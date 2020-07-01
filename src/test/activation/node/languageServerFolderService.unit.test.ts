@@ -9,7 +9,8 @@ import { Extension, Uri, WorkspaceConfiguration } from 'vscode';
 import {
     ILanguageServerFolder,
     ILSExtensionApi,
-    NodeLanguageServerFolderService
+    NodeLanguageServerFolderService,
+    PylanceExtensionName
 } from '../../../client/activation/node/languageServerFolderService';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { IConfigurationService, IExtensions, IPythonSettings } from '../../../client/common/types';
@@ -19,7 +20,6 @@ import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Node Language Server Folder Service', () => {
     const resource = Uri.parse('a');
-    const extensionName = 'some.extension';
 
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
@@ -99,7 +99,6 @@ suite('Node Language Server Folder Service', () => {
     test('lsExtensionName is undefined', async () => {
         pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => true);
         workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => undefined);
-        workspaceConfiguration.setup((wc) => wc.get('lsExtensionName')).returns(() => undefined);
 
         const folderService = new TestService(
             serviceContainer.object,
@@ -116,8 +115,7 @@ suite('Node Language Server Folder Service', () => {
     test('lsExtension not installed', async () => {
         pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => true);
         workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => undefined);
-        workspaceConfiguration.setup((wc) => wc.get('lsExtensionName')).returns(() => extensionName);
-        extensions.setup((e) => e.getExtension(extensionName)).returns(() => undefined);
+        extensions.setup((e) => e.getExtension(PylanceExtensionName)).returns(() => undefined);
 
         const folderService = new TestService(
             serviceContainer.object,
@@ -150,8 +148,7 @@ suite('Node Language Server Folder Service', () => {
             extension.setup((e) => e.exports).returns(() => extensionApi);
             pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => true);
             workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => undefined);
-            workspaceConfiguration.setup((wc) => wc.get('lsExtensionName')).returns(() => extensionName);
-            extensions.setup((e) => e.getExtension(extensionName)).returns(() => extension.object);
+            extensions.setup((e) => e.getExtension(PylanceExtensionName)).returns(() => extension.object);
             folderService = new TestService(
                 serviceContainer.object,
                 configService.object,

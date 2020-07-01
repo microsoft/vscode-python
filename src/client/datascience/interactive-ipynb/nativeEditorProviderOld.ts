@@ -15,10 +15,11 @@ import {
 import { JUPYTER_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { noop } from '../../common/utils/misc';
+import { isNotebookCell, noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { Commands } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
+import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { IDataScienceErrorHandler, INotebookEditor, INotebookModel } from '../types';
 import { NativeEditorProvider } from './nativeEditorProvider';
 import { INotebookStorageProvider } from './notebookStorageProvider';
@@ -212,6 +213,10 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
     ) => {
         // See if this is an ipynb file
         if (this.isNotebook(document) && this.configuration.getSettings(document.uri).datascience.useNotebookEditor) {
+            if (await this.isDocumentOpenedInVSCodeNotebook(document)) {
+                return;
+            }
+
             const closeActiveEditorCommand = 'workbench.action.closeActiveEditor';
             try {
                 const uri = document.uri;
@@ -240,6 +245,15 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             }
         }
     };
+    /**
+     * If the INotebookModel associated with a Notebook is of type VSCodeNotebookModel, then its used with a VSC Notebook.
+     * I.e. document is already opened in a VSC Notebook.
+     */
+    private async isDocumentOpenedInVSCodeNotebook(document: TextDocument): Promise<boolean> {
+        const model = await this.loadModel(document.uri);
+        // This is temporary code.
+        return model instanceof VSCodeNotebookModel;
+    }
     /**
      * Check if user is attempting to compare two ipynb files.
      * If yes, then return `true`, else `false`.
@@ -293,6 +307,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         const validUriScheme = document.uri.scheme !== 'git';
         return (
             validUriScheme &&
+            !isNotebookCell(document) &&
             (document.languageId === JUPYTER_LANGUAGE ||
                 path.extname(document.fileName).toLocaleLowerCase() === '.ipynb')
         );

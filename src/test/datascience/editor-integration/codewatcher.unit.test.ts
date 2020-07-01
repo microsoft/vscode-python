@@ -74,6 +74,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup default settings
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
+            alwaysTrustNotebooks: true,
             jupyterLaunchTimeout: 20000,
             jupyterLaunchRetries: 3,
             enabled: true,

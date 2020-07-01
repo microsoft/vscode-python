@@ -40,6 +40,7 @@ import {
     NotebookStorageProvider
 } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
+import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 import {
     IJupyterExecution,
     INotebookEditor,
@@ -207,7 +208,7 @@ suite('DataScience - Native Editor Provider', () => {
             globalMemento,
             localMemento,
             trustService,
-            false
+            new NotebookModelFactory(false)
         );
 
         storageProvider = new NotebookStorageProvider(notebookStorage, []);

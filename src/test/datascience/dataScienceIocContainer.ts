@@ -264,11 +264,14 @@ import { OldJupyterVariables } from '../../client/datascience/jupyter/oldJupyter
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 import { JupyterDebugService } from '../../client/datascience/jupyterDebugService';
+import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelFinder, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
 import { NotebookAndInteractiveWindowUsageTracker } from '../../client/datascience/notebookAndInteractiveTracker';
+import { NotebookModelFactory } from '../../client/datascience/notebookStorage/factory';
+import { INotebookModelFactory } from '../../client/datascience/notebookStorage/types';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
 import { ProgressReporter } from '../../client/datascience/progress/progressReporter';
@@ -302,6 +305,7 @@ import {
     IJupyterServerProvider,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
+    IJupyterUriProviderRegistration,
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
@@ -614,6 +618,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ExportManagerDependencyChecker,
             ExportManagerDependencyChecker
         );
+        this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
         this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManagerFileOpener);
         this.serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
         this.serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
@@ -1279,6 +1284,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.addInterpreter(this.workingPython2, SupportedCommands.all);
             this.addInterpreter(this.workingPython, SupportedCommands.all);
         }
+        this.serviceManager.addSingleton<IJupyterUriProviderRegistration>(
+            IJupyterUriProviderRegistration,
+            JupyterUriProviderRegistration
+        );
     }
     public setFileContents(uri: Uri, contents: string) {
         const fileSystem = this.serviceManager.get<IFileSystem>(IFileSystem) as MockFileSystem;
@@ -1503,6 +1512,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         pythonSettings.pythonPath = this.defaultPythonPath!;
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
+            alwaysTrustNotebooks: true,
             jupyterLaunchTimeout: 60000,
             jupyterLaunchRetries: 3,
             enabled: true,

@@ -11,6 +11,7 @@ import {
     IVSCodeNotebook
 } from '../../common/application/types';
 import { NotebookEditorSupport } from '../../common/experiments/groups';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
@@ -63,39 +64,49 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         if (this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
             await this.enableNotebooks(true);
         }
-        this.disposables.push(
-            this.vscNotebook.registerNotebookContentProvider(JupyterNotebookView, this.notebookContentProvider)
-        );
-        this.disposables.push(
-            this.vscNotebook.registerNotebookKernel(JupyterNotebookView, ['**/*.ipynb'], this.notebookKernel)
-        );
-        this.disposables.push(
-            this.vscNotebook.registerNotebookOutputRenderer(
-                'jupyter-notebook-renderer',
-                {
-                    type: 'display_data',
-                    subTypes: [
-                        'application/geo+json',
-                        'application/vdom.v1+json',
-                        'application/vnd.dataresource+json',
-                        'application/vnd.plotly.v1+json',
-                        'application/vnd.vega.v2+json',
-                        'application/vnd.vega.v3+json',
-                        'application/vnd.vega.v4+json',
-                        'application/vnd.vega.v5+json',
-                        'application/vnd.vegalite.v1+json',
-                        'application/vnd.vegalite.v2+json',
-                        'application/vnd.vegalite.v3+json',
-                        'application/vnd.vegalite.v4+json',
-                        'application/x-nteract-model-debug+json',
-                        'image/gif',
-                        'text/latex',
-                        'text/vnd.plotly.v1+html'
-                    ]
-                },
-                this.renderer
-            )
-        );
+        if (this.env.channel !== 'insiders') {
+            return;
+        }
+        try {
+            this.disposables.push(
+                this.vscNotebook.registerNotebookContentProvider(JupyterNotebookView, this.notebookContentProvider)
+            );
+            this.disposables.push(
+                this.vscNotebook.registerNotebookKernel(JupyterNotebookView, ['**/*.ipynb'], this.notebookKernel)
+            );
+            this.disposables.push(
+                this.vscNotebook.registerNotebookOutputRenderer(
+                    'jupyter-notebook-renderer',
+                    {
+                        mimeTypes: [
+                            'application/geo+json',
+                            'application/vdom.v1+json',
+                            'application/vnd.dataresource+json',
+                            'application/vnd.plotly.v1+json',
+                            'application/vnd.vega.v2+json',
+                            'application/vnd.vega.v3+json',
+                            'application/vnd.vega.v4+json',
+                            'application/vnd.vega.v5+json',
+                            'application/vnd.vegalite.v1+json',
+                            'application/vnd.vegalite.v2+json',
+                            'application/vnd.vegalite.v3+json',
+                            'application/vnd.vegalite.v4+json',
+                            'application/x-nteract-model-debug+json',
+                            'image/gif',
+                            'text/latex',
+                            'text/vnd.plotly.v1+html'
+                        ]
+                    },
+                    this.renderer
+                )
+            );
+        } catch (ex) {
+            // If something goes wrong, and we're not in Insiders & not using the NativeEditor experiment, then swallow errors.
+            traceError('Failed to register VS Code Notebook API', ex);
+            if (this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
+                throw ex;
+            }
+        }
     }
     private async enableNotebooks(useVSCodeNotebookAsDefaultEditor: boolean) {
         if (this.env.channel === 'stable') {

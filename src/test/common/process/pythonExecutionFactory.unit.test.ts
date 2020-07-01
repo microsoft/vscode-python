@@ -11,6 +11,7 @@ import { Uri } from 'vscode';
 
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { IPlatformService } from '../../../client/common/platform/types';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
@@ -87,6 +88,7 @@ suite('Process - PythonExecutionFactory', () => {
             let windowsStoreInterpreter: IWindowsStoreInterpreter;
             let interpreterService: IInterpreterService;
             let executionService: typemoq.IMock<IPythonExecutionService>;
+            let platformService: IPlatformService;
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
@@ -94,6 +96,7 @@ suite('Process - PythonExecutionFactory', () => {
                 configService = mock(ConfigurationService);
                 condaService = mock(CondaService);
                 processLogger = mock(ProcessLogger);
+                platformService = mock<IPlatformService>();
                 windowsStoreInterpreter = mock(WindowsStoreInterpreter);
                 executionService = typemoq.Mock.ofType<IPythonExecutionService>();
                 executionService.setup((p: any) => p.then).returns(() => undefined);
@@ -127,7 +130,8 @@ suite('Process - PythonExecutionFactory', () => {
                     instance(configService),
                     instance(condaService),
                     instance(bufferDecoder),
-                    instance(windowsStoreInterpreter)
+                    instance(windowsStoreInterpreter),
+                    instance(platformService)
                 );
             });
             teardown(() => sinon.restore());

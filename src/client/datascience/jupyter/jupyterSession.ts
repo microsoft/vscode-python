@@ -1,32 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type {
-    Contents,
-    ContentsManager,
-    Kernel,
-    ServerConnection,
-    Session,
-    SessionManager
-} from '@jupyterlab/services';
-import type { Slot } from '@phosphor/signaling';
+import type { Contents, ContentsManager, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IOutputChannel } from '../../common/types';
-import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
-import { Identifiers, Telemetry } from '../constants';
+import { Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IJupyterConnection, IJupyterKernelSpec, ISessionWithSocket } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterWebSockets } from './jupyterWebSocket';
 import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
@@ -63,9 +53,10 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
-    public async waitForIdle(timeout: number): Promise<void> {
+    @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
+    public waitForIdle(timeout: number): Promise<void> {
         // Wait for idle on this session
-        await this.waitForIdleOnSession(this.session, timeout);
+        return this.waitForIdleOnSession(this.session, timeout);
     }
 
     public async connect(cancelToken?: CancellationToken): Promise<void> {
@@ -154,80 +145,6 @@ export class JupyterSession extends BaseJupyterSession {
     protected startRestartSession() {
         if (!this.restartSessionPromise && this.session && this.contentsManager) {
             this.restartSessionPromise = this.createRestartSession(this.kernelSpec, this.session);
-        }
-    }
-
-    @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
-    private async waitForIdleOnSession(session: ISessionWithSocket | undefined, timeout: number): Promise<void> {
-        if (session && session.kernel) {
-            traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
-            // tslint:disable-next-line: no-any
-            const statusHandler = (resolve: () => void, reject: (exc: any) => void, e: Kernel.Status | undefined) => {
-                if (e === 'idle') {
-                    resolve();
-                } else if (e === 'dead') {
-                    traceError('Kernel died while waiting for idle');
-                    // If we throw an exception, make sure to shutdown the session as it's not usable anymore
-                    this.shutdownSession(session, this.statusHandler).ignoreErrors();
-                    reject(
-                        new JupyterInvalidKernelError({
-                            ...session.kernel,
-                            lastActivityTime: new Date(),
-                            numberOfConnections: 0,
-                            session: session.model
-                        })
-                    );
-                }
-            };
-
-            let statusChangeHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined;
-            const kernelStatusChangedPromise = new Promise((resolve, reject) => {
-                statusChangeHandler = (_: ISessionWithSocket, e: Kernel.Status) => statusHandler(resolve, reject, e);
-                session.statusChanged.connect(statusChangeHandler);
-            });
-            let kernelChangedHandler: Slot<ISessionWithSocket, Session.IKernelChangedArgs> | undefined;
-            const statusChangedPromise = new Promise((resolve, reject) => {
-                kernelChangedHandler = (_: ISessionWithSocket, e: Session.IKernelChangedArgs) =>
-                    statusHandler(resolve, reject, e.newValue?.status);
-                session.kernelChanged.connect(kernelChangedHandler);
-            });
-            const checkStatusPromise = new Promise(async (resolve) => {
-                // This function seems to cause CI builds to timeout randomly on
-                // different tests. Waiting for status to go idle doesn't seem to work and
-                // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
-                const startTime = Date.now();
-                while (
-                    session &&
-                    session.kernel &&
-                    session.kernel.status !== 'idle' &&
-                    Date.now() - startTime < timeout
-                ) {
-                    await sleep(100);
-                }
-                resolve();
-            });
-            await Promise.race([kernelStatusChangedPromise, statusChangedPromise, checkStatusPromise]);
-            traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
-
-            if (statusChangeHandler && session && session.statusChanged) {
-                session.statusChanged.disconnect(statusChangeHandler);
-            }
-            if (kernelChangedHandler && session && session.kernelChanged) {
-                session.kernelChanged.disconnect(kernelChangedHandler);
-            }
-
-            // If we didn't make it out in ten seconds, indicate an error
-            if (session.kernel && session.kernel.status === 'idle') {
-                // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
-                // Restart sessions and retries might make this hard to do correctly otherwise.
-                session.kernel.registerCommTarget(Identifiers.DefaultCommTarget, noop);
-
-                return;
-            }
-
-            // If we throw an exception, make sure to shutdown the session as it's not usable anymore
-            this.shutdownSession(session, this.statusHandler).ignoreErrors();
-            throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
         }
     }
 

@@ -53,7 +53,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
     public get onDidChangeInterpreterInformation(): Event<PythonInterpreter> {
         return this.didChangeInterpreterInformation.event;
     }
+    public get onDidChangeInterpreterConfiguration(): Event<Uri | undefined> {
+        return this.didChangeInterpreterConfigurationEmitter.event;
+    }
     public _pythonPathSetting: string = '';
+    private readonly didChangeInterpreterConfigurationEmitter = new EventEmitter<Uri | undefined>();
     private readonly locator: IInterpreterLocatorService;
     private readonly persistentStateFactory: IPersistentStateFactory;
     private readonly configService: IConfigurationService;
@@ -262,6 +266,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return store;
     }
     public _onConfigChanged = (resource?: Uri) => {
+        this.didChangeInterpreterConfigurationEmitter.fire(resource);
         // Check if we actually changed our python path
         const pySettings = this.configService.getSettings(resource);
         if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {

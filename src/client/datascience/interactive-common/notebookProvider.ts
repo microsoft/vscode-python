@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
@@ -28,16 +29,20 @@ import {
 export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
+    private readonly _onSessionStatusChanged = new EventEmitter<{ status: ServerStatus; notebook: INotebook }>();
     private _connectionMade = new EventEmitter<void>();
     private _type: 'jupyter' | 'raw' = 'jupyter';
     public get activeNotebooks() {
         return [...this.notebooks.values()];
     }
+    public get onSessionStatusChanged() {
+        return this._onSessionStatusChanged.event;
+    }
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -92,17 +97,18 @@ export class NotebookProvider implements INotebookProvider {
     public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
         const rawKernel = await this.rawNotebookProvider.supported();
 
+        // Check our own promise cache
+        if (this.notebooks.get(options.identity.fsPath)) {
+            return this.notebooks.get(options.identity.fsPath)!!;
+        }
+
         // Check to see if our provider already has this notebook
         const notebook = rawKernel
             ? await this.rawNotebookProvider.getNotebook(options.identity, options.token)
             : await this.jupyterNotebookProvider.getNotebook(options);
         if (notebook) {
+            this.cacheNotebookPromise(options.identity, Promise.resolve(notebook));
             return notebook;
-        }
-
-        // Next check our own promise cache
-        if (this.notebooks.get(options.identity.fsPath)) {
-            return this.notebooks.get(options.identity.fsPath)!!;
         }
 
         // If get only, don't create a notebook
@@ -165,6 +171,11 @@ export class NotebookProvider implements INotebookProvider {
             .then((nb) => {
                 // If the notebook is disposed, remove from cache.
                 nb.onDisposed(removeFromCache);
+                nb.onSessionStatusChanged(
+                    (e) => this._onSessionStatusChanged.fire({ status: e, notebook: nb }),
+                    this,
+                    this.disposables
+                );
                 this._notebookCreated.fire({ identity: identity, notebook: nb });
             })
             .catch(noop);

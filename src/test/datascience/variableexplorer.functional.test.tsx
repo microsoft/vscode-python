@@ -541,13 +541,20 @@ Name: 0, dtype: float64`,
                 // Step into the first cell over again. Should have the same variables
                 if (runByLine && t === 'interactive') {
                     // Remove values, don't bother checking them as they'll be different from the debugger
-                    const nonValued = targetVariables.map((v) => {
-                        return { ...v, value: undefined };
-                    });
-                    await verifyAfterStep(ioc, wrapper, () => {
-                        verifyVariables(wrapper, nonValued);
-                        return Promise.resolve();
-                    });
+                    const nonValued = bottomVariables
+                        .map((v) => {
+                            return { ...v, value: undefined };
+                        })
+                        .slice(0, 10);
+                    await verifyAfterStep(
+                        ioc,
+                        wrapper,
+                        () => {
+                            verifyVariables(wrapper, nonValued);
+                            return Promise.resolve();
+                        },
+                        2 // 2 refreshes because the variable explorer is scrolled to the bottom.
+                    );
                 }
             },
             () => {

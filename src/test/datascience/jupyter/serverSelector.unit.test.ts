@@ -17,6 +17,7 @@ import { MultiStepInput, MultiStepInputFactory } from '../../../client/common/ut
 import { addToUriList } from '../../../client/datascience/common';
 import { Settings } from '../../../client/datascience/constants';
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
+import { JupyterUriProviderRegistration } from '../../../client/datascience/jupyterUriProviderRegistration';
 import { MockMemento } from '../../mocks/mementos';
 import { MockInputBox } from '../mockInputBox';
 import { MockQuickPick } from '../mockQuickPick';
@@ -41,6 +42,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
         clipboard = mock(ClipboardService);
         const configService = mock(ConfigurationService);
         const applicationShell = mock(ApplicationShell);
+        const picker = mock(JupyterUriProviderRegistration);
         cmdManager = mock(CommandManager);
         const storage = mockStorage ? mockStorage : new MockMemento();
         quickPick = new MockQuickPick(quickPickSelection);
@@ -63,7 +65,8 @@ suite('Data Science - Jupyter Server URI Selector', () => {
             instance(clipboard),
             multiStepFactory,
             instance(configService),
-            instance(cmdManager)
+            instance(cmdManager),
+            instance(picker)
         );
     }
 

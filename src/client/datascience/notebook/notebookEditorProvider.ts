@@ -21,8 +21,8 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, setSharedProperty } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
-import { updateModelForUseWithVSCodeNotebook } from '../interactive-ipynb/nativeEditorStorage';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
+import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
 import { JupyterNotebookView } from './constants';
 import { mapVSCNotebookCellsToNotebookCellModels } from './helpers/cellMappers';
@@ -149,11 +149,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
 
     private closedEditor(editor: INotebookEditor): void {
-        if (!(editor instanceof NotebookEditor)) {
-            throw new Error('Executing Notebook with another Editor');
+        if (this.openedEditors.has(editor)) {
+            this.openedEditors.delete(editor);
+            this._onDidCloseNotebookEditor.fire(editor);
         }
-        this.openedEditors.delete(editor);
-        this._onDidCloseNotebookEditor.fire(editor);
     }
 
     private async onDidOpenNotebookDocument(doc: NotebookDocument): Promise<void> {
@@ -161,8 +160,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             return;
         }
         const uri = doc.uri;
-        const model = await this.storage.load(uri);
-        updateModelForUseWithVSCodeNotebook(model); // take ownership of this model.
+        const model = await this.storage.load(uri, undefined, undefined, true);
         mapVSCNotebookCellsToNotebookCellModels(doc, model);
         // In open method we might be waiting.
         let editor = this.notebookEditorsByUri.get(uri.toString());
@@ -189,10 +187,15 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString())!;
         deferred.resolve(editor);
         this.notebookEditorsByUri.set(uri.toString(), editor);
-        this.onDidChangeActiveVsCodeNotebookEditor(this.vscodeNotebook.activeNotebookEditor);
     }
     private onDidChangeActiveVsCodeNotebookEditor(editor: VSCodeNotebookEditor | undefined) {
-        if (!editor || this.trackedVSCodeNotebookEditors.has(editor)) {
+        if (!editor) {
+            this._onDidChangeActiveNotebookEditor.fire(undefined);
+            return;
+        }
+        if (this.trackedVSCodeNotebookEditors.has(editor)) {
+            const ourEditor = this.editors.find((item) => item.file.toString() === editor.document.uri.toString());
+            this._onDidChangeActiveNotebookEditor.fire(ourEditor);
             return;
         }
         this.trackedVSCodeNotebookEditors.add(editor);
@@ -233,7 +236,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (!isJupyterNotebook(e.document)) {
             return;
         }
-        const model = await this.storage.load(e.document.uri);
+        const model = await this.storage.load(e.document.uri, undefined, undefined, true);
+        if (!(model instanceof VSCodeNotebookModel)) {
+            throw new Error('NotebookModel not of type VSCodeNotebookModel');
+        }
         if (updateCellModelWithChangesToVSCCell(e, model)) {
             // If we have updated the notebook document, then trigger changes.
             this.contentProvider.notifyChangesToDocument(e.document);

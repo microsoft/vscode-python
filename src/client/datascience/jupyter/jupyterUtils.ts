@@ -9,8 +9,9 @@ import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { noop } from '../../common/utils/misc';
 import { SystemVariables } from '../../common/variables/systemVariables';
+import { Identifiers } from '../constants';
 import { getJupyterConnectionDisplayName } from '../jupyter/jupyterConnection';
-import { IJupyterConnection } from '../types';
+import { IJupyterConnection, IJupyterUriProviderRegistration } from '../types';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -26,7 +27,10 @@ export function expandWorkingDir(
     return path.dirname(launchingFile);
 }
 
-export function createRemoteConnectionInfo(uri: string): IJupyterConnection {
+export async function createRemoteConnectionInfo(
+    uri: string,
+    providerRegistration: IJupyterUriProviderRegistration
+): Promise<IJupyterConnection> {
     let url: URL;
     try {
         url = new URL(uri);
@@ -35,14 +39,18 @@ export function createRemoteConnectionInfo(uri: string): IJupyterConnection {
         throw err;
     }
 
-    const baseUrl = `${url.protocol}//${url.host}${url.pathname}`;
-    const token = `${url.searchParams.get('token')}`;
+    const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
+    const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
+    const serverUri = id && uriHandle ? await providerRegistration.getJupyterServerUri(id, uriHandle) : undefined;
+    const baseUrl = serverUri ? serverUri.baseUrl : `${url.protocol}//${url.host}${url.pathname}`;
+    const token = serverUri ? serverUri.token : `${url.searchParams.get('token')}`;
+    const hostName = serverUri ? new URL(serverUri.baseUrl).hostname : url.hostname;
 
     return {
         type: 'jupyter',
         baseUrl,
         token,
-        hostName: url.hostname,
+        hostName,
         localLaunch: false,
         localProcExitCode: undefined,
         valid: true,
@@ -50,6 +58,7 @@ export function createRemoteConnectionInfo(uri: string): IJupyterConnection {
         disconnected: (_l) => {
             return { dispose: noop };
         },
-        dispose: noop
+        dispose: noop,
+        authorizationHeader: serverUri ? serverUri.authorizationHeader : undefined
     };
 }

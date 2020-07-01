@@ -287,7 +287,7 @@ export class LanguageServerExtensionActivationService
                 outputLine = 'Starting Microsoft Python language server.';
                 break;
             case LanguageServerType.Node:
-                outputLine = 'Starting Node.js language server.';
+                outputLine = 'Starting Pylance language server.';
                 break;
             case LanguageServerType.None:
                 outputLine = 'Editor support is inactive since language server is set to None.';

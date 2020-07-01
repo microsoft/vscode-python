@@ -55,7 +55,8 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
             executionCount: request.executionCount,
             pageStartIndex: 0,
             pageResponse: [],
-            totalCount: 0
+            totalCount: 0,
+            refreshCount: request.refreshCount
         };
 
         if (this.active) {

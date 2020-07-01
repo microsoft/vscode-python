@@ -23,7 +23,6 @@ import {
     assertNotHasTextOutputInVSCode,
     assertVSCCellHasErrors,
     canRunTests,
-    closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
     insertPythonCellAndWait,
@@ -58,7 +57,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await editorProvider.createNew();
     });
     setup(deleteAllCellsAndWait);
-    teardown(() => closeNotebooks(disposables));
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     test('Execute cell using VSCode Command', async () => {
