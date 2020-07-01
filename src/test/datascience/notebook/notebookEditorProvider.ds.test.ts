@@ -41,6 +41,7 @@ suite('DataScience - VSCode Notebook', function () {
         'notebook',
         'test.ipynb'
     );
+    const emptyPyFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'empty.py');
     let testIPynb: Uri;
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
@@ -104,13 +105,132 @@ suite('DataScience - VSCode Notebook', function () {
     });
 
     test('Create empty notebook will fire necessary events', async () => {
-        const notebookOpened = createEventHandler(editorProvider, 'onDidChangeActiveNotebookEditor', disposables);
-        const activeNotebookChanged = createEventHandler(editorProvider, 'onDidOpenNotebookEditor', disposables);
+        const notebookOpened = createEventHandler(editorProvider, 'onDidOpenNotebookEditor', disposables);
+        const activeNotebookChanged = createEventHandler(
+            editorProvider,
+            'onDidChangeActiveNotebookEditor',
+            disposables
+        );
 
         await editorProvider.createNew();
 
         await notebookOpened.assertFired();
         await activeNotebookChanged.assertFired();
+    });
+    test('Opening a non-notebooks will fire necessary events', async () => {
+        const notebookOpened = createEventHandler(editorProvider, 'onDidOpenNotebookEditor', disposables);
+        const activeNotebookChanged = createEventHandler(
+            editorProvider,
+            'onDidChangeActiveNotebookEditor',
+            disposables
+        );
+        const notebookClosed = createEventHandler(editorProvider, 'onDidCloseNotebookEditor', disposables);
+
+        await editorProvider.createNew();
+
+        await notebookOpened.assertFired();
+        await activeNotebookChanged.assertFired();
+        assert.isOk(activeNotebookChanged.first, 'Active Editor is undefined');
+        assert.isFalse(notebookClosed.fired, 'No notebook should be closed');
+
+        // Open a python file.
+        await commandManager.executeCommand('vscode.open', Uri.file(emptyPyFile));
+
+        await activeNotebookChanged.assertFired();
+        assert.isTrue(notebookClosed.fired, 'Unpinned notebook should have been closed when opening another file');
+        assert.isUndefined(activeNotebookChanged.second, 'Active Editor should be undefined');
+    });
+    test('Opening a non-notebook file and toggling between nb & non-notebook will fire necessary events', async () => {
+        const notebookOpened = createEventHandler(editorProvider, 'onDidOpenNotebookEditor', disposables);
+        const activeNotebookChanged = createEventHandler(
+            editorProvider,
+            'onDidChangeActiveNotebookEditor',
+            disposables
+        );
+        const notebookClosed = createEventHandler(editorProvider, 'onDidCloseNotebookEditor', disposables);
+
+        const notebookEditor = await editorProvider.open(testIPynb);
+        await insertMarkdownCellAndWait('1'); // Make the file dirty (so it gets pinned).
+        await notebookOpened.assertFired();
+        await activeNotebookChanged.assertFired();
+        assert.equal(activeNotebookChanged.first, notebookEditor);
+
+        // Open a python file.
+        await commandManager.executeCommand('vscode.open', Uri.file(emptyPyFile));
+
+        await activeNotebookChanged.assertFired();
+        assert.isFalse(notebookClosed.fired, 'Notebook is dirty, hence pinned and not closed');
+        assert.isUndefined(activeNotebookChanged.second, 'Active Editor should be undefined');
+
+        // Going to first notebook file should change the editor back to that.
+        await commands.executeCommand('workbench.action.nextEditor');
+        await notebookOpened.assertFiredExactly(1); // Only 2, no new notebooks opened.
+        await activeNotebookChanged.assertFiredAtLeast(3);
+        assert.equal(activeNotebookChanged.last, notebookEditor);
+
+        // Going to second python file should change the editor back to that.
+        await commands.executeCommand('workbench.action.nextEditor');
+        await notebookOpened.assertFiredExactly(1); // Only 2, no new notebooks opened.
+        await activeNotebookChanged.assertFiredAtLeast(4);
+        assert.isUndefined(activeNotebookChanged.second, 'Active Editor should be undefined');
+
+        // Close the python file.
+        await commandManager.executeCommand('workbench.action.closeActiveEditor');
+        assert.isFalse(notebookClosed.fired, 'Notebook is dirty, hence pinned and not closed');
+        await activeNotebookChanged.assertFiredAtLeast(5);
+        assert.equal(activeNotebookChanged.last, notebookEditor);
+
+        // Close the notebook.
+        await commands.executeCommand('workbench.action.files.saveAll'); // Save untitled changes (to prevent prompts).
+        await commandManager.executeCommand('workbench.action.closeActiveEditor');
+        await notebookClosed.assertFiredExactly(1);
+        await activeNotebookChanged.assertFiredAtLeast(6); // Fired when there are no more documents open.
+        assert.isUndefined(activeNotebookChanged.last);
+    });
+    test('Opening two notebooks and toggling between the two will fire necessary event', async () => {
+        const notebookOpened = createEventHandler(editorProvider, 'onDidOpenNotebookEditor', disposables);
+        const activeNotebookChanged = createEventHandler(
+            editorProvider,
+            'onDidChangeActiveNotebookEditor',
+            disposables
+        );
+        const notebookClosed = createEventHandler(editorProvider, 'onDidCloseNotebookEditor', disposables);
+
+        const editor1 = await editorProvider.open(testIPynb);
+        await insertMarkdownCellAndWait('1'); // Make the file dirty (so it gets pinned).
+        await notebookOpened.assertFired();
+        await activeNotebookChanged.assertFired();
+        assert.equal(activeNotebookChanged.first, editor1);
+        assert.isFalse(notebookClosed.fired, 'No notebook should be closed');
+
+        // Open another notebook.
+        const testIPynb2 = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
+        const editor2 = await editorProvider.open(testIPynb2);
+        await insertMarkdownCellAndWait('1'); // Make the file dirty (so it gets pinned).
+
+        await notebookOpened.assertFiredExactly(2);
+        await activeNotebookChanged.assertFiredAtLeast(2);
+        assert.equal(activeNotebookChanged.last, editor2);
+        assert.isFalse(notebookClosed.fired, 'No notebook should be closed');
+
+        // Re-opening, first file should change the editor back to that.
+        await commands.executeCommand('workbench.action.nextEditor');
+        await notebookOpened.assertFiredExactly(2); // Only 2, no new notebooks opened.
+        await activeNotebookChanged.assertFiredAtLeast(3);
+        assert.equal(activeNotebookChanged.last, editor1);
+
+        // Close the first notebook.
+        await commands.executeCommand('workbench.action.files.saveAll'); // Save untitled changes (to prevent prompts).
+        await commandManager.executeCommand('workbench.action.closeActiveEditor');
+        await notebookClosed.assertFired();
+        await activeNotebookChanged.assertFiredAtLeast(4);
+        assert.equal(activeNotebookChanged.last, editor2);
+
+        // Close the second notebook.
+        await commandManager.executeCommand('workbench.action.closeActiveEditor');
+        await notebookClosed.assertFiredExactly(2);
+        await activeNotebookChanged.assertFiredAtLeast(5); // Fired when there are no more documents open.
+        assert.isUndefined(activeNotebookChanged.last);
     });
     test('Closing a notebook will fire necessary events and clear state', async () => {
         const notebookClosed = createEventHandler(editorProvider, 'onDidCloseNotebookEditor', disposables);
