@@ -179,7 +179,10 @@ suite('Daemon - Python Daemon Pool', () => {
         expect(info2).to.deep.equal(interpreterInfoFromDaemon);
         expect(info3).to.deep.equal(interpreterInfoFromDaemon);
     });
-    test('If executing python code takes too long (> 1s), then return standard PythonExecutionService', async () => {
+    test('If executing python code takes too long (> 1s), then return standard PythonExecutionService', async function () {
+        // https://github.com/microsoft/vscode-python/issues/12690
+        // tslint:disable-next-line: no-invalid-this
+        return this.skip();
         clock = fakeTimers.install();
         const getInterpreterInformationStub = sinon.stub(
             PythonDaemonExecutionService.prototype,
@@ -272,7 +275,10 @@ suite('Daemon - Python Daemon Pool', () => {
             getInterpreterInformationStub.restore();
         }
     });
-    test('If executing python is fast, then use the daemon (for observables)', async () => {
+    test('If executing python is fast, then use the daemon (for observables)', async function () {
+        // https://github.com/microsoft/vscode-python/issues/12690
+        // tslint:disable-next-line: no-invalid-this
+        return this.skip();
         const execModuleObservable = sinon.stub(PythonDaemonExecutionService.prototype, 'execModuleObservable');
         const out = new Observable<Output<string>>((s) => {
             s.next({ source: 'stdout', out: '' });
