@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
-
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import {
@@ -15,6 +13,7 @@ import {
     ViewColumn,
     WebviewPanel
 } from 'vscode';
+import '../../common/extensions';
 
 import * as uuid from 'uuid/v4';
 import { createErrorOutput } from '../../../datascience-ui/common/cellFactory';
@@ -613,7 +612,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private async launchNotebookTrustPrompt() {
         const prompts = [localize.DataScience.trustNotebook(), localize.DataScience.doNotTrustNotebook()];
         const selection = await this.applicationShell.showInformationMessage(
-            localize.DataScience.launchNotebookTrustPrompt(),
+            localize.DataScience.launchNotebookTrustPrompt().format(
+                'command:workbench.action.openSettings?%5B%22python.dataScience.alwaysTrustNotebooks%22%5D'
+            ),
             ...prompts
         );
         if (!selection) {
