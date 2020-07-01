@@ -63,22 +63,20 @@ export async function initializeTest(): Promise<any> {
     }
 }
 export async function closeActiveWindows(): Promise<void> {
-    await closeWindowsInteral();
     await closeActiveNotebooks();
+    await closeWindowsInteral();
 }
 export async function closeActiveNotebooks(): Promise<void> {
-    function notebooksAreOpen() {
-        if (Array.isArray(vscode.notebook.visibleNotebookEditors) && vscode.notebook.visibleNotebookEditors.length) {
-            return true;
-        }
-        return !!vscode.notebook.activeNotebookEditor;
-    }
-    if (!vscode.env.appName.toLowerCase().includes('insiders') || !notebooksAreOpen()) {
+    if (!vscode.env.appName.toLowerCase().includes('insiders') || !isANotebookOpen()) {
         return;
     }
-    // Work around VS Code issues (somethimes notebooks do not get closed).
+    // We could have untitled notebooks, close them by reverting changes.
+    while (vscode.notebook.activeNotebookEditor || vscode.window.activeTextEditor) {
+        await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+    }
+    // Work around VS Code issues (sometimes notebooks do not get closed).
     // Hence keep trying.
-    for (let counter = 0; counter <= 5 && notebooksAreOpen(); counter += 1) {
+    for (let counter = 0; counter <= 5 && isANotebookOpen(); counter += 1) {
         await sleep(counter * 100);
         await closeWindowsInteral();
     }
@@ -102,4 +100,11 @@ async function closeWindowsInteral() {
             }
         );
     });
+}
+
+function isANotebookOpen() {
+    if (Array.isArray(vscode.notebook.visibleNotebookEditors) && vscode.notebook.visibleNotebookEditors.length) {
+        return true;
+    }
+    return !!vscode.notebook.activeNotebookEditor;
 }

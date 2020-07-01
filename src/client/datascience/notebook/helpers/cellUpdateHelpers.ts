@@ -15,7 +15,7 @@ import {
     NotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent
 } from '../../../common/application/types';
-import { traceError } from '../../../common/logger';
+import { isCI, isTestExecution } from '../../../common/constants';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { VSCodeNativeTelemetry } from '../../constants';
 import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
@@ -88,7 +88,11 @@ function handleChangesToCells(change: NotebookCellsChangeEvent, model: VSCodeNot
         handleCellInsertion(change, model);
         sendTelemetryEvent(VSCodeNativeTelemetry.AddCell);
     } else {
-        traceError('Unsupported cell change', change);
+        // If we're on CI, then don't throw this error.
+        // Known issue with VSC to trigger change even when using the command `View: Revert and Close Editor`.
+        if (isCI || isTestExecution()) {
+            return;
+        }
         throw new Error('Unsupported cell change');
     }
 }
