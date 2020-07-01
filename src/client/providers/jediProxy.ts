@@ -25,7 +25,7 @@ import { swallowExceptions } from '../common/utils/decorators';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
-import { PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { traceError, traceWarning } from './../common/logger';

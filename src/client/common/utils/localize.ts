@@ -30,17 +30,9 @@ export namespace Diagnostics {
         'diagnostics.upgradeCodeRunner',
         'Please update the Code Runner extension for it to be compatible with the Python extension.'
     );
-    export const removePythonPathSettingsJson = localize(
-        'diagnostics.removePythonPathSettingsJson',
-        'The setting "python.pythonPath" defined in your settings.json is now deprecated. Do you want us to delete it from your settings.json only? [Learn more](https://aka.ms/AA7jfor).'
-    );
-    export const removePythonPathCodeWorkspace = localize(
-        'diagnostics.removePythonPathCodeWorkspace',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file only? [Learn more](https://aka.ms/AA7jfor).'
-    );
-    export const removePythonPathCodeWorkspaceAndSettingsJson = localize(
-        'diagnostics.removePythonPathCodeWorkspaceAndSettingsJson',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file and settings.json? [Learn more](https://aka.ms/AA7jfor).'
+    export const removedPythonPathFromSettings = localize(
+        'diagnostics.removedPythonPathFromSettings',
+        'We removed the "python.pythonPath" setting from your settings.json file as the setting is no longer used by the Python extension. You can get the path of your selected interpreter in the Python output channel. [Learn more](https://aka.ms/AA7jfor).'
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
@@ -68,10 +60,6 @@ export namespace Diagnostics {
         'Your settings needs to be updated to change the setting "python.unitTest." to "python.testing.", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?'
     );
     export const updateSettings = localize('diagnostics.updateSettings', 'Yes, update settings');
-    export const processId = localize(
-        'diagnostics.processId',
-        'Attaching the debugger to a local process is an experimental feature. It will be available to all users soon.'
-    );
 }
 
 export namespace Common {
@@ -95,6 +83,12 @@ export namespace Common {
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
 }
 
+export namespace CommonSurvey {
+    export const remindMeLaterLabel = localize('CommonSurvey.remindMeLaterLabel', 'Remind me later');
+    export const yesLabel = localize('CommonSurvey.yesLabel', 'Yes, take survey now');
+    export const noLabel = localize('CommonSurvey.noLabel', 'No, thanks');
+}
+
 export namespace AttachProcess {
     export const unsupportedOS = localize('AttachProcess.unsupportedOS', "Operating system '{0}' not supported.");
     export const attachTitle = localize('AttachProcess.attachTitle', 'Attach to process');
@@ -107,10 +101,6 @@ export namespace AttachProcess {
 }
 
 export namespace LanguageService {
-    export const bannerMessage = localize(
-        'LanguageService.bannerMessage',
-        'Can you please take 2 minutes to tell us how the Python Language Server is working for you?'
-    );
     export const bannerLabelYes = localize('LanguageService.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('LanguageService.bannerLabelNo', 'No, thanks');
     export const lsFailedToStart = localize(
@@ -271,6 +261,34 @@ export namespace DataScienceSurveyBanner {
     export const bannerLabelYes = localize('DataScienceSurveyBanner.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('DataScienceSurveyBanner.bannerLabelNo', 'No, thanks');
 }
+export namespace DataScienceRendererExtension {
+    export const installingExtension = localize(
+        'DataScienceRendererExtension.installingExtension',
+        'Installing Notebook Renderers extension... '
+    );
+    export const installationCompleteMessage = localize(
+        'DataScienceRendererExtension.installationCompleteMessage',
+        'complete.'
+    );
+    export const startingDownloadOutputMessage = localize(
+        'DataScienceRendererExtension.startingDownloadOutputMessage',
+        'Starting download of Notebook Renderers extension.'
+    );
+    export const downloadingMessage = localize(
+        'DataScienceRendererExtension.downloadingMessage',
+        'Downloading Notebook Renderers Extension... '
+    );
+    export const downloadCompletedOutputMessage = localize(
+        'DataScienceRendererExtension.downloadCompletedOutputMessage',
+        'Notebook Renderers extension download complete.'
+    );
+}
+export namespace DataScienceNotebookSurveyBanner {
+    export const bannerMessage = localize(
+        'DataScienceNotebookSurveyBanner.bannerMessage',
+        'Can you please take 2 minutes to tell us how the Preview Notebook Editor is working for you?'
+    );
+}
 
 export namespace Installer {
     export const noCondaOrPipInstaller = localize(
@@ -302,6 +320,20 @@ export namespace DataScience {
     export const badWebPanelFormatString = localize(
         'DataScience.badWebPanelFormatString',
         '<html><body><h1>{0} is not a valid file name</h1></body></html>'
+    );
+    export const checkingIfImportIsSupported = localize(
+        'DataScience.checkingIfImportIsSupported',
+        'Checking if import is supported'
+    );
+    export const installingMissingDependencies = localize(
+        'DataScience.installingMissingDependencies',
+        'Installing missing dependencies'
+    );
+    export const performingExport = localize('DataScience.performingExport', 'Performing export');
+    export const convertingToPDF = localize('DataScience.convertingToPDF', 'Converting to PDF');
+    export const exportNotebookToPython = localize(
+        'DataScience.exportNotebookToPython',
+        'Exporting Notebook to Python'
     );
     export const sessionDisposed = localize(
         'DataScience.sessionDisposed',
@@ -518,9 +550,14 @@ export namespace DataScience {
         'DataScience.jupyterSelectURINotRunningDetail',
         'Cannot connect at this time. Status unknown.'
     );
+    export const jupyterSelectUserAndPasswordTitle = localize(
+        'DataScience.jupyterSelectUserAndPasswordTitle',
+        'Enter your user name and password to connect to Jupyter Hub'
+    );
+    export const jupyterSelectUserPrompt = localize('DataScience.jupyterSelectUserPrompt', 'Enter your user name');
     export const jupyterSelectPasswordPrompt = localize(
         'DataScience.jupyterSelectPasswordPrompt',
-        'Enter your notebook password'
+        'Enter your password'
     );
     export const jupyterNotebookFailure = localize(
         'DataScience.jupyterNotebookFailure',
@@ -568,6 +605,8 @@ export namespace DataScience {
     export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting IPython Kernel');
     export const exportCancel = localize('DataScience.exportCancel', 'Cancel');
     export const exportPythonQuickPickLabel = localize('DataScience.exportPythonQuickPickLabel', 'Python Script');
+    export const exportHTMLQuickPickLabel = localize('DataScience.exportHTMLQuickPickLabel', 'HTML');
+    export const exportPDFQuickPickLabel = localize('DataScience.exportPDFQuickPickLabel', 'PDF');
     export const restartKernelAfterInterruptMessage = localize(
         'DataScience.restartKernelAfterInterruptMessage',
         'Interrupting the kernel timed out. Do you want to restart the kernel instead? All variables will be lost.'
@@ -624,6 +663,8 @@ export namespace DataScience {
     export const fetchingDataViewer = localize('DataScience.fetchingDataViewer', 'Fetching data ...');
     export const noRowsInDataViewer = localize('DataScience.noRowsInDataViewer', 'No rows match current filter');
     export const jupyterServer = localize('DataScience.jupyterServer', 'Jupyter Server');
+    export const notebookIsTrusted = localize('DataScience.notebookIsTrusted', 'Trusted');
+    export const notebookIsNotTrusted = localize('DataScience.notebookIsNotTrusted', 'Not Trusted');
     export const noKernel = localize('DataScience.noKernel', 'No Kernel');
     export const serverNotStarted = localize('DataScience.serverNotStarted', 'Not Started');
     export const selectKernel = localize('DataScience.selectKernel', 'Select a Kernel');
@@ -775,6 +816,17 @@ export namespace DataScience {
     export const notebookExportAs = localize('DataScience.notebookExportAs', 'Convert and save to a python script');
     export const exportAsPythonFileTitle = localize('DataScience.exportAsPythonFileTitle', 'Save As Python File');
     export const exportAsQuickPickPlaceholder = localize('DataScience.exportAsQuickPickPlaceholder', 'Export As...');
+    export const openExportedFileMessage = localize(
+        'DataScience.openExportedFileMessage',
+        'Would you like to open the exported file?'
+    );
+    export const openExportFileYes = localize('DataScience.openExportFileYes', 'Yes');
+    export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
+    export const exportToPDFDependencyMessage = localize(
+        'DataScience.exportToPDFDependencyMessage',
+        'If you have not installed xelatex (TeX) you will need to do so before you can export to PDF, for further instructions please look [here](https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex). \r\nTo avoid installing xelatex (TeX) you might want to try exporting to HTML and using your browsers "Print to PDF" feature.'
+    );
+    export const failedExportMessage = localize('DataScience.failedExportMessage', 'Export failed.');
     export const runCell = localize('DataScience.runCell', 'Run cell');
     export const deleteCell = localize('DataScience.deleteCell', 'Delete cell');
     export const moveCellUp = localize('DataScience.moveCellUp', 'Move cell up');
@@ -959,6 +1011,24 @@ export namespace DataScience {
         'DataScience.reloadCustomEditor',
         'Please reload VS Code to use the custom editor API'
     );
+    export const reloadVSCodeNotebookEditor = localize(
+        'DataScience.reloadVSCodeNotebookEditor',
+        'Please reload VS Code to use the Notebook Editor'
+    );
+    export const usingPreviewNotebookWithOtherNotebookWarning = localize(
+        'DataScience.usingPreviewNotebookWithOtherNotebookWarning',
+        'Using the Preview Notebook Editor along with the stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
+    );
+    export const launchNotebookTrustPrompt = localize(
+        'DataScience.launchNotebookTrustPrompt',
+        'A Notebook could execute harmful code when opened. Some cells & outputs have been hidden. Do you trust this notebook?'
+    );
+    export const trustNotebook = localize('DataScience.launchNotebookTrustPrompt.yes', 'Trust');
+    export const doNotTrustNotebook = localize('DataScience.launchNotebookTrustPrompt.no', 'Do not trust');
+    export const previewNotebookOnlySupportedInVSCInsiders = localize(
+        'DataScience.previewNotebookOnlySupportedInVSCInsiders',
+        'The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code.'
+    );
 }
 
 export namespace StartPage {
@@ -1128,7 +1198,7 @@ export namespace Testing {
 export namespace OutdatedDebugger {
     export const outdatedDebuggerMessage = localize(
         'OutdatedDebugger.updateDebuggerMessage',
-        'We noticed you are attaching to ptvsd (Python debugger), which will be deprecated on May 1st, 2020. Please switch to [debugpy](https://aka.ms/migrateToDebugpy).'
+        'We noticed you are attaching to ptvsd (Python debugger), which was deprecated on May 1st, 2020. Please switch to [debugpy](https://aka.ms/migrateToDebugpy).'
     );
 }
 

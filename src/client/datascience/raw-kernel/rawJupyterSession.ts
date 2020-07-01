@@ -10,7 +10,7 @@ import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
@@ -123,9 +123,6 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.connected = false;
             throw error;
         }
-
-        // Start our restart session at this point
-        this.startRestartSession();
 
         this.connected = true;
         return (newSession as RawSession).kernelProcess.kernelSpec;

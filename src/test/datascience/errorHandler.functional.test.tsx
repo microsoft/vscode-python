@@ -38,7 +38,7 @@ suite('DataScience Error Handler Functional Tests', () => {
         jupyterExecution.setup((jup) => jup.getUsableJupyterPython()).returns(() => Promise.resolve(undefined));
         ioc.serviceManager.rebindInstance<IJupyterExecution>(IJupyterExecution, jupyterExecution.object);
 
-        ioc.createWebView(() => mountConnectedMainPanel('interactive'), vsls.Role.None);
+        ioc.createWebView(() => mountConnectedMainPanel('interactive'), 'default', vsls.Role.None);
 
         ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         ioc.get<IJupyterExecution>(IJupyterExecution);

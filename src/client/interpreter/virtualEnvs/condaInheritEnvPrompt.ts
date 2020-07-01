@@ -9,7 +9,7 @@ import { traceDecorators, traceError } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IBrowserService, IPersistentStateFactory } from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
-import { InterpreterType } from '../../pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../contracts';

@@ -21,7 +21,7 @@ import {
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/info';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
@@ -53,7 +53,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
     public get onDidChangeInterpreterInformation(): Event<PythonInterpreter> {
         return this.didChangeInterpreterInformation.event;
     }
+    public get onDidChangeInterpreterConfiguration(): Event<Uri | undefined> {
+        return this.didChangeInterpreterConfigurationEmitter.event;
+    }
     public _pythonPathSetting: string = '';
+    private readonly didChangeInterpreterConfigurationEmitter = new EventEmitter<Uri | undefined>();
     private readonly locator: IInterpreterLocatorService;
     private readonly persistentStateFactory: IPersistentStateFactory;
     private readonly configService: IConfigurationService;
@@ -216,6 +220,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
      * The format is `Python <Version> <bitness> (<env name>: <env type>)`
      * E.g. `Python 3.5.1 32-bit (myenv2: virtualenv)`
      * @param {Partial<PythonInterpreter>} info
+     * @param {Uri} [resource]
      * @returns {string}
      * @memberof InterpreterService
      */
@@ -261,6 +266,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return store;
     }
     public _onConfigChanged = (resource?: Uri) => {
+        this.didChangeInterpreterConfigurationEmitter.fire(resource);
         // Check if we actually changed our python path
         const pySettings = this.configService.getSettings(resource);
         if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {

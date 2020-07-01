@@ -5,7 +5,7 @@ import json
 import sys
 
 obj = {}
-obj["versionInfo"] = sys.version_info[:4]
+obj["versionInfo"] = tuple(sys.version_info)
 obj["sysPrefix"] = sys.prefix
 obj["version"] = sys.version
 obj["is64Bit"] = sys.maxsize > 2 ** 32

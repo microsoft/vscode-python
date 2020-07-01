@@ -8,7 +8,7 @@ import { Uri } from 'vscode';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { ILocalResourceUriConverter, INotebook } from '../types';

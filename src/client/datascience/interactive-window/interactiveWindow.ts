@@ -22,6 +22,7 @@ import {
     GLOBAL_MEMENTO,
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExperimentsManager,
     IMemento,
     IPersistentStateFactory,
@@ -30,7 +31,7 @@ import {
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
@@ -113,7 +114,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
+        @inject(IExperimentService) expService: IExperimentService
     ) {
         super(
             listeners,
@@ -150,7 +152,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             experimentsManager,
             switcher,
             notebookProvider,
-            useCustomEditorApi
+            useCustomEditorApi,
+            expService
         );
 
         // Send a telemetry event to indicate window is opening
@@ -391,7 +394,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return this.submitCode(code, file, line, undefined, undefined, debug ? { runByLine: false } : undefined);
     }
 
-    @captureTelemetry(Telemetry.ExportNotebook, undefined, false)
+    @captureTelemetry(Telemetry.ExportNotebookInteractive, undefined, false)
     // tslint:disable-next-line: no-any no-empty
     private async export(cells: ICell[]) {
         // Should be an array of cells

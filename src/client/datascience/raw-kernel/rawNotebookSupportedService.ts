@@ -13,7 +13,7 @@ import { IRawNotebookSupportedService } from '../types';
 @injectable()
 export class RawNotebookSupportedService implements IRawNotebookSupportedService {
     // Keep track of our ZMQ import check, this doesn't change with settings so we only want to do this once
-    private _zmqSupported: boolean | undefined;
+    private _zmqSupportedPromise: Promise<boolean> | undefined;
 
     constructor(
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
@@ -48,21 +48,24 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
 
     // Check to see if this machine supports our local ZMQ launching
     private async zmqSupported(): Promise<boolean> {
-        if (this._zmqSupported !== undefined) {
-            return this._zmqSupported;
+        if (!this._zmqSupportedPromise) {
+            this._zmqSupportedPromise = this.zmqSupportedImpl();
         }
 
+        return this._zmqSupportedPromise;
+    }
+
+    private async zmqSupportedImpl(): Promise<boolean> {
         try {
             await import('zeromq');
             traceInfo(`ZMQ install verified.`);
             sendTelemetryEvent(Telemetry.ZMQSupported);
-            this._zmqSupported = true;
         } catch (e) {
             traceError(`Exception while attempting zmq :`, e);
             sendTelemetryEvent(Telemetry.ZMQNotSupported);
-            this._zmqSupported = false;
+            return false;
         }
 
-        return this._zmqSupported;
+        return true;
     }
 }

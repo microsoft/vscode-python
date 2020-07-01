@@ -54,6 +54,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private totalWaitTime: number = 0;
     private totalWaitedMessages: number = 0;
     private hookCount: number = 0;
+    private fullHandleMessage?: { id: string; promise: Deferred<void> };
     /**
      * This will be true if user has executed something that has resulted in the use of ipywidgets.
      * We make this determinination based on whether we see messages coming from backend kernel of a specific shape.
@@ -108,7 +109,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 this.sendRawPayloadToKernelSocket(deserializeDataViews(message.payload)![0]);
                 break;
 
-            case IPyWidgetMessages.IPyWidgets_msg_handled:
+            case IPyWidgetMessages.IPyWidgets_msg_received:
                 this.onKernelSocketResponse(message.payload);
                 break;
 
@@ -126,6 +127,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
             case IPyWidgetMessages.IPyWidgets_MessageHookResult:
                 this.handleMessageHookResponse(message.payload);
+                break;
+
+            case IPyWidgetMessages.IPyWidgets_iopub_msg_handled:
+                this.iopubMessageHandled(message.payload);
                 break;
 
             default:
@@ -245,10 +250,38 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         return promise.promise;
     }
 
+    // Determine if a message can just be added into the message queue or if we need to wait for it to be
+    // fully handled on both the UI and extension side before we process the next message incoming
+    private messageNeedsFullHandle(message: any) {
+        // We only get a handled callback for iopub messages, so this channel must be iopub
+        if (message.channel === 'iopub') {
+            if (message.header?.msg_type === 'comm_msg') {
+                // IOPub comm messages need to be fully handled
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Callback from the UI kernel when an iopubMessage has been fully handled
+    private iopubMessageHandled(payload: any) {
+        const msgId = payload.id;
+        // We don't fully handle all iopub messages, so check our id here
+        if (this.fullHandleMessage && this.fullHandleMessage.id === msgId) {
+            this.fullHandleMessage.promise.resolve();
+            this.fullHandleMessage = undefined;
+        }
+    }
+
     private async onKernelSocketMessage(data: WebSocketData): Promise<void> {
+        // Hooks expect serialized data as this normally comes from a WebSocket
+        let message;
+
         if (!this.isUsingIPyWidgets) {
-            // Hooks expect serialized data as this normally comes from a WebSocket
-            const message = this.deserialize(data as any) as any;
+            if (!message) {
+                message = this.deserialize(data as any) as any;
+            }
 
             // Check for hints that would indicate whether ipywidgest are used in outputs.
             if (
@@ -263,6 +296,17 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         const msgUuid = uuid();
         const promise = createDeferred<void>();
         this.waitingMessageIds.set(msgUuid, { startTime: Date.now(), resultPromise: promise });
+
+        // Check if we need to fully handle this message on UI and Extension side before we move to the next
+        if (this.isUsingIPyWidgets) {
+            if (!message) {
+                message = this.deserialize(data as any) as any;
+            }
+            if (this.messageNeedsFullHandle(message)) {
+                this.fullHandleMessage = { id: message.header.msg_id, promise: createDeferred<void>() };
+            }
+        }
+
         if (typeof data === 'string') {
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, { id: msgUuid, data });
         } else {
@@ -272,9 +316,24 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             });
         }
 
+        // There are three handling states that we have for messages here
+        // 1. If we have not detected ipywidget usage at all, we just forward messages to the kernel
+        // 2. If we have detected ipywidget usage. We wait on our message to be received, but not
+        //      possibly processed yet by the UI kernel. This make sure our ordering is in sync
+        // 3. For iopub comm messages we wait for them to be fully handled by the UI kernel
+        //      and the Extension kernel as they may be required to do things like
+        //      register message hooks on both sides before we process the nextExtension message
+
         // If there are no ipywidgets thusfar in the notebook, then no need to synchronize messages.
         if (this.isUsingIPyWidgets) {
             await promise.promise;
+
+            // Comm specific iopub messages we need to wait until they are full handled
+            // by both the UI and extension side before we move forward
+            if (this.fullHandleMessage) {
+                await this.fullHandleMessage.promise.promise;
+                this.fullHandleMessage = undefined;
+            }
         }
     }
     private onKernelSocketResponse(payload: { id: string }) {
@@ -358,20 +417,38 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     private registerMessageHook(msgId: string) {
-        if (this.notebook && !this.messageHooks.has(msgId)) {
-            this.hookCount += 1;
-            const callback = this.messageHookCallback.bind(this);
-            this.messageHooks.set(msgId, callback);
-            this.notebook.registerMessageHook(msgId, callback);
+        try {
+            if (this.notebook && !this.messageHooks.has(msgId)) {
+                this.hookCount += 1;
+                const callback = this.messageHookCallback.bind(this);
+                this.messageHooks.set(msgId, callback);
+                this.notebook.registerMessageHook(msgId, callback);
+            }
+        } finally {
+            // Regardless of if we registered successfully or not, send back a message to the UI
+            // that we are done with extension side handling of this message
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled, {
+                id: msgId,
+                type: IPyWidgetMessages.IPyWidgets_RegisterMessageHook
+            });
         }
     }
 
     private possiblyRemoveMessageHook(args: { hookMsgId: string; lastHookedMsgId: string | undefined }) {
         // Message hooks might need to be removed after a certain message is processed.
-        if (args.lastHookedMsgId) {
-            this.pendingHookRemovals.set(args.lastHookedMsgId, args.hookMsgId);
-        } else {
-            this.removeMessageHook(args.hookMsgId);
+        try {
+            if (args.lastHookedMsgId) {
+                this.pendingHookRemovals.set(args.lastHookedMsgId, args.hookMsgId);
+            } else {
+                this.removeMessageHook(args.hookMsgId);
+            }
+        } finally {
+            // Regardless of if we removed the hook, added to pending removals or just failed, send back a message to the UI
+            // that we are done with extension side handling of this message
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled, {
+                id: args.hookMsgId,
+                type: IPyWidgetMessages.IPyWidgets_RemoveMessageHook
+            });
         }
     }
 

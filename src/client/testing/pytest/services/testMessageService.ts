@@ -21,6 +21,7 @@ export class TestMessageService implements ITestMessageService {
      * Condense the test details down to just the potentially relevant information. Messages
      * should only be created for tests that were actually run.
      *
+     * @param rootDirectory
      * @param testResults Details about all known tests.
      */
     public async getFilteredTestMessages(rootDirectory: string, testResults: Tests): Promise<IPythonTestMessage[]> {

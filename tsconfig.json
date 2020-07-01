@@ -2,19 +2,12 @@
     "compilerOptions": {
         "baseUrl": ".",
         "paths": {
-            "*": [
-                "types/*"
-            ]
+            "*": ["types/*"]
         },
         "module": "commonjs",
         "target": "es2018",
         "outDir": "out",
-        "lib": [
-            "es6",
-            "es2018",
-            "dom",
-            "ES2019"
-        ],
+        "lib": ["es6", "es2018", "dom", "ES2019"],
         "jsx": "react",
         "sourceMap": true,
         "rootDir": "src",

@@ -5,7 +5,9 @@
 
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
+import type { ISignal, Signal } from '@phosphor/signaling';
 import * as WebSocketWS from 'ws';
+import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { deserializeDataViews, serializeDataViews } from '../../client/common/utils/serializers';
 import {
     IInteractiveWindowMapping,
@@ -20,14 +22,15 @@ import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 // Proxy kernel that wraps the default kernel. We need this entire class because
 // we can't derive from DefaultKernel.
 class ProxyKernel implements IMessageHandler, Kernel.IKernel {
+    private readonly _ioPubMessageSignal: Signal<this, KernelMessage.IIOPubMessage>;
+    public get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
+        return this._ioPubMessageSignal;
+    }
     public get terminated() {
         return this.realKernel.terminated as any;
     }
     public get statusChanged() {
         return this.realKernel.statusChanged as any;
-    }
-    public get iopubMessage() {
-        return this.realKernel.iopubMessage as any;
     }
     public get unhandledMessage() {
         return this.realKernel.unhandledMessage as any;
@@ -77,6 +80,8 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     private messageHook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>;
     private messageHooks: Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>;
     private lastHookedMessageId: string | undefined;
+    // Messages that are awaiting extension messages to be fully handled
+    private awaitingExtensionMessage: Map<string, Deferred<void>>;
     constructor(options: KernelSocketOptions, private postOffice: PostOffice) {
         // Dummy websocket we give to the underlying real kernel
         let proxySocketInstance: any;
@@ -108,6 +113,8 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         }
         const settings = ServerConnection.makeSettings({ WebSocket: ProxyWebSocket as any, wsUrl: 'BOGUS_PVSC' });
 
+        this.awaitingExtensionMessage = new Map<string, Deferred<void>>();
+
         // This is crucial, the clientId must match the real kernel in extension.
         // All messages contain the clientId as `session` in the request.
         // If this doesn't match the actual value, then things can and will go wrong.
@@ -121,6 +128,13 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
             },
             options.id
         );
+
+        // Hook up to watch iopub messages from the real kernel
+        // tslint:disable-next-line: no-require-imports
+        const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
+        this._ioPubMessageSignal = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
+        this.realKernel.iopubMessage.connect(this.onIOPubMessage, this);
+
         postOffice.addHandler(this);
         this.websocket = proxySocketInstance;
         this.messageHook = this.messageHookInterceptor.bind(this);
@@ -224,7 +238,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ): void {
-        // When a comm target has been regisered, we need to register this in the real kernel in extension side.
+        // When a comm target has been registered, we need to register this in the real kernel in extension side.
         // Hence send that message to extension.
         this.postOffice.sendMessage<IInteractiveWindowMapping>(
             IPyWidgetMessages.IPyWidgets_registerCommTarget,
@@ -269,6 +283,10 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
                 this.handleMirrorExecute(payload);
                 break;
 
+            case IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled:
+                this.extensionOperationFinished(payload);
+                break;
+
             default:
                 break;
         }
@@ -278,6 +296,17 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
+        // We don't want to finish our processing of this message until the extension has told us that it has finished
+        // With the extension side registering of the message hook
+        const waitPromise = createDeferred<void>();
+
+        // A message could cause multiple callback waits, so use id+type as key
+        const key = this.generateExtensionResponseKey(
+            msgId,
+            IPyWidgetMessages.IPyWidgets_RegisterMessageHook.toString()
+        );
+        this.awaitingExtensionMessage.set(key, waitPromise);
+
         // Tell the other side about this.
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RegisterMessageHook, msgId);
 
@@ -288,10 +317,19 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         window.console.log(`Registering hook for ${msgId}`);
         this.realKernel.registerMessageHook(msgId, this.messageHook);
     }
+
     public removeMessageHook(
         msgId: string,
         _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
+        // We don't want to finish our processing of this message until the extension has told us that it has finished
+        // With the extension side removing of the message hook
+        const waitPromise = createDeferred<void>();
+
+        // A message could cause multiple callback waits, so use id+type as key
+        const key = this.generateExtensionResponseKey(msgId, IPyWidgetMessages.IPyWidgets_RemoveMessageHook.toString());
+        this.awaitingExtensionMessage.set(key, waitPromise);
+
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RemoveMessageHook, {
             hookMsgId: msgId,
             lastHookedMsgId: this.lastHookedMessageId
@@ -306,10 +344,27 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.realKernel.removeMessageHook(msgId, this.messageHook);
     }
 
+    // Called when the extension has finished an operation that we are waiting for in message processing
+    private extensionOperationFinished(payload: any) {
+        //const key = payload.id + payload.type;
+        const key = `${payload.id}${payload.type}`;
+
+        const waitPromise = this.awaitingExtensionMessage.get(key);
+
+        if (waitPromise) {
+            waitPromise.resolve();
+            this.awaitingExtensionMessage.delete(key);
+        }
+    }
+
     private sendResponse(id: string) {
-        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg_handled, {
+        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg_received, {
             id
         });
+    }
+
+    private generateExtensionResponseKey(msgId: string, msgType: string): string {
+        return `${msgId}${msgType}`;
     }
 
     private fakeOpenSocket() {
@@ -404,6 +459,40 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
             this.websocket.sendEnabled = true;
         }
         this.sendResponse(payload.id);
+    }
+
+    // When the real kernel handles iopub messages notify the Extension side and then forward on the message
+    // Note, this message comes from the kernel after it is done handling the message async
+    private onIOPubMessage(_sender: Kernel.IKernel, message: KernelMessage.IIOPubMessage) {
+        // If we are not waiting for anything on the extension just send it
+        if (this.awaitingExtensionMessage.size <= 0) {
+            this.finishIOPubMessage(message);
+        } else {
+            // If we are waiting for something from the extension, wait for all that to finish before
+            // we send the message that we are done handling this message
+            // Since the Extension is blocking waiting for this message to be handled we know all extension message are
+            // related to this message or before and should be resolved before we move on
+            const extensionPromises = Array.from(this.awaitingExtensionMessage.values()).map((value) => {
+                return value.promise;
+            });
+            Promise.all(extensionPromises)
+                .then(() => {
+                    // Fine to wait and send this in the catch as the Extension is blocking new messages for this and the UI kernel
+                    // has already finished handling it
+                    this.finishIOPubMessage(message);
+                })
+                .catch(() => {
+                    window.console.log('Failed to send iopub_msg_handled message');
+                });
+        }
+    }
+
+    // Finish an iopub message by sending a message to the UI and then emitting that we are done with it
+    private finishIOPubMessage(message: KernelMessage.IIOPubMessage) {
+        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_iopub_msg_handled, {
+            id: message.header.msg_id
+        });
+        this._ioPubMessageSignal.emit(message);
     }
 }
 

@@ -9,7 +9,7 @@ import * as uuid from 'uuid/v4';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { IJupyterKernelSpec } from '../types';

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { InterpreterType } from '../../pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../pythonEnvironments/info';
 export const IVirtualEnvironmentManager = Symbol('VirtualEnvironmentManager');
 export interface IVirtualEnvironmentManager {
     getEnvironmentName(pythonPath: string, resource?: Uri): Promise<string>;

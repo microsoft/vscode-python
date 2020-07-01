@@ -6,7 +6,6 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import type {
-    NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookData,
     NotebookDocument,
     NotebookDocumentBackup,
@@ -15,10 +14,16 @@ import type {
     NotebookDocumentOpenContext
 } from 'vscode-proposed';
 import { ICommandManager } from '../../common/application/types';
-import { captureTelemetry } from '../../telemetry';
+import { MARKDOWN_LANGUAGE } from '../../common/constants';
+import { DataScience } from '../../common/utils/localize';
+import { captureTelemetry, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { notebookModelToVSCNotebookData } from './helpers/helpers';
+import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
+import { INotebookContentProvider } from './types';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**
  * This class is responsible for reading a notebook file (ipynb or other files) and returning VS Code with the NotebookData.
@@ -29,22 +34,50 @@ import { notebookModelToVSCNotebookData } from './helpers/helpers';
  * When saving, VSC will provide their model and we need to take that and merge it with an existing ipynb json (if any, to preserve metadata).
  */
 @injectable()
-export class NotebookContentProvider implements VSCodeNotebookContentProvider {
+export class NotebookContentProvider implements INotebookContentProvider {
     private notebookChanged = new EventEmitter<NotebookDocumentEditEvent>();
     public get onDidChangeNotebook() {
         return this.notebookChanged.event;
     }
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(NotebookEditorCompatibilitySupport)
+        private readonly compatibilitySupport: NotebookEditorCompatibilitySupport
     ) {}
+    public notifyChangesToDocument(document: NotebookDocument) {
+        this.notebookChanged.fire({ document });
+    }
     public async openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): Promise<NotebookData> {
-        const model = await this.notebookStorage.load(uri, undefined, !openContext.backupId);
+        if (!this.compatibilitySupport.canOpenWithVSCodeNotebookEditor(uri)) {
+            // If not supported, return a notebook with error displayed.
+            // We cannot, not display a notebook.
+            return {
+                cells: [
+                    {
+                        cellKind: vscodeNotebookEnums.CellKind.Markdown,
+                        language: MARKDOWN_LANGUAGE,
+                        source: `# ${DataScience.usingPreviewNotebookWithOtherNotebookWarning()}`,
+                        metadata: { editable: false, runnable: false },
+                        outputs: []
+                    }
+                ],
+                languages: [],
+                metadata: { cellEditable: false, editable: false, runnable: false }
+            };
+        }
+        // If there's no backup id, then skip loading dirty contents.
+        const model = await (openContext.backupId
+            ? this.notebookStorage.load(uri, undefined, openContext.backupId, true)
+            : this.notebookStorage.load(uri, undefined, true, true));
+
+        setSharedProperty('ds_notebookeditor', 'native');
+        sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cells.length });
         return notebookModelToVSCNotebookData(model);
     }
     @captureTelemetry(Telemetry.Save, undefined, true)
     public async saveNotebook(document: NotebookDocument, cancellation: CancellationToken) {
-        const model = await this.notebookStorage.load(document.uri);
+        const model = await this.notebookStorage.load(document.uri, undefined, undefined, true);
         if (cancellation.isCancellationRequested) {
             return;
         }
@@ -60,7 +93,7 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
         document: NotebookDocument,
         cancellation: CancellationToken
     ): Promise<void> {
-        const model = await this.notebookStorage.load(document.uri);
+        const model = await this.notebookStorage.load(document.uri, undefined, undefined, true);
         if (!cancellation.isCancellationRequested) {
             await this.notebookStorage.saveAs(model, targetResource);
         }
@@ -73,12 +106,12 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
         _context: NotebookDocumentBackupContext,
         cancellation: CancellationToken
     ): Promise<NotebookDocumentBackup> {
-        const model = await this.notebookStorage.load(document.uri);
-        const id = this.notebookStorage.getBackupId(model);
-        this.notebookStorage.backup(model, cancellation).ignoreErrors();
+        const model = await this.notebookStorage.load(document.uri, undefined, undefined, true);
+        const id = this.notebookStorage.generateBackupId(model);
+        await this.notebookStorage.backup(model, cancellation, id);
         return {
             id,
-            delete: () => this.notebookStorage.deleteBackup(model).ignoreErrors() // This cleans up after save has happened.
+            delete: () => this.notebookStorage.deleteBackup(model, id).ignoreErrors()
         };
     }
 }

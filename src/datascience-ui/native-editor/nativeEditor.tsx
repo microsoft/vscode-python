@@ -94,6 +94,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                     className="add-cell-line-top"
                     click={this.insertAboveFirst}
                     baseTheme={this.props.baseTheme}
+                    isNotebookTrusted={this.props.isNotebookTrusted}
                 />
             );
 
@@ -125,7 +126,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         setTimeout(() => this.props.insertAboveFirst(), 1);
     }
     private renderToolbarPanel() {
-        return <ToolbarComponent></ToolbarComponent>;
+        return <ToolbarComponent isNotebookTrusted={this.props.isNotebookTrusted}></ToolbarComponent>;
     }
 
     private renderVariablePanel(baseTheme: string) {
@@ -197,8 +198,15 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         this.props.getVariableData(this.props.currentExecutionCount, startIndex, pageSize);
     };
 
+    private isNotebookTrusted = () => {
+        return this.props.isNotebookTrusted;
+    };
+
     // tslint:disable-next-line: cyclomatic-complexity
     private mainKeyDown = (event: KeyboardEvent) => {
+        if (!this.isNotebookTrusted()) {
+            return; // Disable keyboard interaction with untrusted notebooks
+        }
         // Handler for key down presses in the main panel
         switch (event.key) {
             // tslint:disable-next-line: no-suspicious-comment
@@ -217,11 +225,11 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                     !getSelectedAndFocusedInfo(this.props).focusedCellId &&
                     !this.props.settings?.extraSettings.useCustomEditorApi
                 ) {
-                    if (event.shiftKey && !event.ctrlKey && !event.altKey) {
+                    if (event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey) {
                         event.stopPropagation();
                         this.props.redo();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Redo);
-                    } else if (!event.shiftKey && !event.altKey && !event.ctrlKey) {
+                    } else if (!event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
                         event.stopPropagation();
                         this.props.undo();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Undo);
@@ -309,6 +317,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                     baseTheme={this.props.baseTheme}
                     className="add-cell-line-cell"
                     click={addNewCell}
+                    isNotebookTrusted={this.props.isNotebookTrusted}
                 />
             ) : null;
 
@@ -354,6 +363,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                                 : false
                         }
                         language={this.props.kernel.language}
+                        isNotebookTrusted={this.props.isNotebookTrusted}
                     />
                 </ErrorBoundary>
                 {lastLine}

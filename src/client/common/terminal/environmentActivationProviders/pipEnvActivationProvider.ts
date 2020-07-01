@@ -12,7 +12,7 @@ import {
     IPipEnvService,
     PIPENV_SERVICE
 } from '../../../interpreter/contracts';
-import { InterpreterType } from '../../../pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../../pythonEnvironments/info';
 import { IWorkspaceService } from '../../application/types';
 import { IFileSystem } from '../../platform/types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';

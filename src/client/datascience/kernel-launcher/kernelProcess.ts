@@ -11,7 +11,7 @@ import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop, swallowExceptions } from '../../common/utils/misc';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { cleanEnvironment, findIndexOfConnectionFile } from '../jupyter/kernels/helpers';

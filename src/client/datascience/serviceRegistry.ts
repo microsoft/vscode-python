@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { UseCustomEditorApi, UseNativeEditorApi } from '../common/constants';
+import { UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
 import { NotebookEditorSupport } from '../common/experiments/groups';
 import { StartPage } from '../common/startPage/startPage';
 import { IStartPage } from '../common/startPage/types';
 import { IExperimentsManager } from '../common/types';
-import { ProtocolParser } from '../debugger/debugAdapter/Common/protocolParser';
-import { IProtocolParser } from '../debugger/debugAdapter/types';
+import { ProtocolParser } from '../debugger/extension/helpers/protocolParser';
+import { IProtocolParser } from '../debugger/extension/types';
 import { IServiceManager } from '../ioc/types';
 import { Activation } from './activation';
 import { CodeCssGenerator } from './codeCssGenerator';
@@ -17,7 +17,7 @@ import { CommandRegistry } from './commands/commandRegistry';
 import { ExportCommands } from './commands/exportCommands';
 import { KernelSwitcherCommand } from './commands/kernelSwitcher';
 import { JupyterServerSelectorCommand } from './commands/serverSelector';
-import { Identifiers } from './constants';
+import { Identifiers, OurNotebookProvider, VSCodeNotebookProvider } from './constants';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { DataViewer } from './data-viewing/dataViewer';
 import { DataViewerDependencyService } from './data-viewing/dataViewerDependencyService';
@@ -35,14 +35,15 @@ import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { HoverProvider } from './editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
+import { ExportBase } from './export/exportBase';
 import { ExportManager } from './export/exportManager';
 import { ExportManagerDependencyChecker } from './export/exportManagerDependencyChecker';
 import { ExportManagerFileOpener } from './export/exportManagerFileOpener';
-import { ExportManagerFilePicker, IExportManagerFilePicker } from './export/exportManagerFilePicker';
+import { ExportManagerFilePicker } from './export/exportManagerFilePicker';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
-import { ExportFormat, IExport, IExportManager } from './export/types';
+import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './export/types';
 import { GatherListener } from './gather/gatherListener';
 import { GatherLogger } from './gather/gatherLogger';
 import { DebugListener } from './interactive-common/debugListener';
@@ -53,6 +54,7 @@ import { NotebookServerProvider } from './interactive-common/notebookServerProvi
 import { NotebookUsageTracker } from './interactive-common/notebookUsageTracker';
 import { ShowPlotListener } from './interactive-common/showPlotListener';
 import { AutoSaveService } from './interactive-ipynb/autoSaveService';
+import { DigestStorage } from './interactive-ipynb/digestStorage';
 import { NativeEditor } from './interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorOldWebView } from './interactive-ipynb/nativeEditorOldWebView';
@@ -63,6 +65,7 @@ import { NativeEditorStorage } from './interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
 import { NativeEditorViewTracker } from './interactive-ipynb/nativeEditorViewTracker';
 import { INotebookStorageProvider, NotebookStorageProvider } from './interactive-ipynb/notebookStorageProvider';
+import { TrustService } from './interactive-ipynb/trustService';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactive-window/interactiveWindowProvider';
@@ -107,9 +110,13 @@ import { KernelFinder } from './kernel-launcher/kernelFinder';
 import { KernelLauncher } from './kernel-launcher/kernelLauncher';
 import { IKernelFinder, IKernelLauncher } from './kernel-launcher/types';
 import { MultiplexingDebugService } from './multiplexingDebugService';
+import { NotebookEditorCompatibilitySupport } from './notebook/notebookEditorCompatibilitySupport';
 import { NotebookEditorProvider } from './notebook/notebookEditorProvider';
+import { NotebookEditorProviderWrapper } from './notebook/notebookEditorProviderWrapper';
 import { registerTypes as registerNotebookTypes } from './notebook/serviceRegistry';
 import { NotebookAndInteractiveWindowUsageTracker } from './notebookAndInteractiveTracker';
+import { NotebookModelFactory } from './notebookStorage/factory';
+import { INotebookModelFactory } from './notebookStorage/types';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables';
@@ -129,6 +136,7 @@ import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
     IDebugLocationTracker,
+    IDigestStorage,
     IGatherLogger,
     IGatherProvider,
     IInteractiveWindow,
@@ -162,7 +170,8 @@ import {
     IRawNotebookProvider,
     IRawNotebookSupportedService,
     IStatusProvider,
-    IThemeFinder
+    IThemeFinder,
+    ITrustService
 } from './types';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
@@ -174,11 +183,14 @@ export function registerTypes(serviceManager: IServiceManager) {
     const inCustomEditorApiExperiment = experiments.inExperiment(NotebookEditorSupport.customEditorExperiment);
     const usingCustomEditor = inCustomEditorApiExperiment;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
-    serviceManager.addSingletonInstance<boolean>(UseNativeEditorApi, useVSCodeNotebookAPI);
+    serviceManager.addSingletonInstance<boolean>(UseVSCodeNotebookEditorApi, useVSCodeNotebookAPI);
 
     // This condition is temporary.
-    const notebookEditorProvider = useVSCodeNotebookAPI ? NotebookEditorProvider : usingCustomEditor ? NativeEditorProvider : NativeEditorProviderOld;
-    serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, notebookEditorProvider);
+    serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);
+    serviceManager.addSingleton<INotebookEditorProvider>(OurNotebookProvider, usingCustomEditor ? NativeEditorProvider : NativeEditorProviderOld);
+    serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProviderWrapper);
+    serviceManager.add<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookEditorCompatibilitySupport);
+    serviceManager.add<NotebookEditorCompatibilitySupport>(NotebookEditorCompatibilitySupport, NotebookEditorCompatibilitySupport);
     if (!useVSCodeNotebookAPI) {
         serviceManager.add<INotebookEditor>(INotebookEditor, usingCustomEditor ? NativeEditor : NativeEditorOldWebView);
         // These are never going to be required for new VSC NB.
@@ -187,6 +199,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     }
 
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
+    serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
     serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
@@ -282,8 +295,11 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
     serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
     serviceManager.addSingleton<IExport>(IExport, ExportToPython, ExportFormat.python);
+    serviceManager.addSingleton<IExport>(IExport, ExportBase, 'Export Base');
     serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
     serviceManager.addSingleton<IExportManagerFilePicker>(IExportManagerFilePicker, ExportManagerFilePicker);
+    serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
+    serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
 
     registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);

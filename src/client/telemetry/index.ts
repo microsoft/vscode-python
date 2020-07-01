@@ -9,7 +9,7 @@ import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter'
 import { LanguageServerType } from '../activation/types';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
-import { AppinsightsKey, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
+import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
 import { TerminalShellType } from '../common/terminal/types';
 import { Architecture } from '../common/utils/platform';
@@ -18,13 +18,15 @@ import {
     JupyterCommands,
     NativeKeyboardCommandTelemetry,
     NativeMouseCommandTelemetry,
-    Telemetry
+    Telemetry,
+    VSCodeNativeTelemetry
 } from '../datascience/constants';
+import { ExportFormat } from '../datascience/export/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { LinterId } from '../linters/types';
-import { InterpreterType } from '../pythonEnvironments/discovery/types';
+import { InterpreterType } from '../pythonEnvironments/info';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger, TestTool } from './types';
@@ -58,13 +60,21 @@ export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolea
     return settings.globalValue === false ? true : false;
 }
 
-// Shared properties set by the IExperimentationTelemetry implementation.
-const sharedProperties: Record<string, string> = {};
+const sharedProperties: Record<string, any> = {};
 /**
  * Set shared properties for all telemetry events.
  */
-export function setSharedProperty(name: string, value: string): void {
-    sharedProperties[name] = value;
+export function setSharedProperty<P extends ISharedPropertyMapping, E extends keyof P>(name: E, value?: P[E]): void {
+    const propertyName = name as string;
+    // Ignore such shared telemetry during unit tests.
+    if (isUnitTestExecution() && propertyName.startsWith('ds_')) {
+        return;
+    }
+    if (value === undefined) {
+        delete sharedProperties[propertyName];
+    } else {
+        sharedProperties[propertyName] = value;
+    }
 }
 
 /**
@@ -143,6 +153,17 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 
         // Add shared properties to telemetry props (we may overwrite existing ones).
         Object.assign(customProperties, sharedProperties);
+
+        // Remove shared DS properties from core extension telemetry.
+        Object.keys(sharedProperties).forEach((shareProperty) => {
+            if (
+                customProperties[shareProperty] &&
+                shareProperty.startsWith('ds_') &&
+                !(eventNameSent.startsWith('DS_') || eventNameSent.startsWith('DATASCIENCE'))
+            ) {
+                delete customProperties[shareProperty];
+            }
+        });
 
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
@@ -301,6 +322,16 @@ function getCallsite(frame: stackTrace.StackFrame) {
         }
     }
     return parts.join('.');
+}
+
+/**
+ * Map all shared properties to their data types.
+ */
+export interface ISharedPropertyMapping {
+    /**
+     * For every DS telemetry we would like to know the type of Notebook Editor used when doing something.
+     */
+    ['ds_notebookeditor']: undefined | 'old' | 'custom' | 'native';
 }
 
 // Map all events to their properties
@@ -1638,9 +1669,13 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartExecuteNotebookCellPerceivedCold]: never | undefined;
     [Telemetry.ExecuteNativeCell]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
-    [Telemetry.ExportNotebook]: never | undefined;
-    [Telemetry.ExportPythonFile]: never | undefined;
-    [Telemetry.ExportPythonFileAndOutput]: never | undefined;
+    [Telemetry.ExportNotebookInteractive]: never | undefined;
+    [Telemetry.ExportPythonFileInteractive]: never | undefined;
+    [Telemetry.ExportPythonFileAndOutputInteractive]: never | undefined;
+    [Telemetry.ClickedExportNotebookAsQuickPick]: { format: ExportFormat };
+    [Telemetry.ExportNotebookAs]: { format: ExportFormat; cancelled?: boolean; successful?: boolean; opened?: boolean };
+    [Telemetry.ExportNotebookAsCommand]: { format: ExportFormat };
+    [Telemetry.ExportNotebookAsFailed]: { format: ExportFormat };
     [Telemetry.GetPasswordAttempt]: never | undefined;
     [Telemetry.GetPasswordFailure]: never | undefined;
     [Telemetry.GetPasswordSuccess]: never | undefined;
@@ -1655,10 +1690,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
-    [Telemetry.PtvsdInstallCancelled]: never | undefined;
-    [Telemetry.PtvsdInstallFailed]: never | undefined;
-    [Telemetry.PtvsdPromptToInstall]: never | undefined;
-    [Telemetry.PtvsdSuccessfullyInstalled]: never | undefined;
+    [Telemetry.DebugpyInstallCancelled]: never | undefined;
+    [Telemetry.DebugpyInstallFailed]: never | undefined;
+    [Telemetry.DebugpyPromptToInstall]: never | undefined;
+    [Telemetry.DebugpySuccessfullyInstalled]: never | undefined;
     [Telemetry.OpenNotebook]: { scope: 'command' | 'file' };
     [Telemetry.OpenNotebookAll]: never | undefined;
     [Telemetry.OpenedInteractiveWindow]: never | undefined;
@@ -2121,6 +2156,9 @@ export interface IEventNamePropertyMapping {
 
     // Start Page Events
     [Telemetry.StartPageViewed]: never | undefined;
+    [Telemetry.StartPageOpenedFromCommandPalette]: never | undefined;
+    [Telemetry.StartPageOpenedFromNewInstall]: never | undefined;
+    [Telemetry.StartPageOpenedFromNewUpdate]: never | undefined;
     [Telemetry.StartPageWebViewError]: never | undefined;
     [Telemetry.StartPageTime]: never | undefined;
     [Telemetry.StartPageClickedDontShowAgain]: never | undefined;
@@ -2135,4 +2173,14 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartPageOpenFileBrowser]: never | undefined;
     [Telemetry.StartPageOpenFolder]: never | undefined;
     [Telemetry.StartPageOpenWorkspace]: never | undefined;
+    [Telemetry.RunByLineStart]: never | undefined;
+    [Telemetry.RunByLineStep]: never | undefined;
+    [Telemetry.RunByLineStop]: never | undefined;
+    [Telemetry.RunByLineVariableHover]: never | undefined;
+    [VSCodeNativeTelemetry.AddCell]: never | undefined;
+    [VSCodeNativeTelemetry.DeleteCell]: never | undefined;
+    [VSCodeNativeTelemetry.MoveCell]: never | undefined;
+    [VSCodeNativeTelemetry.ChangeToCode]: never | undefined;
+    [VSCodeNativeTelemetry.ChangeToMarkdown]: never | undefined;
+    [VSCodeNativeTelemetry.RunAllCells]: never | undefined;
 }

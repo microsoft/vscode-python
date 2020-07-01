@@ -61,6 +61,7 @@ suite('Formatting - Notebooks', () => {
                     'src',
                     'test',
                     'datascience',
+                    'notebook',
                     'test.ipynb'
                 );
                 testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));

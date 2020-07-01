@@ -23,6 +23,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExperimentsManager,
     IMemento,
     WORKSPACE_MEMENTO
@@ -47,7 +48,8 @@ import {
     INotebookModel,
     INotebookProvider,
     IStatusProvider,
-    IThemeFinder
+    IThemeFinder,
+    ITrustService
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
@@ -61,6 +63,7 @@ enum AskForSaveResult {
 
 @injectable()
 export class NativeEditorOldWebView extends NativeEditor {
+    public readonly type = 'old';
     public get visible(): boolean {
         return this.viewState.visible;
     }
@@ -101,7 +104,9 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
-        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider
+        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
+        @inject(ITrustService) trustService: ITrustService,
+        @inject(IExperimentService) expService: IExperimentService
     ) {
         super(
             listeners,
@@ -132,7 +137,9 @@ export class NativeEditorOldWebView extends NativeEditor {
             asyncRegistry,
             switcher,
             notebookProvider,
-            useCustomEditorApi
+            useCustomEditorApi,
+            trustService,
+            expService
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.
@@ -174,6 +181,10 @@ export class NativeEditorOldWebView extends NativeEditor {
                     break;
 
                 case AskForSaveResult.No:
+                    // If there were changes, delete them
+                    if (this.model) {
+                        await this.storage.deleteBackup(this.model);
+                    }
                     // Close it
                     await super.close();
                     break;

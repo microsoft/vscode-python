@@ -8,7 +8,7 @@ import * as path from 'path';
 import { RegistryImplementation } from '../../../../client/common/platform/registry';
 import { IRegistry } from '../../../../client/common/platform/types';
 import { IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE } from '../../../../client/interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 import { getOSType, OSType } from '../../../common';
 import { TEST_TIMEOUT } from '../../../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../../../initialize';
@@ -18,6 +18,9 @@ suite('Python interpreter locator service', () => {
     let ioc: UnitTestIocContainer;
     let interpreters: PythonInterpreter[];
     suiteSetup(async function () {
+        // https://github.com/microsoft/vscode-python/issues/12634
+        // tslint:disable-next-line: no-invalid-this
+        return this.skip();
         // tslint:disable-next-line:no-invalid-this
         this.timeout(getOSType() === OSType.Windows ? TEST_TIMEOUT * 7 : TEST_TIMEOUT * 2);
         await initialize();

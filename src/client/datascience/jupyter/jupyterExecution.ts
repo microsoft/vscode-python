@@ -14,7 +14,7 @@ import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Telemetry } from '../constants';
@@ -363,7 +363,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
         } else {
             // If we have a URI spec up a connection info for it
-            return createRemoteConnectionInfo(options.uri, this.configuration.getSettings(undefined).datascience);
+            return createRemoteConnectionInfo(options.uri);
         }
     }
 

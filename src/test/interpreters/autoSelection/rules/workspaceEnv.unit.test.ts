@@ -35,7 +35,7 @@ import { IInterpreterAutoSelectionService } from '../../../../client/interpreter
 import { IInterpreterHelper, IInterpreterLocatorService } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { KnownPathsService } from '../../../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     type PythonPathInConfig = { workspaceFolderValue: string; workspaceValue: string };

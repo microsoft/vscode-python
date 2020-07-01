@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import * as code from 'vscode';
-import { Protocol2CodeConverter } from 'vscode-languageclient';
-// tslint:disable-next-line: match-default-export-name
-import protocolCompletionItem from 'vscode-languageclient/lib/protocolCompletionItem';
+// tslint:disable-next-line: import-name
+import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
+import { Protocol2CodeConverter } from 'vscode-languageclient/node';
 import * as proto from 'vscode-languageserver-protocol';
 
 // tslint:disable:no-any unified-signatures
@@ -69,8 +69,8 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
         const list = <proto.CompletionList>result;
         return new code.CompletionList(list.items.map(this.asCompletionItem.bind(this)), list.isIncomplete);
     }
-    public asCompletionItem(item: proto.CompletionItem): protocolCompletionItem {
-        const result = new protocolCompletionItem(item.label);
+    public asCompletionItem(item: proto.CompletionItem): ProtocolCompletionItem {
+        const result = new ProtocolCompletionItem(item.label);
         if (item.detail) {
             result.detail = item.detail;
         }

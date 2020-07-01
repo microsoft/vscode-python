@@ -8,7 +8,7 @@ import { IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterInformation, InterpreterType, PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { InterpreterInformation, InterpreterType, PythonInterpreter } from '../pythonEnvironments/info';
 import { IInterpreterHelper } from './contracts';
 import { IInterpreterHashProviderFactory } from './locators/types';
 

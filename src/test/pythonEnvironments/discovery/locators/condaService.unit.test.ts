@@ -17,7 +17,7 @@ import { Architecture } from '../../../../client/common/utils/platform';
 import { IInterpreterLocatorService, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { CondaService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 import { MockState } from '../../../interpreters/mocks';
 
 const untildify: (value: string) => string = require('untildify');

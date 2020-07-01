@@ -4,7 +4,7 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { LanguageClientOptions } from 'vscode-languageclient';
+import { LanguageClientOptions } from 'vscode-languageclient/node';
 import { DotNetLanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServerExtension } from '../../../client/activation/languageServer/languageServerExtension';
 import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';

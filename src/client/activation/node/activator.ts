@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-
 import { CancellationToken, CompletionItem, ProviderResult } from 'vscode';
-import * as vscodeLanguageClient from 'vscode-languageclient';
 // tslint:disable-next-line: import-name
-import ProtocolCompletionItem from 'vscode-languageclient/lib/protocolCompletionItem';
+import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
+import { CompletionResolveRequest } from 'vscode-languageclient/node';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -56,11 +55,7 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
             Object.assign(protoItem, item);
 
             const args = languageClient.code2ProtocolConverter.asCompletionItem(protoItem);
-            const result = await languageClient.sendRequest(
-                vscodeLanguageClient.CompletionResolveRequest.type,
-                args,
-                token
-            );
+            const result = await languageClient.sendRequest(CompletionResolveRequest.type, args, token);
 
             if (result) {
                 return languageClient.protocol2CodeConverter.asCompletionItem(result);

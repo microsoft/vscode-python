@@ -25,7 +25,7 @@ import { InterpreterAutoSelectionService } from '../../../../client/interpreter/
 import { NextAction } from '../../../../client/interpreter/autoSelection/rules/baseRule';
 import { SettingsInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/settings';
 import { IInterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection/types';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Auto Selection - Settings Rule', () => {
     let rule: SettingsInterpretersAutoSelectionRuleTest;

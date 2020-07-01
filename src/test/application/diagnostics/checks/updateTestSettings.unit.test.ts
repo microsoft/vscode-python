@@ -168,6 +168,12 @@ suite('Application Diagnostics - Check Test Settings', () => {
         assert.ok(!needsToBeFixed);
         verify(fs.readFile(__filename)).once();
     });
+    test('Verify `python.jediEnabled` is found in user settings', async () => {
+        when(fs.readFile(__filename)).thenResolve('"python.jediEnabled": false');
+        const needsToBeFixed = await diagnosticService.doesFileNeedToBeFixed(__filename);
+        assert.ok(needsToBeFixed);
+        verify(fs.readFile(__filename)).once();
+    });
 
     [
         {
@@ -216,34 +222,44 @@ suite('Application Diagnostics - Check Test Settings', () => {
             expectedContent: '{}'
         },
         {
+            testTitle: 'jediEnabled setting in comment',
+            contents: '{\n // "python.jediEnabled": true\n }',
+            expectedContent: '{\n // "python.jediEnabled": true\n }'
+        },
+        {
             testTitle: 'jediEnabled: true, no languageServer setting',
             contents: '{ "python.jediEnabled": true }',
-            expectedContent: '{"python.languageServer": "Jedi"}'
+            expectedContent: '{ "python.jediEnabled": true, "python.languageServer": "Jedi"}'
         },
         {
             testTitle: 'jediEnabled: true, languageServer setting present',
             contents: '{ "python.jediEnabled": true }',
-            expectedContent: '{"python.languageServer": "Jedi"}'
+            expectedContent: '{ "python.jediEnabled": true, "python.languageServer": "Jedi"}'
         },
         {
             testTitle: 'jediEnabled: false, no languageServer setting',
             contents: '{ "python.jediEnabled": false }',
-            expectedContent: '{"python.languageServer": "Microsoft"}'
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft"}'
         },
         {
             testTitle: 'jediEnabled: false, languageServer is Microsoft',
             contents: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft" }',
-            expectedContent: '{"python.languageServer": "Microsoft"}'
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft"}'
         },
         {
             testTitle: 'jediEnabled: false, languageServer is None',
             contents: '{ "python.jediEnabled": false, "python.languageServer": "None" }',
-            expectedContent: '{"python.languageServer": "None"}'
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "None"}'
         },
         {
             testTitle: 'jediEnabled: false, languageServer is Jedi',
             contents: '{ "python.jediEnabled": false, "python.languageServer": "Jedi" }',
-            expectedContent: '{"python.languageServer": "Jedi"}'
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Jedi"}'
+        },
+        {
+            testTitle: 'jediEnabled not present, languageServer is Microsoft',
+            contents: '{ "python.languageServer": "Microsoft" }',
+            expectedContent: '{ "python.languageServer": "Microsoft" }'
         }
     ].forEach((item) => {
         test(item.testTitle, async () => {

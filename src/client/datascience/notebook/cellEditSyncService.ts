@@ -4,27 +4,25 @@
 import { inject, injectable } from 'inversify';
 import { TextDocument, TextDocumentChangeEvent } from 'vscode';
 import type { NotebookCell, NotebookDocument } from '../../../../typings/vscode-proposed';
-import { splitMultilineString } from '../../../datascience-ui/common';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
-import { NotebookEditorSupport } from '../../common/experiments/groups';
-import { IDisposable, IDisposableRegistry, IExperimentsManager } from '../../common/types';
+import { traceError } from '../../common/logger';
+import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
-import { traceError } from '../../logging';
-import { INotebookEditorProvider, INotebookModel } from '../types';
+import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
+import { INotebookEditorProvider } from '../types';
 import { getOriginalCellId } from './helpers/cellMappers';
 
 @injectable()
 export class CellEditSyncService implements IExtensionSingleActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
-    private mappedDocuments = new WeakMap<TextDocument, { cellId: string; model: INotebookModel }>();
+    private mappedDocuments = new WeakMap<TextDocument, { cellId: string; model: VSCodeNotebookModel }>();
     private nonJupyterNotebookDocuments = new WeakSet<TextDocument>();
     constructor(
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
-        @inject(IExperimentsManager) private readonly experiment: IExperimentsManager
+        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider
     ) {
         disposableRegistry.push(this);
     }
@@ -34,9 +32,6 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
         }
     }
     public async activate(): Promise<void> {
-        if (!this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
-            return;
-        }
         this.documentManager.onDidChangeTextDocument(this.onDidChangeTextDocument, this, this.disposables);
     }
 
@@ -50,16 +45,7 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
             return;
         }
 
-        const cell = details.model.cells.find((item) => item.id === details.cellId);
-        if (!cell) {
-            traceError(
-                `Syncing Cell Editor aborted, Unable to find corresponding ICell for ${e.document.uri.toString()}`,
-                new Error('ICell not found')
-            );
-            return;
-        }
-
-        cell.data.source = splitMultilineString(e.document.getText());
+        details.model.updateCellSource(details.cellId, e.document.getText());
     }
 
     private getEditorsAndCell(cellDocument: TextDocument) {
@@ -108,6 +94,10 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
                 new Error('No INotebookModel in editor')
             );
             return;
+        }
+
+        if (!(editor.model instanceof VSCodeNotebookModel)) {
+            throw new Error('Notebook Model is not of type VSCodeNotebookModel');
         }
 
         this.mappedDocuments.set(cellDocument, { model: editor.model, cellId: getOriginalCellId(cell)! });

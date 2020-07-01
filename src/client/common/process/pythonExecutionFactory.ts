@@ -42,6 +42,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     private readonly daemonsPerPythonService = new Map<string, Promise<IPythonDaemonExecutionService>>();
     private readonly disposables: IDisposableRegistry;
     private readonly logger: IProcessLogger;
+    private readonly fileSystem: IFileSystem;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
@@ -54,19 +55,19 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
+        this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath
             ? options.pythonPath
             : this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
-        const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        processService.on('exec', processLogger.logProcess.bind(processLogger));
+        processService.on('exec', this.logger.logProcess.bind(this.logger));
 
         return createPythonService(
             pythonPath,
             processService,
-            this.serviceContainer.get<IFileSystem>(IFileSystem),
+            this.fileSystem,
             undefined,
             this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)
         );
@@ -164,11 +165,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             ? options.interpreter.path
             : this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = new ProcessService(this.decoder, { ...envVars });
-        const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        processService.on('exec', processLogger.logProcess.bind(processLogger));
-        this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
+        processService.on('exec', this.logger.logProcess.bind(this.logger));
+        this.disposables.push(processService);
 
-        return createPythonService(pythonPath, processService, this.serviceContainer.get<IFileSystem>(IFileSystem));
+        return createPythonService(pythonPath, processService, this.fileSystem);
     }
     // Not using this function for now because there are breaking issues with conda run (conda 4.8, PVSC 2020.1).
     // See https://github.com/microsoft/vscode-python/issues/9490
@@ -190,14 +190,13 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         if (condaVersion && gte(condaVersion, CONDA_RUN_VERSION) && condaEnvironment && condaFile && procService) {
             // Add logging to the newly created process service
             if (!processService) {
-                const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-                procService.on('exec', processLogger.logProcess.bind(processLogger));
-                this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(procService);
+                procService.on('exec', this.logger.logProcess.bind(this.logger));
+                this.disposables.push(procService);
             }
             return createPythonService(
                 pythonPath,
                 procService,
-                this.serviceContainer.get<IFileSystem>(IFileSystem),
+                this.fileSystem,
                 // This is what causes a CondaEnvironment to be returned:
                 [condaFile, condaEnvironment]
             );

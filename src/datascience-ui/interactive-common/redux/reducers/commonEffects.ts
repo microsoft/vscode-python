@@ -37,6 +37,13 @@ export namespace CommonEffects {
         };
     }
 
+    export function trustNotebook(arg: CommonReducerArg): IMainState {
+        return {
+            ...arg.prevState,
+            isNotebookTrusted: true
+        };
+    }
+
     export function startProgress(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,

@@ -15,7 +15,7 @@ import { traceError } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
 import { ICondaService, IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../types';
+import { InterpreterType, PythonInterpreter } from '../../../info';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName } from './conda';
 

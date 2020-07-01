@@ -3,14 +3,14 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationChangeEvent, WorkspaceFolder } from 'vscode';
-import { DocumentFilter } from 'vscode-languageclient';
+import { DocumentFilter } from 'vscode-languageclient/node';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators, traceError } from '../../common/logger';
 import { IConfigurationService, IExtensionContext, IPathUtils, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
 import { ILanguageServerFolderService, ILanguageServerOutputChannel } from '../types';
 

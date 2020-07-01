@@ -4,7 +4,7 @@
 import { inject, injectable, multiInject, named } from 'inversify';
 import { Terminal, Uri } from 'vscode';
 import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITerminalManager } from '../application/types';

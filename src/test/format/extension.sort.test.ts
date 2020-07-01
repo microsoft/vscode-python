@@ -12,7 +12,7 @@ import { SortImportsEditingProvider } from '../../client/providers/importSortPro
 import { ISortImportsEditingProvider } from '../../client/providers/types';
 import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { updateSetting } from '../common';
-import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
+import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_TIMEOUT } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 
 const sortingPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'sorting');
@@ -36,7 +36,9 @@ suite('Sorting', () => {
         await updateSetting('sortImports.args', [], Uri.file(sortingPath), configTarget);
         await closeActiveWindows();
     });
-    setup(async () => {
+    setup(async function () {
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(TEST_TIMEOUT * 2);
         await initializeTest();
         initializeDI();
         fs.writeFileSync(fileToFormatWithConfig, fs.readFileSync(originalFileToFormatWithConfig));

@@ -60,7 +60,9 @@ suite('DataScience Native Toolbar', () => {
             sendCommand: noopAny,
             toggleVariableExplorer: sinon.stub(),
             setVariableExplorerHeight: sinon.stub(),
-            variablesVisible: false
+            launchNotebookTrustPrompt: sinon.stub(),
+            variablesVisible: false,
+            isNotebookTrusted: true
         };
     });
     function mountToolbar() {

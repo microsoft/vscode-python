@@ -46,6 +46,7 @@ export namespace Commands {
     export const ImportNotebook = 'python.datascience.importnotebook';
     export const ImportNotebookFile = 'python.datascience.importnotebookfile';
     export const OpenNotebook = 'python.datascience.opennotebook';
+    export const OpenNotebookInPreviewEditor = 'python.datascience.opennotebookInPreviewEditor';
     export const SelectJupyterURI = 'python.datascience.selectjupyteruri';
     export const SelectJupyterCommandLine = 'python.datascience.selectjupytercommandline';
     export const ExportFileAsNotebook = 'python.datascience.exportfileasnotebook';
@@ -164,7 +165,7 @@ export enum Telemetry {
     CopySourceCode = 'DATASCIENCE.COPY_SOURCE',
     RestartKernel = 'DS_INTERNAL.RESTART_KERNEL',
     RestartKernelCommand = 'DATASCIENCE.RESTART_KERNEL_COMMAND',
-    ExportNotebook = 'DATASCIENCE.EXPORT_NOTEBOOK',
+    ExportNotebookInteractive = 'DATASCIENCE.EXPORT_NOTEBOOK',
     Undo = 'DATASCIENCE.UNDO',
     Redo = 'DATASCIENCE.REDO',
     /**
@@ -184,8 +185,28 @@ export enum Telemetry {
     SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL',
     SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
     Interrupt = 'DATASCIENCE.INTERRUPT',
-    ExportPythonFile = 'DATASCIENCE.EXPORT_PYTHON_FILE',
-    ExportPythonFileAndOutput = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT',
+    /**
+     * Exporting from the interactive window
+     */
+    ExportPythonFileInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE',
+    ExportPythonFileAndOutputInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT',
+    /**
+     * User clicked export as quick pick button
+     */
+    ClickedExportNotebookAsQuickPick = 'DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK',
+    /**
+     * exported a notebook
+     */
+    ExportNotebookAs = 'DATASCIENCE.EXPORT_NOTEBOOK_AS',
+    /**
+     * User invokes export as format from command pallet
+     */
+    ExportNotebookAsCommand = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_COMMAND',
+    /**
+     * An export to a specific format failed
+     */
+    ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
+
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',
     ConnectLocalJupyter = 'DS_INTERNAL.CONNECTLOCALJUPYTER',
@@ -250,10 +271,10 @@ export enum Telemetry {
     HashedCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE_PERF',
     HashedNotebookCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_NOTEBOOK_OUTPUT_MIME_TYPE_PERF',
     JupyterInstalledButNotKernelSpecModule = 'DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE',
-    PtvsdPromptToInstall = 'DATASCIENCE.PTVSD_PROMPT_TO_INSTALL',
-    PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
-    PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED',
-    PtvsdInstallCancelled = 'DATASCIENCE.PTVSD_INSTALL_CANCELLED',
+    DebugpyPromptToInstall = 'DATASCIENCE.DEBUGPY_PROMPT_TO_INSTALL',
+    DebugpySuccessfullyInstalled = 'DATASCIENCE.DEBUGPY_SUCCESSFULLY_INSTALLED',
+    DebugpyInstallFailed = 'DATASCIENCE.DEBUGPY_INSTALL_FAILED',
+    DebugpyInstallCancelled = 'DATASCIENCE.DEBUGPY_INSTALL_CANCELLED',
     ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL',
     ExecuteNativeCell = 'DATASCIENCE.NATIVE.EXECUTE_NATIVE_CELL',
     CreateNewNotebook = 'DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK',
@@ -321,6 +342,9 @@ export enum Telemetry {
     RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
     RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH',
     StartPageViewed = 'DS_INTERNAL.STARTPAGE_VIEWED',
+    StartPageOpenedFromCommandPalette = 'DS_INTERNAL.STARTPAGE_OPENED_FROM_COMMAND_PALETTE',
+    StartPageOpenedFromNewInstall = 'DS_INTERNAL.STARTPAGE_OPENED_FROM_NEW_INSTALL',
+    StartPageOpenedFromNewUpdate = 'DS_INTERNAL.STARTPAGE_OPENED_FROM_NEW_UPDATE',
     StartPageWebViewError = 'DS_INTERNAL.STARTPAGE_WEBVIEWERROR',
     StartPageTime = 'DS_INTERNAL.STARTPAGE_TIME',
     StartPageClickedDontShowAgain = 'DATASCIENCE.STARTPAGE_DONT_SHOW_AGAIN',
@@ -334,7 +358,11 @@ export enum Telemetry {
     StartPageOpenSampleNotebook = 'DATASCIENCE.STARTPAGE_OPEN_SAMPLE_NOTEBOOK',
     StartPageOpenFileBrowser = 'DATASCIENCE.STARTPAGE_OPEN_FILE_BROWSER',
     StartPageOpenFolder = 'DATASCIENCE.STARTPAGE_OPEN_FOLDER',
-    StartPageOpenWorkspace = 'DATASCIENCE.STARTPAGE_OPEN_WORKSPACE'
+    StartPageOpenWorkspace = 'DATASCIENCE.STARTPAGE_OPEN_WORKSPACE',
+    RunByLineStart = 'DATASCIENCE.RUN_BY_LINE',
+    RunByLineStep = 'DATASCIENCE.RUN_BY_LINE_STEP',
+    RunByLineStop = 'DATASCIENCE.RUN_BY_LINE_STOP',
+    RunByLineVariableHover = 'DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER'
 }
 
 export enum NativeKeyboardCommandTelemetry {
@@ -372,6 +400,21 @@ export enum NativeMouseCommandTelemetry {
     SelectServer = 'DATASCIENCE.NATIVE.MOUSE.SELECT_SERVER',
     Save = 'DATASCIENCE.NATIVE.MOUSE.SAVE',
     ToggleVariableExplorer = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_VARIABLE_EXPLORER'
+}
+
+/**
+ * Notebook editing in VS Code Notebooks is handled by VSC.
+ * There's no way for us to know whether user added a cell using keyboard or not.
+ * Similarly a cell could have been added as part of an undo operation.
+ * All we know is previously user had n # of cells and now they have m # of cells.
+ */
+export enum VSCodeNativeTelemetry {
+    AddCell = 'DATASCIENCE.VSCODE_NATIVE.INSERT_CELL',
+    RunAllCells = 'DATASCIENCE.VSCODE_NATIVE.RUN_ALL',
+    DeleteCell = 'DATASCIENCE.VSCODE_NATIVE.DELETE_CELL',
+    MoveCell = 'DATASCIENCE.VSCODE_NATIVE.MOVE_CELL',
+    ChangeToCode = 'DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_CODE', // Not guaranteed to work see, https://github.com/microsoft/vscode/issues/100042
+    ChangeToMarkdown = 'DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_MARKDOWN' // Not guaranteed to work see, https://github.com/microsoft/vscode/issues/100042
 }
 
 export namespace HelpLinks {
@@ -495,3 +538,6 @@ export namespace LiveShareCommands {
     export const rawKernelSupported = 'rawKernelSupported';
     export const createRawNotebook = 'createRawNotebook';
 }
+
+export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
+export const OurNotebookProvider = 'OurNotebookProvider';

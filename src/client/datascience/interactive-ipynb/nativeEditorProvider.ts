@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
-import { CancellationToken } from 'vscode-languageclient';
+import { CancellationToken } from 'vscode-languageclient/node';
 import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
 import {
     CustomDocument,
@@ -24,9 +24,9 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateNewNotebookUri } from '../common';
 import { Telemetry } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
+import { NotebookModelEditEvent } from '../notebookStorage/notebookModelEditEvent';
 import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';
-import { NotebookModelEditEvent } from './notebookModelEditEvent';
 import { INotebookStorageProvider } from './notebookStorageProvider';
 
 // Class that is registered as the custom editor provider for notebooks. VS code will call into this class when
@@ -89,7 +89,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         context: CustomDocumentOpenContext, // This has info about backups. right now we use our own data.
         _cancellation: CancellationToken
     ): Promise<CustomDocument> {
-        const model = await this.loadModel(uri, undefined, context.backupId ? false : true);
+        const model = await this.loadModel(uri, undefined, context.backupId);
         return {
             uri,
             dispose: () => model.dispose()
@@ -116,11 +116,11 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         cancellation: CancellationToken
     ): Promise<CustomDocumentBackup> {
         const model = await this.loadModel(document.uri);
-        const id = this.storage.getBackupId(model);
-        this.storage.backup(model, cancellation).ignoreErrors();
+        const id = this.storage.generateBackupId(model);
+        await this.storage.backup(model, cancellation, id);
         return {
             id,
-            delete: () => this.storage.deleteBackup(model).ignoreErrors() // This cleans up after save has happened.
+            delete: () => this.storage.deleteBackup(model, id).ignoreErrors() // This cleans up after save has happened.
         };
     }
 
@@ -175,12 +175,16 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         return this.open(uri);
     }
 
-    public async loadModel(file: Uri, contents?: string, skipDirtyContents?: boolean) {
+    public async loadModel(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
+    // tslint:disable-next-line: unified-signatures
+    public async loadModel(file: Uri, contents?: string, backupId?: string): Promise<INotebookModel>;
+    // tslint:disable-next-line: no-any
+    public async loadModel(file: Uri, contents?: string, options?: any): Promise<INotebookModel> {
         // Every time we load a new untitled file, up the counter past the max value for this counter
         this.untitledCounter = getNextUntitledCounter(file, this.untitledCounter);
 
         // Load our model from our storage object.
-        const model = await this.storage.load(file, contents, skipDirtyContents);
+        const model = await this.storage.load(file, contents, options);
 
         // Make sure to listen to events on the model
         this.trackModel(model);

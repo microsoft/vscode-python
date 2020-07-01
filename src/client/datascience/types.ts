@@ -28,7 +28,7 @@ import { ICommandManager, IDebugService } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable, Resource } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
-import { PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
 import { IDataViewerDataProvider } from './data-viewing/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
@@ -72,7 +72,6 @@ export interface IJupyterConnection extends Disposable {
     readonly token: string;
     readonly hostName: string;
     localProcExitCode: number | undefined;
-    allowUnauthorized?: boolean;
 }
 
 export type INotebookProviderConnection = IRawConnection | IJupyterConnection;
@@ -306,18 +305,14 @@ export interface IJupyterDebugger {
 }
 
 export interface IJupyterPasswordConnectInfo {
-    emptyPassword: boolean;
-    xsrfCookie: string;
-    sessionCookieName: string;
-    sessionCookieValue: string;
+    requestHeaders?: HeadersInit;
+    remappedBaseUrl?: string;
+    remappedToken?: string;
 }
 
 export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
 export interface IJupyterPasswordConnect {
-    getPasswordConnectionInfo(
-        url: string,
-        allowUnauthorized: boolean
-    ): Promise<IJupyterPasswordConnectInfo | undefined>;
+    getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined>;
 }
 
 export const IJupyterSession = Symbol('IJupyterSession');
@@ -536,6 +531,11 @@ export interface INotebookEditorProvider {
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends IInteractiveBase {
+    /**
+     * Type of editor, whether it is the old, custom or native notebook editor.
+     * Once VSC Notebook is stable, this property can be removed.
+     */
+    readonly type: 'old' | 'custom' | 'native';
     readonly onDidChangeViewState: Event<void>;
     readonly closed: Event<INotebookEditor>;
     readonly executed: Event<INotebookEditor>;
@@ -763,6 +763,10 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
     };
     variableOptions: {
         enableDuringDebugger: boolean;
+    };
+
+    webviewExperiments: {
+        removeKernelToolbarInInteractiveWindow: boolean;
     };
 }
 
@@ -1009,15 +1013,13 @@ export interface INotebookModel {
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
     readonly changed: Event<NotebookModelChange>;
-    readonly cells: Readonly<ICell>[];
+    readonly cells: readonly Readonly<ICell>[];
     readonly onDidEdit: Event<NotebookModelChange>;
     readonly isDisposed: boolean;
     readonly metadata: nbformat.INotebookMetadata | undefined;
+    readonly isTrusted: boolean;
     getContent(): string;
-    applyEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
-    undoEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
     update(change: NotebookModelChange): void;
-    clone(file: Uri): INotebookModel;
     /**
      * Dispose of the Notebook model.
      *
@@ -1031,13 +1033,20 @@ export const INotebookStorage = Symbol('INotebookStorage');
 
 export interface INotebookStorage {
     readonly onSavedAs: Event<{ new: Uri; old: Uri }>;
-    getBackupId(model: INotebookModel): string;
+    generateBackupId(model: INotebookModel): string;
     save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
-    backup(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
-    load(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
+    backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string): Promise<void>;
+    load(file: Uri, contents?: string, backupId?: string, forVSCodeNotebook?: boolean): Promise<INotebookModel>;
+    load(
+        file: Uri,
+        contents?: string,
+        // tslint:disable-next-line: unified-signatures
+        skipDirtyContents?: boolean,
+        forVSCodeNotebook?: boolean
+    ): Promise<INotebookModel>;
     revert(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
-    deleteBackup(model: INotebookModel): Promise<void>;
+    deleteBackup(model: INotebookModel, backupId?: string): Promise<void>;
 }
 type WebViewViewState = {
     readonly visible: boolean;
@@ -1226,4 +1235,17 @@ export interface IJupyterDebugService extends IDebugService {
      * Stop debugging
      */
     stop(): void;
+}
+
+export const IDigestStorage = Symbol('IDigestStorage');
+export interface IDigestStorage {
+    readonly key: Promise<string>;
+    saveDigest(uri: string, digest: string): Promise<void>;
+    containsDigest(uri: string, digest: string): Promise<boolean>;
+}
+
+export const ITrustService = Symbol('ITrustService');
+export interface ITrustService {
+    isNotebookTrusted(uri: string, notebookContents: string): Promise<boolean>;
+    trustNotebook(uri: string, notebookContents: string): Promise<void>;
 }

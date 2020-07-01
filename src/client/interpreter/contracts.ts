@@ -3,7 +3,7 @@ import { CodeLensProvider, Disposable, Event, TextDocument, Uri } from 'vscode';
 import { Resource } from '../common/types';
 import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/discovery/locators/services/conda';
 import { GetInterpreterLocatorOptions } from '../pythonEnvironments/discovery/locators/types';
-import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/info';
 import { WorkspacePythonPath } from './helpers';
 import { GetInterpreterOptions } from './interpreterService';
 
@@ -57,6 +57,7 @@ export interface ICondaService {
 
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
+    onDidChangeInterpreterConfiguration: Event<Uri | undefined>;
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreterInformation: Event<PythonInterpreter>;
     hasInterpreters: Promise<boolean>;

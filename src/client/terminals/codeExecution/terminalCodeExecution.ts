@@ -9,9 +9,9 @@ import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
-import { PythonExecutionInfo } from '../../common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
 
 @injectable()
@@ -58,17 +58,17 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         await this.replActive;
     }
 
-    public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecutionInfo> {
+    public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecInfo> {
         const pythonSettings = this.configurationService.getSettings(resource);
         const command = this.platformService.isWindows
             ? pythonSettings.pythonPath.replace(/\\/g, '/')
             : pythonSettings.pythonPath;
         const launchArgs = pythonSettings.terminal.launchArgs;
-        return { command, args: [...launchArgs, ...args], python: [command] };
+        return buildPythonExecInfo(command, [...launchArgs, ...args]);
     }
 
     // Overridden in subclasses, see djangoShellCodeExecution.ts
-    public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecutionInfo> {
+    public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecInfo> {
         return this.getExecutableInfo(resource, executeArgs);
     }
     private getTerminalService(resource?: Uri): ITerminalService {

@@ -34,7 +34,10 @@ suite('Unit Tests re-discovery', () => {
         await initializeTest();
         initializeDI();
     });
-    teardown(async () => {
+    teardown(async function () {
+        // This is doing a lot more than what a teardown does normally, so increasing the timeout.
+        // tslint:disable-next-line: no-invalid-this
+        this.timeout(TEST_TIMEOUT * 2);
         await ioc.dispose();
         await resetSettings();
         await fs.copy(testFileWithFewTests, testFile, { overwrite: true });

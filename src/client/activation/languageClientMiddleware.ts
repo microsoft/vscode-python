@@ -56,12 +56,12 @@ import {
     ResolveCompletionItemSignature,
     ResolveDocumentLinkSignature,
     ResponseError
-} from 'vscode-languageclient';
+} from 'vscode-languageclient/node';
 
-import { ProvideDeclarationSignature } from 'vscode-languageclient/lib/declaration';
+import { ProvideDeclarationSignature } from 'vscode-languageclient/lib/common/declaration';
 import { HiddenFilePrefix } from '../common/constants';
 import { CollectLSRequestTiming, CollectNodeLSRequestTiming } from '../common/experiments/groups';
-import { IConfigurationService, IExperimentsManager, IPythonExtensionBanner } from '../common/types';
+import { IConfigurationService, IExperimentsManager } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -123,7 +123,6 @@ export class LanguageClientMiddleware implements Middleware {
     private connected = false; // Default to not forwarding to VS code.
 
     public constructor(
-        private readonly surveyBanner: IPythonExtensionBanner | undefined,
         experimentsManager: IExperimentsManager,
         private readonly configService: IConfigurationService,
         serverType: LanguageServerType,
@@ -166,9 +165,6 @@ export class LanguageClientMiddleware implements Middleware {
         next: ProvideCompletionItemsSignature
     ) {
         if (this.connected) {
-            if (this.surveyBanner) {
-                this.surveyBanner.showBanner().ignoreErrors();
-            }
             return next(document, position, context, token);
         }
     }

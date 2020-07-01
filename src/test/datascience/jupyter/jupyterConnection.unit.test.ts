@@ -106,7 +106,6 @@ suite('Data Science - JupyterConnection', () => {
         const connection = await waiter.waitForConnection();
 
         assert.equal(connection.localLaunch, true);
-        assert.equal(connection.allowUnauthorized, undefined);
         assert.equal(connection.localProcExitCode, undefined);
         assert.equal(connection.baseUrl, expectedServerInfo.url);
         assert.equal(connection.hostName, expectedServerInfo.hostname);

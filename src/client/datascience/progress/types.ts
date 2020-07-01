@@ -51,5 +51,7 @@ export enum ReportableAction {
     RawKernelConnecting = 'RawKernelConnecting',
     CheckingIfImportIsSupported = 'CheckingIfImportIsSupported',
     InstallingMissingDependencies = 'InstallingMissingDependencies',
-    ExportNotebookToPython = 'ExportNotebookToPython'
+    ExportNotebookToPython = 'ExportNotebookToPython',
+    PerformingExport = 'PerformingExport',
+    ConvertingToPDF = 'ConvertingToPDF'
 }

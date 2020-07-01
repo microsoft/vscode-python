@@ -34,7 +34,7 @@ import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/t
 import { ServiceContainer } from '../../../client/ioc/container';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable:no-any max-func-body-length chai-vague-errors
 

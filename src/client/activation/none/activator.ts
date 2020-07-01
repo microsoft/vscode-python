@@ -20,10 +20,10 @@ import {
     TextDocument,
     WorkspaceEdit
 } from 'vscode';
-import { isTestExecution } from '../../common/constants';
-import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner, Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { Resource, IPythonExtensionBanner, BANNER_NAME_PROPOSE_LS } from '../../common/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { ILanguageServerActivator } from '../types';
+import { isTestExecution } from '../../common/constants';
 
 /**
  * Provides 'no language server' pseudo-activator.

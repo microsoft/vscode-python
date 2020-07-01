@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as code from 'vscode';
-import { Code2ProtocolConverter } from 'vscode-languageclient';
+import { Code2ProtocolConverter } from 'vscode-languageclient/node';
 import * as proto from 'vscode-languageserver-protocol';
 
 // tslint:disable:no-any unified-signatures

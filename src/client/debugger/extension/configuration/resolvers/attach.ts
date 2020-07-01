@@ -6,10 +6,8 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
-import { DebugAdapterNewPtvsd } from '../../../../common/experiments/groups';
 import { IPlatformService } from '../../../../common/platform/types';
-import { IConfigurationService, IExperimentsManager } from '../../../../common/types';
-import { Diagnostics } from '../../../../common/utils/localize';
+import { IConfigurationService } from '../../../../common/types';
 import { AttachRequestArguments, DebugOptions, PathMapping } from '../../../types';
 import { BaseConfigurationResolver } from './base';
 
@@ -19,8 +17,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(IPlatformService) platformService: IPlatformService,
-        @inject(IConfigurationService) configurationService: IConfigurationService,
-        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager
+        @inject(IConfigurationService) configurationService: IConfigurationService
     ) {
         super(workspaceService, documentManager, platformService, configurationService);
     }
@@ -29,12 +26,6 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         debugConfiguration: AttachRequestArguments,
         _token?: CancellationToken
     ): Promise<AttachRequestArguments | undefined> {
-        if (
-            !this.experiments.inExperiment(DebugAdapterNewPtvsd.experiment) &&
-            debugConfiguration.processId !== undefined
-        ) {
-            throw Error(Diagnostics.processId());
-        }
         const workspaceFolder = this.getWorkspaceFolder(folder);
 
         await this.provideAttachDefaults(workspaceFolder, debugConfiguration as AttachRequestArguments);

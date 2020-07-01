@@ -35,15 +35,20 @@ import {
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { RunByLine } from '../../common/experiments/groups';
+import { RemoveKernelToolbarInInteractiveWindow, RunByLine } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentService,
+    IExperimentsManager
+} from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
@@ -97,6 +102,7 @@ import {
 } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
+import { serializeLanguageConfiguration } from './serialization';
 
 @injectable()
 export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {
@@ -152,7 +158,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() experimentsManager: IExperimentsManager,
         @unmanaged() private switcher: KernelSwitcher,
         @unmanaged() private readonly notebookProvider: INotebookProvider,
-        @unmanaged() useCustomEditorApi: boolean
+        @unmanaged() useCustomEditorApi: boolean,
+        @unmanaged() expService: IExperimentService
     ) {
         super(
             configuration,
@@ -166,7 +173,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             title,
             viewColumn,
             useCustomEditorApi,
-            experimentsManager.inExperiment(RunByLine.experiment)
+            experimentsManager.inExperiment(RunByLine.experiment),
+            expService.inExperiment(RemoveKernelToolbarInInteractiveWindow.experiment)
         );
 
         // Create our unique id. We use this to skip messages we send to other interactive windows
@@ -1401,7 +1409,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Get the contents of the appropriate tmLanguage file.
         traceInfo('Request for tmlanguage file.');
         const languageJson = await this.themeFinder.findTmLanguage(languageId);
-        const languageConfiguration = await this.themeFinder.findLanguageConfiguration(languageId);
+        const languageConfiguration = serializeLanguageConfiguration(
+            await this.themeFinder.findLanguageConfiguration(languageId)
+        );
         const extensions = languageId === PYTHON_LANGUAGE ? ['.py'] : [];
         const scopeName = `scope.${languageId}`; // This works for python, not sure about c# etc.
         this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, {

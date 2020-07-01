@@ -13,18 +13,6 @@ export enum ShowExtensionSurveyPrompt {
     enabled = 'ShowExtensionSurveyPrompt - enabled'
 }
 
-// Experiment to check whether the extension should use the new VS Code debug adapter API.
-export enum DebugAdapterDescriptorFactory {
-    control = 'DebugAdapterFactory - control',
-    experiment = 'DebugAdapterFactory - experiment'
-}
-
-// Experiment to check whether the ptvsd launcher should use pre-installed ptvsd wheels for debugging.
-export enum DebugAdapterNewPtvsd {
-    control = 'PtvsdWheels37 - control',
-    experiment = 'PtvsdWheels37 - experiment'
-}
-
 // Experiment to check whether to enable re-load for web apps while debugging.
 export enum WebAppReload {
     control = 'Reload - control',
@@ -98,4 +86,11 @@ export enum NotebookEditorSupport {
 // Experiment to turn on the start page
 export enum EnableStartPage {
     experiment = 'EnableStartPage'
+}
+
+// Experiment to remove the Kernel/Server Tooblar in the Interactive Window when running a local Jupyter Server.
+// It doesn't make sense to have it there, the user can already change the kernel
+// by changing the python interpreter on the status bar.
+export enum RemoveKernelToolbarInInteractiveWindow {
+    experiment = 'RemoveKernelToolbarInInteractiveWindow'
 }

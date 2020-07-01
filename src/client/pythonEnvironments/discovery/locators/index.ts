@@ -19,7 +19,7 @@ import {
 } from '../../../interpreter/contracts';
 import { IInterpreterFilter } from '../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { PythonInterpreter } from '../types';
+import { PythonInterpreter } from '../../info';
 import { InterpreterFilter } from './services/interpreterFilter';
 import { GetInterpreterLocatorOptions } from './types';
 

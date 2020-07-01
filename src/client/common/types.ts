@@ -18,6 +18,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
+import { LogLevel } from '../logging/levels';
 import { CommandsWithoutArgs } from './application/commands';
 import { ExtensionChannels } from './insidersBuild/types';
 import { InterpreterUri } from './installer/types';
@@ -187,6 +188,7 @@ export interface IPythonSettings {
     readonly experiments: IExperiments;
     readonly languageServer: LanguageServerType;
     readonly defaultInterpreterPath: string;
+    readonly logging: ILoggingSettings;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -227,6 +229,12 @@ export interface Flake8CategorySeverity {
 export interface IMypyCategorySeverity {
     readonly error: DiagnosticSeverity;
     readonly note: DiagnosticSeverity;
+}
+
+export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug';
+
+export interface ILoggingSettings {
+    readonly level: LogLevel | 'off';
 }
 export interface ILintingSettings {
     readonly enabled: boolean;
@@ -336,6 +344,7 @@ export interface IVariableQuery {
 
 export interface IDataScienceSettings {
     allowImportFromNotebook: boolean;
+    alwaysTrustNotebooks: boolean;
     enabled: boolean;
     jupyterInterruptTimeout: number;
     jupyterLaunchTimeout: number;
@@ -370,7 +379,7 @@ export interface IDataScienceSettings {
     enablePlotViewer?: boolean;
     codeLenses?: string;
     debugCodeLenses?: string;
-    ptvsdDistPath?: string;
+    debugpyDistPath?: string;
     stopOnFirstLineWhileDebugging?: boolean;
     textOutputLimit?: number;
     magicCommandsAsComments?: boolean;
@@ -391,6 +400,7 @@ export interface IDataScienceSettings {
     jupyterCommandLineArguments: string[];
     widgetScriptSources: WidgetCDNs[];
     alwaysScrollOnNewCell?: boolean;
+    showKernelSelectionOnInteractiveWindow?: boolean;
 }
 
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
@@ -516,7 +526,6 @@ export interface IPythonExtensionBanner {
     isEnabled(): Promise<boolean>;
     showBanner(): Promise<void>;
 }
-export const BANNER_NAME_LS_SURVEY: string = 'LSSurveyBanner';
 export const BANNER_NAME_PROPOSE_LS: string = 'ProposeLS';
 export const BANNER_NAME_DS_SURVEY: string = 'DSSurveyBanner';
 export const BANNER_NAME_INTERACTIVE_SHIFTENTER: string = 'InteractiveShiftEnterBanner';
@@ -571,6 +580,7 @@ export interface ICryptoUtils {
      * @returns hash as number, or string
      * @param data The string to hash
      * @param hashFormat Return format of the hash, number or string
+     * @param [algorithm]
      */
     createHash<E extends keyof IHashFormat>(
         data: string,

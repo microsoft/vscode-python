@@ -24,7 +24,7 @@ import { swallowExceptions } from '../common/utils/decorators';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
-import { PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { Commands } from './languageServer/constants';
@@ -273,7 +273,7 @@ export class LanguageServerExtensionActivationService
                 outputLine = 'Starting Microsoft Python language server.';
                 break;
             case LanguageServerType.Node:
-                outputLine = 'Starting Node language server.';
+                outputLine = 'Starting Pylance language server.';
                 break;
             case LanguageServerType.None:
                 outputLine = 'Editor support is inactive since language server is set to None.';

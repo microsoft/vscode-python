@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { applyEdits, Edit, findNodeAtLocation, FormattingOptions, getNodeValue, modify, parseTree } from 'jsonc-parser';
+import { applyEdits, findNodeAtLocation, getNodeValue, ModificationOptions, modify, parseTree } from 'jsonc-parser';
 import * as path from 'path';
 import { IExtensionActivationService, LanguageServerType } from '../../activation/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
@@ -31,7 +31,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         const filesToBeFixed = await this.getFilesToBeFixed(resource);
         await Promise.all(filesToBeFixed.map((file) => this.fixSettingInFile(file)));
     }
-    public getSettingsFiles(resource: Resource) {
+    public getSettingsFiles(resource: Resource): string[] {
         const settingsFiles: string[] = [];
         if (this.application.userSettingsFile) {
             settingsFiles.push(this.application.userSettingsFile);
@@ -42,7 +42,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         }
         return settingsFiles;
     }
-    public async getFilesToBeFixed(resource: Resource) {
+    public async getFilesToBeFixed(resource: Resource): Promise<string[]> {
         const files = this.getSettingsFiles(resource);
         const result = await Promise.all(
             files.map(async (file) => {
@@ -90,10 +90,11 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         return fileContents;
     }
 
-    public async doesFileNeedToBeFixed(filePath: string) {
+    public async doesFileNeedToBeFixed(filePath: string): Promise<boolean> {
         try {
             const contents = await this.fs.readFile(filePath);
             return (
+                contents.indexOf('python.jediEnabled') > 0 ||
                 contents.indexOf('python.unitTest.') > 0 ||
                 contents.indexOf('.pyTest') > 0 ||
                 contents.indexOf('.pep8') > 0
@@ -106,51 +107,50 @@ export class UpdateTestSettingService implements IExtensionActivationService {
 
     private fixLanguageServerSettings(fileContent: string): string {
         // `python.jediEnabled` is deprecated:
-        //   - `true` or missing then set to `languageServer: Jedi`.
+        //   - If missing, do nothing.
+        //   - `true`, then set to `languageServer: Jedi`.
         //   - `false` and `languageServer` is present, do nothing.
         //   - `false` and `languageServer` is NOT present, set `languageServer` to `Microsoft`.
-        // `jediEnabled` is then removed.
+        // `jediEnabled` is NOT removed since JSONC parser may also remove comments.
         const jediEnabledPath = ['python.jediEnabled'];
         const languageServerPath = ['python.languageServer'];
 
         try {
-            let ast = parseTree(fileContent);
-            let jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
-            const jediEnabled = jediEnabledNode ? getNodeValue(jediEnabledNode) : true;
-            const languageServerNode = findNodeAtLocation(ast, languageServerPath);
-            const formattingOptions: FormattingOptions = {
-                tabSize: 4,
-                insertSpaces: true
-            };
-            let edits: Edit[] = [];
+            const ast = parseTree(fileContent);
 
-            // If `jediEnabled` is missing, the configuration is default.
-            // This mode is treated as a basis for experimentation so we
-            // should not be setting `languageServer` to `Jedi` if it is missing.
+            const jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
+            const languageServerNode = findNodeAtLocation(ast, languageServerPath);
+
+            // If missing, do nothing.
             if (!jediEnabledNode) {
                 return fileContent;
             }
 
-            if (jediEnabled) {
-                // `jediEnabled` is is true. Default is true, so assume Jedi.
-                edits = modify(fileContent, languageServerPath, LanguageServerType.Jedi, { formattingOptions });
-            } else {
-                // `jediEnabled` is false. if languageServer is missing, set it to Microsoft.
-                if (!languageServerNode) {
-                    edits = modify(fileContent, languageServerPath, LanguageServerType.Microsoft, {
-                        formattingOptions
-                    });
+            const jediEnabled = getNodeValue(jediEnabledNode);
+
+            const modificationOptions: ModificationOptions = {
+                formattingOptions: {
+                    tabSize: 4,
+                    insertSpaces: true
                 }
+            };
+
+            // `jediEnabled` is true, set it to Jedi.
+            if (jediEnabled) {
+                return applyEdits(
+                    fileContent,
+                    modify(fileContent, languageServerPath, LanguageServerType.Jedi, modificationOptions)
+                );
             }
 
-            fileContent = applyEdits(fileContent, edits);
-            // Remove jediEnabled
-            ast = parseTree(fileContent);
-            jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
-            if (jediEnabledNode) {
-                edits = modify(fileContent, jediEnabledPath, undefined, { formattingOptions });
-                fileContent = applyEdits(fileContent, edits);
+            // `jediEnabled` is false. if languageServer is missing, set it to Microsoft.
+            if (!languageServerNode) {
+                return applyEdits(
+                    fileContent,
+                    modify(fileContent, languageServerPath, LanguageServerType.Microsoft, modificationOptions)
+                );
             }
+
             // tslint:disable-next-line:no-empty
         } catch {}
         return fileContent;

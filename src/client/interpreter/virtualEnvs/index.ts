@@ -12,7 +12,7 @@ import { ICurrentProcess, IPathUtils } from '../../common/types';
 import { getNamesAndValues } from '../../common/utils/enum';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { InterpreterType } from '../../pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../pythonEnvironments/info';
 import { IInterpreterLocatorService, IPipEnvService, PIPENV_SERVICE } from '../contracts';
 import { IVirtualEnvironmentManager } from './types';
 

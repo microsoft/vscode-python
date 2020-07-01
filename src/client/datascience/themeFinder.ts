@@ -172,7 +172,7 @@ export class ThemeFinder implements IThemeFinder {
         // Search through all package.json files in the directory and below, looking
         // for the themeName in them.
         const foundPackages = await this.fs.search('**/package.json', rootPath);
-        if (foundPackages.length > 0) {
+        if (foundPackages && foundPackages.length > 0) {
             // For each one, open it up and look for the theme name.
             for (const f of foundPackages) {
                 const fpath = path.join(rootPath, f);

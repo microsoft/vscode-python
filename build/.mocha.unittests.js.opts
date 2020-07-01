@@ -1,8 +1,0 @@
---require source-map-support/register
---require out/test/unittests.js
---reporter mocha-multi-reporters
---reporter-options configFile=build/.mocha-multi-reporters.config
---ui tdd
---recursive
---colors
-./out/test/**/*.unit.test.js 

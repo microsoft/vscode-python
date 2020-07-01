@@ -8,8 +8,8 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 
 import { ICommandManager } from '../../common/application/types';
+import { traceError } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
-import { traceError } from '../../logging';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands, Telemetry } from '../constants';

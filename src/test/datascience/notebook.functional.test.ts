@@ -46,7 +46,7 @@ import {
     InterruptResult
 } from '../../client/datascience/types';
 import { IInterpreterService, IKnownSearchPathsForInterpreters } from '../../client/interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
@@ -609,6 +609,9 @@ suite('DataScience notebook tests', () => {
                     class EmptyInterpreterService implements IInterpreterService {
                         public get hasInterpreters(): Promise<boolean> {
                             return Promise.resolve(true);
+                        }
+                        public onDidChangeInterpreterConfiguration(): Disposable {
+                            return { dispose: noop };
                         }
                         public onDidChangeInterpreter(
                             _listener: (e: void) => any,

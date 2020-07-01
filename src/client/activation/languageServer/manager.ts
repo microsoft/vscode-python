@@ -8,7 +8,7 @@ import { traceDecorators } from '../../common/logger';
 import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IServiceContainer } from '../../ioc/types';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
@@ -115,7 +115,6 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
 
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
-            undefined, // Survey is not active with Microsoft LS.
             this.experimentsManager,
             this.configService,
             LanguageServerType.Microsoft,

@@ -60,6 +60,7 @@ interface INativeCellBaseProps {
     useCustomEditorApi: boolean;
     runningByLine: DebugState;
     supportsRunByLine: boolean;
+    isNotebookTrusted: boolean;
 }
 
 type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
@@ -132,6 +133,10 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return this.props.cellVM.selected;
     };
 
+    private isNotebookTrusted = () => {
+        return this.props.isNotebookTrusted;
+    };
+
     private isFocused = () => {
         return this.props.cellVM.focused;
     };
@@ -141,8 +146,12 @@ export class NativeCell extends React.Component<INativeCellProps> {
     };
 
     private renderNormalCell() {
-        const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
-        let cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
+        const cellOuterClass =
+            this.props.cellVM.editable && this.props.isNotebookTrusted ? 'cell-outer-editable' : 'cell-outer';
+        let cellWrapperClass =
+            this.props.cellVM.editable && this.props.isNotebookTrusted
+                ? 'cell-wrapper'
+                : 'cell-wrapper cell-wrapper-noneditable';
         if (this.isSelected() && !this.isFocused()) {
             cellWrapperClass += ' cell-wrapper-selected';
         }
@@ -256,7 +265,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     };
 
     private shouldRenderOutput(): boolean {
-        if (this.isCodeCell()) {
+        if (this.isCodeCell() && this.props.isNotebookTrusted) {
             const cell = this.getCodeCell();
             return (
                 this.hasOutput() &&
@@ -266,13 +275,16 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 cell.outputs.length !== 0
             );
         } else if (this.isMarkdownCell()) {
-            return !this.isShowingMarkdownEditor();
+            return !this.isShowingMarkdownEditor() && this.isNotebookTrusted();
         }
         return false;
     }
 
     // tslint:disable-next-line: cyclomatic-complexity max-func-body-length
     private keyDownInput = (cellId: string, e: IKeyboardEvent) => {
+        if (!this.isNotebookTrusted()) {
+            return; // Disable keyboard interaction with untrusted notebooks
+        }
         const isFocusedWhenNotSuggesting = this.isFocused() && e.editorInfo && !e.editorInfo.isSuggesting;
         switch (e.code) {
             case 'ArrowUp':
@@ -370,11 +382,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
             case 'z':
             case 'Z':
                 if (!this.isFocused() && !this.props.useCustomEditorApi) {
-                    if (e.shiftKey && !e.ctrlKey && !e.altKey) {
+                    if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
                         e.stopPropagation();
                         this.props.redo();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Redo);
-                    } else if (!e.shiftKey && !e.altKey && !e.ctrlKey) {
+                    } else if (!e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey) {
                         e.stopPropagation();
                         this.props.undo();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Undo);
@@ -498,6 +510,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 <ImageButton
                     baseTheme={this.props.baseTheme}
                     onClick={this.addNewCellBelow}
+                    disabled={!this.props.isNotebookTrusted}
                     tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.InsertBelow} />
@@ -511,7 +524,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     <ImageButton
                         baseTheme={this.props.baseTheme}
                         onClick={moveUp}
-                        disabled={this.props.firstCell}
+                        disabled={this.props.firstCell || !this.props.isNotebookTrusted}
                         tooltip={getLocString('DataScience.moveCellUp', 'Move cell up')}
                     >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Up} />
@@ -521,7 +534,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     <ImageButton
                         baseTheme={this.props.baseTheme}
                         onClick={moveDown}
-                        disabled={this.props.lastCell}
+                        disabled={this.props.lastCell || !this.props.isNotebookTrusted}
                         tooltip={getLocString('DataScience.moveCellDown', 'Move cell down')}
                     >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Down} />
@@ -542,6 +555,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         className="add-divider"
                         baseTheme={this.props.baseTheme}
                         includePlus={false}
+                        isNotebookTrusted={this.props.isNotebookTrusted}
                         click={this.addNewCell}
                     />
                 );
@@ -661,7 +675,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         onClick={runCell}
                         tooltip={getLocString('DataScience.runCell', 'Run cell')}
                         hidden={this.isMarkdownCell()}
-                        disabled={this.props.busy}
+                        disabled={this.props.busy || !this.props.isNotebookTrusted}
                     >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Run} />
                     </ImageButton>
@@ -670,7 +684,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         onClick={runbyline}
                         tooltip={getLocString('DataScience.runByLine', 'Run by line')}
                         hidden={this.isMarkdownCell() || !this.props.supportsRunByLine}
-                        disabled={this.props.busy}
+                        disabled={this.props.busy || !this.props.isNotebookTrusted}
                     >
                         <Image
                             baseTheme={this.props.baseTheme}
@@ -678,7 +692,12 @@ export class NativeCell extends React.Component<INativeCellProps> {
                             image={ImageName.RunByLine}
                         />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchCellType} tooltip={switchTooltip}>
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onMouseDown={switchCellType}
+                        tooltip={switchTooltip}
+                        disabled={!this.props.isNotebookTrusted}
+                    >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={otherCellImage} />
                     </ImageButton>
                     <ImageButton
@@ -689,6 +708,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                             'Gather the code required to generate this cell into a new notebook'
                         )}
                         hidden={gatherDisabled}
+                        disabled={!this.props.isNotebookTrusted}
                     >
                         <Image
                             baseTheme={this.props.baseTheme}
@@ -701,6 +721,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         onClick={deleteCell}
                         tooltip={getLocString('DataScience.deleteCell', 'Delete cell')}
                         className="delete-cell-button hover-cell-button"
+                        disabled={!this.props.isNotebookTrusted}
                     >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Delete} />
                     </ImageButton>
@@ -761,6 +782,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         codeVersion={this.props.cellVM.codeVersion ? this.props.cellVM.codeVersion : 1}
                         focusPending={this.props.focusPending}
                         language={this.props.language}
+                        isNotebookTrusted={this.props.isNotebookTrusted}
                     />
                 </div>
             );

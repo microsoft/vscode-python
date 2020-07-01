@@ -9,7 +9,7 @@ import { Uri } from 'vscode';
 import { PipEnvInstaller } from '../../../client/common/installer/pipEnvInstaller';
 import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable-next-line: max-func-body-length
 suite('PipEnv installer', async () => {

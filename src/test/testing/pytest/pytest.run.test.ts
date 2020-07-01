@@ -243,6 +243,7 @@ function getRelevantSkippedIssuesFromTestDetailsForFile(testDetails: ITestDetail
 /**
  * Get the FlattenedTestFunction from the test results that's associated with the given testDetails object.
  *
+ * @param ioc IOC Test Container
  * @param results Results of the test run.
  * @param testFileUri The Uri of the test file that was run.
  * @param testDetails The details of a particular test.

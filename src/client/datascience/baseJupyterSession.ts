@@ -13,7 +13,7 @@ import { traceError, traceInfo, traceWarning } from '../common/logger';
 import { waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import { PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { Telemetry } from './constants';
 import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
@@ -201,9 +201,17 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined {
-        return this.session && this.session.kernel
-            ? this.session.kernel.requestExecute(content, disposeOnDone, metadata)
-            : undefined;
+        const promise =
+            this.session && this.session.kernel
+                ? this.session.kernel.requestExecute(content, disposeOnDone, metadata)
+                : undefined;
+
+        // It has been observed that starting the restart session slows down first time to execute a cell.
+        // Solution is to start the restart session after the first execution of user code.
+        if (promise) {
+            promise.done.finally(() => this.startRestartSession()).catch(noop);
+        }
+        return promise;
     }
 
     public requestInspect(
