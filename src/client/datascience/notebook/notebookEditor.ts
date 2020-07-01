@@ -22,7 +22,7 @@ import {
     IStatusProvider
 } from '../types';
 import { getDefaultCodeLanguage } from './helpers/helpers';
-import { INotebookExecutionService } from './types';
+import { INotebookContentProvider, INotebookExecutionService } from './types';
 
 export class NotebookEditor implements INotebookEditor {
     public readonly type = 'native';
@@ -76,6 +76,7 @@ export class NotebookEditor implements INotebookEditor {
         private readonly executionService: INotebookExecutionService,
         private readonly commandManager: ICommandManager,
         private readonly notebookProvider: INotebookProvider,
+        private readonly contentProvider: INotebookContentProvider,
         private readonly statusProvider: IStatusProvider,
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
@@ -226,6 +227,7 @@ export class NotebookEditor implements INotebookEditor {
         try {
             this.document.metadata.cellRunnable = false;
             this.document.metadata.runnable = false;
+            this.contentProvider.notifyChangesToDocument(this.document);
             await notebook.restartKernel(
                 this.configurationService.getSettings(this.file).datascience.jupyterInterruptTimeout
             );
@@ -250,6 +252,7 @@ export class NotebookEditor implements INotebookEditor {
             this.restartingKernel = false;
             // Restore previous state.
             [this.document.metadata.cellRunnable, this.document.metadata.runnable] = [cellRunnable, runnable];
+            this.contentProvider.notifyChangesToDocument(this.document);
         }
     }
     private async shouldAskForRestart(): Promise<boolean> {

@@ -174,6 +174,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 executionService,
                 this.commandManager,
                 notebookProvider,
+                this.contentProvider,
                 this.statusProvider,
                 this.appShell,
                 this.configurationService,
