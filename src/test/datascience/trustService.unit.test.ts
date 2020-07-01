@@ -29,6 +29,8 @@ suite('DataScience - TrustService', () => {
         });
         when(fileSystem.appendFile(anything(), anything())).thenCall((f, c) => fs.appendFile(f, c));
         when(fileSystem.readFile(anything())).thenCall((f) => fs.readFile(f));
+        when(fileSystem.createDirectory(anything())).thenCall((d) => fs.mkdir(d));
+        when(fileSystem.directoryExists(anything())).thenCall((d) => fs.pathExists(d));
 
         const digestStorage = new DigestStorage(instance(fileSystem), context.object);
         trustService = new TrustService(digestStorage, instance(configService));
