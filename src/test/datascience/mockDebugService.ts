@@ -11,6 +11,7 @@ import {
     DebugConsole,
     DebugSession,
     DebugSessionCustomEvent,
+    DebugSessionOptions,
     Disposable,
     Event,
     WorkspaceFolder
@@ -72,9 +73,9 @@ export class MockDebuggerService implements IJupyterDebugService {
     public startDebugging(
         folder: WorkspaceFolder | undefined,
         nameOrConfiguration: string | DebugConfiguration,
-        parentSession?: DebugSession | undefined
+        options?: DebugSessionOptions
     ): Thenable<boolean> {
-        return this.activeService.startDebugging(folder, nameOrConfiguration, parentSession);
+        return this.activeService.startDebugging(folder, nameOrConfiguration, options);
     }
     public addBreakpoints(breakpoints: Breakpoint[]): void {
         return this.activeService.addBreakpoints(breakpoints);

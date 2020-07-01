@@ -11,6 +11,7 @@ import {
     DebugConsole,
     DebugSession,
     DebugSessionCustomEvent,
+    DebugSessionOptions,
     Disposable,
     Event,
     EventEmitter,
@@ -106,10 +107,10 @@ export class MultiplexingDebugService implements IJupyterDebugService {
     public startDebugging(
         folder: WorkspaceFolder | undefined,
         nameOrConfiguration: string | DebugConfiguration,
-        parentSession?: DebugSession | undefined
+        options?: DebugSessionOptions
     ): Thenable<boolean> {
         this.lastStartedService = this.vscodeDebugService;
-        return this.vscodeDebugService.startDebugging(folder, nameOrConfiguration, parentSession);
+        return this.vscodeDebugService.startDebugging(folder, nameOrConfiguration, options);
     }
     public addBreakpoints(breakpoints: Breakpoint[]): void {
         return this.activeService.addBreakpoints(breakpoints);

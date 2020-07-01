@@ -14,6 +14,7 @@ import {
     DebugConsole,
     DebugSession,
     DebugSessionCustomEvent,
+    DebugSessionOptions,
     DecorationRenderOptions,
     Disposable,
     DocumentSelector,
@@ -70,7 +71,6 @@ import type {
     NotebookOutputSelector
 } from 'vscode-proposed';
 import * as vsls from 'vsls/vscode';
-
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
 
@@ -927,7 +927,7 @@ export interface IDebugService {
     startDebugging(
         folder: WorkspaceFolder | undefined,
         nameOrConfiguration: string | DebugConfiguration,
-        parentSession?: DebugSession
+        options?: DebugSessionOptions
     ): Thenable<boolean>;
 
     /**

@@ -14,6 +14,7 @@ import {
     DebugConsole,
     DebugSession,
     DebugSessionCustomEvent,
+    DebugSessionOptions,
     Disposable,
     Event,
     EventEmitter,
@@ -167,7 +168,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
     public startDebugging(
         _folder: WorkspaceFolder | undefined,
         nameOrConfiguration: string | DebugConfiguration,
-        _parentSession?: DebugSession | undefined
+        _options?: DebugSessionOptions
     ): Thenable<boolean> {
         // Should have a port number. We'll assume it's local
         const config = nameOrConfiguration as DebugConfiguration; // NOSONAR

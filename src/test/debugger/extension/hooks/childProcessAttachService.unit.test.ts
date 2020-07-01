@@ -144,7 +144,8 @@ suite('Debug - Attach to Child Process', () => {
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
         const [, secondArg, thirdArg] = capture(debugService.startDebugging).last();
         expect(secondArg).to.deep.equal(debugConfig);
-        expect(thirdArg).to.deep.equal(session);
+        expect(thirdArg).to.have.property('parentSession', session);
+        expect(thirdArg).to.have.property('noCompact', true, 'Sessions must not be compacted');
         verify(shell.showErrorMessage(anything())).never();
     });
     test('Pass data as is if data is attach debug configuration', async () => {
@@ -165,7 +166,8 @@ suite('Debug - Attach to Child Process', () => {
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
         const [, secondArg, thirdArg] = capture(debugService.startDebugging).last();
         expect(secondArg).to.deep.equal(debugConfig);
-        expect(thirdArg).to.deep.equal(session);
+        expect(thirdArg).to.have.property('parentSession', session);
+        expect(thirdArg).to.have.property('noCompact', true, 'Sessions must not be compacted');
         verify(shell.showErrorMessage(anything())).never();
     });
     test('Validate debug config when parent/root parent was attached', async () => {
@@ -193,7 +195,8 @@ suite('Debug - Attach to Child Process', () => {
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
         const [, secondArg, thirdArg] = capture(debugService.startDebugging).last();
         expect(secondArg).to.deep.equal(debugConfig);
-        expect(thirdArg).to.deep.equal(session);
+        expect(thirdArg).to.have.property('parentSession', session);
+        expect(thirdArg).to.have.property('noCompact', true, 'Sessions must not be compacted');
         verify(shell.showErrorMessage(anything())).never();
     });
 });
