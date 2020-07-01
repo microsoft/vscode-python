@@ -18,6 +18,7 @@ suite('DataScience - TrustService', () => {
     let trustService: TrustService;
     let alwaysTrustNotebooks: boolean = false;
     setup(() => {
+        alwaysTrustNotebooks = false;
         const configService = mock(ConfigurationService);
         const fileSystem = mock(FileSystem);
         const context = typemoq.Mock.ofType<IExtensionContext>();
