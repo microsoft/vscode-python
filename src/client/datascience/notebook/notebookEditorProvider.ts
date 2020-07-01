@@ -149,11 +149,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
 
     private closedEditor(editor: INotebookEditor): void {
-        if (!(editor instanceof NotebookEditor)) {
-            throw new Error('Executing Notebook with another Editor');
+        if (this.openedEditors.has(editor)) {
+            this.openedEditors.delete(editor);
+            this._onDidCloseNotebookEditor.fire(editor);
         }
-        this.openedEditors.delete(editor);
-        this._onDidCloseNotebookEditor.fire(editor);
     }
 
     private async onDidOpenNotebookDocument(doc: NotebookDocument): Promise<void> {
@@ -188,7 +187,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString())!;
         deferred.resolve(editor);
         this.notebookEditorsByUri.set(uri.toString(), editor);
-        this.onDidChangeActiveVsCodeNotebookEditor(this.vscodeNotebook.activeNotebookEditor);
     }
     private onDidChangeActiveVsCodeNotebookEditor(editor: VSCodeNotebookEditor | undefined) {
         if (!editor) {

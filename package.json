@@ -677,7 +677,8 @@
                 "icon": {
                     "light": "resources/light/restart-kernel.svg",
                     "dark": "resources/dark/restart-kernel.svg"
-                }
+                },
+                "enablement": "python.datascience.notebookeditor.canrestartNotebookkernel"
             },
             {
                 "command": "python.datascience.notebookeditor.runallcells",
@@ -843,7 +844,7 @@
                     "command": "python.datascience.notebookeditor.restartkernel",
                     "title": "%python.command.python.datascience.restartkernel.title%",
                     "group": "navigation",
-                    "when": "notebookEditorFocused && python.datascience.notebookeditor.canrestartNotebookkernel"
+                    "when": "notebookEditorFocused"
                 }
             ],
             "explorer/context": [
