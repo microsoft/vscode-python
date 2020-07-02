@@ -41,7 +41,6 @@
     "python.command.python.analysis.clearCache.title": "清除模組分析快取",
     "python.snippet.launch.module.default": "請輸入-模組-名稱",
     "python.snippet.launch.attachpid.label": "Python: 使用處理程序 ID 連結",
-    "LanguageService.bannerMessage": "請問您是否可以用兩分鐘的時間，告訴我們 Python 語言伺服器在您環境中的運作情況?",
     "LanguageService.bannerLabelYes": "是，現在填寫調查",
     "LanguageService.bannerLabelNo": "不了，謝謝",
     "LanguageService.lsFailedToStart": "啟動語言伺服器時遇到問題。改回使用替代方案 \"Jedi\"。請檢查 Python 輸出面板以取得更多資訊。",

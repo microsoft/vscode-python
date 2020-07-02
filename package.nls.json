@@ -106,7 +106,6 @@
     "python.snippet.launch.django.label": "Python: Django",
     "python.snippet.launch.flask.label": "Python: Flask",
     "python.snippet.launch.pyramid.label": "Python: Pyramid Application",
-    "LanguageService.bannerMessage": "Can you please take 2 minutes to tell us how the Python Language Server is working for you?",
     "LanguageService.bannerLabelYes": "Yes, take survey now",
     "LanguageService.bannerLabelNo": "No, thanks",
     "LanguageService.lsFailedToStart": "We encountered an issue starting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.",

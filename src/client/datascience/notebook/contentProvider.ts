@@ -102,9 +102,6 @@ export class NotebookContentProvider implements INotebookContentProvider {
             await this.notebookStorage.saveAs(model, targetResource);
         }
     }
-    public async revertNotebook(_document: NotebookDocument, _cancellation: CancellationToken): Promise<void> {
-        // Not implemented, waiting on VSCode API changes.
-    }
     public async backupNotebook(
         document: NotebookDocument,
         _context: NotebookDocumentBackupContext,
