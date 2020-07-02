@@ -35,6 +35,7 @@ import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
+import { IExportUtil } from '../export/types';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     INotebookIdentity,
@@ -118,7 +119,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(IExperimentService) expService: IExperimentService,
-        @inject(INotebookStorage) private notebookStorage: INotebookStorage
+        @inject(INotebookStorage) private notebookStorage: INotebookStorage,
+        @inject(IExportUtil) private exportUtil: IExportUtil
     ) {
         super(
             listeners,
@@ -439,39 +441,16 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.startProgress();
         try {
             await this.jupyterExporter.exportToFile(cells, uri.fsPath, false);
-            const newPath = await this.createNewFile(directoryPath, '.ipynb', uri);
+            const newPath = await this.exportUtil.createFileInDirectory(directoryPath, '.ipynb', uri);
             model = await this.notebookStorage.load(Uri.file(newPath));
         } finally {
             tempFile.dispose();
-            await this.deleteNewDirectory(directoryPath);
+            await this.exportUtil.deleteDirectory(directoryPath);
             this.stopProgress();
         }
         if (model) {
             this.commandManager.executeCommand(Commands.Export, model);
         }
-    }
-
-    private async createNewFile(dirPath: string, fileName: string, source: Uri): Promise<string> {
-        try {
-            await this.fileSystem.createDirectory(dirPath);
-            const newFilePath = path.join(dirPath, fileName);
-            await this.fileSystem.copyFile(source.fsPath, newFilePath);
-            return newFilePath;
-        } catch (e) {
-            await this.deleteNewDirectory(dirPath);
-            throw e;
-        }
-    }
-
-    private async deleteNewDirectory(dirPath: string) {
-        if (!(await this.fileSystem.directoryExists(dirPath))) {
-            return;
-        }
-        const files = await this.fileSystem.getFiles(dirPath);
-        for (const file of files) {
-            await this.fileSystem.deleteFile(file);
-        }
-        await this.fileSystem.deleteDirectory(dirPath);
     }
 
     private handleModelChange(update: NotebookModelChange) {

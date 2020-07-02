@@ -1,9 +1,10 @@
 import { inject, injectable, named } from 'inversify';
+import * as path from 'path';
 import { Uri } from 'vscode';
-import { IFileSystem, TemporaryFile } from '../../common/platform/types';
+import { IFileSystem } from '../../common/platform/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import { IDataScienceErrorHandler, INotebookModel } from '../types';
-import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './types';
+import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker, IExportUtil } from './types';
 
 @injectable()
 export class ExportManager implements IExportManager {
@@ -14,7 +15,8 @@ export class ExportManager implements IExportManager {
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IExportManagerFilePicker) private readonly filePicker: IExportManagerFilePicker,
-        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter
+        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
+        @inject(IExportUtil) private readonly exportUtil: IExportUtil
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
@@ -28,13 +30,11 @@ export class ExportManager implements IExportManager {
             target = Uri.file((await this.fileSystem.createTemporaryFile('.py')).filePath);
         }
 
-        const tempFile = await this.makeTemporaryFile(model);
-        if (!tempFile) {
-            return; // error making temp file
-        }
+        const fileName = path.basename(target.fsPath, path.extname(target.fsPath));
+        const tempFilePath = await this.makeTemporaryFile(model, fileName);
+        const source = Uri.file(tempFilePath);
 
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
-        const source = Uri.file(tempFile.filePath);
         try {
             switch (format) {
                 case ExportFormat.python:
@@ -53,23 +53,30 @@ export class ExportManager implements IExportManager {
                     break;
             }
         } finally {
-            tempFile.dispose();
+            await this.exportUtil.deleteDirectory(path.dirname(tempFilePath));
             reporter.dispose();
         }
 
         return target;
     }
 
-    private async makeTemporaryFile(model: INotebookModel): Promise<TemporaryFile | undefined> {
-        let tempFile: TemporaryFile | undefined;
+    private async makeTemporaryFile(model: INotebookModel, name: string): Promise<string> {
+        const tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
+        const directoryPath = path.join(
+            path.dirname(tempFile.filePath),
+            path.basename(tempFile.filePath, path.extname(tempFile.filePath))
+        );
+        const newFilePath = path.join(directoryPath, name);
+        tempFile.dispose();
+
         try {
-            tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
+            await this.fileSystem.createDirectory(directoryPath);
             const content = model ? model.getContent() : '';
-            await this.fileSystem.writeFile(tempFile.filePath, content, 'utf-8');
+            await this.fileSystem.writeFile(newFilePath, content, 'utf-8');
         } catch (e) {
             await this.errorHandler.handleError(e);
         }
 
-        return tempFile;
+        return newFilePath;
     }
 }
