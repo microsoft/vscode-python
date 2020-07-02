@@ -82,7 +82,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         }
     }
 
-    @captureTelemetry(EventName.ENTER_INTERPRETER_PATH_BUTTON)
+    @captureTelemetry(EventName.SELECT_INTERPRETER_ENTER_BUTTON)
     public async _enterOrBrowseInterpreterPath(
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs
@@ -102,10 +102,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
 
         if (typeof selection === 'string') {
             // User entered text in the filter box to enter path to python, store it
-            sendTelemetryEvent(EventName.INPUT_INTERPRETER_PATH_CHOICES, undefined, { choice: 'enter' });
+            sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'enter' });
             state.path = selection;
         } else if (selection && selection.label === InterpreterQuickPickList.browsePath.label()) {
-            sendTelemetryEvent(EventName.INPUT_INTERPRETER_PATH_CHOICES, undefined, { choice: 'browse' });
+            sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'browse' });
             const filtersKey = 'Executables';
             const filtersObject: { [name: string]: string[] } = {};
             filtersObject[filtersKey] = ['exe'];

@@ -918,11 +918,11 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when 'Enter interpreter path' button is clicked.
      */
-    [EventName.ENTER_INTERPRETER_PATH_BUTTON]: never | undefined;
+    [EventName.SELECT_INTERPRETER_ENTER_BUTTON]: never | undefined;
     /**
      * Telemetry event sent with details about what choice user made to input the interpreter path.
      */
-    [EventName.INPUT_INTERPRETER_PATH_CHOICES]: {
+    [EventName.SELECT_INTERPRETER_ENTER_CHOICE]: {
         /**
          * Carries 'enter' if user chose to enter the path to executable.
          * Carries 'browse' if user chose to browse for the path to the executable.
