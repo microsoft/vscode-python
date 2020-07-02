@@ -22,6 +22,7 @@ import { IEnvironmentActivationService } from '../../../interpreter/activation/t
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
+import { getRealPath } from '../../common';
 import { Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
@@ -33,7 +34,7 @@ import {
     KernelInterpreterDependencyResponse
 } from '../../types';
 import { cleanEnvironment, detectDefaultKernelName } from './helpers';
-import { getKernelSpecFile, JupyterKernelSpec } from './jupyterKernelSpec';
+import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { LiveKernelModel } from './types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -542,7 +543,7 @@ export class KernelService {
             throw new Error('Unable to parse output to get the kernel info');
         }
 
-        const specFile = await getKernelSpecFile(
+        const specFile = await getRealPath(
             this.fileSystem,
             this.execFactory,
             pythonPath,

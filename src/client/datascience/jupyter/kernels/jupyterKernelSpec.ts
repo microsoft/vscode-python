@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import type { Kernel } from '@jupyterlab/services';
-import * as os from 'os';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
@@ -10,6 +9,7 @@ import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { getRealPath } from '../../common';
 import { IJupyterKernelSpec } from '../../types';
 
 export class JupyterKernelSpec implements IJupyterKernelSpec {
@@ -67,7 +67,7 @@ export async function parseKernelSpecs(
                     ...spec,
                     name: kernelName
                 };
-                const specFile = await getKernelSpecFile(
+                const specFile = await getRealPath(
                     fs,
                     execFactory,
                     spec.argv[0],
@@ -81,45 +81,4 @@ export async function parseKernelSpecs(
         createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: [], token })
     ]);
     return specs.filter((item) => !!item).map((item) => item as JupyterKernelSpec);
-}
-
-export async function getKernelSpecFile(
-    fs: IFileSystem,
-    execFactory: IPythonExecutionFactory,
-    pythonPath: string,
-    expectedPath: string
-): Promise<string | undefined> {
-    if (await fs.fileExists(expectedPath)) {
-        return expectedPath;
-    }
-
-    // On windows, a store installed python may not put kernel.json in the
-    // spot returned by jupyter kernelspec list. Detect this situation and look in the
-    // store cache location.
-    // Not super happy with this. It's basically working around a bug in jupyter kernelspec list
-    if (os.platform() === 'win32' && expectedPath.includes('Roaming')) {
-        // Run this python and ask for its USER_BASE. That should have the
-        // real location for jupyter kernels
-        const pythonRunner = await execFactory.create({ pythonPath });
-        const result = await pythonRunner.exec(['-c', 'import site;print(site.USER_BASE)'], {
-            throwOnStdErr: false,
-            encoding: 'utf-8'
-        });
-        if (result.stdout) {
-            // Path should be one up and under 'Roaming\jupyter\kernels'
-            const fileName = path.basename(expectedPath);
-            const baseDirName = path.basename(path.dirname(expectedPath));
-            const specFile = path.join(
-                path.normalize(path.join(result.stdout, '..')),
-                'Roaming',
-                'jupyter',
-                'kernels',
-                baseDirName,
-                fileName
-            );
-            if (await fs.fileExists(specFile)) {
-                return specFile;
-            }
-        }
-    }
 }

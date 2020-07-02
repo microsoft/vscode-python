@@ -7,6 +7,8 @@ import * as path from 'path';
 import { Memento, Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { traceError, traceInfo } from '../common/logger';
+import { IFileSystem } from '../common/platform/types';
+import { IPythonExecutionFactory } from '../common/process/types';
 import { DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { Settings } from './constants';
@@ -147,5 +149,38 @@ export function generateNewNotebookUri(counter: number, title?: string, forVSCod
         // saved.
         const filePath = Uri.file(path.join(os.tmpdir(), fileName));
         return filePath.with({ scheme: 'untitled', path: filePath.fsPath });
+    }
+}
+
+export async function getRealPath(
+    fs: IFileSystem,
+    execFactory: IPythonExecutionFactory,
+    pythonPath: string,
+    expectedPath: string
+): Promise<string | undefined> {
+    if (await fs.directoryExists(expectedPath)) {
+        return expectedPath;
+    }
+    if (await fs.fileExists(expectedPath)) {
+        return expectedPath;
+    }
+
+    // If can't find the path, try turning it into a real path.
+    const pythonRunner = await execFactory.create({ pythonPath });
+    const result = await pythonRunner.exec(
+        ['-c', `import os;print(os.path.realpath("${expectedPath.replace(/\\/g, '\\\\')}"))`],
+        {
+            throwOnStdErr: false,
+            encoding: 'utf-8'
+        }
+    );
+    if (result && result.stdout) {
+        const trimmed = result.stdout.trim();
+        if (await fs.directoryExists(trimmed)) {
+            return trimmed;
+        }
+        if (await fs.fileExists(trimmed)) {
+            return trimmed;
+        }
     }
 }
