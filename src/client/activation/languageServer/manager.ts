@@ -115,7 +115,6 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
 
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
-            undefined,
             this.experimentsManager,
             this.configService,
             LanguageServerType.Microsoft,
