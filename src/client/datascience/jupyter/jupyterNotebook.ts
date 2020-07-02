@@ -950,7 +950,6 @@ export class JupyterNotebookBase implements INotebook {
         msg: KernelMessage.IIOPubMessage
         // tslint:disable-next-line: no-any
     ) {
-
         // Let our loggers get a first crack at the message. They may change it
         this.getLoggers().forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
 
@@ -1006,7 +1005,7 @@ export class JupyterNotebookBase implements INotebook {
             // Tell all of the listeners about the event. They can cause this to not return until
             // they are done handling the event.
             // One such example is a comm_msg for ipywidgets. We have to wait for it to finish.
-            [...this.ioPubListeners].map((l) => l(msg, msg.header.msg_id));
+            [...this.ioPubListeners].forEach((l) => l(msg, msg.header.msg_id));
 
             // Show our update if any new output.
             if (shouldUpdateSubscriber) {

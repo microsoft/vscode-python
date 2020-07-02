@@ -166,7 +166,7 @@ export class LanguageClientMiddleware implements Middleware {
         next: ProvideCompletionItemsSignature
     ) {
         if (this.connected) {
-            this.surveyBanner?.showBanner().ignoreErrors();
+            this.surveyBanner?.showBanner().ignoreErrors(); // NOSONAR
             return next(document, position, context, token);
         }
     }
