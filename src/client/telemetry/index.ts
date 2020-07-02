@@ -912,6 +912,24 @@ export interface IEventNamePropertyMapping {
         disabled: boolean;
     };
     /**
+     * Telemetry event sent when 'Select Interpreter' command is invoked.
+     */
+    [EventName.SELECT_INTERPRETER]: never | undefined;
+    /**
+     * Telemetry event sent when 'Enter interpreter path' button is clicked.
+     */
+    [EventName.SELECT_INTERPRETER_ENTER_BUTTON]: never | undefined;
+    /**
+     * Telemetry event sent with details about what choice user made to input the interpreter path.
+     */
+    [EventName.SELECT_INTERPRETER_ENTER_CHOICE]: {
+        /**
+         * Carries 'enter' if user chose to enter the path to executable.
+         * Carries 'browse' if user chose to browse for the path to the executable.
+         */
+        choice: 'enter' | 'browse';
+    };
+    /**
      * Telemetry event sent with details after updating the python interpreter
      */
     [EventName.PYTHON_INTERPRETER]: {

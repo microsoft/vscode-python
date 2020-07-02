@@ -22,6 +22,7 @@ import { IEnvironmentActivationService } from '../../../interpreter/activation/t
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
+import { getRealPath } from '../../common';
 import { Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
@@ -362,10 +363,12 @@ export class KernelService {
         }
         if (!kernel) {
             // Possible user doesn't have kernelspec installed.
-            kernel = await this.getKernelSpecFromStdOut(output.stdout).catch((ex) => {
-                traceError('Failed to get kernelspec from stdout', ex);
-                return undefined;
-            });
+            kernel = await this.getKernelSpecFromStdOut(await execService.getExecutablePath(), output.stdout).catch(
+                (ex) => {
+                    traceError('Failed to get kernelspec from stdout', ex);
+                    return undefined;
+                }
+            );
         }
         if (!kernel) {
             const error = `Kernel not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
@@ -519,7 +522,7 @@ export class KernelService {
      * @memberof KernelService
      */
     @traceDecorators.error('Failed to parse kernel creation stdout')
-    private async getKernelSpecFromStdOut(output: string): Promise<JupyterKernelSpec | undefined> {
+    private async getKernelSpecFromStdOut(pythonPath: string, output: string): Promise<JupyterKernelSpec | undefined> {
         if (!output) {
             return;
         }
@@ -540,8 +543,13 @@ export class KernelService {
             throw new Error('Unable to parse output to get the kernel info');
         }
 
-        const specFile = path.join(groups.path, 'kernel.json');
-        if (!(await this.fileSystem.fileExists(specFile))) {
+        const specFile = await getRealPath(
+            this.fileSystem,
+            this.execFactory,
+            pythonPath,
+            path.join(groups.path, 'kernel.json')
+        );
+        if (!specFile) {
             throw new Error('KernelSpec file not found');
         }
 

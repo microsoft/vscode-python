@@ -2955,7 +2955,7 @@
                 "python.dataScience.alwaysTrustNotebooks": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Automatically trust all notebooks that are opened. Warning: only enable this setting if you are absolutely certain that you wish to trust all notebooks.",
+                    "markdownDescription": "Enabling this setting will automatically trust any opened notebook and therefore display markdown and render code cells. You will no longer be prompted to trust individual notebooks and harmful code could automatically run. \n\n[Learn more.](https://aka.ms/trusted-notebooks)",
                     "scope": "machine"
                 },
                 "python.insidersChannel": {
