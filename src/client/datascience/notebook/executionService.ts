@@ -186,7 +186,10 @@ export class NotebookExecutionService implements INotebookExecutionService {
         }
 
         const editor = this.editorProvider.editors.find((e) => e.model === model);
-        if (!(editor instanceof NotebookEditor)) {
+        if (!editor) {
+            throw new Error('No editor for Model');
+        }
+        if (editor && !(editor instanceof NotebookEditor)) {
             throw new Error('Executing Notebook with another Editor');
         }
         // If we need to cancel this execution (from our code, due to kernel restarts or similar, then cancel).

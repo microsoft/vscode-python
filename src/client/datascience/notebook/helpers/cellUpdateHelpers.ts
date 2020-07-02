@@ -10,6 +10,7 @@
  */
 
 import * as assert from 'assert';
+import { NotebookCell } from '../../../../../types/vscode-proposed';
 import {
     NotebookCellLanguageChangeEvent,
     NotebookCellOutputsChangeEvent,
@@ -78,25 +79,33 @@ function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: VSCodeNo
 }
 
 function handleChangesToCells(change: NotebookCellsChangeEvent, model: VSCodeNotebookModel) {
-    if (isCellMoveChange(change)) {
+    if (isSingleCellMoveChange(change)) {
         handleCellMove(change, model);
-        sendTelemetryEvent(VSCodeNativeTelemetry.MoveCell);
     } else if (isCellDelete(change)) {
-        handleCellDelete(change, model);
-        sendTelemetryEvent(VSCodeNativeTelemetry.DeleteCell);
-    } else if (isCellInsertion(change)) {
-        handleCellInsertion(change, model);
-        sendTelemetryEvent(VSCodeNativeTelemetry.AddCell);
+        handleCellDeletes(change.changes[0].deletedItems, model);
+    } else if (isSingleCellInsertion(change)) {
+        handleCellInsertions(change.changes[0].items, change.changes[0].start, model);
     } else {
-        traceError('Unsupported cell change', change);
-        throw new Error('Unsupported cell change');
+        // A more complex change.
+        // E.g. when user reverts a document, we will get a change event
+        // to delete all cells and add all the old cells.
+        // Similarly we could have other changes were we have 4 changes,
+        // First 3 are to delete cells, and last change in the array is to insert.
+        for (const individualChange of change.changes) {
+            if (individualChange.deletedCount) {
+                handleCellDeletes(individualChange.deletedItems, model);
+            }
+            if (individualChange.items) {
+                handleCellInsertions(individualChange.deletedItems, individualChange.start, model);
+            }
+        }
     }
 }
 /**
  * Determines whether a change is a move of a cell.
  * A move = Delete the cell as the first change, then as the second change insert into required place.
  */
-function isCellMoveChange(change: NotebookCellsChangeEvent) {
+function isSingleCellMoveChange(change: NotebookCellsChangeEvent) {
     if (change.changes.length !== 2) {
         return false;
     }
@@ -113,8 +122,8 @@ function isCellMoveChange(change: NotebookCellsChangeEvent) {
 function isCellDelete(change: NotebookCellsChangeEvent) {
     return change.changes.length === 1 && change.changes[0].deletedCount > 0 && change.changes[0].items.length === 0;
 }
-function isCellInsertion(change: NotebookCellsChangeEvent) {
-    return change.changes.length === 1 && change.changes[0].deletedCount === 0 && change.changes[0].items.length > 0;
+function isSingleCellInsertion(change: NotebookCellsChangeEvent) {
+    return change.changes.length === 1 && change.changes[0].deletedCount === 0 && change.changes[0].items.length === 1;
 }
 
 function handleCellMove(change: NotebookCellsChangeEvent, model: VSCodeNotebookModel) {
@@ -124,19 +133,25 @@ function handleCellMove(change: NotebookCellsChangeEvent, model: VSCodeNotebookM
     const cellToSwapWith = model.cells[insertChange.start];
     assert.notEqual(cellToSwap, cellToSwapWith, 'Cannot swap cell with the same cell');
     model.swapCells(cellToSwap, cellToSwapWith);
+    sendTelemetryEvent(VSCodeNativeTelemetry.MoveCell);
 }
-function handleCellInsertion(change: NotebookCellsChangeEvent, model: VSCodeNotebookModel) {
-    assert.equal(change.changes.length, 1, 'When inserting cells we must have only 1 change');
-    assert.equal(change.changes[0].items.length, 1, 'Insertion of more than 1 cell is not supported');
-    const insertChange = change.changes[0];
-    const cell = change.changes[0].items[0];
-    const newCell = createCellFromVSCNotebookCell(cell, model);
-    model.addCell(newCell, insertChange.start);
+function handleCellInsertions(cells: NotebookCell[], insertionStart: number, model: VSCodeNotebookModel) {
+    for (const cell of cells) {
+        const newCell = createCellFromVSCNotebookCell(cell, model);
+        model.addCell(newCell, insertionStart);
+        insertionStart += 1;
+    }
+    sendTelemetryEvent(VSCodeNativeTelemetry.AddCell);
 }
-function handleCellDelete(change: NotebookCellsChangeEvent, model: VSCodeNotebookModel) {
-    assert.equal(change.changes.length, 1, 'When deleting cells we must have only 1 change');
-    const deletionChange = change.changes[0];
-    assert.equal(deletionChange.deletedCount, 1, 'Deleting more than one cell is not supported');
-    const cellToRemove = model.cells[deletionChange.start];
-    model.deleteCell(cellToRemove);
+function handleCellDeletes(deletedItems: NotebookCell[], model: VSCodeNotebookModel) {
+    deletedItems.forEach((cell) => {
+        try {
+            const cellModel = findMappedNotebookCellModel(cell, model.cells);
+            model.deleteCell(cellModel);
+        } catch (ex) {
+            // If cell doesn't exist, then nothing to delete.
+            traceError('Unable to delete cell as it does not exist in the model', ex);
+        }
+    });
+    sendTelemetryEvent(VSCodeNativeTelemetry.DeleteCell);
 }

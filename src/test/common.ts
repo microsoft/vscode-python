@@ -650,6 +650,9 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
     public get second(): T {
         return this.handledEvents[1];
     }
+    public get last(): T {
+        return this.handledEvents[this.handledEvents.length - 1];
+    }
     public get count(): number {
         return this.handledEvents.length;
     }
@@ -676,6 +679,13 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
             async () => this.count === numberOfTimesFired,
             waitPeriod,
             `${this.eventNameForErrorMessages} event fired ${this.count}, expected ${numberOfTimesFired}`
+        );
+    }
+    public async assertFiredAtLeast(numberOfTimesFired: number, waitPeriod: number = 2_000): Promise<void> {
+        await waitForCondition(
+            async () => this.count >= numberOfTimesFired,
+            waitPeriod,
+            `${this.eventNameForErrorMessages} event fired ${this.count}, expected at least ${numberOfTimesFired}.`
         );
     }
     public atIndex(index: number): T {

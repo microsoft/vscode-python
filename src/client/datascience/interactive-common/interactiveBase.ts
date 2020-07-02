@@ -1349,7 +1349,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                   totalCount: 0,
                   pageResponse: [],
                   pageStartIndex: args?.startIndex,
-                  executionCount: args?.executionCount
+                  executionCount: args?.executionCount,
+                  refreshCount: args?.refreshCount || 0
               };
 
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();

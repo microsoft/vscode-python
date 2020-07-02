@@ -1,5 +1,90 @@
 # Changelog
 
+## 2020.6.3 (30 June 2020)
+
+### Fixes
+
+1. Correctly check for ZMQ support, previously it could allow ZMQ to be supported when zmq could not be imported.
+   ([#12585](https://github.com/Microsoft/vscode-python/issues/12585))
+1. Auto indentation no longer working for notebooks and interactive window.
+   ([#12389](https://github.com/Microsoft/vscode-python/issues/12389))
+1. Add telemetry for tracking run by line.
+   ([#12580](https://github.com/Microsoft/vscode-python/issues/12580))
+1. Add more telemetry to distinguish how is the start page opened.
+   ([#12603](https://github.com/microsoft/vscode-python/issues/12603))
+1. Stop looking for mspythonconfig.json file in subfolders.
+   ([#12614](https://github.com/Microsoft/vscode-python/issues/12614))
+
+## 2020.6.2 (25 June 2020)
+
+### Fixes
+
+1. Fix `linting.pylintEnabled` setting check.
+   ([#12285](https://github.com/Microsoft/vscode-python/issues/12285))
+1. Don't modify LS settings if jediEnabled does not exist.
+   ([#12429](https://github.com/Microsoft/vscode-python/issues/12429))
+
+## 2020.6.1 (17 June 2020)
+
+### Fixes
+
+1. Fixed issue when `python.jediEnabled` setting was not removed and `python.languageServer` setting was not updated.
+   ([#12429](https://github.com/Microsoft/vscode-python/issues/12429))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [ptvsd](https://pypi.org/project/ptvsd/)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2020.6.0 (16 June 2020)
 
 ### Enhancements

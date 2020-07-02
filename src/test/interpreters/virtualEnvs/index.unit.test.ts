@@ -17,7 +17,6 @@ import { ICurrentProcess, IPathUtils } from '../../../client/common/types';
 import { IInterpreterLocatorService, IPipEnvService, PIPENV_SERVICE } from '../../../client/interpreter/contracts';
 import { VirtualEnvironmentManager } from '../../../client/interpreter/virtualEnvs';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { InterpreterType } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Virtual Environment Manager', () => {
@@ -227,70 +226,37 @@ suite('Virtual Environment Manager', () => {
 
     for (const isWindows of [true, false]) {
         const testTitleSuffix = `(${isWindows ? 'On Windows' : 'Non-Windows'}})`;
+
         test(`Get Environment Type, detects virtualenv ${testTitleSuffix}`, async () => {
             const pythonPath = path.join('x', 'b', 'c', 'python');
-            terminalActivation
-                .setup((t) => t.isShellSupported(TypeMoq.It.isAny()))
-                .returns(() => true)
-                .verifiable(TypeMoq.Times.atLeastOnce());
-            terminalActivation
-                .setup((t) =>
-                    t.getActivationCommandsForInterpreter!(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())
-                )
-                .returns(() => Promise.resolve(['1']))
+            platformService
+                .setup((p) => p.isWindows)
+                .returns(() => isWindows)
+                .verifiable(TypeMoq.Times.once());
+            fs.setup((f) => f.fileExists(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(true))
                 .verifiable(TypeMoq.Times.atLeastOnce());
 
             const isRecognized = await virtualEnvMgr.isVirtualEnvironment(pythonPath);
 
             expect(isRecognized).to.be.equal(true, 'invalid value');
-            terminalActivation.verifyAll();
+            platformService.verifyAll();
         });
 
         test(`Get Environment Type, does not detect virtualenv incorrectly ${testTitleSuffix}`, async () => {
             const pythonPath = path.join('x', 'b', 'c', 'python');
-            terminalActivation
-                .setup((t) => t.isShellSupported(TypeMoq.It.isAny()))
-                .returns(() => true)
-                .verifiable(TypeMoq.Times.atLeastOnce());
-            terminalActivation
-                .setup((t) =>
-                    t.getActivationCommandsForInterpreter!(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())
-                )
-                .returns(() => Promise.resolve([]))
+            platformService
+                .setup((p) => p.isWindows)
+                .returns(() => isWindows)
+                .verifiable(TypeMoq.Times.once());
+            fs.setup((f) => f.fileExists(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.atLeastOnce());
 
-            let isRecognized = await virtualEnvMgr.isVirtualEnvironment(pythonPath);
+            const isRecognized = await virtualEnvMgr.isVirtualEnvironment(pythonPath);
 
             expect(isRecognized).to.be.equal(false, 'invalid value');
-            terminalActivation.verifyAll();
-
-            terminalActivation.reset();
-            terminalActivation
-                .setup((t) => t.isShellSupported(TypeMoq.It.isAny()))
-                .returns(() => false)
-                .verifiable(TypeMoq.Times.atLeastOnce());
-            terminalActivation
-                .setup((t) =>
-                    t.getActivationCommandsForInterpreter!(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())
-                )
-                .returns(() => Promise.resolve([]))
-                .verifiable(TypeMoq.Times.never());
-
-            isRecognized = await virtualEnvMgr.isVirtualEnvironment(pythonPath);
-
-            expect(isRecognized).to.be.equal(false, 'invalid value');
-            terminalActivation.verifyAll();
+            platformService.verifyAll();
         });
     }
-    test('Get Environment Type, does not detect the type', async () => {
-        const pythonPath = path.join('x', 'b', 'c', 'python');
-        virtualEnvMgr.isPipEnvironment = () => Promise.resolve(false);
-        virtualEnvMgr.isPyEnvEnvironment = () => Promise.resolve(false);
-        virtualEnvMgr.isVenvEnvironment = () => Promise.resolve(false);
-        virtualEnvMgr.isVirtualEnvironment = () => Promise.resolve(false);
-
-        const envType = await virtualEnvMgr.getEnvironmentType(pythonPath);
-
-        expect(envType).to.be.equal(InterpreterType.Unknown);
-    });
 });

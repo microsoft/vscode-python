@@ -40,6 +40,7 @@ import {
     TestsToRun
 } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
+import { TEST_TIMEOUT } from '../../constants';
 import { MockProcessService } from '../../mocks/proc';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
@@ -434,9 +435,17 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             };
         }
     }
-    suiteSetup(async () => {
+    // tslint:disable-next-line: no-function-expression
+    suiteSetup(async function () {
+        // tslint:disable-next-line: no-invalid-this
+        this.timeout(TEST_TIMEOUT * 2);
+        // tslint:disable: no-console
+        console.time('Pytest before all hook');
         await initialize();
+        console.timeLog('Pytest before all hook');
         await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
+        console.timeEnd('Pytest before all hook');
+        // tslint:enable: no-console
     });
     function initializeDI() {
         ioc = new UnitTestIocContainer();

@@ -1,6 +1,6 @@
 import { createHmac } from 'crypto';
 import { inject, injectable } from 'inversify';
-import { EventEmitter } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
 import { EnableTrustedNotebooks } from '../../common/experiments/groups';
 import { IConfigurationService, IExperimentService } from '../../common/types';
 import { IDigestStorage, ITrustService } from '../types';
@@ -30,7 +30,7 @@ export class TrustService implements ITrustService {
      * Once a notebook is loaded in an untrusted state, no code will be executed and no
      * markdown will be rendered until notebook as a whole is marked trusted
      */
-    public async isNotebookTrusted(uri: string, notebookContents: string) {
+    public async isNotebookTrusted(uri: Uri, notebookContents: string) {
         if (this.alwaysTrustNotebooks || !(await this.enabled)) {
             return true; // Skip check if user manually overrode our trust checking, or if user is not in experiment
         }
@@ -44,7 +44,7 @@ export class TrustService implements ITrustService {
      * It will add a new trusted checkpoint to the local database if it's safe to do so
      * I.e. if the notebook has already been trusted by the user
      */
-    public async trustNotebook(uri: string, notebookContents: string) {
+    public async trustNotebook(uri: Uri, notebookContents: string) {
         if (!this.alwaysTrustNotebooks && (await this.enabled)) {
             // Only update digest store if the user wants us to check trust
             const digest = await this.computeDigest(notebookContents);

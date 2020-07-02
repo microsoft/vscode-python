@@ -612,7 +612,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async launchNotebookTrustPrompt() {
         const prompts = [localize.DataScience.trustNotebook(), localize.DataScience.doNotTrustNotebook()];
-        const selection = await this.applicationShell.showInformationMessage(
+        const selection = await this.applicationShell.showErrorMessage(
             localize.DataScience.launchNotebookTrustPrompt(),
             ...prompts
         );
@@ -622,7 +622,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (this.model && selection === localize.DataScience.trustNotebook() && !this.model.isTrusted) {
             try {
                 const contents = this.model.getContent();
-                await this.trustService.trustNotebook(this.model.file.toString(), contents);
+                await this.trustService.trustNotebook(this.model.file, contents);
                 // Update model trust
                 this.model.update({
                     source: 'user',

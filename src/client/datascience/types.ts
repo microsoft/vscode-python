@@ -826,6 +826,7 @@ export interface IConditionalJupyterVariables extends IJupyterVariables {
 // Request for variables
 export interface IJupyterVariablesRequest {
     executionCount: number;
+    refreshCount: number;
     sortColumn: string;
     sortAscending: boolean;
     startIndex: number;
@@ -838,6 +839,7 @@ export interface IJupyterVariablesResponse {
     totalCount: number;
     pageStartIndex: number;
     pageResponse: IJupyterVariable[];
+    refreshCount: number;
 }
 
 export const IPlotViewerProvider = Symbol('IPlotViewerProvider');
@@ -1057,8 +1059,6 @@ type WebViewViewState = {
 };
 export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };
 
-export const INotebookProvider = Symbol('INotebookProvider');
-
 export type GetServerOptions = {
     getOnly?: boolean;
     disableUI?: boolean;
@@ -1079,12 +1079,14 @@ export type GetNotebookOptions = {
     token?: CancellationToken;
 };
 
+export const INotebookProvider = Symbol('INotebookProvider');
 export interface INotebookProvider {
     readonly type: 'raw' | 'jupyter';
     /**
      * Fired when a notebook has been created for a given Uri/Identity
      */
     onNotebookCreated: Event<{ identity: Uri; notebook: INotebook }>;
+    onSessionStatusChanged: Event<{ status: ServerStatus; notebook: INotebook }>;
 
     /**
      * Fired just the first time that this provider connects
@@ -1266,13 +1268,13 @@ export interface IJupyterUriProviderRegistration {
 export const IDigestStorage = Symbol('IDigestStorage');
 export interface IDigestStorage {
     readonly key: Promise<string>;
-    saveDigest(uri: string, digest: string): Promise<void>;
-    containsDigest(uri: string, digest: string): Promise<boolean>;
+    saveDigest(uri: Uri, digest: string): Promise<void>;
+    containsDigest(uri: Uri, digest: string): Promise<boolean>;
 }
 
 export const ITrustService = Symbol('ITrustService');
 export interface ITrustService {
     readonly onDidSetNotebookTrust: Event<void>;
-    isNotebookTrusted(uri: string, notebookContents: string): Promise<boolean>;
-    trustNotebook(uri: string, notebookContents: string): Promise<void>;
+    isNotebookTrusted(uri: Uri, notebookContents: string): Promise<boolean>;
+    trustNotebook(uri: Uri, notebookContents: string): Promise<void>;
 }

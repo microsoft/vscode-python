@@ -178,24 +178,18 @@ export async function shutdownAllNotebooks() {
     await Promise.all(notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()));
 }
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
-    // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
-    await commands.executeCommand('workbench.action.files.saveAll');
     await closeActiveWindows();
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
     sinon.restore();
 }
 export async function closeNotebooks(disposables: IDisposable[] = []) {
-    // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
-    await commands.executeCommand('workbench.action.files.saveAll');
     await closeActiveWindows();
     disposeAllDisposables(disposables);
 }
 
 export async function startJupyter() {
-    const { contentProvider, editorProvider } = await getServices();
-    // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
-    await commands.executeCommand('workbench.action.files.saveAll');
+    const { editorProvider } = await getServices();
     await closeActiveWindows();
 
     const disposables: IDisposable[] = [];
@@ -220,15 +214,6 @@ export async function startJupyter() {
             'Cell not executed'
         );
 
-        const saveStub = sinon.stub(contentProvider, 'saveNotebook');
-        const saveAsStub = sinon.stub(contentProvider, 'saveNotebookAs');
-        // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
-        saveStub.callsFake(noop as any);
-        saveAsStub.callsFake(noop as any);
-        disposables.push({
-            dispose: () => saveStub.restore()
-        });
-        await commands.executeCommand('workbench.action.files.saveAll');
         await closeActiveWindows();
     } finally {
         disposables.forEach((d) => d.dispose());

@@ -26,6 +26,7 @@ export type IVariableState = {
     pageSize: number;
     containerHeight: number;
     gridHeight: number;
+    refreshCount: number;
 };
 
 type VariableReducerFunc<T = never | undefined> = ReducerFunc<
@@ -49,7 +50,8 @@ function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVari
         sortColumn: arg.payload.data.sortColumn,
         startIndex: arg.payload.data.startIndex,
         sortAscending: arg.payload.data.sortAscending,
-        pageSize: arg.payload.data.pageSize
+        pageSize: arg.payload.data.pageSize,
+        refreshCount: arg.payload.data.refreshCount
     });
     return {
         ...arg.prevState,
@@ -77,7 +79,8 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
                     sortColumn: 'name',
                     sortAscending: true,
                     startIndex: 0,
-                    pageSize: arg.prevState.pageSize
+                    pageSize: arg.prevState.pageSize,
+                    refreshCount: arg.prevState.refreshCount
                 }
             }
         });
@@ -129,7 +132,9 @@ function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVa
     // Check to see if we have moved to a new execution count
     if (
         response.executionCount > arg.prevState.currentExecutionCount ||
-        (response.executionCount === arg.prevState.currentExecutionCount && arg.prevState.variables.length === 0)
+        response.refreshCount > arg.prevState.refreshCount ||
+        (response.executionCount === arg.prevState.currentExecutionCount && arg.prevState.variables.length === 0) ||
+        (response.refreshCount === arg.prevState.refreshCount && arg.prevState.variables.length === 0)
     ) {
         // Should be an entirely new request. Make an empty list
         const variables = Array<IJupyterVariable>(response.totalCount);
@@ -143,9 +148,13 @@ function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVa
         return {
             ...arg.prevState,
             currentExecutionCount: response.executionCount,
+            refreshCount: response.refreshCount,
             variables
         };
-    } else if (response.executionCount === arg.prevState.currentExecutionCount) {
+    } else if (
+        response.executionCount === arg.prevState.currentExecutionCount &&
+        response.refreshCount === arg.prevState.refreshCount
+    ) {
         // This is a response for a page in an already existing list.
         const variables = [...arg.prevState.variables];
 
@@ -180,7 +189,8 @@ function handleRestarted(arg: VariableReducerArg): IVariableState {
                 sortColumn: 'name',
                 sortAscending: true,
                 startIndex: 0,
-                pageSize: arg.prevState.pageSize
+                pageSize: arg.prevState.pageSize,
+                refreshCount: 0
             }
         }
     });
@@ -207,7 +217,8 @@ function handleFinishCell(arg: VariableReducerArg<ICell>): IVariableState {
                     sortColumn: 'name',
                     sortAscending: true,
                     startIndex: 0,
-                    pageSize: arg.prevState.pageSize
+                    pageSize: arg.prevState.pageSize,
+                    refreshCount: arg.prevState.refreshCount
                 }
             }
         });
@@ -230,13 +241,11 @@ function handleRefresh(arg: VariableReducerArg): IVariableState {
                     sortColumn: 'name',
                     sortAscending: true,
                     startIndex: 0,
-                    pageSize: arg.prevState.pageSize
+                    pageSize: arg.prevState.pageSize,
+                    refreshCount: arg.prevState.refreshCount + 1
                 }
             },
-            prevState: {
-                ...arg.prevState,
-                variables: []
-            }
+            prevState: arg.prevState
         });
     }
     return {
@@ -274,7 +283,8 @@ export function generateVariableReducer(): Reducer<IVariableState, QueuableActio
         sortColumn: 'name',
         pageSize: 5,
         containerHeight: 0,
-        gridHeight: 200
+        gridHeight: 200,
+        refreshCount: 0
     };
 
     // Then combine that with our map of state change message to reducer
