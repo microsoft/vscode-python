@@ -33,7 +33,7 @@ import {
     KernelInterpreterDependencyResponse
 } from '../../types';
 import { cleanEnvironment, detectDefaultKernelName } from './helpers';
-import { JupyterKernelSpec } from './jupyterKernelSpec';
+import { getKernelSpecFile, JupyterKernelSpec } from './jupyterKernelSpec';
 import { LiveKernelModel } from './types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -362,10 +362,12 @@ export class KernelService {
         }
         if (!kernel) {
             // Possible user doesn't have kernelspec installed.
-            kernel = await this.getKernelSpecFromStdOut(output.stdout).catch((ex) => {
-                traceError('Failed to get kernelspec from stdout', ex);
-                return undefined;
-            });
+            kernel = await this.getKernelSpecFromStdOut(await execService.getExecutablePath(), output.stdout).catch(
+                (ex) => {
+                    traceError('Failed to get kernelspec from stdout', ex);
+                    return undefined;
+                }
+            );
         }
         if (!kernel) {
             const error = `Kernel not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
@@ -519,7 +521,7 @@ export class KernelService {
      * @memberof KernelService
      */
     @traceDecorators.error('Failed to parse kernel creation stdout')
-    private async getKernelSpecFromStdOut(output: string): Promise<JupyterKernelSpec | undefined> {
+    private async getKernelSpecFromStdOut(pythonPath: string, output: string): Promise<JupyterKernelSpec | undefined> {
         if (!output) {
             return;
         }
@@ -540,8 +542,13 @@ export class KernelService {
             throw new Error('Unable to parse output to get the kernel info');
         }
 
-        const specFile = path.join(groups.path, 'kernel.json');
-        if (!(await this.fileSystem.fileExists(specFile))) {
+        const specFile = await getKernelSpecFile(
+            this.fileSystem,
+            this.execFactory,
+            pythonPath,
+            path.join(groups.path, 'kernel.json')
+        );
+        if (!specFile) {
             throw new Error('KernelSpec file not found');
         }
 
