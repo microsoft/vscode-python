@@ -5,12 +5,13 @@
 
 // tslint:disable:no-any max-func-body-length
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import { ChildProcess } from 'child_process';
 import { EOL } from 'os';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
+import * as sinon from 'sinon';
 import { Writable } from 'stream';
 import * as TypeMoq from 'typemoq';
 import { Range, TextDocument, TextEditor, TextLine, Uri, WorkspaceEdit } from 'vscode';
@@ -30,6 +31,7 @@ import {
     IPythonSettings,
     ISortImportSettings
 } from '../../client/common/types';
+import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { IServiceContainer } from '../../client/ioc/types';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
@@ -68,6 +70,10 @@ suite('Import Sort Provider', () => {
         serviceContainer.setup((c) => c.get(IDisposableRegistry)).returns(() => []);
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         sortProvider = new SortImportsEditingProvider(serviceContainer.object);
+    });
+
+    teardown(() => {
+        sinon.restore();
     });
 
     test('Ensure command is registered', () => {
@@ -255,6 +261,30 @@ suite('Import Sort Provider', () => {
         expect(edit).to.be.equal(undefined, 'not undefined');
         shell.verifyAll();
         documentManager.verifyAll();
+    });
+    test("Ensure new isort process isn't started for file until the previous process has finished its execution", async () => {
+        const uri = Uri.file('TestDoc');
+        const _provideDocumentSortImportsEdits = sinon.stub(
+            SortImportsEditingProvider.prototype,
+            '_provideDocumentSortImportsEdits'
+        );
+        const deferred = createDeferred<WorkspaceEdit | undefined>();
+        _provideDocumentSortImportsEdits.returns(deferred.promise);
+        sortProvider.provideDocumentSortImportsEdits(uri).ignoreErrors();
+
+        // Next two calls should simply return because the previous promise hasn't completed yet
+        await sortProvider.provideDocumentSortImportsEdits(uri);
+        await sortProvider.provideDocumentSortImportsEdits(uri);
+
+        // Ensure only one isort process is only created for the file
+        assert.ok(_provideDocumentSortImportsEdits.calledOnce);
+
+        // Resolve the promise now
+        deferred.resolve();
+
+        await sortProvider.provideDocumentSortImportsEdits(uri);
+        // Ensure a new isort process is created for the file
+        assert.ok(_provideDocumentSortImportsEdits.calledTwice);
     });
     test('Ensure no edits are provided when there are no lines (when using provider method)', async () => {
         const uri = Uri.file('TestDoc');

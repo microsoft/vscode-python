@@ -8,7 +8,7 @@ import { traceError } from '../common/logger';
 import * as internalScripts from '../common/process/internal/scripts';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IEditorUtils, IOutputChannel } from '../common/types';
-import { createDeferred } from '../common/utils/async';
+import { createDeferred, createDeferredFromPromise, Deferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
@@ -23,6 +23,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     private readonly documentManager: IDocumentManager;
     private readonly configurationService: IConfigurationService;
     private readonly editorUtils: IEditorUtils;
+    private isortPromises = new Map<string, Deferred<WorkspaceEdit | undefined>>();
 
     public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.shell = serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -35,6 +36,21 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
 
     @captureTelemetry(EventName.FORMAT_SORT_IMPORTS)
     public async provideDocumentSortImportsEdits(
+        uri: Uri,
+        token?: CancellationToken
+    ): Promise<WorkspaceEdit | undefined> {
+        if (this.isortPromises.has(uri.fsPath)) {
+            if (!this.isortPromises.get(uri.fsPath)!.completed) {
+                return;
+            }
+        }
+        const promise = this._provideDocumentSortImportsEdits(uri, token);
+        const deferred = createDeferredFromPromise(promise);
+        this.isortPromises.set(uri.fsPath, deferred);
+        return promise;
+    }
+
+    public async _provideDocumentSortImportsEdits(
         uri: Uri,
         token?: CancellationToken
     ): Promise<WorkspaceEdit | undefined> {
