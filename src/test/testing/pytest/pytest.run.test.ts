@@ -519,7 +519,10 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             let testManager: ITestManager;
             let results: Tests;
             let diagnostics: readonly vscode.Diagnostic[];
-            suiteSetup(async () => {
+            suiteSetup(async function () {
+                // This "before all" hook is doing way more than normal
+                // tslint:disable-next-line: no-invalid-this
+                this.timeout(TEST_TIMEOUT * 2);
                 await initializeTest();
                 initializeDI();
                 await injectTestDiscoveryOutput(scenario.discoveryOutput);
