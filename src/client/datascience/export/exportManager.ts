@@ -53,8 +53,8 @@ export class ExportManager implements IExportManager {
                     break;
             }
         } finally {
-            await this.exportUtil.deleteDirectory(path.dirname(tempFilePath));
             reporter.dispose();
+            this.exportUtil.deleteDirectory(path.dirname(tempFilePath)).then().catch();
         }
 
         return target;
