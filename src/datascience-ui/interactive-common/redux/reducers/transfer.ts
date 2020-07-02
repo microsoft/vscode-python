@@ -40,8 +40,7 @@ export namespace Transfer {
         postActionToExtension(arg, InteractiveWindowMessages.ExportNotebookAs, cellContents);
 
         return {
-            ...arg.prevState,
-            busy: true
+            ...arg.prevState
         };
     }
 
