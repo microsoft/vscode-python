@@ -59,7 +59,12 @@ suite('Propose New Language Server Banner', () => {
     });
     test('Do not show banner before target date', async () => {
         setupShowMessage('', typemoq.Times.never());
-        const testBanner = preparePopup(100, new Date('September 1, 2020 0:0:1'));
+        const testBanner = preparePopup(100, new Date('September 1, 2030 0:0:1'));
+        await testBanner.showBanner();
+    });
+    test('Do show banner after target date', async () => {
+        setupShowMessage('', typemoq.Times.once());
+        const testBanner = preparePopup(100, new Date('May 1, 2030 0:0:1'));
         await testBanner.showBanner();
     });
     test('isEnabled must return false when Banner is implicitly disabled by sampling', async () => {
