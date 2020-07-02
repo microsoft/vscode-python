@@ -574,7 +574,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
     public [InteractiveWindowMessages.OpenSettings]: string | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
-    public [InteractiveWindowMessages.ExportNotebookAs]: never | undefined;
+    public [InteractiveWindowMessages.ExportNotebookAs]: ICell[];
     public [InteractiveWindowMessages.GetAllCells]: never | undefined;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
     public [InteractiveWindowMessages.DeleteAllCells]: IAddCellAction;

@@ -815,7 +815,7 @@ export namespace DataScience {
         'DataScience.remoteDebuggerNotSupported',
         'Debugging while attached to a remote server is not currently supported.'
     );
-    export const notebookExportAs = localize('DataScience.notebookExportAs', 'Convert and save to a python script');
+    export const notebookExportAs = localize('DataScience.notebookExportAs', 'Export As');
     export const exportAsPythonFileTitle = localize('DataScience.exportAsPythonFileTitle', 'Save As Python File');
     export const exportAsQuickPickPlaceholder = localize('DataScience.exportAsQuickPickPlaceholder', 'Export As...');
     export const openExportedFileMessage = localize(

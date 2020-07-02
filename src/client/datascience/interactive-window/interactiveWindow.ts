@@ -33,7 +33,7 @@ import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { EditorContexts, Identifiers, Telemetry } from '../constants';
+import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
@@ -57,7 +57,9 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookExporter,
+    INotebookModel,
     INotebookProvider,
+    INotebookStorage,
     IStatusProvider,
     IThemeFinder,
     WebViewViewChangeEventArgs
@@ -115,7 +117,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
-        @inject(IExperimentService) expService: IExperimentService
+        @inject(IExperimentService) expService: IExperimentService,
+        @inject(INotebookStorage) private notebookStorage: INotebookStorage
     ) {
         super(
             listeners,
@@ -218,6 +221,10 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
             case InteractiveWindowMessages.UpdateModel:
                 this.handleMessage(message, payload, this.handleModelChange);
+                break;
+
+            case InteractiveWindowMessages.ExportNotebookAs:
+                this.handleMessage(message, payload, this.exportAs);
                 break;
 
             default:
@@ -417,6 +424,24 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             } finally {
                 this.stopProgress();
             }
+        }
+    }
+
+    private async exportAs(cells: ICell[]) {
+        const tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
+        const uri = Uri.file(tempFile.filePath);
+        let model: INotebookModel;
+
+        this.startProgress();
+        try {
+            await this.jupyterExporter.exportToFile(cells, uri.fsPath, false);
+            model = await this.notebookStorage.load(uri);
+        } finally {
+            tempFile.dispose();
+            this.stopProgress();
+        }
+        if (model) {
+            this.commandManager.executeCommand(Commands.Export, model);
         }
     }
 
