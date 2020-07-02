@@ -431,18 +431,47 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         const tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
         const uri = Uri.file(tempFile.filePath);
         let model: INotebookModel;
+        const directoryPath = path.join(
+            path.dirname(tempFile.filePath),
+            path.basename(tempFile.filePath, path.extname(tempFile.filePath))
+        );
 
         this.startProgress();
         try {
             await this.jupyterExporter.exportToFile(cells, uri.fsPath, false);
-            model = await this.notebookStorage.load(uri);
+            const newPath = await this.createNewFile(directoryPath, '.ipynb', uri);
+            model = await this.notebookStorage.load(Uri.file(newPath));
         } finally {
             tempFile.dispose();
+            await this.deleteNewDirectory(directoryPath);
             this.stopProgress();
         }
         if (model) {
             this.commandManager.executeCommand(Commands.Export, model);
         }
+    }
+
+    private async createNewFile(dirPath: string, fileName: string, source: Uri): Promise<string> {
+        try {
+            await this.fileSystem.createDirectory(dirPath);
+            const newFilePath = path.join(dirPath, fileName);
+            await this.fileSystem.copyFile(source.fsPath, newFilePath);
+            return newFilePath;
+        } catch (e) {
+            await this.deleteNewDirectory(dirPath);
+            throw e;
+        }
+    }
+
+    private async deleteNewDirectory(dirPath: string) {
+        if (!(await this.fileSystem.directoryExists(dirPath))) {
+            return;
+        }
+        const files = await this.fileSystem.getFiles(dirPath);
+        for (const file of files) {
+            await this.fileSystem.deleteFile(file);
+        }
+        await this.fileSystem.deleteDirectory(dirPath);
     }
 
     private handleModelChange(update: NotebookModelChange) {
