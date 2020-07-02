@@ -1510,17 +1510,17 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    private async handleKernelMessage(msg: KernelMessage.IIOPubMessage, _requestId: string) {
+    private handleKernelMessage(msg: KernelMessage.IIOPubMessage, _requestId: string) {
         // Only care about one sort of message, UpdateDisplayData
         // tslint:disable-next-line: no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
         if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
-            return this.handleUpdateDisplayData(msg as KernelMessage.IUpdateDisplayDataMsg);
+            this.handleUpdateDisplayData(msg as KernelMessage.IUpdateDisplayDataMsg);
         }
     }
 
-    private async handleUpdateDisplayData(msg: KernelMessage.IUpdateDisplayDataMsg) {
+    private handleUpdateDisplayData(msg: KernelMessage.IUpdateDisplayDataMsg) {
         // Send to the UI to handle
-        return this.postMessage(InteractiveWindowMessages.UpdateDisplayData, msg).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.UpdateDisplayData, msg).ignoreErrors();
     }
 }
