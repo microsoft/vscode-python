@@ -1013,7 +1013,6 @@ for i in range(0, 100):
     runMountedTest(
         'Gather code run from text editor',
         async (wrapper) => {
-            ioc.getSettings().datascience.enableGather = true;
             ioc.getSettings().datascience.gatherToScript = true;
             // Enter some code.
             const code = `${defaultCellMarker}\na=1\na`;
@@ -1056,7 +1055,6 @@ for i in range(0, 100):
     runMountedTest(
         'Gather code run from input box',
         async (wrapper) => {
-            ioc.getSettings().datascience.enableGather = true;
             ioc.getSettings().datascience.gatherToScript = true;
             // Create an interactive window so that it listens to the results.
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);

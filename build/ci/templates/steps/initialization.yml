@@ -18,7 +18,6 @@ parameters:
   compile: 'true'
   sqlite: 'false'
   installVSCEorNPX: 'true'
-  enableGather: 'false'
 
 steps:
   - bash: |
@@ -92,15 +91,6 @@ steps:
       command: custom
       verbose: true
       customCommand: ci
-
-  - task: Npm@1
-    displayName: 'Install optional python-program-analysis'
-    condition: and(succeeded(), eq('${{ parameters.enableGather }}', 'true'))
-    inputs:
-      workingDir: ${{ parameters.workingDirectory }}
-      command: custom
-      verbose: true
-      customCommand: 'install @msrvida/python-program-analysis'
 
   # On Mac, the command `node` doesn't always point to the current node version.
   # Debugger tests use the variable process.env.NODE_PATH

@@ -356,7 +356,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         font={this.props.font}
                         allowUndo={this.props.undoStack.length > 0}
                         editorOptions={this.props.editorOptions}
-                        enableGather={this.props.settings.enableGather}
                         themeMatplotlibPlots={this.props.settings.themeMatplotlibPlots}
                         // Focus pending does not apply to native editor.
                         focusPending={0}

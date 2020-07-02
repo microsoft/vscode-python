@@ -2070,22 +2070,16 @@
                     "description": "Modify plot output so that it can be expanded into a plot viewer window.",
                     "scope": "resource"
                 },
-                "python.dataScience.enableGather": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Python Insiders Only: Enable experimental gather feature for executed cells. For a gathered cell, that cell and only the code it depends on will be exported to a new notebook.",
-                    "scope": "resource"
-                },
                 "python.dataScience.gatherToScript": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Python Insiders Only: If experimental gather feature is enabled, gather code to a python script rather than a notebook.",
+                    "description": "Gather code to a python script rather than a notebook.",
                     "scope": "resource"
                 },
                 "python.dataScience.gatherSpecPath": {
                     "type": "string",
                     "default": "",
-                    "description": "Python Insiders Only: If experimental gather feature is enabled, this setting specifies a folder that contains additional or replacement spec files used for analysis.",
+                    "description": "This setting specifies a folder that contains additional or replacement spec files used for analysis.",
                     "scope": "resource"
                 },
                 "python.dataScience.codeLenses": {
