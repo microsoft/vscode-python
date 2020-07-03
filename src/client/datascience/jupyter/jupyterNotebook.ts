@@ -1002,9 +1002,7 @@ export class JupyterNotebookBase implements INotebook {
                 subscriber.cell.data.execution_count = msg.content.execution_count as number;
             }
 
-            // Tell all of the listeners about the event. They can cause this to not return until
-            // they are done handling the event.
-            // One such example is a comm_msg for ipywidgets. We have to wait for it to finish.
+            // Tell all of the listeners about the event.
             [...this.ioPubListeners].forEach((l) => l(msg, msg.header.msg_id));
 
             // Show our update if any new output.
