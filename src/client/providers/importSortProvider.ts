@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
-import { CancellationToken, TextDocument, Uri, WorkspaceEdit } from 'vscode';
+import { CancellationToken, CancellationTokenSource, TextDocument, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { Commands, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { traceError } from '../common/logger';
@@ -23,7 +23,10 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     private readonly documentManager: IDocumentManager;
     private readonly configurationService: IConfigurationService;
     private readonly editorUtils: IEditorUtils;
-    private isortPromises = new Map<string, Deferred<WorkspaceEdit | undefined>>();
+    private isortPromises = new Map<
+        string,
+        { deferred: Deferred<WorkspaceEdit | undefined>; tokenSource: CancellationTokenSource }
+    >();
 
     public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.shell = serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -35,18 +38,18 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     }
 
     @captureTelemetry(EventName.FORMAT_SORT_IMPORTS)
-    public async provideDocumentSortImportsEdits(
-        uri: Uri,
-        token?: CancellationToken
-    ): Promise<WorkspaceEdit | undefined> {
+    public async provideDocumentSortImportsEdits(uri: Uri): Promise<WorkspaceEdit | undefined> {
         if (this.isortPromises.has(uri.fsPath)) {
-            if (!this.isortPromises.get(uri.fsPath)!.completed) {
-                return;
+            const isortPromise = this.isortPromises.get(uri.fsPath)!;
+            if (!isortPromise.deferred.completed) {
+                // Cancelling the token will kill the previous isort process & discard its result.
+                isortPromise.tokenSource.cancel();
             }
         }
-        const promise = this._provideDocumentSortImportsEdits(uri, token);
+        const tokenSource = new CancellationTokenSource();
+        const promise = this._provideDocumentSortImportsEdits(uri, tokenSource.token);
         const deferred = createDeferredFromPromise(promise);
-        this.isortPromises.set(uri.fsPath, deferred);
+        this.isortPromises.set(uri.fsPath, { deferred, tokenSource });
         return promise;
     }
 
@@ -63,14 +66,13 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         }
 
         const execIsort = await this.getExecIsort(document, uri, token);
-        if (token && token.isCancellationRequested) {
-            return;
-        }
         const diffPatch = await execIsort(document.getText());
-
-        return diffPatch
+        const edit = diffPatch
             ? this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri)
             : undefined;
+
+        // If token has been cancelled discard the result.
+        return token && token.isCancellationRequested ? undefined : edit;
     }
 
     public registerCommands() {
