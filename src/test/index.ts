@@ -16,6 +16,7 @@ import * as Mocha from 'mocha';
 import * as path from 'path';
 import { IS_CI_SERVER_TEST_DEBUGGER, MOCHA_REPORTER_JUNIT } from './ciConstants';
 import {
+    EXTENSION_ROOT_DIR_FOR_TESTS,
     IS_MULTI_ROOT_TEST,
     IS_SMOKE_TEST,
     MAX_EXTENSION_ACTIVATION_TIME,
@@ -26,6 +27,29 @@ import { initialize } from './initialize';
 import { initializeLogger } from './testLogger';
 
 initializeLogger();
+
+function setupCoverage() {
+    // tslint:disable-next-line: no-console
+    console.error('Instrumenting Code');
+    const NYC = require('nyc');
+    const nyc = new NYC({
+        cwd: path.join(EXTENSION_ROOT_DIR_FOR_TESTS),
+        include: ['**/out/client/**/*.js'],
+        exclude: ['**/test/**', '.vscode-test/**', '**/datascience-ui/**', '**/ipywidgest/**', '**/node_modules/**'],
+        reporter: ['text', 'html'],
+        all: true,
+        instrument: true,
+        hookRequire: true,
+        hookRunInContext: true,
+        hookRunInThisContext: true,
+        excludeNodeModules: true
+    });
+
+    nyc.reset();
+    nyc.wrap();
+
+    return nyc;
+}
 
 type SetupOptions = Mocha.MochaOptions & {
     testFilesSuffix: string;
@@ -137,6 +161,7 @@ export async function run(): Promise<void> {
     const options = configure();
     const mocha = new Mocha(options);
     const testsRoot = path.join(__dirname);
+    const nyc = setupCoverage();
 
     // Enable source map support.
     require('source-map-support').install();
@@ -175,13 +200,20 @@ export async function run(): Promise<void> {
         console.error('Failed to activate python extension without errors', ex);
     }
 
-    // Run the tests.
-    await new Promise<void>((resolve, reject) => {
-        mocha.run((failures) => {
-            if (failures > 0) {
-                return reject(new Error(`${failures} total failures`));
-            }
-            resolve();
+    try {
+        // Run the tests.
+        await new Promise<void>((resolve, reject) => {
+            mocha.run((failures) => {
+                if (failures > 0) {
+                    return reject(new Error(`${failures} total failures`));
+                }
+                resolve();
+            });
         });
-    });
+    } finally {
+        if (nyc) {
+            nyc.writeCoverageFile();
+            nyc.report();
+        }
+    }
 }
