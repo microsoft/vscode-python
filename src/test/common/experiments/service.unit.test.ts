@@ -30,7 +30,7 @@ suite('Experimentation service', () => {
     setup(() => {
         configurationService = mock(ConfigurationService);
         appEnvironment = mock(ApplicationEnvironment);
-        globalMemento = mock(MockMemento);
+        globalMemento = new MockMemento();
         outputChannel = new MockOutputChannel('');
     });
 
@@ -66,7 +66,7 @@ suite('Experimentation service', () => {
             new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
-                instance(globalMemento),
+                globalMemento,
                 outputChannel
             );
 
@@ -90,7 +90,7 @@ suite('Experimentation service', () => {
             new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
-                instance(globalMemento),
+                globalMemento,
                 outputChannel
             );
 
@@ -113,7 +113,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
-                instance(globalMemento),
+                globalMemento,
                 outputChannel
             );
 
@@ -128,11 +128,32 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
-                instance(globalMemento),
+                globalMemento,
                 outputChannel
             );
 
             assert.deepEqual(experimentService._optOutFrom, ['Foo - experiment']);
+        });
+
+        test('Experiment data in Memento storage should be logged', () => {
+            const experiments = ['ExperimentOne', 'ExperimentTwo'];
+            globalMemento = mock(MockMemento);
+            configureSettings(true, [], []);
+            // tslint:disable-next-line: no-any
+            when(globalMemento.get(anything(), anything())).thenReturn({ features: experiments } as any);
+
+            // tslint:disable-next-line: no-unused-expression
+            new ExperimentService(
+                instance(configurationService),
+                instance(appEnvironment),
+                instance(globalMemento),
+                outputChannel
+            );
+            const output = `${Experiments.inGroup().format(experiments[0])}\n${Experiments.inGroup().format(
+                experiments[1]
+            )}\n`;
+
+            assert.equal(outputChannel.output, output);
         });
     });
 
@@ -169,7 +190,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
-                instance(globalMemento),
+                globalMemento,
                 outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
@@ -185,7 +206,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
-                instance(globalMemento),
+                globalMemento,
                 outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
@@ -201,7 +222,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
-                instance(globalMemento),
+                globalMemento,
                 outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
@@ -221,7 +242,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
-                instance(globalMemento),
+                globalMemento,
                 outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
@@ -241,7 +262,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
-                instance(globalMemento),
+                globalMemento,
                 outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
@@ -261,7 +282,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(configurationService),
                 instance(appEnvironment),
-                instance(globalMemento),
+                globalMemento,
                 outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
@@ -273,26 +294,6 @@ suite('Experimentation service', () => {
                 properties: { expNameOptedOutOf: experiment }
             });
             sinon.assert.notCalled(isCachedFlightEnabledStub);
-        });
-
-        test('Experiment data in Memento storage should be logged', () => {
-            const experiments = ['ExperimentOne', 'ExperimentTwo'];
-            configureSettings(true, [], []);
-            // tslint:disable-next-line: no-any
-            when(globalMemento.get(anything(), anything())).thenReturn({ features: experiments } as any);
-
-            // tslint:disable-next-line: no-unused-expression
-            new ExperimentService(
-                instance(configurationService),
-                instance(appEnvironment),
-                instance(globalMemento),
-                outputChannel
-            );
-            const output = `${Experiments.inGroup().format(experiments[0])}\n${Experiments.inGroup().format(
-                experiments[1]
-            )}\n`;
-
-            assert.equal(outputChannel.output, output);
         });
     });
 });
