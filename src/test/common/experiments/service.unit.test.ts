@@ -139,6 +139,7 @@ suite('Experimentation service', () => {
             const experiments = ['ExperimentOne', 'ExperimentTwo'];
             globalMemento = mock(MockMemento);
             configureSettings(true, [], []);
+            configureApplicationEnvironment('stable', extensionVersion);
             // tslint:disable-next-line: no-any
             when(globalMemento.get(anything(), anything())).thenReturn({ features: experiments } as any);
 
