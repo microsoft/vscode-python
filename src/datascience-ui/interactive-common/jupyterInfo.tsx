@@ -10,7 +10,8 @@ export interface IJupyterInfoProps {
     baseTheme: string;
     font: IFont;
     kernel: IServerState;
-    isNotebookTrusted?: boolean; // Native editor-specific
+    isNotebookTrusted?: boolean;
+    shouldShowTrustMessage: boolean;
     selectServer(): void;
     launchNotebookTrustPrompt?(): void; // Native editor-specific
     selectKernel(): void;
@@ -90,7 +91,7 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
     }
 
     private renderTrustMessage() {
-        if (this.props.isNotebookTrusted !== undefined) {
+        if (this.props.shouldShowTrustMessage) {
             const text = this.props.isNotebookTrusted
                 ? getLocString('DataScience.notebookIsTrusted', 'Trusted')
                 : getLocString('DataScience.notebookIsNotTrusted', 'Not Trusted');
