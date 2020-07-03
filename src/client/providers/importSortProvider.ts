@@ -66,9 +66,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         }
 
         const execIsort = await this.getExecIsort(document, uri, token);
-        if (token && token.isCancellationRequested) {
-            return;
-        }
         const diffPatch = await execIsort(document.getText());
         const edit = diffPatch
             ? this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri)
