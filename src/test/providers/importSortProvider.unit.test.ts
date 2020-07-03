@@ -5,7 +5,7 @@
 
 // tslint:disable:no-any max-func-body-length
 
-import { assert, expect } from 'chai';
+import { expect } from 'chai';
 import { ChildProcess } from 'child_process';
 import { EOL } from 'os';
 import * as path from 'path';
@@ -31,7 +31,6 @@ import {
     IPythonSettings,
     ISortImportSettings
 } from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { IServiceContainer } from '../../client/ioc/types';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
