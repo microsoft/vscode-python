@@ -27,8 +27,15 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         resource: Resource,
         kernelSpec: IJupyterKernelSpec,
         interpreter?: PythonInterpreter
-    ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon }> {
+    ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon } | undefined> {
         const daemon = await this.daemonPool.get(resource, kernelSpec, interpreter);
+
+        // The daemon pool can return back a non-IPythonKernelDaemon if daemon service is not supported or for Python 2.
+        // Use a check for the daemon.start function here before we call it.
+        if (!daemon.start) {
+            return undefined;
+        }
+
         const args = kernelSpec.argv.slice();
         const modulePrefixIndex = args.findIndex((item) => item === '-m');
         if (modulePrefixIndex === -1) {

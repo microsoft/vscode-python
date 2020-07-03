@@ -215,17 +215,23 @@ export class KernelProcess implements IKernelProcess {
     }
 
     private async launchAsObservable() {
-        let exeObs: ObservableExecutionResult<string>;
+        let exeObs: ObservableExecutionResult<string> | undefined;
         if (this.isPythonKernel) {
             this.pythonKernelLauncher = new PythonKernelLauncherDaemon(this.daemonPool);
-            const { observableOutput, daemon } = await this.pythonKernelLauncher.launch(
+            const kernelDaemonLaunch = await this.pythonKernelLauncher.launch(
                 this.resource,
                 this._kernelSpec,
                 this.interpreter
             );
-            this.kernelDaemon = daemon;
-            exeObs = observableOutput;
-        } else {
+
+            if (kernelDaemonLaunch) {
+                this.kernelDaemon = kernelDaemonLaunch.daemon;
+                exeObs = kernelDaemonLaunch.observableOutput;
+            }
+        }
+
+        // If we are not python or if we failed with our daemon launch just use the ProcessExecutionFactory
+        if (!exeObs) {
             // First part of argument is always the executable.
             const executable = this._kernelSpec.argv[0];
             const executionService = await this.processExecutionFactory.create(this.resource);
@@ -234,7 +240,7 @@ export class KernelProcess implements IKernelProcess {
             });
         }
 
-        if (exeObs.proc) {
+        if (exeObs && exeObs.proc) {
             exeObs.proc.on('exit', (exitCode) => {
                 traceInfo('KernelProcess Exit', `Exit - ${exitCode}`);
                 if (this.disposed) {
