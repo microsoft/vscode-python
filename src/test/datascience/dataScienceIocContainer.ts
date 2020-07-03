@@ -151,7 +151,6 @@ import {
     TerminalActivationProviders
 } from '../../client/common/terminal/types';
 import {
-    BANNER_NAME_LS_SURVEY,
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
     IBrowserService,
@@ -171,7 +170,6 @@ import {
     IOutputChannel,
     IPathUtils,
     IPersistentStateFactory,
-    IPythonExtensionBanner,
     IPythonSettings,
     IsWindows,
     ProductType,
@@ -384,7 +382,6 @@ import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client
 import { registerInterpreterTypes } from '../../client/interpreter/serviceRegistry';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
-import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
 import { PythonInterpreterLocatorService } from '../../client/pythonEnvironments/discovery/locators';
 import { InterpreterLocatorHelper } from '../../client/pythonEnvironments/discovery/locators/helpers';
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
@@ -928,14 +925,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IDotNetCompatibilityService>(
             IDotNetCompatibilityService,
             instance(dotNetCompability)
-        );
-
-        // Don't allow a banner to show up
-        const extensionBanner = mock(LanguageServerSurveyBanner);
-        this.serviceManager.addSingletonInstance<IPythonExtensionBanner>(
-            IPythonExtensionBanner,
-            instance(extensionBanner),
-            BANNER_NAME_LS_SURVEY
         );
 
         // Don't allow the download to happen

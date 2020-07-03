@@ -6,14 +6,12 @@ import { INugetRepository } from '../common/nuget/types';
 import {
     BANNER_NAME_DS_SURVEY,
     BANNER_NAME_INTERACTIVE_SHIFTENTER,
-    BANNER_NAME_LS_SURVEY,
     BANNER_NAME_PROPOSE_LS,
     IPythonExtensionBanner
 } from '../common/types';
 import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner';
 import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
-import { LanguageServerSurveyBanner } from '../languageServices/languageServerSurveyBanner';
 import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguageServerBanner';
 import { AATesting } from './aaTesting';
 import { ExtensionActivationManager } from './activationManager';
@@ -86,11 +84,6 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         LanguageServerType.Jedi
     );
 
-    serviceManager.addSingleton<IPythonExtensionBanner>(
-        IPythonExtensionBanner,
-        LanguageServerSurveyBanner,
-        BANNER_NAME_LS_SURVEY
-    );
     serviceManager.addSingleton<IPythonExtensionBanner>(
         IPythonExtensionBanner,
         ProposeLanguageServerBanner,

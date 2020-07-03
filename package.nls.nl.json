@@ -47,7 +47,6 @@
     "python.snippet.launch.flask.label": "Python: Flask",
     "python.snippet.launch.pyramid.label": "Python: Pyramid-applicatie",
     "python.snippet.launch.attach.label": "Python: aankoppelen",
-    "LanguageService.bannerMessage": "Zou je alsjeblieft 2 minuten kunnen nemen om ons te vertellen hoe de Python-language server voor jou werkt?",
     "LanguageService.bannerLabelYes": "Ja, neem nu deel aan het onderzoek",
     "LanguageService.bannerLabelNo": "Nee, bedankt",
     "LanguageService.lsFailedToStart": "We zijn een probleem tegengekomen bij het starten van de language server. Aan het terugschakelen naar het alternatief, Jedi. Bekijk het weergavepaneel voor details.",

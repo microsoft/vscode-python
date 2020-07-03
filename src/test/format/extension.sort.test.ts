@@ -160,7 +160,7 @@ suite('Sorting', () => {
         const originalContent = textDocument.getText();
         await commands.executeCommand(Commands.Sort_Imports);
         assert.notEqual(originalContent, textDocument.getText(), 'Contents have not changed');
-    });
+    }).timeout(TEST_TIMEOUT * 2);
 
     test('With Changes and Config implicit from cwd', async () => {
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);

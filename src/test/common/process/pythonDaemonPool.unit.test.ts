@@ -20,6 +20,7 @@ import { IProcessLogger, IPythonExecutionService, Output } from '../../../client
 import { sleep } from '../../../client/common/utils/async';
 import { InterpreterInformation } from '../../../client/pythonEnvironments/info';
 import { noop } from '../../core';
+import { asyncDump } from '../asyncDump';
 use(chaiPromised);
 
 // tslint:disable: no-any max-func-body-length
@@ -48,7 +49,11 @@ suite('Daemon - Python Daemon Pool', () => {
         listenStub.returns(undefined);
         sendRequestStub.returns({ pong: 'hello' });
     });
-    teardown(() => {
+    teardown(function () {
+        // tslint:disable-next-line: no-invalid-this
+        if (this.currentTest && this.currentTest.state === 'failed') {
+            asyncDump();
+        }
         if (clock) {
             clock.uninstall();
         }

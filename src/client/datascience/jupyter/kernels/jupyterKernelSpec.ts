@@ -7,7 +7,9 @@ import { CancellationToken } from 'vscode';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
+import { IPythonExecutionFactory } from '../../../common/process/types';
 import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { getRealPath } from '../../common';
 import { IJupyterKernelSpec } from '../../types';
 
 export class JupyterKernelSpec implements IJupyterKernelSpec {
@@ -43,7 +45,12 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
  * @param {CancellationToken} [token]
  * @returns
  */
-export async function parseKernelSpecs(stdout: string, fs: IFileSystem, token?: CancellationToken) {
+export async function parseKernelSpecs(
+    stdout: string,
+    fs: IFileSystem,
+    execFactory: IPythonExecutionFactory,
+    token?: CancellationToken
+) {
     traceInfo('Parsing kernelspecs from jupyter');
     // This should give us back a key value pair we can parse
     const jsOut = JSON.parse(stdout.trim()) as {
@@ -54,18 +61,20 @@ export async function parseKernelSpecs(stdout: string, fs: IFileSystem, token?: 
     const specs = await Promise.race([
         Promise.all(
             Object.keys(kernelSpecs).map(async (kernelName) => {
-                const specFile = path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json');
-                const spec = kernelSpecs[kernelName].spec;
+                const spec = kernelSpecs[kernelName].spec as Kernel.ISpecModel;
                 // Add the missing name property.
                 const model = {
                     ...spec,
                     name: kernelName
                 };
-                // Check if the spec file exists.
-                if (await fs.fileExists(specFile)) {
+                const specFile = await getRealPath(
+                    fs,
+                    execFactory,
+                    spec.argv[0],
+                    path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json')
+                );
+                if (specFile) {
                     return new JupyterKernelSpec(model as Kernel.ISpecModel, specFile);
-                } else {
-                    return;
                 }
             })
         ),

@@ -27,7 +27,6 @@
     "python.snippet.launch.flask.label": "Python: Flask",
     "python.snippet.launch.pyramid.label": "Python: Приложение Pyramid",
     "python.snippet.launch.attach.label": "Python: Подключить отладчик",
-    "LanguageService.bannerMessage": "Не могли бы вы уделить 2 минуты, чтобы рассказать нам насколько хорошо у вас работает Python Language Server?",
     "LanguageService.bannerLabelYes": "Да, пройти опрос сейчас",
     "LanguageService.bannerLabelNo": "Нет, спасибо"
 }
