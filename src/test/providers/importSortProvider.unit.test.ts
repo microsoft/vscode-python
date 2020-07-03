@@ -5,7 +5,7 @@
 
 // tslint:disable:no-any max-func-body-length
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import { ChildProcess } from 'child_process';
 import { EOL } from 'os';
 import * as path from 'path';
@@ -14,7 +14,7 @@ import { Subscriber } from 'rxjs/Subscriber';
 import * as sinon from 'sinon';
 import { Writable } from 'stream';
 import * as TypeMoq from 'typemoq';
-import { Range, TextDocument, TextEditor, TextLine, Uri, WorkspaceEdit } from 'vscode';
+import { CancellationTokenSource, Range, TextDocument, TextEditor, TextLine, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../client/common/application/types';
 import { Commands, EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { ProcessService } from '../../client/common/process/proc';
@@ -31,10 +31,10 @@ import {
     IPythonSettings,
     ISortImportSettings
 } from '../../client/common/types';
+import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { IServiceContainer } from '../../client/ioc/types';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
-import { ISortImportsEditingProvider } from '../../client/providers/types';
 
 const ISOLATED = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
 
@@ -48,7 +48,7 @@ suite('Import Sort Provider', () => {
     let editorUtils: TypeMoq.IMock<IEditorUtils>;
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
-    let sortProvider: ISortImportsEditingProvider;
+    let sortProvider: SortImportsEditingProvider;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
@@ -261,32 +261,67 @@ suite('Import Sort Provider', () => {
         shell.verifyAll();
         documentManager.verifyAll();
     });
-    // Will add the test after we agree on the solution.
 
-    // test("Ensure new isort process isn't started for file until the previous process has finished its execution", async () => {
-    //     const uri = Uri.file('TestDoc');
-    //     const _provideDocumentSortImportsEdits = sinon.stub(
-    //         SortImportsEditingProvider.prototype,
-    //         '_provideDocumentSortImportsEdits'
-    //     );
-    //     const deferred = createDeferred<WorkspaceEdit | undefined>();
-    //     _provideDocumentSortImportsEdits.returns(deferred.promise);
-    //     sortProvider.provideDocumentSortImportsEdits(uri).ignoreErrors();
+    test('If no previous isort promise for the file exists, register the isort promise for the file and return it', async () => {
+        const uri = Uri.file('TestDoc');
+        const _provideDocumentSortImportsEdits = sinon.stub(
+            SortImportsEditingProvider.prototype,
+            '_provideDocumentSortImportsEdits'
+        );
 
-    //     // Next two calls should simply return because the previous promise hasn't completed yet
-    //     await sortProvider.provideDocumentSortImportsEdits(uri);
-    //     await sortProvider.provideDocumentSortImportsEdits(uri);
+        _provideDocumentSortImportsEdits.resolves(undefined);
 
-    //     // Ensure only one isort process is only created for the file
-    //     assert.ok(_provideDocumentSortImportsEdits.calledOnce);
+        await sortProvider.provideDocumentSortImportsEdits(uri);
 
-    //     // Resolve the promise now
-    //     deferred.resolve();
+        assert.ok(sortProvider._isortPromises.has(uri.fsPath));
+        assert.ok(_provideDocumentSortImportsEdits.calledOnce);
+    });
 
-    //     await sortProvider.provideDocumentSortImportsEdits(uri);
-    //     // Ensure a new isort process is created for the file
-    //     assert.ok(_provideDocumentSortImportsEdits.calledTwice);
-    // });
+    test("If previous isort promise for the file has completed, don't cancel any token and return new promise", async () => {
+        const uri = Uri.file('TestDoc');
+        const _provideDocumentSortImportsEdits = sinon.stub(
+            SortImportsEditingProvider.prototype,
+            '_provideDocumentSortImportsEdits'
+        );
+        _provideDocumentSortImportsEdits.resolves(undefined);
+
+        const deferred = createDeferred<WorkspaceEdit | undefined>();
+        deferred.resolve();
+        const tokenSource = TypeMoq.Mock.ofType<CancellationTokenSource>();
+        tokenSource
+            .setup((t) => t.cancel())
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.never());
+        sortProvider._isortPromises.set(uri.fsPath, { deferred, tokenSource: tokenSource.object });
+
+        await sortProvider.provideDocumentSortImportsEdits(uri);
+
+        tokenSource.verifyAll();
+        assert.ok(_provideDocumentSortImportsEdits.calledOnce);
+    });
+
+    test("If previous isort promise for the file hasn't been completed yet, cancel the previous token and resume", async () => {
+        const uri = Uri.file('TestDoc');
+        const _provideDocumentSortImportsEdits = sinon.stub(
+            SortImportsEditingProvider.prototype,
+            '_provideDocumentSortImportsEdits'
+        );
+        _provideDocumentSortImportsEdits.resolves(undefined);
+
+        const deferred = createDeferred<WorkspaceEdit | undefined>();
+        const tokenSource = TypeMoq.Mock.ofType<CancellationTokenSource>();
+        tokenSource
+            .setup((t) => t.cancel())
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.once());
+        sortProvider._isortPromises.set(uri.fsPath, { deferred, tokenSource: tokenSource.object });
+
+        await sortProvider.provideDocumentSortImportsEdits(uri);
+
+        tokenSource.verifyAll();
+        assert.ok(_provideDocumentSortImportsEdits.calledOnce);
+    });
+
     test('Ensure no edits are provided when there are no lines (when using provider method)', async () => {
         const uri = Uri.file('TestDoc');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
