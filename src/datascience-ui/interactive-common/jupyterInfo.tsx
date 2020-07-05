@@ -95,26 +95,29 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
                 ? getLocString('DataScience.notebookIsTrusted', 'Trusted')
                 : getLocString('DataScience.notebookIsNotTrusted', 'Not Trusted');
             const textSize = text.length;
-            const dynamicFont: React.CSSProperties = {
-                fontSize: 'var(--vscode-font-size)', // Use the same font and size as the menu
-                fontFamily: 'var(--vscode-font-family)',
-                maxWidth: this.getMaxWidth(textSize + 5), // plus 5 for the line and margins,
-                color: this.props.isNotebookTrusted ? undefined : 'var(--vscode-editorError-foreground)'
+            const maxWidth: React.CSSProperties = {
+                maxWidth: this.getMaxWidth(textSize + 5) // plus 5 for the line and margins,
             };
-            const trustTextWidth: React.CSSProperties = {
-                maxWidth: this.getMaxWidth(textSize)
+            const dynamicStyle: React.CSSProperties = {
+                maxWidth: this.getMaxWidth(textSize),
+                color: this.props.isNotebookTrusted ? undefined : 'var(--vscode-editorError-foreground)',
+                cursor: this.props.isNotebookTrusted ? undefined : 'pointer'
             };
 
             return (
-                <div className="kernel-status" style={dynamicFont}>
-                    <div
-                        className="kernel-status-section kernel-status-section-hoverable kernel-status-status"
-                        style={trustTextWidth}
+                <div className="kernel-status" style={maxWidth}>
+                    <button
+                        type="button"
+                        disabled={this.props.isNotebookTrusted} // Disable showing prompt for already-trusted notebooks
+                        aria-disabled={this.props.isNotebookTrusted}
+                        className={`jupyter-info-section${
+                            this.props.isNotebookTrusted ? '' : ' jupyter-info-section-hoverable'
+                        }`} // Disable animation on hover for already-trusted notebooks
+                        style={dynamicStyle}
                         onClick={this.props.launchNotebookTrustPrompt}
-                        role="button"
                     >
                         <div className="kernel-status-text">{text}</div>
-                    </div>
+                    </button>
                     <div className="kernel-status-divider" />
                 </div>
             );
