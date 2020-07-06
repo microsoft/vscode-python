@@ -11,6 +11,7 @@ import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
+import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
 import { IExtensionContext, IInstaller, IPathUtils, Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { defaultKernelSpecName } from '../../client/datascience/jupyter/kernels/helpers';
@@ -259,6 +260,8 @@ suite('Kernel Finder', () => {
                     }
                 });
 
+            const executionFactory = mock(PythonExecutionFactory);
+
             kernelFinder = new KernelFinder(
                 interpreterService.object,
                 interpreterLocator.object,
@@ -267,7 +270,8 @@ suite('Kernel Finder', () => {
                 pathUtils.object,
                 instance(installer),
                 context.object,
-                instance(workspaceService)
+                instance(workspaceService),
+                instance(executionFactory)
             );
         });
 
@@ -334,6 +338,7 @@ suite('Kernel Finder', () => {
             resource = Uri.file(context.object.globalStoragePath);
 
             workspaceService = mock<IWorkspaceService>();
+            const executionFactory = mock(PythonExecutionFactory);
 
             kernelFinder = new KernelFinder(
                 interpreterService.object,
@@ -343,7 +348,8 @@ suite('Kernel Finder', () => {
                 pathUtils.object,
                 instance(installer),
                 context.object,
-                instance(workspaceService)
+                instance(workspaceService),
+                instance(executionFactory)
             );
         });
 

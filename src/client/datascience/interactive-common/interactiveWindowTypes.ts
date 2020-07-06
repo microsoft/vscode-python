@@ -333,6 +333,7 @@ export interface IRefreshVariablesRequest {
 export interface ILoadAllCells {
     cells: ICell[];
     isNotebookTrusted?: boolean;
+    shouldShowTrustMessage?: boolean;
 }
 
 export interface IScrollToCell {

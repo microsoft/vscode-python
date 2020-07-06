@@ -341,7 +341,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
             this.registeredIOPubListeners.add(nb);
             //tslint:disable-next-line:no-require-imports
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-            nb.registerIOPubListener(async (msg) => {
+            nb.registerIOPubListener((msg) => {
                 if (
                     jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg) &&
                     handleUpdateDisplayDataMessage(msg, model, document)

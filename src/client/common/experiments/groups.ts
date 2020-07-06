@@ -94,3 +94,8 @@ export enum EnableStartPage {
 export enum RemoveKernelToolbarInInteractiveWindow {
     experiment = 'RemoveKernelToolbarInInteractiveWindow'
 }
+
+// Experiment to turn on trusted notebooks checks
+export enum EnableTrustedNotebooks {
+    experiment = 'EnableTrustedNotebooks'
+}

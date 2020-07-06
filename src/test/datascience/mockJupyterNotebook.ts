@@ -60,9 +60,7 @@ export class MockJupyterNotebook implements INotebook {
     constructor(private providerConnection: INotebookProviderConnection | undefined) {
         noop();
     }
-    public registerIOPubListener(
-        _listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>
-    ): void {
+    public registerIOPubListener(_listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void {
         noop();
     }
     public getGatherProvider(): IGatherProvider | undefined {

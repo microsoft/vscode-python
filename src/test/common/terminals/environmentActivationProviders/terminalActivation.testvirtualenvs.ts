@@ -81,7 +81,9 @@ suite('Activation of Environments in Terminal', () => {
         outputFilesCreated.push(outputFile);
     });
 
-    suiteTeardown(async () => {
+    suiteTeardown(async function () {
+        // tslint:disable-next-line: no-invalid-this
+        this.timeout(TEST_TIMEOUT * 2);
         await revertSettings();
 
         // remove all created log files.
