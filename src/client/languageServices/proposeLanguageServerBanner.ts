@@ -49,23 +49,9 @@ export class ProposeLanguageServerBanner extends BannerBase {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        sampleSizePerHundred: number = 10,
-        disableGeneralAudienceUntil: Date = new Date('July 7, 2020 0:0:1')
+        sampleSizePerHundred: number = 10
     ) {
         super(ProposeLSStateKeys.ProposeLSBanner, persistentState);
-        // Banner is suppressed until July 7th 2020.
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO: remove this eventually.
-        const now = new Date();
-        if (
-            now.getFullYear() < disableGeneralAudienceUntil.getFullYear() ||
-            now.getMonth() < disableGeneralAudienceUntil.getMonth() ||
-            now.getDay() < disableGeneralAudienceUntil.getDay()
-        ) {
-            this.sampleSizePerHundred = 0;
-            this.disable();
-            return;
-        }
 
         if (this.appEnvirontment.channel === 'insiders') {
             // If this is insiders build, everyone gets the banner once

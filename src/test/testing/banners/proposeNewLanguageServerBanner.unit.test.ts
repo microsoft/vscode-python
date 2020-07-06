@@ -32,7 +32,6 @@ suite('Propose New Language Server Banner', () => {
     const yes = localize.LanguageService.tryItNow();
     const no = localize.LanguageService.noThanks();
     const later = localize.LanguageService.remindMeLater();
-    const bannerEnabledDate = new Date('June 1, 2020 0:0:1'); // Enabled by default here
 
     setup(() => {
         config = typemoq.Mock.ofType<IConfigurationService>();
@@ -59,12 +58,12 @@ suite('Propose New Language Server Banner', () => {
     });
     test('Do not show banner before target date', async () => {
         setupShowMessage('', typemoq.Times.never());
-        const testBanner = preparePopup(100, new Date('September 1, 2030 0:0:1'));
+        const testBanner = preparePopup(100);
         await testBanner.showBanner();
     });
     test('Do show banner after target date', async () => {
         setupShowMessage('', typemoq.Times.once());
-        const testBanner = preparePopup(100, new Date('May 1, 2030 0:0:1'));
+        const testBanner = preparePopup(100);
         await testBanner.showBanner();
     });
     test('isEnabled must return false when Banner is implicitly disabled by sampling', async () => {
@@ -142,8 +141,7 @@ suite('Propose New Language Server Banner', () => {
             appShell.object,
             persistentStateFactory.object,
             config.object,
-            100,
-            bannerEnabledDate
+            100
         );
         await testBanner.showBanner();
 
@@ -186,8 +184,7 @@ suite('Propose New Language Server Banner', () => {
             appShell.object,
             persistentStateFactory.object,
             config.object,
-            100,
-            bannerEnabledDate
+            100
         );
         await testBanner.showBanner();
 
@@ -196,15 +193,14 @@ suite('Propose New Language Server Banner', () => {
         }
     }
 
-    function preparePopup(sampleValue: number, date?: Date): ProposeLanguageServerBanner {
+    function preparePopup(sampleValue: number): ProposeLanguageServerBanner {
         setupPersistentState(ProposeLSStateKeys.ProposeLSBanner, true);
         return new ProposeLanguageServerBanner(
             appEnvironment.object,
             appShell.object,
             persistentStateFactory.object,
             config.object,
-            sampleValue,
-            date ?? bannerEnabledDate
+            sampleValue
         );
     }
 
