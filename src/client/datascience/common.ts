@@ -184,3 +184,7 @@ export async function getRealPath(
         }
     }
 }
+
+export function getEnvironmentVariableSeparator(isWindows: Boolean): string {
+    return isWindows ? ';' : ':';
+}

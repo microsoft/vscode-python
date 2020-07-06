@@ -15,7 +15,7 @@ import { IExtensionContext, IInstaller, InstallerResponse, IPathUtils, Product, 
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterLocatorService, IInterpreterService, KNOWN_PATH_SERVICE } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
-import { getRealPath } from '../common';
+import { getEnvironmentVariableSeparator, getRealPath } from '../common';
 import { Telemetry } from '../constants';
 import { createDefaultKernelSpec, defaultKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
@@ -251,17 +251,36 @@ export class KernelFinder implements IKernelFinder {
                 if (winPath) {
                     paths = [winPath];
                 }
+
+                if (jupyterPathVar !== '') {
+                    const jupyterPaths = jupyterPathVar.split(
+                        getEnvironmentVariableSeparator(this.platformService.isWindows)
+                    );
+                    jupyterPaths.forEach(async (jupyterPath) => {
+                        const jupyterWinPath = await getRealPath(
+                            this.file,
+                            this.exeFactory,
+                            activeInterpreter.path,
+                            jupyterPath
+                        );
+
+                        if (jupyterWinPath) {
+                            paths.push(jupyterWinPath);
+                        }
+                    });
+                }
             } else {
                 paths = [path.join(this.pathUtils.home, winJupyterPath)];
+                if (jupyterPathVar !== '') {
+                    const jupyterPaths = jupyterPathVar.split(
+                        getEnvironmentVariableSeparator(this.platformService.isWindows)
+                    );
+                    paths.push(...jupyterPaths);
+                }
             }
 
             if (process.env.ALLUSERSPROFILE) {
                 paths.push(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels'));
-            }
-
-            if (jupyterPathVar !== '') {
-                const jupyterPaths = jupyterPathVar.split(';');
-                paths.push(...jupyterPaths);
             }
         } else {
             // Unix based
@@ -274,7 +293,9 @@ export class KernelFinder implements IKernelFinder {
             ];
 
             if (jupyterPathVar !== '') {
-                const jupyterPaths = jupyterPathVar.split(':');
+                const jupyterPaths = jupyterPathVar.split(
+                    getEnvironmentVariableSeparator(this.platformService.isWindows)
+                );
                 paths.push(...jupyterPaths);
             }
         }
