@@ -14,6 +14,7 @@ if ((Reflect as any).metadata === undefined) {
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
+import { isCI } from '../client/common/constants';
 import { IS_CI_SERVER_TEST_DEBUGGER, MOCHA_REPORTER_JUNIT } from './ciConstants';
 import {
     EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -29,14 +30,21 @@ import { initializeLogger } from './testLogger';
 initializeLogger();
 
 function setupCoverage() {
-    // tslint:disable-next-line: no-console
-    console.error('Instrumenting Code');
+    // In case of running integration tests like DS test with VS Code UI, we have no other way to add coverage.
+    // In such a case we need to instrument the code for coverage.
+    if (!process.env.VSC_PYTHON_INSTRUMENT_CODE_FOR_COVERAGE) {
+        return;
+    }
+    const reports = ['lcovonly', 'text', 'text-summary'];
+    if (!isCI) {
+        reports.push('html');
+    }
     const NYC = require('nyc');
     const nyc = new NYC({
         cwd: path.join(EXTENSION_ROOT_DIR_FOR_TESTS),
         include: ['**/out/client/**/*.js'],
-        exclude: ['**/test/**', '.vscode-test/**', '**/datascience-ui/**', '**/ipywidgest/**', '**/node_modules/**'],
-        reporter: ['text', 'html'],
+        exclude: ['**/test/**', '.vscode-test/**', '**/datascience-ui/**', '**/ipywidgets/**', '**/node_modules/**'],
+        reporter: reports,
         all: true,
         instrument: true,
         hookRequire: true,
@@ -48,7 +56,7 @@ function setupCoverage() {
     nyc.reset();
     nyc.wrap();
 
-    return nyc;
+    return nyc as { writeCoverageFile: Function; report: Function };
 }
 
 type SetupOptions = Mocha.MochaOptions & {

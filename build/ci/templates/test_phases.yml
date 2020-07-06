@@ -72,22 +72,6 @@ steps:
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'UnitTests'
 
-  - task: CopyFiles@2
-    inputs:
-      sourceFolder: '$(Build.SourcesDirectory)/.nyc_output'
-      targetFolder: '$(Build.ArtifactStagingDirectory)/nyc/.nyc_output'
-    displayName: 'Copy nyc_output to publish as artificat'
-    condition: contains(variables['TestsToRun'], 'testUnitTests')
-
-  # Upload Code Coverage Results (to be merged later).
-  - task: PublishBuildArtifacts@1
-    inputs:
-      pathtoPublish: '$(Build.ArtifactStagingDirectory)/nyc'
-      artifactName: 'coverage-output-$(Agent.Os)'
-    condition: contains(variables['TestsToRun'], 'testUnitTests')
-
-  - template: steps/generate_upload_coverage.yml
-
   # Install the requirements for the Python or the system tests. This includes the supporting libs that
   # we ship in our extension such as DEBUGPY and Jedi.
   #
@@ -489,6 +473,22 @@ steps:
       testRunTitle: 'debugger-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'SystemTests'
+
+  - task: CopyFiles@2
+    inputs:
+      sourceFolder: '$(Build.SourcesDirectory)/.nyc_output'
+      targetFolder: '$(Build.ArtifactStagingDirectory)/nyc/.nyc_output'
+    displayName: 'Copy nyc_output to publish as artificat'
+    condition: or(contains(variables['TestsToRun'], 'testUnitTests'),contains(variables['TestsToRun'], 'testDataScience'))
+
+  # Upload Code Coverage Results (to be merged later).
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: '$(Build.ArtifactStagingDirectory)/nyc'
+      artifactName: 'coverage-output-$(Agent.Os)'
+      condition: or(contains(variables['TestsToRun'], 'testUnitTests'),contains(variables['TestsToRun'], 'testDataScience'))
+
+  - template: steps/generate_upload_coverage.yml
 
   # Run the performance tests.
   #
