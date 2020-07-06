@@ -21,7 +21,6 @@ import {
 } from '../pythonEnvironments/discovery/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from '../pythonEnvironments/discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../pythonEnvironments/discovery/locators/services/interpreterFilter';
 import { InterpreterWatcherBuilder } from '../pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
 import {
     KnownPathsService,
@@ -285,7 +284,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager) {
         InterpeterHashProviderFactory,
         InterpeterHashProviderFactory
     );
-    serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         PreWarmActivatedEnvironmentVariables

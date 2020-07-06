@@ -3,15 +3,9 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
-import { IInterpreterFilter, IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
 import { PythonInterpreter } from '../../../info';
-import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
+import { isRestrictedWindowsStoreInterpreterPath } from './windowsStoreInterpreter';
 
-@injectable()
-export class InterpreterFilter implements IInterpreterFilter {
-    constructor(@inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter) {}
-    public isHiddenInterpreter(interpreter: PythonInterpreter): boolean {
-        return this.windowsStoreInterpreter.isHiddenInterpreter(interpreter.path);
-    }
+export function isHiddenInterpreter(interpreter: PythonInterpreter): boolean {
+    return isRestrictedWindowsStoreInterpreterPath(interpreter.path);
 }

@@ -129,7 +129,6 @@ import { ICondaService } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
 import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
@@ -231,7 +230,6 @@ suite('Installer', () => {
             InterpeterHashProviderFactory,
             InterpeterHashProviderFactory
         );
-        ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
 
         ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
         ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);

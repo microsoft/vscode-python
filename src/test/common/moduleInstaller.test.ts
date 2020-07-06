@@ -130,7 +130,6 @@ import {
 import { IServiceContainer } from '../../client/ioc/types';
 import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
 import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { ImportTracker } from '../../client/telemetry/importTracker';
@@ -239,7 +238,6 @@ suite('Module Installer', () => {
                 InterpeterHashProviderFactory,
                 InterpeterHashProviderFactory
             );
-            ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
 
             ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
             ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);

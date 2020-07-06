@@ -397,7 +397,6 @@ import {
 } from '../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
 import { InterpreterWatcherBuilder } from '../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
 import {
     KnownPathsService,
@@ -1079,7 +1078,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.addSingleton<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
             this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
             this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-            this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
             this.serviceManager.add<IInterpreterWatcher>(
                 IInterpreterWatcher,
                 WorkspaceVirtualEnvWatcherService,

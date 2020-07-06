@@ -13,7 +13,6 @@ import { ICondaService } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
 import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { isPythonVersionInProcess } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
@@ -94,7 +93,6 @@ suite('Formatting - General', () => {
             InterpeterHashProviderFactory,
             InterpeterHashProviderFactory
         );
-        ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
 
         // Mocks.

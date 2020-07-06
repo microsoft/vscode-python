@@ -75,7 +75,6 @@ import { CurrentPathService } from '../client/pythonEnvironments/discovery/locat
 import { GlobalVirtualEnvService } from '../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from '../client/pythonEnvironments/discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
 import { KnownPathsService } from '../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
 import { PipEnvService } from '../client/pythonEnvironments/discovery/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from '../client/pythonEnvironments/discovery/locators/services/pipEnvServiceHelper';
@@ -279,7 +278,6 @@ export class IocContainer {
             InterpeterHashProviderFactory,
             InterpeterHashProviderFactory
         );
-        this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     }
     public registerVariableTypes() {
         variableRegisterTypes(this.serviceManager);

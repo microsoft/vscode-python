@@ -14,7 +14,6 @@ import { InterpreterService } from '../../../client/interpreter/interpreterServi
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { InterpreterHashProvider } from '../../../client/pythonEnvironments/discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
 import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { ArgumentsHelper } from '../../../client/testing/common/argumentsHelper';
 import { CommandSource, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
@@ -125,7 +124,6 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             InterpeterHashProviderFactory,
             InterpeterHashProviderFactory
         );
-        ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     }
 
     async function ignoreTestLauncher() {
