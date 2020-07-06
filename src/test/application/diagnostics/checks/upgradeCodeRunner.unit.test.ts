@@ -261,7 +261,7 @@ suite('Application Diagnostics - Upgrade Code Runner', () => {
                 .setup((e) => e.packageJSON)
                 .returns(() => ({
                     featureFlags: {
-                        usingNewPythonInterpreterPathApi: true
+                        usingNewPythonInterpreterPathApiV2: true
                     }
                 }));
             workspaceService
