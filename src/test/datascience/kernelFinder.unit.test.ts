@@ -14,6 +14,7 @@ import { IFileSystem, IPlatformService } from '../../client/common/platform/type
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
 import { IExtensionContext, IInstaller, IPathUtils, Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
+import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { defaultKernelSpecName } from '../../client/datascience/jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../../client/datascience/jupyter/kernels/jupyterKernelSpec';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
@@ -29,6 +30,7 @@ suite('Kernel Finder', () => {
     let platformService: typemoq.IMock<IPlatformService>;
     let pathUtils: typemoq.IMock<IPathUtils>;
     let context: typemoq.IMock<IExtensionContext>;
+    let envVarsProvider: typemoq.IMock<IEnvironmentVariablesProvider>;
     let installer: IInstaller;
     let workspaceService: IWorkspaceService;
     let kernelFinder: IKernelFinder;
@@ -86,6 +88,9 @@ suite('Kernel Finder', () => {
         platformService = typemoq.Mock.ofType<IPlatformService>();
         platformService.setup((ps) => ps.isWindows).returns(() => true);
         platformService.setup((ps) => ps.isMac).returns(() => true);
+
+        envVarsProvider = typemoq.Mock.ofType<IEnvironmentVariablesProvider>();
+        envVarsProvider.setup((e) => e.getEnvironmentVariables(typemoq.It.isAny())).returns(() => Promise.resolve({}));
     });
 
     suite('listKernelSpecs', () => {
@@ -271,7 +276,8 @@ suite('Kernel Finder', () => {
                 instance(installer),
                 context.object,
                 instance(workspaceService),
-                instance(executionFactory)
+                instance(executionFactory),
+                envVarsProvider.object
             );
         });
 
@@ -349,7 +355,8 @@ suite('Kernel Finder', () => {
                 instance(installer),
                 context.object,
                 instance(workspaceService),
-                instance(executionFactory)
+                instance(executionFactory),
+                envVarsProvider.object
             );
         });
 
