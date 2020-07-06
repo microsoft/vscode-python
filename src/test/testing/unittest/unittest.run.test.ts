@@ -11,11 +11,6 @@ import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { InterpreterHashProvider } from '../../../client/pythonEnvironments/discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
-import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { ArgumentsHelper } from '../../../client/testing/common/argumentsHelper';
 import { CommandSource, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 import { TestRunner } from '../../../client/testing/common/runner';
@@ -39,6 +34,8 @@ import { MockProcessService } from '../../mocks/proc';
 import { MockUnitTestSocketServer } from '../mocks';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
+import { registerPythonEnvironmentsServices } from '../../../client/pythonEnvironments/main';
+import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 
 // tslint:disable:max-func-body-length
 
@@ -114,18 +111,12 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, TestManagerRunner, UNITTEST_PROVIDER);
         ioc.serviceManager.add<ITestRunner>(ITestRunner, TestRunner);
         ioc.serviceManager.add<IUnitTestHelper>(IUnitTestHelper, UnitTestHelper);
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(
             IInterpreterService,
             instance(mock(InterpreterService))
         );
-        ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-        ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(
-            InterpeterHashProviderFactory,
-            InterpeterHashProviderFactory
-        );
-        ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+        registerPythonEnvironmentsServices(ioc.serviceManager);
+        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 
     async function ignoreTestLauncher() {

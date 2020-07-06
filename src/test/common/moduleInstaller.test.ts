@@ -128,11 +128,8 @@ import {
     PIPENV_SERVICE
 } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
-import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
-import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { registerPythonEnvironmentsServices } from '../../client/pythonEnvironments/main';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
 import { getExtensionSettings, PYTHON_PATH, rootWorkspaceUri } from '../common';
@@ -233,13 +230,7 @@ suite('Module Installer', () => {
             ioc.registerMockProcessTypes();
             ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
 
-            ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-            ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-            ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(
-                InterpeterHashProviderFactory,
-                InterpeterHashProviderFactory
-            );
-            ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+            registerPythonEnvironmentsServices(ioc.serviceManager);
 
             ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
             ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);

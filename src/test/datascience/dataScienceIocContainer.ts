@@ -353,65 +353,20 @@ import {
     IPythonPathUpdaterServiceManager
 } from '../../client/interpreter/configuration/types';
 import {
-    CONDA_ENV_FILE_SERVICE,
-    CONDA_ENV_SERVICE,
-    CURRENT_PATH_SERVICE,
-    GLOBAL_VIRTUAL_ENV_SERVICE,
     ICondaService,
     IInterpreterDisplay,
     IInterpreterHelper,
-    IInterpreterLocatorHelper,
-    IInterpreterLocatorService,
     IInterpreterService,
     IInterpreterVersionService,
-    IInterpreterWatcher,
-    IInterpreterWatcherBuilder,
-    IKnownSearchPathsForInterpreters,
-    INTERPRETER_LOCATOR_SERVICE,
-    IShebangCodeLensProvider,
-    IVirtualEnvironmentsSearchPathProvider,
-    KNOWN_PATH_SERVICE,
-    PIPENV_SERVICE,
-    WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    IShebangCodeLensProvider
 } from '../../client/interpreter/contracts';
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
-import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { registerInterpreterTypes } from '../../client/interpreter/serviceRegistry';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
-import { PythonInterpreterLocatorService } from '../../client/pythonEnvironments/discovery/locators';
-import { InterpreterLocatorHelper } from '../../client/pythonEnvironments/discovery/locators/helpers';
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
-import { CondaEnvFileService } from '../../client/pythonEnvironments/discovery/locators/services/condaEnvFileService';
-import { CondaEnvService } from '../../client/pythonEnvironments/discovery/locators/services/condaEnvService';
-import {
-    CurrentPathService,
-    PythonInPathCommandProvider
-} from '../../client/pythonEnvironments/discovery/locators/services/currentPathService';
-import {
-    GlobalVirtualEnvironmentsSearchPathProvider,
-    GlobalVirtualEnvService
-} from '../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvService';
-import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
-import { InterpreterWatcherBuilder } from '../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
-import {
-    KnownPathsService,
-    KnownSearchPathsForInterpreters
-} from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
-import { PipEnvService } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvService';
-import { PipEnvServiceHelper } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvServiceHelper';
-import { WindowsRegistryService } from '../../client/pythonEnvironments/discovery/locators/services/windowsRegistryService';
-import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
-import {
-    WorkspaceVirtualEnvironmentsSearchPathProvider,
-    WorkspaceVirtualEnvService
-} from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
-import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
@@ -438,6 +393,7 @@ import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
+import { registerPythonEnvironmentsServices } from '../../client/pythonEnvironments/main';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -1064,10 +1020,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             when(this.kernelServiceMock.getKernelSpecs(anything(), anything())).thenResolve([]);
             this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
 
-            this.serviceManager.addSingleton<InterpeterHashProviderFactory>(
-                InterpeterHashProviderFactory,
-                InterpeterHashProviderFactory
-            );
+            registerPythonEnvironmentsServices(this.serviceManager);
+
             this.serviceManager.addSingleton<IInterpreterSecurityService>(
                 IInterpreterSecurityService,
                 InterpreterSecurityService
@@ -1077,91 +1031,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 InterpreterSecurityStorage
             );
             this.serviceManager.addSingleton<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
-            this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-            this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-            this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
-            this.serviceManager.add<IInterpreterWatcher>(
-                IInterpreterWatcher,
-                WorkspaceVirtualEnvWatcherService,
-                WORKSPACE_VIRTUAL_ENV_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterWatcherBuilder>(
-                IInterpreterWatcherBuilder,
-                InterpreterWatcherBuilder
-            );
-            this.serviceManager.add<IInterpreterWatcher>(
-                IInterpreterWatcher,
-                WorkspaceVirtualEnvWatcherService,
-                WORKSPACE_VIRTUAL_ENV_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterWatcherBuilder>(
-                IInterpreterWatcherBuilder,
-                InterpreterWatcherBuilder
-            );
-
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                PythonInterpreterLocatorService,
-                INTERPRETER_LOCATOR_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                CondaEnvFileService,
-                CONDA_ENV_FILE_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                CondaEnvService,
-                CONDA_ENV_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                CurrentPathService,
-                CURRENT_PATH_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                GlobalVirtualEnvService,
-                GLOBAL_VIRTUAL_ENV_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                WorkspaceVirtualEnvService,
-                WORKSPACE_VIRTUAL_ENV_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                PipEnvService,
-                PIPENV_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                WindowsRegistryService,
-                WINDOWS_REGISTRY_SERVICE
-            );
-
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                KnownPathsService,
-                KNOWN_PATH_SERVICE
-            );
 
             this.serviceManager.addSingleton<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
-            this.serviceManager.addSingleton<IInterpreterLocatorHelper>(
-                IInterpreterLocatorHelper,
-                InterpreterLocatorHelper
-            );
+
             this.serviceManager.addSingleton<IInterpreterComparer>(IInterpreterComparer, InterpreterComparer);
             this.serviceManager.addSingleton<IInterpreterVersionService>(
                 IInterpreterVersionService,
                 InterpreterVersionService
             );
-            this.serviceManager.addSingleton<IPythonInPathCommandProvider>(
-                IPythonInPathCommandProvider,
-                PythonInPathCommandProvider
-            );
 
-            this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
             this.serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
             this.serviceManager.addSingleton<IShebangCodeLensProvider>(
                 IShebangCodeLensProvider,
@@ -1183,28 +1061,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             condaService.setup((c) => c.isCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
             condaService.setup((c) => c.condaEnvironmentsFile).returns(() => undefined);
 
-            this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
-                IVirtualEnvironmentsSearchPathProvider,
-                GlobalVirtualEnvironmentsSearchPathProvider,
-                'global'
-            );
-            this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
-                IVirtualEnvironmentsSearchPathProvider,
-                WorkspaceVirtualEnvironmentsSearchPathProvider,
-                'workspace'
-            );
             this.serviceManager.addSingleton<IVirtualEnvironmentManager>(
                 IVirtualEnvironmentManager,
                 VirtualEnvironmentManager
             );
-            this.serviceManager.add<IKnownSearchPathsForInterpreters>(
-                IKnownSearchPathsForInterpreters,
-                KnownSearchPathsForInterpreters
-            );
-            this.serviceManager.addSingleton<IPythonInPathCommandProvider>(
-                IPythonInPathCommandProvider,
-                PythonInPathCommandProvider
-            );
+
             this.serviceManager.addSingletonInstance<IInterpreterDisplay>(
                 IInterpreterDisplay,
                 interpreterDisplay.object
