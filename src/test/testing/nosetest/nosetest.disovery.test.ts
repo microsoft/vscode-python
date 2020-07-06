@@ -11,7 +11,7 @@ import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { registerPythonEnvironmentsServices } from '../../../client/pythonEnvironments/main';
+import { registerForIOC } from '../../../client/pythonEnvironments/legacyIOC';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { ITestManagerFactory } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
@@ -82,7 +82,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
             instance(mock(InterpreterService))
         );
 
-        registerPythonEnvironmentsServices(ioc.serviceManager);
+        registerForIOC(ioc.serviceManager);
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 

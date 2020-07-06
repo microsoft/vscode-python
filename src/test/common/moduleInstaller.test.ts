@@ -129,7 +129,7 @@ import {
 } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
-import { registerPythonEnvironmentsServices } from '../../client/pythonEnvironments/main';
+import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
 import { getExtensionSettings, PYTHON_PATH, rootWorkspaceUri } from '../common';
@@ -230,7 +230,7 @@ suite('Module Installer', () => {
             ioc.registerMockProcessTypes();
             ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
 
-            registerPythonEnvironmentsServices(ioc.serviceManager);
+            registerForIOC(ioc.serviceManager);
 
             ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
             ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);

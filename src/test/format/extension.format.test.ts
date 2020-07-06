@@ -9,7 +9,7 @@ import { IProcessServiceFactory } from '../../client/common/process/types';
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BlackFormatter } from '../../client/formatters/blackFormatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
-import { registerPythonEnvironmentsServices } from '../../client/pythonEnvironments/main';
+import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 import { isPythonVersionInProcess } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { MockProcessService } from '../mocks/proc';
@@ -83,7 +83,7 @@ suite('Formatting - General', () => {
         ioc.registerFormatterTypes();
         ioc.registerInterpreterStorageTypes();
 
-        registerPythonEnvironmentsServices(ioc.serviceManager);
+        registerForIOC(ioc.serviceManager);
 
         // Mocks.
         ioc.registerMockProcessTypes();

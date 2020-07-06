@@ -57,12 +57,12 @@ import {
     WorkspaceVirtualEnvService
 } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvWatcherService';
-import { registerPythonEnvironmentsServices } from '../../client/pythonEnvironments/main';
+import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 
 suite('Interpreters - Service Registry', () => {
     test('Registrations', () => {
         const serviceManager = mock(ServiceManager);
-        registerPythonEnvironmentsServices(instance(serviceManager));
+        registerForIOC(instance(serviceManager));
 
         [
             [IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters],

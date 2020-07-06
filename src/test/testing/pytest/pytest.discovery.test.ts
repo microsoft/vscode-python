@@ -25,7 +25,7 @@ import { InterpreterService } from '../../../client/interpreter/interpreterServi
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
-import { registerPythonEnvironmentsServices } from '../../../client/pythonEnvironments/main';
+import { registerForIOC } from '../../../client/pythonEnvironments/legacyIOC';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { ITestManagerFactory } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
@@ -137,7 +137,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             instance(mock(InterpreterService))
         );
         ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
-        registerPythonEnvironmentsServices(ioc.serviceManager);
+        registerForIOC(ioc.serviceManager);
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 
