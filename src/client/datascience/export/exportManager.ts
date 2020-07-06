@@ -3,7 +3,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../common/platform/types';
 import { ProgressReporter } from '../progress/progressReporter';
-import { IDataScienceErrorHandler, INotebookModel } from '../types';
+import { INotebookModel } from '../types';
 import { ExportUtil } from './exportUtil';
 import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './types';
 
@@ -14,7 +14,6 @@ export class ExportManager implements IExportManager {
         @inject(IExport) @named(ExportFormat.html) private readonly exportToHTML: IExport,
         @inject(IExport) @named(ExportFormat.python) private readonly exportToPython: IExport,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IExportManagerFilePicker) private readonly filePicker: IExportManagerFilePicker,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(ExportUtil) private readonly exportUtil: ExportUtil
@@ -31,9 +30,15 @@ export class ExportManager implements IExportManager {
             target = Uri.file((await this.fileSystem.createTemporaryFile('.py')).filePath);
         }
 
+        // Need to make a temp directory here, instead of just a temp file. This is because
+        // we need to store the contents of the notebook in a file that is named the same
+        // as what we want the title of the exported file to be. To ensure this file path will be unique
+        // we store it in a temp directory. The name of the file matters because when
+        // exporting to certain formats the filename is used within the exported document as the title.
         const fileName = path.basename(target.fsPath, path.extname(target.fsPath));
-        const tempFilePath = await this.makeTemporaryFile(model, fileName);
-        const source = Uri.file(tempFilePath);
+        const tempDir = await this.exportUtil.generateTempDir();
+        const sourceFilePath = await this.exportUtil.makeFileInDirectory(model, fileName, tempDir.path);
+        const source = Uri.file(sourceFilePath);
 
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
         try {
@@ -55,29 +60,9 @@ export class ExportManager implements IExportManager {
             }
         } finally {
             reporter.dispose();
-            this.exportUtil.deleteDirectory(path.dirname(tempFilePath)).then().catch();
+            tempDir.dispose();
         }
 
         return target;
-    }
-
-    private async makeTemporaryFile(model: INotebookModel, fileName: string): Promise<string> {
-        // Need to make a temp directory here, instead of just a temp file. This is because
-        // we need to store the contents of the notebook in a temp file that is named the same
-        // as what we want the title of the exported file to be. To ensure this file path will be unique
-        // we store it in a temp directory. The name of the temp file matters because when
-        // exporting to certain formats the filename is used within the exported document as the title.
-        const directoryPath = await this.exportUtil.createUniqueDirectoryPath();
-        const newFilePath = path.join(directoryPath, fileName);
-
-        try {
-            await this.fileSystem.createDirectory(directoryPath);
-            const content = model ? model.getContent() : '';
-            await this.fileSystem.writeFile(newFilePath, content, 'utf-8');
-        } catch (e) {
-            await this.errorHandler.handleError(e);
-        }
-
-        return newFilePath;
     }
 }

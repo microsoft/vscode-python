@@ -60,7 +60,6 @@ import {
     INotebookExporter,
     INotebookModel,
     INotebookProvider,
-    INotebookStorage,
     IStatusProvider,
     IThemeFinder,
     WebViewViewChangeEventArgs
@@ -119,7 +118,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(IExperimentService) expService: IExperimentService,
-        @inject(INotebookStorage) private notebookStorage: INotebookStorage,
         @inject(ExportUtil) private exportUtil: ExportUtil
     ) {
         super(
@@ -430,19 +428,12 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     private async exportAs(cells: ICell[]) {
-        const tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
-        const uri = Uri.file(tempFile.filePath);
-        const directoryPath = await this.exportUtil.createUniqueDirectoryPath();
-
         let model: INotebookModel;
+
         this.startProgress();
         try {
-            await this.jupyterExporter.exportToFile(cells, uri.fsPath, false);
-            const newPath = await this.exportUtil.createFileInDirectory(directoryPath, '.ipynb', uri);
-            model = await this.notebookStorage.load(Uri.file(newPath));
+            model = await this.exportUtil.getModelFromCells(cells);
         } finally {
-            tempFile.dispose();
-            await this.exportUtil.deleteDirectory(directoryPath);
             this.stopProgress();
         }
         if (model) {
