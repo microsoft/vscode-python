@@ -22,6 +22,7 @@ import {
 import {
     ICell,
     IGatherLogger,
+    IGatherProvider,
     IInteractiveWindowListener,
     INotebook,
     INotebookEditorProvider,
@@ -39,8 +40,7 @@ export class GatherListener implements IInteractiveWindowListener {
         payload: any;
     }>();
     private notebookUri: Uri | undefined;
-    // tslint:disable-next-line: no-any
-    private gatherProvider: any | undefined;
+    private gatherProvider: IGatherProvider | undefined;
     private gatherTimer: StopWatch | undefined;
 
     constructor(
@@ -141,7 +141,7 @@ export class GatherListener implements IInteractiveWindowListener {
 
         const slicedProgram = this.gatherProvider
             ? this.gatherProvider.gatherCode(cell)
-            : '## Please install the Gather Extension';
+            : localize.DataScience.gatherError();
 
         if (!slicedProgram) {
             sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'err' });

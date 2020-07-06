@@ -5,14 +5,14 @@ import { extensions } from 'vscode';
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { sendTelemetryEvent } from '../../telemetry';
 import { CellMatcher } from '../cellMatcher';
-import { GatherExtension } from '../constants';
-import { ICell as IVscCell, IGatherLogger } from '../types';
+import { GatherExtension, Telemetry } from '../constants';
+import { ICell as IVscCell, IGatherLogger, IGatherProvider } from '../types';
 
 @injectable()
-// tslint:disable: no-any
 export class GatherLogger implements IGatherLogger {
-    private gather: any | undefined;
+    private gather: IGatherProvider | undefined;
     constructor(@inject(IConfigurationService) private configService: IConfigurationService) {
         this.initGatherExtension().ignoreErrors();
     }
@@ -46,13 +46,14 @@ export class GatherLogger implements IGatherLogger {
         }
     }
 
-    public getGatherProvider(): any | undefined {
+    public getGatherProvider(): IGatherProvider | undefined {
         return this.gather;
     }
 
     private async initGatherExtension() {
         const ext = extensions.getExtension(GatherExtension);
         if (ext) {
+            sendTelemetryEvent(Telemetry.GatherIsInstalled);
             if (!ext.isActive) {
                 await ext.activate();
             }

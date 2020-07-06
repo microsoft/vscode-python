@@ -268,10 +268,15 @@ export interface INotebookExecutionLogger extends IDisposable {
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
 }
 
+export interface IGatherProvider {
+    logExecution(vscCell: ICell): void;
+    gatherCode(vscCell: ICell): string;
+    resetLog(): void;
+}
+
 export const IGatherLogger = Symbol('IGatherLogger');
 export interface IGatherLogger extends INotebookExecutionLogger {
-    // tslint:disable-next-line: no-any
-    getGatherProvider(): any;
+    getGatherProvider(): IGatherProvider | undefined;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
