@@ -44,6 +44,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private readonly waitForDebugClientCode: string;
     private readonly tracingEnableCode: string;
     private readonly tracingDisableCode: string;
+    private runningByLine: boolean = false;
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IConfigurationService) private configService: IConfigurationService,
@@ -59,7 +60,12 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         this.tracingDisableCode = `from debugpy import trace_this_thread;trace_this_thread(False)`;
     }
 
+    public get isRunningByLine(): boolean {
+        return this.debugService.activeDebugSession !== undefined && this.runningByLine;
+    }
+
     public startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void> {
+        this.runningByLine = true;
         traceInfo(`Running by line for ${cellHashFileName}`);
         const config: Partial<DebugConfiguration> = {
             justMyCode: false,
@@ -90,6 +96,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     public async stopDebugging(notebook: INotebook): Promise<void> {
+        this.runningByLine = false;
         const config = this.configs.get(notebook.identity.toString());
         if (config) {
             traceInfo('stop debugging');

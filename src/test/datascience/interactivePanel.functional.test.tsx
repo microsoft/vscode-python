@@ -109,7 +109,8 @@ suite('DataScience Interactive Panel', () => {
                 visible: true,
                 containerHeight: 0,
                 gridHeight: 200,
-                refreshCount: 0
+                refreshCount: 0,
+                showVariablesOnDebug: false
             },
             setVariableExplorerHeight: noopAny,
             editorOptions: {},
