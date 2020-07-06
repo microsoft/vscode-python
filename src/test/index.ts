@@ -14,8 +14,7 @@ if ((Reflect as any).metadata === undefined) {
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
-import { isCI } from '../client/common/constants';
-import { IS_CI_SERVER_TEST_DEBUGGER, MOCHA_REPORTER_JUNIT } from './ciConstants';
+import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER, MOCHA_REPORTER_JUNIT } from './ciConstants';
 import {
     EXTENSION_ROOT_DIR_FOR_TESTS,
     IS_MULTI_ROOT_TEST,
@@ -36,7 +35,7 @@ function setupCoverage() {
         return;
     }
     const reports = ['lcovonly', 'text', 'text-summary'];
-    if (!isCI) {
+    if (!IS_CI_SERVER) {
         reports.push('html');
     }
     const NYC = require('nyc');
