@@ -15,7 +15,7 @@ import { IExtensionContext, IInstaller, InstallerResponse, IPathUtils, Product, 
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterLocatorService, IInterpreterService, KNOWN_PATH_SERVICE } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
-import { getEnvironmentVariableSeparator, getRealPath } from '../common';
+import { getRealPath } from '../common';
 import { Telemetry } from '../constants';
 import { createDefaultKernelSpec, defaultKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
@@ -253,9 +253,7 @@ export class KernelFinder implements IKernelFinder {
                 }
 
                 if (jupyterPathVar !== '') {
-                    const jupyterPaths = jupyterPathVar.split(
-                        getEnvironmentVariableSeparator(this.platformService.isWindows)
-                    );
+                    const jupyterPaths = jupyterPathVar.split(path.delimiter);
                     jupyterPaths.forEach(async (jupyterPath) => {
                         const jupyterWinPath = await getRealPath(
                             this.file,
@@ -272,9 +270,7 @@ export class KernelFinder implements IKernelFinder {
             } else {
                 paths = [path.join(this.pathUtils.home, winJupyterPath)];
                 if (jupyterPathVar !== '') {
-                    const jupyterPaths = jupyterPathVar.split(
-                        getEnvironmentVariableSeparator(this.platformService.isWindows)
-                    );
+                    const jupyterPaths = jupyterPathVar.split(path.delimiter);
                     paths.push(...jupyterPaths);
                 }
             }
@@ -293,9 +289,7 @@ export class KernelFinder implements IKernelFinder {
             ];
 
             if (jupyterPathVar !== '') {
-                const jupyterPaths = jupyterPathVar.split(
-                    getEnvironmentVariableSeparator(this.platformService.isWindows)
-                );
+                const jupyterPaths = jupyterPathVar.split(path.delimiter);
                 paths.push(...jupyterPaths);
             }
         }
