@@ -108,7 +108,7 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
                 <div className="kernel-status" style={maxWidth}>
                     <button
                         type="button"
-                        disabled={this.props.isNotebookTrusted} // Disable showing prompt for already-trusted notebooks
+                        disabled={this.props.isNotebookTrusted}
                         aria-disabled={this.props.isNotebookTrusted}
                         className={`jupyter-info-section${
                             this.props.isNotebookTrusted ? '' : ' jupyter-info-section-hoverable'
