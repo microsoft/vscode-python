@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
+import { sleep } from '../../common/utils/async';
 import { ICell, IDataScienceErrorHandler, INotebookExporter, INotebookModel, INotebookStorage } from '../types';
 
 @injectable()
@@ -31,6 +32,7 @@ export class ExportUtil {
                         await this.fileSystem.deleteDirectory(resultDir);
                         count = 10;
                     } catch {
+                        await sleep(3000);
                         count += 1;
                     }
                 }
