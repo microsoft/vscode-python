@@ -21,9 +21,3 @@ export const IExportManagerFilePicker = Symbol('IExportManagerFilePicker');
 export interface IExportManagerFilePicker {
     getExportFileLocation(format: ExportFormat, source: Uri): Promise<Uri | undefined>;
 }
-
-export const IExportUtil = Symbol('IExportUitl');
-export interface IExportUtil {
-    deleteDirectory(dirPath: string): Promise<void>;
-    createFileInDirectory(dirPath: string, fileName: string, source: Uri): Promise<string>;
-}

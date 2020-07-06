@@ -4,7 +4,8 @@ import { Uri } from 'vscode';
 import { IFileSystem } from '../../common/platform/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import { IDataScienceErrorHandler, INotebookModel } from '../types';
-import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker, IExportUtil } from './types';
+import { ExportUtil } from './exportUtil';
+import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './types';
 
 @injectable()
 export class ExportManager implements IExportManager {
@@ -16,7 +17,7 @@ export class ExportManager implements IExportManager {
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IExportManagerFilePicker) private readonly filePicker: IExportManagerFilePicker,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
-        @inject(IExportUtil) private readonly exportUtil: IExportUtil
+        @inject(ExportUtil) private readonly exportUtil: ExportUtil
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
@@ -60,14 +61,14 @@ export class ExportManager implements IExportManager {
         return target;
     }
 
-    private async makeTemporaryFile(model: INotebookModel, name: string): Promise<string> {
-        const tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
-        const directoryPath = path.join(
-            path.dirname(tempFile.filePath),
-            path.basename(tempFile.filePath, path.extname(tempFile.filePath))
-        );
-        const newFilePath = path.join(directoryPath, name);
-        tempFile.dispose();
+    private async makeTemporaryFile(model: INotebookModel, fileName: string): Promise<string> {
+        // Need to make a temp directory here, instead of just a temp file. This is because
+        // we need to store the contents of the notebook in a temp file that is named the same
+        // as what we want the title of the exported file to be. To ensure this file path will be unique
+        // we store it in a temp directory. The name of the temp file matters because when
+        // exporting to certain formats the filename is used within the exported document as the title.
+        const directoryPath = await this.exportUtil.createUniqueDirectoryPath();
+        const newFilePath = path.join(directoryPath, fileName);
 
         try {
             await this.fileSystem.createDirectory(directoryPath);

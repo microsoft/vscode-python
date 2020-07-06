@@ -2,10 +2,9 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../common/platform/types';
-import { IExportUtil } from './types';
 
 @injectable()
-export class ExportUtil implements IExportUtil {
+export class ExportUtil {
     constructor(@inject(IFileSystem) private fileSystem: IFileSystem) {}
 
     public async createFileInDirectory(dirPath: string, fileName: string, source: Uri): Promise<string> {
@@ -18,6 +17,14 @@ export class ExportUtil implements IExportUtil {
             await this.deleteDirectory(dirPath);
             throw e;
         }
+    }
+
+    public async createUniqueDirectoryPath(): Promise<string> {
+        const tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
+        const filePath = tempFile.filePath;
+        const dirPath = path.join(path.dirname(filePath), path.basename(filePath, path.extname(filePath)));
+        tempFile.dispose();
+        return dirPath;
     }
 
     public async deleteDirectory(dirPath: string) {

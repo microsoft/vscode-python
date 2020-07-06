@@ -35,7 +35,7 @@ import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
-import { IExportUtil } from '../export/types';
+import { ExportUtil } from '../export/exportUtil';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     INotebookIdentity,
@@ -120,7 +120,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(IExperimentService) expService: IExperimentService,
         @inject(INotebookStorage) private notebookStorage: INotebookStorage,
-        @inject(IExportUtil) private exportUtil: IExportUtil
+        @inject(ExportUtil) private exportUtil: ExportUtil
     ) {
         super(
             listeners,
@@ -432,12 +432,9 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private async exportAs(cells: ICell[]) {
         const tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
         const uri = Uri.file(tempFile.filePath);
-        let model: INotebookModel;
-        const directoryPath = path.join(
-            path.dirname(tempFile.filePath),
-            path.basename(tempFile.filePath, path.extname(tempFile.filePath))
-        );
+        const directoryPath = await this.exportUtil.createUniqueDirectoryPath();
 
+        let model: INotebookModel;
         this.startProgress();
         try {
             await this.jupyterExporter.exportToFile(cells, uri.fsPath, false);
