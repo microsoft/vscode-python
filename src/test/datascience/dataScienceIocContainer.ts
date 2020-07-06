@@ -1056,7 +1056,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
             // Don't use conda at all when mocking
             const condaService = TypeMoq.Mock.ofType<ICondaService>();
-            this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
+            this.serviceManager.rebindInstance<ICondaService>(ICondaService, condaService.object);
             condaService.setup((c) => c.isCondaAvailable()).returns(() => Promise.resolve(false));
             condaService.setup((c) => c.isCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
             condaService.setup((c) => c.condaEnvironmentsFile).returns(() => undefined);

@@ -461,7 +461,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
 
         registerForIOC(ioc.serviceManager);
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 
     async function injectTestDiscoveryOutput(outputFileName: string) {

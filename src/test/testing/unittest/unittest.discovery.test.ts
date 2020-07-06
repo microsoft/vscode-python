@@ -63,7 +63,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
             instance(mock(InterpreterService))
         );
         registerForIOC(ioc.serviceManager);
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 
     async function injectTestDiscoveryOutput(output: string) {

@@ -116,7 +116,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             instance(mock(InterpreterService))
         );
         registerForIOC(ioc.serviceManager);
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 
     async function ignoreTestLauncher() {

@@ -83,7 +83,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         );
 
         registerForIOC(ioc.serviceManager);
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 
     async function injectTestDiscoveryOutput(outputFileName: string) {
