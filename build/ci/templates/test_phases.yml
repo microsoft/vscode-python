@@ -88,7 +88,7 @@ steps:
 
   - template: steps/generate_upload_coverage.yml
     parameters:
-      enabled: contains(variables['TestsToRun'], 'testUnitTests')
+      enabled: ${{ contains(variables['TestsToRun'], 'testUnitTests') }}
 
   # Install the requirements for the Python or the system tests. This includes the supporting libs that
   # we ship in our extension such as DEBUGPY and Jedi.
@@ -462,7 +462,7 @@ steps:
 
   - template: steps/generate_upload_coverage.yml
     parameters:
-      enabled: contains(variables['TestsToRun'], 'testDataScience')
+      enabled: ${{ contains(variables['TestsToRun'], 'testDataScience') }}
 
   # Run the multi-workspace tests.
   #
