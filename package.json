@@ -36,9 +36,6 @@
         "unittest",
         "multi-root ready"
     ],
-    "extensionPack": [
-        "ms-python.gather"
-    ],
     "categories": [
         "Programming Languages",
         "Debuggers",
