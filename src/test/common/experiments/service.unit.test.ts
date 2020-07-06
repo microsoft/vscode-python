@@ -135,8 +135,8 @@ suite('Experimentation service', () => {
             assert.deepEqual(experimentService._optOutFrom, ['Foo - experiment']);
         });
 
-        test('Experiment data in Memento storage should be logged', () => {
-            const experiments = ['ExperimentOne', 'ExperimentTwo'];
+        test('Experiment data in Memento storage should be logged if it starts with "python"', () => {
+            const experiments = ['ExperimentOne', 'pythonExperiment'];
             globalMemento = mock(MockMemento);
             configureSettings(true, [], []);
             configureApplicationEnvironment('stable', extensionVersion);
@@ -150,9 +150,7 @@ suite('Experimentation service', () => {
                 instance(globalMemento),
                 outputChannel
             );
-            const output = `${Experiments.inGroup().format(experiments[0])}\n${Experiments.inGroup().format(
-                experiments[1]
-            )}\n`;
+            const output = `${Experiments.inGroup().format('pythonExperiment')}\n`;
 
             assert.equal(outputChannel.output, output);
         });

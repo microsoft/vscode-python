@@ -107,8 +107,11 @@ export class ExperimentService implements IExperimentService {
     private logExperiments() {
         const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
 
-        for (const exp of experiments.features) {
-            this.output.appendLine(Experiments.inGroup().format(exp));
-        }
+        experiments.features.forEach((exp) => {
+            // Log experiments only for the Python extension.
+            if (exp.startsWith('python')) {
+                this.output.appendLine(Experiments.inGroup().format(exp));
+            }
+        });
     }
 }
