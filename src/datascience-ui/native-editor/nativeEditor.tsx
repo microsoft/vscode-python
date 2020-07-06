@@ -126,7 +126,12 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         setTimeout(() => this.props.insertAboveFirst(), 1);
     }
     private renderToolbarPanel() {
-        return <ToolbarComponent isNotebookTrusted={this.props.isNotebookTrusted}></ToolbarComponent>;
+        return (
+            <ToolbarComponent
+                shouldShowTrustMessage={this.props.shouldShowTrustMessage}
+                isNotebookTrusted={this.props.isNotebookTrusted}
+            ></ToolbarComponent>
+        );
     }
 
     private renderVariablePanel(baseTheme: string) {

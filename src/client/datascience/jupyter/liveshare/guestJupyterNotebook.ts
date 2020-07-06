@@ -327,9 +327,7 @@ export class GuestJupyterNotebook
         noop();
     }
 
-    public registerIOPubListener(
-        _listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>
-    ): void {
+    public registerIOPubListener(_listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void {
         noop();
     }
 

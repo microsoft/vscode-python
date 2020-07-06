@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
-
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import {
@@ -15,6 +13,7 @@ import {
     ViewColumn,
     WebviewPanel
 } from 'vscode';
+import '../../common/extensions';
 
 import * as uuid from 'uuid/v4';
 import { createErrorOutput } from '../../../datascience-ui/common/cellFactory';
@@ -89,6 +88,7 @@ import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { isTestExecution, PYTHON_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
+import { EnableTrustedNotebooks } from '../../common/experiments/groups';
 import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
@@ -184,7 +184,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(ITrustService) private trustService: ITrustService,
-        @inject(IExperimentService) expService: IExperimentService
+        @inject(IExperimentService) private expService: IExperimentService
     ) {
         super(
             listeners,
@@ -716,7 +716,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async sendInitialCellsToWebView(cells: ICell[], isNotebookTrusted: boolean): Promise<void> {
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: cells.length });
-        return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells, isNotebookTrusted });
+
+        const shouldShowTrustMessage = await this.expService.inExperiment(EnableTrustedNotebooks.experiment);
+        return this.postMessage(InteractiveWindowMessages.LoadAllCells, {
+            cells,
+            isNotebookTrusted,
+            shouldShowTrustMessage
+        });
     }
 
     private async exportAs(): Promise<void> {

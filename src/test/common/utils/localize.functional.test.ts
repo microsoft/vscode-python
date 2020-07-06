@@ -51,10 +51,10 @@ suite('Localization', () => {
     }
 
     test('keys', (done) => {
-        const val = localize.LanguageService.bannerMessage();
+        const val = localize.ExtensionSurveyBanner.bannerMessage();
         assert.equal(
             val,
-            'Can you please take 2 minutes to tell us how the Python Language Server is working for you?',
+            'Can you please take 2 minutes to tell us how the Python extension is working for you?',
             'LanguageService string doesnt match'
         );
         done();
