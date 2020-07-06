@@ -1,14 +1,17 @@
+parameters:
+    enabled: false
+
 steps:
   # Generate the coverage reports.
   - bash: npm run test:cover:report
     displayName: 'run test:cover:report'
-    condition: or(contains(variables['TestsToRun'], 'testUnitTests'),contains(variables['TestsToRun'], 'testDataScience'))
+    condition: eq('${{ parameters.enabled }}', true)
     failOnStderr: false
 
   # Publish Code Coverage Results
   - task: PublishCodeCoverageResults@1
     displayName: 'Publish test:unittests coverage results'
-    condition: or(contains(variables['TestsToRun'], 'testUnitTests'),contains(variables['TestsToRun'], 'testDataScience'))
+    condition: eq('${{ parameters.enabled }}', true)
     inputs:
       codeCoverageTool: 'cobertura'
       summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml'
@@ -17,7 +20,7 @@ steps:
   - bash: cat ./coverage/cobertura-coverage.xml | ./node_modules/.bin/codecov --pipe
     displayName: 'Upload coverage to codecov'
     continueOnError: true
-    condition: or(contains(variables['TestsToRun'], 'testUnitTests'),contains(variables['TestsToRun'], 'testDataScience'))
+    condition: eq('${{ parameters.enabled }}', true)
     failOnStderr: false
     env:
       CODECOV_TOKEN: $(CODECOV_TOKEN)
