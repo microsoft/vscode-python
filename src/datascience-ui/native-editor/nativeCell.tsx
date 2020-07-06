@@ -52,6 +52,7 @@ interface INativeCellBaseProps {
     firstCell: boolean;
     font: IFont;
     allowUndo: boolean;
+    gatherIsInstalled: boolean;
     editorOptions: monacoEditor.editor.IEditorOptions;
     themeMatplotlibPlots: boolean | undefined;
     focusPending: number;
@@ -595,7 +596,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.cellVM.hasBeenRun === null ||
             this.props.cellVM.hasBeenRun === false ||
             this.isError() ||
-            this.isMarkdownCell();
+            this.isMarkdownCell() ||
+            !this.props.gatherIsInstalled;
         const switchTooltip =
             this.props.cellVM.cell.data.cell_type === 'code'
                 ? getLocString('DataScience.switchToMarkdown', 'Change to markdown')

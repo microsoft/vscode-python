@@ -764,6 +764,8 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
     webviewExperiments: {
         removeKernelToolbarInInteractiveWindow: boolean;
     };
+
+    gatherIsInstalled: boolean;
 }
 
 // Get variables from the currently running active Jupyter server

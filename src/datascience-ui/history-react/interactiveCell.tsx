@@ -189,7 +189,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     onClick={gatherCode}
                     hidden={
                         this.props.cellVM.cell.state === CellState.error ||
-                        this.props.cellVM.cell.data.cell_type === 'markdown'
+                        this.props.cellVM.cell.data.cell_type === 'markdown' ||
+                        !this.props.settings.gatherIsInstalled
                     }
                     tooltip={getLocString('DataScience.gatherCodeTooltip', 'Gather code')}
                 >
