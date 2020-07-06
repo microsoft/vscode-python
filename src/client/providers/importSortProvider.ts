@@ -66,6 +66,9 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         }
 
         const execIsort = await this.getExecIsort(document, uri, token);
+        if (token && token.isCancellationRequested) {
+            return;
+        }
         const diffPatch = await execIsort(document.getText());
         const edit = diffPatch
             ? this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri)
@@ -120,34 +123,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         }
     }
 
-    public async _communicateWithIsortProcess(
-        observableResult: ObservableExecutionResult<string>,
-        inputText: string
-    ): Promise<string> {
-        // Configure our listening to the output from isort ...
-        let outputBuffer = '';
-        const isortOutput = createDeferred<string>();
-        observableResult.out.subscribe({
-            next: (output) => {
-                if (output.source === 'stdout') {
-                    outputBuffer += output.out;
-                }
-            },
-            complete: () => {
-                isortOutput.resolve(outputBuffer);
-            }
-        });
-
-        // ... then send isort the document content ...
-        observableResult.proc?.stdin.write(inputText);
-        observableResult.proc?.stdin.end();
-
-        // .. and finally wait for isort to do its thing
-        await isortOutput.promise;
-
-        return outputBuffer;
-    }
-
     private async getExecIsort(
         document: TextDocument,
         uri: Uri,
@@ -177,16 +152,44 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             return async (documentText: string) => {
                 const args = getIsortArgs(filename, isortArgs);
                 const result = procService.execObservable(isort, args, spawnOptions);
-                return this._communicateWithIsortProcess(result, documentText);
+                return this.communicateWithIsortProcess(result, documentText);
             };
         } else {
             const procService = await this.pythonExecutionFactory.create({ resource: document.uri });
             return async (documentText: string) => {
                 const [args, parse] = internalScripts.sortImports(filename, isortArgs);
                 const result = procService.execObservable(args, spawnOptions);
-                return parse(await this._communicateWithIsortProcess(result, documentText));
+                return parse(await this.communicateWithIsortProcess(result, documentText));
             };
         }
+    }
+
+    private async communicateWithIsortProcess(
+        observableResult: ObservableExecutionResult<string>,
+        inputText: string
+    ): Promise<string> {
+        // Configure our listening to the output from isort ...
+        let outputBuffer = '';
+        const isortOutput = createDeferred<string>();
+        observableResult.out.subscribe({
+            next: (output) => {
+                if (output.source === 'stdout') {
+                    outputBuffer += output.out;
+                }
+            },
+            complete: () => {
+                isortOutput.resolve(outputBuffer);
+            }
+        });
+
+        // ... then send isort the document content ...
+        observableResult.proc?.stdin.write(inputText);
+        observableResult.proc?.stdin.end();
+
+        // .. and finally wait for isort to do its thing
+        await isortOutput.promise;
+
+        return outputBuffer;
     }
 }
 
