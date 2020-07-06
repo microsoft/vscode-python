@@ -1,10 +1,10 @@
 name: CI
 
 on:
-  push:
-    branches:
-      # Run the CI workflow only on master for microsoft/vscode-python for now.
-      - master
+    push:
+      branches:
+        # Run the CI workflow only on master for microsoft/vscode-python for now.
+        - master
 
 env:
   PYTHON_VERSION: 3.8
@@ -202,7 +202,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
         python: [2.7, 3.8]
-        test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional, datascience]
+        test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
     env:
       # Something in Node 12.16.0 breaks the TS debug adapter, and ubuntu-latest bundles Node 12.16.1.
       # We can remove this when we switch over to the python-based DA in https://github.com/microsoft/vscode-python/issues/7136.
@@ -371,6 +371,14 @@ jobs:
           python -m IPython pythonFiles/tests/run_all.py
         if: matrix.test-suite == 'python-unit'
 
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+        if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
+
       # The virtual environment based tests use the `testSingleWorkspace` set of tests
       # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`,
       # which is set in the "Prepare environment for venv tests" step.
@@ -407,20 +415,6 @@ jobs:
       - name: Run functional tests
         run: npm run test:functional
         if: matrix.test-suite == 'functional'
-
-      - name: Run DataScience tests
-        uses: GabrielBB/xvfb-action@v1.0
-        with:
-          run: npm run testDataScience
-        if: matrix.test-suite == 'datascience' && startsWith(matrix.python, 3.)
-
-      # Upload unit test coverage reports for later use in the "reports" job.
-      - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v1
-        with:
-          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
-          path: .nyc_output
-        if: (matrix.test-suite == 'ts-unit' || matrix.test-suite == 'datascience') && startsWith(matrix.python, 3.)
 
   smoke-tests:
     name: Smoke tests
