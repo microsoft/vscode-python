@@ -11,6 +11,8 @@ import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
+import { registerPythonEnvironmentsServices } from '../../../client/pythonEnvironments/main';
 import { ArgumentsHelper } from '../../../client/testing/common/argumentsHelper';
 import { CommandSource, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 import { TestRunner } from '../../../client/testing/common/runner';
@@ -34,8 +36,6 @@ import { MockProcessService } from '../../mocks/proc';
 import { MockUnitTestSocketServer } from '../mocks';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
-import { registerPythonEnvironmentsServices } from '../../../client/pythonEnvironments/main';
-import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 
 // tslint:disable:max-func-body-length
 

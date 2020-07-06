@@ -368,6 +368,7 @@ import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs'
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { registerPythonEnvironmentsServices } from '../../client/pythonEnvironments/main';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
 import { MockOutputChannel } from '../mockClasses';
@@ -393,7 +394,6 @@ import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
-import { registerPythonEnvironmentsServices } from '../../client/pythonEnvironments/main';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
