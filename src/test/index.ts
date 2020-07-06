@@ -34,7 +34,7 @@ function setupCoverage() {
     if (!process.env.VSC_PYTHON_INSTRUMENT_CODE_FOR_COVERAGE) {
         return;
     }
-    const reports = ['lcovonly', 'text', 'text-summary'];
+    const reports = ['lcovonly', 'text', 'text-summary', 'html'];
     if (!IS_CI_SERVER) {
         reports.push('html');
     }
