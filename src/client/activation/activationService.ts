@@ -178,7 +178,7 @@ export class LanguageServerExtensionActivationService
     public getLanguageServerType(): LanguageServerType {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const lsType = configurationService.getSettings(this.resource).languageServer;
-        // If user is using Microsoft LS and is assigned to an experiment (i.e. use Node server), return false.
+        // If user is using Microsoft LS and is assigned to an experiment (i.e. use Pylance server), return false.
         if (lsType === LanguageServerType.Microsoft && this.abExperiments.inExperiment(LSEnabled)) {
             return LanguageServerType.Node;
         }

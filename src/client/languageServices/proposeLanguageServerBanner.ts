@@ -63,7 +63,7 @@ export class ProposeLanguageServerBanner extends BannerBase {
         const ls = configuration.getSettings()?.languageServer ?? LanguageServerType.Jedi;
         this.sampleSizePerHundred = sampleSizePerHundred ?? bannerShowRate.get(ls) ?? 10;
         if (this.sampleSizePerHundred === 0) {
-            this.disable();
+            this.disable().ignoreErrors();
         }
     }
 

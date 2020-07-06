@@ -20,7 +20,7 @@ import {
     TextDocument,
     WorkspaceEdit
 } from 'vscode';
-import { Resource, IPythonExtensionBanner, BANNER_NAME_PROPOSE_LS } from '../../common/types';
+import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner, Resource } from '../../common/types';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { ILanguageServerActivator } from '../types';
 import { isTestExecution } from '../../common/constants';
