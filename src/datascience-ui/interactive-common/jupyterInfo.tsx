@@ -20,6 +20,7 @@ export interface IJupyterInfoProps {
 export class JupyterInfo extends React.Component<IJupyterInfoProps> {
     private get isKernelSelectionAllowed() {
         return (
+            this.props.isNotebookTrusted !== false &&
             this.props.kernel.jupyterServerStatus !== ServerStatus.Restarting &&
             this.props.kernel.jupyterServerStatus !== ServerStatus.Starting
         );
