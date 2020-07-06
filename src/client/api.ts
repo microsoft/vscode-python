@@ -8,6 +8,7 @@ import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IConfigurationService, Resource } from './common/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
+import { IJupyterUriProvider, IJupyterUriProviderRegistration } from './datascience/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -82,6 +83,11 @@ export interface IExtensionApi {
          * @param {string} title Data Viewer title
          */
         showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
+        /**
+         * Registers a remote server provider component that's used to pick remote jupyter server URIs
+         * @param serverProvider object called back when picking jupyter server URI
+         */
+        registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
     };
 }
 
@@ -127,6 +133,12 @@ export function buildApi(
             async showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
                 const dataViewerProviderService = serviceContainer.get<IDataViewerFactory>(IDataViewerFactory);
                 await dataViewerProviderService.create(dataProvider, title);
+            },
+            registerRemoteServerProvider(picker: IJupyterUriProvider): void {
+                const container = serviceContainer.get<IJupyterUriProviderRegistration>(
+                    IJupyterUriProviderRegistration
+                );
+                container.registerProvider(picker);
             }
         }
     };

@@ -19,6 +19,7 @@ import {
     IJupyterSession,
     IJupyterSessionManager
 } from '../types';
+import { createAuthorizingRequest } from './jupyterRequest';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
 import { createDefaultKernelSpec } from './kernels/helpers';
@@ -232,9 +233,17 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // tslint:disable-next-line:no-any
         let requestInit: any = { cache: 'no-store', credentials: 'same-origin' };
         let cookieString;
+        // tslint:disable-next-line: no-any
+        let requestCtor: any = nodeFetch.Request;
+
+        // If authorization header is provided, then we need to prevent jupyterlab services from
+        // writing the authorization header.
+        if (connInfo.authorizationHeader) {
+            requestCtor = createAuthorizingRequest(connInfo.authorizationHeader);
+        }
 
         // If no token is specified prompt for a password
-        if (connInfo.token === '' || connInfo.token === 'null') {
+        if ((connInfo.token === '' || connInfo.token === 'null') && !connInfo.authorizationHeader) {
             if (this.failOnPassword) {
                 throw new Error('Password request not allowed.');
             }
@@ -279,7 +288,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             init: requestInit,
             WebSocket: createJupyterWebSocket(
                 cookieString,
-                allowUnauthorized
+                allowUnauthorized,
+                connInfo.authorizationHeader
                 // tslint:disable-next-line:no-any
             ) as any,
             // Redefine fetch to our node-modules so it picks up the correct version.
@@ -287,7 +297,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             // tslint:disable-next-line:no-any
             fetch: nodeFetch.default as any,
             // tslint:disable-next-line:no-any
-            Request: nodeFetch.Request as any,
+            Request: requestCtor,
             // tslint:disable-next-line:no-any
             Headers: nodeFetch.Headers as any
         };

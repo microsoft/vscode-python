@@ -13,6 +13,7 @@ import {
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PYTHON_WARNINGS } from '../constants';
 import { traceDecorators, traceError } from '../logger';
+import { IPlatformService } from '../platform/types';
 import { IDisposable, IDisposableRegistry } from '../types';
 import { createDeferred } from '../utils/async';
 import { BasePythonDaemon } from './baseDaemon';
@@ -26,6 +27,7 @@ export class PythonDaemonFactory {
         protected readonly disposables: IDisposableRegistry,
         protected readonly options: DaemonExecutionFactoryCreationOptions,
         protected readonly pythonExecutionService: IPythonExecutionService,
+        protected readonly platformService: IPlatformService,
         protected readonly activatedEnvVariables?: NodeJS.ProcessEnv
     ) {
         if (!options.pythonPath) {
@@ -82,7 +84,13 @@ export class PythonDaemonFactory {
             await this.testDaemon(connection);
 
             const cls = this.options.daemonClass ?? PythonDaemonExecutionService;
-            const instance = new cls(this.pythonExecutionService, this.pythonPath, daemonProc.proc, connection);
+            const instance = new cls(
+                this.pythonExecutionService,
+                this.platformService,
+                this.pythonPath,
+                daemonProc.proc,
+                connection
+            );
             if (instance instanceof BasePythonDaemon) {
                 this.disposables.push(instance);
                 return (instance as unknown) as T;

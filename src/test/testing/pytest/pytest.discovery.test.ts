@@ -7,7 +7,7 @@ import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
-import { IFileSystem } from '../../../client/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { createPythonEnv } from '../../../client/common/process/pythonEnvironment';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
@@ -74,7 +74,8 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             @inject(IConfigurationService) private readonly _configService: IConfigurationService,
             @inject(ICondaService) condaService: ICondaService,
             @inject(WindowsStoreInterpreter) windowsStoreInterpreter: WindowsStoreInterpreter,
-            @inject(IBufferDecoder) decoder: IBufferDecoder
+            @inject(IBufferDecoder) decoder: IBufferDecoder,
+            @inject(IPlatformService) platformService: IPlatformService
         ) {
             super(
                 _serviceContainer,
@@ -83,7 +84,8 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 _configService,
                 condaService,
                 decoder,
-                windowsStoreInterpreter
+                windowsStoreInterpreter,
+                platformService
             );
         }
         public async createActivatedEnvironment(

@@ -9,7 +9,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
-import { commands } from 'vscode';
+import { commands, Uri } from 'vscode';
 import { NotebookCell } from '../../../../types/vscode-proposed';
 import { CellDisplayOutput } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
@@ -178,46 +178,45 @@ export async function shutdownAllNotebooks() {
     await Promise.all(notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()));
 }
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
-    // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
-    await commands.executeCommand('workbench.action.files.saveAll');
     await closeActiveWindows();
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
     sinon.restore();
 }
 export async function closeNotebooks(disposables: IDisposable[] = []) {
-    // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
-    await commands.executeCommand('workbench.action.files.saveAll');
     await closeActiveWindows();
     disposeAllDisposables(disposables);
 }
 
 export async function startJupyter() {
-    const { contentProvider, editorProvider } = await getServices();
-    // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
-    await commands.executeCommand('workbench.action.files.saveAll');
+    const { editorProvider } = await getServices();
     await closeActiveWindows();
 
-    // Create a new nb, add a python cell and execute it.
-    // Doing that will start jupyter.
-    await editorProvider.createNew();
-    await (await insertPythonCell('print("Hello World")', 0)).waitForCellToGetAdded();
-    const model = editorProvider.activeEditor?.model;
-    editorProvider.activeEditor?.runAllCells();
-    // Wait for 15s for Jupyter to start.
-    await waitForCondition(async () => (model?.cells[0].data.outputs as []).length > 0, 15_000, 'Cell not executed');
-
-    const saveStub = sinon.stub(contentProvider, 'saveNotebook');
-    const saveAsStub = sinon.stub(contentProvider, 'saveNotebookAs');
+    const disposables: IDisposable[] = [];
     try {
-        // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
-        saveStub.callsFake(noop as any);
-        saveAsStub.callsFake(noop as any);
-        await commands.executeCommand('workbench.action.files.saveAll');
+        const templateIPynb = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'datascience',
+            'notebook',
+            'empty.ipynb'
+        );
+        const tempIPynb = await createTemporaryNotebook(templateIPynb, disposables);
+        await editorProvider.open(Uri.file(tempIPynb));
+        await (await insertPythonCell('print("Hello World")', 0)).waitForCellToGetAdded();
+        const model = editorProvider.activeEditor?.model;
+        editorProvider.activeEditor?.runAllCells();
+        // Wait for 15s for Jupyter to start.
+        await waitForCondition(
+            async () => (model?.cells[0].data.outputs as []).length > 0,
+            15_000,
+            'Cell not executed'
+        );
+
         await closeActiveWindows();
     } finally {
-        saveStub.restore();
-        saveAsStub.restore();
+        disposables.forEach((d) => d.dispose());
     }
 }
 

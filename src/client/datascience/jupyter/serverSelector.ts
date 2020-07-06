@@ -12,17 +12,20 @@ import { noop } from '../../common/utils/misc';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
+    InputFlowAction,
     InputStep,
     IQuickPickParameters
 } from '../../common/utils/multiStepInput';
 import { captureTelemetry } from '../../telemetry';
 import { getSavedUriList } from '../common';
-import { Settings, Telemetry } from '../constants';
+import { Identifiers, Settings, Telemetry } from '../constants';
+import { IJupyterUriProvider, IJupyterUriProviderRegistration, JupyterServerUriHandle } from '../types';
 
 const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
 
 interface ISelectUriQuickPickItem extends QuickPickItem {
     newChoice: boolean;
+    provider?: IJupyterUriProvider;
 }
 
 @injectable()
@@ -35,7 +38,9 @@ export class JupyterServerSelector {
         @inject(IClipboard) private readonly clipboard: IClipboard,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(ICommandManager) private cmdManager: ICommandManager
+        @inject(ICommandManager) private cmdManager: ICommandManager,
+        @inject(IJupyterUriProviderRegistration)
+        private extraUriProviders: IJupyterUriProviderRegistration
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
@@ -53,19 +58,50 @@ export class JupyterServerSelector {
         // newChoice element will be set if the user picked 'enter a new server'
         const item = await input.showQuickPick<ISelectUriQuickPickItem, IQuickPickParameters<ISelectUriQuickPickItem>>({
             placeholder: DataScience.jupyterSelectURIQuickPickPlaceholder(),
-            items: this.getUriPickList(allowLocal),
+            items: await this.getUriPickList(allowLocal),
             title: allowLocal
                 ? DataScience.jupyterSelectURIQuickPickTitle()
                 : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly()
         });
         if (item.label === this.localLabel) {
             await this.setJupyterURIToLocal();
-        } else if (!item.newChoice) {
+        } else if (!item.newChoice && !item.provider) {
             await this.setJupyterURIToRemote(item.label);
-        } else {
+        } else if (!item.provider) {
             return this.selectRemoteURI.bind(this);
+        } else {
+            return this.selectProviderURI.bind(this, item.provider, item);
         }
     }
+
+    private async selectProviderURI(
+        provider: IJupyterUriProvider,
+        item: ISelectUriQuickPickItem,
+        _input: IMultiStepInput<{}>,
+        _state: {}
+    ): Promise<InputStep<{}> | void> {
+        const result = await provider.handleQuickPick(item, true);
+        if (result === 'back') {
+            throw InputFlowAction.back;
+        }
+        if (result) {
+            await this.handleProviderQuickPick(provider.id, result);
+        }
+    }
+    private async handleProviderQuickPick(id: string, result: JupyterServerUriHandle | undefined) {
+        if (result) {
+            const uri = this.generateUriFromRemoteProvider(id, result);
+            await this.setJupyterURIToRemote(uri);
+        }
+    }
+
+    private generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {
+        // tslint:disable-next-line: no-http-string
+        return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${
+            Identifiers.REMOTE_URI_HANDLE_PARAM
+        }=${encodeURI(result)}`;
+    }
+
     private async selectRemoteURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
         let initialValue = defaultUri;
         try {
@@ -138,13 +174,27 @@ export class JupyterServerSelector {
         }
     };
 
-    private getUriPickList(allowLocal: boolean): ISelectUriQuickPickItem[] {
+    private async getUriPickList(allowLocal: boolean): Promise<ISelectUriQuickPickItem[]> {
+        // Ask our providers to stick on items
+        let providerItems: ISelectUriQuickPickItem[] = [];
+        const providers = await this.extraUriProviders.getProviders();
+        if (providers) {
+            providers.forEach((p) => {
+                const newproviderItems = p.getQuickPickEntryItems().map((i) => {
+                    return { ...i, newChoice: false, provider: p };
+                });
+                providerItems = providerItems.concat(newproviderItems);
+            });
+        }
+
         // Always have 'local' and 'add new'
-        const items: ISelectUriQuickPickItem[] = [];
+        let items: ISelectUriQuickPickItem[] = [];
         if (allowLocal) {
             items.push({ label: this.localLabel, detail: DataScience.jupyterSelectURILocalDetail(), newChoice: false });
+            items = items.concat(providerItems);
             items.push({ label: this.newLabel, detail: DataScience.jupyterSelectURINewDetail(), newChoice: true });
         } else {
+            items = items.concat(providerItems);
             items.push({
                 label: this.remoteLabel,
                 detail: DataScience.jupyterSelectURIRemoteDetail(),

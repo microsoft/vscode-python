@@ -62,7 +62,8 @@ suite('DataScience Native Toolbar', () => {
             setVariableExplorerHeight: sinon.stub(),
             launchNotebookTrustPrompt: sinon.stub(),
             variablesVisible: false,
-            isNotebookTrusted: true
+            isNotebookTrusted: true,
+            shouldShowTrustMessage: true
         };
     });
     function mountToolbar() {

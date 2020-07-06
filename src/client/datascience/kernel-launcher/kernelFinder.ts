@@ -10,9 +10,11 @@ import { IWorkspaceService } from '../../common/application/types';
 import { wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 import { IExtensionContext, IInstaller, InstallerResponse, IPathUtils, Product, Resource } from '../../common/types';
 import { IInterpreterLocatorService, IInterpreterService, KNOWN_PATH_SERVICE } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
+import { getRealPath } from '../common';
 import { Telemetry } from '../constants';
 import { createDefaultKernelSpec, defaultKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
@@ -55,7 +57,8 @@ export class KernelFinder implements IKernelFinder {
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IInstaller) private installer: IInstaller,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IPythonExecutionFactory) private readonly exeFactory: IPythonExecutionFactory
     ) {}
 
     @captureTelemetry(Telemetry.KernelFinderPerf)
@@ -230,10 +233,23 @@ export class KernelFinder implements IKernelFinder {
     }
 
     private async getDiskPaths(): Promise<string[]> {
-        let paths = [];
+        let paths: string[] = [];
 
         if (this.platformService.isWindows) {
-            paths = [path.join(this.pathUtils.home, winJupyterPath)];
+            const activeInterpreter = await this.interpreterService.getActiveInterpreter();
+            if (activeInterpreter) {
+                const winPath = await getRealPath(
+                    this.file,
+                    this.exeFactory,
+                    activeInterpreter.path,
+                    path.join(this.pathUtils.home, winJupyterPath)
+                );
+                if (winPath) {
+                    paths = [winPath];
+                }
+            } else {
+                paths = [path.join(this.pathUtils.home, winJupyterPath)];
+            }
 
             if (process.env.ALLUSERSPROFILE) {
                 paths.push(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels'));

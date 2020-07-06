@@ -186,7 +186,10 @@ export class NotebookExecutionService implements INotebookExecutionService {
         }
 
         const editor = this.editorProvider.editors.find((e) => e.model === model);
-        if (!(editor instanceof NotebookEditor)) {
+        if (!editor) {
+            throw new Error('No editor for Model');
+        }
+        if (editor && !(editor instanceof NotebookEditor)) {
             throw new Error('Executing Notebook with another Editor');
         }
         // If we need to cancel this execution (from our code, due to kernel restarts or similar, then cancel).
@@ -338,7 +341,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
             this.registeredIOPubListeners.add(nb);
             //tslint:disable-next-line:no-require-imports
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-            nb.registerIOPubListener(async (msg) => {
+            nb.registerIOPubListener((msg) => {
                 if (
                     jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg) &&
                     handleUpdateDisplayDataMessage(msg, model, document)

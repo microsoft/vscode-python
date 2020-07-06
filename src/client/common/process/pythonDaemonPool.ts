@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IPlatformService } from '../../common/platform/types';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { IDisposableRegistry } from '../types';
@@ -32,10 +33,11 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
         disposables: IDisposableRegistry,
         options: PooledDaemonExecutionFactoryCreationOptions,
         pythonExecutionService: IPythonExecutionService,
+        platformService: IPlatformService,
         activatedEnvVariables?: NodeJS.ProcessEnv,
         private readonly timeoutWaitingForDaemon: number = 1_000
     ) {
-        super(disposables, options, pythonExecutionService, activatedEnvVariables);
+        super(disposables, options, pythonExecutionService, platformService, activatedEnvVariables);
         this.disposables.push(this);
     }
     public async initialize() {

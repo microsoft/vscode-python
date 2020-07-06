@@ -176,7 +176,7 @@ export class JupyterNotebookBase implements INotebook {
     private disposed = new EventEmitter<void>();
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
-    private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>>();
+    private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => void>();
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this.session.kernelSocket;
     }
@@ -656,9 +656,7 @@ export class JupyterNotebookBase implements INotebook {
         return this.loggers;
     }
 
-    public registerIOPubListener(
-        listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>
-    ): void {
+    public registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void {
         this.ioPubListeners.add(listener);
     }
 
@@ -951,10 +949,7 @@ export class JupyterNotebookBase implements INotebook {
         clearState: RefBool,
         msg: KernelMessage.IIOPubMessage
         // tslint:disable-next-line: no-any
-    ): Promise<any> {
-        // tslint:disable-next-line: no-any
-        let result: Promise<any> = Promise.resolve();
-
+    ) {
         // Let our loggers get a first crack at the message. They may change it
         this.getLoggers().forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
 
@@ -1007,10 +1002,8 @@ export class JupyterNotebookBase implements INotebook {
                 subscriber.cell.data.execution_count = msg.content.execution_count as number;
             }
 
-            // Tell all of the listeners about the event. They can cause this to not return until
-            // they are done handling the event.
-            // One such example is a comm_msg for ipywidgets. We have to wait for it to finish.
-            result = Promise.all([...this.ioPubListeners].map((l) => l(msg, msg.header.msg_id)));
+            // Tell all of the listeners about the event.
+            [...this.ioPubListeners].forEach((l) => l(msg, msg.header.msg_id));
 
             // Show our update if any new output.
             if (shouldUpdateSubscriber) {
@@ -1020,8 +1013,6 @@ export class JupyterNotebookBase implements INotebook {
             // If not a restart error, then tell the subscriber
             subscriber.error(this.sessionStartTime, err);
         }
-
-        return result;
     }
 
     private checkForExit(): Error | undefined {

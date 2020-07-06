@@ -11,7 +11,6 @@ import * as TypeMoq from 'typemoq';
 import { EventEmitter, Uri, ViewColumn, WebviewPanel } from 'vscode';
 import { traceInfo } from '../../../client/common/logger';
 import { noop } from '../../../client/common/utils/misc';
-import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider } from '../../../client/datascience/types';
 import { createTemporaryFile } from '../../utils/fs';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
@@ -118,14 +117,16 @@ export async function openNotebook(
     const webViewPanel = createWebViewPanel();
     traceInfo(`Notebook UI Tests: about to open editor`);
 
-    const kernelIdle = notebookUI.waitForMessageAfterServer(InteractiveWindowMessages.KernelIdle);
     const notebookEditor = await openNotebookEditor(ioc, notebookFileContents, notebookFile);
     traceInfo(`Notebook UI Tests: have editor`);
     await uiLoaded;
     traceInfo(`Notebook UI Tests: UI complete`);
 
     // Wait for kernel to be idle before finishing. (Prevents early shutdown problems in tests)
-    await kernelIdle;
+    await notebookEditor.notebook?.waitForIdle(60_000);
+
+    // Tell the notebook UI about the editor (it needs it for execution)
+    notebookUI._setEditor(notebookEditor);
 
     return { notebookEditor, webViewPanel, notebookUI };
 }

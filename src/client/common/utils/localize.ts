@@ -315,6 +315,15 @@ export namespace Products {
 }
 
 export namespace DataScience {
+    export const unknownServerUri = localize(
+        'DataScience.unknownServerUri',
+        'Server URI cannot be used. Did you uninstall an extension that provided a Jupyter server connection?'
+    );
+    export const uriProviderDescriptionFormat = localize(
+        'DataScience.uriProviderDescriptionFormat',
+        '{0} (From {1} extension)'
+    );
+    export const unknownPackage = localize('DataScience.unknownPackage', 'unknown');
     export const historyTitle = localize('DataScience.historyTitle', 'Python Interactive');
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');
     export const badWebPanelFormatString = localize(
@@ -1021,7 +1030,7 @@ export namespace DataScience {
     );
     export const launchNotebookTrustPrompt = localize(
         'DataScience.launchNotebookTrustPrompt',
-        'A Notebook could execute harmful code when opened. Some cells & outputs have been hidden. Do you trust this notebook?'
+        'A notebook could execute harmful code when opened. Some cells & outputs have been hidden. Do you trust this notebook? (To trust all notebooks by default, click [here](command:workbench.action.openSettings?%5B%22python.dataScience.alwaysTrustNotebooks%22%5D).) [Learn more.](https://aka.ms/trusted-notebooks)'
     );
     export const trustNotebook = localize('DataScience.launchNotebookTrustPrompt.yes', 'Trust');
     export const doNotTrustNotebook = localize('DataScience.launchNotebookTrustPrompt.no', 'Do not trust');

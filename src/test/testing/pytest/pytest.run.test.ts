@@ -8,7 +8,7 @@ import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
-import { IFileSystem } from '../../../client/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { createPythonEnv } from '../../../client/common/process/pythonEnvironment';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
@@ -40,6 +40,7 @@ import {
     TestsToRun
 } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
+import { TEST_TIMEOUT } from '../../constants';
 import { MockProcessService } from '../../mocks/proc';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
@@ -396,7 +397,8 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             @inject(IConfigurationService) private readonly _configService: IConfigurationService,
             @inject(ICondaService) condaService: ICondaService,
             @inject(WindowsStoreInterpreter) windowsStoreInterpreter: WindowsStoreInterpreter,
-            @inject(IBufferDecoder) decoder: IBufferDecoder
+            @inject(IBufferDecoder) decoder: IBufferDecoder,
+            @inject(IPlatformService) platformService: IPlatformService
         ) {
             super(
                 _serviceContainer,
@@ -405,7 +407,8 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                 _configService,
                 condaService,
                 decoder,
-                windowsStoreInterpreter
+                windowsStoreInterpreter,
+                platformService
             );
         }
         public async createActivatedEnvironment(
@@ -432,9 +435,17 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             };
         }
     }
-    suiteSetup(async () => {
+    // tslint:disable-next-line: no-function-expression
+    suiteSetup(async function () {
+        // tslint:disable-next-line: no-invalid-this
+        this.timeout(TEST_TIMEOUT * 2);
+        // tslint:disable: no-console
+        console.time('Pytest before all hook');
         await initialize();
+        console.timeLog('Pytest before all hook');
         await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
+        console.timeEnd('Pytest before all hook');
+        // tslint:enable: no-console
     });
     function initializeDI() {
         ioc = new UnitTestIocContainer();
@@ -508,7 +519,10 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             let testManager: ITestManager;
             let results: Tests;
             let diagnostics: readonly vscode.Diagnostic[];
-            suiteSetup(async () => {
+            suiteSetup(async function () {
+                // This "before all" hook is doing way more than normal
+                // tslint:disable-next-line: no-invalid-this
+                this.timeout(TEST_TIMEOUT * 2);
                 await initializeTest();
                 initializeDI();
                 await injectTestDiscoveryOutput(scenario.discoveryOutput);

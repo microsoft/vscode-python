@@ -673,7 +673,12 @@
             {
                 "command": "python.datascience.notebookeditor.restartkernel",
                 "title": "%python.command.python.datascience.restartkernel.title%",
-                "category": "Python"
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/restart-kernel.svg",
+                    "dark": "resources/dark/restart-kernel.svg"
+                },
+                "enablement": "python.datascience.notebookeditor.canrestartNotebookkernel"
             },
             {
                 "command": "python.datascience.notebookeditor.runallcells",
@@ -834,6 +839,12 @@
                     "title": "%python.command.python.execInTerminal.title%",
                     "group": "navigation",
                     "when": "resourceLangId == python && python.showPlayIcon"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.restartkernel",
+                    "title": "%python.command.python.datascience.restartkernel.title%",
+                    "group": "navigation",
+                    "when": "notebookEditorFocused"
                 }
             ],
             "explorer/context": [
@@ -1081,55 +1092,55 @@
                     "command": "python.datascience.notebookeditor.undocells",
                     "title": "%python.command.python.datascience.undocells.title%",
                     "category": "Python",
-                    "when": "python.datascience.haveinteractivecells && python.datascience.featureenabled && python.datascience.isnativeactive && !notebookEditorFocused"
+                    "when": "python.datascience.haveinteractivecells && python.datascience.featureenabled && python.datascience.isnativeactive && !notebookEditorFocused && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.redocells",
                     "title": "%python.command.python.datascience.redocells.title%",
                     "category": "Python",
-                    "when": "python.datascience.havenativeredoablecells && python.datascience.featureenabled && python.datascience.isnativeactive && !notebookEditorFocused"
+                    "when": "python.datascience.havenativeredoablecells && python.datascience.featureenabled && python.datascience.isnativeactive && !notebookEditorFocused&& python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.removeallcells",
                     "title": "%python.command.python.datascience.notebookeditor.removeallcells.title%",
                     "category": "Python",
-                    "when": "python.datascience.havenativecells && python.datascience.featureenabled && python.datascience.isnativeactive"
+                    "when": "python.datascience.havenativecells && python.datascience.featureenabled && python.datascience.isnativeactive && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.interruptkernel",
                     "title": "%python.command.python.datascience.interruptkernel.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.restartkernel",
                     "title": "%python.command.python.datascience.restartkernel.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.runallcells",
                     "title": "%python.command.python.datascience.notebookeditor.runallcells.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.runselectedcell",
                     "title": "%python.command.python.datascience.notebookeditor.runselectedcell.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.havecellselected && !notebookEditorFocused"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.havecellselected && !notebookEditorFocused && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.runselectedcell",
                     "title": "%python.command.python.datascience.notebookeditor.runselectedcell.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && notebookEditorFocused"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && notebookEditorFocused && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.addcellbelow",
                     "title": "%python.command.python.datascience.notebookeditor.addcellbelow.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.expandallcells",
@@ -2944,7 +2955,7 @@
                 "python.dataScience.alwaysTrustNotebooks": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Automatically trust all notebooks that are opened. Warning: only enable this setting if you are absolutely certain that you wish to trust all notebooks.",
+                    "markdownDescription": "Enabling this setting will automatically trust any opened notebook and therefore display markdown and render code cells. You will no longer be prompted to trust individual notebooks and harmful code could automatically run. \n\n[Learn more.](https://aka.ms/trusted-notebooks)",
                     "scope": "machine"
                 },
                 "python.insidersChannel": {
@@ -3200,7 +3211,6 @@
         "@jupyter-widgets/controls": "^1.5.2",
         "@jupyter-widgets/jupyterlab-manager": "^1.0.2",
         "@jupyter-widgets/output": "^2.0.1",
-        "@nteract/plotly": "^1.48.3",
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
@@ -3337,6 +3347,7 @@
         "node-html-parser": "^1.1.13",
         "nyc": "^15.0.0",
         "playwright-chromium": "^0.13.0",
+        "plotly.js-dist": "^1.54.5",
         "postcss": "^7.0.27",
         "postcss-cssnext": "^3.1.0",
         "postcss-import": "^12.0.1",
