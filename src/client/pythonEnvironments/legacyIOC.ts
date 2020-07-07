@@ -145,30 +145,6 @@ export function registerForIOC(serviceManager: IServiceManager) {
 }
 
 @injectable()
-class PythonInterpreterLocatorServiceProxy implements IInterpreterLocatorService {
-    private readonly impl: IInterpreterLocatorService;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        this.impl = new PythonInterpreterLocatorService(serviceContainer);
-        serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this.impl);
-    }
-    public dispose() {
-        this.impl.dispose();
-    }
-    public get onLocating(): Event<Promise<PythonInterpreter[]>> {
-        return this.impl.onLocating;
-    }
-    public get hasInterpreters(): Promise<boolean> {
-        return this.impl.hasInterpreters;
-    }
-    public get didTriggerInterpreterSuggestions(): boolean | undefined {
-        return this.impl.didTriggerInterpreterSuggestions;
-    }
-    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]> {
-        return this.impl.getInterpreters(resource, options);
-    }
-}
-
-@injectable()
 class InterpreterLocatorHelperProxy implements IInterpreterLocatorHelper {
     private readonly impl: IInterpreterLocatorHelper;
     constructor(
@@ -221,5 +197,33 @@ class InterpreterHashProviderFactoryProxy implements IInterpreterHashProviderFac
     }
     public async create(options: { pythonPath: string } | { resource: Uri }): Promise<IInterpreterHashProvider> {
         return this.impl.create(options);
+    }
+}
+
+@injectable()
+class BaseLocatorServiceProxy implements IInterpreterLocatorService {
+    constructor(protected readonly impl: IInterpreterLocatorService) {}
+    public dispose() {
+        this.impl.dispose();
+    }
+    public get onLocating(): Event<Promise<PythonInterpreter[]>> {
+        return this.impl.onLocating;
+    }
+    public get hasInterpreters(): Promise<boolean> {
+        return this.impl.hasInterpreters;
+    }
+    public get didTriggerInterpreterSuggestions(): boolean | undefined {
+        return this.impl.didTriggerInterpreterSuggestions;
+    }
+    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]> {
+        return this.impl.getInterpreters(resource, options);
+    }
+}
+
+@injectable()
+class PythonInterpreterLocatorServiceProxy extends BaseLocatorServiceProxy {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        super(new PythonInterpreterLocatorService(serviceContainer));
+        serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this.impl);
     }
 }
