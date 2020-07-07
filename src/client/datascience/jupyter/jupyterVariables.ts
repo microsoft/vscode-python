@@ -17,6 +17,7 @@ import {
     IJupyterVariablesResponse,
     INotebook
 } from '../types';
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 
 /**
  * This class provides variable data for showing in the interactive window or a notebook.
@@ -50,15 +51,15 @@ export class JupyterVariables implements IJupyterVariables {
         notebook: INotebook,
         request: IJupyterVariablesRequest
     ): Promise<IJupyterVariablesResponse> {
-        return this.realVariables.getVariables(notebook, request);
+        return this.getVariableHandler(notebook).getVariables(notebook, request);
     }
 
     public getMatchingVariable(notebook: INotebook, name: string): Promise<IJupyterVariable | undefined> {
-        return this.realVariables.getMatchingVariable(notebook, name);
+        return this.getVariableHandler(notebook).getMatchingVariable(notebook, name);
     }
 
     public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
-        return this.realVariables.getDataFrameInfo(targetVariable, notebook);
+        return this.getVariableHandler(notebook).getDataFrameInfo(targetVariable, notebook);
     }
 
     public async getDataFrameRows(
@@ -67,14 +68,14 @@ export class JupyterVariables implements IJupyterVariables {
         start: number,
         end: number
     ): Promise<JSONObject> {
-        return this.realVariables.getDataFrameRows(targetVariable, notebook, start, end);
+        return this.getVariableHandler(notebook).getDataFrameRows(targetVariable, notebook, start, end);
     }
 
-    private get realVariables(): IJupyterVariables {
+    private getVariableHandler(notebook: INotebook): IJupyterVariables {
         if (!this.experimentsManager.inExperiment(RunByLine.experiment)) {
             return this.oldVariables;
         }
-        if (this.debuggerVariables.active) {
+        if (this.debuggerVariables.active && notebook.status === ServerStatus.Busy) {
             return this.debuggerVariables;
         }
 
