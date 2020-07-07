@@ -99,7 +99,11 @@ export function registerForIOC(serviceManager: IServiceManager) {
         WorkspaceVirtualEnvServiceProxy,
         WORKSPACE_VIRTUAL_ENV_SERVICE
     );
-    serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
+    serviceManager.addSingleton<IInterpreterLocatorService>(
+        IInterpreterLocatorService,
+        PipEnvServiceProxy,
+        PIPENV_SERVICE
+    );
 
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
@@ -299,5 +303,12 @@ class KnownPathsServiceProxy extends BaseLocatorServiceProxy {
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         super(new KnownPathsService(knownSearchPaths, helper, serviceContainer));
+    }
+}
+
+@injectable()
+class PipEnvServiceProxy extends BaseLocatorServiceProxy {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        super(new PipEnvService(serviceContainer));
     }
 }
