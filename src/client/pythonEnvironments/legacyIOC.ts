@@ -8,8 +8,8 @@ import { SemVer } from 'semver';
 import { Disposable, Event, Uri } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
 import { IFileSystem, IPlatformService, IRegistry } from '../common/platform/types';
-import { IProcessServiceFactory } from '../common/process/types';
-import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../common/types';
+import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
+import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory, Resource } from '../common/types';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -128,7 +128,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
 
     serviceManager.add<IInterpreterWatcher>(
         IInterpreterWatcher,
-        WorkspaceVirtualEnvWatcherService,
+        WorkspaceVirtualEnvWatcherServiceProxy,
         WORKSPACE_VIRTUAL_ENV_SERVICE
     );
     serviceManager.addSingleton<IWindowsStoreInterpreter>(IWindowsStoreInterpreter, WindowsStoreInterpreterProxy);
@@ -374,6 +374,30 @@ class InterpreterWatcherBuilderProxy implements IInterpreterWatcherBuilder {
     }
     public async getWorkspaceVirtualEnvInterpreterWatcher(resource: Uri | undefined): Promise<IInterpreterWatcher> {
         return this.impl.getWorkspaceVirtualEnvInterpreterWatcher(resource);
+    }
+}
+
+@injectable()
+class WorkspaceVirtualEnvWatcherServiceProxy implements IInterpreterWatcher, Disposable {
+    private readonly impl: IInterpreterWatcher & Disposable;
+    constructor(
+        @inject(IDisposableRegistry) disposableRegistry: Disposable[],
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(IPlatformService) platformService: IPlatformService,
+        @inject(IPythonExecutionFactory) pythonExecFactory: IPythonExecutionFactory
+    ) {
+        this.impl = new WorkspaceVirtualEnvWatcherService(
+            disposableRegistry,
+            workspaceService,
+            platformService,
+            pythonExecFactory
+        );
+    }
+    public get onDidCreate(): Event<Resource> {
+        return this.onDidCreate;
+    }
+    public dispose() {
+        return this.impl.dispose();
     }
 }
 
