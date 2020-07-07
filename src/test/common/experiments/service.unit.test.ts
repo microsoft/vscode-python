@@ -36,6 +36,7 @@ suite('Experimentation service', () => {
 
     teardown(() => {
         sinon.restore();
+        Telemetry._resetSharedProperties();
     });
 
     function configureSettings(enabled: boolean, optInto: string[], optOutFrom: string[]) {
