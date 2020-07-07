@@ -117,7 +117,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
         KNOWN_PATH_SERVICE
     );
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-    serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
+    serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelperProxy);
     serviceManager.addSingleton<IPythonInPathCommandProvider>(
         IPythonInPathCommandProvider,
         PythonInPathCommandProviderProxy
@@ -270,6 +270,23 @@ class WorkspaceVirtualEnvironmentsSearchPathProviderProxy implements IVirtualEnv
     }
     public async getSearchPaths(resource?: Uri): Promise<string[]> {
         return this.impl.getSearchPaths(resource);
+    }
+}
+
+@injectable()
+class PipEnvServiceHelperProxy implements IPipEnvServiceHelper {
+    private readonly impl: IPipEnvServiceHelper;
+    constructor(
+        @inject(IPersistentStateFactory) statefactory: IPersistentStateFactory,
+        @inject(IFileSystem) fs: IFileSystem
+    ) {
+        this.impl = new PipEnvServiceHelper(statefactory, fs);
+    }
+    public async getPipEnvInfo(pythonPath: string): Promise<{ workspaceFolder: Uri; envName: string } | undefined> {
+        return this.impl.getPipEnvInfo(pythonPath);
+    }
+    public async trackWorkspaceFolder(pythonPath: string, workspaceFolder: Uri): Promise<void> {
+        return this.impl.trackWorkspaceFolder(pythonPath, workspaceFolder);
     }
 }
 
