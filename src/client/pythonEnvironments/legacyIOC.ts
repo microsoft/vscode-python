@@ -137,7 +137,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
         IVirtualEnvironmentsSearchPathProvider,
-        GlobalVirtualEnvironmentsSearchPathProvider,
+        GlobalVirtualEnvironmentsSearchPathProviderProxy,
         'global'
     );
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
@@ -274,6 +274,17 @@ class WorkspaceVirtualEnvironmentsSearchPathProviderProxy implements IVirtualEnv
 }
 
 @injectable()
+class GlobalVirtualEnvironmentsSearchPathProviderProxy implements IVirtualEnvironmentsSearchPathProvider {
+    private readonly impl: IVirtualEnvironmentsSearchPathProvider;
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        this.impl = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
+    }
+    public async getSearchPaths(resource?: Uri): Promise<string[]> {
+        return this.impl.getSearchPaths(resource);
+    }
+}
+
+@injectable()
 class PipEnvServiceHelperProxy implements IPipEnvServiceHelper {
     private readonly impl: IPipEnvServiceHelper;
     constructor(
@@ -289,6 +300,9 @@ class PipEnvServiceHelperProxy implements IPipEnvServiceHelper {
         return this.impl.trackWorkspaceFolder(pythonPath, workspaceFolder);
     }
 }
+
+//===========================
+// locators
 
 @injectable()
 class BaseLocatorServiceProxy implements IInterpreterLocatorService {
