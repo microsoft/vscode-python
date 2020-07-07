@@ -142,7 +142,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
         IVirtualEnvironmentsSearchPathProvider,
-        WorkspaceVirtualEnvironmentsSearchPathProvider,
+        WorkspaceVirtualEnvironmentsSearchPathProviderProxy,
         'workspace'
     );
     serviceManager.addSingleton<IKnownSearchPathsForInterpreters>(
@@ -259,6 +259,17 @@ class KnownSearchPathsForInterpretersProxy implements IKnownSearchPathsForInterp
     }
     public getSearchPaths(): string[] {
         return this.impl.getSearchPaths();
+    }
+}
+
+@injectable()
+class WorkspaceVirtualEnvironmentsSearchPathProviderProxy implements IVirtualEnvironmentsSearchPathProvider {
+    private readonly impl: IVirtualEnvironmentsSearchPathProvider;
+    public constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        this.impl = new WorkspaceVirtualEnvironmentsSearchPathProvider(serviceContainer);
+    }
+    public async getSearchPaths(resource?: Uri): Promise<string[]> {
+        return this.impl.getSearchPaths(resource);
     }
 }
 
