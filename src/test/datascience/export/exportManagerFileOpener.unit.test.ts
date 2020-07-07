@@ -9,7 +9,6 @@ import { IApplicationShell, IDocumentManager } from '../../../client/common/appl
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IBrowserService, IDisposable } from '../../../client/common/types';
 import { ExportManagerFileOpener } from '../../../client/datascience/export/exportManagerFileOpener';
-import { ExportUtil } from '../../../client/datascience/export/exportUtil';
 import { ExportFormat, IExportManager } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { INotebookModel } from '../../../client/datascience/types';
@@ -22,7 +21,6 @@ suite('Data Science - Export File Opener', () => {
     let fileSystem: IFileSystem;
     let applicationShell: IApplicationShell;
     let browserService: IBrowserService;
-    let exportUtil: ExportUtil;
     const model = instance(mock<INotebookModel>());
     setup(async () => {
         exporter = mock<IExportManager>();
@@ -30,7 +28,6 @@ suite('Data Science - Export File Opener', () => {
         fileSystem = mock<IFileSystem>();
         applicationShell = mock<IApplicationShell>();
         browserService = mock<IBrowserService>();
-        exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
         const editor = mock<TextEditor>();
         // tslint:disable-next-line: no-any
@@ -110,18 +107,6 @@ suite('Data Science - Export File Opener', () => {
 
         await fileOpener.export(ExportFormat.pdf, model);
 
-        verify(browserService.launch(anything())).never();
-    });
-    test("SVG's are removed from output when exporting to PDF", async () => {
-        const uri = Uri.file('test.pdf');
-        when(exporter.export(anything(), anything())).thenResolve(uri);
-        when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
-            Promise.resolve(getLocString('DataScience.openExportFileNo', 'No'))
-        );
-
-        await fileOpener.export(ExportFormat.pdf, model);
-
-        verify(exportUtil.removeSvgs(anything())).once();
         verify(browserService.launch(anything())).never();
     });
 });
