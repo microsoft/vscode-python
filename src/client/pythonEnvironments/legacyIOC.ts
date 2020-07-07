@@ -209,6 +209,38 @@ class InterpreterHashProviderFactoryProxy implements IInterpreterHashProviderFac
 }
 
 @injectable()
+class InterpreterHashProviderProxy implements IInterpreterHashProvider {
+    private readonly impl: IInterpreterHashProvider;
+    constructor(@inject(IFileSystem) fs: IFileSystem) {
+        this.impl = new InterpreterHashProvider(fs);
+    }
+    public async getInterpreterHash(pythonPath: string): Promise<string> {
+        return this.impl.getInterpreterHash(pythonPath);
+    }
+}
+
+@injectable()
+class WindowsStoreInterpreterProxy implements IWindowsStoreInterpreter, IWindowsStoreHashProvider {
+    private readonly impl: IWindowsStoreInterpreter & IWindowsStoreHashProvider;
+    constructor(
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IPersistentStateFactory) persistentFactory: IPersistentStateFactory,
+        @inject(IFileSystem) fs: IFileSystem
+    ) {
+        this.impl = new WindowsStoreInterpreter(serviceContainer, persistentFactory, fs);
+    }
+    public isWindowsStoreInterpreter(pythonPath: string): boolean {
+        return this.impl.isWindowsStoreInterpreter(pythonPath);
+    }
+    public isHiddenInterpreter(pythonPath: string): boolean {
+        return this.impl.isHiddenInterpreter(pythonPath);
+    }
+    public async getInterpreterHash(pythonPath: string): Promise<string> {
+        return this.impl.getInterpreterHash(pythonPath);
+    }
+}
+
+@injectable()
 class BaseLocatorServiceProxy implements IInterpreterLocatorService {
     constructor(protected readonly impl: IInterpreterLocatorService) {}
     public dispose() {
@@ -324,37 +356,5 @@ class WindowsRegistryServiceProxy extends BaseLocatorServiceProxy {
         @inject(IWindowsStoreInterpreter) windowsStoreInterpreter: IWindowsStoreInterpreter
     ) {
         super(new WindowsRegistryService(registry, platform, serviceContainer, windowsStoreInterpreter));
-    }
-}
-
-@injectable()
-class InterpreterHashProviderProxy implements IInterpreterHashProvider {
-    private readonly impl: IInterpreterHashProvider;
-    constructor(@inject(IFileSystem) fs: IFileSystem) {
-        this.impl = new InterpreterHashProvider(fs);
-    }
-    public async getInterpreterHash(pythonPath: string): Promise<string> {
-        return this.impl.getInterpreterHash(pythonPath);
-    }
-}
-
-@injectable()
-class WindowsStoreInterpreterProxy implements IWindowsStoreInterpreter, IWindowsStoreHashProvider {
-    private readonly impl: IWindowsStoreInterpreter & IWindowsStoreHashProvider;
-    constructor(
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IPersistentStateFactory) persistentFactory: IPersistentStateFactory,
-        @inject(IFileSystem) fs: IFileSystem
-    ) {
-        this.impl = new WindowsStoreInterpreter(serviceContainer, persistentFactory, fs);
-    }
-    public isWindowsStoreInterpreter(pythonPath: string): boolean {
-        return this.impl.isWindowsStoreInterpreter(pythonPath);
-    }
-    public isHiddenInterpreter(pythonPath: string): boolean {
-        return this.impl.isHiddenInterpreter(pythonPath);
-    }
-    public async getInterpreterHash(pythonPath: string): Promise<string> {
-        return this.impl.getInterpreterHash(pythonPath);
     }
 }
