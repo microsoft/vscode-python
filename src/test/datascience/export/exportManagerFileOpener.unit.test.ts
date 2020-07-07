@@ -118,10 +118,10 @@ suite('Data Science - Export File Opener', () => {
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
             Promise.resolve(getLocString('DataScience.openExportFileNo', 'No'))
         );
-        verify(exportUtil.removeSvgs(anything())).once();
 
         await fileOpener.export(ExportFormat.pdf, model);
 
+        verify(exportUtil.removeSvgs(anything())).once();
         verify(browserService.launch(anything())).never();
     });
 });
