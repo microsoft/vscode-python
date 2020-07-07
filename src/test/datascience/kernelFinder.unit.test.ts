@@ -50,6 +50,8 @@ suite('Kernel Finder', () => {
         argv: ['<python path>', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
         specFile: path.join('1', 'share', 'jupyter', 'kernels', kernelName, 'kernel.json')
     };
+    // Change this to your actual JUPYTER_PATH value and see it appearing on the paths in the kernelFinder
+    const JupyterPathEnvVar = '';
 
     function setupFileSystem() {
         fileSystem
@@ -90,7 +92,9 @@ suite('Kernel Finder', () => {
         platformService.setup((ps) => ps.isMac).returns(() => true);
 
         envVarsProvider = typemoq.Mock.ofType<IEnvironmentVariablesProvider>();
-        envVarsProvider.setup((e) => e.getEnvironmentVariables(typemoq.It.isAny())).returns(() => Promise.resolve({}));
+        envVarsProvider
+            .setup((e) => e.getEnvironmentVariables(typemoq.It.isAny()))
+            .returns(() => Promise.resolve({ JUPYTER_PATH: JupyterPathEnvVar }));
     });
 
     suite('listKernelSpecs', () => {
@@ -455,6 +459,9 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
+            interpreterService
+                .setup((is) => is.getActiveInterpreter(typemoq.It.isAny()))
+                .returns(() => Promise.resolve(undefined));
             const spec = await kernelFinder.findKernelSpec(activeInterpreter, testKernelMetadata);
             expect(spec).to.deep.include(kernel);
             fileSystem.reset();
