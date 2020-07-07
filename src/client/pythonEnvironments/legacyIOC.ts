@@ -3,8 +3,10 @@
 
 // tslint:disable:no-use-before-declare max-classes-per-file
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
+import { SemVer } from 'semver';
 import { Disposable, Event, Uri } from 'vscode';
+import { IWorkspaceService } from '../common/application/types';
 import { IFileSystem, IPlatformService, IRegistry } from '../common/platform/types';
 import { IProcessServiceFactory } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../common/types';
@@ -40,6 +42,7 @@ import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
+import { CondaEnvironmentInfo, CondaInfo } from './discovery/locators/services/conda';
 import { CondaEnvFileService } from './discovery/locators/services/condaEnvFileService';
 import { CondaEnvService } from './discovery/locators/services/condaEnvService';
 import { CondaService } from './discovery/locators/services/condaService';
@@ -116,7 +119,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
         KnownPathsServiceProxy,
         KNOWN_PATH_SERVICE
     );
-    serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
+    serviceManager.addSingleton<ICondaService>(ICondaService, CondaServiceProxy);
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelperProxy);
     serviceManager.addSingleton<IPythonInPathCommandProvider>(
         IPythonInPathCommandProvider,
@@ -298,6 +301,65 @@ class PipEnvServiceHelperProxy implements IPipEnvServiceHelper {
     }
     public async trackWorkspaceFolder(pythonPath: string, workspaceFolder: Uri): Promise<void> {
         return this.impl.trackWorkspaceFolder(pythonPath, workspaceFolder);
+    }
+}
+
+@injectable()
+class CondaServiceProxy implements ICondaService {
+    private readonly impl: ICondaService;
+    constructor(
+        @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
+        @inject(IPlatformService) platform: IPlatformService,
+        @inject(IFileSystem) fileSystem: IFileSystem,
+        @inject(IPersistentStateFactory) persistentStateFactory: IPersistentStateFactory,
+        @inject(IConfigurationService) configService: IConfigurationService,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(IInterpreterLocatorService)
+        @named(WINDOWS_REGISTRY_SERVICE)
+        @optional()
+        registryLookupForConda?: IInterpreterLocatorService
+    ) {
+        this.impl = new CondaService(
+            processServiceFactory,
+            platform,
+            fileSystem,
+            persistentStateFactory,
+            configService,
+            disposableRegistry,
+            workspaceService,
+            registryLookupForConda
+        );
+    }
+    public get condaEnvironmentsFile(): string | undefined {
+        return this.impl.condaEnvironmentsFile;
+    }
+    public async getCondaFile(): Promise<string> {
+        return this.impl.getCondaFile();
+    }
+    public async isCondaAvailable(): Promise<boolean> {
+        return this.impl.isCondaAvailable();
+    }
+    public async getCondaVersion(): Promise<SemVer | undefined> {
+        return this.impl.getCondaVersion();
+    }
+    public async getCondaInfo(): Promise<CondaInfo | undefined> {
+        return this.impl.getCondaInfo();
+    }
+    public async getCondaEnvironments(ignoreCache: boolean): Promise<CondaEnvironmentInfo[] | undefined> {
+        return this.impl.getCondaEnvironments(ignoreCache);
+    }
+    public getInterpreterPath(condaEnvironmentPath: string): string {
+        return this.impl.getInterpreterPath(condaEnvironmentPath);
+    }
+    public async getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined> {
+        return this.impl.getCondaFileFromInterpreter(interpreterPath, envName);
+    }
+    public async isCondaEnvironment(interpreterPath: string): Promise<boolean> {
+        return this.impl.isCondaEnvironment(interpreterPath);
+    }
+    public async getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined> {
+        return this.impl.getCondaEnvironment(interpreterPath);
     }
 }
 
