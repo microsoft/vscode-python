@@ -17,7 +17,7 @@ import { ISortImportsEditingProvider } from './types';
 
 @injectable()
 export class SortImportsEditingProvider implements ISortImportsEditingProvider {
-    public _isortPromises = new Map<
+    private readonly isortPromises = new Map<
         string,
         { deferred: Deferred<WorkspaceEdit | undefined>; tokenSource: CancellationTokenSource }
     >();
@@ -39,8 +39,8 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
 
     @captureTelemetry(EventName.FORMAT_SORT_IMPORTS)
     public async provideDocumentSortImportsEdits(uri: Uri): Promise<WorkspaceEdit | undefined> {
-        if (this._isortPromises.has(uri.fsPath)) {
-            const isortPromise = this._isortPromises.get(uri.fsPath)!;
+        if (this.isortPromises.has(uri.fsPath)) {
+            const isortPromise = this.isortPromises.get(uri.fsPath)!;
             if (!isortPromise.deferred.completed) {
                 // Cancelling the token will kill the previous isort process & discard its result.
                 isortPromise.tokenSource.cancel();
@@ -49,8 +49,9 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         const tokenSource = new CancellationTokenSource();
         const promise = this._provideDocumentSortImportsEdits(uri, tokenSource.token);
         const deferred = createDeferredFromPromise(promise);
-        this._isortPromises.set(uri.fsPath, { deferred, tokenSource });
-        return promise;
+        this.isortPromises.set(uri.fsPath, { deferred, tokenSource });
+        // If token has been cancelled discard the result.
+        return promise.then((edit) => (tokenSource.token.isCancellationRequested ? undefined : edit));
     }
 
     public async _provideDocumentSortImportsEdits(
@@ -70,12 +71,10 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             return;
         }
         const diffPatch = await execIsort(document.getText());
-        const edit = diffPatch
+
+        return diffPatch
             ? this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri)
             : undefined;
-
-        // If token has been cancelled discard the result.
-        return token && token.isCancellationRequested ? undefined : edit;
     }
 
     public registerCommands() {

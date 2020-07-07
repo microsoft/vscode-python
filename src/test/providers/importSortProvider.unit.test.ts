@@ -5,16 +5,15 @@
 
 // tslint:disable:no-any max-func-body-length
 
-import { assert, expect } from 'chai';
+import { expect } from 'chai';
 import { ChildProcess } from 'child_process';
 import { EOL } from 'os';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
-import * as sinon from 'sinon';
 import { Writable } from 'stream';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, Range, TextDocument, TextEditor, TextLine, Uri, WorkspaceEdit } from 'vscode';
+import { Range, TextDocument, TextEditor, TextLine, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../client/common/application/types';
 import { Commands, EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { ProcessService } from '../../client/common/process/proc';
@@ -31,10 +30,11 @@ import {
     IPythonSettings,
     ISortImportSettings
 } from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
+import { createDeferred, createDeferredFromPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { IServiceContainer } from '../../client/ioc/types';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
+import { sleep } from '../core';
 
 const ISOLATED = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
 
@@ -69,10 +69,6 @@ suite('Import Sort Provider', () => {
         serviceContainer.setup((c) => c.get(IDisposableRegistry)).returns(() => []);
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         sortProvider = new SortImportsEditingProvider(serviceContainer.object);
-    });
-
-    teardown(() => {
-        sinon.restore();
     });
 
     test('Ensure command is registered', () => {
@@ -260,66 +256,6 @@ suite('Import Sort Provider', () => {
         expect(edit).to.be.equal(undefined, 'not undefined');
         shell.verifyAll();
         documentManager.verifyAll();
-    });
-
-    test('If no previous isort promise for the file exists, register the isort promise for the file and return it', async () => {
-        const uri = Uri.file('TestDoc');
-        const _provideDocumentSortImportsEdits = sinon.stub(
-            SortImportsEditingProvider.prototype,
-            '_provideDocumentSortImportsEdits'
-        );
-
-        _provideDocumentSortImportsEdits.resolves(undefined);
-
-        await sortProvider.provideDocumentSortImportsEdits(uri);
-
-        assert.ok(sortProvider._isortPromises.has(uri.fsPath));
-        assert.ok(_provideDocumentSortImportsEdits.calledOnce);
-    });
-
-    test("If previous isort promise for the file has completed, don't cancel any token and return new promise", async () => {
-        const uri = Uri.file('TestDoc');
-        const _provideDocumentSortImportsEdits = sinon.stub(
-            SortImportsEditingProvider.prototype,
-            '_provideDocumentSortImportsEdits'
-        );
-        _provideDocumentSortImportsEdits.resolves(undefined);
-
-        const deferred = createDeferred<WorkspaceEdit | undefined>();
-        deferred.resolve();
-        const tokenSource = TypeMoq.Mock.ofType<CancellationTokenSource>();
-        tokenSource
-            .setup((t) => t.cancel())
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.never());
-        sortProvider._isortPromises.set(uri.fsPath, { deferred, tokenSource: tokenSource.object });
-
-        await sortProvider.provideDocumentSortImportsEdits(uri);
-
-        tokenSource.verifyAll();
-        assert.ok(_provideDocumentSortImportsEdits.calledOnce);
-    });
-
-    test("If previous isort promise for the file hasn't been completed yet, cancel the previous token and resume", async () => {
-        const uri = Uri.file('TestDoc');
-        const _provideDocumentSortImportsEdits = sinon.stub(
-            SortImportsEditingProvider.prototype,
-            '_provideDocumentSortImportsEdits'
-        );
-        _provideDocumentSortImportsEdits.resolves(undefined);
-
-        const deferred = createDeferred<WorkspaceEdit | undefined>();
-        const tokenSource = TypeMoq.Mock.ofType<CancellationTokenSource>();
-        tokenSource
-            .setup((t) => t.cancel())
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.once());
-        sortProvider._isortPromises.set(uri.fsPath, { deferred, tokenSource: tokenSource.object });
-
-        await sortProvider.provideDocumentSortImportsEdits(uri);
-
-        tokenSource.verifyAll();
-        assert.ok(_provideDocumentSortImportsEdits.calledOnce);
     });
 
     test('Ensure no edits are provided when there are no lines (when using provider method)', async () => {
@@ -517,72 +453,28 @@ suite('Import Sort Provider', () => {
         documentManager.verifyAll();
     });
 
-    test('If token has been cancelled, discard the result from isort process', async () => {
-        const uri = Uri.file('something.y');
-        const tokenSource = new CancellationTokenSource();
+    test('If a second sort command is initiated before the execution of first one is finished, discard the result from first isort process', async () => {
+        // ----------------------Common setup between the 2 commands---------------------------
+        const uri = Uri.file('something.py');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
         const processService = TypeMoq.Mock.ofType<ProcessService>();
         processService.setup((d: any) => d.then).returns(() => undefined);
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
-        mockDoc
-            .setup((d) => d.lineCount)
-            .returns(() => 10)
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        mockDoc
-            .setup((d) => d.getText(TypeMoq.It.isAny()))
-            .returns(() => 'Hello')
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        mockDoc
-            .setup((d) => d.isDirty)
-            .returns(() => true)
-            .verifiable(TypeMoq.Times.never());
-        mockDoc
-            .setup((d) => d.uri)
-            .returns(() => uri)
-            .verifiable(TypeMoq.Times.atLeastOnce());
+        mockDoc.setup((d) => d.lineCount).returns(() => 10);
+        mockDoc.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => 'Hello');
+        mockDoc.setup((d) => d.isDirty).returns(() => true);
+        mockDoc.setup((d) => d.uri).returns(() => uri);
         documentManager
             .setup((d) => d.openTextDocument(TypeMoq.It.isValue(uri)))
-            .returns(() => Promise.resolve(mockDoc.object))
-            .verifiable(TypeMoq.Times.atLeastOnce());
+            .returns(() => Promise.resolve(mockDoc.object));
         pythonSettings
             .setup((s) => s.sortImports)
             .returns(() => {
-                return ({ path: 'CUSTOM_ISORT', args: ['1', '2'] } as any) as ISortImportSettings;
-            })
-            .verifiable(TypeMoq.Times.once());
+                return ({ path: 'CUSTOM_ISORT', args: [] } as any) as ISortImportSettings;
+            });
         processServiceFactory
             .setup((p) => p.create(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(processService.object))
-            .verifiable(TypeMoq.Times.once());
-
-        let actualSubscriber: Subscriber<Output<string>>;
-        const stdinStream = TypeMoq.Mock.ofType<Writable>();
-        stdinStream.setup((s) => s.write('Hello')).verifiable(TypeMoq.Times.once());
-        stdinStream
-            .setup((s) => s.end())
-            .callback(() => {
-                actualSubscriber.next({ source: 'stdout', out: 'DIFF' });
-                actualSubscriber.complete();
-            })
-            .verifiable(TypeMoq.Times.once());
-        const childProcess = TypeMoq.Mock.ofType<ChildProcess>();
-        childProcess.setup((p) => p.stdin).returns(() => stdinStream.object);
-        const executionResult = {
-            proc: childProcess.object,
-            out: new Observable<Output<string>>((subscriber) => (actualSubscriber = subscriber)),
-            dispose: noop
-        };
-        const expectedArgs = ['-', '--diff', '1', '2'];
-        processService
-            .setup((p) =>
-                p.execObservable(
-                    TypeMoq.It.isValue('CUSTOM_ISORT'),
-                    TypeMoq.It.isValue(expectedArgs),
-                    TypeMoq.It.isAny()
-                )
-            )
-            .returns(() => executionResult)
-            .verifiable(TypeMoq.Times.once());
+            .returns(() => Promise.resolve(processService.object));
         const result = new WorkspaceEdit();
         editorUtils
             .setup((e) =>
@@ -592,15 +484,76 @@ suite('Import Sort Provider', () => {
                     TypeMoq.It.isAny()
                 )
             )
-            .returns(() => result)
+            .returns(() => result);
+
+        // ----------------------Run the command once----------------------
+        let firstSubscriber: Subscriber<Output<string>>;
+        const firstProcessResult = createDeferred<Output<string> | undefined>();
+        const stdinStream1 = TypeMoq.Mock.ofType<Writable>();
+        stdinStream1.setup((s) => s.write('Hello'));
+        stdinStream1
+            .setup((s) => s.end())
+            .callback(async () => {
+                // Wait until the process has returned with results
+                const result = await firstProcessResult.promise;
+                firstSubscriber.next(result);
+                firstSubscriber.complete();
+            })
             .verifiable(TypeMoq.Times.once());
+        const firstChildProcess = TypeMoq.Mock.ofType<ChildProcess>();
+        firstChildProcess.setup((p) => p.stdin).returns(() => stdinStream1.object);
+        const firstExecutionResult = {
+            proc: firstChildProcess.object,
+            out: new Observable<Output<string>>((subscriber) => (firstSubscriber = subscriber)),
+            dispose: noop
+        };
+        processService
+            .setup((p) => p.execObservable(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => firstExecutionResult);
 
-        tokenSource.cancel();
-        const edit = await sortProvider._provideDocumentSortImportsEdits(uri, tokenSource.token);
+        // The first execution isn't immediately resolved, so don't wait on the promise
+        const firstExecutionDeferred = createDeferredFromPromise(sortProvider.provideDocumentSortImportsEdits(uri));
+        // Yield control to the first execution, so all the mock setups are used.
+        await sleep(1);
 
-        expect(edit).to.be.equal(undefined, '');
-        shell.verifyAll();
-        mockDoc.verifyAll();
-        documentManager.verifyAll();
+        // ----------------------Run the command again----------------------
+        let secondSubscriber: Subscriber<Output<string>>;
+        const stdinStream2 = TypeMoq.Mock.ofType<Writable>();
+        stdinStream2.setup((s) => s.write('Hello'));
+        stdinStream2
+            .setup((s) => s.end())
+            .callback(() => {
+                // The second process immediately returns with results
+                secondSubscriber.next({ source: 'stdout', out: 'DIFF' });
+                secondSubscriber.complete();
+            })
+            .verifiable(TypeMoq.Times.once());
+        const secondChildProcess = TypeMoq.Mock.ofType<ChildProcess>();
+        secondChildProcess.setup((p) => p.stdin).returns(() => stdinStream2.object);
+        const secondExecutionResult = {
+            proc: secondChildProcess.object,
+            out: new Observable<Output<string>>((subscriber) => (secondSubscriber = subscriber)),
+            dispose: noop
+        };
+        processService.reset();
+        processService.setup((d: any) => d.then).returns(() => undefined);
+        processService
+            .setup((p) => p.execObservable(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => secondExecutionResult);
+
+        // // The second execution should immediately return with results
+        let edit = await sortProvider.provideDocumentSortImportsEdits(uri);
+
+        // ----------------------Verify results----------------------
+        expect(edit).to.be.equal(result, 'Second execution result is incorrect');
+        expect(firstExecutionDeferred.completed).to.equal(false, "The first execution shouldn't finish yet");
+        stdinStream2.verifyAll();
+
+        // The first process returns with results
+        firstProcessResult.resolve({ source: 'stdout', out: 'DIFF' });
+
+        edit = await firstExecutionDeferred.promise;
+        expect(edit).to.be.equal(undefined, 'The results from the second execution should be discarded');
+        stdinStream1.verifyAll();
     });
 });
