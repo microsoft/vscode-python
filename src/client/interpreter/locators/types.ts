@@ -46,6 +46,10 @@ export interface IInterpreterHashProvider {
     getInterpreterHash(pythonPath: string): Promise<string>;
 }
 
+export const IWindowsStoreHashProvider = Symbol('IWindowStoreHashProvider');
+export interface IWindowsStoreHashProvider extends IInterpreterHashProvider {}
+
+export const IWindowsStoreInterpreter = Symbol('IWindowsStoreInterpreter');
 export interface IWindowsStoreInterpreter {
     /**
      * Whether this is a Windows Store/App Interpreter.

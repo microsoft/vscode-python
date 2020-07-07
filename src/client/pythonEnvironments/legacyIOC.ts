@@ -7,7 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import { Disposable, Event, Uri } from 'vscode';
 import { IFileSystem, IPlatformService, IRegistry } from '../common/platform/types';
 import { IProcessServiceFactory } from '../common/process/types';
-import { IConfigurationService, IDisposableRegistry } from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../common/types';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -33,6 +33,7 @@ import {
     IInterpreterHashProviderFactory,
     IPipEnvServiceHelper,
     IPythonInPathCommandProvider,
+    IWindowsStoreHashProvider,
     IWindowsStoreInterpreter
 } from '../interpreter/locators/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
@@ -127,7 +128,8 @@ export function registerForIOC(serviceManager: IServiceManager) {
         WorkspaceVirtualEnvWatcherService,
         WORKSPACE_VIRTUAL_ENV_SERVICE
     );
-    serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+    serviceManager.addSingleton<IWindowsStoreInterpreter>(IWindowsStoreInterpreter, WindowsStoreInterpreterProxy);
+    serviceManager.addSingleton<IWindowsStoreHashProvider>(IWindowsStoreHashProvider, WindowsStoreInterpreterProxy);
     serviceManager.addSingleton<IInterpreterHashProvider>(IInterpreterHashProvider, InterpreterHashProviderProxy);
     serviceManager.addSingleton<IInterpreterHashProviderFactory>(
         IInterpreterHashProviderFactory,
@@ -190,8 +192,8 @@ class InterpreterHashProviderFactoryProxy implements IInterpreterHashProviderFac
     private readonly impl: IInterpreterHashProviderFactory;
     constructor(
         @inject(IConfigurationService) configService: IConfigurationService,
-        @inject(WindowsStoreInterpreter) windowsStoreInterpreter: IWindowsStoreInterpreter,
-        @inject(WindowsStoreInterpreter) windowsStoreHashProvider: IInterpreterHashProvider,
+        @inject(IWindowsStoreInterpreter) windowsStoreInterpreter: IWindowsStoreInterpreter,
+        @inject(IWindowsStoreHashProvider) windowsStoreHashProvider: IWindowsStoreHashProvider,
         @inject(IInterpreterHashProvider) hashProvider: IInterpreterHashProvider
     ) {
         this.impl = new InterpreterHashProviderFactory(
@@ -319,7 +321,7 @@ class WindowsRegistryServiceProxy extends BaseLocatorServiceProxy {
         @inject(IRegistry) registry: IRegistry,
         @inject(IPlatformService) platform: IPlatformService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(WindowsStoreInterpreter) windowsStoreInterpreter: IWindowsStoreInterpreter
+        @inject(IWindowsStoreInterpreter) windowsStoreInterpreter: IWindowsStoreInterpreter
     ) {
         super(new WindowsRegistryService(registry, platform, serviceContainer, windowsStoreInterpreter));
     }
@@ -330,6 +332,27 @@ class InterpreterHashProviderProxy implements IInterpreterHashProvider {
     private readonly impl: IInterpreterHashProvider;
     constructor(@inject(IFileSystem) fs: IFileSystem) {
         this.impl = new InterpreterHashProvider(fs);
+    }
+    public async getInterpreterHash(pythonPath: string): Promise<string> {
+        return this.impl.getInterpreterHash(pythonPath);
+    }
+}
+
+@injectable()
+class WindowsStoreInterpreterProxy implements IWindowsStoreInterpreter, IWindowsStoreHashProvider {
+    private readonly impl: IWindowsStoreInterpreter & IWindowsStoreHashProvider;
+    constructor(
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IPersistentStateFactory) persistentFactory: IPersistentStateFactory,
+        @inject(IFileSystem) fs: IFileSystem
+    ) {
+        this.impl = new WindowsStoreInterpreter(serviceContainer, persistentFactory, fs);
+    }
+    public isWindowsStoreInterpreter(pythonPath: string): boolean {
+        return this.impl.isWindowsStoreInterpreter(pythonPath);
+    }
+    public isHiddenInterpreter(pythonPath: string): boolean {
+        return this.impl.isHiddenInterpreter(pythonPath);
     }
     public async getInterpreterHash(pythonPath: string): Promise<string> {
         return this.impl.getInterpreterHash(pythonPath);

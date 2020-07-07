@@ -6,14 +6,17 @@
 import { inject } from 'inversify';
 import { Uri } from 'vscode';
 import { IConfigurationService } from '../../../../common/types';
-import { IInterpreterHashProvider, IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
-import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
+import {
+    IInterpreterHashProvider,
+    IWindowsStoreHashProvider,
+    IWindowsStoreInterpreter
+} from '../../../../interpreter/locators/types';
 
 export class InterpreterHashProviderFactory {
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreHashProvider: IInterpreterHashProvider,
+        @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
+        @inject(IWindowsStoreHashProvider) private readonly windowsStoreHashProvider: IWindowsStoreHashProvider,
         @inject(IInterpreterHashProvider) private readonly hashProvider: IInterpreterHashProvider
     ) {}
 
