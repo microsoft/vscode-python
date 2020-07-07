@@ -19,7 +19,6 @@ import { CacheableLocatorService } from './cacheableLocatorService';
  * If no interpreter is configured then it falls back to the system
  * Python (3 then 2).
  */
-@injectable()
 export class CurrentPathService extends CacheableLocatorService {
     private readonly fs: IFileSystem;
 

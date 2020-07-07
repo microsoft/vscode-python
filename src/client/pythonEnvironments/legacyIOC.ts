@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, Uri } from 'vscode';
 import { IFileSystem } from '../common/platform/types';
+import { IProcessServiceFactory } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry } from '../common/types';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -85,7 +86,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
-        CurrentPathService,
+        CurrentPathServiceProxy,
         CURRENT_PATH_SERVICE
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
@@ -250,5 +251,17 @@ class CondaEnvServiceProxy extends BaseLocatorServiceProxy {
         @inject(IFileSystem) fileSystem: IFileSystem
     ) {
         super(new CondaEnvService(condaService, helper, serviceContainer, fileSystem));
+    }
+}
+
+@injectable()
+class CurrentPathServiceProxy extends BaseLocatorServiceProxy {
+    constructor(
+        @inject(IInterpreterHelper) helper: IInterpreterHelper,
+        @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
+        @inject(IPythonInPathCommandProvider) pythonCommandProvider: IPythonInPathCommandProvider,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
+    ) {
+        super(new CurrentPathService(helper, processServiceFactory, pythonCommandProvider, serviceContainer));
     }
 }
