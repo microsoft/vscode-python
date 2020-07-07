@@ -33,8 +33,9 @@ import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { EditorContexts, Identifiers, Telemetry } from '../constants';
+import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
+import { ExportUtil } from '../export/exportUtil';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     INotebookIdentity,
@@ -57,6 +58,7 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookExporter,
+    INotebookModel,
     INotebookProvider,
     IStatusProvider,
     IThemeFinder,
@@ -115,7 +117,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
-        @inject(IExperimentService) expService: IExperimentService
+        @inject(IExperimentService) expService: IExperimentService,
+        @inject(ExportUtil) private exportUtil: ExportUtil
     ) {
         super(
             listeners,
@@ -218,6 +221,10 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
             case InteractiveWindowMessages.UpdateModel:
                 this.handleMessage(message, payload, this.handleModelChange);
+                break;
+
+            case InteractiveWindowMessages.ExportNotebookAs:
+                this.handleMessage(message, payload, this.exportAs);
                 break;
 
             default:
@@ -417,6 +424,20 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             } finally {
                 this.stopProgress();
             }
+        }
+    }
+
+    private async exportAs(cells: ICell[]) {
+        let model: INotebookModel;
+
+        this.startProgress();
+        try {
+            model = await this.exportUtil.getModelFromCells(cells);
+        } finally {
+            this.stopProgress();
+        }
+        if (model) {
+            this.commandManager.executeCommand(Commands.Export, model);
         }
     }
 

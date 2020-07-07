@@ -46,7 +46,7 @@ export class JupyterExporter implements INotebookExporter {
         noop();
     }
 
-    public async exportToFile(cells: ICell[], file: string): Promise<void> {
+    public async exportToFile(cells: ICell[], file: string, showOpenPrompt: boolean = true): Promise<void> {
         let directoryChange;
         const settings = this.configService.getSettings();
         if (settings.datascience.changeDirOnImportExport) {
@@ -60,6 +60,9 @@ export class JupyterExporter implements INotebookExporter {
             const contents = JSON.stringify(notebook);
             await this.trustService.trustNotebook(Uri.file(file.toLowerCase()), contents);
             await this.fileSystem.writeFile(file, contents, { encoding: 'utf8', flag: 'w' });
+            if (!showOpenPrompt) {
+                return;
+            }
             const openQuestion1 = localize.DataScience.exportOpenQuestion1();
             const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
                 ? localize.DataScience.exportOpenQuestion()

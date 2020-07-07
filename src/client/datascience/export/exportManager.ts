@@ -1,8 +1,10 @@
 import { inject, injectable, named } from 'inversify';
+import * as path from 'path';
 import { Uri } from 'vscode';
-import { IFileSystem, TemporaryFile } from '../../common/platform/types';
+import { IFileSystem } from '../../common/platform/types';
 import { ProgressReporter } from '../progress/progressReporter';
-import { IDataScienceErrorHandler, INotebookModel } from '../types';
+import { INotebookModel } from '../types';
+import { ExportUtil } from './exportUtil';
 import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './types';
 
 @injectable()
@@ -12,9 +14,9 @@ export class ExportManager implements IExportManager {
         @inject(IExport) @named(ExportFormat.html) private readonly exportToHTML: IExport,
         @inject(IExport) @named(ExportFormat.python) private readonly exportToPython: IExport,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IExportManagerFilePicker) private readonly filePicker: IExportManagerFilePicker,
-        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter
+        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
+        @inject(ExportUtil) private readonly exportUtil: ExportUtil
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
@@ -28,13 +30,17 @@ export class ExportManager implements IExportManager {
             target = Uri.file((await this.fileSystem.createTemporaryFile('.py')).filePath);
         }
 
-        const tempFile = await this.makeTemporaryFile(model);
-        if (!tempFile) {
-            return; // error making temp file
-        }
+        // Need to make a temp directory here, instead of just a temp file. This is because
+        // we need to store the contents of the notebook in a file that is named the same
+        // as what we want the title of the exported file to be. To ensure this file path will be unique
+        // we store it in a temp directory. The name of the file matters because when
+        // exporting to certain formats the filename is used within the exported document as the title.
+        const fileName = path.basename(target.fsPath, path.extname(target.fsPath));
+        const tempDir = await this.exportUtil.generateTempDir();
+        const sourceFilePath = await this.exportUtil.makeFileInDirectory(model, fileName, tempDir.path);
+        const source = Uri.file(sourceFilePath);
 
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
-        const source = Uri.file(tempFile.filePath);
         try {
             switch (format) {
                 case ExportFormat.python:
@@ -53,23 +59,10 @@ export class ExportManager implements IExportManager {
                     break;
             }
         } finally {
-            tempFile.dispose();
             reporter.dispose();
+            tempDir.dispose();
         }
 
         return target;
-    }
-
-    private async makeTemporaryFile(model: INotebookModel): Promise<TemporaryFile | undefined> {
-        let tempFile: TemporaryFile | undefined;
-        try {
-            tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
-            const content = model ? model.getContent() : '';
-            await this.fileSystem.writeFile(tempFile.filePath, content, 'utf-8');
-        } catch (e) {
-            await this.errorHandler.handleError(e);
-        }
-
-        return tempFile;
     }
 }

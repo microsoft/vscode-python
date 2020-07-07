@@ -52,9 +52,19 @@ suite('Data Science - Kernel Launcher Daemon', () => {
         await assert.isRejected(promise, /^Unsupported KernelSpec file. args must be/g);
     });
     test('Creates and returns a daemon', async () => {
-        const { observableOutput, daemon } = await launcher.launch(undefined, kernelSpec, interpreter);
+        const daemonCreationOutput = await launcher.launch(undefined, kernelSpec, interpreter);
 
-        assert.equal(observableOutput, instance(observableOutputForDaemon));
-        assert.equal(daemon, instance(kernelDaemon));
+        assert.isDefined(daemonCreationOutput);
+
+        if (daemonCreationOutput) {
+            assert.equal(daemonCreationOutput.observableOutput, instance(observableOutputForDaemon));
+            assert.equal(daemonCreationOutput.daemon, instance(kernelDaemon));
+        }
+    });
+    test('If our daemon pool return does not support start, return undefined', async () => {
+        when(daemonPool.get(anything(), anything(), anything())).thenResolve({} as any);
+        const daemonCreationOutput = await launcher.launch(undefined, kernelSpec, interpreter);
+
+        assert.isUndefined(daemonCreationOutput);
     });
 });

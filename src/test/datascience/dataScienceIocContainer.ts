@@ -208,6 +208,7 @@ import { ExportManagerFilePicker } from '../../client/datascience/export/exportM
 import { ExportToHTML } from '../../client/datascience/export/exportToHTML';
 import { ExportToPDF } from '../../client/datascience/export/exportToPDF';
 import { ExportToPython } from '../../client/datascience/export/exportToPython';
+import { ExportUtil } from '../../client/datascience/export/exportUtil';
 import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from '../../client/datascience/export/types';
 import { GatherProvider } from '../../client/datascience/gather/gather';
 import { GatherListener } from '../../client/datascience/gather/gatherListener';
@@ -617,6 +618,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ExportManagerDependencyChecker,
             ExportManagerDependencyChecker
         );
+        this.serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
         this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
         this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManagerFileOpener);
         this.serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);

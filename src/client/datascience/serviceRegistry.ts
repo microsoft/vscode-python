@@ -43,6 +43,7 @@ import { ExportManagerFilePicker } from './export/exportManagerFilePicker';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
+import { ExportUtil } from './export/exportUtil';
 import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './export/types';
 import { GatherListener } from './gather/gatherListener';
 import { GatherLogger } from './gather/gatherLogger';
@@ -298,6 +299,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
     serviceManager.addSingleton<IExport>(IExport, ExportToPython, ExportFormat.python);
     serviceManager.addSingleton<IExport>(IExport, ExportBase, 'Export Base');
+    serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
     serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
     serviceManager.addSingleton<IExportManagerFilePicker>(IExportManagerFilePicker, ExportManagerFilePicker);
     serviceManager.addSingleton<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration, JupyterUriProviderRegistration);
