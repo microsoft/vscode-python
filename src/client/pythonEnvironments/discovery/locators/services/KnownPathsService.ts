@@ -14,7 +14,6 @@ const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 /**
  * Locates "known" paths.
  */
-@injectable()
 export class KnownPathsService extends CacheableLocatorService {
     public constructor(
         @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: IKnownSearchPathsForInterpreters,

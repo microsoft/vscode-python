@@ -108,7 +108,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
-        KnownPathsService,
+        KnownPathsServiceProxy,
         KNOWN_PATH_SERVICE
     );
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
@@ -288,5 +288,16 @@ class WorkspaceVirtualEnvServiceProxy extends BaseLocatorServiceProxy {
         @inject(IInterpreterWatcherBuilder) builder: IInterpreterWatcherBuilder
     ) {
         super(new WorkspaceVirtualEnvService(workspaceVirtualEnvPathProvider, serviceContainer, builder));
+    }
+}
+
+@injectable()
+class KnownPathsServiceProxy extends BaseLocatorServiceProxy {
+    public constructor(
+        @inject(IKnownSearchPathsForInterpreters) knownSearchPaths: IKnownSearchPathsForInterpreters,
+        @inject(IInterpreterHelper) helper: IInterpreterHelper,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
+    ) {
+        super(new KnownPathsService(knownSearchPaths, helper, serviceContainer));
     }
 }
