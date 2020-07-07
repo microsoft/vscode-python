@@ -147,7 +147,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IKnownSearchPathsForInterpreters>(
         IKnownSearchPathsForInterpreters,
-        KnownSearchPathsForInterpreters
+        KnownSearchPathsForInterpretersProxy
     );
     serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
 }
@@ -248,6 +248,17 @@ class PythonInPathCommandProviderProxy implements IPythonInPathCommandProvider {
     }
     public getCommands(): { command: string; args?: string[] }[] {
         return this.impl.getCommands();
+    }
+}
+
+@injectable()
+class KnownSearchPathsForInterpretersProxy implements IKnownSearchPathsForInterpreters {
+    private readonly impl: IKnownSearchPathsForInterpreters;
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        this.impl = new KnownSearchPathsForInterpreters(serviceContainer);
+    }
+    public getSearchPaths(): string[] {
+        return this.impl.getSearchPaths();
     }
 }
 

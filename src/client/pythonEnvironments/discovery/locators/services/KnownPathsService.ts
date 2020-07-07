@@ -1,5 +1,5 @@
 // tslint:disable:no-require-imports no-var-requires no-unnecessary-callback-wrapper
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
@@ -83,8 +83,7 @@ export class KnownPathsService extends CacheableLocatorService {
     }
 }
 
-@injectable()
-export class KnownSearchPathsForInterpreters implements IKnownSearchPathsForInterpreters {
+export class KnownSearchPathsForInterpreters {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
     /**
      * Return the paths where Python interpreters might be found.
