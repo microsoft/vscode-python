@@ -128,7 +128,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
         WORKSPACE_VIRTUAL_ENV_SERVICE
     );
     serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-    serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+    serviceManager.addSingleton<IInterpreterHashProvider>(IInterpreterHashProvider, InterpreterHashProviderProxy);
     serviceManager.addSingleton<IInterpreterHashProviderFactory>(
         IInterpreterHashProviderFactory,
         InterpreterHashProviderFactoryProxy
@@ -192,7 +192,7 @@ class InterpreterHashProviderFactoryProxy implements IInterpreterHashProviderFac
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(WindowsStoreInterpreter) windowsStoreInterpreter: IWindowsStoreInterpreter,
         @inject(WindowsStoreInterpreter) windowsStoreHashProvider: IInterpreterHashProvider,
-        @inject(InterpreterHashProvider) hashProvider: IInterpreterHashProvider
+        @inject(IInterpreterHashProvider) hashProvider: IInterpreterHashProvider
     ) {
         this.impl = new InterpreterHashProviderFactory(
             configService,
@@ -322,5 +322,16 @@ class WindowsRegistryServiceProxy extends BaseLocatorServiceProxy {
         @inject(WindowsStoreInterpreter) windowsStoreInterpreter: IWindowsStoreInterpreter
     ) {
         super(new WindowsRegistryService(registry, platform, serviceContainer, windowsStoreInterpreter));
+    }
+}
+
+@injectable()
+class InterpreterHashProviderProxy implements IInterpreterHashProvider {
+    private readonly impl: IInterpreterHashProvider;
+    constructor(@inject(IFileSystem) fs: IFileSystem) {
+        this.impl = new InterpreterHashProvider(fs);
+    }
+    public async getInterpreterHash(pythonPath: string): Promise<string> {
+        return this.impl.getInterpreterHash(pythonPath);
     }
 }

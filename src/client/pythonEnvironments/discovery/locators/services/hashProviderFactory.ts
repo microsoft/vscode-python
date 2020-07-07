@@ -7,7 +7,6 @@ import { inject } from 'inversify';
 import { Uri } from 'vscode';
 import { IConfigurationService } from '../../../../common/types';
 import { IInterpreterHashProvider, IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
-import { InterpreterHashProvider } from './hashProvider';
 import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
 
 export class InterpreterHashProviderFactory {
@@ -15,7 +14,7 @@ export class InterpreterHashProviderFactory {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreHashProvider: IInterpreterHashProvider,
-        @inject(InterpreterHashProvider) private readonly hashProvider: IInterpreterHashProvider
+        @inject(IInterpreterHashProvider) private readonly hashProvider: IInterpreterHashProvider
     ) {}
 
     public async create(options: { pythonPath: string } | { resource: Uri }): Promise<IInterpreterHashProvider> {

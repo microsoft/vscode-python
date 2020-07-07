@@ -27,6 +27,7 @@ export interface IInterpreterHashProviderFactory {
     create(options: { pythonPath: string } | { resource: Uri }): Promise<IInterpreterHashProvider>;
 }
 
+export const IInterpreterHashProvider = Symbol('IInterpreterHashProvider');
 /**
  * Provides the ability to get the has of a given interpreter.
  *
