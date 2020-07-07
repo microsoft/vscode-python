@@ -317,7 +317,11 @@ export namespace DataScience {
         '{0} (From {1} extension)'
     );
     export const unknownPackage = localize('DataScience.unknownPackage', 'unknown');
-    export const historyTitle = localize('DataScience.historyTitle', 'Python Interactive');
+    export const interactiveWindowTitle = localize('DataScience.interactiveWindowTitleFormat', 'Python Interactive');
+    export const interactiveWindowTitleFormat = localize(
+        'DataScience.interactiveWindowTitleFormat',
+        'Python Interactive {0}'
+    );
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');
     export const badWebPanelFormatString = localize(
         'DataScience.badWebPanelFormatString',
@@ -361,7 +365,6 @@ export namespace DataScience {
     export const exportDialogFilter = localize('DataScience.exportDialogFilter', 'Jupyter Notebooks');
     export const exportDialogComplete = localize('DataScience.exportDialogComplete', 'Notebook written to {0}');
     export const exportDialogFailed = localize('DataScience.exportDialogFailed', 'Failed to export notebook. {0}');
-    export const exportOpenQuestion = localize('DataScience.exportOpenQuestion', 'Open in browser');
     export const exportOpenQuestion1 = localize('DataScience.exportOpenQuestion1', 'Open in editor');
     export const runCellLensCommandTitle = localize('python.command.python.datascience.runcell.title', 'Run cell');
     export const importDialogTitle = localize('DataScience.importDialogTitle', 'Import Jupyter Notebook');

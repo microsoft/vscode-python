@@ -15,7 +15,6 @@ import { INotebookStorageProvider } from '../interactive-ipynb/notebookStoragePr
 import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,
-    IInteractiveWindowProvider,
     IJupyterNotebookProvider,
     INotebook,
     INotebookEditor,
@@ -41,7 +40,6 @@ export class NotebookProvider implements INotebookProvider {
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
-        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
@@ -50,9 +48,6 @@ export class NotebookProvider implements INotebookProvider {
     ) {
         disposables.push(editorProvider.onDidCloseNotebookEditor(this.onDidCloseNotebookEditor, this));
         disposables.push(storageProvider.onSavedAs(this.onSavedAs, this));
-        disposables.push(
-            interactiveWindowProvider.onDidChangeActiveInteractiveWindow(this.checkAndDisposeNotebook, this)
-        );
         this.rawNotebookProvider
             .supported()
             .then((b) => (this._type = b ? 'raw' : 'jupyter'))
@@ -203,28 +198,6 @@ export class NotebookProvider implements INotebookProvider {
             this.notebooks.set(e.new.toString(), notebookPromise);
             this.notebooks.delete(e.old.toString());
         }
-    }
-
-    /**
-     * Interactive windows have just one window.
-     * When that it closed, just close all of the notebooks associated with interactive windows.
-     */
-    private checkAndDisposeNotebook() {
-        if (this.interactiveWindowProvider.getActive()) {
-            return;
-        }
-
-        Array.from(this.notebooks.values()).forEach((promise) => {
-            promise
-                .then((notebook) => {
-                    if (notebook.identity.scheme === 'history') {
-                        notebook.dispose().ignoreErrors();
-                    }
-                })
-                .catch(noop);
-        });
-
-        this.notebooks.clear();
     }
 
     private async disposeNotebook(resource: Uri) {

@@ -12,6 +12,7 @@ import { IExperimentsManager } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
+import { getInteractiveIdentity } from '../interactive-window/identity';
 import { ICell, IJupyterVariables, INotebookExecutionLogger, INotebookProvider } from '../types';
 
 // This class provides hashes for debugging jupyter cells. Call getHashes just before starting debugging to compute all of the
@@ -98,7 +99,7 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
                     // Only do this for the interactive window notebook
                     const notebook = await this.notebookProvider.getOrCreateNotebook({
                         getOnly: true,
-                        identity: vscode.Uri.parse(Identifiers.InteractiveWindowIdentity),
+                        identity: getInteractiveIdentity(document.uri),
                         token: t
                     });
                     if (notebook) {

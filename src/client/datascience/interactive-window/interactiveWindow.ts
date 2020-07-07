@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
@@ -64,6 +63,7 @@ import {
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
+import { getInteractiveIdentity, getInteractiveWindowTitle } from './identity';
 
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 
@@ -82,11 +82,14 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public get closed(): Event<IInteractiveWindow> {
         return this.closedEvent.event;
     }
+    public get owner(): Resource {
+        return this._owner;
+    }
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private waitingForExportCells: boolean = false;
     private trackedJupyterStart: boolean = false;
-    private lastFile: string | undefined;
+    private _owner: Uri | undefined;
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -150,7 +153,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 path.join(historyReactDir, 'commons.initial.bundle.js'),
                 path.join(historyReactDir, 'interactiveWindow.js')
             ],
-            localize.DataScience.historyTitle(),
+            localize.DataScience.interactiveWindowTitle(),
             ViewColumn.Two,
             experimentsManager,
             switcher,
@@ -176,13 +179,20 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return Promise.resolve();
     }
 
-    public async show(): Promise<void> {
+    public async load(owner: Resource): Promise<void> {
+        // Set our owner
+        this._owner = owner;
+
         // Start the server as soon as we open
         this.ensureConnectionAndNotebook().ignoreErrors();
 
-        // When showing we have to load the web panel. Make sure
-        // we use the last file sent through add code.
-        await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());
+        // When showing we have to load the web panel.
+        await this.loadWebPanel(this.owner ? path.dirname(this.owner.fsPath) : process.cwd());
+
+        // Update the title if possible
+        if (this.owner) {
+            this.setTitle(getInteractiveWindowTitle(this.owner));
+        }
 
         // Make sure we're loaded first. InteractiveWindow doesn't makes sense without an active server.
         await this.ensureConnectionAndNotebook();
@@ -194,7 +204,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return super.show();
     }
 
-    public async addCode(code: string, file: string, line: number): Promise<boolean> {
+    public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
         return this.addOrDebugCode(code, file, line, false);
     }
 
@@ -232,10 +242,12 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    public async debugCode(code: string, file: string, line: number): Promise<boolean> {
+    public async debugCode(code: string, file: Uri, line: number): Promise<boolean> {
         let saved = true;
         // Make sure the file is saved before debugging
-        const doc = this.documentManager.textDocuments.find((d) => this.fileSystem.arePathsSame(d.fileName, file));
+        const doc = this.documentManager.textDocuments.find((d) =>
+            this.fileSystem.arePathsSame(d.fileName, file.fsPath)
+        );
         if (doc && doc.isUntitled) {
             // Before we start, get the list of documents
             const beforeSave = [...this.documentManager.textDocuments];
@@ -247,7 +259,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             if (saved) {
                 const diff = this.documentManager.textDocuments.filter((f) => beforeSave.indexOf(f) === -1);
                 if (diff && diff.length > 0) {
-                    file = diff[0].fileName;
+                    file = diff[0].uri;
 
                     // Open the new document
                     await this.documentManager.openTextDocument(file);
@@ -279,8 +291,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     public async getOwningResource(): Promise<Resource> {
-        if (this.lastFile) {
-            return Uri.file(this.lastFile);
+        if (this.owner) {
+            return this.owner;
         }
         const root = this.workspaceService.rootPath;
         if (root) {
@@ -314,7 +326,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
             // Activate the other side, and send as if came from a file
             this.interactiveWindowProvider
-                .getOrCreateActive()
+                .getOrCreate(this.owner)
                 .then((_v) => {
                     this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
                         code: info.code,
@@ -341,9 +353,9 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     protected async getNotebookIdentity(): Promise<INotebookIdentity> {
-        // Always the same identity (for now)
+        // Use the owner in the identity
         return {
-            resource: Uri.parse(Identifiers.InteractiveWindowIdentity),
+            resource: getInteractiveIdentity(this.owner),
             type: 'interactive'
         };
     }
@@ -384,21 +396,22 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return super.ensureConnectionAndNotebook();
     }
 
-    private async addOrDebugCode(code: string, file: string, line: number, debug: boolean): Promise<boolean> {
-        if (this.lastFile && !this.fileSystem.arePathsSame(file, this.lastFile)) {
+    private async addOrDebugCode(code: string, file: Uri, line: number, debug: boolean): Promise<boolean> {
+        if (this.owner && !this.fileSystem.arePathsSame(file.fsPath, this.owner.fsPath)) {
             sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
         }
-        // Save the last file we ran with.
-        this.lastFile = file;
+        // Update the owner for this window
+        this._owner = file;
+        this.setTitle(getInteractiveWindowTitle(file));
 
         // Make sure our web panel opens.
         await this.show();
 
         // Tell the webpanel about the new directory.
-        this.updateCwd(path.dirname(file));
+        this.updateCwd(path.dirname(file.fsPath));
 
         // Call the internal method.
-        return this.submitCode(code, file, line, undefined, undefined, debug ? { runByLine: false } : undefined);
+        return this.submitCode(code, file.fsPath, line, undefined, undefined, debug ? { runByLine: false } : undefined);
     }
 
     @captureTelemetry(Telemetry.ExportNotebookInteractive, undefined, false)

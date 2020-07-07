@@ -70,7 +70,7 @@
     "python.command.python.datascience.runcurrentcelladvance.title": "Run Current Cell And Advance",
     "python.command.python.datascience.execSelectionInteractive.title": "Run Selection/Line in Python Interactive Window",
     "python.command.python.datascience.runcell.title": "Run Cell",
-    "python.command.python.datascience.showhistorypane.title": "Show Python Interactive Window",
+    "python.command.python.datascience.createnewinteractive.title": "Create Python Interactive Window",
     "python.command.python.datascience.selectjupyteruri.title": "Specify local or remote Jupyter server for connections",
     "python.command.python.datascience.selectjupytercommandline.title": "Specify Jupyter command line arguments",
     "python.command.python.datascience.importnotebook.title": "Import Jupyter Notebook",

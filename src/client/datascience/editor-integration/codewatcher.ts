@@ -11,7 +11,8 @@ import {
     Selection,
     TextDocument,
     TextEditor,
-    TextEditorRevealType
+    TextEditorRevealType,
+    Uri
 } from 'vscode';
 
 import { IDocumentManager } from '../../common/application/types';
@@ -30,7 +31,7 @@ export class CodeWatcher implements ICodeWatcher {
     private static sentExecuteCellTelemetry: boolean = false;
     private document?: TextDocument;
     private version: number = -1;
-    private fileName: string = '';
+    private fileName: Uri = Uri.parse('');
     private codeLenses: CodeLens[] = [];
     private cachedSettings: IDataScienceSettings | undefined;
     private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
@@ -51,7 +52,7 @@ export class CodeWatcher implements ICodeWatcher {
         this.document = document;
 
         // Cache these, we don't want to pull an old version if the document is updated
-        this.fileName = document.fileName;
+        this.fileName = document.uri;
         this.version = document.version;
 
         // Get document cells here. Make a copy of our settings.
@@ -131,7 +132,7 @@ export class CodeWatcher implements ICodeWatcher {
                 // or if we do not we need to start it up as these commands are all expected to start a new history if needed
                 const success = await this.addCode(code, this.getFileName(), range.start.line);
                 if (!success) {
-                    await this.addErrorMessage(leftCount);
+                    await this.addErrorMessage(this.getFileName(), leftCount);
                     break;
                 }
             }
@@ -182,7 +183,7 @@ export class CodeWatcher implements ICodeWatcher {
                 const code = this.document.getText(range);
                 const success = await this.addCode(code, this.getFileName(), lens.range.start.line);
                 if (!success) {
-                    await this.addErrorMessage(leftCount);
+                    await this.addErrorMessage(this.getFileName(), leftCount);
                     break;
                 }
             } else {
@@ -210,7 +211,7 @@ export class CodeWatcher implements ICodeWatcher {
                 const code = this.document.getText(lens.range);
                 const success = await this.addCode(code, this.getFileName(), lens.range.start.line);
                 if (!success) {
-                    await this.addErrorMessage(leftCount);
+                    await this.addErrorMessage(this.getFileName(), leftCount);
                     break;
                 }
             }
@@ -383,7 +384,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     private async addCode(
         code: string,
-        file: string,
+        file: Uri,
         line: number,
         editor?: TextEditor,
         debug?: boolean
@@ -391,7 +392,7 @@ export class CodeWatcher implements ICodeWatcher {
         let result = false;
         try {
             const stopWatch = new StopWatch();
-            const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
+            const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreate(file);
             if (debug) {
                 result = await activeInteractiveWindow.debugCode(code, file, line, editor);
             } else {
@@ -405,12 +406,12 @@ export class CodeWatcher implements ICodeWatcher {
         return result;
     }
 
-    private async addErrorMessage(leftCount: number): Promise<void> {
+    private async addErrorMessage(file: Uri, leftCount: number): Promise<void> {
         // Only show an error message if any left
         if (leftCount > 0) {
             const message = localize.DataScience.cellStopOnErrorFormatMessage().format(leftCount.toString());
             try {
-                const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
+                const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreate(file);
                 return activeInteractiveWindow.addMessage(message);
             } catch (err) {
                 await this.dataScienceErrorHandler.handleError(err);

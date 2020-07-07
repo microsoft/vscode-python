@@ -17,21 +17,20 @@ import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { generateCellRangesFromDocument, generateCellsFromDocument } from '../cellFactory';
-import { Commands, Identifiers, Telemetry } from '../constants';
+import { Commands, Telemetry } from '../constants';
 import { ExportFormat, IExportManager } from '../export/types';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
-import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import {
     IDataScienceCommandListener,
-    IDataScienceErrorHandler,
     IInteractiveBase,
     IInteractiveWindowProvider,
-    IJupyterExecution,
+    INotebook,
     INotebookEditorProvider,
     INotebookExporter,
-    INotebookServer,
+    INotebookProvider,
     IStatusProvider
 } from '../types';
+import { createNewInteractiveIdentity } from './identity';
 
 @injectable()
 export class InteractiveWindowCommandListener implements IDataScienceCommandListener {
@@ -39,20 +38,21 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
-        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
         @inject(IExportManager) private exportManager: IExportManager,
         @inject(INotebookStorageProvider) private notebookStorageProvider: INotebookStorageProvider
     ) {}
 
     public register(commandManager: ICommandManager): void {
-        let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, () => this.showInteractiveWindow());
+        let disposable = commandManager.registerCommand(Commands.CreateNewInteractive, () =>
+            this.createNewInteractiveWindow()
+        );
         this.disposableRegistry.push(disposable);
         disposable = commandManager.registerCommand(
             Commands.ImportNotebook,
@@ -209,20 +209,13 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     // When all done, show a notice that it completed.
                     if (uri && uri.fsPath) {
                         const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                        const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
-                            ? localize.DataScience.exportOpenQuestion()
-                            : undefined;
-                        const questions = [openQuestion1, ...(openQuestion2 ? [openQuestion2] : [])];
+                        const questions = [openQuestion1];
                         const selection = await this.applicationShell.showInformationMessage(
                             localize.DataScience.exportDialogComplete().format(uri.fsPath),
                             ...questions
                         );
                         if (selection === openQuestion1) {
                             await this.ipynbProvider.open(uri);
-                        }
-                        if (selection === openQuestion2) {
-                            // If the user wants to, open the notebook they just generated.
-                            this.jupyterExecution.spawnNotebook(uri.fsPath).ignoreErrors();
                         }
                     }
                 }
@@ -232,7 +225,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
     @captureTelemetry(Telemetry.ExportPythonFileAndOutputInteractive, undefined, false)
     private async exportFileAndOutput(file: string): Promise<Uri | undefined> {
-        if (file && file.length > 0 && (await this.jupyterExecution.isNotebookSupported())) {
+        if (file && file.length > 0) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
             if (
@@ -279,10 +272,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
                         // When all done, show a notice that it completed.
                         const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                        const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
-                            ? localize.DataScience.exportOpenQuestion()
-                            : undefined;
-                        const questions = [openQuestion1, ...(openQuestion2 ? [openQuestion2] : [])];
+                        const questions = [openQuestion1];
                         const selection = await this.applicationShell.showInformationMessage(
                             localize.DataScience.exportDialogComplete().format(output),
                             ...questions
@@ -290,22 +280,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         if (selection === openQuestion1) {
                             await this.ipynbProvider.open(Uri.file(output));
                         }
-                        if (selection === openQuestion2) {
-                            // If the user wants to, open the notebook they just generated.
-                            this.jupyterExecution.spawnNotebook(output).ignoreErrors();
-                        }
-
                         return Uri.file(output);
                     }
                 }
             }
-        } else {
-            await this.dataScienceErrorHandler.handleError(
-                new JupyterInstallError(
-                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
-                    localize.DataScience.pythonInteractiveHelpLink()
-                )
-            );
         }
     }
 
@@ -315,21 +293,12 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         file: string,
         cancelToken: CancellationToken
     ): Promise<void> {
-        let server: INotebookServer | undefined;
+        let notebook: INotebook | undefined;
         try {
             const settings = this.configuration.getSettings(document.uri);
-            const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
-            // Try starting a server. Purpose should be unique so we
-            // create a brand new one.
-            server = await this.jupyterExecution.connectToNotebookServer(
-                { skipUsingDefaultConfig: !useDefaultConfig, purpose: uuid(), allowUI: () => false },
-                cancelToken
-            );
-            const notebook = server
-                ? await server.createNotebook(undefined, Uri.parse(Identifiers.InteractiveWindowIdentity))
-                : undefined;
-
+            // Create a new notebook
+            notebook = await this.notebookProvider.getOrCreateNotebook({ identity: createNewInteractiveIdentity() });
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(
                 ...(await Promise.all(
@@ -351,8 +320,8 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             const notebookJson = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
             await this.fileSystem.writeFile(file, JSON.stringify(notebookJson));
         } finally {
-            if (server) {
-                await server.dispose();
+            if (notebook) {
+                await notebook.dispose();
             }
         }
     }
@@ -372,65 +341,65 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     }
 
     private undoCells() {
-        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.undoCells();
         }
     }
 
     private redoCells() {
-        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.redoCells();
         }
     }
 
     private removeAllCells() {
-        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.removeAllCells();
         }
     }
 
     private interruptKernel() {
-        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.interruptKernel().ignoreErrors();
         }
     }
 
     private restartKernel() {
-        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.restartKernel().ignoreErrors();
         }
     }
 
     private expandAllCells() {
-        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.expandAllCells();
         }
     }
 
     private collapseAllCells() {
-        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.collapseAllCells();
         }
     }
 
     private exportCells() {
-        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.exportCells();
         }
     }
 
-    @captureTelemetry(Telemetry.ShowHistoryPane, undefined, false)
-    private async showInteractiveWindow(): Promise<void> {
-        const active = await this.interactiveWindowProvider.getOrCreateActive();
-        return active.show();
+    @captureTelemetry(Telemetry.CreateNewInteractive, undefined, false)
+    private async createNewInteractiveWindow(): Promise<void> {
+        const active = await this.interactiveWindowProvider.getOrCreate(undefined);
+        return active.load(undefined);
     }
 
     private waitForStatus<T>(
@@ -486,8 +455,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
     private async scrollToCell(id: string): Promise<void> {
         if (id) {
-            const interactiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
-            interactiveWindow.scrollToCell(id);
+            const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+            if (interactiveWindow) {
+                interactiveWindow.scrollToCell(id);
+            }
         }
     }
 }

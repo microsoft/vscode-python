@@ -84,7 +84,7 @@
         "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.datascience.createnewnotebook",
         "onCommand:python.startPage.open",
-        "onCommand:python.datascience.showhistorypane",
+        "onCommand:python.datascience.createnewinteractive",
         "onCommand:python.datascience.importnotebook",
         "onCommand:python.datascience.importnotebookfile",
         "onCommand:python.datascience.opennotebook",
@@ -534,8 +534,8 @@
                 "category": "Python"
             },
             {
-                "command": "python.datascience.showhistorypane",
-                "title": "%python.command.python.datascience.showhistorypane.title%",
+                "command": "python.datascience.createnewinteractive",
+                "title": "%python.command.python.datascience.createnewinteractive.title%",
                 "category": "Python"
             },
             {
@@ -995,10 +995,10 @@
                     "when": "editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled"
                 },
                 {
-                    "command": "python.datascience.showhistorypane",
-                    "title": "%python.command.python.datascience.showhistorypane.title%",
+                    "command": "python.datascience.createnewinteractive",
+                    "title": "%python.command.python.datascience.createnewinteractive.title%",
                     "category": "Python",
-                    "when": "python.datascience.featureenabled && !python.datascience.isinteractiveactive"
+                    "when": "python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.runallcells",

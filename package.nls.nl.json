@@ -26,7 +26,6 @@
     "python.command.python.datascience.runcurrentcell.title": "Huidige cel uitvoeren",
     "python.command.python.datascience.runcurrentcelladvance.title": "Huidige cel uitvoeren en doorgaan",
     "python.command.python.datascience.runcell.title": "Cel uitvoeren",
-    "python.command.python.datascience.showhistorypane.title": "Interactief Python-venster laten zien",
     "python.command.python.datascience.selectjupyteruri.title": "Jupyter-server-URI specificeren",
     "python.command.python.datascience.importnotebook.title": "Jupyter-notebook importeren",
     "python.command.python.datascience.importnotebookonfile.title": "Jupyter-notebook importeren",

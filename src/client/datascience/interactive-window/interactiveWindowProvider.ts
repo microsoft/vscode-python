@@ -6,37 +6,46 @@ import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
+import { Uri } from 'vscode';
 import { ILiveShareApi } from '../../common/application/types';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../common/types';
+import { IFileSystem } from '../../common/platform/types';
+import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../constants';
 import { PostOffice } from '../liveshare/postOffice';
-import { IInteractiveWindow, IInteractiveWindowProvider } from '../types';
+import { IDataScienceErrorHandler, IInteractiveWindow, IInteractiveWindowProvider } from '../types';
 
 interface ISyncData {
     count: number;
     waitable: Deferred<void>;
 }
 
+const UnownedKeyScheme = 'guid-key';
+
 @injectable()
 export class InteractiveWindowProvider implements IInteractiveWindowProvider, IAsyncDisposable {
     public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
         return this._onDidChangeActiveInteractiveWindow.event;
+    }
+    public get activeWindow(): IInteractiveWindow | undefined {
+        return this.activeInteractiveWindow;
     }
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
     private activeInteractiveWindow: IInteractiveWindow | undefined;
     private postOffice: PostOffice;
     private id: string;
     private pendingSyncs: Map<string, ISyncData> = new Map<string, ISyncData>();
-    private executedCode: EventEmitter<string> = new EventEmitter<string>();
     private activeInteractiveWindowExecuteHandler: Disposable | undefined;
+    private activeWindows: IInteractiveWindow[] = [];
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
     ) {
         asyncRegistry.push(this);
 
@@ -59,57 +68,63 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.id = uuid();
     }
 
-    public getActive(): IInteractiveWindow | undefined {
-        return this.activeInteractiveWindow;
+    public get(owner: Resource): IInteractiveWindow | undefined {
+        return this.activeWindows.find((w) => {
+            if (!owner && w.owner) {
+                return true;
+            }
+            if (owner && w.owner && this.fileSystem.arePathsSame(owner.fsPath, w.owner.fsPath)) {
+                return true;
+            }
+            return false;
+        });
     }
 
-    public get onExecutedCode(): Event<string> {
-        return this.executedCode.event;
-    }
+    public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
+        // See if we already have a match
+        let result = this.get(resource);
+        if (!result) {
+            // No match. Create a new item.
+            result = this.create(resource);
 
-    public async getOrCreateActive(): Promise<IInteractiveWindow> {
-        if (!this.activeInteractiveWindow) {
-            await this.create();
+            // Wait for synchronization in liveshare
+            await this.synchronizeCreate(resource);
         }
-
-        // Make sure all other providers have an active interactive window.
-        await this.synchronizeCreate();
-
-        // Now that all of our peers have sync'd, return the interactive window to use.
-        if (this.activeInteractiveWindow) {
-            return this.activeInteractiveWindow;
-        }
-
-        throw new Error(localize.DataScience.pythonInteractiveCreateFailed());
+        return result;
     }
 
     public dispose(): Promise<void> {
         return this.postOffice.dispose();
     }
 
-    private async create(): Promise<IInteractiveWindow> {
+    private create(resource: Resource): IInteractiveWindow {
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
-        this.activeInteractiveWindow = this.serviceContainer.get<IInteractiveWindow>(IInteractiveWindow);
+        const result = this.serviceContainer.get<IInteractiveWindow>(IInteractiveWindow);
+        this.activeWindows.push(result);
+        this.activeInteractiveWindow = result;
+
+        // When shutting down, we fire an event
         const handler = this.activeInteractiveWindow.closed(this.onInteractiveWindowClosed);
         this.disposables.push(this.activeInteractiveWindow);
         this.disposables.push(handler);
-        this.activeInteractiveWindowExecuteHandler = this.activeInteractiveWindow.onExecutedCode(
-            this.onInteractiveWindowExecute
-        );
-        this.disposables.push(this.activeInteractiveWindowExecuteHandler);
         this.disposables.push(
-            this.activeInteractiveWindow.onDidChangeViewState(() => this.raiseOnDidChangeActiveInteractiveWindow())
+            this.activeInteractiveWindow.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this))
         );
-        this.raiseOnDidChangeActiveInteractiveWindow();
+
+        // Load in the background
+        result
+            .load(resource)
+            .then(() => this.raiseOnDidChangeActiveInteractiveWindow())
+            .catch((e) => this.errorHandler.handleError(e));
+
         return this.activeInteractiveWindow;
     }
 
     private raiseOnDidChangeActiveInteractiveWindow() {
-        const currentWindow = this.getActive();
-        this._onDidChangeActiveInteractiveWindow.fire(
-            currentWindow?.active && currentWindow.visible ? currentWindow : undefined
-        );
+        // Find the active window
+        this.activeInteractiveWindow = this.activeWindows.find((w) => (w.active && w.visible ? true : false));
+        this._onDidChangeActiveInteractiveWindow.fire(this.activeWindow);
     }
     private onPeerCountChanged(newCount: number) {
         // If we're losing peers, resolve all syncs
@@ -121,12 +136,14 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
 
     // tslint:disable-next-line:no-any
     private async onRemoteCreate(...args: any[]) {
-        // Should be a single arg, the originator of the create
-        if (args.length > 0 && args[0].toString() !== this.id) {
+        // Should be two args, the originator of the create and the key/resource
+        if (args.length > 1 && args[0].toString() !== this.id) {
             // The other side is creating a interactive window. Create on this side. We don't need to show
             // it as the running of new code should do that.
-            if (!this.activeInteractiveWindow) {
-                await this.create();
+            const key = Uri.parse(args[1].toString());
+            const resource = key.scheme === UnownedKeyScheme ? undefined : key;
+            if (!this.get(resource)) {
+                this.create(resource);
             }
 
             // Tell the requestor that we got its message (it should be waiting for all peers to sync)
@@ -162,10 +179,10 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.raiseOnDidChangeActiveInteractiveWindow();
     };
 
-    private async synchronizeCreate(): Promise<void> {
+    private async synchronizeCreate(owner: Resource): Promise<void> {
         // Create a new pending wait if necessary
         if (this.postOffice.peerCount > 0 || this.postOffice.role === vsls.Role.Guest) {
-            const key = uuid();
+            const key = owner ? owner.toString() : Uri.parse(`${UnownedKeyScheme}://${uuid}`).toString();
             const waitable = createDeferred<void>();
             this.pendingSyncs.set(key, { count: this.postOffice.peerCount, waitable });
 
@@ -176,8 +193,4 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             await waitable.promise;
         }
     }
-
-    private onInteractiveWindowExecute = (code: string) => {
-        this.executedCode.fire(code);
-    };
 }

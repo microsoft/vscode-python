@@ -445,10 +445,24 @@ export interface INotebookExporter extends Disposable {
 
 export const IInteractiveWindowProvider = Symbol('IInteractiveWindowProvider');
 export interface IInteractiveWindowProvider {
+    /**
+     * The active interactive window if it has the focus.
+     */
+    readonly activeWindow: IInteractiveWindow | undefined;
+    /**
+     * Event fired when the active interactive window changes
+     */
     readonly onDidChangeActiveInteractiveWindow: Event<IInteractiveWindow | undefined>;
-    onExecutedCode: Event<string>;
-    getActive(): IInteractiveWindow | undefined;
-    getOrCreateActive(): Promise<IInteractiveWindow>;
+    /**
+     * Gets the interactive window associated with the owner. If owner is undefined, looks for an un-owned interactive window.
+     * @param owner resource that might be associated with an interactive window.
+     */
+    get(owner: Resource): IInteractiveWindow | undefined;
+    /**
+     * Gets or creates a new interactive window and associates it with the owner. If no owner, marks as a non associated.
+     * @param owner file that started this interactive window
+     */
+    getOrCreate(owner: Resource): Promise<IInteractiveWindow>;
 }
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
@@ -481,7 +495,6 @@ export interface ILocalResourceUriConverter {
 export interface IInteractiveBase extends Disposable {
     onExecutedCode: Event<string>;
     notebook?: INotebook;
-    show(): Promise<void>;
     startProgress(): void;
     stopProgress(): void;
     undoCells(): void;
@@ -496,18 +509,14 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly onDidChangeViewState: Event<void>;
     readonly visible: boolean;
     readonly active: boolean;
+    readonly owner: Resource;
     closed: Event<IInteractiveWindow>;
-    addCode(
-        code: string,
-        file: string,
-        line: number,
-        editor?: TextEditor,
-        runningStopWatch?: StopWatch
-    ): Promise<boolean>;
+    load(owner: Resource): Promise<void>;
+    addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;
     debugCode(
         code: string,
-        file: string,
+        file: Uri,
         line: number,
         editor?: TextEditor,
         runningStopWatch?: StopWatch
@@ -556,6 +565,7 @@ export interface INotebookEditor extends IInteractiveBase {
     readonly visible: boolean;
     readonly active: boolean;
     readonly model: INotebookModel | undefined;
+    show(): Promise<void>;
     load(storage: INotebookModel, webViewPanel?: WebviewPanel): Promise<void>;
     runAllCells(): void;
     runSelectedCell(): void;
@@ -612,7 +622,7 @@ export const ICodeWatcher = Symbol('ICodeWatcher');
 export interface ICodeWatcher {
     codeLensUpdated: Event<void>;
     setDocument(document: TextDocument): void;
-    getFileName(): string;
+    getFileName(): Uri;
     getVersion(): number;
     getCodeLenses(): CodeLens[];
     getCachedSettings(): IDataScienceSettings | undefined;
