@@ -1,3 +1,4 @@
+import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -69,5 +70,40 @@ export class ExportUtil {
         }
 
         return model;
+    }
+
+    public removeSvgs(model: INotebookModel) {
+        const newCells: ICell[] = [];
+        for (const cell of model.cells) {
+            const outputs = cell.data.outputs;
+            if (outputs as nbformat.IOutput[]) {
+                this.removeSvgFromOutputs(outputs as nbformat.IOutput[]);
+            }
+            newCells.push(cell);
+        }
+        model.update({
+            kind: 'modify',
+            newCells: newCells,
+            oldCells: model.cells as ICell[],
+            oldDirty: false,
+            newDirty: false,
+            source: 'user'
+        });
+    }
+
+    private removeSvgFromOutputs(outputs: nbformat.IOutput[]) {
+        const SVG = 'image/svg+xml';
+        const PNG = 'image/png';
+        for (const output of outputs as nbformat.IOutput[]) {
+            if (output.data as nbformat.IMimeBundle) {
+                const data = output.data as nbformat.IMimeBundle;
+                if (!(SVG in data)) {
+                    continue;
+                }
+                if (PNG in data) {
+                    delete data[SVG];
+                }
+            }
+        }
     }
 }

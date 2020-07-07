@@ -21,6 +21,13 @@ export class ExportManager implements IExportManager {
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
         let target;
+
+        if (format === ExportFormat.pdf) {
+            // When exporting to PDF we need to remove any SVG output. This is due to an error
+            // with nbconvert and a dependency of its called InkScape.
+            await this.exportUtil.removeSvgs(model);
+        }
+
         if (format !== ExportFormat.python) {
             target = await this.filePicker.getExportFileLocation(format, model.file);
             if (!target) {
