@@ -138,7 +138,7 @@ gulp.task('compile-viewers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
 });
 
-gulp.task('compile-webviews', gulp.series('compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
+gulp.task('compile-webviews', gulp.series('compile-ipywidgets', 'compile-notebooks', 'compile-viewers', 'compile-renderers'));
 
 gulp.task(
     'check-datascience-dependencies',
