@@ -120,7 +120,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
     serviceManager.addSingleton<IPythonInPathCommandProvider>(
         IPythonInPathCommandProvider,
-        PythonInPathCommandProvider
+        PythonInPathCommandProviderProxy
     );
 
     serviceManager.add<IInterpreterWatcher>(
@@ -237,6 +237,17 @@ class WindowsStoreInterpreterProxy implements IWindowsStoreInterpreter, IWindows
     }
     public async getInterpreterHash(pythonPath: string): Promise<string> {
         return this.impl.getInterpreterHash(pythonPath);
+    }
+}
+
+@injectable()
+class PythonInPathCommandProviderProxy implements IPythonInPathCommandProvider {
+    private readonly impl: IPythonInPathCommandProvider;
+    constructor(@inject(IPlatformService) platform: IPlatformService) {
+        this.impl = new PythonInPathCommandProvider(platform);
+    }
+    public getCommands(): { command: string; args?: string[] }[] {
+        return this.impl.getCommands();
     }
 }
 
