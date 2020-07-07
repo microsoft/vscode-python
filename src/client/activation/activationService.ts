@@ -172,7 +172,7 @@ export class LanguageServerExtensionActivationService
 
     /**
      * Determines what language server to use depending on settings and experiments.
-     * Experiment is for Microsoft => Node. No experimentation with Jedi users.
+     * Experiment is for Microsoft => Pylance. No experimentation with Jedi users.
      * @returns `LanguageServerType`
      */
     public getLanguageServerType(): LanguageServerType {
