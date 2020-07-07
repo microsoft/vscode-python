@@ -5,6 +5,7 @@ import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable, named } from 'inversify';
 
 import { Event, EventEmitter } from 'vscode';
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { RunByLine } from '../../common/experiments/groups';
 import { IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
@@ -17,7 +18,6 @@ import {
     IJupyterVariablesResponse,
     INotebook
 } from '../types';
-import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 
 /**
  * This class provides variable data for showing in the interactive window or a notebook.
