@@ -16,7 +16,6 @@ import { BaseVirtualEnvService } from './baseVirtualEnvService';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify: (value: string) => string = require('untildify');
 
-@injectable()
 export class GlobalVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
         @inject(IVirtualEnvironmentsSearchPathProvider)

@@ -3,7 +3,7 @@
 
 // tslint:disable:no-use-before-declare max-classes-per-file
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { Disposable, Event, Uri } from 'vscode';
 import { IFileSystem } from '../common/platform/types';
 import { IProcessServiceFactory } from '../common/process/types';
@@ -91,7 +91,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
-        GlobalVirtualEnvService,
+        GlobalVirtualEnvServiceProxy,
         GLOBAL_VIRTUAL_ENV_SERVICE
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
@@ -263,5 +263,17 @@ class CurrentPathServiceProxy extends BaseLocatorServiceProxy {
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         super(new CurrentPathService(helper, processServiceFactory, pythonCommandProvider, serviceContainer));
+    }
+}
+
+@injectable()
+class GlobalVirtualEnvServiceProxy extends BaseLocatorServiceProxy {
+    public constructor(
+        @inject(IVirtualEnvironmentsSearchPathProvider)
+        @named('global')
+        globalVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
+    ) {
+        super(new GlobalVirtualEnvService(globalVirtualEnvPathProvider, serviceContainer));
     }
 }
