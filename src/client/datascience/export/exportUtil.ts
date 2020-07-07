@@ -97,7 +97,7 @@ export class ExportUtil {
         for (const output of outputs as nbformat.IOutput[]) {
             if (output.data as nbformat.IMimeBundle) {
                 const data = output.data as nbformat.IMimeBundle;
-                // only remove the svg if there is a pdf available
+                // only remove the svg if there is a png available
                 if (!(SVG in data)) {
                     continue;
                 }
