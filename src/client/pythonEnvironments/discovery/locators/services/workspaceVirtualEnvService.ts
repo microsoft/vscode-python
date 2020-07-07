@@ -19,7 +19,6 @@ import {
 import { IServiceContainer } from '../../../../ioc/types';
 import { BaseVirtualEnvService } from './baseVirtualEnvService';
 
-@injectable()
 export class WorkspaceVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
         @inject(IVirtualEnvironmentsSearchPathProvider)

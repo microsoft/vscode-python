@@ -96,7 +96,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
-        WorkspaceVirtualEnvService,
+        WorkspaceVirtualEnvServiceProxy,
         WORKSPACE_VIRTUAL_ENV_SERVICE
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
@@ -275,5 +275,18 @@ class GlobalVirtualEnvServiceProxy extends BaseLocatorServiceProxy {
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         super(new GlobalVirtualEnvService(globalVirtualEnvPathProvider, serviceContainer));
+    }
+}
+
+@injectable()
+class WorkspaceVirtualEnvServiceProxy extends BaseLocatorServiceProxy {
+    public constructor(
+        @inject(IVirtualEnvironmentsSearchPathProvider)
+        @named('workspace')
+        workspaceVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IInterpreterWatcherBuilder) builder: IInterpreterWatcherBuilder
+    ) {
+        super(new WorkspaceVirtualEnvService(workspaceVirtualEnvPathProvider, serviceContainer, builder));
     }
 }
