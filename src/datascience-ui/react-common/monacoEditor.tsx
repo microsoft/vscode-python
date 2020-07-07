@@ -138,11 +138,14 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             });
 
             // Listen for commands on the editor. This is to work around a problem
-            // with double pasting 
+            // with double pasting
+            // tslint:disable: no-any
             if ((editor as any)._commandService) {
                 const commandService = (editor as any)._commandService as any;
                 if (commandService._onWillExecuteCommand) {
-                    this.subscriptions.push(commandService._onWillExecuteCommand.event(this.onCommandWillExecute.bind(this)));
+                    this.subscriptions.push(
+                        commandService._onWillExecuteCommand.event(this.onCommandWillExecute.bind(this))
+                    );
                 }
             }
 
@@ -594,7 +597,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         return false;
     }
 
-    private onCommandWillExecute(ev: { commandId: string, args: any[]}) {
+    private onCommandWillExecute(ev: { commandId: string; args: any[] }) {
         if (ev.commandId === 'paste' && ev.args.length > 0 && ev.args[0].text) {
             // See if same as last paste and within 100ms. This is the error condition.
             const diff = Date.now() - this.lastPasteCommandTime;
