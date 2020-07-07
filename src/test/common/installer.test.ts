@@ -125,7 +125,6 @@ import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/comm
 import { Random } from '../../client/common/utils/random';
 import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
 import { INotebookExecutionLogger } from '../../client/datascience/types';
-import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
@@ -218,8 +217,6 @@ suite('Installer', () => {
             DataScienceProductPathService,
             ProductType.DataScience
         );
-
-        registerForIOC(ioc.serviceManager);
 
         ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
         ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
