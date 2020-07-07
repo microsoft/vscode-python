@@ -5,7 +5,7 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { TextEditor, Uri } from 'vscode';
-import { IFileSystem, TemporaryDirectory, TemporaryFile } from '../../../client/common/platform/types';
+import { IFileSystem, TemporaryFile } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
 import { ExportManager } from '../../../client/datascience/export/exportManager';
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
