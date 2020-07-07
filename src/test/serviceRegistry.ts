@@ -245,7 +245,6 @@ export class IocContainer {
             IEnvironmentActivationService,
             instance(mockEnvironmentActivationService)
         );
-        registerForIOC(this.serviceManager);
     }
     public registerVariableTypes() {
         variableRegisterTypes(this.serviceManager);

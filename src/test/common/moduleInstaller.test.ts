@@ -129,7 +129,6 @@ import {
 } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
-import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
 import { getExtensionSettings, PYTHON_PATH, rootWorkspaceUri } from '../common';
@@ -210,14 +209,6 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipEnvInstaller);
-            condaService = TypeMoq.Mock.ofType<ICondaService>();
-            ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
-
-            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-            ioc.serviceManager.addSingletonInstance<IInterpreterService>(
-                IInterpreterService,
-                interpreterService.object
-            );
 
             ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
             ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
@@ -230,7 +221,11 @@ suite('Module Installer', () => {
             ioc.registerMockProcessTypes();
             ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
 
-            registerForIOC(ioc.serviceManager);
+            ioc.registerMockInterpreterTypes();
+            condaService = TypeMoq.Mock.ofType<ICondaService>();
+            ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, condaService.object);
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, interpreterService.object);
 
             ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
             ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);

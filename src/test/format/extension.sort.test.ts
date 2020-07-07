@@ -58,11 +58,9 @@ suite('Sorting', () => {
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
         ioc.registerInterpreterStorageTypes();
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
-        ioc.serviceManager.addSingletonInstance<IInterpreterService>(
-            IInterpreterService,
-            instance(mock(InterpreterService))
-        );
+        ioc.registerMockInterpreterTypes();
+        ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
     }
     test('Without Config', async () => {
         const textDocument = await workspace.openTextDocument(fileToFormatWithoutConfig);
