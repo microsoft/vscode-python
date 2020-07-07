@@ -80,7 +80,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
-        CondaEnvService,
+        CondaEnvServiceProxy,
         CONDA_ENV_SERVICE
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
@@ -238,5 +238,17 @@ class CondaEnvFileServiceProxy extends BaseLocatorServiceProxy {
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         super(new CondaEnvFileService(helperService, condaService, fileSystem, serviceContainer));
+    }
+}
+
+@injectable()
+class CondaEnvServiceProxy extends BaseLocatorServiceProxy {
+    constructor(
+        @inject(ICondaService) condaService: ICondaService,
+        @inject(IInterpreterHelper) helper: IInterpreterHelper,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IFileSystem) fileSystem: IFileSystem
+    ) {
+        super(new CondaEnvService(condaService, helper, serviceContainer, fileSystem));
     }
 }
