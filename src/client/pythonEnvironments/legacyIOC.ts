@@ -1,6 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable:no-use-before-declare
+
+import { inject, injectable } from 'inversify';
+import { Disposable, Event, Uri } from 'vscode';
+import { IDisposableRegistry } from '../common/types';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -21,7 +26,7 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
-import { IServiceManager } from '../ioc/types';
+import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
@@ -46,12 +51,14 @@ import {
     WorkspaceVirtualEnvService
 } from './discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
+import { GetInterpreterLocatorOptions } from './discovery/locators/types';
+import { PythonInterpreter } from './info';
 
 export function registerForIOC(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
-        PythonInterpreterLocatorService,
+        PythonInterpreterLocatorServiceProxy,
         INTERPRETER_LOCATOR_SERVICE
     );
     serviceManager.addSingleton<IInterpreterLocatorProgressService>(
@@ -128,4 +135,28 @@ export function registerForIOC(serviceManager: IServiceManager) {
         KnownSearchPathsForInterpreters
     );
     serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
+}
+
+@injectable()
+class PythonInterpreterLocatorServiceProxy implements IInterpreterLocatorService {
+    private readonly impl: IInterpreterLocatorService;
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        this.impl = new PythonInterpreterLocatorService(serviceContainer);
+        serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this.impl);
+    }
+    public dispose() {
+        this.impl.dispose();
+    }
+    public get onLocating(): Event<Promise<PythonInterpreter[]>> {
+        return this.impl.onLocating;
+    }
+    public get hasInterpreters(): Promise<boolean> {
+        return this.impl.hasInterpreters;
+    }
+    public get didTriggerInterpreterSuggestions(): boolean | undefined {
+        return this.impl.didTriggerInterpreterSuggestions;
+    }
+    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]> {
+        return this.impl.getInterpreters(resource, options);
+    }
 }
