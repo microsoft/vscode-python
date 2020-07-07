@@ -495,8 +495,8 @@ suite('Import Sort Provider', () => {
             .setup((s) => s.end())
             .callback(async () => {
                 // Wait until the process has returned with results
-                const result = await firstProcessResult.promise;
-                firstSubscriber.next(result);
+                const processResult = await firstProcessResult.promise;
+                firstSubscriber.next(processResult);
                 firstSubscriber.complete();
             })
             .verifiable(TypeMoq.Times.once());
