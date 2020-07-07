@@ -103,6 +103,8 @@ import {
 import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
+// tslint:disable-next-line:no-require-imports no-var-requires
+const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 
 @injectable()
 export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {
@@ -479,7 +481,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     protected onViewStateChanged(args: WebViewViewChangeEventArgs) {
         // Only activate if the active editor is empty. This means that
         // vscode thinks we are actually supposed to have focus. It would be
-        // nice if they would more accurrately tell us this, but this works for now.
+        // nice if they would more accurately tell us this, but this works for now.
         // Essentially the problem is the webPanel.active state doesn't track
         // if the focus is supposed to be in the webPanel or not. It only tracks if
         // it's been activated. However if there's no active text editor and we're active, we
@@ -496,7 +498,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     protected async activating() {
         // Only activate if the active editor is empty. This means that
         // vscode thinks we are actually supposed to have focus. It would be
-        // nice if they would more accurrately tell us this, but this works for now.
+        // nice if they would more accurately tell us this, but this works for now.
         // Essentially the problem is the webPanel.active state doesn't track
         // if the focus is supposed to be in the webPanel or not. It only tracks if
         // it's been activated. However if there's no active text editor and we're active, we
@@ -650,7 +652,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
                 // Indicate we executed some code
                 this.executeEvent.fire(code);
-
+                // When we have a cell that streams output every ms, then UI updates too frequently.
+                // This chews up the CPU when updating the UI (https://github.com/microsoft/vscode-python/issues/12588).
+                // Hence throttle updates to the UI to every 100ms.
+                // This also reduces messages sent to the webview, further reducing CPU usage (less serialization/de-serialization).
+                // As we're merely updating text, 10 updates per second is good enough.
+                const sendCellsToWebView = throttle(this.sendCellsToWebView.bind(this), 100);
                 // Sign up for cell changes
                 observable.subscribe(
                     (cells: ICell[]) => {
@@ -658,7 +665,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                         const combined = cells.map(this.combineData.bind(undefined, data));
 
                         // Then send the combined output to the UI
-                        this.sendCellsToWebView(combined);
+                        sendCellsToWebView(combined);
 
                         // Any errors will move our result to false (if allowed)
                         if (this.configuration.getSettings(owningResource).datascience.stopOnError) {
@@ -852,7 +859,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 await this.ensureNotebook(serverConnection);
             }
         } catch (exc) {
-            // We should dispose ourselves if the load fails. Othewise the user
+            // We should dispose ourselves if the load fails. Otherwise the user
             // updates their install and we just fail again because the load promise is the same.
             await this.closeBecauseOfFailure(exc);
 
@@ -1380,7 +1387,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             }
             // Storing an object that looks like
             //  { "fully qualified Path to 1.ipynb": 1234,
-            //    "fully qualifieid path to 2.ipynb": 1234 }
+            //    "fully qualified path to 2.ipynb": 1234 }
 
             // tslint:disable-next-line: no-any
             const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
@@ -1395,7 +1402,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const uri = await this.getOwningResource(); // Get file name
 
         if (!uri || isUntitledFile(uri)) {
-            return; // don't resotre height of untitled notebooks
+            return; // don't restore height of untitled notebooks
         }
 
         // tslint:disable-next-line: no-any
