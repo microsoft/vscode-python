@@ -72,7 +72,15 @@ suite('DataScience Native Toolbar', () => {
     function getToolbarButton(button: Button) {
         return wrapper.find(ImageButton).at(button);
     }
-
+    function getTrustMessage() {
+        return wrapper.find('.jupyter-info-section');
+    }
+    function clickTrustMessage() {
+        const handler = getTrustMessage().props().onClick;
+        if (handler) {
+            handler({} as any);
+        }
+    }
     function assertEnabled(button: Button) {
         assert.isFalse(getToolbarButton(button).props().disabled);
     }
@@ -209,6 +217,78 @@ suite('DataScience Native Toolbar', () => {
             mountToolbar();
             clickButton(Button.InterruptKernel);
             assert.isTrue(((props.interruptKernel as any) as sinon.SinonStub).calledOnce);
+        });
+    });
+    suite('When trusted', () => {
+        test('Trust message shows "Trusted"', () => {
+            mountToolbar();
+            const message = getTrustMessage();
+            assert.equal(message.text(), 'Trusted');
+        });
+        test('Clicking trust message does nothing', () => {
+            mountToolbar();
+            clickTrustMessage();
+            assert.isTrue(((props.launchNotebookTrustPrompt as any) as sinon.SinonStub).notCalled);
+        });
+    });
+    suite('When untrusted', () => {
+        setup(() => {
+            props = {
+                baseTheme: '',
+                busy: false,
+                cellCount: 0,
+                dirty: false,
+                export: sinon.stub(),
+                exportAs: sinon.stub(),
+                font: { family: '', size: 1 },
+                interruptKernel: sinon.stub(),
+                kernel: {
+                    displayName: '',
+                    jupyterServerStatus: ServerStatus.Busy,
+                    localizedUri: '',
+                    language: PYTHON_LANGUAGE
+                },
+                restartKernel: sinon.stub(),
+                selectKernel: noopAny,
+                selectServer: noopAny,
+                addCell: sinon.stub(),
+                clearAllOutputs: sinon.stub(),
+                executeAbove: sinon.stub(),
+                executeAllCells: sinon.stub(),
+                executeCellAndBelow: sinon.stub(),
+                save: sinon.stub(),
+                selectionFocusedInfo: {},
+                sendCommand: noopAny,
+                toggleVariableExplorer: sinon.stub(),
+                setVariableExplorerHeight: sinon.stub(),
+                launchNotebookTrustPrompt: sinon.stub(),
+                variablesVisible: false,
+                isNotebookTrusted: false,
+                shouldShowTrustMessage: true
+            };
+        });
+        test('All toolbar buttons are disabled', () => {
+            mountToolbar();
+            assertDisabled(Button.RunAll);
+            assertDisabled(Button.RunAbove);
+            assertDisabled(Button.RunBelow);
+            assertDisabled(Button.RestartKernel);
+            assertDisabled(Button.InterruptKernel);
+            assertDisabled(Button.AddCell);
+            assertDisabled(Button.ClearAllOutput);
+            assertDisabled(Button.VariableExplorer);
+            assertDisabled(Button.Save);
+            assertDisabled(Button.Export);
+        });
+        test('Trust message shows "Not Trusted"', () => {
+            mountToolbar();
+            const message = getTrustMessage();
+            assert.equal(message.text(), 'Not Trusted');
+        });
+        test('Clicking trust message dispatches launchNotebookTrustPrompt', () => {
+            mountToolbar();
+            clickTrustMessage();
+            assert.isTrue(((props.launchNotebookTrustPrompt as any) as sinon.SinonStub).calledOnce);
         });
     });
 });
