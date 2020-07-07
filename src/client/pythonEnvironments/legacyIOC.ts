@@ -152,7 +152,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
         IKnownSearchPathsForInterpreters,
         KnownSearchPathsForInterpretersProxy
     );
-    serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
+    serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilderProxy);
 }
 
 @injectable()
@@ -360,6 +360,20 @@ class CondaServiceProxy implements ICondaService {
     }
     public async getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined> {
         return this.impl.getCondaEnvironment(interpreterPath);
+    }
+}
+
+@injectable()
+class InterpreterWatcherBuilderProxy implements IInterpreterWatcherBuilder {
+    private readonly impl: IInterpreterWatcherBuilder;
+    constructor(
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
+    ) {
+        this.impl = new InterpreterWatcherBuilder(workspaceService, serviceContainer);
+    }
+    public async getWorkspaceVirtualEnvInterpreterWatcher(resource: Uri | undefined): Promise<IInterpreterWatcher> {
+        return this.impl.getWorkspaceVirtualEnvInterpreterWatcher(resource);
     }
 }
 

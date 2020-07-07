@@ -3,21 +3,16 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import { traceDecorators } from '../../../../common/logger';
 import { createDeferred } from '../../../../common/utils/async';
-import {
-    IInterpreterWatcher,
-    IInterpreterWatcherBuilder,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
-} from '../../../../interpreter/contracts';
+import { IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
 import { WorkspaceVirtualEnvWatcherService } from './workspaceVirtualEnvWatcherService';
 
-@injectable()
-export class InterpreterWatcherBuilder implements IInterpreterWatcherBuilder {
+export class InterpreterWatcherBuilder {
     private readonly watchersByResource = new Map<string, Promise<IInterpreterWatcher>>();
     /**
      * Creates an instance of InterpreterWatcherBuilder.
