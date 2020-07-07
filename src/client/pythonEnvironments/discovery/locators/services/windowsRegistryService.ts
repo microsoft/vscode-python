@@ -1,6 +1,6 @@
 // tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation
 
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
@@ -32,7 +32,6 @@ type CompanyInterpreter = {
     arch?: Architecture;
 };
 
-@injectable()
 export class WindowsRegistryService extends CacheableLocatorService {
     private readonly pathUtils: IPathUtils;
     private readonly fs: IFileSystem;

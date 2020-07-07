@@ -5,7 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Disposable, Event, Uri } from 'vscode';
-import { IFileSystem } from '../common/platform/types';
+import { IFileSystem, IPlatformService, IRegistry } from '../common/platform/types';
 import { IProcessServiceFactory } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry } from '../common/types';
 import {
@@ -107,7 +107,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
-        WindowsRegistryService,
+        WindowsRegistryServiceProxy,
         WINDOWS_REGISTRY_SERVICE
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
@@ -310,5 +310,17 @@ class KnownPathsServiceProxy extends BaseLocatorServiceProxy {
 class PipEnvServiceProxy extends BaseLocatorServiceProxy {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(new PipEnvService(serviceContainer));
+    }
+}
+
+@injectable()
+class WindowsRegistryServiceProxy extends BaseLocatorServiceProxy {
+    constructor(
+        @inject(IRegistry) registry: IRegistry,
+        @inject(IPlatformService) platform: IPlatformService,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(WindowsStoreInterpreter) windowsStoreInterpreter: IWindowsStoreInterpreter
+    ) {
+        super(new WindowsRegistryService(registry, platform, serviceContainer, windowsStoreInterpreter));
     }
 }
