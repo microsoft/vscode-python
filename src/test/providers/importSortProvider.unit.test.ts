@@ -553,7 +553,7 @@ suite('Import Sort Provider', () => {
         firstProcessResult.resolve({ source: 'stdout', out: 'DIFF' });
 
         edit = await firstExecutionDeferred.promise;
-        expect(edit).to.be.equal(undefined, 'The results from the second execution should be discarded');
+        expect(edit).to.be.equal(undefined, 'The results from the first execution should be discarded');
         stdinStream1.verifyAll();
     });
 });
