@@ -63,7 +63,8 @@ function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVari
 function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
     const newState: IVariableState = {
         ...arg.prevState,
-        visible: !arg.prevState.visible
+        visible: !arg.prevState.visible,
+        showVariablesOnDebug: false // If user does any toggling don't auto open this.
     };
 
     postActionToExtension(arg, InteractiveWindowMessages.VariableExplorerToggle, newState.visible);
