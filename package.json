@@ -1786,6 +1786,7 @@
                             "CollectNodeLSRequestTiming - experiment",
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
+                            "EnableTrustedNotebooks",
                             "All"
                         ]
                     },
@@ -1810,6 +1811,7 @@
                             "CollectNodeLSRequestTiming - experiment",
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
+                            "EnableTrustedNotebooks",
                             "All"
                         ]
                     },
