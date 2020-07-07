@@ -13,6 +13,7 @@ import {
     CURRENT_PATH_SERVICE,
     GLOBAL_VIRTUAL_ENV_SERVICE,
     ICondaService,
+    IInterpreterHelper,
     IInterpreterLocatorHelper,
     IInterpreterLocatorProgressService,
     IInterpreterLocatorService,
@@ -74,7 +75,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
-        CondaEnvFileService,
+        CondaEnvFileServiceProxy,
         CONDA_ENV_FILE_SERVICE
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
@@ -225,5 +226,17 @@ class PythonInterpreterLocatorServiceProxy extends BaseLocatorServiceProxy {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(new PythonInterpreterLocatorService(serviceContainer));
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this.impl);
+    }
+}
+
+@injectable()
+class CondaEnvFileServiceProxy extends BaseLocatorServiceProxy {
+    constructor(
+        @inject(IInterpreterHelper) helperService: IInterpreterHelper,
+        @inject(ICondaService) condaService: ICondaService,
+        @inject(IFileSystem) fileSystem: IFileSystem,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
+    ) {
+        super(new CondaEnvFileService(helperService, condaService, fileSystem, serviceContainer));
     }
 }
