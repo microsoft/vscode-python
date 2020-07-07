@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-use-before-declare
+// tslint:disable:no-use-before-declare max-classes-per-file
 
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, Uri } from 'vscode';
 import { IFileSystem } from '../common/platform/types';
-import { IDisposableRegistry } from '../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../common/types';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -26,7 +26,13 @@ import {
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../interpreter/contracts';
-import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
+import {
+    IInterpreterHashProvider,
+    IInterpreterHashProviderFactory,
+    IPipEnvServiceHelper,
+    IPythonInPathCommandProvider,
+    IWindowsStoreInterpreter
+} from '../interpreter/locators/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
@@ -40,7 +46,7 @@ import {
     GlobalVirtualEnvService
 } from './discovery/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from './discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from './discovery/locators/services/hashProviderFactory';
+import { InterpreterHashProviderFactory } from './discovery/locators/services/hashProviderFactory';
 import { InterpreterWatcherBuilder } from './discovery/locators/services/interpreterWatcherBuilder';
 import { KnownPathsService, KnownSearchPathsForInterpreters } from './discovery/locators/services/KnownPathsService';
 import { PipEnvService } from './discovery/locators/services/pipEnvService';
@@ -117,9 +123,9 @@ export function registerForIOC(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
     serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-    serviceManager.addSingleton<InterpeterHashProviderFactory>(
-        InterpeterHashProviderFactory,
-        InterpeterHashProviderFactory
+    serviceManager.addSingleton<IInterpreterHashProviderFactory>(
+        IInterpreterHashProviderFactory,
+        InterpreterHashProviderFactoryProxy
     );
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
         IVirtualEnvironmentsSearchPathProvider,
@@ -194,5 +200,26 @@ class InterpreterLocatorProgressServiceProxy implements IInterpreterLocatorProgr
     }
     public register(): void {
         this.impl.register();
+    }
+}
+
+@injectable()
+class InterpreterHashProviderFactoryProxy implements IInterpreterHashProviderFactory {
+    private readonly impl: IInterpreterHashProviderFactory;
+    constructor(
+        @inject(IConfigurationService) configService: IConfigurationService,
+        @inject(WindowsStoreInterpreter) windowsStoreInterpreter: IWindowsStoreInterpreter,
+        @inject(WindowsStoreInterpreter) windowsStoreHashProvider: IInterpreterHashProvider,
+        @inject(InterpreterHashProvider) hashProvider: IInterpreterHashProvider
+    ) {
+        this.impl = new InterpreterHashProviderFactory(
+            configService,
+            windowsStoreInterpreter,
+            windowsStoreHashProvider,
+            hashProvider
+        );
+    }
+    public async create(options: { pythonPath: string } | { resource: Uri }): Promise<IInterpreterHashProvider> {
+        return this.impl.create(options);
     }
 }

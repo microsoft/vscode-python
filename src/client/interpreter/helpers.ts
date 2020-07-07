@@ -7,7 +7,6 @@ import { IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { isMacDefaultPythonPath } from '../pythonEnvironments/discovery';
-import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import {
     getInterpreterTypeName,
     InterpreterInformation,
@@ -49,7 +48,7 @@ export class InterpreterHelper implements IInterpreterHelper {
     private readonly persistentFactory: IPersistentStateFactory;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory
+        @inject(IInterpreterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory
     ) {
         this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }

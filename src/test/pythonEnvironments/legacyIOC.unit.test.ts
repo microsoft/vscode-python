@@ -25,7 +25,11 @@ import {
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../client/interpreter/contracts';
-import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
+import {
+    IInterpreterHashProviderFactory,
+    IPipEnvServiceHelper,
+    IPythonInPathCommandProvider
+} from '../../client/interpreter/locators/types';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { PythonInterpreterLocatorService } from '../../client/pythonEnvironments/discovery/locators';
 import { InterpreterLocatorHelper } from '../../client/pythonEnvironments/discovery/locators/helpers';
@@ -42,7 +46,7 @@ import {
     GlobalVirtualEnvService
 } from '../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
+import { InterpreterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import { InterpreterWatcherBuilder } from '../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
 import {
     KnownPathsService,
@@ -91,7 +95,7 @@ suite('Interpreters - Service Registry', () => {
 
             [WindowsStoreInterpreter, WindowsStoreInterpreter],
             [InterpreterHashProvider, InterpreterHashProvider],
-            [InterpeterHashProviderFactory, InterpeterHashProviderFactory]
+            [IInterpreterHashProviderFactory, InterpreterHashProviderFactory]
         ].forEach((mapping) => {
             verify(serviceManager.addSingleton.apply(serviceManager, mapping as any)).once();
         });

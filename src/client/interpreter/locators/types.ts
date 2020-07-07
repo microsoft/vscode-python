@@ -15,6 +15,7 @@ export interface IPipEnvServiceHelper {
     trackWorkspaceFolder(pythonPath: string, workspaceFolder: Uri): Promise<void>;
 }
 
+export const IInterpreterHashProviderFactory = Symbol('IInterpreterHashProviderFactory');
 /**
  * Factory to create a hash provider.
  * Getting the hash of an interpreter can vary based on the type of the interpreter.

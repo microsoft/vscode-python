@@ -3,19 +3,14 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import { Uri } from 'vscode';
 import { IConfigurationService } from '../../../../common/types';
-import {
-    IInterpreterHashProvider,
-    IInterpreterHashProviderFactory,
-    IWindowsStoreInterpreter
-} from '../../../../interpreter/locators/types';
+import { IInterpreterHashProvider, IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
 import { InterpreterHashProvider } from './hashProvider';
 import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
 
-@injectable()
-export class InterpeterHashProviderFactory implements IInterpreterHashProviderFactory {
+export class InterpreterHashProviderFactory {
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
