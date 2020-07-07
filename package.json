@@ -1786,6 +1786,7 @@
                             "CollectNodeLSRequestTiming - experiment",
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
+                            "EnableTrustedNotebooks",
                             "All"
                         ]
                     },
@@ -2259,6 +2260,7 @@
                     "enum": [
                         "Jedi",
                         "Microsoft",
+                        "Pylance",
                         "None"
                     ],
                     "default": "Jedi",
