@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, Uri } from 'vscode';
+import { IFileSystem } from '../common/platform/types';
 import { IDisposableRegistry } from '../common/types';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -55,7 +56,7 @@ import { GetInterpreterLocatorOptions } from './discovery/locators/types';
 import { PythonInterpreter } from './info';
 
 export function registerForIOC(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
+    serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelperProxy);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         PythonInterpreterLocatorServiceProxy,
@@ -158,5 +159,19 @@ class PythonInterpreterLocatorServiceProxy implements IInterpreterLocatorService
     }
     public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]> {
         return this.impl.getInterpreters(resource, options);
+    }
+}
+
+@injectable()
+class InterpreterLocatorHelperProxy implements IInterpreterLocatorHelper {
+    private readonly impl: IInterpreterLocatorHelper;
+    constructor(
+        @inject(IFileSystem) fs: IFileSystem,
+        @inject(IPipEnvServiceHelper) pipEnvServiceHelper: IPipEnvServiceHelper
+    ) {
+        this.impl = new InterpreterLocatorHelper(fs, pipEnvServiceHelper);
+    }
+    public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
+        return this.impl.mergeInterpreters(interpreters);
     }
 }
