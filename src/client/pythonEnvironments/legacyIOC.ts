@@ -64,7 +64,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IInterpreterLocatorProgressService>(
         IInterpreterLocatorProgressService,
-        InterpreterLocatorProgressService
+        InterpreterLocatorProgressServiceProxy
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
@@ -173,5 +173,26 @@ class InterpreterLocatorHelperProxy implements IInterpreterLocatorHelper {
     }
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
         return this.impl.mergeInterpreters(interpreters);
+    }
+}
+
+@injectable()
+class InterpreterLocatorProgressServiceProxy implements IInterpreterLocatorProgressService {
+    private readonly impl: IInterpreterLocatorProgressService;
+    constructor(
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IDisposableRegistry) disposables: Disposable[]
+    ) {
+        this.impl = new InterpreterLocatorProgressService(serviceContainer, disposables);
+    }
+
+    public get onRefreshing(): Event<void> {
+        return this.impl.onRefreshing;
+    }
+    public get onRefreshed(): Event<void> {
+        return this.impl.onRefreshed;
+    }
+    public register(): void {
+        this.impl.register();
     }
 }
