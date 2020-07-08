@@ -22,6 +22,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     private currentlySelectedWorkspaceFolder: Resource;
     private readonly autoSelection: IInterpreterAutoSelectionService;
     private interpreterPath: string | undefined;
+    private wasDisplayed?: boolean;
 
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
@@ -42,6 +43,15 @@ export class InterpreterDisplay implements IInterpreterDisplay {
             this,
             disposableRegistry
         );
+    }
+    public show() {
+        if (!this.wasDisplayed) {
+            return;
+        }
+        this.statusBar.show();
+    }
+    public hide() {
+        this.statusBar.hide();
     }
     public async refresh(resource?: Uri) {
         // Use the workspace Uri if available
@@ -83,6 +93,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
             this.statusBar.text = '$(alert) Select Python Interpreter';
             this.currentlySelectedInterpreterPath = undefined;
         }
+        this.wasDisplayed = true;
         this.statusBar.show();
     }
 }

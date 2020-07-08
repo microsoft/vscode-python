@@ -51,6 +51,7 @@ import {
     IShebangCodeLensProvider
 } from './contracts';
 import { InterpreterDisplay } from './display';
+import { InterpreterStatusbarDisplayManager } from './display/displayManager';
 import { InterpreterSelectionTip } from './display/interpreterSelectionTip';
 import { InterpreterLocatorProgressStatubarHandler } from './display/progressDisplay';
 import { ShebangCodeLensProvider } from './display/shebangCodeLensProvider';
@@ -162,6 +163,10 @@ export function registerInterpreterTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         PreWarmActivatedEnvironmentVariables
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        InterpreterStatusbarDisplayManager
     );
 }
 
