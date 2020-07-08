@@ -63,24 +63,18 @@ export class NotebookTrustHandler implements IExtensionSingleActivationService {
             DataScience.launchNotebookTrustPrompt(),
             ...prompts
         );
-        if (!selection) {
+        if (selection !== DataScience.trustNotebook() || model.isTrusted) {
             return;
         }
-        if (model && selection === DataScience.trustNotebook() && !model.isTrusted) {
-            try {
-                const contents = model.getContent();
-                await this.trustService.trustNotebook(model.file, contents);
-                // Update model trust
-                model.update({
-                    source: 'user',
-                    kind: 'updateTrust',
-                    oldDirty: model.isDirty,
-                    newDirty: model.isDirty,
-                    isNotebookTrusted: true
-                });
-            } catch (err) {
-                traceError(err);
-            }
-        }
+        const contents = model.getContent();
+        await this.trustService.trustNotebook(model.file, contents);
+        // Update model trust
+        model.update({
+            source: 'user',
+            kind: 'updateTrust',
+            oldDirty: model.isDirty,
+            newDirty: model.isDirty,
+            isNotebookTrusted: true
+        });
     }
 }
