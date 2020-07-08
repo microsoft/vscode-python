@@ -363,7 +363,6 @@ import {
     IInterpreterLocatorService,
     IInterpreterService,
     IInterpreterVersionService,
-    IInterpreterWatcher,
     IInterpreterWatcherBuilder,
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
