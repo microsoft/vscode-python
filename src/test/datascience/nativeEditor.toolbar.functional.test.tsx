@@ -27,6 +27,8 @@ enum Button {
     Save = 8,
     Export = 9
 }
+const allowList: Button[] = []; // List of buttons to be enabled while a notebook is untrusted
+
 suite('DataScience Native Toolbar', () => {
     const noopAny: any = noop;
     let props: INativeEditorToolbarProps;
@@ -267,18 +269,16 @@ suite('DataScience Native Toolbar', () => {
                 shouldShowTrustMessage: true
             };
         });
-        test('All toolbar buttons are disabled', () => {
+        test('All toolbar buttons are disabled unless explicitly added to allowlist', () => {
             mountToolbar();
-            assertDisabled(Button.RunAll);
-            assertDisabled(Button.RunAbove);
-            assertDisabled(Button.RunBelow);
-            assertDisabled(Button.RestartKernel);
-            assertDisabled(Button.InterruptKernel);
-            assertDisabled(Button.AddCell);
-            assertDisabled(Button.ClearAllOutput);
-            assertDisabled(Button.VariableExplorer);
-            assertDisabled(Button.Save);
-            assertDisabled(Button.Export);
+            const buttons = wrapper.find(ImageButton);
+            let index = 0;
+            buttons.forEach((_b) => {
+                if (!allowList.includes(index)) {
+                    assertDisabled(index);
+                }
+                index += 1;
+            });
         });
         test('Trust message shows "Not Trusted"', () => {
             mountToolbar();
