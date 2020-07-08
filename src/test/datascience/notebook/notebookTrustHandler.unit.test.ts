@@ -5,7 +5,7 @@
 
 import { assert } from 'chai';
 import { teardown } from 'mocha';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, TextDocument, Uri } from 'vscode';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
@@ -14,7 +14,6 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import { NotebookTrustHandler } from '../../../client/datascience/notebook/notebookTrustHandler';
-import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import {
     INotebookEditor,
     INotebookEditorProvider,
@@ -29,27 +28,22 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 suite('Data Science - NativeNotebook TrustHandler', () => {
     let trustHandler: IExtensionSingleActivationService;
     let trustService: ITrustService;
-    let contentProvider: INotebookContentProvider;
     let vscNotebook: IVSCodeNotebook;
     let editorProvider: INotebookEditorProvider;
     let fs: IFileSystem;
     let disposables: IDisposable[];
     let onDidTrustNotebook: EventEmitter<void>;
-    let onDidChangeNotebookDocument: EventEmitter<NotebookDocument>;
     setup(async () => {
         disposables = [];
         trustService = mock<ITrustService>();
-        contentProvider = mock<INotebookContentProvider>();
         vscNotebook = mock<IVSCodeNotebook>();
         editorProvider = mock<INotebookEditorProvider>();
         fs = mock<IFileSystem>();
         onDidTrustNotebook = new EventEmitter<void>();
-        onDidChangeNotebookDocument = new EventEmitter<NotebookDocument>();
         when(trustService.onDidSetNotebookTrust).thenReturn(onDidTrustNotebook.event);
         when(fs.arePathsSame(anything(), anything())).thenCall((a, b) => a === b); // Dirty simple file compare.
         trustHandler = new NotebookTrustHandler(
             instance(trustService),
-            instance(contentProvider),
             instance(vscNotebook),
             instance(editorProvider),
             instance(fs),
@@ -141,8 +135,6 @@ suite('Data Science - NativeNotebook TrustHandler', () => {
         assertDocumentTrust(nb1, false);
         assertDocumentTrust(nb2, false);
         assertDocumentTrust(nb2a, false);
-        // & no document was updated.
-        verify(contentProvider.notifyChangesToDocument(anything())).never();
 
         // Trigger a change, after trusting second nb/model.
         when(model2.isTrusted).thenReturn(true);
@@ -152,7 +144,5 @@ suite('Data Science - NativeNotebook TrustHandler', () => {
         assertDocumentTrust(nb1, false);
         assertDocumentTrust(nb2, true);
         assertDocumentTrust(nb2a, false); // This is a document from a different content provider, we should modify this.
-        verify(contentProvider.notifyChangesToDocument(nb2)).once();
-        verify(contentProvider.notifyChangesToDocument(anything())).once();
     });
 });

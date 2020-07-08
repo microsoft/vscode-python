@@ -20,8 +20,13 @@ import { traceError } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { VSCodeNativeTelemetry } from '../../constants';
 import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
+import { INotebookModel } from '../../types';
 import { findMappedNotebookCellModel } from './cellMappers';
-import { createCellFromVSCNotebookCell, updateVSCNotebookCellMetadata } from './helpers';
+import {
+    createCellFromVSCNotebookCell,
+    createVSCCellOutputsFromOutputs,
+    updateVSCNotebookCellMetadata
+} from './helpers';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -53,9 +58,8 @@ export function updateCellModelWithChangesToVSCCell(
 
 /**
  * Updates a notebook document as a result of trusting it.
- * @returns `true` if document has been updated, else `false`.
  */
-export function updateVSCNotebookAfterTrustingNotebook(document: NotebookDocument) {
+export function updateVSCNotebookAfterTrustingNotebook(document: NotebookDocument, model: INotebookModel) {
     const areAllCellsEditableAndRunnable = document.cells.every((cell) => {
         if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
             return cell.metadata.editable;
@@ -69,8 +73,9 @@ export function updateVSCNotebookAfterTrustingNotebook(document: NotebookDocumen
         document.metadata.editable &&
         document.metadata.runnable;
 
+    // If already trusted, then nothing to do.
     if (isDocumentEditableAndRunnable && areAllCellsEditableAndRunnable) {
-        return false;
+        return;
     }
 
     document.metadata.cellEditable = true;
@@ -83,8 +88,14 @@ export function updateVSCNotebookAfterTrustingNotebook(document: NotebookDocumen
         if (cell.cellKind !== vscodeNotebookEnums.CellKind.Markdown) {
             cell.metadata.runnable = true;
         }
+
+        // Restore the output once we trust the notebook.
+        const cellModel = findMappedNotebookCellModel(cell, model.cells);
+        if (cellModel) {
+            // tslint:disable-next-line: no-any
+            cell.outputs = createVSCCellOutputsFromOutputs(cellModel.data.outputs as any);
+        }
     });
-    return true;
 }
 
 export function clearCellForExecution(vscCell: NotebookCell, model: VSCodeNotebookModel) {
