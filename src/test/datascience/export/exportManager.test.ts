@@ -11,7 +11,7 @@ import { ExportManager } from '../../../client/datascience/export/exportManager'
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
 import { ExportFormat, IExport, IExportManagerFilePicker } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
-import { INotebookModel } from '../../../client/datascience/types';
+import { INotebookModel, INotebookStorage } from '../../../client/datascience/types';
 
 suite('Data Science - Export Manager', () => {
     let exporter: ExportManager;
@@ -21,6 +21,7 @@ suite('Data Science - Export Manager', () => {
     let fileSystem: IFileSystem;
     let exportUtil: ExportUtil;
     let filePicker: IExportManagerFilePicker;
+    let notebookStorage: INotebookStorage;
     const model = instance(mock<INotebookModel>());
     setup(async () => {
         exportUtil = mock<ExportUtil>();
@@ -31,6 +32,7 @@ suite('Data Science - Export Manager', () => {
         exportPython = mock<IExport>();
         exportHtml = mock<IExport>();
         exportPdf = mock<IExport>();
+        notebookStorage = mock<INotebookStorage>();
         // tslint:disable-next-line: no-any
         (instance(editor) as any).then = undefined;
         // tslint:disable-next-line: no-any
@@ -43,6 +45,8 @@ suite('Data Science - Export Manager', () => {
         when(fileSystem.createTemporaryFile(anything())).thenResolve(instance(mock<TemporaryFile>()));
         when(exportPdf.export(anything(), anything())).thenResolve();
         when(filePicker.getExportFileLocation(anything(), anything())).thenResolve(Uri.file('foo'));
+        when(notebookStorage.load(anything())).thenResolve(model);
+        when(notebookStorage.save(anything(), anything())).thenResolve();
         // tslint:disable-next-line: no-any
         when(reporter.createProgressIndicator(anything())).thenReturn(instance(mock<IDisposable>()) as any);
         exporter = new ExportManager(
@@ -52,7 +56,8 @@ suite('Data Science - Export Manager', () => {
             instance(fileSystem),
             instance(filePicker),
             instance(reporter),
-            instance(exportUtil)
+            instance(exportUtil),
+            instance(notebookStorage)
         );
     });
 

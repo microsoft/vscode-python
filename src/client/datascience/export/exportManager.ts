@@ -1,9 +1,9 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
 import { IFileSystem } from '../../common/platform/types';
 import { ProgressReporter } from '../progress/progressReporter';
-import { INotebookModel } from '../types';
+import { INotebookModel, INotebookStorage } from '../types';
 import { ExportUtil } from './exportUtil';
 import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './types';
 
@@ -16,17 +16,12 @@ export class ExportManager implements IExportManager {
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IExportManagerFilePicker) private readonly filePicker: IExportManagerFilePicker,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
-        @inject(ExportUtil) private readonly exportUtil: ExportUtil
+        @inject(ExportUtil) private readonly exportUtil: ExportUtil,
+        @inject(INotebookStorage) private notebookStorage: INotebookStorage
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
         let target;
-
-        if (format === ExportFormat.pdf) {
-            // When exporting to PDF we need to remove any SVG output. This is due to an error
-            // with nbconvert and a dependency of its called InkScape.
-            this.exportUtil.removeSvgs(model);
-        }
 
         if (format !== ExportFormat.python) {
             target = await this.filePicker.getExportFileLocation(format, model.file);
@@ -46,6 +41,14 @@ export class ExportManager implements IExportManager {
         const tempDir = await this.exportUtil.generateTempDir();
         const sourceFilePath = await this.exportUtil.makeFileInDirectory(model, fileName, tempDir.path);
         const source = Uri.file(sourceFilePath);
+
+        if (format === ExportFormat.pdf) {
+            // When exporting to PDF we need to remove any SVG output. This is due to an error
+            // with nbconvert and a dependency of its called InkScape.
+            const tempModel = await this.notebookStorage.load(source);
+            this.exportUtil.removeSvgs(tempModel);
+            await this.notebookStorage.save(tempModel, new CancellationTokenSource().token);
+        }
 
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
         try {
