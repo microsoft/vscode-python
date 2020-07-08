@@ -438,8 +438,11 @@ class BaseLocatorServiceProxy implements IInterpreterLocatorService {
     public get hasInterpreters(): Promise<boolean> {
         return this.impl.hasInterpreters;
     }
-    public get didTriggerInterpreterSuggestions(): boolean | undefined {
-        return this.impl.didTriggerInterpreterSuggestions;
+    public get didTriggerInterpreterSuggestions(): boolean {
+        return this.impl.didTriggerInterpreterSuggestions as boolean;
+    }
+    public set didTriggerInterpreterSuggestions(value: boolean) {
+        this.impl.didTriggerInterpreterSuggestions = value;
     }
     public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]> {
         return this.impl.getInterpreters(resource, options);
