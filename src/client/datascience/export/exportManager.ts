@@ -19,11 +19,15 @@ export class ExportManager implements IExportManager {
         @inject(ExportUtil) private readonly exportUtil: ExportUtil
     ) {}
 
-    public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
+    public async export(
+        format: ExportFormat,
+        model: INotebookModel,
+        defaultFileName?: string
+    ): Promise<Uri | undefined> {
         let target;
 
         if (format !== ExportFormat.python) {
-            target = await this.filePicker.getExportFileLocation(format, model.file);
+            target = await this.filePicker.getExportFileLocation(format, model.file, defaultFileName);
             if (!target) {
                 return;
             }

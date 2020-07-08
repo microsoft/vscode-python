@@ -22,10 +22,14 @@ export class ExportManagerFileOpener implements IExportManager {
         @inject(IBrowserService) private readonly browserService: IBrowserService
     ) {}
 
-    public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
+    public async export(
+        format: ExportFormat,
+        model: INotebookModel,
+        defaultFileName?: string
+    ): Promise<Uri | undefined> {
         let uri: Uri | undefined;
         try {
-            uri = await this.manager.export(format, model);
+            uri = await this.manager.export(format, model, defaultFileName);
         } catch (e) {
             let msg = e;
             traceError('Export failed', e);

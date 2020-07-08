@@ -437,7 +437,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             this.stopProgress();
         }
         if (model) {
-            this.commandManager.executeCommand(Commands.Export, model);
+            this.commandManager.executeCommand(Commands.Export, model, this.lastFile);
         }
     }
 

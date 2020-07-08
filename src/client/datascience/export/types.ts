@@ -9,7 +9,7 @@ export enum ExportFormat {
 
 export const IExportManager = Symbol('IExportManager');
 export interface IExportManager {
-    export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined>;
+    export(format: ExportFormat, model: INotebookModel, defaultFileName?: string): Promise<Uri | undefined>;
 }
 
 export const IExport = Symbol('IExport');
@@ -19,5 +19,5 @@ export interface IExport {
 
 export const IExportManagerFilePicker = Symbol('IExportManagerFilePicker');
 export interface IExportManagerFilePicker {
-    getExportFileLocation(format: ExportFormat, source: Uri): Promise<Uri | undefined>;
+    getExportFileLocation(format: ExportFormat, source: Uri, defaultFileName?: string): Promise<Uri | undefined>;
 }

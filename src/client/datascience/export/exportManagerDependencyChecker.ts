@@ -16,7 +16,11 @@ export class ExportManagerDependencyChecker implements IExportManager {
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter
     ) {}
 
-    public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
+    public async export(
+        format: ExportFormat,
+        model: INotebookModel,
+        defaultFileName?: string
+    ): Promise<Uri | undefined> {
         // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
         try {
@@ -29,6 +33,6 @@ export class ExportManagerDependencyChecker implements IExportManager {
         } finally {
             reporter.dispose();
         }
-        return this.manager.export(format, model);
+        return this.manager.export(format, model, defaultFileName);
     }
 }
