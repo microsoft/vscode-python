@@ -24,6 +24,7 @@ import {
     IInterpreterWatcherBuilder,
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
+    IPipEnvService,
     IVirtualEnvironmentsSearchPathProvider,
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
@@ -105,7 +106,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
-        PipEnvServiceProxy,
+        PipEnvLocatorServiceProxy,
         PIPENV_SERVICE
     );
 
@@ -120,6 +121,7 @@ export function registerForIOC(serviceManager: IServiceManager) {
         KNOWN_PATH_SERVICE
     );
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaServiceProxy);
+    serviceManager.addSingleton<IPipEnvService>(IPipEnvService, PipEnvServiceProxy);
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelperProxy);
     serviceManager.addSingleton<IPythonInPathCommandProvider>(
         IPythonInPathCommandProvider,
@@ -284,6 +286,22 @@ class GlobalVirtualEnvironmentsSearchPathProviderProxy implements IVirtualEnviro
     }
     public async getSearchPaths(resource?: Uri): Promise<string[]> {
         return this.impl.getSearchPaths(resource);
+    }
+}
+
+@injectable()
+class PipEnvServiceProxy {
+    private readonly impl: IPipEnvService;
+    constructor(@inject(IInterpreterLocatorService) @named(PIPENV_SERVICE) proxy: IPipEnvService) {
+        // tslint:disable-next-line:no-any
+        const locator = (proxy as unknown) as any;
+        this.impl = locator.pipEnvService;
+    }
+    public async isRelatedPipEnvironment(dir: string, pythonPath: string): Promise<boolean> {
+        return this.impl.isRelatedPipEnvironment(dir, pythonPath);
+    }
+    public get executable(): string {
+        return this.impl.executable;
     }
 }
 
@@ -505,9 +523,12 @@ class KnownPathsServiceProxy extends BaseLocatorServiceProxy {
 }
 
 @injectable()
-class PipEnvServiceProxy extends BaseLocatorServiceProxy {
+class PipEnvLocatorServiceProxy extends BaseLocatorServiceProxy {
+    // This is only meant for consumption by PipEnvServiceProxy.
+    public readonly pipEnvService: IPipEnvService;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(new PipEnvService(serviceContainer));
+        this.pipEnvService = (this.impl as unknown) as IPipEnvService;
     }
 }
 

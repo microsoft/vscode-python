@@ -89,7 +89,7 @@ export interface IInterpreterHelper {
 }
 
 export const IPipEnvService = Symbol('IPipEnvService');
-export interface IPipEnvService extends IInterpreterLocatorService {
+export interface IPipEnvService {
     executable: string;
     isRelatedPipEnvironment(dir: string, pythonPath: string): Promise<boolean>;
 }

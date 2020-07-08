@@ -10,7 +10,7 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../client/common/process/types';
-import { IInterpreterLocatorService, IPipEnvService, PIPENV_SERVICE } from '../../client/interpreter/contracts';
+import { IPipEnvService } from '../../client/interpreter/contracts';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IServiceContainer } from '../../client/ioc/types';
 
@@ -51,9 +51,7 @@ suite('Virtual environment manager', () => {
         serviceContainer
             .setup((s) => s.get(TypeMoq.It.isValue(IProcessServiceFactory)))
             .returns(() => TypeMoq.Mock.ofType<IProcessServiceFactory>().object);
-        serviceContainer
-            .setup((s) => s.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(PIPENV_SERVICE)))
-            .returns(() => pipEnvService.object);
+        serviceContainer.setup((s) => s.get(TypeMoq.It.isValue(IPipEnvService))).returns(() => pipEnvService.object);
         serviceContainer
             .setup((s) => s.get(TypeMoq.It.isValue(IFileSystem)))
             .returns(() => TypeMoq.Mock.ofType<IFileSystem>().object);
@@ -85,9 +83,7 @@ suite('Virtual environment manager', () => {
         pipEnvService
             .setup((w) => w.isRelatedPipEnvironment(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(isPipEnvironment));
-        serviceContainer
-            .setup((s) => s.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(PIPENV_SERVICE)))
-            .returns(() => pipEnvService.object);
+        serviceContainer.setup((s) => s.get(TypeMoq.It.isValue(IPipEnvService))).returns(() => pipEnvService.object);
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
         if (resource) {
