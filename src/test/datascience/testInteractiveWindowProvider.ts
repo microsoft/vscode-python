@@ -36,8 +36,8 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
             serviceContainer,
             asyncRegistry,
             disposables,
-            // fileSystem,
-            // errorHandler
+            fileSystem,
+            errorHandler
         );
 
         // During a test, the 'create' function will end up being called during a live share. We need to hook its result too

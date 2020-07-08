@@ -5,16 +5,10 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { IDataScienceSettings, IDisposableRegistry, IPythonSettings } from '../../../client/common/types';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
 import { INotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
-import {
-    IJupyterNotebookProvider,
-    INotebook,
-    INotebookEditorProvider,
-    IRawNotebookProvider
-} from '../../../client/datascience/types';
+import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../client/datascience/types';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -33,8 +27,6 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
 // tslint:disable: max-func-body-length
 suite('Data Science - NotebookProvider', () => {
     let notebookProvider: NotebookProvider;
-    let fileSystem: IFileSystem;
-    let notebookEditorProvider: INotebookEditorProvider;
     let disposableRegistry: IDisposableRegistry;
     let jupyterNotebookProvider: IJupyterNotebookProvider;
     let rawNotebookProvider: IRawNotebookProvider;
@@ -42,8 +34,6 @@ suite('Data Science - NotebookProvider', () => {
     let dataScienceSettings: IDataScienceSettings;
 
     setup(() => {
-        fileSystem = mock<IFileSystem>();
-        notebookEditorProvider = mock<INotebookEditorProvider>();
         disposableRegistry = mock<IDisposableRegistry>();
         jupyterNotebookProvider = mock<IJupyterNotebookProvider>();
         rawNotebookProvider = mock<IRawNotebookProvider>();
@@ -60,8 +50,6 @@ suite('Data Science - NotebookProvider', () => {
         when(rawNotebookProvider.supported).thenReturn(() => Promise.resolve(false));
 
         notebookProvider = new NotebookProvider(
-            instance(fileSystem),
-            instance(notebookEditorProvider),
             instance(disposableRegistry),
             instance(rawNotebookProvider),
             instance(jupyterNotebookProvider),

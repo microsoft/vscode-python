@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IWorkspaceService } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
@@ -17,8 +16,6 @@ import {
     GetNotebookOptions,
     IJupyterNotebookProvider,
     INotebook,
-    INotebookEditor,
-    INotebookEditorProvider,
     INotebookProvider,
     INotebookProviderConnection,
     IRawNotebookProvider
@@ -38,15 +35,12 @@ export class NotebookProvider implements INotebookProvider {
         return this._onSessionStatusChanged.event;
     }
     constructor(
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(INotebookStorageProvider) storageProvider: INotebookStorageProvider
     ) {
-        disposables.push(editorProvider.onDidCloseNotebookEditor(this.onDidCloseNotebookEditor, this));
         disposables.push(storageProvider.onSavedAs(this.onSavedAs, this));
         this.rawNotebookProvider
             .supported()
@@ -179,18 +173,6 @@ export class NotebookProvider implements INotebookProvider {
         promise.catch(removeFromCache);
     }
 
-    private async onDidCloseNotebookEditor(editor: INotebookEditor) {
-        // First find all notebooks associated with this editor (ipynb file).
-        const editors = this.editorProvider.editors.filter(
-            (e) => this.fs.arePathsSame(e.file.fsPath, editor.file.fsPath) && e !== editor
-        );
-
-        // If we have no editors for this file, then dispose the notebook.
-        if (editors.length === 0) {
-            await this.disposeNotebook(editor.file);
-        }
-    }
-
     private async onSavedAs(e: { new: Uri; old: Uri }) {
         // Swap the Uris when a notebook is saved as a different file.
         const notebookPromise = this.notebooks.get(e.old.toString());
@@ -198,21 +180,5 @@ export class NotebookProvider implements INotebookProvider {
             this.notebooks.set(e.new.toString(), notebookPromise);
             this.notebooks.delete(e.old.toString());
         }
-    }
-
-    private async disposeNotebook(resource: Uri) {
-        // First find all notebooks associated with this editor (ipynb file).
-        const notebookPromise = this.notebooks.get(resource.fsPath);
-        if (!notebookPromise) {
-            // Possible it was closed before a notebook could be created.
-            return;
-        }
-        this.notebooks.delete(resource.fsPath);
-        const notebook = await notebookPromise.catch(noop);
-        if (!notebook) {
-            return;
-        }
-
-        await notebook.dispose().catch(noop);
     }
 }
