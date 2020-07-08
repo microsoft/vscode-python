@@ -18,7 +18,7 @@ import { IDisposable } from '../../../client/common/types';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
 import { findMappedNotebookCellModel } from '../../../client/datascience/notebook/helpers/cellMappers';
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
-import { ICell, INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
+import { ICell, INotebookEditorProvider, INotebookModel, INotebookProvider } from '../../../client/datascience/types';
 import { createEventHandler, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
@@ -226,17 +226,51 @@ export function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
         cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Success
     );
 }
+export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell) {
+    await waitForCondition(
+        async () => assertHasExecutionCompletedSuccessfully(cell),
+        1_000,
+        `Cell ${cell.notebook.cells.indexOf(cell) + 1} did not complete successfully`
+    );
+}
+export function assertExecutionOrderInVSCCell(cell: NotebookCell, executionOrder?: number) {
+    assert.equal(cell.metadata.executionOrder, executionOrder);
+    return true;
+}
+export async function waitForExecutionOrderInVSCCell(cell: NotebookCell, executionOrder: number | undefined) {
+    await waitForCondition(
+        async () => assertExecutionOrderInVSCCell(cell, executionOrder),
+        1_000,
+        `Execution count not '${executionOrder}' for Cell ${cell.notebook.cells.indexOf(cell) + 1}`
+    );
+}
+export async function waitForExecutionOrderInCell(
+    cell: ICell,
+    executionOrder: number | undefined,
+    model: INotebookModel
+) {
+    await waitForCondition(
+        async () => {
+            if (executionOrder === undefined || executionOrder === null) {
+                return cell.data.execution_count === null;
+            }
+            return cell.data.execution_count === executionOrder;
+        },
+        1_000,
+        `Execution count not '${executionOrder}' for ICell ${model.cells.indexOf(cell) + 1}`
+    );
+}
 export function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
     return (
         (cell.metadata.executionOrder ?? 0) > 0 &&
         cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Error
     );
 }
-export function hasOutputInVSCode(cell: NotebookCell) {
-    assert.ok(cell.outputs.length, 'No output');
+export function assertHasOutputInVSCell(cell: NotebookCell) {
+    assert.ok(cell.outputs.length, `No output in Cell ${cell.notebook.cells.indexOf(cell) + 1}`);
 }
-export function hasOutputInICell(cell: ICell) {
-    assert.ok((cell.data.outputs as nbformat.IOutput[]).length, 'No output');
+export function assertHasOutputInICell(cell: ICell, model: INotebookModel) {
+    assert.ok((cell.data.outputs as nbformat.IOutput[]).length, `No output in ICell ${model.cells.indexOf(cell) + 1}`);
 }
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
     const cellOutputs = cell.outputs;
@@ -249,6 +283,13 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
         expect(outputText).to.include(text, 'Output does not contain provided text');
     }
     return true;
+}
+export async function waitForTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
+    await waitForCondition(
+        async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),
+        1_000,
+        `Output does not contain provided text '${text}' for Cell ${cell.notebook.cells.indexOf(cell) + 1}`
+    );
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
     const cellOutputs = cell.outputs;
@@ -270,6 +311,27 @@ export function assertHasTextOutputInICell(cell: ICell, text: string, index: num
 export function assertVSCCellIsRunning(cell: NotebookCell) {
     assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
     return true;
+}
+export async function waitForVSCCellHasEmptyOutput(cell: NotebookCell) {
+    await waitForCondition(
+        async () => cell.outputs.length === 0,
+        1_000,
+        `Cell ${cell.notebook.cells.indexOf(cell) + 1} output did not get cleared`
+    );
+}
+export async function waitForCellHasEmptyOutput(cell: ICell, model: INotebookModel) {
+    await waitForCondition(
+        async () => !Array.isArray(cell.data.outputs) || cell.data.outputs.length === 0,
+        1_000,
+        `ICell ${model.cells.indexOf(cell) + 1} output did not get cleared`
+    );
+}
+export async function waitForVSCCellIsRunning(cell: NotebookCell) {
+    await waitForCondition(
+        async () => assertVSCCellIsRunning(cell),
+        1_000,
+        `Cell ${cell.notebook.cells.indexOf(cell) + 1} did not start`
+    );
 }
 export function assertVSCCellIsNotRunning(cell: NotebookCell) {
     assert.notEqual(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);

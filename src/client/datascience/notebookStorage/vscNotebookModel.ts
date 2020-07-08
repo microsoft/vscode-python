@@ -47,8 +47,8 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             cell.data.source = splitMultilineString(source);
         }
     }
-    public clearCellOutput(cell: ICell): void {
-        if (cell.data.cell_type === 'code') {
+    public clearCellOutput(cell: ICell, clearExecutionCount: boolean): void {
+        if (cell.data.cell_type === 'code' && clearExecutionCount) {
             cell.data.execution_count = null;
         }
         if (cell.data.metadata.vscode) {

@@ -22,6 +22,7 @@ import { INotebookStorageProvider } from '../interactive-ipynb/notebookStoragePr
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { IDataScienceErrorHandler, INotebook, INotebookEditorProvider, INotebookProvider } from '../types';
 import { findMappedNotebookCellModel } from './helpers/cellMappers';
+import { clearCellForExecution } from './helpers/cellUpdateHelpers';
 import {
     handleUpdateDisplayDataMessage,
     hasTransientOutputForAnotherCell,
@@ -217,7 +218,6 @@ export class NotebookExecutionService implements INotebookExecutionService {
 
         const deferred = createDeferred<NotebookCellRunState>();
         const executionStopWatch = new StopWatch();
-
         wrappedToken.onCancellationRequested(() => {
             if (deferred.completed) {
                 return;
@@ -231,18 +231,21 @@ export class NotebookExecutionService implements INotebookExecutionService {
             }
         });
 
+        // Ensure we clear the cell state and trigger a change.
+        clearCellForExecution(cell, model);
         cell.metadata.runStartTime = new Date().getTime();
+        this.contentProvider.notifyChangesToDocument(document);
 
         let subscription: Subscription | undefined;
         let modelClearedEventHandler: IDisposable | undefined;
         try {
-            nb.clear(cell.uri.fsPath); // NOSONAR
+            nb.clear(cell.uri.toString()); // NOSONAR
             editor.notifyExecution(cell.document.getText());
             const observable = nb.executeObservable(
                 cell.document.getText(),
                 document.fileName,
                 0,
-                cell.uri.fsPath,
+                cell.uri.toString(),
                 false
             );
             subscription = observable?.subscribe(
@@ -251,13 +254,13 @@ export class NotebookExecutionService implements INotebookExecutionService {
                         modelClearedEventHandler = model.changed((e) => {
                             if (e.kind === 'clear') {
                                 // If cell output has been cleared, then clear the output in the observed executable cell.
-                                // Else if user clears output while execuitng a cell, we add it back.
+                                // Else if user clears output while executing a cell, we add it back.
                                 cells.forEach((c) => (c.data.outputs = []));
                             }
                         });
                     }
                     const rawCellOutput = cells
-                        .filter((item) => item.id === cell.uri.fsPath)
+                        .filter((item) => item.id === cell.uri.toString())
                         .flatMap((item) => (item.data.outputs as unknown) as nbformat.IOutput[])
                         .filter((output) => !hasTransientOutputForAnotherCell(output));
 

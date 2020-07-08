@@ -23,6 +23,7 @@ import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
 import { findMappedNotebookCellModel } from './cellMappers';
 import { createCellFromVSCNotebookCell, updateVSCNotebookCellMetadata } from './helpers';
 // tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**
  * If a VS Code cell changes, then ensure we update the corresponding cell in our INotebookModel.
@@ -50,6 +51,18 @@ export function updateCellModelWithChangesToVSCCell(
     }
 }
 
+export function clearCellForExecution(vscCell: NotebookCell, model: VSCodeNotebookModel) {
+    vscCell.metadata.statusMessage = undefined;
+    vscCell.metadata.executionOrder = undefined;
+    vscCell.metadata.lastRunDuration = undefined;
+    vscCell.metadata.runStartTime = undefined;
+    vscCell.outputs = [];
+
+    const cell = findMappedNotebookCellModel(vscCell, model.cells);
+    model.clearCellOutput(cell, true);
+    updateVSCNotebookCellMetadata(vscCell.metadata, cell);
+}
+
 /**
  * We're not interested in changes to cell output as this happens as a result of us pushing changes to the notebook.
  * I.e. cell output is already in our INotebookModel.
@@ -61,17 +74,23 @@ function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: VSCodeNo
         return false;
     }
     // In the VS Code cells, also clear the cell results, execution counts and times.
-    change.cells.forEach((cell) => {
-        cell.metadata.runState = undefined;
-        cell.metadata.statusMessage = undefined;
-        cell.metadata.executionOrder = undefined;
-        cell.metadata.lastRunDuration = undefined;
-        cell.metadata.runStartTime = undefined;
-    });
-    // If a cell has been cleared, then clear the corresponding ICell (cell in INotebookModel).
     change.cells.forEach((vscCell) => {
+        // If we're not in the middle of an execution, then don't clear its status.
+        // Else a cell isn't cancellable.
+        if (vscCell.metadata.runState !== vscodeNotebookEnums.NotebookCellRunState.Running) {
+            vscCell.metadata.runState = undefined;
+            vscCell.metadata.executionOrder = undefined;
+        }
+        vscCell.metadata.statusMessage = undefined;
+        vscCell.metadata.lastRunDuration = undefined;
+        vscCell.metadata.runStartTime = undefined;
+
+        // If a cell has been cleared, then clear the corresponding ICell (cell in INotebookModel).
         const cell = findMappedNotebookCellModel(vscCell, model.cells);
-        model.clearCellOutput(cell);
+        // If we're not in the middle of an execution, then don't clear its status.
+        // Else a cell isn't cancellable.
+        const clearExecutionCount = vscCell.metadata.runState !== vscodeNotebookEnums.NotebookCellRunState.Running;
+        model.clearCellOutput(cell, clearExecutionCount);
         updateVSCNotebookCellMetadata(vscCell.metadata, cell);
     });
 
