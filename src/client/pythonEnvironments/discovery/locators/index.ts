@@ -17,10 +17,9 @@ import {
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../../interpreter/contracts';
-import { IInterpreterFilter } from '../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonInterpreter } from '../../info';
-import { InterpreterFilter } from './services/interpreterFilter';
+import { isHiddenInterpreter } from './services/interpreterFilter';
 import { GetInterpreterLocatorOptions } from './types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -38,10 +37,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     private readonly interpreterLocatorHelper: IInterpreterLocatorHelper;
     private readonly _hasInterpreters: Deferred<boolean>;
 
-    constructor(
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(InterpreterFilter) private readonly interpreterFilter: IInterpreterFilter
-    ) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this._hasInterpreters = createDeferred<boolean>();
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
@@ -96,7 +92,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         const items = flatten(listOfInterpreters)
             .filter((item) => !!item)
             .map((item) => item!)
-            .filter((item) => !this.interpreterFilter.isHiddenInterpreter(item));
+            .filter((item) => !isHiddenInterpreter(item));
         this._hasInterpreters.resolve(items.length > 0);
         return this.interpreterLocatorHelper.mergeInterpreters(items);
     }

@@ -35,7 +35,6 @@ import {
 } from './discovery/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from './discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from './discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from './discovery/locators/services/interpreterFilter';
 import { InterpreterWatcherBuilder } from './discovery/locators/services/interpreterWatcherBuilder';
 import { KnownPathsService, KnownSearchPathsForInterpreters } from './discovery/locators/services/KnownPathsService';
 import { PipEnvService } from './discovery/locators/services/pipEnvService';
@@ -114,7 +113,6 @@ export function registerForIOC(serviceManager: IServiceManager) {
         InterpeterHashProviderFactory,
         InterpeterHashProviderFactory
     );
-    serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
         IVirtualEnvironmentsSearchPathProvider,
         GlobalVirtualEnvironmentsSearchPathProvider,
