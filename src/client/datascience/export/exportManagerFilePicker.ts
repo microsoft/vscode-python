@@ -44,13 +44,11 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
                 return;
         }
 
-        const notebookFileName = path.basename(source.fsPath, path.extname(source.fsPath));
-        let dialogUri: Uri;
-        if (defaultFileName) {
-            dialogUri = Uri.file(defaultFileName);
-        } else {
-            dialogUri = Uri.file(path.join(this.getLastFileSaveLocation().fsPath, notebookFileName));
-        }
+        const notebookFileName = defaultFileName
+            ? defaultFileName
+            : path.basename(source.fsPath, path.extname(source.fsPath));
+
+        const dialogUri = Uri.file(path.join(this.getLastFileSaveLocation().fsPath, notebookFileName));
         const options: SaveDialogOptions = {
             defaultUri: dialogUri,
             saveLabel: 'Export',
