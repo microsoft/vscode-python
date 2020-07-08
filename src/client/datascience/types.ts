@@ -449,6 +449,10 @@ export interface IInteractiveWindowProvider {
      */
     readonly activeWindow: IInteractiveWindow | undefined;
     /**
+     * List of open interactive windows
+     */
+    readonly windows: ReadonlyArray<IInteractiveWindow>;
+    /**
      * Event fired when the active interactive window changes
      */
     readonly onDidChangeActiveInteractiveWindow: Event<IInteractiveWindow | undefined>;

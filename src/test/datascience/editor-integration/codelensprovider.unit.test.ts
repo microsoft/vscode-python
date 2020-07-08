@@ -15,6 +15,7 @@ import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '..
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { Uri } from 'vscode';
 
 // tslint:disable-next-line: max-func-body-length
 suite('DataScienceCodeLensProvider Unit Tests', () => {
@@ -100,7 +101,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .setup((tc) => tc.getCodeLenses())
             .returns(() => [])
             .verifiable(TypeMoq.Times.exactly(2));
-        targetCodeWatcher.setup((tc) => tc.getFileName()).returns(() => 'test.py');
+        targetCodeWatcher.setup((tc) => tc.getFileName()).returns(() => Uri.file('test.py'));
         targetCodeWatcher.setup((tc) => tc.getVersion()).returns(() => 1);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
@@ -162,7 +163,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .setup((tc) => tc.getCodeLenses())
             .returns(() => [])
             .verifiable(TypeMoq.Times.exactly(3));
-        targetCodeWatcher.setup((tc) => tc.getFileName()).returns(() => 'test.py');
+        targetCodeWatcher.setup((tc) => tc.getFileName()).returns(() => Uri.file('test.py'));
         targetCodeWatcher.setup((tc) => tc.getVersion()).returns(() => 1);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))

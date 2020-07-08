@@ -10,7 +10,7 @@ import { mount, ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
 import * as uuid from 'uuid/v4';
-import { Disposable, Uri } from 'vscode';
+import { Disposable } from 'vscode';
 
 import { Identifiers } from '../../client/datascience/constants';
 import {
@@ -19,6 +19,7 @@ import {
     IDataViewerDataProvider,
     IDataViewerFactory
 } from '../../client/datascience/data-viewing/types';
+import { getInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import {
     IJupyterVariable,
     IJupyterVariableDataProviderFactory,
@@ -132,7 +133,7 @@ suite('DataScience DataViewer tests', () => {
     async function injectCode(code: string): Promise<void> {
         const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
         notebook = await notebookProvider.getOrCreateNotebook({
-            identity: Uri.parse(Identifiers.InteractiveWindowIdentity)
+            identity: getInteractiveIdentity(undefined)
         });
         if (notebook) {
             const cells = await notebook.execute(code, Identifiers.EmptyFileName, 0, uuid());

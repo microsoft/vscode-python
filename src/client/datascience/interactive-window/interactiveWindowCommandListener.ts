@@ -20,10 +20,13 @@ import { generateCellRangesFromDocument, generateCellsFromDocument } from '../ce
 import { Commands, Telemetry } from '../constants';
 import { ExportFormat, IExportManager } from '../export/types';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
+import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import {
     IDataScienceCommandListener,
+    IDataScienceErrorHandler,
     IInteractiveBase,
     IInteractiveWindowProvider,
+    IJupyterExecution,
     INotebook,
     INotebookEditorProvider,
     INotebookExporter,
@@ -45,6 +48,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
+        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
         @inject(IExportManager) private exportManager: IExportManager,
         @inject(INotebookStorageProvider) private notebookStorageProvider: INotebookStorageProvider

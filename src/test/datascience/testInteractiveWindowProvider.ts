@@ -5,12 +5,17 @@ import { inject, injectable } from 'inversify';
 import { Event } from 'vscode';
 
 import { ILiveShareApi } from '../../client/common/application/types';
-import { IAsyncDisposableRegistry, IDisposableRegistry } from '../../client/common/types';
+import { IFileSystem } from '../../client/common/platform/types';
+import { IAsyncDisposableRegistry, IDisposableRegistry, Resource } from '../../client/common/types';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
+import {
+    IDataScienceErrorHandler,
+    IInteractiveWindow,
+    IInteractiveWindowProvider
+} from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 @injectable()
@@ -23,9 +28,18 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IFileSystem) readonly fileSystem: IFileSystem,
+        @inject(IDataScienceErrorHandler) readonly errorHandler: IDataScienceErrorHandler
     ) {
-        this.realProvider = new InteractiveWindowProvider(liveShare, serviceContainer, asyncRegistry, disposables);
+        this.realProvider = new InteractiveWindowProvider(
+            liveShare,
+            serviceContainer,
+            asyncRegistry,
+            disposables,
+            fileSystem,
+            errorHandler
+        );
 
         // During a test, the 'create' function will end up being called during a live share. We need to hook its result too
         // so just hook the 'create' function to fix all callers.
@@ -33,7 +47,7 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
         const fungible = this.realProvider as any;
         const origCreate = fungible.create.bind(fungible);
         fungible.create = async () => {
-            const result = await origCreate();
+            const result = origCreate();
             // During testing the MainPanel sends the init message before our interactive window is created.
             // Pretend like it's happening now
             // tslint:disable-next-line: no-any
@@ -48,15 +62,19 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
         };
     }
 
-    public getActive(): IInteractiveWindow | undefined {
-        return this.realProvider.getActive();
+    public get activeWindow(): IInteractiveWindow | undefined {
+        return this.realProvider.activeWindow;
     }
 
-    public get onExecutedCode(): Event<string> {
-        return this.realProvider.onExecutedCode;
+    public get windows(): ReadonlyArray<IInteractiveWindow> {
+        return this.realProvider.windows;
     }
 
-    public async getOrCreateActive(): Promise<IInteractiveWindow> {
-        return this.realProvider.getOrCreateActive();
+    public get(resource: Resource): IInteractiveWindow | undefined {
+        return this.realProvider.get(resource);
+    }
+
+    public getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
+        return this.realProvider.getOrCreate(resource);
     }
 }

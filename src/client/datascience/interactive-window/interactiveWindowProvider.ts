@@ -32,13 +32,16 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     public get activeWindow(): IInteractiveWindow | undefined {
         return this.activeInteractiveWindow;
     }
+    public get windows(): ReadonlyArray<IInteractiveWindow> {
+        return this._windows;
+    }
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
     private activeInteractiveWindow: IInteractiveWindow | undefined;
     private postOffice: PostOffice;
     private id: string;
     private pendingSyncs: Map<string, ISyncData> = new Map<string, ISyncData>();
     private activeInteractiveWindowExecuteHandler: Disposable | undefined;
-    private activeWindows: IInteractiveWindow[] = [];
+    private _windows: IInteractiveWindow[] = [];
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -69,7 +72,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     }
 
     public get(owner: Resource): IInteractiveWindow | undefined {
-        return this.activeWindows.find((w) => {
+        return this._windows.find((w) => {
             if (!owner && w.owner) {
                 return true;
             }
@@ -101,7 +104,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
         const result = this.serviceContainer.get<IInteractiveWindow>(IInteractiveWindow);
-        this.activeWindows.push(result);
+        this._windows.push(result);
         this.activeInteractiveWindow = result;
 
         // When shutting down, we fire an event
@@ -123,7 +126,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
 
     private raiseOnDidChangeActiveInteractiveWindow() {
         // Find the active window
-        this.activeInteractiveWindow = this.activeWindows.find((w) => (w.active && w.visible ? true : false));
+        this.activeInteractiveWindow = this._windows.find((w) => (w.active && w.visible ? true : false));
         this._onDidChangeActiveInteractiveWindow.fire(this.activeWindow);
     }
     private onPeerCountChanged(newCount: number) {

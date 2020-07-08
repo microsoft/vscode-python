@@ -183,7 +183,7 @@ suite('DataScience Debugger tests', () => {
             }
 
             disposables.push(jupyterDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
-            const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
+            const done = history.debugCode(code, Uri.file(fileName), 0, docManager.activeTextEditor);
             await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
             if (expectError) {
                 assert.ok(lastErrorMessage, 'Error did not occur when expected');
@@ -339,7 +339,7 @@ suite('DataScience Debugger tests', () => {
                 const breakPromise = createDeferred<void>();
                 disposables.push(jupyterDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
                 const targetUri = Uri.file(fileName);
-                const done = history.debugCode(code, targetUri.fsPath, 0, docManager.activeTextEditor);
+                const done = history.debugCode(code, targetUri, 0, docManager.activeTextEditor);
                 await waitForPromise(
                     Promise.race([done, breakPromise.promise]),
                     ioc.getSettings().datascience.jupyterLaunchTimeout * 2 // Give restarts a chance

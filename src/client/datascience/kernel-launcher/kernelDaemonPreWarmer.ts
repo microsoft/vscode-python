@@ -43,7 +43,7 @@ export class KernelDaemonPreWarmer implements IExtensionActivationService {
         this.disposables.push(
             this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.preWarmKernelDaemonPool, this)
         );
-        if (this.notebookEditorProvider.editors.length > 0 || this.interactiveProvider.getActive()) {
+        if (this.notebookEditorProvider.editors.length > 0 || this.interactiveProvider.windows.length > 0) {
             await this.preWarmKernelDaemonPool();
         }
         await this.preWarmDaemonPoolIfNecesary();
