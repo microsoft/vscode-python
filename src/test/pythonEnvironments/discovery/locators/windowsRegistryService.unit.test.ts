@@ -63,12 +63,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
     }
     test('Must return an empty list (x86)', async () => {
         const registry = new MockRegistry([], []);
-        const winRegistry = new WindowsRegistryService(
-            registry,
-            setup64Bit(false),
-            serviceContainer.object,
-            windowsStoreInterpreter.object
-        );
+        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object);
+        winRegistry._windowsStoreInterpreter = windowsStoreInterpreter.object;
         platformService.setup((p) => p.isWindows).returns(() => true);
 
         const interpreters = await winRegistry.getInterpreters();
@@ -76,12 +72,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
     });
     test('Must return an empty list (x64)', async () => {
         const registry = new MockRegistry([], []);
-        const winRegistry = new WindowsRegistryService(
-            registry,
-            setup64Bit(true),
-            serviceContainer.object,
-            windowsStoreInterpreter.object
-        );
+        const winRegistry = new WindowsRegistryService(registry, setup64Bit(true), serviceContainer.object);
+        winRegistry._windowsStoreInterpreter = windowsStoreInterpreter.object;
         platformService.setup((p) => p.isWindows).returns(() => true);
 
         const interpreters = await winRegistry.getInterpreters();
@@ -139,12 +131,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
             }
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(
-            registry,
-            setup64Bit(false),
-            serviceContainer.object,
-            windowsStoreInterpreter.object
-        );
+        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object);
+        winRegistry._windowsStoreInterpreter = windowsStoreInterpreter.object;
 
         interpreterHelper.reset();
         interpreterHelper
@@ -155,7 +143,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const interpreters = await winRegistry.getInterpreters();
 
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
-        assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect arhictecture');
+        assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect architecture');
         assert.equal(interpreters[0].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
         assert.equal(
             interpreters[0].path,
@@ -188,13 +176,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
             }
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(
-            registry,
-            setup64Bit(false),
-            serviceContainer.object,
-            windowsStoreInterpreter.object
-        );
-
+        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object);
+        winRegistry._windowsStoreInterpreter = windowsStoreInterpreter.object;
         interpreterHelper.reset();
         interpreterHelper
             .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
@@ -204,7 +187,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const interpreters = await winRegistry.getInterpreters();
 
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
-        assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect arhictecture');
+        assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect architecture');
         assert.equal(interpreters[0].companyDisplayName, 'Python Software Foundation', 'Incorrect company name');
         assert.equal(interpreters[0].path, path.join(environmentsPath, 'path1', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[0].version!.raw, '9.9.9-final', 'Incorrect version');
@@ -234,12 +217,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
             }
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(
-            registry,
-            setup64Bit(false),
-            serviceContainer.object,
-            windowsStoreInterpreter.object
-        );
+        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object);
+        winRegistry._windowsStoreInterpreter = windowsStoreInterpreter.object;
 
         const interpreters = await winRegistry.getInterpreters();
 
@@ -270,12 +249,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
             }
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(
-            registry,
-            setup64Bit(false),
-            serviceContainer.object,
-            windowsStoreInterpreter.object
-        );
+        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object);
+        winRegistry._windowsStoreInterpreter = windowsStoreInterpreter.object;
         interpreterHelper.reset();
         interpreterHelper
             .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
@@ -284,7 +259,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const interpreters = await winRegistry.getInterpreters();
 
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
-        assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect arhictecture');
+        assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect architecture');
         assert.equal(interpreters[0].companyDisplayName, 'Company One', 'Incorrect company name');
         assert.equal(interpreters[0].path, path.join(environmentsPath, 'path1', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[0].version!.raw, '9.9.9-final', 'Incorrect version');
@@ -315,12 +290,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
             }
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(
-            registry,
-            setup64Bit(false),
-            serviceContainer.object,
-            windowsStoreInterpreter.object
-        );
+        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object);
+        winRegistry._windowsStoreInterpreter = windowsStoreInterpreter.object;
         interpreterHelper.reset();
         interpreterHelper
             .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
@@ -367,12 +338,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
             }
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(
-            registry,
-            setup64Bit(false),
-            serviceContainer.object,
-            windowsStoreInterpreter.object
-        );
+        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object);
+        winRegistry._windowsStoreInterpreter = windowsStoreInterpreter.object;
         interpreterHelper.reset();
         interpreterHelper
             .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
@@ -532,12 +499,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
             }
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(
-            registry,
-            setup64Bit(false),
-            serviceContainer.object,
-            windowsStoreInterpreter.object
-        );
+        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object);
+        winRegistry._windowsStoreInterpreter = windowsStoreInterpreter.object;
         interpreterHelper.reset();
         interpreterHelper
             .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
@@ -546,17 +509,17 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const interpreters = await winRegistry.getInterpreters();
 
         assert.equal(interpreters.length, 4, 'Incorrect number of entries');
-        assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect arhictecture');
+        assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect architecture');
         assert.equal(interpreters[0].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
         assert.equal(interpreters[0].path, path.join(environmentsPath, 'path1', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[0].version!.raw, '1.0.0', 'Incorrect version');
 
-        assert.equal(interpreters[1].architecture, Architecture.x86, 'Incorrect arhictecture');
+        assert.equal(interpreters[1].architecture, Architecture.x86, 'Incorrect architecture');
         assert.equal(interpreters[1].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
         assert.equal(interpreters[1].path, path.join(environmentsPath, 'path2', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[1].version!.raw, '2.0.0', 'Incorrect version');
 
-        assert.equal(interpreters[2].architecture, Architecture.x86, 'Incorrect arhictecture');
+        assert.equal(interpreters[2].architecture, Architecture.x86, 'Incorrect architecture');
         assert.equal(interpreters[2].companyDisplayName, 'Company Two', 'Incorrect company name');
         assert.equal(
             interpreters[2].path,
@@ -565,7 +528,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         );
         assert.equal(interpreters[2].version!.raw, '4.0.0', 'Incorrect version');
 
-        assert.equal(interpreters[3].architecture, Architecture.x86, 'Incorrect arhictecture');
+        assert.equal(interpreters[3].architecture, Architecture.x86, 'Incorrect architecture');
         assert.equal(interpreters[3].companyDisplayName, 'Company Two', 'Incorrect company name');
         assert.equal(
             interpreters[3].path,
@@ -746,12 +709,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
             }
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(
-            registry,
-            setup64Bit(false),
-            serviceContainer.object,
-            windowsStoreInterpreter.object
-        );
+        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object);
+        winRegistry._windowsStoreInterpreter = windowsStoreInterpreter.object;
         interpreterHelper.reset();
         interpreterHelper
             .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
@@ -760,7 +719,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const interpreters = await winRegistry.getInterpreters();
 
         assert.equal(interpreters.length, 4, 'Incorrect number of entries');
-        assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect arhictecture');
+        assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect architecture');
         assert.equal(interpreters[0].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
         assert.equal(
             interpreters[0].path,
@@ -769,7 +728,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         );
         assert.equal(interpreters[0].version!.raw, '1.0.0', 'Incorrect version');
 
-        assert.equal(interpreters[1].architecture, Architecture.x86, 'Incorrect arhictecture');
+        assert.equal(interpreters[1].architecture, Architecture.x86, 'Incorrect architecture');
         assert.equal(interpreters[1].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
         assert.equal(
             interpreters[1].path,
@@ -778,12 +737,12 @@ suite('Interpreters from Windows Registry (unit)', () => {
         );
         assert.equal(interpreters[1].version!.raw, '2.0.0', 'Incorrect version');
 
-        assert.equal(interpreters[2].architecture, Architecture.x86, 'Incorrect arhictecture');
+        assert.equal(interpreters[2].architecture, Architecture.x86, 'Incorrect architecture');
         assert.equal(interpreters[2].companyDisplayName, 'Company Two', 'Incorrect company name');
         assert.equal(interpreters[2].path, path.join(environmentsPath, 'path1', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[2].version!.raw, '3.0.0', 'Incorrect version');
 
-        assert.equal(interpreters[3].architecture, Architecture.x86, 'Incorrect arhictecture');
+        assert.equal(interpreters[3].architecture, Architecture.x86, 'Incorrect architecture');
         assert.equal(interpreters[3].companyDisplayName, 'Company Two', 'Incorrect company name');
         assert.equal(interpreters[3].path, path.join(environmentsPath, 'path2', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[3].version!.raw, '4.0.0', 'Incorrect version');
@@ -960,12 +919,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
             }
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(
-            registry,
-            setup64Bit(false),
-            serviceContainer.object,
-            windowsStoreInterpreter.object
-        );
+        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object);
+        winRegistry._windowsStoreInterpreter = windowsStoreInterpreter.object;
         interpreterHelper.reset();
         interpreterHelper
             .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
@@ -975,7 +930,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
 
         assert.equal(interpreters.length, 2, 'Incorrect number of entries');
 
-        assert.equal(interpreters[0].architecture, Architecture.x86, '1. Incorrect arhictecture');
+        assert.equal(interpreters[0].architecture, Architecture.x86, '1. Incorrect architecture');
         assert.equal(interpreters[0].companyDisplayName, 'Display Name for Company One', '1. Incorrect company name');
         assert.equal(
             interpreters[0].path,
@@ -984,7 +939,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         );
         assert.equal(interpreters[0].version!.raw, '1.0.0', '1. Incorrect version');
 
-        assert.equal(interpreters[1].architecture, Architecture.x86, '2. Incorrect arhictecture');
+        assert.equal(interpreters[1].architecture, Architecture.x86, '2. Incorrect architecture');
         assert.equal(interpreters[1].companyDisplayName, 'Company Two', '2. Incorrect company name');
         assert.equal(interpreters[1].path, path.join(environmentsPath, 'path2', 'python.exe'), '2. Incorrect path');
         assert.equal(interpreters[1].version!.raw, '2.0.0', '2. Incorrect version');

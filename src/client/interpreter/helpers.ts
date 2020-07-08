@@ -3,11 +3,14 @@ import { ConfigurationTarget, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { traceError } from '../common/logger';
 import { FileSystemPaths } from '../common/platform/fs-paths';
+import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { isMacDefaultPythonPath } from '../pythonEnvironments/discovery';
+import { InterpreterHashProvider } from '../pythonEnvironments/discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
+import { WindowsStoreInterpreter } from '../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import {
     getInterpreterTypeName,
     InterpreterInformation,
@@ -18,7 +21,7 @@ import {
 import { IInterpreterHelper } from './contracts';
 import { IInterpreterHashProviderFactory } from './locators/types';
 
-const EXPITY_DURATION = 24 * 60 * 60 * 1000;
+const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 type CachedPythonInterpreter = Partial<PythonInterpreter> & { fileHash: string };
 
 export type WorkspacePythonPath = {
@@ -46,12 +49,18 @@ export function isInterpreterLocatedInWorkspace(interpreter: PythonInterpreter, 
 
 @injectable()
 export class InterpreterHelper implements IInterpreterHelper {
+    public _hashProviderFactory: IInterpreterHashProviderFactory;
     private readonly persistentFactory: IPersistentStateFactory;
-    constructor(
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory
-    ) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+        const fs: IFileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        const executionFactory: IPythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(
+            IPythonExecutionFactory
+        );
         this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        this._hashProviderFactory = new InterpeterHashProviderFactory(
+            new WindowsStoreInterpreter(executionFactory, this.persistentFactory, fs),
+            new InterpreterHashProvider(fs)
+        );
     }
     public getActiveWorkspaceUri(resource: Resource): WorkspacePythonPath | undefined {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -78,8 +87,8 @@ export class InterpreterHelper implements IInterpreterHelper {
         }
     }
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>> {
-        const fileHash = await this.hashProviderFactory
-            .create({ pythonPath })
+        const fileHash = await this._hashProviderFactory
+            .create(pythonPath)
             .then((provider) => provider.getInterpreterHash(pythonPath))
             .catch((ex) => {
                 traceError(`Failed to create File hash for interpreter ${pythonPath}`, ex);
@@ -88,7 +97,7 @@ export class InterpreterHelper implements IInterpreterHelper {
         const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(
             `${pythonPath}.v3`,
             undefined,
-            EXPITY_DURATION
+            EXPIRY_DURATION
         );
         if (store.value && fileHash && store.value.fileHash === fileHash) {
             return store.value;

@@ -20,7 +20,9 @@ import {
 } from '../common/types';
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
+import { InterpreterHashProvider } from '../pythonEnvironments/discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
+import { WindowsStoreInterpreter } from '../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/info';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -34,7 +36,7 @@ import {
 import { IInterpreterHashProviderFactory } from './locators/types';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
-const EXPITY_DURATION = 24 * 60 * 60 * 1000;
+const EXPIRY_DURATION = 24 * 60 * 60 * 1000;
 
 export type GetInterpreterOptions = {
     onSuggestion?: boolean;
@@ -57,6 +59,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.didChangeInterpreterConfigurationEmitter.event;
     }
     public _pythonPathSetting: string = '';
+    public _hashProviderFactory: IInterpreterHashProviderFactory;
     private readonly didChangeInterpreterConfigurationEmitter = new EventEmitter<Uri | undefined>();
     private readonly locator: IInterpreterLocatorService;
     private readonly persistentStateFactory: IPersistentStateFactory;
@@ -68,10 +71,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private readonly inMemoryCacheOfDisplayNames = new Map<string, string>();
     private readonly updatedInterpreters = new Set<string>();
 
-    constructor(
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory
-    ) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.locator = serviceContainer.get<IInterpreterLocatorService>(
             IInterpreterLocatorService,
             INTERPRETER_LOCATOR_SERVICE
@@ -80,6 +80,17 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         this.experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        const fs: IFileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        const executionFactory: IPythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(
+            IPythonExecutionFactory
+        );
+        const persistentFactory: IPersistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(
+            IPersistentStateFactory
+        );
+        this._hashProviderFactory = new InterpeterHashProviderFactory(
+            new WindowsStoreInterpreter(executionFactory, persistentFactory, fs),
+            new InterpreterHashProvider(fs)
+        );
     }
 
     public async refresh(resource?: Uri) {
@@ -179,7 +190,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
 
         // Don't want for all interpreters are collected.
-        // Try to collect the infromation manually, that's faster.
+        // Try to collect the information manually, that's faster.
         // Get from which ever comes first.
         const option1 = (async () => {
             const result = this.collectInterpreterDetails(pythonPath, resource);
@@ -192,7 +203,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             const interpreters = await this.getInterpreters(resource);
             const found = interpreters.find((i) => fs.arePathsSame(i.path, pythonPath));
             if (found) {
-                // Cache the interpreter info, only if we get the data from interpretr list.
+                // Cache the interpreter info, only if we get the data from interpreter list.
                 // tslint:disable-next-line:no-any
                 (found as any).__store = true;
                 return found;
@@ -225,17 +236,17 @@ export class InterpreterService implements Disposable, IInterpreterService {
      * @memberof InterpreterService
      */
     public async getDisplayName(info: Partial<PythonInterpreter>, resource?: Uri): Promise<string> {
-        // faster than calculating file has agian and again, only when deailing with cached items.
+        // faster than calculating file has again and again, only when dealing with cached items.
         if (!info.cachedEntry && info.path && this.inMemoryCacheOfDisplayNames.has(info.path)) {
             return this.inMemoryCacheOfDisplayNames.get(info.path)!;
         }
-        const fileHash = (info.path ? await this.getInterepreterFileHash(info.path).catch(() => '') : '') || '';
-        // Do not include dipslay name into hash as that changes.
+        const fileHash = (info.path ? await this.getInterpreterFileHash(info.path).catch(() => '') : '') || '';
+        // Do not include display name into hash as that changes.
         const interpreterHash = `${fileHash}-${md5(JSON.stringify({ ...info, displayName: '' }))}`;
         const store = this.persistentStateFactory.createGlobalPersistentState<{ hash: string; displayName: string }>(
             `${info.path}.interpreter.displayName.v7`,
             undefined,
-            EXPITY_DURATION
+            EXPIRY_DURATION
         );
         if (store.value && store.value.hash === interpreterHash && store.value.displayName) {
             this.inMemoryCacheOfDisplayNames.set(info.path!, store.value.displayName);
@@ -255,11 +266,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
     public async getInterpreterCache(
         pythonPath: string
     ): Promise<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>> {
-        const fileHash = (pythonPath ? await this.getInterepreterFileHash(pythonPath).catch(() => '') : '') || '';
+        const fileHash = (pythonPath ? await this.getInterpreterFileHash(pythonPath).catch(() => '') : '') || '';
         const store = this.persistentStateFactory.createGlobalPersistentState<{
             fileHash: string;
             info?: PythonInterpreter;
-        }>(`${pythonPath}.interpreter.Details.v7`, undefined, EXPITY_DURATION);
+        }>(`${pythonPath}.interpreter.Details.v7`, undefined, EXPIRY_DURATION);
         if (!store.value || store.value.fileHash !== fileHash) {
             await store.updateValue({ fileHash });
         }
@@ -276,10 +287,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
             interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
         }
     };
-    protected async getInterepreterFileHash(pythonPath: string): Promise<string> {
-        return this.hashProviderFactory
-            .create({ pythonPath })
-            .then((provider) => provider.getInterpreterHash(pythonPath));
+    protected async getInterpreterFileHash(pythonPath: string): Promise<string> {
+        return this._hashProviderFactory.create(pythonPath).then((provider) => provider.getInterpreterHash(pythonPath));
     }
     protected async updateCachedInterpreterInformation(info: PythonInterpreter, resource: Resource): Promise<void> {
         const key = JSON.stringify(info);
@@ -310,7 +319,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (!info.envName && info.path && info.type && info.type === InterpreterType.Pipenv) {
             // If we do not have the name of the environment, then try to get it again.
             // This can happen based on the context (i.e. resource).
-            // I.e. we can determine if an environment is PipEnv only when giving it the right workspacec path (i.e. resource).
+            // I.e. we can determine if an environment is PipEnv only when giving it the right workspace path (i.e. resource).
             const virtualEnvMgr = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
             info.envName = await virtualEnvMgr.getEnvironmentName(info.path, resource);
         }
@@ -348,11 +357,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
             type === InterpreterType.Unknown
                 ? undefined
                 : await virtualEnvManager.getEnvironmentName(pythonPath, resource);
-        const pthonInfo = {
+        const pythonInfo = {
             ...(details as PythonInterpreter),
             envName
         };
-        pthonInfo.displayName = await this.getDisplayName(pthonInfo, resource);
-        return pthonInfo;
+        pythonInfo.displayName = await this.getDisplayName(pythonInfo, resource);
+        return pythonInfo;
     }
 }
