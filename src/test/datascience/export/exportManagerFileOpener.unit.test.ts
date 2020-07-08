@@ -48,20 +48,20 @@ suite('Data Science - Export File Opener', () => {
 
     test('No file is opened if nothing is exported', async () => {
         when(exporter.export(anything(), anything())).thenResolve();
-        await fileOpener.export(ExportFormat.python, model);
+        await fileOpener.export(ExportFormat.python, model, undefined);
 
         verify(documentManager.showTextDocument(anything())).never();
     });
     test('Python File is opened if exported', async () => {
         const uri = Uri.file('test.python');
-        when(exporter.export(anything(), anything())).thenResolve(uri);
-        await fileOpener.export(ExportFormat.python, model);
+        when(exporter.export(anything(), anything(), anything())).thenResolve(uri);
+        await fileOpener.export(ExportFormat.python, model, undefined);
 
         verify(documentManager.showTextDocument(anything())).once();
     });
     test('HTML File opened if yes button pressed', async () => {
         const uri = Uri.file('test.html');
-        when(exporter.export(anything(), anything())).thenResolve(uri);
+        when(exporter.export(anything(), anything(), anything())).thenResolve(uri);
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
             Promise.resolve(getLocString('DataScience.openExportFileYes', 'Yes'))
         );
@@ -82,14 +82,14 @@ suite('Data Science - Export File Opener', () => {
         verify(browserService.launch(anything())).never();
     });
     test('Exporting to PDF displays message if operation fails', async () => {
-        when(exporter.export(anything(), anything())).thenThrow(new Error('Export failed...'));
+        when(exporter.export(anything(), anything(), anything())).thenThrow(new Error('Export failed...'));
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         await fileOpener.export(ExportFormat.pdf, model);
         verify(applicationShell.showErrorMessage(anything())).once();
     });
     test('PDF File opened if yes button pressed', async () => {
         const uri = Uri.file('test.pdf');
-        when(exporter.export(anything(), anything())).thenResolve(uri);
+        when(exporter.export(anything(), anything(), anything())).thenResolve(uri);
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
             Promise.resolve(getLocString('DataScience.openExportFileYes', 'Yes'))
         );
