@@ -89,7 +89,7 @@ export interface IInterpreterHelper {
 }
 
 export const IPipEnvService = Symbol('IPipEnvService');
-export interface IPipEnvService extends IInterpreterLocatorService {
+export interface IPipEnvService {
     executable: string;
     isRelatedPipEnvironment(dir: string, pythonPath: string): Promise<boolean>;
 }
@@ -99,9 +99,13 @@ export interface IInterpreterLocatorHelper {
     mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]>;
 }
 
-export const IInterpreterWatcher = Symbol('IInterpreterWatcher');
 export interface IInterpreterWatcher {
     onDidCreate: Event<Resource>;
+}
+
+export const IInterpreterWatcherRegistry = Symbol('IInterpreterWatcherRegistry');
+export interface IInterpreterWatcherRegistry extends IInterpreterWatcher {
+    register(resource: Resource): Promise<void>;
 }
 
 export const IInterpreterWatcherBuilder = Symbol('IInterpreterWatcherBuilder');
@@ -119,4 +123,13 @@ export interface IInterpreterLocatorProgressService {
     readonly onRefreshing: Event<void>;
     readonly onRefreshed: Event<void>;
     register(): void;
+}
+
+export const IInterpreterStatusbarVisibilityFilter = Symbol('IInterpreterStatusbarVisibilityFilter');
+/**
+ * Implement this interface to control the visibility of the interpreter statusbar.
+ */
+export interface IInterpreterStatusbarVisibilityFilter {
+    readonly changed?: Event<void>;
+    readonly visible: boolean;
 }

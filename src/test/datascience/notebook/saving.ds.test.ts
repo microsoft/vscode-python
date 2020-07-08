@@ -111,7 +111,7 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         const json = JSON.parse(fs.readFileSync(testIPynb.fsPath, { encoding: 'utf8' })) as nbformat.INotebookContent;
         assert.ok(json.cells[0].execution_count === null);
     });
-    test('Verify output & metadata when re-opening (slow)xxx', async () => {
+    test('Verify output & metadata when re-opening (slow)', async () => {
         const templateIPynb = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',

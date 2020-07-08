@@ -1,4 +1,4 @@
-import { inject, injectable, named, optional } from 'inversify';
+import { inject, named, optional } from 'inversify';
 import * as path from 'path';
 import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
@@ -9,7 +9,7 @@ import { IFileSystem, IPlatformService } from '../../../../common/platform/types
 import { IProcessServiceFactory } from '../../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
-import { ICondaService, IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE } from '../../../../interpreter/contracts';
+import { IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE } from '../../../../interpreter/contracts';
 import { InterpreterType, PythonInterpreter } from '../../../info';
 import { CondaEnvironmentInfo, CondaInfo } from './conda';
 import { parseCondaEnvFileContents } from './condaHelper';
@@ -48,8 +48,7 @@ export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
 /**
  * A wrapper around a conda installation.
  */
-@injectable()
-export class CondaService implements ICondaService {
+export class CondaService {
     private condaFile?: Promise<string | undefined>;
     private isAvailable: boolean | undefined;
 

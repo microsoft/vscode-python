@@ -1,5 +1,5 @@
 // tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation no-unnecessary-callback-wrapper
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import { Uri } from 'vscode';
 import { traceError, traceInfo } from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
@@ -19,7 +19,6 @@ import { CacheableLocatorService } from './cacheableLocatorService';
  * If no interpreter is configured then it falls back to the system
  * Python (3 then 2).
  */
-@injectable()
 export class CurrentPathService extends CacheableLocatorService {
     private readonly fs: IFileSystem;
 
@@ -125,8 +124,7 @@ export class CurrentPathService extends CacheableLocatorService {
     }
 }
 
-@injectable()
-export class PythonInPathCommandProvider implements IPythonInPathCommandProvider {
+export class PythonInPathCommandProvider {
     constructor(@inject(IPlatformService) private readonly platform: IPlatformService) {}
     public getCommands(): { command: string; args?: string[] }[] {
         const paths = ['python3.7', 'python3.6', 'python3', 'python2', 'python'].map((item) => {
