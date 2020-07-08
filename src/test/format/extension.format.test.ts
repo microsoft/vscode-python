@@ -9,12 +9,7 @@ import { IProcessServiceFactory } from '../../client/common/process/types';
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BlackFormatter } from '../../client/formatters/blackFormatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
-import { ICondaService } from '../../client/interpreter/contracts';
-import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
-import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
+import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 import { isPythonVersionInProcess } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { MockProcessService } from '../mocks/proc';
@@ -88,14 +83,7 @@ suite('Formatting - General', () => {
         ioc.registerFormatterTypes();
         ioc.registerInterpreterStorageTypes();
 
-        ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-        ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(
-            InterpeterHashProviderFactory,
-            InterpeterHashProviderFactory
-        );
-        ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
-        ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
+        registerForIOC(ioc.serviceManager);
 
         // Mocks.
         ioc.registerMockProcessTypes();

@@ -553,7 +553,7 @@ Name: 0, dtype: float64`,
                             verifyVariables(wrapper, nonValued);
                             return Promise.resolve();
                         },
-                        2 // 2 refreshes because the variable explorer is scrolled to the bottom.
+                        3 // 3 refreshes because the variable explorer is scrolled to the bottom.
                     );
                 }
             },

@@ -9,9 +9,19 @@ import { getExperimentationService, IExperimentationService, TargetPopulation } 
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment } from '../application/types';
-import { PVSC_EXTENSION_ID } from '../constants';
-import { GLOBAL_MEMENTO, IConfigurationService, IExperimentService, IMemento, IPythonSettings } from '../types';
+import { PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import {
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    IExperimentService,
+    IMemento,
+    IOutputChannel,
+    IPythonSettings
+} from '../types';
+import { Experiments } from '../utils/localize';
 import { ExperimentationTelemetry } from './telemetry';
+
+const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
 
 @injectable()
 export class ExperimentService implements IExperimentService {
@@ -30,7 +40,8 @@ export class ExperimentService implements IExperimentService {
     constructor(
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalState: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
     ) {
         this.settings = configurationService.getSettings(undefined);
 
@@ -61,8 +72,10 @@ export class ExperimentService implements IExperimentService {
             this.appEnvironment.packageJson.version!,
             targetPopulation,
             telemetryReporter,
-            globalState
+            this.globalState
         );
+
+        this.logExperiments();
     }
 
     public async inExperiment(experiment: string): Promise<boolean> {
@@ -89,5 +102,16 @@ export class ExperimentService implements IExperimentService {
         }
 
         return this.experimentationService.isCachedFlightEnabled(experiment);
+    }
+
+    private logExperiments() {
+        const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
+
+        experiments.features.forEach((exp) => {
+            // Filter out experiments groups that are not from the Python extension.
+            if (exp.toLowerCase().startsWith('python')) {
+                this.output.appendLine(Experiments.inGroup().format(exp));
+            }
+        });
     }
 }

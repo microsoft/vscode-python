@@ -268,9 +268,7 @@ export interface INotebookExecutionLogger extends IDisposable {
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
 }
 
-export const IGatherProvider = Symbol('IGatherProvider');
 export interface IGatherProvider {
-    enabled: boolean;
     logExecution(vscCell: ICell): void;
     gatherCode(vscCell: ICell): string;
     resetLog(): void;
@@ -278,7 +276,7 @@ export interface IGatherProvider {
 
 export const IGatherLogger = Symbol('IGatherLogger');
 export interface IGatherLogger extends INotebookExecutionLogger {
-    getGatherProvider(): IGatherProvider;
+    getGatherProvider(): IGatherProvider | undefined;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -301,6 +299,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
 
 export const IJupyterDebugger = Symbol('IJupyterDebugger');
 export interface IJupyterDebugger {
+    readonly isRunningByLine: boolean;
     startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void>;
     startDebugging(notebook: INotebook): Promise<void>;
     stopDebugging(notebook: INotebook): Promise<void>;
@@ -781,6 +780,8 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
     webviewExperiments: {
         removeKernelToolbarInInteractiveWindow: boolean;
     };
+
+    gatherIsInstalled: boolean;
 }
 
 // Get variables from the currently running active Jupyter server

@@ -4,7 +4,7 @@
 import '../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
-import { ConfigurationChangeEvent, Uri, ViewColumn, WebviewPanel, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationChangeEvent, extensions, Uri, ViewColumn, WebviewPanel, WorkspaceConfiguration } from 'vscode';
 
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
@@ -15,7 +15,7 @@ import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { DefaultTheme, Telemetry } from './constants';
+import { DefaultTheme, GatherExtension, Telemetry } from './constants';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
 import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from './types';
 
@@ -177,6 +177,8 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         const editor = this.workspaceService.getConfiguration('editor');
         const workbench = this.workspaceService.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
+        const ext = extensions.getExtension(GatherExtension);
+
         return {
             ...this.configService.getSettings(resource).datascience,
             extraSettings: {
@@ -218,7 +220,8 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             },
             webviewExperiments: {
                 removeKernelToolbarInInteractiveWindow: await this.hideKernelToolbarInInteractiveWindow
-            }
+            },
+            gatherIsInstalled: ext ? true : false
         };
     }
 
@@ -366,7 +369,6 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             event.affectsConfiguration('editor.scrollbar.horizontalScrollbarSize') ||
             event.affectsConfiguration('files.autoSave') ||
             event.affectsConfiguration('files.autoSaveDelay') ||
-            event.affectsConfiguration('python.dataScience.enableGather') ||
             event.affectsConfiguration('python.dataScience.widgetScriptSources')
         ) {
             // See if the theme changed

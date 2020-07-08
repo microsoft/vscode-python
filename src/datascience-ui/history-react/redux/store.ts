@@ -8,5 +8,5 @@ import { reducerMap } from './reducers';
 
 // This special version uses the reducer map from the IInteractiveWindowMapping
 export function createStore(skipDefault: boolean, baseTheme: string, testMode: boolean, postOffice: PostOffice) {
-    return ReduxCommon.createStore(skipDefault, baseTheme, testMode, false, reducerMap, postOffice);
+    return ReduxCommon.createStore(skipDefault, baseTheme, testMode, false, false, reducerMap, postOffice);
 }
