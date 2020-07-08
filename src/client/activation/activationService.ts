@@ -10,7 +10,6 @@ import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { LSControl, LSEnabled } from '../common/experiments/groups';
-import { traceError } from '../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -151,40 +150,22 @@ export class LanguageServerExtensionActivationService
     }
 
     /**
-     * Checks if user does not have any `languageServer` setting set.
-     * @param resource
-     * @returns `true` if user is using default configuration, `false` if user has `languageServer` setting added.
-     */
-    public isJediUsingDefaultConfiguration(resource: Resource): boolean {
-        const settings = this.workspaceService
-            .getConfiguration('python', resource)
-            .inspect<LanguageServerType>('languageServer');
-        if (!settings) {
-            traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.languageServer`');
-            return false;
-        }
-        return (
-            settings.globalValue === undefined &&
-            settings.workspaceValue === undefined &&
-            settings.workspaceFolderValue === undefined
-        );
-    }
-
-    /**
      * Determines what language server to use depending on settings and experiments.
      * Experiment is for Microsoft => Pylance. No experimentation with Jedi users.
      * @returns `LanguageServerType`
      */
     public getLanguageServerType(): LanguageServerType {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const lsType = configurationService.getSettings(this.resource).languageServer;
+        const lsType = configurationService.getSettings(this.resource).languageServer ?? LanguageServerType.Jedi;
         // If user is using Microsoft LS and is assigned to an experiment (i.e. use Pylance server), return false.
-        if (lsType === LanguageServerType.Microsoft && this.abExperiments.inExperiment(LSEnabled)) {
-            return LanguageServerType.Node;
+        if (lsType === LanguageServerType.Microsoft) {
+            if (this.abExperiments.inExperiment(LSEnabled)) {
+                return LanguageServerType.Node;
+            }
+            // Send telemetry if user is in control group
+            this.abExperiments.sendTelemetryIfInExperiment(LSControl);
         }
-        // Send telemetry if user is in control group
-        this.abExperiments.sendTelemetryIfInExperiment(LSControl);
-        return lsType ?? LanguageServerType.Jedi; // Jedi is default.
+        return lsType;
     }
 
     protected async onWorkspaceFoldersChanged() {
