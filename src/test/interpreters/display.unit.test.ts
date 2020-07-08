@@ -3,8 +3,15 @@ import * as path from 'path';
 import { SemVer } from 'semver';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationTarget, Disposable, StatusBarAlignment, StatusBarItem, Uri, WorkspaceFolder } from 'vscode';
-import { EventEmitter } from 'vscode';
+import {
+    ConfigurationTarget,
+    Disposable,
+    EventEmitter,
+    StatusBarAlignment,
+    StatusBarItem,
+    Uri,
+    WorkspaceFolder
+} from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
