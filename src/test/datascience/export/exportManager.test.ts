@@ -33,7 +33,7 @@ suite('Data Science - Export Manager', () => {
         exportPdf = mock<IExport>();
 
         // tslint:disable-next-line: no-any
-        when(filePicker.getExportFileLocation(anything(), anything())).thenReturn(
+        when(filePicker.getExportFileLocation(anything(), anything(), anything())).thenReturn(
             Promise.resolve(Uri.file('test.pdf'))
         );
         // tslint:disable-next-line: no-empty
