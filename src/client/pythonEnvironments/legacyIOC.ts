@@ -134,20 +134,12 @@ export function registerForIOC(serviceManager: IServiceManager) {
         WorkspaceVirtualEnvWatcherServiceProxy,
         WORKSPACE_VIRTUAL_ENV_SERVICE
     );
-<<<<<<< HEAD
-    serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-    serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-    serviceManager.addSingleton<InterpreterHashProviderFactory>(
-        InterpreterHashProviderFactory,
-        InterpreterHashProviderFactory
-=======
     serviceManager.addSingleton<IWindowsStoreInterpreter>(IWindowsStoreInterpreter, WindowsStoreInterpreterProxy);
     serviceManager.addSingleton<IWindowsStoreHashProvider>(IWindowsStoreHashProvider, WindowsStoreInterpreterProxy);
     serviceManager.addSingleton<IInterpreterHashProvider>(IInterpreterHashProvider, InterpreterHashProviderProxy);
     serviceManager.addSingleton<IInterpreterHashProviderFactory>(
         IInterpreterHashProviderFactory,
         InterpreterHashProviderFactoryProxy
->>>>>>> master
     );
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
         IVirtualEnvironmentsSearchPathProvider,

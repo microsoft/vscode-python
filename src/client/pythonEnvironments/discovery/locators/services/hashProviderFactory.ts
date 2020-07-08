@@ -12,12 +12,7 @@ import {
     IWindowsStoreInterpreter
 } from '../../../../interpreter/locators/types';
 
-<<<<<<< HEAD
-@injectable()
-export class InterpreterHashProviderFactory implements IInterpreterHashProviderFactory {
-=======
 export class InterpreterHashProviderFactory {
->>>>>>> master
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
