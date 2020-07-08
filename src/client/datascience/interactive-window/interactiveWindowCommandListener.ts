@@ -38,6 +38,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -209,13 +210,20 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     // When all done, show a notice that it completed.
                     if (uri && uri.fsPath) {
                         const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                        const questions = [openQuestion1];
+                        const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
+                            ? localize.DataScience.exportOpenQuestion()
+                            : undefined;
+                        const questions = [openQuestion1, ...(openQuestion2 ? [openQuestion2] : [])];
                         const selection = await this.applicationShell.showInformationMessage(
                             localize.DataScience.exportDialogComplete().format(uri.fsPath),
                             ...questions
                         );
                         if (selection === openQuestion1) {
                             await this.ipynbProvider.open(uri);
+                        }
+                        if (selection === openQuestion2) {
+                            // If the user wants to, open the notebook they just generated.
+                            this.jupyterExecution.spawnNotebook(uri.fsPath).ignoreErrors();
                         }
                     }
                 }
@@ -225,7 +233,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
     @captureTelemetry(Telemetry.ExportPythonFileAndOutputInteractive, undefined, false)
     private async exportFileAndOutput(file: string): Promise<Uri | undefined> {
-        if (file && file.length > 0) {
+        if (file && file.length > 0 && (await this.jupyterExecution.isNotebookSupported())) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
             if (
@@ -272,7 +280,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
                         // When all done, show a notice that it completed.
                         const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                        const questions = [openQuestion1];
+                        const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
+                            ? localize.DataScience.exportOpenQuestion()
+                            : undefined;
+                        const questions = [openQuestion1, ...(openQuestion2 ? [openQuestion2] : [])];
                         const selection = await this.applicationShell.showInformationMessage(
                             localize.DataScience.exportDialogComplete().format(output),
                             ...questions
@@ -280,10 +291,21 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         if (selection === openQuestion1) {
                             await this.ipynbProvider.open(Uri.file(output));
                         }
+                        if (selection === openQuestion2) {
+                            // If the user wants to, open the notebook they just generated.
+                            this.jupyterExecution.spawnNotebook(output).ignoreErrors();
+                        }
                         return Uri.file(output);
                     }
                 }
             }
+        } else {
+            await this.dataScienceErrorHandler.handleError(
+                new JupyterInstallError(
+                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
+                    localize.DataScience.pythonInteractiveHelpLink()
+                )
+            );
         }
     }
 
