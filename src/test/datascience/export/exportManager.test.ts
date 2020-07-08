@@ -4,7 +4,6 @@
 'use strict';
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { Mocker } from 'ts-mockito/lib/Mock'; // Must be below import 'ts-mockito'
 import { TextEditor, Uri } from 'vscode';
 import { IFileSystem, TemporaryFile } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
@@ -12,14 +11,7 @@ import { ExportManager } from '../../../client/datascience/export/exportManager'
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
 import { ExportFormat, IExport, IExportManagerFilePicker } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
-import { INotebookModel, INotebookStorage } from '../../../client/datascience/types';
-
-function betterMock(clazz) {
-    const mocker = new Mocker(clazz);
-    // tslint:disable-next-line: no-string-literal
-    mocker['excludedPropertyNames'] = ['hasOwnProperty', 'then'];
-    return mocker.getMock();
-}
+import { INotebookModel } from '../../../client/datascience/types';
 
 suite('Data Science - Export Manager', () => {
     let exporter: ExportManager;
@@ -42,10 +34,6 @@ suite('Data Science - Export Manager', () => {
         exportPdf = mock<IExport>();
         // tslint:disable-next-line: no-any
         (instance(editor) as any).then = undefined;
-        // tslint:disable-next-line: no-any
-        (instance(model) as any).then = undefined;
-        // tslint:disable-next-line: no-any
-        (instance(tempFile) as any).then = undefined;
 
         // tslint:disable-next-line: no-any
         when(filePicker.getExportFileLocation(anything(), anything())).thenReturn(
