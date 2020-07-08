@@ -99,9 +99,13 @@ export interface IInterpreterLocatorHelper {
     mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]>;
 }
 
-export const IInterpreterWatcher = Symbol('IInterpreterWatcher');
 export interface IInterpreterWatcher {
     onDidCreate: Event<Resource>;
+}
+
+export const IInterpreterWatcherRegistry = Symbol('IInterpreterWatcherRegistry');
+export interface IInterpreterWatcherRegistry extends IInterpreterWatcher {
+    register(resource: Resource): Promise<void>;
 }
 
 export const IInterpreterWatcherBuilder = Symbol('IInterpreterWatcherBuilder');

@@ -22,6 +22,7 @@ import {
     IInterpreterLocatorService,
     IInterpreterWatcher,
     IInterpreterWatcherBuilder,
+    IInterpreterWatcherRegistry,
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
     IPipEnvService,
@@ -128,8 +129,8 @@ export function registerForIOC(serviceManager: IServiceManager) {
         PythonInPathCommandProviderProxy
     );
 
-    serviceManager.add<IInterpreterWatcher>(
-        IInterpreterWatcher,
+    serviceManager.add<IInterpreterWatcherRegistry>(
+        IInterpreterWatcherRegistry,
         WorkspaceVirtualEnvWatcherServiceProxy,
         WORKSPACE_VIRTUAL_ENV_SERVICE
     );
@@ -396,8 +397,8 @@ class InterpreterWatcherBuilderProxy implements IInterpreterWatcherBuilder {
 }
 
 @injectable()
-class WorkspaceVirtualEnvWatcherServiceProxy implements IInterpreterWatcher, Disposable {
-    private readonly impl: IInterpreterWatcher & Disposable;
+class WorkspaceVirtualEnvWatcherServiceProxy implements IInterpreterWatcherRegistry, Disposable {
+    private readonly impl: IInterpreterWatcherRegistry & Disposable;
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
@@ -412,7 +413,10 @@ class WorkspaceVirtualEnvWatcherServiceProxy implements IInterpreterWatcher, Dis
         );
     }
     public get onDidCreate(): Event<Resource> {
-        return this.onDidCreate;
+        return this.impl.onDidCreate;
+    }
+    public async register(resource: Resource): Promise<void> {
+        return this.impl.register(resource);
     }
     public dispose() {
         return this.impl.dispose();

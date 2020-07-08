@@ -8,9 +8,12 @@ import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import { traceDecorators } from '../../../../common/logger';
 import { createDeferred } from '../../../../common/utils/async';
-import { IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../../interpreter/contracts';
+import {
+    IInterpreterWatcher,
+    IInterpreterWatcherRegistry,
+    WORKSPACE_VIRTUAL_ENV_SERVICE
+} from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
-import { WorkspaceVirtualEnvWatcherService } from './workspaceVirtualEnvWatcherService';
 
 export class InterpreterWatcherBuilder {
     private readonly watchersByResource = new Map<string, Promise<IInterpreterWatcher>>();
@@ -32,8 +35,8 @@ export class InterpreterWatcherBuilder {
         if (!this.watchersByResource.has(key)) {
             const deferred = createDeferred<IInterpreterWatcher>();
             this.watchersByResource.set(key, deferred.promise);
-            const watcher = this.serviceContainer.get<WorkspaceVirtualEnvWatcherService>(
-                IInterpreterWatcher,
+            const watcher = this.serviceContainer.get<IInterpreterWatcherRegistry>(
+                IInterpreterWatcherRegistry,
                 WORKSPACE_VIRTUAL_ENV_SERVICE
             );
             await watcher.register(resource);
