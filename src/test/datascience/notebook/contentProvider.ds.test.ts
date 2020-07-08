@@ -17,12 +17,7 @@ import {
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
-import {
-    canRunTests,
-    closeNotebooksAndCleanUpAfterTests,
-    createTemporaryNotebook,
-    swallowSavingOfNotebooks
-} from './helper';
+import { canRunTests, closeNotebooksAndCleanUpAfterTests, createTemporaryNotebook } from './helper';
 
 // tslint:disable: no-any no-invalid-this
 suite('DataScience - VSCode Notebook - (Open)', function () {
@@ -51,10 +46,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
     });
-    teardown(async () => {
-        await swallowSavingOfNotebooks();
-        await closeNotebooksAndCleanUpAfterTests(disposables);
-    });
+    teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
 
     test('Verify cell mapping', async () => {
         const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
