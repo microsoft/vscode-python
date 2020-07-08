@@ -26,14 +26,11 @@ suite('Data Science - Export Manager', () => {
     setup(async () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
-        const editor = mock<TextEditor>();
         filePicker = mock<IExportManagerFilePicker>();
         fileSystem = mock<IFileSystem>();
         exportPython = mock<IExport>();
         exportHtml = mock<IExport>();
         exportPdf = mock<IExport>();
-        // tslint:disable-next-line: no-any
-        (instance(editor) as any).then = undefined;
 
         // tslint:disable-next-line: no-any
         when(filePicker.getExportFileLocation(anything(), anything())).thenReturn(
