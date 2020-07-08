@@ -3,19 +3,22 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Disposable, Event, EventEmitter } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { Uri } from 'vscode';
 import { ILiveShareApi } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../constants';
 import { PostOffice } from '../liveshare/postOffice';
-import { IDataScienceErrorHandler, IInteractiveWindow, IInteractiveWindowProvider } from '../types';
+import {
+    IDataScienceErrorHandler,
+    IInteractiveWindow,
+    IInteractiveWindowLoadable,
+    IInteractiveWindowProvider
+} from '../types';
 
 interface ISyncData {
     count: number;
@@ -103,7 +106,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     private create(resource: Resource): IInteractiveWindow {
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
-        const result = this.serviceContainer.get<IInteractiveWindow>(IInteractiveWindow);
+        const result = this.serviceContainer.get<IInteractiveWindowLoadable>(IInteractiveWindow);
         this._windows.push(result);
         this.activeInteractiveWindow = result;
 

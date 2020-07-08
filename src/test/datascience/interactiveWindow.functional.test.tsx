@@ -97,8 +97,7 @@ suite('DataScience Interactive Window output tests', () => {
     });
 
     async function forceSettingsChange(newSettings: IDataScienceSettings) {
-        const window = await getOrCreateInteractiveWindow(ioc);
-        await window.show();
+        await getOrCreateInteractiveWindow(ioc);
         const update = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, newSettings);
         return update;
@@ -204,8 +203,7 @@ for i in range(10):
         'Ctrl + 1/Ctrl + 2',
         async (wrapper) => {
             // Create an interactive window so that it listens to the results.
-            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
-            await interactiveWindow.show();
+            await getOrCreateInteractiveWindow(ioc);
 
             // Type in the input box
             const editor = getInteractiveEditor(wrapper);
@@ -241,8 +239,7 @@ for i in range(10):
         'Escape/Ctrl+U',
         async (wrapper) => {
             // Create an interactive window so that it listens to the results.
-            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
-            await interactiveWindow.show();
+            await getOrCreateInteractiveWindow(ioc);
 
             // Type in the input box
             const editor = getInteractiveEditor(wrapper);
@@ -271,8 +268,7 @@ for i in range(10):
         'Click outside cells sets focus to input box',
         async (wrapper) => {
             // Create an interactive window so that it listens to the results.
-            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
-            await interactiveWindow.show();
+            await getOrCreateInteractiveWindow(ioc);
 
             // Type in the input box
             const editor = getInteractiveEditor(wrapper);
@@ -566,7 +562,6 @@ for i in range(0, 100):
         async (wrapper) => {
             let interruptedKernel = false;
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
-            await interactiveWindow.show();
             interactiveWindow.notebook?.onKernelInterrupted(() => (interruptedKernel = true));
 
             let timerCount = 0;
@@ -676,7 +671,7 @@ for i in range(0, 100):
                     context.skip();
                     return;
                 }
-                const window = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
+                const window = (await interactiveWindowProvider.getOrCreate(undefined)) as InteractiveWindow;
                 await addCode(ioc, wrapper, 'a=1\na');
                 const activeInterpreter = await interpreterService.getActiveInterpreter(
                     await window.getOwningResource()
@@ -700,7 +695,7 @@ for i in range(0, 100):
                 // Then open a second time and make sure it uses this new path
                 const newWrapper = mountWebView(ioc, 'interactive');
                 assert.ok(newWrapper, 'Could not mount a second time');
-                const newWindow = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
+                const newWindow = (await interactiveWindowProvider.getOrCreate(undefined)) as InteractiveWindow;
                 await addCode(ioc, newWrapper, 'a=1\na', false, secondUri);
                 assert.notEqual(
                     newWindow.notebook!.getMatchingInterpreter()?.path,
@@ -722,13 +717,11 @@ for i in range(0, 100):
         async () => {
             // tslint:disable-next-line:no-any
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
-            await interactiveWindow.show(); // Have to wait for the load to finish
             await interactiveWindow.dispose();
             // tslint:disable-next-line:no-any
             const h2 = await getOrCreateInteractiveWindow(ioc);
             // Check equal and then dispose so the test goes away
             const equal = Object.is(interactiveWindow, h2);
-            await h2.show();
             assert.ok(!equal, 'Disposing is not removing the active interactive window');
         },
         () => {
@@ -763,7 +756,7 @@ for i in range(0, 100):
             const updatePromise = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
 
             // Send some code to the interactive window
-            await interactiveWindow.addCode('a=1\na', Uri.file('foo.py').fsPath, 2);
+            await interactiveWindow.addCode('a=1\na', Uri.file('foo.py'), 2);
 
             // Wait for the render to go through
             await updatePromise;
@@ -848,8 +841,7 @@ for i in range(0, 100):
         'Simple input',
         async (wrapper) => {
             // Create an interactive window so that it listens to the results.
-            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
-            await interactiveWindow.show();
+            await getOrCreateInteractiveWindow(ioc);
 
             // Then enter some code.
             await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
@@ -870,8 +862,7 @@ for i in range(0, 100):
             editor.setRevealCallback(() => showedEditor.resolve());
 
             // Create an interactive window so that it listens to the results.
-            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
-            await interactiveWindow.show();
+            await getOrCreateInteractiveWindow(ioc);
 
             // Then enter some code.
             await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
@@ -894,8 +885,7 @@ for i in range(0, 100):
         'Multiple input',
         async (wrapper) => {
             // Create an interactive window so that it listens to the results.
-            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
-            await interactiveWindow.show();
+            await getOrCreateInteractiveWindow(ioc);
 
             // Then enter some code.
             await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
@@ -960,13 +950,13 @@ for i in range(0, 100):
             const executed = createDeferred();
             // We have to wait until the execute goes through before we reset.
             interactiveWindow.onExecutedCode(() => executed.resolve());
-            const added = interactiveWindow.addCode('import time\r\ntime.sleep(1000)', Uri.file('foo').fsPath, 0);
+            const added = interactiveWindow.addCode('import time\r\ntime.sleep(1000)', Uri.file('foo'), 0);
             await executed.promise;
             await interactiveWindow.restartKernel();
             await added;
 
             // Now see if our wrapper still works. Interactive window should have forced a restart
-            await interactiveWindow.addCode('a=1\na', Uri.file('foo').fsPath, 0);
+            await interactiveWindow.addCode('a=1\na', Uri.file('foo'), 0);
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
         },
         () => {
@@ -1054,8 +1044,7 @@ for i in range(0, 100):
         async (wrapper) => {
             ioc.getSettings().datascience.gatherToScript = true;
             // Create an interactive window so that it listens to the results.
-            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
-            await interactiveWindow.show();
+            await getOrCreateInteractiveWindow(ioc);
 
             // Then enter some code.
             await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
@@ -1100,7 +1089,7 @@ for i in range(0, 100):
             const docManager = ioc.get<IDocumentManager>(IDocumentManager);
             docManager.showTextDocument(docManager.textDocuments[0]);
             const window = (await getOrCreateInteractiveWindow(ioc)) as InteractiveWindow;
-            await window.show();
+            await window.load(undefined);
             await window.copyCode({ source: 'print("baz")' });
             assert.equal(
                 docManager.textDocuments[0].getText(),

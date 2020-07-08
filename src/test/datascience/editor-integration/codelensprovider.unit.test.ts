@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, Disposable, TextDocument } from 'vscode';
+import { CancellationTokenSource, Disposable, TextDocument, Uri } from 'vscode';
 
 import {
     ICommandManager,
@@ -15,7 +15,6 @@ import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '..
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { Uri } from 'vscode';
 
 // tslint:disable-next-line: max-func-body-length
 suite('DataScienceCodeLensProvider Unit Tests', () => {

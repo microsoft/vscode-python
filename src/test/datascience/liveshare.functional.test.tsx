@@ -109,9 +109,7 @@ suite('DataScience LiveShare tests', () => {
     async function getOrCreateInteractiveWindow(role: vsls.Role): Promise<IInteractiveWindow> {
         // Get the container to use based on the role.
         const container = role === vsls.Role.Host ? hostContainer : guestContainer;
-        const window = await container!.get<IInteractiveWindowProvider>(IInteractiveWindowProvider).getOrCreateActive();
-        await window.show();
-        return window;
+        return container!.get<IInteractiveWindowProvider>(IInteractiveWindowProvider).getOrCreate(undefined);
     }
 
     function isSessionStarted(role: vsls.Role): boolean {
@@ -169,7 +167,7 @@ suite('DataScience LiveShare tests', () => {
         return waitForResults(role, async (both: boolean) => {
             if (!both) {
                 const history = await getOrCreateInteractiveWindow(role);
-                await history.addCode(code, Uri.file('foo.py').fsPath, 2);
+                await history.addCode(code, Uri.file('foo.py'), 2);
             } else {
                 // Add code to the apropriate container
                 const host = await getOrCreateInteractiveWindow(vsls.Role.Host);
@@ -178,10 +176,10 @@ suite('DataScience LiveShare tests', () => {
                 if (isSessionStarted(vsls.Role.Guest)) {
                     const guest = await getOrCreateInteractiveWindow(vsls.Role.Guest);
                     role === vsls.Role.Host
-                        ? await host.addCode(code, Uri.file('foo.py').fsPath, 2)
-                        : await guest.addCode(code, Uri.file('foo.py').fsPath, 2);
+                        ? await host.addCode(code, Uri.file('foo.py'), 2)
+                        : await guest.addCode(code, Uri.file('foo.py'), 2);
                 } else {
-                    await host.addCode(code, Uri.file('foo.py').fsPath, 2);
+                    await host.addCode(code, Uri.file('foo.py'), 2);
                 }
             }
         });

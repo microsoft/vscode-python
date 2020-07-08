@@ -424,8 +424,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
     @captureTelemetry(Telemetry.CreateNewInteractive, undefined, false)
     private async createNewInteractiveWindow(): Promise<void> {
-        const active = await this.interactiveWindowProvider.getOrCreate(undefined);
-        return active.load(undefined);
+        await this.interactiveWindowProvider.getOrCreate(undefined);
     }
 
     private waitForStatus<T>(

@@ -10,6 +10,7 @@ import { Uri } from 'vscode';
 import { IDocumentManager } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
+import { getInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import {
     IJupyterDebugService,
     IJupyterVariable,
@@ -36,7 +37,7 @@ export async function verifyAfterStep(
     const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
     const file = Uri.file('foo.py');
     docManager.addDocument('a=1\na', file.fsPath);
-    const debugPromise = interactive.debugCode('a=1\na', file.fsPath, 1, undefined, undefined);
+    const debugPromise = interactive.debugCode('a=1\na', file, 1, undefined, undefined);
     await debuggerBroke.promise;
     const variableRefresh = waitForVariablesUpdated(ioc, 'default', numberOfRefreshesRequired);
     await jupyterDebugger.requestVariables(); // This is necessary because not running inside of VS code. Normally it would do this.
@@ -136,7 +137,7 @@ export async function verifyCanFetchData<T>(
     const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
     const notebook = await notebookProvider.getOrCreateNotebook({
         getOnly: true,
-        identity: Uri.parse(Identifiers.InteractiveWindowIdentity)
+        identity: getInteractiveIdentity(undefined)
     });
     expect(notebook).to.not.be.undefined;
     const variableList = await variableFetcher.getVariables(notebook!, {

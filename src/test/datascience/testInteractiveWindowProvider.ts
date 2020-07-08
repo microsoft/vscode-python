@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { Event } from 'vscode';
 
 import { ILiveShareApi } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';

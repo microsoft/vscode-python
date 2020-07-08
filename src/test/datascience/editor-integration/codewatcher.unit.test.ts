@@ -140,7 +140,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         // Setup our active history instance
         interactiveWindowProvider
-            .setup((h) => h.getOrCreateActive())
+            .setup((h) => h.getOrCreate(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(activeInteractiveWindow.object));
 
         // Setup our active text editor
@@ -403,10 +403,10 @@ fourth line
     });
 
     test('Test the RunCell command', async () => {
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const testString = '#%%\ntesting';
-        const document = createDocument(testString, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+        const document = createDocument(testString, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
         const testRange = new Range(0, 0, 1, 7);
 
         codeWatcher.setDocument(document.object);
@@ -436,13 +436,13 @@ fourth line
     });
 
     test('Test the RunFileInteractive command', async () => {
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `#%%
 testing1
 #%%
 testing2`;
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce());
 
         document
             .setup((doc) => doc.getText())
@@ -474,14 +474,14 @@ testing2`;
     });
 
     test('Test the RunAllCells command', async () => {
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `testing0
 #%%
 testing1
 #%%
 testing2`;
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
 
@@ -520,13 +520,13 @@ testing2`;
     });
 
     test('Test the RunCurrentCell command', async () => {
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `#%%
 testing1
 #%%
 testing2`;
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
 
@@ -557,7 +557,7 @@ testing2`;
     });
 
     test('Test the RunCellAndAllBelow command', async () => {
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `#%%
 testing1
@@ -571,7 +571,7 @@ testing2`;
         const targetText2 = `#%%
 testing3`;
 
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
 
@@ -610,7 +610,7 @@ testing3`;
     });
 
     test('Test the RunAllCellsAbove command', async () => {
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `testing0
 #%%
@@ -626,7 +626,7 @@ testing1`;
         const targetText2 = `#%%
 testing2`;
 
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
 
@@ -665,7 +665,7 @@ testing2`;
     });
 
     test('Test the RunToLine command', async () => {
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `#%%
 testing1
@@ -676,7 +676,7 @@ testing3`;
         const targetText = `#%%
 testing1`;
 
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
 
@@ -702,19 +702,19 @@ testing1`;
     });
 
     test('Test the RunToLine command with nothing on the lines', async () => {
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `
 
 print('testing')`;
 
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
 
         // If adding empty lines nothing should be added and history should not be started
         interactiveWindowProvider
-            .setup((h) => h.getOrCreateActive())
+            .setup((h) => h.getOrCreate(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(activeInteractiveWindow.object))
             .verifiable(TypeMoq.Times.never());
         activeInteractiveWindow
@@ -739,7 +739,7 @@ print('testing')`;
     });
 
     test('Test the RunFromLine command', async () => {
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `#%%
 testing1
@@ -752,7 +752,7 @@ testing2
 #%%
 testing3`;
 
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
 
@@ -779,13 +779,13 @@ testing3`;
     });
 
     test('Test the RunSelection command', async () => {
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `#%%
 testing1
 #%%
 testing2`;
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
         helper
@@ -828,13 +828,13 @@ testing2`;
     });
 
     test('Test the RunCellAndAdvance command with next cell', async () => {
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `#%%
 testing1
 #%%
 testing2`;
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
 
@@ -885,10 +885,10 @@ testing2`;
 
     test('CodeLens returned after settings changed is different', () => {
         // Create our document
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = '#%% foobar';
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce());
         document.setup((doc) => doc.getText()).returns(() => inputText);
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
         const codeLensProvider = new DataScienceCodeLensProvider(
@@ -930,7 +930,7 @@ testing2`;
     });
 
     test('Test the RunAllCellsAbove command with an error', async () => {
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `#%%
 testing1
@@ -944,7 +944,7 @@ testing1`;
         const targetText2 = `#%%
 testing2`;
 
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
 
@@ -983,13 +983,13 @@ testing2`;
     });
 
     test('Test the RunAllCells command with an error', async () => {
-        const fileName = Uri.file('test.py').fsPath;
+        const fileName = Uri.file('test.py');
         const version = 1;
         const inputText = `#%%
 testing1
 #%%
 testing2`; // Command tests override getText, so just need the ranges here
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+        const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
 

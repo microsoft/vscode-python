@@ -202,8 +202,7 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
             'Simple autocomplete',
             async (wrapper) => {
                 // Create an interactive window so that it listens to the results.
-                const interactiveWindow = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
-                await interactiveWindow.show();
+                await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
 
                 // Then enter some code. Don't submit, we're just testing that autocomplete appears
                 const suggestion = waitForSuggestion(wrapper);
@@ -225,8 +224,7 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
             'Multiple interpreters',
             async (wrapper) => {
                 // Create an interactive window so that it listens to the results.
-                const interactiveWindow = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
-                await interactiveWindow.show();
+                await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
 
                 // Then enter some code. Don't submit, we're just testing that autocomplete appears
                 let suggestion = waitForSuggestion(wrapper);
@@ -274,8 +272,7 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
                     // This test only works when mocking.
 
                     // Create an interactive window so that it listens to the results.
-                    const interactiveWindow = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
-                    await interactiveWindow.show();
+                    await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
 
                     // Then enter some code. Don't submit, we're just testing that autocomplete appears
                     const suggestion = waitForSuggestion(wrapper);
@@ -301,8 +298,7 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
                     // This test only works when mocking.
 
                     // Create an interactive window so that it listens to the results.
-                    const interactiveWindow = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
-                    await interactiveWindow.show();
+                    await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
 
                     // Force a timeout on the jupyter completions so that it takes some amount of time
                     ioc.mockJupyter.getCurrentSession()!.setCompletionTimeout(100);
@@ -331,8 +327,7 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
                     // This test only works when mocking.
 
                     // Create an interactive window so that it listens to the results.
-                    const interactiveWindow = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
-                    await interactiveWindow.show();
+                    await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
 
                     // Then enter some code. Don't submit, we're just testing that autocomplete appears
                     const suggestion = waitForSuggestion(wrapper);
@@ -359,8 +354,7 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
                     // This test only works when mocking.
 
                     // Create an interactive window so that it listens to the results.
-                    const interactiveWindow = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
-                    await interactiveWindow.show();
+                    await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
 
                     // Then enter some code. Don't submit, we're just testing that autocomplete appears
                     const suggestion = waitForSuggestion(wrapper);

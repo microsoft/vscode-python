@@ -514,7 +514,6 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly active: boolean;
     readonly owner: Resource;
     closed: Event<IInteractiveWindow>;
-    load(owner: Resource): Promise<void>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;
     debugCode(
@@ -528,6 +527,10 @@ export interface IInteractiveWindow extends IInteractiveBase {
     collapseAllCells(): void;
     exportCells(): void;
     scrollToCell(id: string): void;
+}
+
+export interface IInteractiveWindowLoadable extends IInteractiveWindow {
+    load(owner: Resource): Promise<void>;
 }
 
 // For native editing, the provider acts like the IDocumentManager for normal docs

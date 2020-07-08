@@ -23,7 +23,7 @@ export function getInteractiveCellResults(
 
 export async function getOrCreateInteractiveWindow(ioc: DataScienceIocContainer): Promise<IInteractiveWindow> {
     const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-    return (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
+    return (await interactiveWindowProvider.getOrCreate(undefined)) as InteractiveWindow;
 }
 
 export function closeInteractiveWindow(ioc: DataScienceIocContainer, window: IInteractiveWindow) {
@@ -70,7 +70,7 @@ export async function addCode(
     // 5) Status finished
     return getInteractiveCellResults(ioc, wrapper, async () => {
         const history = await getOrCreateInteractiveWindow(ioc);
-        const success = await history.addCode(code, uri.fsPath, 2);
+        const success = await history.addCode(code, uri, 2);
         if (expectError) {
             assert.equal(success, false, `${code} did not produce an error`);
         }

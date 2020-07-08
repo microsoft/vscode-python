@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CodeLens, Disposable, Position, Range, TextDocument, Uri } from 'vscode';
+import { CodeLens, Disposable, Position, Range, TextDocument } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { range } from 'lodash';
@@ -16,6 +16,7 @@ import { IDataScienceSettings } from '../../../client/common/types';
 import * as CellFactory from '../../../client/datascience/cellFactory';
 import { Commands, Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { getInteractiveIdentity } from '../../../client/datascience/interactive-window/identity';
 import {
     ICell,
     ICodeLensFactory,
@@ -103,19 +104,14 @@ suite('DataScience gotocell tests', () => {
             if (!server) {
                 return undefined;
             } else {
-                const nb: INotebook = await server.createNotebook(
-                    undefined,
-                    Uri.parse(Identifiers.InteractiveWindowIdentity)
-                );
+                const uri = getInteractiveIdentity(undefined);
+                const nb: INotebook = await server.createNotebook(undefined, uri);
                 const listener = (codeLensFactory as any) as IInteractiveWindowListener;
                 listener.onMessage(InteractiveWindowMessages.NotebookIdentity, {
-                    resource: Uri.parse(Identifiers.InteractiveWindowIdentity),
+                    resource: uri,
                     type: 'interactive'
                 });
-                listener.onMessage(
-                    InteractiveWindowMessages.NotebookExecutionActivated,
-                    Identifiers.InteractiveWindowIdentity
-                );
+                listener.onMessage(InteractiveWindowMessages.NotebookExecutionActivated, uri);
                 return nb;
             }
         } catch (exc) {

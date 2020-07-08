@@ -27,7 +27,7 @@ import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
-import { Identifiers } from '../../client/datascience/constants';
+import { getInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
@@ -306,11 +306,11 @@ suite('DataScience notebook tests', () => {
                         const newSettings = { ...ioc.getSettings().datascience, jupyterServerURI: uri };
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, newSettings);
                     }
+                    launchingFile = launchingFile || path.join(srcDirectory(), 'foo.py');
                     const notebook = await notebookProvider.getOrCreateNotebook({
-                        identity: Uri.parse(Identifiers.InteractiveWindowIdentity)
+                        identity: getInteractiveIdentity(Uri.file(launchingFile))
                     });
 
-                    launchingFile = launchingFile || path.join(srcDirectory(), 'foo.py');
                     if (notebook) {
                         await notebook.setLaunchingFile(launchingFile);
                     }
@@ -889,7 +889,7 @@ suite('DataScience notebook tests', () => {
                 const nonCancelSource = new CancellationTokenSource();
                 const server = await jupyterExecution.connectToNotebookServer(undefined, nonCancelSource.token);
                 const notebook = server
-                    ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
+                    ? await server.createNotebook(baseUri, getInteractiveIdentity(undefined))
                     : undefined;
                 assert.ok(notebook, 'Server not found with a cancel token that does not cancel');
 
@@ -1479,8 +1479,8 @@ plt.show()`,
             runTest('Notebook launch retry', async function (_this: Mocha.Context) {
                 // Skipping for now. Renable to test idle timeouts
                 _this.skip();
-                ioc.getSettings().datascience.jupyterLaunchRetries = 1;
-                ioc.getSettings().datascience.jupyterLaunchTimeout = 10000;
+                // ioc.getSettings().datascience.jupyterLaunchRetries = 1;
+                // ioc.getSettings().datascience.jupyterLaunchTimeout = 10000;
                 //         ioc.getSettings().datascience.runStartupCommands = '%config Application.log_level="DEBUG"';
                 //         const log = `import logging
                 // logger = logging.getLogger()
@@ -1489,13 +1489,13 @@ plt.show()`,
                 // fhandler.setFormatter(formatter)
                 // logger.addHandler(fhandler)
                 // logger.setLevel(logging.DEBUG)`;
-                for (let i = 0; i < 100; i += 1) {
-                    const notebook = await createNotebook();
-                    assert.ok(notebook, 'did not create notebook');
-                    await notebook!.dispose();
-                    const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
-                    await exec.dispose();
-                }
+                // for (let i = 0; i < 100; i += 1) {
+                //     const notebook = await createNotebook();
+                //     assert.ok(notebook, 'did not create notebook');
+                //     await notebook!.dispose();
+                //     const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
+                //     await exec.dispose();
+                // }
             });
         });
     });
