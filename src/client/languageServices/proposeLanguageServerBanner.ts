@@ -6,21 +6,24 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
 import { LanguageServerType } from '../activation/types';
-import { IApplicationShell } from '../common/application/types';
+import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import { IConfigurationService, IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
+import { LanguageService } from '../common/utils/localize';
 import { getRandomBetween } from '../common/utils/random';
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
-    ShowBanner = 'ProposeLSBanner'
+    ShowBanner = 'ProposePylanceBanner'
 }
 
-enum ProposeLSLabelIndex {
-    Yes,
-    No,
-    Later
-}
+const frequencyPerServerType = new Map<LanguageServerType, number>([
+    [LanguageServerType.Node, 0],
+    [LanguageServerType.Microsoft, 50],
+    [LanguageServerType.None, 50],
+    // Banner for Jedi users is suppressed until further notice.
+    [LanguageServerType.Jedi, 0]
+]);
 
 /*
 This class represents a popup that propose that the user try out a new
@@ -30,21 +33,28 @@ and will show as soon as it is instructed to do so, if a random sample
 function enables the popup for this user.
 */
 @injectable()
-export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
+export class ProposePylanceBanner implements IPythonExtensionBanner {
     private initialized?: boolean;
     private disabledInCurrentSession: boolean = false;
-    private sampleSizePerHundred: number;
-    private bannerMessage: string =
-        'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.';
-    private bannerLabels: string[] = ['Try it now', 'No thanks', 'Remind me Later'];
+    private sampleSizePerHundred = 0;
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        sampleSizePerOneHundredUsers: number = 10
+        @inject(IApplicationEnvironment) private appEnvirontment: IApplicationEnvironment,
+        sampleSizePerHundred = -1
     ) {
-        this.sampleSizePerHundred = sampleSizePerOneHundredUsers;
+        if (this.appEnvirontment.channel === 'insiders') {
+            this.sampleSizePerHundred = 100;
+        } else {
+            if (sampleSizePerHundred >= 0) {
+                this.sampleSizePerHundred = sampleSizePerHundred;
+            } else {
+                const lsType = this.configuration.getSettings().languageServer ?? LanguageServerType.Jedi;
+                this.sampleSizePerHundred = frequencyPerServerType.get(lsType) ?? 0;
+            }
+        }
         this.initialize();
     }
 
@@ -59,7 +69,6 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
             return;
         }
 
-        // we only want 10% of folks that use Jedi to see this survey.
         const randomSample: number = getRandomBetween(0, 100);
         if (randomSample >= this.sampleSizePerHundred) {
             this.disable().ignoreErrors();
@@ -67,9 +76,7 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
         }
     }
     public get enabled(): boolean {
-        // Banner is deactivated.
-        return false;
-        // return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
+        return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
     }
 
     public async showBanner(): Promise<void> {
@@ -82,25 +89,20 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
             return;
         }
 
-        const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
-        switch (response) {
-            case this.bannerLabels[ProposeLSLabelIndex.Yes]: {
-                await this.enableLanguageServer();
-                await this.disable();
-                break;
-            }
-            case this.bannerLabels[ProposeLSLabelIndex.No]: {
-                await this.disable();
-                break;
-            }
-            case this.bannerLabels[ProposeLSLabelIndex.Later]: {
-                this.disabledInCurrentSession = true;
-                break;
-            }
-            default: {
-                // Disable for the current session.
-                this.disabledInCurrentSession = true;
-            }
+        const response = await this.appShell.showInformationMessage(
+            LanguageService.proposePylanceMessage(),
+            LanguageService.tryItNow(),
+            LanguageService.bannerLabelNo(),
+            LanguageService.remindMeLater()
+        );
+
+        if (response === LanguageService.tryItNow()) {
+            await this.enableLanguageServer();
+            await this.disable();
+        } else if (response === LanguageService.bannerLabelNo()) {
+            await this.disable();
+        } else {
+            this.disabledInCurrentSession = true;
         }
     }
 
@@ -117,7 +119,7 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     public async enableLanguageServer(): Promise<void> {
         await this.configuration.updateSetting(
             'languageServer',
-            LanguageServerType.Microsoft,
+            LanguageServerType.Node,
             undefined,
             ConfigurationTarget.Global
         );
