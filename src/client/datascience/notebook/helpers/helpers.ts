@@ -61,11 +61,11 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
         cells,
         languages: [defaultLanguage],
         metadata: {
-            cellEditable: true,
-            cellRunnable: true,
-            editable: true,
+            cellEditable: model.isTrusted,
+            cellRunnable: model.isTrusted,
+            editable: model.isTrusted,
             cellHasExecutionOrder: true,
-            runnable: true,
+            runnable: model.isTrusted,
             displayOrder: [
                 'application/vnd.*',
                 'application/vdom.*',
@@ -177,11 +177,11 @@ export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: I
             cell.data.cell_type === 'code' ? vscodeNotebookEnums.CellKind.Code : vscodeNotebookEnums.CellKind.Markdown,
         language: cell.data.cell_type === 'code' ? defaultCodeLanguage : MARKDOWN_LANGUAGE,
         metadata: {
-            editable: true,
+            editable: model.isTrusted,
             executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
             hasExecutionOrder: cell.data.cell_type === 'code',
             runState,
-            runnable: cell.data.cell_type === 'code'
+            runnable: cell.data.cell_type === 'code' && model.isTrusted
         },
         source: concatMultilineStringInput(cell.data.source),
         outputs
