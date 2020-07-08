@@ -11,6 +11,7 @@ import { IInterpreterDisplay, IInterpreterStatusbarVisibilityFilter } from '../c
  * Create this class as Inversify doesn't allow @multiinject if there are no registered items.
  * i.e. we must always have one for @multiinject to work.
  */
+@injectable()
 export class AlwaysDisplayStatusBar implements IInterpreterStatusbarVisibilityFilter {
     public shouldDisplayStatusBar(): boolean {
         return true;
