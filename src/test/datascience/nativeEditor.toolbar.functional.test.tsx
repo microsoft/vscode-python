@@ -8,6 +8,7 @@ import * as sinon from 'sinon';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { getNamesAndValues } from '../../client/common/utils/enum';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
+import { TrustMessage } from '../../datascience-ui/interactive-common/trustMessage';
 import { INativeEditorToolbarProps, Toolbar } from '../../datascience-ui/native-editor/toolbar';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { noop } from '../core';
@@ -75,12 +76,12 @@ suite('DataScience Native Toolbar', () => {
         return wrapper.find(ImageButton).at(button);
     }
     function getTrustMessage() {
-        return wrapper.find('.jupyter-info-section');
+        return wrapper.find(TrustMessage);
     }
     function clickTrustMessage() {
-        const handler = getTrustMessage().props().onClick;
+        const handler = getTrustMessage().props().launchNotebookTrustPrompt;
         if (handler) {
-            handler({} as any);
+            handler();
         }
     }
     function assertEnabled(button: Button) {
