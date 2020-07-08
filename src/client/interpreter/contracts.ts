@@ -120,3 +120,12 @@ export interface IInterpreterLocatorProgressService {
     readonly onRefreshed: Event<void>;
     register(): void;
 }
+
+export const IInterpreterStatusbarVisibilityFilter = Symbol('IInterpreterStatusbarVisibilityFilter');
+/**
+ * Implement this interface to control the visibility of the interpreter statusbar.
+ */
+export interface IInterpreterStatusbarVisibilityFilter {
+    readonly changed?: Event<void>;
+    readonly visible: boolean;
+}

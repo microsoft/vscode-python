@@ -15,6 +15,8 @@ export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 export const JupyterDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
 export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_launcher_daemon';
 
+export const GatherExtension = 'ms-python.gather';
+
 // List of 'language' names that we know about. All should be lower case as that's how we compare.
 export const KnownNotebookLanguages: string[] = [
     'python',
@@ -315,6 +317,7 @@ export enum Telemetry {
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
     KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',
+    GatherIsInstalled = 'DS_INTERNAL.GATHER_IS_INSTALLED',
     GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED',
     GatheredNotebookSaved = 'DATASCIENCE.GATHERED_NOTEBOOK_SAVED',
     GatherQualityReport = 'DS_INTERNAL.GATHER_QUALITY_REPORT',

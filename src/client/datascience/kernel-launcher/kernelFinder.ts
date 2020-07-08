@@ -12,6 +12,7 @@ import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IExtensionContext, IInstaller, InstallerResponse, IPathUtils, Product, Resource } from '../../common/types';
+import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterLocatorService, IInterpreterService, KNOWN_PATH_SERVICE } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { getRealPath } from '../common';
@@ -58,7 +59,8 @@ export class KernelFinder implements IKernelFinder {
         @inject(IInstaller) private installer: IInstaller,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IPythonExecutionFactory) private readonly exeFactory: IPythonExecutionFactory
+        @inject(IPythonExecutionFactory) private readonly exeFactory: IPythonExecutionFactory,
+        @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider
     ) {}
 
     @captureTelemetry(Telemetry.KernelFinderPerf)
@@ -234,6 +236,8 @@ export class KernelFinder implements IKernelFinder {
 
     private async getDiskPaths(): Promise<string[]> {
         let paths: string[] = [];
+        const vars = await this.envVarsProvider.getEnvironmentVariables();
+        const jupyterPathVar = vars.JUPYTER_PATH || '';
 
         if (this.platformService.isWindows) {
             const activeInterpreter = await this.interpreterService.getActiveInterpreter();
@@ -247,8 +251,28 @@ export class KernelFinder implements IKernelFinder {
                 if (winPath) {
                     paths = [winPath];
                 }
+
+                if (jupyterPathVar !== '') {
+                    const jupyterPaths = jupyterPathVar.split(path.delimiter);
+                    jupyterPaths.forEach(async (jupyterPath) => {
+                        const jupyterWinPath = await getRealPath(
+                            this.file,
+                            this.exeFactory,
+                            activeInterpreter.path,
+                            jupyterPath
+                        );
+
+                        if (jupyterWinPath) {
+                            paths.push(jupyterWinPath);
+                        }
+                    });
+                }
             } else {
                 paths = [path.join(this.pathUtils.home, winJupyterPath)];
+                if (jupyterPathVar !== '') {
+                    const jupyterPaths = jupyterPathVar.split(path.delimiter);
+                    paths.push(...jupyterPaths);
+                }
             }
 
             if (process.env.ALLUSERSPROFILE) {
@@ -263,6 +287,11 @@ export class KernelFinder implements IKernelFinder {
                 path.join('usr', 'local', 'share', 'jupyter', 'kernels'),
                 path.join(this.pathUtils.home, secondPart)
             ];
+
+            if (jupyterPathVar !== '') {
+                const jupyterPaths = jupyterPathVar.split(path.delimiter);
+                paths.push(...jupyterPaths);
+            }
         }
 
         return paths;

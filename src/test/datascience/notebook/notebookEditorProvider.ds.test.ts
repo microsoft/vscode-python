@@ -21,11 +21,10 @@ import {
     createTemporaryNotebook,
     deleteAllCellsAndWait,
     insertMarkdownCellAndWait,
-    insertPythonCellAndWait,
-    swallowSavingOfNotebooks
+    insertPythonCellAndWait
 } from './helper';
 
-suite('DataScience - VSCode Notebook', function () {
+suite('DataScience - VSCode Notebook (Editor Provider)', function () {
     // tslint:disable: no-invalid-this no-any
     this.timeout(5_000);
 
@@ -55,14 +54,12 @@ suite('DataScience - VSCode Notebook', function () {
     });
     setup(async () => {
         sinon.restore();
-        await swallowSavingOfNotebooks();
-
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
     });
     teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    suiteTeardown(closeActiveWindows);
+    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     test('No notebooks when opening VSC', async () => {
         assert.isUndefined(vscodeNotebook.activeNotebookEditor);
@@ -459,7 +456,7 @@ suite('DataScience - VSCode Notebook', function () {
         // Open another notebook.
         await commandManager.executeCommand('vscode.openWith', testIPynb, JupyterNotebookView);
 
-        await notebookOpened.assertFiredExactly(2);
+        await notebookOpened.assertFiredAtLeast(2);
         await activeNotebookChanged.assertFiredExactly(2);
     });
 });

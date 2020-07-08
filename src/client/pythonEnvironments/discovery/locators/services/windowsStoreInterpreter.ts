@@ -13,19 +13,38 @@ import { IInterpreterHashProvider, IWindowsStoreInterpreter } from '../../../../
 import { IServiceContainer } from '../../../../ioc/types';
 
 /**
+ * When using Windows Store interpreter the path that should be used is under
+ * %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\python*.exe. The python.exe path
+ * under ProgramFiles\WindowsApps should not be used at all. Execute permissions on
+ * that instance of the store interpreter are restricted to system. Paths under
+ * %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation* are also ok
+ * to use. But currently this results in duplicate entries.
+ *
+ * @param {string} pythonPath
+ * @returns {boolean}
+ */
+export function isRestrictedWindowsStoreInterpreterPath(pythonPath: string): boolean {
+    const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
+    return (
+        pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
+        pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
+    );
+}
+
+/**
  * The default location of Windows apps are `%ProgramFiles%\WindowsApps`.
  * (https://www.samlogic.net/articles/windows-8-windowsapps-folder.htm)
  * When users access Python interpreter it is installed in `<users local folder>\Microsoft\WindowsApps`
  * Based on our testing this is where Python interpreters installed from Windows Store is always installed.
- * (unforutnately couldn't find any documentation on this).
+ * (unfortunately couldn't find any documentation on this).
  * What we've identified is the fact that:
  * - The Python interpreter in Microsoft\WIndowsApps\python.exe is a symbolic link to files located in:
  *  - Program Files\WindowsApps\ & Microsoft\WindowsApps\PythonSoftwareFoundation
  * - I.e. they all point to the same place.
- * However when the user lauches the executabale, its located in `Microsoft\WindowsAapps\python.exe`
+ * However when the user launches the executable, its located in `Microsoft\WindowsApps\python.exe`
  * Hence for all intensive purposes that's the main executable, that's what the user uses.
  * As a result:
- * - We'll only display what the user has access to, that being `Microsoft\WindowsAapps\python.exe`
+ * - We'll only display what the user has access to, that being `Microsoft\WindowsApps\python.exe`
  * - Others are hidden.
  *
  * Details can be found here (original issue https://github.com/microsoft/vscode-python/issues/5926).
@@ -66,11 +85,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
      * @memberof IInterpreterHelper
      */
     public isHiddenInterpreter(pythonPath: string): boolean {
-        const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
-        return (
-            pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
-            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
-        );
+        return isRestrictedWindowsStoreInterpreterPath(pythonPath);
     }
     /**
      * Gets the hash of the Python interpreter (installed from the windows store).

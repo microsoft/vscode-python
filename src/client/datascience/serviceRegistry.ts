@@ -140,7 +140,6 @@ import {
     IDebugLocationTracker,
     IDigestStorage,
     IGatherLogger,
-    IGatherProvider,
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
@@ -311,9 +310,5 @@ export function registerTypes(serviceManager: IServiceManager) {
 }
 
 export function registerGatherTypes(serviceManager: IServiceManager) {
-    // tslint:disable-next-line: no-require-imports
-    const gather = require('./gather/gather');
-
-    serviceManager.add<IGatherProvider>(IGatherProvider, gather.GatherProvider);
     serviceManager.add<IGatherLogger>(IGatherLogger, GatherLogger, undefined, [INotebookExecutionLogger]);
 }

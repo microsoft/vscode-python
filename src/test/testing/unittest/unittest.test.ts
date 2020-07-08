@@ -53,11 +53,9 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         ioc.registerUnitTestTypes();
         ioc.registerProcessTypes();
         ioc.registerInterpreterStorageTypes();
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
-        ioc.serviceManager.addSingletonInstance<IInterpreterService>(
-            IInterpreterService,
-            instance(mock(InterpreterService))
-        );
+        ioc.registerMockInterpreterTypes();
+        ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();

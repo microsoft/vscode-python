@@ -24,10 +24,8 @@ import { ICondaService, IInterpreterService } from '../../../client/interpreter/
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { InterpreterHashProvider } from '../../../client/pythonEnvironments/discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
 import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
+import { registerForIOC } from '../../../client/pythonEnvironments/legacyIOC';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { ITestManagerFactory } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
@@ -134,20 +132,13 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         // Mocks.
         ioc.registerMockProcessTypes();
         ioc.registerInterpreterStorageTypes();
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(
             IInterpreterService,
             instance(mock(InterpreterService))
         );
         ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
-
-        ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-        ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(
-            InterpeterHashProviderFactory,
-            InterpeterHashProviderFactory
-        );
-        ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+        registerForIOC(ioc.serviceManager);
+        ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 
     async function injectTestDiscoveryOutput(output: string) {

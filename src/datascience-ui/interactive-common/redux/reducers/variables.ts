@@ -15,7 +15,7 @@ import {
 } from '../../../../client/datascience/types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { postActionToExtension } from '../helpers';
-import { CommonActionType, CommonActionTypeMapping, IVariableExplorerHeight } from './types';
+import { CommonActionType, CommonActionTypeMapping, ICellAction, IVariableExplorerHeight } from './types';
 
 export type IVariableState = {
     currentExecutionCount: number;
@@ -27,6 +27,7 @@ export type IVariableState = {
     containerHeight: number;
     gridHeight: number;
     refreshCount: number;
+    showVariablesOnDebug: boolean;
 };
 
 type VariableReducerFunc<T = never | undefined> = ReducerFunc<
@@ -62,7 +63,8 @@ function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVari
 function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
     const newState: IVariableState = {
         ...arg.prevState,
-        visible: !arg.prevState.visible
+        visible: !arg.prevState.visible,
+        showVariablesOnDebug: false // If user does any toggling don't auto open this.
     };
 
     postActionToExtension(arg, InteractiveWindowMessages.VariableExplorerToggle, newState.visible);
@@ -254,6 +256,18 @@ function handleRefresh(arg: VariableReducerArg): IVariableState {
     };
 }
 
+function handleDebugStart(arg: VariableReducerArg<ICellAction>): IVariableState {
+    // If we haven't already turned on variables, do so now
+    if (arg.prevState.showVariablesOnDebug) {
+        return {
+            ...arg.prevState,
+            showVariablesOnDebug: false,
+            visible: true
+        };
+    }
+    return arg.prevState;
+}
+
 type VariableReducerFunctions<T> = {
     [P in keyof T]: T[P] extends never | undefined ? VariableReducerFunc : VariableReducerFunc<T[P]>;
 };
@@ -270,10 +284,13 @@ const reducerMap: Partial<VariableActionMapping> = {
     [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: setVariableExplorerHeight,
     [InteractiveWindowMessages.VariableExplorerHeightResponse]: handleVariableExplorerHeightResponse,
     [CommonActionType.GET_VARIABLE_DATA]: handleRequest,
-    [InteractiveWindowMessages.GetVariablesResponse]: handleResponse
+    [InteractiveWindowMessages.GetVariablesResponse]: handleResponse,
+    [CommonActionType.RUN_BY_LINE]: handleDebugStart
 };
 
-export function generateVariableReducer(): Reducer<IVariableState, QueuableAction<Partial<VariableActionMapping>>> {
+export function generateVariableReducer(
+    showVariablesOnDebug: boolean
+): Reducer<IVariableState, QueuableAction<Partial<VariableActionMapping>>> {
     // First create our default state.
     const defaultState: IVariableState = {
         currentExecutionCount: 0,
@@ -284,7 +301,8 @@ export function generateVariableReducer(): Reducer<IVariableState, QueuableActio
         pageSize: 5,
         containerHeight: 0,
         gridHeight: 200,
-        refreshCount: 0
+        refreshCount: 0,
+        showVariablesOnDebug
     };
 
     // Then combine that with our map of state change message to reducer

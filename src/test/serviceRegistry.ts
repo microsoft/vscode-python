@@ -46,42 +46,14 @@ import {
     IInterpreterAutoSelectionService,
     IInterpreterAutoSeletionProxyService
 } from '../client/interpreter/autoSelection/types';
-import {
-    CONDA_ENV_FILE_SERVICE,
-    CONDA_ENV_SERVICE,
-    CURRENT_PATH_SERVICE,
-    GLOBAL_VIRTUAL_ENV_SERVICE,
-    IInterpreterLocatorHelper,
-    IInterpreterLocatorService,
-    IInterpreterService,
-    INTERPRETER_LOCATOR_SERVICE,
-    KNOWN_PATH_SERVICE,
-    PIPENV_SERVICE,
-    WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
-} from '../client/interpreter/contracts';
+import { IInterpreterService } from '../client/interpreter/contracts';
 import { InterpreterService } from '../client/interpreter/interpreterService';
-import { IPipEnvServiceHelper } from '../client/interpreter/locators/types';
 import { registerInterpreterTypes } from '../client/interpreter/serviceRegistry';
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { registerTypes as lintersRegisterTypes } from '../client/linters/serviceRegistry';
-import { PythonInterpreterLocatorService } from '../client/pythonEnvironments/discovery/locators';
-import { InterpreterLocatorHelper } from '../client/pythonEnvironments/discovery/locators/helpers';
-import { CondaEnvFileService } from '../client/pythonEnvironments/discovery/locators/services/condaEnvFileService';
-import { CondaEnvService } from '../client/pythonEnvironments/discovery/locators/services/condaEnvService';
-import { CurrentPathService } from '../client/pythonEnvironments/discovery/locators/services/currentPathService';
-import { GlobalVirtualEnvService } from '../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvService';
-import { InterpreterHashProvider } from '../client/pythonEnvironments/discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
-import { KnownPathsService } from '../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
-import { PipEnvService } from '../client/pythonEnvironments/discovery/locators/services/pipEnvService';
-import { PipEnvServiceHelper } from '../client/pythonEnvironments/discovery/locators/services/pipEnvServiceHelper';
-import { WindowsRegistryService } from '../client/pythonEnvironments/discovery/locators/services/windowsRegistryService';
-import { WindowsStoreInterpreter } from '../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
-import { WorkspaceVirtualEnvService } from '../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
+import { registerForIOC } from '../client/pythonEnvironments/legacyIOC';
 import { TEST_OUTPUT_CHANNEL } from '../client/testing/common/constants';
 import { registerTypes as unittestsRegisterTypes } from '../client/testing/serviceRegistry';
 import { MockOutputChannel } from './mockClasses';
@@ -273,13 +245,6 @@ export class IocContainer {
             IEnvironmentActivationService,
             instance(mockEnvironmentActivationService)
         );
-        this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-        this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-        this.serviceManager.addSingleton<InterpeterHashProviderFactory>(
-            InterpeterHashProviderFactory,
-            InterpeterHashProviderFactory
-        );
-        this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     }
     public registerVariableTypes() {
         variableRegisterTypes(this.serviceManager);
@@ -333,58 +298,8 @@ export class IocContainer {
 
     public registerMockInterpreterTypes() {
         this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            PythonInterpreterLocatorService,
-            INTERPRETER_LOCATOR_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            CondaEnvFileService,
-            CONDA_ENV_FILE_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            CondaEnvService,
-            CONDA_ENV_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            CurrentPathService,
-            CURRENT_PATH_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            GlobalVirtualEnvService,
-            GLOBAL_VIRTUAL_ENV_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            WorkspaceVirtualEnvService,
-            WORKSPACE_VIRTUAL_ENV_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            PipEnvService,
-            PIPENV_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            WindowsRegistryService,
-            WINDOWS_REGISTRY_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            KnownPathsService,
-            KNOWN_PATH_SERVICE
-        );
-
-        this.serviceManager.addSingleton<IInterpreterLocatorHelper>(
-            IInterpreterLocatorHelper,
-            InterpreterLocatorHelper
-        );
-        this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
         this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
+        registerForIOC(this.serviceManager);
     }
 
     public registerMockProcess() {

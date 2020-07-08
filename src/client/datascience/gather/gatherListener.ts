@@ -112,7 +112,7 @@ export class GatherListener implements IInteractiveWindowListener {
         }
     }
 
-    private getGatherProvider(nb: INotebook): IGatherProvider | undefined {
+    private getGatherProvider(nb: INotebook): any | undefined {
         const gatherLogger = <IGatherLogger>(
             nb.getLoggers().find((logger: INotebookExecutionLogger) => (<IGatherLogger>logger).getGatherProvider)
         );
@@ -139,7 +139,9 @@ export class GatherListener implements IInteractiveWindowListener {
     private gatherCodeInternal = async (cell: ICell, toScript: boolean = false) => {
         this.gatherTimer = new StopWatch();
 
-        const slicedProgram = this.gatherProvider ? this.gatherProvider.gatherCode(cell) : 'Gather internal error';
+        const slicedProgram = this.gatherProvider
+            ? this.gatherProvider.gatherCode(cell)
+            : localize.DataScience.gatherError();
 
         if (!slicedProgram) {
             sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'err' });

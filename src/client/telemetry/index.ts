@@ -1775,7 +1775,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SubmitCellThroughInput]: never | undefined;
     [Telemetry.Undo]: never | undefined;
     [Telemetry.VariableExplorerFetchTime]: never | undefined;
-    [Telemetry.VariableExplorerToggled]: { open: boolean };
+    [Telemetry.VariableExplorerToggled]: { open: boolean; runByLine: boolean };
     [Telemetry.VariableExplorerVariableCount]: { variableCount: number };
     [Telemetry.WaitForIdleJupyter]: never | undefined;
     [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
@@ -2034,6 +2034,7 @@ export interface IEventNamePropertyMapping {
      * @memberof IEventNamePropertyMapping
      */
     [Telemetry.KernelInvalid]: undefined | never;
+    [Telemetry.GatherIsInstalled]: undefined | never;
     [Telemetry.GatherCompleted]: {
         /**
          * result indicates whether the gather was completed to a script, notebook or suffered an internal error.

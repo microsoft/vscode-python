@@ -24,8 +24,7 @@ import {
     deleteAllCellsAndWait,
     disposeAllDisposables,
     insertPythonCellAndWait,
-    startJupyter,
-    swallowSavingOfNotebooks
+    startJupyter
 } from './helper';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -36,7 +35,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  * We will not use actual kernels, just ensure the appropriate methods are invoked on the appropriate classes.
  * This is done by stubbing out some methods.
  */
-suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors', function () {
+suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', function () {
     this.timeout(60_000);
 
     let api: IExtensionTestApi;
@@ -60,7 +59,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors', functio
         executionService = api.serviceContainer.get<INotebookExecutionService>(INotebookExecutionService);
 
         sinon.restore();
-        await swallowSavingOfNotebooks();
 
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
@@ -71,7 +69,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors', functio
     teardown(() => disposeAllDisposables(suiteDisposables));
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables)));
 
-    test('Cancelling token will cancel cell execution (slow)', async () => {
+    test('Cancelling token will cancel cell execution', async () => {
         await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
         const cancellation = new CancellationTokenSource();
         const cell = vscEditor.document.cells[0];
@@ -93,7 +91,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors', functio
         await waitForCondition(async () => deferred.completed, 5_000, 'Execution not cancelled');
         assertVSCCellHasErrors(cell);
     });
-    test('Cancelling using VSC Command for cell (slow)', async function () {
+    test('Cancelling using VSC Command for cell', async function () {
         // Fails due to VSC bugs.
         return this.skip();
         await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
@@ -113,7 +111,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors', functio
 
         await waitForCondition(async () => assertVSCCellHasErrors(cell), 1_000, 'Execution not cancelled');
     });
-    test('Cancelling using VSC Command in toolbar (slow)', async () => {
+    test('Cancelling using VSC Command in toolbar', async () => {
         await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
         const cell = vscEditor.document.cells[0];
 
@@ -176,7 +174,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors', functio
         assert.equal(cell1Output2.outputKind, vscodeNotebookEnums.CellOutputKind.Error, 'Should be error output');
         assert.equal(interrupt.callCount, 1, 'Interrupt should have been invoked only once');
     });
-    test('Restarting kernel will cancel cell execution (slow)', async () => {
+    test('Restarting kernel will cancel cell execution', async () => {
         await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
         const cell = vscEditor.document.cells[0];
 

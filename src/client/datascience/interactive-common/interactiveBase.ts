@@ -1364,7 +1364,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const openValue = payload as boolean;
 
             // Log the state in our Telemetry
-            sendTelemetryEvent(Telemetry.VariableExplorerToggled, undefined, { open: openValue });
+            sendTelemetryEvent(Telemetry.VariableExplorerToggled, undefined, {
+                open: openValue,
+                runByLine: this.jupyterDebugger.isRunningByLine
+            });
         }
     };
 

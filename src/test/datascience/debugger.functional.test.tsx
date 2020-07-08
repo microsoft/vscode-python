@@ -203,8 +203,11 @@ suite('DataScience Debugger tests', () => {
 
                 // Step if allowed
                 if (stepAndVerify && ioc.getDefaultWrapper() && !ioc.mockJupyter) {
-                    // Verify variables work
-                    openVariableExplorer(ioc.getDefaultWrapper());
+                    // Verify variables work. Native editor should already open the variable explorer
+                    // automatically
+                    if (type === 'default') {
+                        openVariableExplorer(ioc.getDefaultWrapper());
+                    }
                     breakPromise = createDeferred<void>();
                     await jupyterDebuggerService?.step();
                     await breakPromise.promise;

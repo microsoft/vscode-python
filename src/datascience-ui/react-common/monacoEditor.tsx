@@ -94,6 +94,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private visibleLineCount: number = -1;
     private attached: boolean = false; // Keeps track of when we reparent the editor out of the dummy dom node.
     private pendingLayoutScroll = false;
+    private lastPasteCommandTime = 0;
+    private lastPasteCommandText = '';
 
     constructor(props: IMonacoEditorProps) {
         super(props);
@@ -134,6 +136,18 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 language: this.props.language,
                 ...this.props.options
             });
+
+            // Listen for commands on the editor. This is to work around a problem
+            // with double pasting
+            // tslint:disable: no-any
+            if ((editor as any)._commandService) {
+                const commandService = (editor as any)._commandService as any;
+                if (commandService._onWillExecuteCommand) {
+                    this.subscriptions.push(
+                        commandService._onWillExecuteCommand.event(this.onCommandWillExecute.bind(this))
+                    );
+                }
+            }
 
             // Force the editor to behave like a unix editor as
             // all of our code is assuming that.
@@ -581,6 +595,18 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             return visibility ? visibility !== 'hidden' : true;
         }
         return false;
+    }
+
+    private onCommandWillExecute(ev: { commandId: string; args: any[] }) {
+        if (ev.commandId === 'paste' && ev.args.length > 0 && ev.args[0].text) {
+            // See if same as last paste and within 100ms. This is the error condition.
+            const diff = Date.now() - this.lastPasteCommandTime;
+            if (diff < 100 && ev.args[0].text && ev.args[0].text === this.lastPasteCommandText) {
+                ev.args[0].text = ''; // Turn into an empty paste to null the operation.
+            }
+            this.lastPasteCommandText = ev.args[0].text;
+            this.lastPasteCommandTime = Date.now();
+        }
     }
 
     private setAriaReadOnly(editor: monacoEditor.editor.IStandaloneCodeEditor) {

@@ -6,10 +6,11 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { commands, Uri } from 'vscode';
+import { commands, Position, Range, Uri, window } from 'vscode';
+import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { INotebookModelChange } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../../../client/datascience/types';
+import { ICell, INotebookEditor, INotebookEditorProvider, INotebookModel } from '../../../client/datascience/types';
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { createEventHandler, IExtensionTestApi, TestEventHandler, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
@@ -23,8 +24,7 @@ import {
     insertMarkdownCell,
     insertMarkdownCellAndWait,
     insertPythonCell,
-    insertPythonCellAndWait,
-    swallowSavingOfNotebooks
+    insertPythonCellAndWait
 } from './helper';
 
 suite('DataScience - VSCode Notebook (Edit)', function () {
@@ -44,6 +44,7 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
     const disposables: IDisposable[] = [];
     let editedEvent: TestEventHandler<INotebookEditor>;
     let changedEvent: TestEventHandler<INotebookModelChange>;
+    let vscNotebook: IVSCodeNotebook;
     suiteSetup(async function () {
         this.timeout(10_000);
         api = await initialize();
@@ -51,6 +52,7 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
             return this.skip();
         }
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+        vscNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     [true, false].forEach((isUntitled) => {
@@ -58,7 +60,6 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
             let model: INotebookModel;
             setup(async () => {
                 sinon.restore();
-                await swallowSavingOfNotebooks();
 
                 // Don't use same file (due to dirty handling, we might save in dirty.)
                 // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
@@ -72,6 +73,42 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
                 changedEvent = createEventHandler(editorProvider.activeEditor!.model!, 'changed', disposables);
             });
             teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+            async function assertTextInCell(cell: ICell, text: string) {
+                await waitForCondition(
+                    async () => (cell.data.source as string[]).join('') === splitMultilineString(text).join(''),
+                    1_000,
+                    `Text ${text} is not in ${(cell.data.source as string[]).join('')}`
+                );
+            }
+            test('Insert and edit cell', async () => {
+                await deleteAllCellsAndWait();
+                await insertPythonCellAndWait('HELLO');
+                const doc = vscNotebook.activeNotebookEditor?.document;
+                const cellEditor1 = window.visibleTextEditors.find(
+                    (item) => doc?.cells.length && item.document.uri.toString() === doc?.cells[0].uri.toString()
+                );
+                await assertTextInCell(model.cells[0], 'HELLO');
+
+                // Edit cell.
+                await new Promise((resolve) =>
+                    cellEditor1?.edit((editor) => {
+                        editor.insert(new Position(0, 5), ' WORLD');
+                        resolve();
+                    })
+                );
+
+                await assertTextInCell(model.cells[0], 'HELLO WORLD');
+
+                //Clear cell text.
+                await new Promise((resolve) =>
+                    cellEditor1?.edit((editor) => {
+                        editor.delete(new Range(0, 0, 0, 'HELLO WORLD'.length));
+                        resolve();
+                    })
+                );
+
+                await assertTextInCell(model.cells[0], '');
+            });
 
             test('Deleting a cell in an nb should update our NotebookModel', async () => {
                 // Delete first cell.
@@ -164,7 +201,7 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
                 await editedEvent.assertFired();
                 await changedEvent.assertFired();
             });
-            test('Toggle cells (code->mardown->code->markdown)', async () => {
+            test('Toggle cells (code->markdown->code->markdown)', async () => {
                 await deleteAllCellsAndWait();
                 await insertPythonCellAndWait('HELLO');
 
