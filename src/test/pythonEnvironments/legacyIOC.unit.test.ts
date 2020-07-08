@@ -42,7 +42,7 @@ import {
     GlobalVirtualEnvService
 } from '../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
+import { InterpreterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import { InterpreterWatcherBuilder } from '../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
 import {
     KnownPathsService,
@@ -91,7 +91,7 @@ suite('Interpreters - Service Registry', () => {
 
             [WindowsStoreInterpreter, WindowsStoreInterpreter],
             [InterpreterHashProvider, InterpreterHashProvider],
-            [InterpeterHashProviderFactory, InterpeterHashProviderFactory]
+            [InterpreterHashProviderFactory, InterpreterHashProviderFactory]
         ].forEach((mapping) => {
             verify(serviceManager.addSingleton.apply(serviceManager, mapping as any)).once();
         });
