@@ -78,6 +78,9 @@ export abstract class BaseNotebookModel implements INotebookModel {
             case 'version':
                 changed = this.updateVersionInfo(change.interpreter, change.kernelSpec);
                 break;
+            case 'updateTrust':
+                this._isTrusted = change.isNotebookTrusted;
+                break;
             default:
                 break;
         }
