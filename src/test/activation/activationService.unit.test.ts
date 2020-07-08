@@ -841,7 +841,6 @@ suite('Language Server Activation - ActivationService', () => {
 
     suite('Test getLanguageServerType()', () => {
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-        let pythonSettings: TypeMoq.IMock<IPythonSettings>;
         let appShell: TypeMoq.IMock<IApplicationShell>;
         let cmdManager: TypeMoq.IMock<ICommandManager>;
         let workspaceService: TypeMoq.IMock<IWorkspaceService>;
@@ -862,7 +861,6 @@ suite('Language Server Activation - ActivationService', () => {
             stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
             state = TypeMoq.Mock.ofType<IPersistentState<boolean | undefined>>();
             configService = TypeMoq.Mock.ofType<IConfigurationService>();
-            pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
             experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
             const e = new EventEmitter<void>();
