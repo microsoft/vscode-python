@@ -4,6 +4,7 @@
 'use strict';
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { Mocker } from 'ts-mockito/lib/Mock'; // Must be below import 'ts-mockito'
 import { TextEditor, Uri } from 'vscode';
 import { IFileSystem, TemporaryFile } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
@@ -13,6 +14,13 @@ import { ExportFormat, IExport, IExportManagerFilePicker } from '../../../client
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { INotebookModel, INotebookStorage } from '../../../client/datascience/types';
 
+function betterMock(clazz) {
+    const mocker = new Mocker(clazz);
+    // tslint:disable-next-line: no-string-literal
+    mocker['excludedPropertyNames'] = ['hasOwnProperty', 'then'];
+    return mocker.getMock();
+}
+
 suite('Data Science - Export Manager', () => {
     let exporter: ExportManager;
     let exportPython: IExport;
@@ -21,8 +29,8 @@ suite('Data Science - Export Manager', () => {
     let fileSystem: IFileSystem;
     let exportUtil: ExportUtil;
     let filePicker: IExportManagerFilePicker;
-    let notebookStorage: INotebookStorage;
-    const model = instance(mock<INotebookModel>());
+    const model = mock<INotebookModel>();
+    const tempFile = mock<TemporaryFile>();
     setup(async () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
@@ -32,9 +40,13 @@ suite('Data Science - Export Manager', () => {
         exportPython = mock<IExport>();
         exportHtml = mock<IExport>();
         exportPdf = mock<IExport>();
-        notebookStorage = mock<INotebookStorage>();
         // tslint:disable-next-line: no-any
         (instance(editor) as any).then = undefined;
+        // tslint:disable-next-line: no-any
+        (instance(model) as any).then = undefined;
+        // tslint:disable-next-line: no-any
+        (instance(tempFile) as any).then = undefined;
+
         // tslint:disable-next-line: no-any
         when(filePicker.getExportFileLocation(anything(), anything())).thenReturn(
             Promise.resolve(Uri.file('test.pdf'))
@@ -42,11 +54,9 @@ suite('Data Science - Export Manager', () => {
         // tslint:disable-next-line: no-empty
         when(exportUtil.generateTempDir()).thenResolve({ path: 'test', dispose: () => {} });
         when(exportUtil.makeFileInDirectory(anything(), anything(), anything())).thenResolve('foo');
-        when(fileSystem.createTemporaryFile(anything())).thenResolve(instance(mock<TemporaryFile>()));
+        when(fileSystem.createTemporaryFile(anything())).thenResolve(instance(tempFile));
         when(exportPdf.export(anything(), anything())).thenResolve();
         when(filePicker.getExportFileLocation(anything(), anything())).thenResolve(Uri.file('foo'));
-        when(notebookStorage.load(anything())).thenResolve(model);
-        when(notebookStorage.save(anything(), anything())).thenResolve();
         // tslint:disable-next-line: no-any
         when(reporter.createProgressIndicator(anything())).thenReturn(instance(mock<IDisposable>()) as any);
         exporter = new ExportManager(
@@ -56,14 +66,12 @@ suite('Data Science - Export Manager', () => {
             instance(fileSystem),
             instance(filePicker),
             instance(reporter),
-            instance(exportUtil),
-            instance(notebookStorage)
+            instance(exportUtil)
         );
     });
 
     test('Remove svg is called when exporting to PDF', async () => {
         await exporter.export(ExportFormat.pdf, model);
-
         verify(exportUtil.removeSvgs(anything())).once();
     });
 });

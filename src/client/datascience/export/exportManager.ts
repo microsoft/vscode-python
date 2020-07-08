@@ -1,9 +1,9 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationTokenSource, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { IFileSystem } from '../../common/platform/types';
 import { ProgressReporter } from '../progress/progressReporter';
-import { INotebookModel, INotebookStorage } from '../types';
+import { INotebookModel } from '../types';
 import { ExportUtil } from './exportUtil';
 import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './types';
 
@@ -16,8 +16,7 @@ export class ExportManager implements IExportManager {
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IExportManagerFilePicker) private readonly filePicker: IExportManagerFilePicker,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
-        @inject(ExportUtil) private readonly exportUtil: ExportUtil,
-        @inject(INotebookStorage) private notebookStorage: INotebookStorage
+        @inject(ExportUtil) private readonly exportUtil: ExportUtil
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
@@ -45,9 +44,7 @@ export class ExportManager implements IExportManager {
         if (format === ExportFormat.pdf) {
             // When exporting to PDF we need to remove any SVG output. This is due to an error
             // with nbconvert and a dependency of its called InkScape.
-            const tempModel = await this.notebookStorage.load(source);
-            this.exportUtil.removeSvgs(tempModel);
-            await this.notebookStorage.save(tempModel, new CancellationTokenSource().token);
+            await this.exportUtil.removeSvgs(source);
         }
 
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);

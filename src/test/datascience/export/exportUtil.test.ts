@@ -36,8 +36,8 @@ suite('DataScience - Export Util', () => {
             path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'testPDF.ipynb')
         );
 
+        await exportUtil.removeSvgs(file);
         const model = await notebookStorage.load(file);
-        exportUtil.removeSvgs(model);
 
         // make sure no svg exists in model
         const SVG = 'image/svg+xml';

@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Uri } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { sleep } from '../../common/utils/async';
 import { ICell, IDataScienceErrorHandler, INotebookExporter, INotebookModel, INotebookStorage } from '../types';
@@ -72,7 +72,9 @@ export class ExportUtil {
         return model;
     }
 
-    public removeSvgs(model: INotebookModel) {
+    public async removeSvgs(source: Uri) {
+        const model = await this.notebookStorage.load(source);
+
         const newCells: ICell[] = [];
         for (const cell of model.cells) {
             const outputs = cell.data.outputs;
@@ -89,6 +91,7 @@ export class ExportUtil {
             newDirty: false,
             source: 'user'
         });
+        await this.notebookStorage.save(model, new CancellationTokenSource().token);
     }
 
     private removeSvgFromOutputs(outputs: nbformat.IOutput[]) {
