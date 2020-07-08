@@ -4,7 +4,7 @@
 'use strict';
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { TextEditor, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { IFileSystem, TemporaryFile } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
 import { ExportManager } from '../../../client/datascience/export/exportManager';
