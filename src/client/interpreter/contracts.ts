@@ -72,8 +72,6 @@ export interface IInterpreterService {
 export const IInterpreterDisplay = Symbol('IInterpreterDisplay');
 export interface IInterpreterDisplay {
     refresh(resource?: Uri): Promise<void>;
-    show(): void;
-    hide(): void;
 }
 
 export const IShebangCodeLensProvider = Symbol('IShebangCodeLensProvider');
@@ -128,5 +126,6 @@ export const IInterpreterStatusbarVisibilityFilter = Symbol('IInterpreterStatusb
  * Implement this interface to control the visibility of the interpreter statusbar.
  */
 export interface IInterpreterStatusbarVisibilityFilter {
-    shouldDisplayStatusBar(): boolean;
+    readonly changed?: Event<void>;
+    readonly visible: boolean;
 }
