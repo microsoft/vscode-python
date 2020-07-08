@@ -9,11 +9,9 @@ import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/ch
 import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { LSControl, LSEnabled } from '../common/experiments/groups';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentsManager,
     IOutputChannel,
     IPersistentStateFactory,
     IPythonSettings,
@@ -57,8 +55,7 @@ export class LanguageServerExtensionActivationService
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
-        @inject(IExperimentsManager) private readonly abExperiments: IExperimentsManager
+        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory
     ) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -156,16 +153,7 @@ export class LanguageServerExtensionActivationService
      */
     public getLanguageServerType(): LanguageServerType {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const lsType = configurationService.getSettings(this.resource).languageServer ?? LanguageServerType.Jedi;
-        // If user is using Microsoft LS and is assigned to an experiment (i.e. use Pylance server), return false.
-        if (lsType === LanguageServerType.Microsoft) {
-            if (this.abExperiments.inExperiment(LSEnabled)) {
-                return LanguageServerType.Node;
-            }
-            // Send telemetry if user is in control group
-            this.abExperiments.sendTelemetryIfInExperiment(LSControl);
-        }
-        return lsType;
+        return configurationService.getSettings(this.resource).languageServer ?? LanguageServerType.Jedi;
     }
 
     protected async onWorkspaceFoldersChanged() {

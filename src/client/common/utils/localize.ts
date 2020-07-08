@@ -137,7 +137,7 @@ export namespace LanguageService {
         'Try out a new faster, feature-rich language server for Python by Microsoft - Pylance!'
     );
     export const tryItNow = localize('LanguageService.tryItNow', 'Try it now');
-    export const noThanks = localize('LanguageService.noThanks', 'No thanks');
+    export const noThanks = localize('LanguageService.noThanks', 'No, thanks');
     export const remindMeLater = localize('LanguageService.remindMeLater', 'Remind me later');
 }
 
