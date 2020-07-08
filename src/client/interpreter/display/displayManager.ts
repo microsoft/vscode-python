@@ -14,7 +14,7 @@ import { IInterpreterDisplay, IInterpreterStatusbarVisibilityFilter } from '../c
 @injectable()
 export class AlwaysDisplayStatusBar implements IInterpreterStatusbarVisibilityFilter {
     public shouldDisplayStatusBar(): boolean {
-        return true;
+        return false;
     }
 }
 

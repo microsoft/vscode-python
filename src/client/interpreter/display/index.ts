@@ -22,7 +22,8 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     private currentlySelectedWorkspaceFolder: Resource;
     private readonly autoSelection: IInterpreterAutoSelectionService;
     private interpreterPath: string | undefined;
-    private wasDisplayed?: boolean;
+    private statusbarShouldBeHidden?: boolean;
+    private statusBarCanBeDisplayed?: boolean;
 
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
@@ -45,12 +46,13 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         );
     }
     public show() {
-        if (!this.wasDisplayed) {
-            return;
+        this.statusbarShouldBeHidden = false;
+        if (this.statusBarCanBeDisplayed) {
+            this.statusBar.show();
         }
-        this.statusBar.show();
     }
     public hide() {
+        this.statusbarShouldBeHidden = true;
         this.statusBar.hide();
     }
     public async refresh(resource?: Uri) {
@@ -93,7 +95,9 @@ export class InterpreterDisplay implements IInterpreterDisplay {
             this.statusBar.text = '$(alert) Select Python Interpreter';
             this.currentlySelectedInterpreterPath = undefined;
         }
-        this.wasDisplayed = true;
-        this.statusBar.show();
+        this.statusBarCanBeDisplayed = true;
+        if (!this.statusbarShouldBeHidden) {
+            this.statusBar.show();
+        }
     }
 }
