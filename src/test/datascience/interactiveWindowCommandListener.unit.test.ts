@@ -213,7 +213,7 @@ suite('Interactive window command listener', async () => {
             instance(interactiveWindowProvider),
             instance(notebookExporter),
             instance(jupyterExecution),
-            //instance(notebookProvider),
+            instance(notebookProvider),
             documentManager,
             instance(applicationShell),
             instance(fileSystem),

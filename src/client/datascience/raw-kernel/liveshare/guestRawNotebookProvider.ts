@@ -18,7 +18,7 @@ import {
     LiveShareParticipantGuest
 } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { ILiveShareParticipant } from '../../jupyter/liveshare/types';
-import { IDataScience, INotebook, IRawConnection, IRawNotebookProvider } from '../../types';
+import { INotebook, IRawConnection, IRawNotebookProvider } from '../../types';
 import { RawConnection } from '../rawNotebookProvider';
 
 export class GuestRawNotebookProvider
@@ -30,7 +30,7 @@ export class GuestRawNotebookProvider
 
     constructor(
         private readonly liveShare: ILiveShareApi,
-        private readonly dataScience: IDataScience,
+        private readonly startupTime: number,
         private readonly disposableRegistry: IDisposableRegistry,
         _asyncRegistry: IAsyncDisposableRegistry,
         private readonly configService: IConfigurationService,
@@ -88,7 +88,7 @@ export class GuestRawNotebookProvider
             resource,
             identity,
             undefined,
-            this.dataScience.activationStartTime
+            this.startupTime
         );
         deferred.resolve(result);
         const oldDispose = result.dispose.bind(result);

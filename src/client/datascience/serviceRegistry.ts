@@ -17,7 +17,7 @@ import { CommandRegistry } from './commands/commandRegistry';
 import { ExportCommands } from './commands/exportCommands';
 import { KernelSwitcherCommand } from './commands/kernelSwitcher';
 import { JupyterServerSelectorCommand } from './commands/serverSelector';
-import { Identifiers, OurNotebookProvider, VSCodeNotebookProvider } from './constants';
+import { DataScienceStartupTime, Identifiers, OurNotebookProvider, VSCodeNotebookProvider } from './constants';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { DataViewer } from './data-viewing/dataViewer';
 import { DataViewerDependencyService } from './data-viewing/dataViewerDependencyService';
@@ -186,6 +186,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     const usingCustomEditor = inCustomEditorApiExperiment;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
     serviceManager.addSingletonInstance<boolean>(UseVSCodeNotebookEditorApi, useVSCodeNotebookAPI);
+    serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
 
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);

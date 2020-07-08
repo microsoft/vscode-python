@@ -44,7 +44,6 @@ export type PromiseFunction = (...any: any[]) => Promise<any>;
 // Main interface
 export const IDataScience = Symbol('IDataScience');
 export interface IDataScience extends Disposable {
-    activationStartTime: number;
     activate(): Promise<void>;
 }
 

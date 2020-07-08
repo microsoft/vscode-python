@@ -43,7 +43,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
-        //@inject(INotebookProvider) private notebookProvider: INotebookProvider,
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -324,7 +324,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         try {
             const settings = this.configuration.getSettings(document.uri);
             // Create a new notebook
-            notebook = undefined; //await this.notebookProvider.getOrCreateNotebook({ identity: createNewInteractiveIdentity() });
+            notebook = await this.notebookProvider.getOrCreateNotebook({ identity: createNewInteractiveIdentity() });
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(
                 ...(await Promise.all(

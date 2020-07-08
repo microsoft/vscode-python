@@ -320,7 +320,7 @@ export namespace DataScience {
     export const interactiveWindowTitle = localize('DataScience.interactiveWindowTitleFormat', 'Python Interactive');
     export const interactiveWindowTitleFormat = localize(
         'DataScience.interactiveWindowTitleFormat',
-        'Python Interactive {0}'
+        'Python Interactive - {0}'
     );
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');
     export const badWebPanelFormatString = localize(

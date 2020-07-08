@@ -185,7 +185,7 @@ import { EnvironmentVariablesProvider } from '../../client/common/variables/envi
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { ExportCommands } from '../../client/datascience/commands/exportCommands';
-import { Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
+import { DataScienceStartupTime, Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
 import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerDependencyService } from '../../client/datascience/data-viewing/dataViewerDependencyService';
@@ -540,6 +540,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         useCustomEditor: boolean = false,
         languageServerType: LanguageServerType = LanguageServerType.Microsoft
     ) {
+        this.serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
+
         // Save our language server type
         this.languageServerType = languageServerType;
 
@@ -943,9 +945,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             configurationService.object
         );
 
-        const startTime = Date.now();
         this.datascience = TypeMoq.Mock.ofType<IDataScience>();
-        this.datascience.setup((d) => d.activationStartTime).returns(() => startTime);
         this.serviceManager.addSingletonInstance<IDataScience>(IDataScience, this.datascience.object);
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
         this.serviceManager.addSingleton<IEnvironmentVariablesService>(
