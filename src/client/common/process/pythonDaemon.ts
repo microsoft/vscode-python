@@ -9,6 +9,7 @@ import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { extractInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
 import { traceWarning } from '../logger';
+import { IPlatformService } from '../platform/types';
 import { BasePythonDaemon } from './baseDaemon';
 import { PythonEnvInfo } from './internal/scripts';
 import {
@@ -34,11 +35,12 @@ export class DaemonError extends Error {
 export class PythonDaemonExecutionService extends BasePythonDaemon implements IPythonDaemonExecutionService {
     constructor(
         pythonExecutionService: IPythonExecutionService,
+        platformService: IPlatformService,
         pythonPath: string,
         proc: ChildProcess,
         connection: MessageConnection
     ) {
-        super(pythonExecutionService, pythonPath, proc, connection);
+        super(pythonExecutionService, platformService, pythonPath, proc, connection);
     }
     public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
         try {

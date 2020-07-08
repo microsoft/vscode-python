@@ -8,6 +8,7 @@ import * as os from 'os';
 import { Subject } from 'rxjs/Subject';
 import * as util from 'util';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
+import { IPlatformService } from '../../common/platform/types';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../logger';
 import { IDisposable } from '../types';
 import { createDeferred, Deferred } from '../utils/async';
@@ -49,6 +50,7 @@ export abstract class BasePythonDaemon {
     private disposed = false;
     constructor(
         protected readonly pythonExecutionService: IPythonExecutionService,
+        protected readonly platformService: IPlatformService,
         protected readonly pythonPath: string,
         public readonly proc: ChildProcess,
         public readonly connection: MessageConnection
@@ -61,15 +63,27 @@ export abstract class BasePythonDaemon {
         this.monitorConnection();
     }
     public dispose() {
-        try {
-            this.disposed = true;
-            // The daemon should die as a result of this.
-            this.connection.sendNotification(new NotificationType('exit'));
-            this.proc.kill();
-        } catch {
-            noop();
+        // Make sure that we only dispose once so we are not sending multiple kill signals or notifications
+        // This daemon can be held by multiple disposes such as a jupyter server daemon process which can
+        // be disposed by both the connection and the main async disposable
+        if (!this.disposed) {
+            try {
+                this.disposed = true;
+
+                // Proc.kill uses a 'SIGTERM' signal by default to kill. This was failing to kill the process
+                // sometimes on Mac and Linux. Changing this over to a 'SIGKILL' to fully kill the process.
+                // Windows closes with a different non-signal message, so keep that the same
+                // See kill_kernel message of kernel_launcher_daemon.py for and example of this.
+                if (this.platformService.isWindows) {
+                    this.proc.kill();
+                } else {
+                    this.proc.kill('SIGKILL');
+                }
+            } catch {
+                noop();
+            }
+            this.disposables.forEach((item) => item.dispose());
         }
-        this.disposables.forEach((item) => item.dispose());
     }
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         if (this.isAlive && this.canExecFileUsingDaemon(args, options)) {

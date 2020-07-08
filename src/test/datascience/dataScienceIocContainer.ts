@@ -151,7 +151,6 @@ import {
     TerminalActivationProviders
 } from '../../client/common/terminal/types';
 import {
-    BANNER_NAME_LS_SURVEY,
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
     IBrowserService,
@@ -171,7 +170,6 @@ import {
     IOutputChannel,
     IPathUtils,
     IPersistentStateFactory,
-    IPythonExtensionBanner,
     IPythonSettings,
     IsWindows,
     ProductType,
@@ -210,8 +208,8 @@ import { ExportManagerFilePicker } from '../../client/datascience/export/exportM
 import { ExportToHTML } from '../../client/datascience/export/exportToHTML';
 import { ExportToPDF } from '../../client/datascience/export/exportToPDF';
 import { ExportToPython } from '../../client/datascience/export/exportToPython';
+import { ExportUtil } from '../../client/datascience/export/exportUtil';
 import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from '../../client/datascience/export/types';
-import { GatherProvider } from '../../client/datascience/gather/gather';
 import { GatherListener } from '../../client/datascience/gather/gatherListener';
 import { GatherLogger } from '../../client/datascience/gather/gatherLogger';
 import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
@@ -265,6 +263,7 @@ import { OldJupyterVariables } from '../../client/datascience/jupyter/oldJupyter
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 import { JupyterDebugService } from '../../client/datascience/jupyterDebugService';
+import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
@@ -292,7 +291,6 @@ import {
     IDebugLocationTracker,
     IDigestStorage,
     IGatherLogger,
-    IGatherProvider,
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
@@ -306,6 +304,7 @@ import {
     IJupyterServerProvider,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
+    IJupyterUriProviderRegistration,
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
@@ -353,67 +352,22 @@ import {
     IPythonPathUpdaterServiceManager
 } from '../../client/interpreter/configuration/types';
 import {
-    CONDA_ENV_FILE_SERVICE,
-    CONDA_ENV_SERVICE,
-    CURRENT_PATH_SERVICE,
-    GLOBAL_VIRTUAL_ENV_SERVICE,
     ICondaService,
     IInterpreterDisplay,
     IInterpreterHelper,
-    IInterpreterLocatorHelper,
-    IInterpreterLocatorService,
     IInterpreterService,
     IInterpreterVersionService,
-    IInterpreterWatcher,
-    IInterpreterWatcherBuilder,
-    IKnownSearchPathsForInterpreters,
-    INTERPRETER_LOCATOR_SERVICE,
-    IShebangCodeLensProvider,
-    IVirtualEnvironmentsSearchPathProvider,
-    KNOWN_PATH_SERVICE,
-    PIPENV_SERVICE,
-    WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    IShebangCodeLensProvider
 } from '../../client/interpreter/contracts';
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
-import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { registerInterpreterTypes } from '../../client/interpreter/serviceRegistry';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
-import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
-import { PythonInterpreterLocatorService } from '../../client/pythonEnvironments/discovery/locators';
-import { InterpreterLocatorHelper } from '../../client/pythonEnvironments/discovery/locators/helpers';
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
-import { CondaEnvFileService } from '../../client/pythonEnvironments/discovery/locators/services/condaEnvFileService';
-import { CondaEnvService } from '../../client/pythonEnvironments/discovery/locators/services/condaEnvService';
-import {
-    CurrentPathService,
-    PythonInPathCommandProvider
-} from '../../client/pythonEnvironments/discovery/locators/services/currentPathService';
-import {
-    GlobalVirtualEnvironmentsSearchPathProvider,
-    GlobalVirtualEnvService
-} from '../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvService';
-import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
-import { InterpreterWatcherBuilder } from '../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
-import {
-    KnownPathsService,
-    KnownSearchPathsForInterpreters
-} from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
-import { PipEnvService } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvService';
-import { PipEnvServiceHelper } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvServiceHelper';
-import { WindowsRegistryService } from '../../client/pythonEnvironments/discovery/locators/services/windowsRegistryService';
-import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
-import {
-    WorkspaceVirtualEnvironmentsSearchPathProvider,
-    WorkspaceVirtualEnvService
-} from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
-import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
 import { MockOutputChannel } from '../mockClasses';
@@ -618,6 +572,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ExportManagerDependencyChecker,
             ExportManagerDependencyChecker
         );
+        this.serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
         this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
         this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManagerFileOpener);
         this.serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
@@ -845,7 +800,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             INotebookExecutionLogger
         ]);
         this.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
-        this.serviceManager.add<IGatherProvider>(IGatherProvider, GatherProvider);
         this.serviceManager.add<IGatherLogger>(IGatherLogger, GatherLogger, undefined, [INotebookExecutionLogger]);
         this.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, TestExecutionLogger);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory, undefined, [
@@ -926,14 +880,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IDotNetCompatibilityService>(
             IDotNetCompatibilityService,
             instance(dotNetCompability)
-        );
-
-        // Don't allow a banner to show up
-        const extensionBanner = mock(LanguageServerSurveyBanner);
-        this.serviceManager.addSingletonInstance<IPythonExtensionBanner>(
-            IPythonExtensionBanner,
-            instance(extensionBanner),
-            BANNER_NAME_LS_SURVEY
         );
 
         // Don't allow the download to happen
@@ -1073,10 +1019,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             when(this.kernelServiceMock.getKernelSpecs(anything(), anything())).thenResolve([]);
             this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
 
-            this.serviceManager.addSingleton<InterpeterHashProviderFactory>(
-                InterpeterHashProviderFactory,
-                InterpeterHashProviderFactory
-            );
+            registerForIOC(this.serviceManager);
+
             this.serviceManager.addSingleton<IInterpreterSecurityService>(
                 IInterpreterSecurityService,
                 InterpreterSecurityService
@@ -1086,91 +1030,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 InterpreterSecurityStorage
             );
             this.serviceManager.addSingleton<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
-            this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-            this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-            this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
-            this.serviceManager.add<IInterpreterWatcher>(
-                IInterpreterWatcher,
-                WorkspaceVirtualEnvWatcherService,
-                WORKSPACE_VIRTUAL_ENV_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterWatcherBuilder>(
-                IInterpreterWatcherBuilder,
-                InterpreterWatcherBuilder
-            );
-            this.serviceManager.add<IInterpreterWatcher>(
-                IInterpreterWatcher,
-                WorkspaceVirtualEnvWatcherService,
-                WORKSPACE_VIRTUAL_ENV_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterWatcherBuilder>(
-                IInterpreterWatcherBuilder,
-                InterpreterWatcherBuilder
-            );
-
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                PythonInterpreterLocatorService,
-                INTERPRETER_LOCATOR_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                CondaEnvFileService,
-                CONDA_ENV_FILE_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                CondaEnvService,
-                CONDA_ENV_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                CurrentPathService,
-                CURRENT_PATH_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                GlobalVirtualEnvService,
-                GLOBAL_VIRTUAL_ENV_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                WorkspaceVirtualEnvService,
-                WORKSPACE_VIRTUAL_ENV_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                PipEnvService,
-                PIPENV_SERVICE
-            );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                WindowsRegistryService,
-                WINDOWS_REGISTRY_SERVICE
-            );
-
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(
-                IInterpreterLocatorService,
-                KnownPathsService,
-                KNOWN_PATH_SERVICE
-            );
 
             this.serviceManager.addSingleton<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
-            this.serviceManager.addSingleton<IInterpreterLocatorHelper>(
-                IInterpreterLocatorHelper,
-                InterpreterLocatorHelper
-            );
+
             this.serviceManager.addSingleton<IInterpreterComparer>(IInterpreterComparer, InterpreterComparer);
             this.serviceManager.addSingleton<IInterpreterVersionService>(
                 IInterpreterVersionService,
                 InterpreterVersionService
             );
-            this.serviceManager.addSingleton<IPythonInPathCommandProvider>(
-                IPythonInPathCommandProvider,
-                PythonInPathCommandProvider
-            );
 
-            this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
             this.serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
             this.serviceManager.addSingleton<IShebangCodeLensProvider>(
                 IShebangCodeLensProvider,
@@ -1187,33 +1055,16 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
             // Don't use conda at all when mocking
             const condaService = TypeMoq.Mock.ofType<ICondaService>();
-            this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
+            this.serviceManager.rebindInstance<ICondaService>(ICondaService, condaService.object);
             condaService.setup((c) => c.isCondaAvailable()).returns(() => Promise.resolve(false));
             condaService.setup((c) => c.isCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
             condaService.setup((c) => c.condaEnvironmentsFile).returns(() => undefined);
 
-            this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
-                IVirtualEnvironmentsSearchPathProvider,
-                GlobalVirtualEnvironmentsSearchPathProvider,
-                'global'
-            );
-            this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
-                IVirtualEnvironmentsSearchPathProvider,
-                WorkspaceVirtualEnvironmentsSearchPathProvider,
-                'workspace'
-            );
             this.serviceManager.addSingleton<IVirtualEnvironmentManager>(
                 IVirtualEnvironmentManager,
                 VirtualEnvironmentManager
             );
-            this.serviceManager.add<IKnownSearchPathsForInterpreters>(
-                IKnownSearchPathsForInterpreters,
-                KnownSearchPathsForInterpreters
-            );
-            this.serviceManager.addSingleton<IPythonInPathCommandProvider>(
-                IPythonInPathCommandProvider,
-                PythonInPathCommandProvider
-            );
+
             this.serviceManager.addSingletonInstance<IInterpreterDisplay>(
                 IInterpreterDisplay,
                 interpreterDisplay.object
@@ -1285,6 +1136,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.addInterpreter(this.workingPython2, SupportedCommands.all);
             this.addInterpreter(this.workingPython, SupportedCommands.all);
         }
+        this.serviceManager.addSingleton<IJupyterUriProviderRegistration>(
+            IJupyterUriProviderRegistration,
+            JupyterUriProviderRegistration
+        );
     }
     public setFileContents(uri: Uri, contents: string) {
         const fileSystem = this.serviceManager.get<IFileSystem>(IFileSystem) as MockFileSystem;

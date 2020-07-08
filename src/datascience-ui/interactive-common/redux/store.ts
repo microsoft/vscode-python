@@ -74,7 +74,8 @@ function generateDefaultState(
             },
             settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.
             editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined,
-            isNotebookTrusted: true
+            isNotebookTrusted: true,
+            shouldShowTrustMessage: false
         };
     }
 }
@@ -195,7 +196,8 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         // Indicate variables complete
         if (
             (!fastDeepEqual(prevState.variables.variables, afterState.variables.variables) ||
-                prevState.variables.currentExecutionCount !== afterState.variables.currentExecutionCount) &&
+                prevState.variables.currentExecutionCount !== afterState.variables.currentExecutionCount ||
+                prevState.variables.refreshCount !== afterState.variables.refreshCount) &&
             action.type === InteractiveWindowMessages.GetVariablesResponse
         ) {
             sendMessage(InteractiveWindowMessages.VariablesComplete);
@@ -386,6 +388,7 @@ export function createStore<M>(
     baseTheme: string,
     testMode: boolean,
     editable: boolean,
+    showVariablesOnDebug: boolean,
     reducerMap: M,
     postOffice: PostOffice
 ) {
@@ -399,7 +402,7 @@ export function createStore<M>(
     const monacoReducer = generateMonacoReducer(testMode, postOffice);
 
     // Create another reducer for handling variable state
-    const variableReducer = generateVariableReducer();
+    const variableReducer = generateVariableReducer(showVariablesOnDebug);
 
     // Combine these together
     const rootReducer = Redux.combineReducers<IStore>({

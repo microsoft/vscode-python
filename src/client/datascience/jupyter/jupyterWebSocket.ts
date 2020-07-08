@@ -11,24 +11,26 @@ export const JupyterWebSockets = new Map<string, WebSocketWS & IKernelSocket>();
 
 // We need to override the websocket that jupyter lab services uses to put in our cookie information
 // Do this as a function so that we can pass in variables the the socket will have local access to
-export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?: boolean) {
+export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?: boolean, authorizationHeader?: any) {
     class JupyterWebSocket extends KernelSocketWrapper(WebSocketWS) {
         private kernelId: string | undefined;
 
         constructor(url: string, protocols?: string | string[] | undefined) {
             let co: WebSocketWS.ClientOptions = {};
+            let co_headers: { [key: string]: string } | undefined;
 
             if (allowUnauthorized) {
                 co = { ...co, rejectUnauthorized: false };
             }
 
             if (cookieString) {
-                co = {
-                    ...co,
-                    headers: {
-                        Cookie: cookieString
-                    }
-                };
+                co_headers = { Cookie: cookieString };
+            }
+            if (authorizationHeader) {
+                co_headers = co_headers ? { ...co_headers, ...authorizationHeader } : authorizationHeader;
+            }
+            if (co_headers) {
+                co = { ...co, headers: co_headers };
             }
 
             super(url, protocols, co);

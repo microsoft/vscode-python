@@ -1,18 +1,21 @@
 import { inject, injectable } from 'inversify';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { extensions } from 'vscode';
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { sendTelemetryEvent } from '../../telemetry';
 import { CellMatcher } from '../cellMatcher';
+import { GatherExtension, Telemetry } from '../constants';
 import { ICell as IVscCell, IGatherLogger, IGatherProvider } from '../types';
 
 @injectable()
 export class GatherLogger implements IGatherLogger {
-    constructor(
-        @inject(IGatherProvider) private gather: IGatherProvider,
-        @inject(IConfigurationService) private configService: IConfigurationService
-    ) {}
+    private gather: IGatherProvider | undefined;
+    constructor(@inject(IConfigurationService) private configService: IConfigurationService) {
+        this.initGatherExtension().ignoreErrors();
+    }
 
     public dispose() {
         noop();
@@ -27,7 +30,7 @@ export class GatherLogger implements IGatherLogger {
     }
 
     public async postExecute(vscCell: IVscCell, _silent: boolean): Promise<void> {
-        if (this.gather.enabled) {
+        if (this.gather) {
             // Don't log if vscCell.data.source is an empty string or if it was
             // silently executed. Original Jupyter extension also does this.
             if (vscCell.data.source !== '' && !_silent) {
@@ -43,7 +46,20 @@ export class GatherLogger implements IGatherLogger {
         }
     }
 
-    public getGatherProvider() {
+    public getGatherProvider(): IGatherProvider | undefined {
         return this.gather;
+    }
+
+    private async initGatherExtension() {
+        const ext = extensions.getExtension(GatherExtension);
+        if (ext) {
+            sendTelemetryEvent(Telemetry.GatherIsInstalled);
+            if (!ext.isActive) {
+                await ext.activate();
+            }
+            const api = ext.exports;
+
+            this.gather = api.getGatherProvider();
+        }
     }
 }

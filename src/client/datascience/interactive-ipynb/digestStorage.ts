@@ -1,6 +1,8 @@
 import { createHash, randomBytes } from 'crypto';
 import { inject, injectable } from 'inversify';
+import * as os from 'os';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { traceError } from '../../common/logger';
 import { isFileNotFoundError } from '../../common/platform/errors';
 import { IFileSystem } from '../../common/platform/types';
@@ -21,16 +23,14 @@ export class DigestStorage implements IDigestStorage {
         this.digestDir = this.initDir();
     }
 
-    public async saveDigest(uri: string, signature: string) {
-        const fileName = createHash('sha256').update(uri).digest('hex');
-        const fileLocation = path.join(await this.digestDir, fileName);
+    public async saveDigest(uri: Uri, signature: string) {
+        const fileLocation = await this.getFileLocation(uri);
         // Since the signature is a hex digest, the character 'z' is being used to delimit the start and end of a single digest
         await this.fs.appendFile(fileLocation, `z${signature}z\n`);
     }
 
-    public async containsDigest(uri: string, signature: string) {
-        const fileName = createHash('sha256').update(uri).digest('hex');
-        const fileLocation = path.join(await this.digestDir, fileName);
+    public async containsDigest(uri: Uri, signature: string) {
+        const fileLocation = await this.getFileLocation(uri);
         try {
             const digests = await this.fs.readFile(fileLocation);
             return digests.indexOf(`z${signature}z`) >= 0;
@@ -40,6 +40,12 @@ export class DigestStorage implements IDigestStorage {
             }
             return false;
         }
+    }
+
+    private async getFileLocation(uri: Uri): Promise<string> {
+        const normalizedName = os.platform() === 'win32' ? uri.fsPath.toLowerCase() : uri.fsPath;
+        const hashedName = createHash('sha256').update(normalizedName).digest('hex');
+        return path.join(await this.digestDir, hashedName);
     }
 
     private async initDir(): Promise<string> {

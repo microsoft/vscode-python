@@ -203,8 +203,11 @@ suite('DataScience Debugger tests', () => {
 
                 // Step if allowed
                 if (stepAndVerify && ioc.getDefaultWrapper() && !ioc.mockJupyter) {
-                    // Verify variables work
-                    openVariableExplorer(ioc.getDefaultWrapper());
+                    // Verify variables work. Native editor should already open the variable explorer
+                    // automatically
+                    if (type === 'default') {
+                        openVariableExplorer(ioc.getDefaultWrapper());
+                    }
                     breakPromise = createDeferred<void>();
                     await jupyterDebuggerService?.step();
                     await breakPromise.promise;
@@ -337,7 +340,10 @@ suite('DataScience Debugger tests', () => {
                 disposables.push(jupyterDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
                 const targetUri = Uri.file(fileName);
                 const done = history.debugCode(code, targetUri.fsPath, 0, docManager.activeTextEditor);
-                await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
+                await waitForPromise(
+                    Promise.race([done, breakPromise.promise]),
+                    ioc.getSettings().datascience.jupyterLaunchTimeout * 2 // Give restarts a chance
+                );
                 assert.ok(breakPromise.resolved, 'Breakpoint event did not fire');
                 assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
                 const stackFrames = await jupyterDebuggerService!.getStack();

@@ -239,7 +239,12 @@ export class JupyterInterpreterSubCommandExecutionService
                 stdoutFromFileExecPromise
             ]);
 
-            return parseKernelSpecs(stdoutFromDaemon || stdoutFromFileExec, this.fs, token).catch((parserError) => {
+            return parseKernelSpecs(
+                stdoutFromDaemon || stdoutFromFileExec,
+                this.fs,
+                this.pythonExecutionFactory,
+                token
+            ).catch((parserError) => {
                 traceError('Failed to parse kernelspecs', parserError);
                 // This is failing for some folks. In that case return nothing
                 return [];

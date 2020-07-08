@@ -52,7 +52,7 @@ interface INativeCellBaseProps {
     firstCell: boolean;
     font: IFont;
     allowUndo: boolean;
-    enableGather: boolean | undefined;
+    gatherIsInstalled: boolean;
     editorOptions: monacoEditor.editor.IEditorOptions;
     themeMatplotlibPlots: boolean | undefined;
     focusPending: number;
@@ -146,12 +146,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
     };
 
     private renderNormalCell() {
-        const cellOuterClass =
-            this.props.cellVM.editable && this.props.isNotebookTrusted ? 'cell-outer-editable' : 'cell-outer';
-        let cellWrapperClass =
-            this.props.cellVM.editable && this.props.isNotebookTrusted
-                ? 'cell-wrapper'
-                : 'cell-wrapper cell-wrapper-noneditable';
+        const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
+        let cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
         if (this.isSelected() && !this.isFocused()) {
             cellWrapperClass += ' cell-wrapper-selected';
         }
@@ -245,7 +241,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     };
 
     private isShowingMarkdownEditor = (): boolean => {
-        return this.isMarkdownCell() && this.props.cellVM.focused;
+        return this.isMarkdownCell() && (this.props.cellVM.focused || !this.isNotebookTrusted());
     };
 
     private shouldRenderInput(): boolean {
@@ -265,7 +261,10 @@ export class NativeCell extends React.Component<INativeCellProps> {
     };
 
     private shouldRenderOutput(): boolean {
-        if (this.isCodeCell() && this.props.isNotebookTrusted) {
+        if (!this.isNotebookTrusted()) {
+            return false;
+        }
+        if (this.isCodeCell()) {
             const cell = this.getCodeCell();
             return (
                 this.hasOutput() &&
@@ -275,16 +274,13 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 cell.outputs.length !== 0
             );
         } else if (this.isMarkdownCell()) {
-            return !this.isShowingMarkdownEditor() && this.isNotebookTrusted();
+            return !this.isShowingMarkdownEditor();
         }
         return false;
     }
 
     // tslint:disable-next-line: cyclomatic-complexity max-func-body-length
     private keyDownInput = (cellId: string, e: IKeyboardEvent) => {
-        if (!this.isNotebookTrusted()) {
-            return; // Disable keyboard interaction with untrusted notebooks
-        }
         const isFocusedWhenNotSuggesting = this.isFocused() && e.editorInfo && !e.editorInfo.isSuggesting;
         switch (e.code) {
             case 'ArrowUp':
@@ -601,7 +597,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.cellVM.hasBeenRun === false ||
             this.isError() ||
             this.isMarkdownCell() ||
-            this.props.enableGather === false;
+            !this.props.gatherIsInstalled;
         const switchTooltip =
             this.props.cellVM.cell.data.cell_type === 'code'
                 ? getLocString('DataScience.switchToMarkdown', 'Change to markdown')

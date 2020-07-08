@@ -91,11 +91,9 @@ suite('Method Extraction', () => {
         ioc.registerProcessTypes();
         ioc.registerVariableTypes();
         ioc.registerInterpreterStorageTypes();
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
-        ioc.serviceManager.addSingletonInstance<IInterpreterService>(
-            IInterpreterService,
-            instance(mock(InterpreterService))
-        );
+        ioc.registerMockInterpreterTypes();
+        ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
     }
     function createPythonExecGetter(workspaceRoot: string): () => Promise<IPythonExecutionService> {
         return async () => {

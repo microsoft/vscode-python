@@ -4,7 +4,6 @@
 'use strict';
 
 import { Uri } from 'vscode';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
 
 export const IPythonInPathCommandProvider = Symbol('IPythonInPathCommandProvider');
 export interface IPythonInPathCommandProvider {
@@ -62,8 +61,4 @@ export interface IWindowsStoreInterpreter {
      * @memberof IInterpreterHelper
      */
     isHiddenInterpreter(pythonPath: string): boolean;
-}
-
-export interface IInterpreterFilter {
-    isHiddenInterpreter(interpreter: PythonInterpreter): boolean;
 }

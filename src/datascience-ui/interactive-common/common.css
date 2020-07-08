@@ -469,7 +469,20 @@ body, html {
     width: 100%;
 }
 
-
+.jupyter-info-section {
+    padding: 0px 5px;
+    align-self: center;
+    margin-top: 1px;
+    margin-bottom: 2px;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    font-size: var(--vscode-font-size);
+    font-family: var(--vscode-font-family);
+}
+.jupyter-info-section-hoverable:hover {
+    background-color: var(--override-badge-background, var(--vscode-badge-background));
+}
 
 
 .kernel-status {

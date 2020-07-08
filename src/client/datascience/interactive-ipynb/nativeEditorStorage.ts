@@ -100,7 +100,7 @@ export class NativeEditorStorage implements INotebookStorage {
         const contents = model.getContent();
         const parallelize = [this.fileSystem.writeFile(model.file.fsPath, contents, 'utf-8')];
         if (model.isTrusted) {
-            parallelize.push(this.trustService.trustNotebook(model.file.toString(), contents));
+            parallelize.push(this.trustService.trustNotebook(model.file, contents));
         }
         await Promise.all(parallelize);
         model.update({
@@ -116,7 +116,7 @@ export class NativeEditorStorage implements INotebookStorage {
         const contents = model.getContent();
         const parallelize = [this.fileSystem.writeFile(file.fsPath, contents, 'utf-8')];
         if (model.isTrusted) {
-            parallelize.push(this.trustService.trustNotebook(file.toString(), contents));
+            parallelize.push(this.trustService.trustNotebook(file, contents));
         }
         await Promise.all(parallelize);
         model.update({
@@ -356,7 +356,7 @@ export class NativeEditorStorage implements INotebookStorage {
         const isTrusted =
             contents === undefined || isUntitledFile(file)
                 ? true // If no contents or untitled, this is a newly created file, so it should be trusted
-                : await this.trustService.isNotebookTrusted(file.toString(), contentsToCheck!);
+                : await this.trustService.isNotebookTrusted(file, contentsToCheck!);
         return this.factory.createModel(
             {
                 trusted: isTrusted,

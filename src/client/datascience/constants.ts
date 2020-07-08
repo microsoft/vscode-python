@@ -15,6 +15,8 @@ export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 export const JupyterDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
 export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_launcher_daemon';
 
+export const GatherExtension = 'ms-python.gather';
+
 // List of 'language' names that we know about. All should be lower case as that's how we compare.
 export const KnownNotebookLanguages: string[] = [
     'python',
@@ -118,6 +120,8 @@ export namespace EditorContexts {
     export const IsPythonOrInteractiveActive = 'python.datascience.ispythonorinteractiveeactive';
     export const IsPythonOrInteractiveOrNativeActive = 'python.datascience.ispythonorinteractiveornativeeactive';
     export const HaveCellSelected = 'python.datascience.havecellselected';
+    export const IsNotebookTrusted = 'python.datascience.isnotebooktrusted';
+    export const CanRestartNotebookKernel = 'python.datascience.notebookeditor.canrestartNotebookkernel';
 }
 
 export namespace RegExpValues {
@@ -313,6 +317,7 @@ export enum Telemetry {
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
     KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',
+    GatherIsInstalled = 'DS_INTERNAL.GATHER_IS_INSTALLED',
     GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED',
     GatheredNotebookSaved = 'DATASCIENCE.GATHERED_NOTEBOOK_SAVED',
     GatherQualityReport = 'DS_INTERNAL.GATHER_QUALITY_REPORT',
@@ -472,6 +477,9 @@ export namespace Identifiers {
     export const DEBUGGER_VARIABLES = 'DEBUGGER_VARIABLES';
     export const MULTIPLEXING_DEBUGSERVICE = 'MULTIPLEXING_DEBUGSERVICE';
     export const RUN_BY_LINE_DEBUGSERVICE = 'RUN_BY_LINE_DEBUGSERVICE';
+    export const REMOTE_URI = 'https://remote/';
+    export const REMOTE_URI_ID_PARAM = 'id';
+    export const REMOTE_URI_HANDLE_PARAM = 'uriHandle';
 }
 
 export namespace CodeSnippits {

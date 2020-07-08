@@ -139,6 +139,7 @@ export class CellInput extends React.Component<ICellInputProps> {
                 <div className="cell-input">
                     <Markdown
                         editorOptions={this.props.editorOptions}
+                        readOnly={!this.props.isNotebookTrusted}
                         markdown={source}
                         codeTheme={this.props.codeTheme}
                         testMode={this.props.testMode ? true : false}
@@ -158,7 +159,6 @@ export class CellInput extends React.Component<ICellInputProps> {
                         font={this.props.font}
                         disableUndoStack={this.props.disableUndoStack}
                         version={this.props.codeVersion}
-                        isNotebookTrusted={this.props.isNotebookTrusted}
                     />
                 </div>
             );

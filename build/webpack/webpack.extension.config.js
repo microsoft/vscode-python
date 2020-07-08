@@ -13,11 +13,6 @@ const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
-// tslint:disable-next-line:no-var-requires no-require-imports
-const FileManagerPlugin = require('filemanager-webpack-plugin-fixed');
-// If ENABLE_GATHER variable is defined, don't exclude the python-program-analysis pacakge.
-// See externals, below.
-const ppaPackageList = process.env.ENABLE_GATHER ? [] : ['@msrvida/python-program-analysis'];
 const config = {
     mode: 'production',
     target: 'node',
@@ -61,25 +56,9 @@ const config = {
             { enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: 'transform-loader?brfs' }
         ]
     },
-    // Packages listed in externals keeps webpack from trying to package them.
-    // The ppaPackageList variable is set to non-empty if the build pipeline has been
-    // authenticated to install @msrvida/python-program-analysis.
-    externals: ['vscode', 'commonjs', ...ppaPackageList, ...existingModulesInOutDir],
+    externals: ['vscode', 'commonjs', ...existingModulesInOutDir],
     plugins: [
         ...common.getDefaultPlugins('extension'),
-        // Copy gather spec files into a known location for the webpacked extension
-        new FileManagerPlugin({
-            onEnd: [
-                {
-                    copy: [
-                        {
-                            source: './node_modules/@msrvida/python-program-analysis/dist/es5/specs/*.yaml',
-                            destination: './out/client/gatherSpecs'
-                        }
-                    ]
-                }
-            ]
-        }),
         new copyWebpackPlugin([
             {
                 from: './node_modules/pdfkit/js/pdfkit.standalone.js',

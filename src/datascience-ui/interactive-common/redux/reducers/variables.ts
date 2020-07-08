@@ -15,7 +15,7 @@ import {
 } from '../../../../client/datascience/types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { postActionToExtension } from '../helpers';
-import { CommonActionType, CommonActionTypeMapping, IVariableExplorerHeight } from './types';
+import { CommonActionType, CommonActionTypeMapping, ICellAction, IVariableExplorerHeight } from './types';
 
 export type IVariableState = {
     currentExecutionCount: number;
@@ -26,6 +26,8 @@ export type IVariableState = {
     pageSize: number;
     containerHeight: number;
     gridHeight: number;
+    refreshCount: number;
+    showVariablesOnDebug: boolean;
 };
 
 type VariableReducerFunc<T = never | undefined> = ReducerFunc<
@@ -49,7 +51,8 @@ function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVari
         sortColumn: arg.payload.data.sortColumn,
         startIndex: arg.payload.data.startIndex,
         sortAscending: arg.payload.data.sortAscending,
-        pageSize: arg.payload.data.pageSize
+        pageSize: arg.payload.data.pageSize,
+        refreshCount: arg.payload.data.refreshCount
     });
     return {
         ...arg.prevState,
@@ -60,7 +63,8 @@ function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVari
 function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
     const newState: IVariableState = {
         ...arg.prevState,
-        visible: !arg.prevState.visible
+        visible: !arg.prevState.visible,
+        showVariablesOnDebug: false // If user does any toggling don't auto open this.
     };
 
     postActionToExtension(arg, InteractiveWindowMessages.VariableExplorerToggle, newState.visible);
@@ -77,7 +81,8 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
                     sortColumn: 'name',
                     sortAscending: true,
                     startIndex: 0,
-                    pageSize: arg.prevState.pageSize
+                    pageSize: arg.prevState.pageSize,
+                    refreshCount: arg.prevState.refreshCount
                 }
             }
         });
@@ -129,7 +134,9 @@ function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVa
     // Check to see if we have moved to a new execution count
     if (
         response.executionCount > arg.prevState.currentExecutionCount ||
-        (response.executionCount === arg.prevState.currentExecutionCount && arg.prevState.variables.length === 0)
+        response.refreshCount > arg.prevState.refreshCount ||
+        (response.executionCount === arg.prevState.currentExecutionCount && arg.prevState.variables.length === 0) ||
+        (response.refreshCount === arg.prevState.refreshCount && arg.prevState.variables.length === 0)
     ) {
         // Should be an entirely new request. Make an empty list
         const variables = Array<IJupyterVariable>(response.totalCount);
@@ -143,9 +150,13 @@ function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVa
         return {
             ...arg.prevState,
             currentExecutionCount: response.executionCount,
+            refreshCount: response.refreshCount,
             variables
         };
-    } else if (response.executionCount === arg.prevState.currentExecutionCount) {
+    } else if (
+        response.executionCount === arg.prevState.currentExecutionCount &&
+        response.refreshCount === arg.prevState.refreshCount
+    ) {
         // This is a response for a page in an already existing list.
         const variables = [...arg.prevState.variables];
 
@@ -180,7 +191,8 @@ function handleRestarted(arg: VariableReducerArg): IVariableState {
                 sortColumn: 'name',
                 sortAscending: true,
                 startIndex: 0,
-                pageSize: arg.prevState.pageSize
+                pageSize: arg.prevState.pageSize,
+                refreshCount: 0
             }
         }
     });
@@ -207,7 +219,8 @@ function handleFinishCell(arg: VariableReducerArg<ICell>): IVariableState {
                     sortColumn: 'name',
                     sortAscending: true,
                     startIndex: 0,
-                    pageSize: arg.prevState.pageSize
+                    pageSize: arg.prevState.pageSize,
+                    refreshCount: arg.prevState.refreshCount
                 }
             }
         });
@@ -230,19 +243,29 @@ function handleRefresh(arg: VariableReducerArg): IVariableState {
                     sortColumn: 'name',
                     sortAscending: true,
                     startIndex: 0,
-                    pageSize: arg.prevState.pageSize
+                    pageSize: arg.prevState.pageSize,
+                    refreshCount: arg.prevState.refreshCount + 1
                 }
             },
-            prevState: {
-                ...arg.prevState,
-                variables: []
-            }
+            prevState: arg.prevState
         });
     }
     return {
         ...arg.prevState,
         variables: []
     };
+}
+
+function handleDebugStart(arg: VariableReducerArg<ICellAction>): IVariableState {
+    // If we haven't already turned on variables, do so now
+    if (arg.prevState.showVariablesOnDebug) {
+        return {
+            ...arg.prevState,
+            showVariablesOnDebug: false,
+            visible: true
+        };
+    }
+    return arg.prevState;
 }
 
 type VariableReducerFunctions<T> = {
@@ -261,10 +284,13 @@ const reducerMap: Partial<VariableActionMapping> = {
     [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: setVariableExplorerHeight,
     [InteractiveWindowMessages.VariableExplorerHeightResponse]: handleVariableExplorerHeightResponse,
     [CommonActionType.GET_VARIABLE_DATA]: handleRequest,
-    [InteractiveWindowMessages.GetVariablesResponse]: handleResponse
+    [InteractiveWindowMessages.GetVariablesResponse]: handleResponse,
+    [CommonActionType.RUN_BY_LINE]: handleDebugStart
 };
 
-export function generateVariableReducer(): Reducer<IVariableState, QueuableAction<Partial<VariableActionMapping>>> {
+export function generateVariableReducer(
+    showVariablesOnDebug: boolean
+): Reducer<IVariableState, QueuableAction<Partial<VariableActionMapping>>> {
     // First create our default state.
     const defaultState: IVariableState = {
         currentExecutionCount: 0,
@@ -274,7 +300,9 @@ export function generateVariableReducer(): Reducer<IVariableState, QueuableActio
         sortColumn: 'name',
         pageSize: 5,
         containerHeight: 0,
-        gridHeight: 200
+        gridHeight: 200,
+        refreshCount: 0,
+        showVariablesOnDebug
     };
 
     // Then combine that with our map of state change message to reducer

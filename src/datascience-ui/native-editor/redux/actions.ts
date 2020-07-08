@@ -127,6 +127,7 @@ export const actionCreators = {
         createIncomingActionWithPayload(CommonActionType.OPEN_SETTINGS, { setting }),
     getVariableData: (
         newExecutionCount: number,
+        refreshCount: number,
         startIndex: number = 0,
         pageSize: number = 100
     ): CommonAction<IJupyterVariablesRequest> =>
@@ -135,7 +136,8 @@ export const actionCreators = {
             sortColumn: 'name',
             sortAscending: true,
             startIndex,
-            pageSize
+            pageSize,
+            refreshCount
         }),
     widgetFailed: (ex: Error): CommonAction<Error> =>
         createIncomingActionWithPayload(CommonActionType.IPYWIDGET_RENDER_FAILURE, ex),

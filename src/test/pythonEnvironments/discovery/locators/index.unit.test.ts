@@ -25,7 +25,6 @@ import {
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../../../client/interpreter/contracts';
-import { IInterpreterFilter } from '../../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { PythonInterpreterLocatorService } from '../../../../client/pythonEnvironments/discovery/locators';
 import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
@@ -35,19 +34,17 @@ suite('Interpreters - Locators Index', () => {
     let platformSvc: TypeMoq.IMock<IPlatformService>;
     let helper: TypeMoq.IMock<IInterpreterLocatorHelper>;
     let locator: IInterpreterLocatorService;
-    let filter: TypeMoq.IMock<IInterpreterFilter>;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         platformSvc = TypeMoq.Mock.ofType<IPlatformService>();
         helper = TypeMoq.Mock.ofType<IInterpreterLocatorHelper>();
-        filter = TypeMoq.Mock.ofType<IInterpreterFilter>();
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => []);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformSvc.object);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterLocatorHelper)))
             .returns(() => helper.object);
 
-        locator = new PythonInterpreterLocatorService(serviceContainer.object, filter.object);
+        locator = new PythonInterpreterLocatorService(serviceContainer.object);
     });
     [undefined, Uri.file('Something')].forEach((resource) => {
         getNamesAndValues<OSType>(OSType).forEach((osType) => {

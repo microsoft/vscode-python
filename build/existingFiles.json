@@ -208,7 +208,6 @@
     "src/client/language/types.ts",
     "src/client/language/unicode.ts",
     "src/client/languageServices/jediProxyFactory.ts",
-    "src/client/languageServices/languageServerSurveyBanner.ts",
     "src/client/languageServices/proposeLanguageServerBanner.ts",
     "src/client/linters/bandit.ts",
     "src/client/linters/baseLinter.ts",

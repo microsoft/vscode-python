@@ -128,10 +128,6 @@ import {
     PIPENV_SERVICE
 } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
-import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
-import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
@@ -213,14 +209,6 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipEnvInstaller);
-            condaService = TypeMoq.Mock.ofType<ICondaService>();
-            ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
-
-            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-            ioc.serviceManager.addSingletonInstance<IInterpreterService>(
-                IInterpreterService,
-                interpreterService.object
-            );
 
             ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
             ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
@@ -233,13 +221,11 @@ suite('Module Installer', () => {
             ioc.registerMockProcessTypes();
             ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
 
-            ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-            ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-            ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(
-                InterpeterHashProviderFactory,
-                InterpeterHashProviderFactory
-            );
-            ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+            ioc.registerMockInterpreterTypes();
+            condaService = TypeMoq.Mock.ofType<ICondaService>();
+            ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, condaService.object);
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, interpreterService.object);
 
             ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
             ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
@@ -371,12 +357,12 @@ suite('Module Installer', () => {
             mockInterpreterLocator
                 .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([]));
-            ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(
+            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 mockInterpreterLocator.object,
                 INTERPRETER_LOCATOR_SERVICE
             );
-            ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(
+            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 TypeMoq.Mock.ofType<IInterpreterLocatorService>().object,
                 PIPENV_SERVICE
@@ -433,12 +419,12 @@ suite('Module Installer', () => {
                         }
                     ])
                 );
-            ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(
+            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 mockInterpreterLocator.object,
                 INTERPRETER_LOCATOR_SERVICE
             );
-            ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(
+            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 TypeMoq.Mock.ofType<IInterpreterLocatorService>().object,
                 PIPENV_SERVICE
@@ -511,12 +497,12 @@ suite('Module Installer', () => {
             mockInterpreterLocator
                 .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([{ ...info, path: interpreterPath, type: InterpreterType.Unknown }]));
-            ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(
+            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 mockInterpreterLocator.object,
                 INTERPRETER_LOCATOR_SERVICE
             );
-            ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(
+            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 TypeMoq.Mock.ofType<IInterpreterLocatorService>().object,
                 PIPENV_SERVICE
@@ -565,12 +551,12 @@ suite('Module Installer', () => {
             mockInterpreterLocator
                 .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([{ ...info, path: interpreterPath, type: InterpreterType.Conda }]));
-            ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(
+            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 mockInterpreterLocator.object,
                 INTERPRETER_LOCATOR_SERVICE
             );
-            ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(
+            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 TypeMoq.Mock.ofType<IInterpreterLocatorService>().object,
                 PIPENV_SERVICE
@@ -607,7 +593,7 @@ suite('Module Installer', () => {
                 .returns(() =>
                     Promise.resolve([{ ...info, path: 'interpreterPath', type: InterpreterType.VirtualEnv }])
                 );
-            ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(
+            ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 mockInterpreterLocator.object,
                 PIPENV_SERVICE

@@ -15,6 +15,7 @@ import {
     Disposable,
     Event,
     LanguageConfiguration,
+    QuickPickItem,
     Range,
     TextDocument,
     TextEditor,
@@ -72,6 +73,8 @@ export interface IJupyterConnection extends Disposable {
     readonly token: string;
     readonly hostName: string;
     localProcExitCode: number | undefined;
+    // tslint:disable-next-line: no-any
+    authorizationHeader?: any; // Snould be a json object
 }
 
 export type INotebookProviderConnection = IRawConnection | IJupyterConnection;
@@ -212,7 +215,7 @@ export interface INotebook extends IAsyncDisposable {
         interpreter: PythonInterpreter | undefined
     ): Promise<void>;
     getLoggers(): INotebookExecutionLogger[];
-    registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>): void;
+    registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
@@ -265,9 +268,7 @@ export interface INotebookExecutionLogger extends IDisposable {
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
 }
 
-export const IGatherProvider = Symbol('IGatherProvider');
 export interface IGatherProvider {
-    enabled: boolean;
     logExecution(vscCell: ICell): void;
     gatherCode(vscCell: ICell): string;
     resetLog(): void;
@@ -275,7 +276,7 @@ export interface IGatherProvider {
 
 export const IGatherLogger = Symbol('IGatherLogger');
 export interface IGatherLogger extends INotebookExecutionLogger {
-    getGatherProvider(): IGatherProvider;
+    getGatherProvider(): IGatherProvider | undefined;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -298,6 +299,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
 
 export const IJupyterDebugger = Symbol('IJupyterDebugger');
 export interface IJupyterDebugger {
+    readonly isRunningByLine: boolean;
     startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void>;
     startDebugging(notebook: INotebook): Promise<void>;
     stopDebugging(notebook: INotebook): Promise<void>;
@@ -437,7 +439,7 @@ export interface INotebookImporter extends Disposable {
 export const INotebookExporter = Symbol('INotebookExporter');
 export interface INotebookExporter extends Disposable {
     translateToNotebook(cells: ICell[], directoryChange?: string): Promise<nbformat.INotebookContent | undefined>;
-    exportToFile(cells: ICell[], file: string): Promise<void>;
+    exportToFile(cells: ICell[], file: string, showOpenPrompt?: boolean): Promise<void>;
 }
 
 export const IInteractiveWindowProvider = Symbol('IInteractiveWindowProvider');
@@ -768,6 +770,8 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
     webviewExperiments: {
         removeKernelToolbarInInteractiveWindow: boolean;
     };
+
+    gatherIsInstalled: boolean;
 }
 
 // Get variables from the currently running active Jupyter server
@@ -823,6 +827,7 @@ export interface IConditionalJupyterVariables extends IJupyterVariables {
 // Request for variables
 export interface IJupyterVariablesRequest {
     executionCount: number;
+    refreshCount: number;
     sortColumn: string;
     sortAscending: boolean;
     startIndex: number;
@@ -835,6 +840,7 @@ export interface IJupyterVariablesResponse {
     totalCount: number;
     pageStartIndex: number;
     pageResponse: IJupyterVariable[];
+    refreshCount: number;
 }
 
 export const IPlotViewerProvider = Symbol('IPlotViewerProvider');
@@ -1054,8 +1060,6 @@ type WebViewViewState = {
 };
 export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };
 
-export const INotebookProvider = Symbol('INotebookProvider');
-
 export type GetServerOptions = {
     getOnly?: boolean;
     disableUI?: boolean;
@@ -1076,12 +1080,14 @@ export type GetNotebookOptions = {
     token?: CancellationToken;
 };
 
+export const INotebookProvider = Symbol('INotebookProvider');
 export interface INotebookProvider {
     readonly type: 'raw' | 'jupyter';
     /**
      * Fired when a notebook has been created for a given Uri/Identity
      */
     onNotebookCreated: Event<{ identity: Uri; notebook: INotebook }>;
+    onSessionStatusChanged: Event<{ status: ServerStatus; notebook: INotebook }>;
 
     /**
      * Fired just the first time that this provider connects
@@ -1237,15 +1243,39 @@ export interface IJupyterDebugService extends IDebugService {
     stop(): void;
 }
 
+export interface IJupyterServerUri {
+    baseUrl: string;
+    token: string;
+    // tslint:disable-next-line: no-any
+    authorizationHeader: any; // JSON object for authorization header.
+}
+
+export type JupyterServerUriHandle = string;
+
+export interface IJupyterUriProvider {
+    id: string; // Should be a unique string (like a guid)
+    getQuickPickEntryItems(): QuickPickItem[];
+    handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
+    getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+}
+
+export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
+
+export interface IJupyterUriProviderRegistration {
+    getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
+    registerProvider(picker: IJupyterUriProvider): void;
+    getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+}
 export const IDigestStorage = Symbol('IDigestStorage');
 export interface IDigestStorage {
     readonly key: Promise<string>;
-    saveDigest(uri: string, digest: string): Promise<void>;
-    containsDigest(uri: string, digest: string): Promise<boolean>;
+    saveDigest(uri: Uri, digest: string): Promise<void>;
+    containsDigest(uri: Uri, digest: string): Promise<boolean>;
 }
 
 export const ITrustService = Symbol('ITrustService');
 export interface ITrustService {
-    isNotebookTrusted(uri: string, notebookContents: string): Promise<boolean>;
-    trustNotebook(uri: string, notebookContents: string): Promise<void>;
+    readonly onDidSetNotebookTrust: Event<void>;
+    isNotebookTrusted(uri: Uri, notebookContents: string): Promise<boolean>;
+    trustNotebook(uri: Uri, notebookContents: string): Promise<void>;
 }

@@ -912,6 +912,24 @@ export interface IEventNamePropertyMapping {
         disabled: boolean;
     };
     /**
+     * Telemetry event sent when 'Select Interpreter' command is invoked.
+     */
+    [EventName.SELECT_INTERPRETER]: never | undefined;
+    /**
+     * Telemetry event sent when 'Enter interpreter path' button is clicked.
+     */
+    [EventName.SELECT_INTERPRETER_ENTER_BUTTON]: never | undefined;
+    /**
+     * Telemetry event sent with details about what choice user made to input the interpreter path.
+     */
+    [EventName.SELECT_INTERPRETER_ENTER_CHOICE]: {
+        /**
+         * Carries 'enter' if user chose to enter the path to executable.
+         * Carries 'browse' if user chose to browse for the path to the executable.
+         */
+        choice: 'enter' | 'browse';
+    };
+    /**
      * Telemetry event sent with details after updating the python interpreter
      */
     [EventName.PYTHON_INTERPRETER]: {
@@ -1757,7 +1775,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SubmitCellThroughInput]: never | undefined;
     [Telemetry.Undo]: never | undefined;
     [Telemetry.VariableExplorerFetchTime]: never | undefined;
-    [Telemetry.VariableExplorerToggled]: { open: boolean };
+    [Telemetry.VariableExplorerToggled]: { open: boolean; runByLine: boolean };
     [Telemetry.VariableExplorerVariableCount]: { variableCount: number };
     [Telemetry.WaitForIdleJupyter]: never | undefined;
     [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
@@ -2016,6 +2034,7 @@ export interface IEventNamePropertyMapping {
      * @memberof IEventNamePropertyMapping
      */
     [Telemetry.KernelInvalid]: undefined | never;
+    [Telemetry.GatherIsInstalled]: undefined | never;
     [Telemetry.GatherCompleted]: {
         /**
          * result indicates whether the gather was completed to a script, notebook or suffered an internal error.

@@ -168,7 +168,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
-                            onClick={this.props.exportAs}
+                            onClick={this.props.export}
                             disabled={this.props.cellVMs.length === 0 || this.props.busy}
                             tooltip={getLocString('DataScience.export', 'Export as Jupyter notebook')}
                         >
@@ -176,6 +176,19 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                                 baseTheme={this.props.baseTheme}
                                 class="image-button-image"
                                 image={ImageName.SaveAs}
+                            />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={this.props.exportAs}
+                            disabled={this.props.busy || !this.props.isNotebookTrusted}
+                            className="native-button"
+                            tooltip={getLocString('DataScience.notebookExportAs', 'Export as')}
+                        >
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.ExportToPython}
                             />
                         </ImageButton>
                         <ImageButton
@@ -223,6 +236,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         kernel={this.props.kernel}
                         selectServer={this.props.selectServer}
                         selectKernel={this.props.selectKernel}
+                        shouldShowTrustMessage={false}
                     />
                 );
             } else if (this.props.kernel.localizedUri === getLocString('DataScience.localJupyterServer', 'local')) {
@@ -237,6 +251,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                 kernel={this.props.kernel}
                 selectServer={this.props.selectServer}
                 selectKernel={this.props.selectKernel}
+                shouldShowTrustMessage={false}
             />
         );
     }
@@ -345,6 +360,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
+            refreshCount: this.props.variableState.refreshCount,
             offsetHeight: toolbarHeight,
             supportsDebugging:
                 this.props.settings && this.props.settings.variableOptions
@@ -354,7 +370,12 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     };
 
     private pageInVariableData = (startIndex: number, pageSize: number) => {
-        this.props.getVariableData(this.props.currentExecutionCount, startIndex, pageSize);
+        this.props.getVariableData(
+            this.props.currentExecutionCount,
+            this.props.variableState.refreshCount,
+            startIndex,
+            pageSize
+        );
     };
 
     private renderCell = (

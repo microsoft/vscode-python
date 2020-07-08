@@ -36,8 +36,12 @@ export namespace Transfer {
     }
 
     export function showExportAsMenu(arg: CommonReducerArg): IMainState {
-        postActionToExtension(arg, InteractiveWindowMessages.ExportNotebookAs, arg.payload.data); // want to send filename
-        return arg.prevState;
+        const cellContents = arg.prevState.cellVMs.map((v) => v.cell);
+        postActionToExtension(arg, InteractiveWindowMessages.ExportNotebookAs, cellContents);
+
+        return {
+            ...arg.prevState
+        };
     }
 
     export function save(arg: CommonReducerArg): IMainState {

@@ -4,6 +4,7 @@ import { inject, injectable } from 'inversify';
 import { gte } from 'semver';
 
 import { Uri } from 'vscode';
+import { IPlatformService } from '../../common/platform/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
@@ -50,7 +51,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
+        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
+        @inject(IPlatformService) private readonly platformService: IPlatformService
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -109,6 +111,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                     this.disposables,
                     { ...options, pythonPath },
                     activatedProc!,
+                    this.platformService,
                     activatedEnvVars
                 );
                 await daemon.initialize();
@@ -119,6 +122,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                     this.disposables,
                     { ...options, pythonPath },
                     activatedProc!,
+                    this.platformService,
                     activatedEnvVars
                 );
                 return factory.createDaemonService<T>();

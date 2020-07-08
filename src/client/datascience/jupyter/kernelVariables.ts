@@ -330,7 +330,8 @@ export class KernelVariables implements IJupyterVariables {
             executionCount: request.executionCount,
             pageStartIndex: -1,
             pageResponse: [],
-            totalCount: 0
+            totalCount: 0,
+            refreshCount: request.refreshCount
         };
 
         // Use the list of names to fetch the page of data

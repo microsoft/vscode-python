@@ -9,7 +9,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
-import { commands } from 'vscode';
+import { commands, Uri } from 'vscode';
 import { NotebookCell } from '../../../../types/vscode-proposed';
 import { CellDisplayOutput } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
@@ -18,7 +18,7 @@ import { IDisposable } from '../../../client/common/types';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
 import { findMappedNotebookCellModel } from '../../../client/datascience/notebook/helpers/cellMappers';
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
-import { ICell, INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
+import { ICell, INotebookEditorProvider, INotebookModel, INotebookProvider } from '../../../client/datascience/types';
 import { createEventHandler, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
@@ -178,46 +178,45 @@ export async function shutdownAllNotebooks() {
     await Promise.all(notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()));
 }
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
-    // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
-    await commands.executeCommand('workbench.action.files.saveAll');
     await closeActiveWindows();
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
     sinon.restore();
 }
 export async function closeNotebooks(disposables: IDisposable[] = []) {
-    // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
-    await commands.executeCommand('workbench.action.files.saveAll');
     await closeActiveWindows();
     disposeAllDisposables(disposables);
 }
 
 export async function startJupyter() {
-    const { contentProvider, editorProvider } = await getServices();
-    // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
-    await commands.executeCommand('workbench.action.files.saveAll');
+    const { editorProvider } = await getServices();
     await closeActiveWindows();
 
-    // Create a new nb, add a python cell and execute it.
-    // Doing that will start jupyter.
-    await editorProvider.createNew();
-    await (await insertPythonCell('print("Hello World")', 0)).waitForCellToGetAdded();
-    const model = editorProvider.activeEditor?.model;
-    editorProvider.activeEditor?.runAllCells();
-    // Wait for 15s for Jupyter to start.
-    await waitForCondition(async () => (model?.cells[0].data.outputs as []).length > 0, 15_000, 'Cell not executed');
-
-    const saveStub = sinon.stub(contentProvider, 'saveNotebook');
-    const saveAsStub = sinon.stub(contentProvider, 'saveNotebookAs');
+    const disposables: IDisposable[] = [];
     try {
-        // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
-        saveStub.callsFake(noop as any);
-        saveAsStub.callsFake(noop as any);
-        await commands.executeCommand('workbench.action.files.saveAll');
+        const templateIPynb = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'datascience',
+            'notebook',
+            'empty.ipynb'
+        );
+        const tempIPynb = await createTemporaryNotebook(templateIPynb, disposables);
+        await editorProvider.open(Uri.file(tempIPynb));
+        await (await insertPythonCell('print("Hello World")', 0)).waitForCellToGetAdded();
+        const model = editorProvider.activeEditor?.model;
+        editorProvider.activeEditor?.runAllCells();
+        // Wait for 15s for Jupyter to start.
+        await waitForCondition(
+            async () => (model?.cells[0].data.outputs as []).length > 0,
+            15_000,
+            'Cell not executed'
+        );
+
         await closeActiveWindows();
     } finally {
-        saveStub.restore();
-        saveAsStub.restore();
+        disposables.forEach((d) => d.dispose());
     }
 }
 
@@ -227,17 +226,51 @@ export function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
         cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Success
     );
 }
+export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell) {
+    await waitForCondition(
+        async () => assertHasExecutionCompletedSuccessfully(cell),
+        1_000,
+        `Cell ${cell.notebook.cells.indexOf(cell) + 1} did not complete successfully`
+    );
+}
+export function assertExecutionOrderInVSCCell(cell: NotebookCell, executionOrder?: number) {
+    assert.equal(cell.metadata.executionOrder, executionOrder);
+    return true;
+}
+export async function waitForExecutionOrderInVSCCell(cell: NotebookCell, executionOrder: number | undefined) {
+    await waitForCondition(
+        async () => assertExecutionOrderInVSCCell(cell, executionOrder),
+        1_000,
+        `Execution count not '${executionOrder}' for Cell ${cell.notebook.cells.indexOf(cell) + 1}`
+    );
+}
+export async function waitForExecutionOrderInCell(
+    cell: ICell,
+    executionOrder: number | undefined,
+    model: INotebookModel
+) {
+    await waitForCondition(
+        async () => {
+            if (executionOrder === undefined || executionOrder === null) {
+                return cell.data.execution_count === null;
+            }
+            return cell.data.execution_count === executionOrder;
+        },
+        1_000,
+        `Execution count not '${executionOrder}' for ICell ${model.cells.indexOf(cell) + 1}`
+    );
+}
 export function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
     return (
         (cell.metadata.executionOrder ?? 0) > 0 &&
         cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Error
     );
 }
-export function hasOutputInVSCode(cell: NotebookCell) {
-    assert.ok(cell.outputs.length, 'No output');
+export function assertHasOutputInVSCell(cell: NotebookCell) {
+    assert.ok(cell.outputs.length, `No output in Cell ${cell.notebook.cells.indexOf(cell) + 1}`);
 }
-export function hasOutputInICell(cell: ICell) {
-    assert.ok((cell.data.outputs as nbformat.IOutput[]).length, 'No output');
+export function assertHasOutputInICell(cell: ICell, model: INotebookModel) {
+    assert.ok((cell.data.outputs as nbformat.IOutput[]).length, `No output in ICell ${model.cells.indexOf(cell) + 1}`);
 }
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
     const cellOutputs = cell.outputs;
@@ -250,6 +283,13 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
         expect(outputText).to.include(text, 'Output does not contain provided text');
     }
     return true;
+}
+export async function waitForTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
+    await waitForCondition(
+        async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),
+        1_000,
+        `Output does not contain provided text '${text}' for Cell ${cell.notebook.cells.indexOf(cell) + 1}`
+    );
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
     const cellOutputs = cell.outputs;
@@ -271,6 +311,27 @@ export function assertHasTextOutputInICell(cell: ICell, text: string, index: num
 export function assertVSCCellIsRunning(cell: NotebookCell) {
     assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
     return true;
+}
+export async function waitForVSCCellHasEmptyOutput(cell: NotebookCell) {
+    await waitForCondition(
+        async () => cell.outputs.length === 0,
+        1_000,
+        `Cell ${cell.notebook.cells.indexOf(cell) + 1} output did not get cleared`
+    );
+}
+export async function waitForCellHasEmptyOutput(cell: ICell, model: INotebookModel) {
+    await waitForCondition(
+        async () => !Array.isArray(cell.data.outputs) || cell.data.outputs.length === 0,
+        1_000,
+        `ICell ${model.cells.indexOf(cell) + 1} output did not get cleared`
+    );
+}
+export async function waitForVSCCellIsRunning(cell: NotebookCell) {
+    await waitForCondition(
+        async () => assertVSCCellIsRunning(cell),
+        1_000,
+        `Cell ${cell.notebook.cells.indexOf(cell) + 1} did not start`
+    );
 }
 export function assertVSCCellIsNotRunning(cell: NotebookCell) {
     assert.notEqual(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);

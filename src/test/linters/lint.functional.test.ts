@@ -13,7 +13,7 @@ import { CancellationTokenSource, TextDocument, TextLine, Uri } from 'vscode';
 import { Product } from '../../client/common/installer/productInstaller';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PlatformService } from '../../client/common/platform/platformService';
-import { IFileSystem } from '../../client/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
@@ -714,6 +714,7 @@ class TestFixture extends BaseTestFixture {
             disposableRegistry
         );
         const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
+        const platformService = mock<IPlatformService>();
         return new PythonExecutionFactory(
             serviceContainer.object,
             envActivationService.object,
@@ -721,7 +722,8 @@ class TestFixture extends BaseTestFixture {
             configService,
             condaService.object,
             decoder,
-            instance(windowsStoreInterpreter)
+            instance(windowsStoreInterpreter),
+            instance(platformService)
         );
     }
 

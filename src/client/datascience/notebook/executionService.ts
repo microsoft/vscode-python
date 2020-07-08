@@ -22,6 +22,7 @@ import { INotebookStorageProvider } from '../interactive-ipynb/notebookStoragePr
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { IDataScienceErrorHandler, INotebook, INotebookEditorProvider, INotebookProvider } from '../types';
 import { findMappedNotebookCellModel } from './helpers/cellMappers';
+import { clearCellForExecution } from './helpers/cellUpdateHelpers';
 import {
     handleUpdateDisplayDataMessage,
     hasTransientOutputForAnotherCell,
@@ -186,7 +187,10 @@ export class NotebookExecutionService implements INotebookExecutionService {
         }
 
         const editor = this.editorProvider.editors.find((e) => e.model === model);
-        if (!(editor instanceof NotebookEditor)) {
+        if (!editor) {
+            throw new Error('No editor for Model');
+        }
+        if (editor && !(editor instanceof NotebookEditor)) {
             throw new Error('Executing Notebook with another Editor');
         }
         // If we need to cancel this execution (from our code, due to kernel restarts or similar, then cancel).
@@ -214,7 +218,6 @@ export class NotebookExecutionService implements INotebookExecutionService {
 
         const deferred = createDeferred<NotebookCellRunState>();
         const executionStopWatch = new StopWatch();
-
         wrappedToken.onCancellationRequested(() => {
             if (deferred.completed) {
                 return;
@@ -228,18 +231,21 @@ export class NotebookExecutionService implements INotebookExecutionService {
             }
         });
 
+        // Ensure we clear the cell state and trigger a change.
+        clearCellForExecution(cell, model);
         cell.metadata.runStartTime = new Date().getTime();
+        this.contentProvider.notifyChangesToDocument(document);
 
         let subscription: Subscription | undefined;
         let modelClearedEventHandler: IDisposable | undefined;
         try {
-            nb.clear(cell.uri.fsPath); // NOSONAR
+            nb.clear(cell.uri.toString()); // NOSONAR
             editor.notifyExecution(cell.document.getText());
             const observable = nb.executeObservable(
                 cell.document.getText(),
                 document.fileName,
                 0,
-                cell.uri.fsPath,
+                cell.uri.toString(),
                 false
             );
             subscription = observable?.subscribe(
@@ -248,13 +254,13 @@ export class NotebookExecutionService implements INotebookExecutionService {
                         modelClearedEventHandler = model.changed((e) => {
                             if (e.kind === 'clear') {
                                 // If cell output has been cleared, then clear the output in the observed executable cell.
-                                // Else if user clears output while execuitng a cell, we add it back.
+                                // Else if user clears output while executing a cell, we add it back.
                                 cells.forEach((c) => (c.data.outputs = []));
                             }
                         });
                     }
                     const rawCellOutput = cells
-                        .filter((item) => item.id === cell.uri.fsPath)
+                        .filter((item) => item.id === cell.uri.toString())
                         .flatMap((item) => (item.data.outputs as unknown) as nbformat.IOutput[])
                         .filter((output) => !hasTransientOutputForAnotherCell(output));
 
@@ -338,7 +344,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
             this.registeredIOPubListeners.add(nb);
             //tslint:disable-next-line:no-require-imports
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-            nb.registerIOPubListener(async (msg) => {
+            nb.registerIOPubListener((msg) => {
                 if (
                     jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg) &&
                     handleUpdateDisplayDataMessage(msg, model, document)

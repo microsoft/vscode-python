@@ -91,6 +91,7 @@ suite('Unit Tests - debugging', () => {
         ioc.registerTestManagers();
         ioc.registerMockUnitTestSocketServer();
         ioc.registerInterpreterStorageTypes();
+        ioc.registerMockInterpreterTypes();
         ioc.serviceManager.add<IArgumentsHelper>(IArgumentsHelper, ArgumentsHelper);
         ioc.serviceManager.add<ITestRunner>(ITestRunner, TestRunner);
         ioc.serviceManager.add<IXUnitParser>(IXUnitParser, XUnitParser);
@@ -103,11 +104,8 @@ suite('Unit Tests - debugging', () => {
         ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, UnitTestTestManagerRunner, UNITTEST_PROVIDER);
         ioc.serviceManager.addSingleton<ITestDebugLauncher>(ITestDebugLauncher, MockDebugLauncher);
         ioc.serviceManager.addSingleton<ITestMessageService>(ITestMessageService, TestMessageService, PYTEST_PROVIDER);
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
-        ioc.serviceManager.addSingletonInstance<IInterpreterService>(
-            IInterpreterService,
-            instance(mock(InterpreterService))
-        );
+        ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
     }
 
     async function testStartingDebugger(testProvider: TestProvider) {

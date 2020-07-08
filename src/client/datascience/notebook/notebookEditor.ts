@@ -22,7 +22,7 @@ import {
     IStatusProvider
 } from '../types';
 import { getDefaultCodeLanguage } from './helpers/helpers';
-import { INotebookExecutionService } from './types';
+import { INotebookContentProvider, INotebookExecutionService } from './types';
 
 export class NotebookEditor implements INotebookEditor {
     public readonly type = 'native';
@@ -76,6 +76,7 @@ export class NotebookEditor implements INotebookEditor {
         private readonly executionService: INotebookExecutionService,
         private readonly commandManager: ICommandManager,
         private readonly notebookProvider: INotebookProvider,
+        private readonly contentProvider: INotebookContentProvider,
         private readonly statusProvider: IStatusProvider,
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
@@ -166,6 +167,7 @@ export class NotebookEditor implements INotebookEditor {
                 const no = DataScience.restartKernelMessageNo();
                 const v = await this.applicationShell.showInformationMessage(message, yes, no);
                 if (v === yes) {
+                    this.restartingKernel = false;
                     await this.restartKernel();
                 }
             }
@@ -178,13 +180,10 @@ export class NotebookEditor implements INotebookEditor {
         }
     }
 
-    public async restartKernel(internal: boolean = false): Promise<void> {
+    public async restartKernel(): Promise<void> {
         this.executionService.cancelPendingExecutions(this.document);
 
-        // Only log this if it's user requested restart
-        if (!internal) {
-            sendTelemetryEvent(Telemetry.RestartKernelCommand);
-        }
+        sendTelemetryEvent(Telemetry.RestartKernelCommand);
         if (this.restartingKernel) {
             return;
         }
@@ -195,28 +194,22 @@ export class NotebookEditor implements INotebookEditor {
         });
 
         if (notebook && !this.restartingKernel) {
-            this.restartingKernel = true;
+            if (await this.shouldAskForRestart()) {
+                // Ask the user if they want us to restart or not.
+                const message = DataScience.restartKernelMessage();
+                const yes = DataScience.restartKernelMessageYes();
+                const dontAskAgain = DataScience.restartKernelMessageDontAskAgain();
+                const no = DataScience.restartKernelMessageNo();
 
-            try {
-                if (await this.shouldAskForRestart()) {
-                    // Ask the user if they want us to restart or not.
-                    const message = DataScience.restartKernelMessage();
-                    const yes = DataScience.restartKernelMessageYes();
-                    const dontAskAgain = DataScience.restartKernelMessageDontAskAgain();
-                    const no = DataScience.restartKernelMessageNo();
-
-                    const v = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
-                    if (v === dontAskAgain) {
-                        await this.disableAskForRestart();
-                        await this.restartKernelInternal(notebook);
-                    } else if (v === yes) {
-                        await this.restartKernelInternal(notebook);
-                    }
-                } else {
+                const response = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
+                if (response === dontAskAgain) {
+                    await this.disableAskForRestart();
+                    await this.restartKernelInternal(notebook);
+                } else if (response === yes) {
                     await this.restartKernelInternal(notebook);
                 }
-            } finally {
-                this.restartingKernel = false;
+            } else {
+                await this.restartKernelInternal(notebook);
             }
         }
     }
@@ -229,7 +222,12 @@ export class NotebookEditor implements INotebookEditor {
         // Set our status
         const status = this.statusProvider.set(DataScience.restartingKernelStatus(), true, undefined, undefined);
 
+        // Disable running cells.
+        const [cellRunnable, runnable] = [this.document.metadata.cellRunnable, this.document.metadata.runnable];
         try {
+            this.document.metadata.cellRunnable = false;
+            this.document.metadata.runnable = false;
+            this.contentProvider.notifyChangesToDocument(this.document);
             await notebook.restartKernel(
                 this.configurationService.getSettings(this.file).datascience.jupyterInterruptTimeout
             );
@@ -252,6 +250,9 @@ export class NotebookEditor implements INotebookEditor {
         } finally {
             status.dispose();
             this.restartingKernel = false;
+            // Restore previous state.
+            [this.document.metadata.cellRunnable, this.document.metadata.runnable] = [cellRunnable, runnable];
+            this.contentProvider.notifyChangesToDocument(this.document);
         }
     }
     private async shouldAskForRestart(): Promise<boolean> {

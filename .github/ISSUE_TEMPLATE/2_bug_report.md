@@ -50,20 +50,3 @@ XXX
 
 </p>
 </details>
-
-<br />
-
-<details>
-
-<summary>
-Output from <code>Console</code> under the <code>Developer Tools</code> panel (toggle Developer Tools on under <code>Help</code>; turn on source maps to make any tracebacks be useful by running <code>Enable source map support for extension debugging</code>)
-</summary>
-
-<p>
-
-```
-XXXX
-```
-
-</p>
-</details>
