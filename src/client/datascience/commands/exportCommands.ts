@@ -31,9 +31,15 @@ export class ExportCommands implements IDisposable {
     ) {}
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (model) => this.export(model, ExportFormat.python));
-        this.registerCommand(Commands.ExportToHTML, (model) => this.export(model, ExportFormat.html));
-        this.registerCommand(Commands.ExportToPDF, (model) => this.export(model, ExportFormat.pdf));
-        this.registerCommand(Commands.Export, (model) => this.export(model));
+        this.registerCommand(Commands.ExportToHTML, (model, defaultFileName?) =>
+            this.export(model, ExportFormat.html, defaultFileName)
+        );
+        this.registerCommand(Commands.ExportToPDF, (model, defaultFileName?) =>
+            this.export(model, ExportFormat.pdf, defaultFileName)
+        );
+        this.registerCommand(Commands.Export, (model, defaultFileName?) =>
+            this.export(model, undefined, defaultFileName)
+        );
     }
 
     public dispose() {
@@ -49,7 +55,7 @@ export class ExportCommands implements IDisposable {
         this.disposables.push(disposable);
     }
 
-    private async export(model: INotebookModel, exportMethod?: ExportFormat) {
+    private async export(model: INotebookModel, exportMethod?: ExportFormat, defaultFileName?: string) {
         if (!model) {
             // if no model was passed then this was called from the command pallete,
             // so we need to get the active editor
@@ -65,11 +71,11 @@ export class ExportCommands implements IDisposable {
         }
 
         if (exportMethod) {
-            await this.exportManager.export(exportMethod, model);
+            await this.exportManager.export(exportMethod, model, defaultFileName);
         } else {
             // if we don't have an export method we need to ask for one and display the
             // quickpick menu
-            const pickedItem = await this.showExportQuickPickMenu(model).then((item) => item);
+            const pickedItem = await this.showExportQuickPickMenu(model, defaultFileName).then((item) => item);
             if (pickedItem !== undefined) {
                 pickedItem.handler();
             } else {
@@ -78,7 +84,7 @@ export class ExportCommands implements IDisposable {
         }
     }
 
-    private getExportQuickPickItems(model: INotebookModel): IExportQuickPickItem[] {
+    private getExportQuickPickItems(model: INotebookModel, defaultFileName?: string): IExportQuickPickItem[] {
         return [
             {
                 label: DataScience.exportPythonQuickPickLabel(),
@@ -97,7 +103,7 @@ export class ExportCommands implements IDisposable {
                     sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                         format: ExportFormat.html
                     });
-                    this.commandManager.executeCommand(Commands.ExportToHTML, model);
+                    this.commandManager.executeCommand(Commands.ExportToHTML, model, defaultFileName);
                 }
             },
             {
@@ -107,14 +113,17 @@ export class ExportCommands implements IDisposable {
                     sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                         format: ExportFormat.pdf
                     });
-                    this.commandManager.executeCommand(Commands.ExportToPDF, model);
+                    this.commandManager.executeCommand(Commands.ExportToPDF, model, defaultFileName);
                 }
             }
         ];
     }
 
-    private async showExportQuickPickMenu(model: INotebookModel): Promise<IExportQuickPickItem | undefined> {
-        const items = this.getExportQuickPickItems(model);
+    private async showExportQuickPickMenu(
+        model: INotebookModel,
+        defaultFileName?: string
+    ): Promise<IExportQuickPickItem | undefined> {
+        const items = this.getExportQuickPickItems(model, defaultFileName);
 
         const options: QuickPickOptions = {
             ignoreFocusOut: false,

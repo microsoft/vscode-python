@@ -437,7 +437,11 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             this.stopProgress();
         }
         if (model) {
-            this.commandManager.executeCommand(Commands.Export, model);
+            let defaultFileName;
+            if (this.lastFile) {
+                defaultFileName = path.basename(this.lastFile, path.extname(this.lastFile));
+            }
+            this.commandManager.executeCommand(Commands.Export, model, defaultFileName);
         }
     }
 
