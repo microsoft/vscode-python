@@ -99,7 +99,10 @@ suite('Python Settings', async () => {
         // number settings
         config.setup((c) => c.get<number>('jediMemoryLimit')).returns(() => sourceSettings.jediMemoryLimit);
         // Language server type settings
-        config.setup((c) => c.get<LanguageServerType>('languageServer')).returns(() => sourceSettings.languageServer);
+        config
+            .setup((c) => c.get<LanguageServerType>('languageServer'))
+            .returns(() => sourceSettings.languageServer)
+            .verifiable(TypeMoq.Times.atLeastOnce());
 
         // "any" settings
         // tslint:disable-next-line:no-any
