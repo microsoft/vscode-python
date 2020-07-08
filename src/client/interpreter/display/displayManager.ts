@@ -7,6 +7,16 @@ import { IDocumentManager, IVSCodeNotebook } from '../../common/application/type
 import { IDisposableRegistry } from '../../common/types';
 import { IInterpreterDisplay, IInterpreterStatusbarVisibilityFilter } from '../contracts';
 
+/**
+ * Create this class as Inversify doesn't allow @multiinject if there are no registered items.
+ * i.e. we must always have one for @multiinject to work.
+ */
+export class AlwaysDisplayStatusBar implements IInterpreterStatusbarVisibilityFilter {
+    public shouldDisplayStatusBar(): boolean {
+        return true;
+    }
+}
+
 @injectable()
 export class InterpreterStatusbarDisplayManager implements IExtensionSingleActivationService {
     constructor(
