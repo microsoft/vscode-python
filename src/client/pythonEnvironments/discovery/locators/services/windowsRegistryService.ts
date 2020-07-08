@@ -182,7 +182,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                     // Give preference to what we have retrieved from getInterpreterInformation.
                     version: details.version || parsePythonVersion(version),
                     companyDisplayName: interpreterInfo.companyDisplayName,
-                    type: this._windowsStoreInterpreter.isHiddenInterpreter(executablePath)
+                    type: this._windowsStoreInterpreter.isWindowsStoreInterpreter(executablePath)
                         ? InterpreterType.WindowsStore
                         : InterpreterType.Unknown
                 } as PythonInterpreter;

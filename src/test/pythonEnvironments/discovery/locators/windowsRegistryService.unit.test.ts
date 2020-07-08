@@ -313,7 +313,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters[0].type, InterpreterType.WindowsStore, 'Incorrect type');
         windowsStoreInterpreter.verifyAll();
     });
-    test('Must not return any interpreters (must ignore internal windows store intrepreters)', async () => {
+    test('Must not return any interpreters (must ignore internal windows store interpreters)', async () => {
         platformService.setup((p) => p.isWindows).returns(() => true);
         const registryKeys = [
             {
