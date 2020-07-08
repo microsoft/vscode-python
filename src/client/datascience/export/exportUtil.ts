@@ -1,8 +1,9 @@
+import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Uri } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { sleep } from '../../common/utils/async';
 import { ICell, IDataScienceErrorHandler, INotebookExporter, INotebookModel, INotebookStorage } from '../types';
@@ -69,5 +70,44 @@ export class ExportUtil {
         }
 
         return model;
+    }
+
+    public async removeSvgs(source: Uri) {
+        const model = await this.notebookStorage.load(source);
+
+        const newCells: ICell[] = [];
+        for (const cell of model.cells) {
+            const outputs = cell.data.outputs;
+            if (outputs as nbformat.IOutput[]) {
+                this.removeSvgFromOutputs(outputs as nbformat.IOutput[]);
+            }
+            newCells.push(cell);
+        }
+        model.update({
+            kind: 'modify',
+            newCells: newCells,
+            oldCells: model.cells as ICell[],
+            oldDirty: false,
+            newDirty: false,
+            source: 'user'
+        });
+        await this.notebookStorage.save(model, new CancellationTokenSource().token);
+    }
+
+    private removeSvgFromOutputs(outputs: nbformat.IOutput[]) {
+        const SVG = 'image/svg+xml';
+        const PNG = 'image/png';
+        for (const output of outputs as nbformat.IOutput[]) {
+            if (output.data as nbformat.IMimeBundle) {
+                const data = output.data as nbformat.IMimeBundle;
+                // only remove the svg if there is a png available
+                if (!(SVG in data)) {
+                    continue;
+                }
+                if (PNG in data) {
+                    delete data[SVG];
+                }
+            }
+        }
     }
 }

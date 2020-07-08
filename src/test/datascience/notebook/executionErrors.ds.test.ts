@@ -17,12 +17,7 @@ import {
 } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize, initializeTest } from '../../initialize';
-import {
-    canRunTests,
-    closeNotebooksAndCleanUpAfterTests,
-    insertPythonCellAndWait,
-    swallowSavingOfNotebooks
-} from './helper';
+import { canRunTests, closeNotebooksAndCleanUpAfterTests, insertPythonCellAndWait } from './helper';
 
 // tslint:disable: no-any no-invalid-this
 suite('DataScience - VSCode Notebook - Errors in Execution', function () {
@@ -43,7 +38,6 @@ suite('DataScience - VSCode Notebook - Errors in Execution', function () {
     setup(async () => {
         sinon.restore();
         await initializeTest();
-        await swallowSavingOfNotebooks();
         const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
         notebook = mock<INotebook>();
         (instance(notebook) as any).then = undefined;

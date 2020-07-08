@@ -21,6 +21,7 @@ export class ExportManager implements IExportManager {
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
         let target;
+
         if (format !== ExportFormat.python) {
             target = await this.filePicker.getExportFileLocation(format, model.file);
             if (!target) {
@@ -39,6 +40,12 @@ export class ExportManager implements IExportManager {
         const tempDir = await this.exportUtil.generateTempDir();
         const sourceFilePath = await this.exportUtil.makeFileInDirectory(model, fileName, tempDir.path);
         const source = Uri.file(sourceFilePath);
+
+        if (format === ExportFormat.pdf) {
+            // When exporting to PDF we need to remove any SVG output. This is due to an error
+            // with nbconvert and a dependency of its called InkScape.
+            await this.exportUtil.removeSvgs(source);
+        }
 
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
         try {

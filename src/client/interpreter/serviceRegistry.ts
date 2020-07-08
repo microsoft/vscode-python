@@ -47,10 +47,11 @@ import {
     IInterpreterHelper,
     IInterpreterLocatorProgressHandler,
     IInterpreterService,
+    IInterpreterStatusbarVisibilityFilter,
     IInterpreterVersionService,
     IShebangCodeLensProvider
 } from './contracts';
-import { InterpreterDisplay } from './display';
+import { AlwaysDisplayStatusBar, InterpreterDisplay } from './display';
 import { InterpreterSelectionTip } from './display/interpreterSelectionTip';
 import { InterpreterLocatorProgressStatubarHandler } from './display/progressDisplay';
 import { ShebangCodeLensProvider } from './display/shebangCodeLensProvider';
@@ -162,6 +163,10 @@ export function registerInterpreterTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         PreWarmActivatedEnvironmentVariables
+    );
+    serviceManager.addSingleton<IInterpreterStatusbarVisibilityFilter>(
+        IInterpreterStatusbarVisibilityFilter,
+        AlwaysDisplayStatusBar
     );
 }
 

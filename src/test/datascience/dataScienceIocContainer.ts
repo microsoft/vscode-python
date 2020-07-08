@@ -101,7 +101,7 @@ import {
 import { CryptoUtils } from '../../client/common/crypto';
 import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibilityService';
 import { IDotNetCompatibilityService } from '../../client/common/dotnet/types';
-import { LocalZMQKernel } from '../../client/common/experiments/groups';
+import { EnableTrustedNotebooks, LocalZMQKernel } from '../../client/common/experiments/groups';
 import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
@@ -606,7 +606,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
         this.serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
         this.serviceManager.add<IStartPage>(IStartPage, StartPage);
-        this.serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
+
+        const experimentService = mock(ExperimentService);
+        when(experimentService.inExperiment(EnableTrustedNotebooks.experiment)).thenResolve(true);
+        this.serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, instance(experimentService));
+
         this.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
