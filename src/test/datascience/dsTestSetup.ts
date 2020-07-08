@@ -58,5 +58,6 @@ if (
 
 // Update package.json to pick experiments from our custom settings.json file.
 content.contributes.configuration.properties['python.experiments.optInto'].scope = 'resource';
+content.contributes.configuration.properties['python.logging.level'].scope = 'resource';
 
 fs.writeFileSync(packageJsonFile, JSON.stringify(content, undefined, 4));
