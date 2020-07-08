@@ -206,14 +206,14 @@ suite('Interactive window command listener', async () => {
         when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));
         when(applicationShell.showInformationMessage(anything())).thenReturn(Promise.resolve('moo'));
 
-        const notebookProvider = mock(NotebookProvider);
+        //const notebookProvider = mock(NotebookProvider);
 
         const result = new InteractiveWindowCommandListener(
             disposableRegistry,
             instance(interactiveWindowProvider),
             instance(notebookExporter),
             instance(jupyterExecution),
-            instance(notebookProvider),
+            //instance(notebookProvider),
             documentManager,
             instance(applicationShell),
             instance(fileSystem),

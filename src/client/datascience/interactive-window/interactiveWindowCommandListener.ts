@@ -4,7 +4,7 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import * as uuid from 'uuid/v4';
+// import * as uuid from 'uuid/v4';
 import { Range, TextDocument, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
@@ -27,13 +27,13 @@ import {
     IInteractiveBase,
     IInteractiveWindowProvider,
     IJupyterExecution,
-    INotebook,
+    //    INotebook,
     INotebookEditorProvider,
     INotebookExporter,
-    INotebookProvider,
+    //    INotebookProvider,
     IStatusProvider
 } from '../types';
-import { createNewInteractiveIdentity } from './identity';
+// import { createNewInteractiveIdentity } from './identity';
 
 @injectable()
 export class InteractiveWindowCommandListener implements IDataScienceCommandListener {
@@ -42,7 +42,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
-        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
+        //@inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -314,41 +314,38 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     }
 
     private async exportCellsWithOutput(
-        ranges: { range: Range; title: string }[],
-        document: TextDocument,
-        file: string,
-        cancelToken: CancellationToken
+        _ranges: { range: Range; title: string }[],
+        _document: TextDocument,
+        _file: string,
+        _cancelToken: CancellationToken
     ): Promise<void> {
-        let notebook: INotebook | undefined;
+        //const notebook: INotebook | undefined = undefined;
         try {
-            const settings = this.configuration.getSettings(document.uri);
-
-            // Create a new notebook
-            notebook = await this.notebookProvider.getOrCreateNotebook({ identity: createNewInteractiveIdentity() });
-            // If that works, then execute all of the cells.
-            const cells = Array.prototype.concat(
-                ...(await Promise.all(
-                    ranges.map((r) => {
-                        const code = document.getText(r.range);
-                        return notebook
-                            ? notebook.execute(code, document.fileName, r.range.start.line, uuid(), cancelToken)
-                            : [];
-                    })
-                ))
-            );
-
-            // Then save them to the file
-            let directoryChange;
-            if (settings.datascience.changeDirOnImportExport) {
-                directoryChange = file;
-            }
-
-            const notebookJson = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
-            await this.fileSystem.writeFile(file, JSON.stringify(notebookJson));
+            // const settings = this.configuration.getSettings(document.uri);
+            // // Create a new notebook
+            // notebook = await this.notebookProvider.getOrCreateNotebook({ identity: createNewInteractiveIdentity() });
+            // // If that works, then execute all of the cells.
+            // const cells = Array.prototype.concat(
+            //     ...(await Promise.all(
+            //         ranges.map((r) => {
+            //             const code = document.getText(r.range);
+            //             return notebook
+            //                 ? notebook.execute(code, document.fileName, r.range.start.line, uuid(), cancelToken)
+            //                 : [];
+            //         })
+            //     ))
+            // );
+            // // Then save them to the file
+            // let directoryChange;
+            // if (settings.datascience.changeDirOnImportExport) {
+            //     directoryChange = file;
+            // }
+            // const notebookJson = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
+            // await this.fileSystem.writeFile(file, JSON.stringify(notebookJson));
         } finally {
-            if (notebook) {
-                await notebook.dispose();
-            }
+            // if (notebook) {
+            //     await notebook.dispose();
+            // }
         }
     }
 

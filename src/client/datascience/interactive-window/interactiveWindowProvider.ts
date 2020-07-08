@@ -7,14 +7,15 @@ import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
+import { traceError } from '../../common/logger';
+//import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../constants';
 import { PostOffice } from '../liveshare/postOffice';
 import {
-    IDataScienceErrorHandler,
+    //IDataScienceErrorHandler,
     IInteractiveWindow,
     IInteractiveWindowLoadable,
     IInteractiveWindowProvider
@@ -49,9 +50,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry //        @inject(IFileSystem) private readonly fileSystem: IFileSystem, //        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
     ) {
         asyncRegistry.push(this);
 
@@ -79,9 +78,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             if (!owner && w.owner) {
                 return true;
             }
-            if (owner && w.owner && this.fileSystem.arePathsSame(owner.fsPath, w.owner.fsPath)) {
-                return true;
-            }
+            // if (owner && w.owner && this.fileSystem.arePathsSame(owner.fsPath, w.owner.fsPath)) {
+            //     return true;
+            // }
             return false;
         });
     }
@@ -122,7 +121,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         result
             .load(resource)
             .then(() => this.raiseOnDidChangeActiveInteractiveWindow())
-            .catch((e) => this.errorHandler.handleError(e));
+            .catch(traceError);
 
         return this.activeInteractiveWindow;
     }

@@ -5,7 +5,7 @@
 
 // tslint:disable:max-func-body-length
 
-import { Container } from 'inversify';
+import { Container, interfaces } from 'inversify';
 import { Disposable, Memento } from 'vscode';
 
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from './common/types';
@@ -18,9 +18,20 @@ import { registerForIOC } from './pythonEnvironments/legacyIOC';
 // objects to DI and simple init (e.g. no side effects).  That implies
 // that constructors are likewise simple and do no work.  It also means
 // that it is inherently synchronous.
+export function inversifyLogger(planAndResolve: interfaces.Next): interfaces.Next {
+    return (args: interfaces.NextArgs) => {
+        const start = new Date().getTime();
+        const result = planAndResolve(args);
+        const end = new Date().getTime();
+        // tslint:disable-next-line: no-console
+        console.log(`wooooo  ${end - start}`);
+        return result;
+    };
+}
 
 export function initializeGlobals(context: IExtensionContext): [IServiceManager, IServiceContainer] {
     const cont = new Container();
+    //cont.applyMiddleware(inversifyLogger);
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
 
