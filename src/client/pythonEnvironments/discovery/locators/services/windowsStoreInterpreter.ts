@@ -3,14 +3,13 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import * as path from 'path';
 import { traceDecorators } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../../common/process/types';
 import { IPersistentStateFactory } from '../../../../common/types';
 import { IInterpreterHashProvider, IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
-import { IServiceContainer } from '../../../../ioc/types';
 
 /**
  * When using Windows Store interpreter the path that should be used is under
@@ -26,6 +25,21 @@ import { IServiceContainer } from '../../../../ioc/types';
 export function isRestrictedWindowsStoreInterpreterPath(pythonPath: string): boolean {
     const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
     return (
+        pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
+        pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
+    );
+}
+
+/**
+ * Whether this is a Windows Store/App Interpreter.
+ *
+ * @param {string} pythonPath
+ * @returns {boolean}
+ */
+export function isWindowsStoreInterpreter(pythonPath: string): boolean {
+    const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
+    return (
+        pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\'.toUpperCase()) ||
         pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
         pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
     );
@@ -57,9 +71,9 @@ export function isRestrictedWindowsStoreInterpreterPath(pythonPath: string): boo
 @injectable()
 export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInterpreterHashProvider {
     constructor(
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IPersistentStateFactory) private readonly persistentFactory: IPersistentStateFactory,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        private readonly executionFactory: IPythonExecutionFactory,
+        private readonly persistentFactory: IPersistentStateFactory,
+        private readonly fs: IFileSystem
     ) {}
     /**
      * Whether this is a Windows Store/App Interpreter.
@@ -69,12 +83,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
      * @memberof WindowsStoreInterpreter
      */
     public isWindowsStoreInterpreter(pythonPath: string): boolean {
-        const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
-        return (
-            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\'.toUpperCase()) ||
-            pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
-            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
-        );
+        return isWindowsStoreInterpreter(pythonPath);
     }
     /**
      * Whether this is a python executable in a windows app store folder that is internal and can be hidden from users.
@@ -116,8 +125,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
         if (stateStore.value) {
             return stateStore.value;
         }
-        const executionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const pythonService = await executionFactory.create({ pythonPath });
+        const pythonService = await this.executionFactory.create({ pythonPath });
         const executablePath = await pythonService.getExecutablePath();
         // If we are unable to get file hash of executable, then get hash of parent directory.
         // Its likely it will fail for the executable (fails during development, but try nevertheless - in case things start working).

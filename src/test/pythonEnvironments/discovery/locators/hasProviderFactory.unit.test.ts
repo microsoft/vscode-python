@@ -7,10 +7,7 @@
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { instance, mock, verify, when } from 'ts-mockito';
-import { Uri } from 'vscode';
-import { ConfigurationService } from '../../../../client/common/configuration/service';
-import { IConfigurationService } from '../../../../client/common/types';
+import { instance, mock } from 'ts-mockito';
 import { IInterpreterHashProvider } from '../../../../client/interpreter/locators/types';
 import { InterpreterHashProvider } from '../../../../client/pythonEnvironments/discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
@@ -18,62 +15,28 @@ import { WindowsStoreInterpreter } from '../../../../client/pythonEnvironments/d
 
 use(chaiAsPromised);
 
-suite('Interpretersx - Interpreter Hash Provider Factory', () => {
-    let configService: IConfigurationService;
-    let windowsStoreInterpreter: WindowsStoreInterpreter;
+suite('Interpreters - Interpreter Hash Provider Factory', () => {
+    let windowsStoreInterpreter: IInterpreterHashProvider;
     let standardHashProvider: IInterpreterHashProvider;
     let factory: InterpeterHashProviderFactory;
+    const storePythonPath =
+        'C:\\Users\\SomeUser\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.8\\python.exe';
+    const nonStorePythonPath = 'C:\\Python.3.8\\python.exe';
     setup(() => {
-        configService = mock(ConfigurationService);
         windowsStoreInterpreter = mock(WindowsStoreInterpreter);
         standardHashProvider = mock(InterpreterHashProvider);
-        const windowsStoreInstance = instance(windowsStoreInterpreter);
-        (windowsStoreInstance as any).then = undefined;
-        factory = new InterpeterHashProviderFactory(
-            instance(configService),
-            windowsStoreInstance,
-            windowsStoreInstance,
-            instance(standardHashProvider)
-        );
+        const windowsStoreProviderInstance = instance(windowsStoreInterpreter);
+        const standardHashProviderInstance = instance(standardHashProvider);
+        (windowsStoreProviderInstance as any).then = undefined;
+        (standardHashProviderInstance as any).tenn = undefined;
+        factory = new InterpeterHashProviderFactory(windowsStoreProviderInstance, standardHashProviderInstance);
     });
     test('When provided python path is not a window store interpreter return standard hash provider', async () => {
-        const pythonPath = 'NonWindowsInterpreterPath';
-        when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(false);
-
-        const provider = await factory.create({ pythonPath });
-
+        const provider = await factory.create(nonStorePythonPath);
         expect(provider).to.deep.equal(instance(standardHashProvider));
-        verify(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).once();
     });
     test('When provided python path is a windows store interpreter return windows store hash provider', async () => {
-        const pythonPath = 'NonWindowsInterpreterPath';
-        when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(true);
-
-        const provider = await factory.create({ pythonPath });
-
+        const provider = await factory.create(storePythonPath);
         expect(provider).to.deep.equal(instance(windowsStoreInterpreter));
-        verify(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).once();
-    });
-    test('When provided resource resolves to a python path that is not a window store interpreter return standard hash provider', async () => {
-        const pythonPath = 'NonWindowsInterpreterPath';
-        const resource = Uri.file('1');
-        when(configService.getSettings(resource)).thenReturn({ pythonPath } as any);
-        when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(false);
-
-        const provider = await factory.create({ resource });
-
-        expect(provider).to.deep.equal(instance(standardHashProvider));
-        verify(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).once();
-    });
-    test('When provided resource resolves to a python path that is a windows store interpreter return windows store hash provider', async () => {
-        const pythonPath = 'NonWindowsInterpreterPath';
-        const resource = Uri.file('1');
-        when(configService.getSettings(resource)).thenReturn({ pythonPath } as any);
-        when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(true);
-
-        const provider = await factory.create({ resource });
-
-        expect(provider).to.deep.equal(instance(windowsStoreInterpreter));
-        verify(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).once();
     });
 });

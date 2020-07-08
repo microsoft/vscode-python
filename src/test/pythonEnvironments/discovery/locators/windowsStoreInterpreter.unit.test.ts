@@ -32,7 +32,7 @@ suite('Interpreters - Windows Store Interpreter', () => {
             instance(executionFactory)
         );
         windowsStoreInterpreter = new WindowsStoreInterpreter(
-            instance(serviceContainer),
+            instance(executionFactory),
             instance(persistanceStateFactory),
             instance(fs)
         );

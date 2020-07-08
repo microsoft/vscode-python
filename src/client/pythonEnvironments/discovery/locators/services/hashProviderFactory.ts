@@ -3,31 +3,18 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
-import { IConfigurationService } from '../../../../common/types';
-import {
-    IInterpreterHashProvider,
-    IInterpreterHashProviderFactory,
-    IWindowsStoreInterpreter
-} from '../../../../interpreter/locators/types';
-import { InterpreterHashProvider } from './hashProvider';
-import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
+import { injectable } from 'inversify';
+import { IInterpreterHashProvider, IInterpreterHashProviderFactory } from '../../../../interpreter/locators/types';
+import { isWindowsStoreInterpreter } from './windowsStoreInterpreter';
 
 @injectable()
 export class InterpeterHashProviderFactory implements IInterpreterHashProviderFactory {
     constructor(
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreHashProvider: IInterpreterHashProvider,
-        @inject(InterpreterHashProvider) private readonly hashProvider: IInterpreterHashProvider
+        private readonly windowsStoreHashProvider: IInterpreterHashProvider,
+        private readonly standardHashProvider: IInterpreterHashProvider
     ) {}
 
-    public async create(options: { pythonPath: string } | { resource: Uri }): Promise<IInterpreterHashProvider> {
-        const pythonPath =
-            'pythonPath' in options ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
-        return this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)
-            ? this.windowsStoreHashProvider
-            : this.hashProvider;
+    public async create(pythonPath: string): Promise<IInterpreterHashProvider> {
+        return isWindowsStoreInterpreter(pythonPath) ? this.windowsStoreHashProvider : this.standardHashProvider;
     }
 }
