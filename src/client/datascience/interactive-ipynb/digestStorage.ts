@@ -9,7 +9,6 @@ import { IFileSystem } from '../../common/platform/types';
 import { IExtensionContext } from '../../common/types';
 import { IDigestStorage } from '../types';
 
-// NB: still need to implement automatic culling of least recently used entries
 @injectable()
 export class DigestStorage implements IDigestStorage {
     public readonly key: Promise<string>;
