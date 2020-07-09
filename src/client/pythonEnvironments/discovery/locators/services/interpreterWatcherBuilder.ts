@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { inject } from 'inversify';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import { traceDecorators } from '../../../../common/logger';
@@ -25,8 +24,8 @@ export class InterpreterWatcherBuilder {
      * @memberof InterpreterWatcherBuilder
      */
     constructor(
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
+        private readonly workspaceService: IWorkspaceService,
+        private readonly serviceContainer: IServiceContainer
     ) {}
 
     @traceDecorators.verbose('Build the workspace interpreter watcher')

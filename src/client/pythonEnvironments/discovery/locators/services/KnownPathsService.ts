@@ -1,5 +1,4 @@
 // tslint:disable:no-require-imports no-var-requires no-unnecessary-callback-wrapper
-import { inject } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
@@ -16,9 +15,9 @@ const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
  */
 export class KnownPathsService extends CacheableLocatorService {
     public constructor(
-        @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: IKnownSearchPathsForInterpreters,
-        @inject(IInterpreterHelper) private helper: IInterpreterHelper,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
+        private knownSearchPaths: IKnownSearchPathsForInterpreters,
+        private helper: IInterpreterHelper,
+        serviceContainer: IServiceContainer
     ) {
         super('KnownPathsService', serviceContainer);
     }
@@ -84,7 +83,7 @@ export class KnownPathsService extends CacheableLocatorService {
 }
 
 export class KnownSearchPathsForInterpreters {
-    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
+    constructor(private readonly serviceContainer: IServiceContainer) {}
     /**
      * Return the paths where Python interpreters might be found.
      */
