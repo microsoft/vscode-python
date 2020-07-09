@@ -43,7 +43,7 @@ import {
 } from '../interpreter/locators/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonInterpreterLocatorService } from './discovery/locators';
-import { inSameDirectory, mergeInterpreters, updateEnvInfo } from './discovery/locators/helpers';
+import { updateEnvInfo } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
 import { CondaEnvironmentInfo, CondaInfo } from './discovery/locators/services/conda';
 import { CondaEnvFileService } from './discovery/locators/services/condaEnvFileService';
@@ -68,7 +68,14 @@ import {
 } from './discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { GetInterpreterLocatorOptions } from './discovery/locators/types';
-import { areSameInterpreter, normalizeInterpreter, PythonInterpreter, updateInterpreter } from './info';
+import {
+    areSameInterpreter,
+    inSameDirectory,
+    mergeInterpreters,
+    normalizeInterpreter,
+    PythonInterpreter,
+    updateInterpreter
+} from './info';
 import { areSameVersion } from './info/pythonVersion';
 
 export function registerForIOC(serviceManager: IServiceManager) {

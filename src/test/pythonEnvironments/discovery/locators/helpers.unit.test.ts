@@ -16,15 +16,13 @@ import { Architecture } from '../../../../client/common/utils/platform';
 import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
 import { IPipEnvServiceHelper } from '../../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import {
-    inSameDirectory,
-    mergeInterpreters,
-    updateEnvInfo
-} from '../../../../client/pythonEnvironments/discovery/locators/helpers';
+import { updateEnvInfo } from '../../../../client/pythonEnvironments/discovery/locators/helpers';
 import { PipEnvServiceHelper } from '../../../../client/pythonEnvironments/discovery/locators/services/pipEnvServiceHelper';
 import {
     areSameInterpreter,
+    inSameDirectory,
     InterpreterType,
+    mergeInterpreters,
     normalizeInterpreter,
     PythonInterpreter,
     updateInterpreter
