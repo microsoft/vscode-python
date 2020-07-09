@@ -53,7 +53,7 @@ export class NotebookTrustHandler implements IExtensionSingleActivationService {
         if (!uri) {
             return;
         }
-        const model = await this.storageProvider.load(uri);
+        const model = await this.storageProvider.get(uri);
         if (model.isTrusted) {
             return;
         }
@@ -66,8 +66,6 @@ export class NotebookTrustHandler implements IExtensionSingleActivationService {
         if (selection !== DataScience.trustNotebook() || model.isTrusted) {
             return;
         }
-        const contents = model.getContent();
-        await this.trustService.trustNotebook(model.file, contents);
         // Update model trust
         model.update({
             source: 'user',
@@ -76,5 +74,7 @@ export class NotebookTrustHandler implements IExtensionSingleActivationService {
             newDirty: model.isDirty,
             isNotebookTrusted: true
         });
+        const contents = model.getContent();
+        await this.trustService.trustNotebook(model.file, contents);
     }
 }

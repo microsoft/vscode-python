@@ -63,7 +63,7 @@ export class ExportUtil {
             await this.jupyterExporter.exportToFile(cells, tempFile.filePath, false);
             const newPath = path.join(tempDir.path, '.ipynb');
             await this.fileSystem.copyFile(tempFile.filePath, newPath);
-            model = await this.notebookStorage.load(Uri.file(newPath));
+            model = await this.notebookStorage.get(Uri.file(newPath));
         } finally {
             tempFile.dispose();
             tempDir.dispose();
@@ -73,7 +73,7 @@ export class ExportUtil {
     }
 
     public async removeSvgs(source: Uri) {
-        const model = await this.notebookStorage.load(source);
+        const model = await this.notebookStorage.get(source);
 
         const newCells: ICell[] = [];
         for (const cell of model.cells) {

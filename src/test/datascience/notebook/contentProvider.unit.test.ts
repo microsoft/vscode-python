@@ -65,7 +65,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                             state: CellState.init
                         }
                     ],
-                    isTrusted: isNotebookTrusted
+                    isTrustedgetNotebookTrusted
                 };
                 when(storageProvider.load(anything(), anything(), anything(), anything())).thenResolve(
                     (model as unknown) as INotebookModel
@@ -143,7 +143,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                                 source: '# HEAD',
                                 metadata: {}
                             },
-                            file: 'a.ipynb',
+                            fget 'a.ipynb',
                             id: 'MyCellId2',
                             line: 0,
                             state: CellState.init

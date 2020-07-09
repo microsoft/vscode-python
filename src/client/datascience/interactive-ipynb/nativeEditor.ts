@@ -151,7 +151,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private startupTimer: StopWatch = new StopWatch();
     private loadedAllCells: boolean = false;
     private executeCancelTokens = new Set<CancellationTokenSource>();
-    private previouslyNotTrusted:boolean = false;
+    private previouslyNotTrusted: boolean = false;
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -809,4 +809,4 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         }
     }
-
+}
