@@ -30,66 +30,84 @@ export class InterpreterLocatorHelper {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper
     ) {}
+
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
+        const normalized = this.normalizeAll(interpreters);
+        const merged = this.mergeAll(normalized);
+        await this.updateAll(merged);
+        return merged;
+    }
+
+    private normalizeAll(interpreters: PythonInterpreter[]): PythonInterpreter[] {
         const deps = {
-            arePathsSame: this.fs.arePathsSame,
-            getPipEnvInfo: this.pipEnvServiceHelper.getPipEnvInfo.bind(this.pipEnvServiceHelper),
-            normalizePath: path.normalize,
-            getPathDirname: path.dirname
+            normalizePath: path.normalize
         };
-        const items = interpreters
+        return interpreters
             .map((item) => {
                 return { ...item };
             })
             .map((item) => {
                 item.path = deps.normalizePath(item.path);
                 return item;
-            })
-            .reduce<PythonInterpreter[]>((accumulator, current) => {
-                const currentVersion = current && current.version ? current.version.raw : undefined;
-                const existingItem = accumulator.find((item) => {
-                    // If same version and same base path, then ignore.
-                    // Could be Python 3.6 with path = python.exe, and Python 3.6 and path = python3.exe.
-                    if (
-                        item.version &&
-                        item.version.raw === currentVersion &&
-                        item.path &&
-                        current.path &&
-                        deps.arePathsSame(deps.getPathDirname(item.path), deps.getPathDirname(current.path))
-                    ) {
-                        return true;
-                    }
-                    return false;
-                });
-                if (!existingItem) {
-                    accumulator.push(current);
-                } else {
-                    // Preserve type information.
-                    // Possible we identified environment as unknown, but a later provider has identified env type.
-                    if (existingItem.type === InterpreterType.Unknown && current.type !== InterpreterType.Unknown) {
-                        existingItem.type = current.type;
-                    }
-                    const props: (keyof PythonInterpreter)[] = [
-                        'envName',
-                        'envPath',
-                        'path',
-                        'sysPrefix',
-                        'architecture',
-                        'sysVersion',
-                        'version'
-                    ];
-                    for (const prop of props) {
-                        if (!existingItem[prop] && current[prop]) {
-                            // tslint:disable-next-line: no-any
-                            (existingItem as any)[prop] = current[prop];
-                        }
+            });
+    }
+
+    private mergeAll(interpreters: PythonInterpreter[]): PythonInterpreter[] {
+        const deps = {
+            arePathsSame: this.fs.arePathsSame,
+            getPathDirname: path.dirname
+        };
+        return interpreters.reduce<PythonInterpreter[]>((accumulator, current) => {
+            const currentVersion = current && current.version ? current.version.raw : undefined;
+            const existingItem = accumulator.find((item) => {
+                // If same version and same base path, then ignore.
+                // Could be Python 3.6 with path = python.exe, and Python 3.6 and path = python3.exe.
+                if (
+                    item.version &&
+                    item.version.raw === currentVersion &&
+                    item.path &&
+                    current.path &&
+                    deps.arePathsSame(deps.getPathDirname(item.path), deps.getPathDirname(current.path))
+                ) {
+                    return true;
+                }
+                return false;
+            });
+            if (!existingItem) {
+                accumulator.push(current);
+            } else {
+                // Preserve type information.
+                // Possible we identified environment as unknown, but a later provider has identified env type.
+                if (existingItem.type === InterpreterType.Unknown && current.type !== InterpreterType.Unknown) {
+                    existingItem.type = current.type;
+                }
+                const props: (keyof PythonInterpreter)[] = [
+                    'envName',
+                    'envPath',
+                    'path',
+                    'sysPrefix',
+                    'architecture',
+                    'sysVersion',
+                    'version'
+                ];
+                for (const prop of props) {
+                    if (!existingItem[prop] && current[prop]) {
+                        // tslint:disable-next-line: no-any
+                        (existingItem as any)[prop] = current[prop];
                     }
                 }
-                return accumulator;
-            }, []);
+            }
+            return accumulator;
+        }, []);
+    }
+
+    private async updateAll(interpreters: PythonInterpreter[]) {
+        const deps = {
+            getPipEnvInfo: this.pipEnvServiceHelper.getPipEnvInfo.bind(this.pipEnvServiceHelper)
+        };
         // This stuff needs to be fast.
         await Promise.all(
-            items.map(async (item) => {
+            interpreters.map(async (item) => {
                 const info = await deps.getPipEnvInfo(item.path);
                 if (info) {
                     item.type = InterpreterType.Pipenv;
@@ -98,6 +116,5 @@ export class InterpreterLocatorHelper {
                 }
             })
         );
-        return items;
     }
 }
