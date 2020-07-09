@@ -40,7 +40,8 @@ suite('Data Science - NativeNotebook helpers', () => {
                     line: 0,
                     state: CellState.init
                 }
-            ]
+            ],
+            isTrusted: true
         };
 
         const notebook = notebookModelToVSCNotebookData((model as unknown) as INotebookModel);
@@ -95,7 +96,8 @@ suite('Data Science - NativeNotebook helpers', () => {
                         line: 0,
                         state: CellState.init
                     }
-                ]
+                ],
+                isTrusted: true
             };
             const notebook = notebookModelToVSCNotebookData((model as unknown) as INotebookModel);
 
