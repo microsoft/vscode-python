@@ -1,6 +1,7 @@
 import * as fsapi from 'fs-extra';
 import { inject } from 'inversify';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { traceError } from '../../../common/logger';
 import { IS_WINDOWS } from '../../../common/platform/constants';
 import { IFileSystem } from '../../../common/platform/types';
@@ -32,89 +33,121 @@ export class InterpreterLocatorHelper {
     ) {}
 
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
-        const normalized = this.normalizeAll(interpreters);
-        const merged = this.mergeAll(normalized);
-        await this.updateAll(merged);
-        return merged;
-    }
-
-    private normalizeAll(interpreters: PythonInterpreter[]): PythonInterpreter[] {
-        const deps = {
-            normalizePath: path.normalize
-        };
-        return interpreters
-            .map((item) => {
-                return { ...item };
-            })
-            .map((item) => {
-                item.path = deps.normalizePath(item.path);
-                return item;
-            });
-    }
-
-    private mergeAll(interpreters: PythonInterpreter[]): PythonInterpreter[] {
         const deps = {
             arePathsSame: this.fs.arePathsSame,
+            getPipEnvInfo: this.pipEnvServiceHelper.getPipEnvInfo.bind(this.pipEnvServiceHelper),
+            normalizePath: path.normalize,
             getPathDirname: path.dirname
         };
-        return interpreters.reduce<PythonInterpreter[]>((accumulator, current) => {
-            const currentVersion = current && current.version ? current.version.raw : undefined;
-            const existingItem = accumulator.find((item) => {
-                // If same version and same base path, then ignore.
-                // Could be Python 3.6 with path = python.exe, and Python 3.6 and path = python3.exe.
-                if (
-                    item.version &&
-                    item.version.raw === currentVersion &&
-                    item.path &&
-                    current.path &&
-                    deps.arePathsSame(deps.getPathDirname(item.path), deps.getPathDirname(current.path))
-                ) {
-                    return true;
-                }
-                return false;
-            });
-            if (!existingItem) {
-                accumulator.push(current);
-            } else {
-                // Preserve type information.
-                // Possible we identified environment as unknown, but a later provider has identified env type.
-                if (existingItem.type === InterpreterType.Unknown && current.type !== InterpreterType.Unknown) {
-                    existingItem.type = current.type;
-                }
-                const props: (keyof PythonInterpreter)[] = [
-                    'envName',
-                    'envPath',
-                    'path',
-                    'sysPrefix',
-                    'architecture',
-                    'sysVersion',
-                    'version'
-                ];
-                for (const prop of props) {
-                    if (!existingItem[prop] && current[prop]) {
-                        // tslint:disable-next-line: no-any
-                        (existingItem as any)[prop] = current[prop];
-                    }
+        const normalized = interpreters.map((interp) => normalizeInterpreter(interp, deps));
+        const merged = mergeInterpreters(normalized, deps);
+        await Promise.all(
+            // At this point they are independent so we can update them separately.
+            merged.map(async (interp) => updateInterpreter(interp, deps))
+        );
+        return merged;
+    }
+}
+
+/**
+ * Make a copy of the env info and standardize the data.
+ *
+ * @param interp = the env info to normalize
+ * @param deps - functional dependencies
+ * @prop deps.normalizePath - (like `path.normalize`)
+ */
+function normalizeInterpreter(
+    interp: PythonInterpreter,
+    deps: {
+        normalizePath(p: string): string;
+    }
+): PythonInterpreter {
+    const normalized = { ...interp };
+    normalized.path = deps.normalizePath(interp.path);
+    return normalized;
+}
+
+/**
+ * Combine env info for matching environments.
+ *
+ * Environments are matched by path and version.
+ *
+ * @param interpreters - the env infos to merge
+ * @param deps - functional dependencies
+ * @prop deps.arePathsSame - determine if two filenames point to the same file
+ * @prop deps.getPathDirname - (like `path.dirname`)
+ */
+function mergeInterpreters(
+    interpreters: PythonInterpreter[],
+    deps: {
+        arePathsSame(p1: string, p2: string): boolean;
+        getPathDirname(p: string): string;
+    }
+): PythonInterpreter[] {
+    return interpreters.reduce<PythonInterpreter[]>((accumulator, current) => {
+        const currentVersion = current && current.version ? current.version.raw : undefined;
+        const existingItem = accumulator.find((item) => {
+            // If same version and same base path, then ignore.
+            // Could be Python 3.6 with path = python.exe, and Python 3.6 and path = python3.exe.
+            if (
+                item.version &&
+                item.version.raw === currentVersion &&
+                item.path &&
+                current.path &&
+                deps.arePathsSame(deps.getPathDirname(item.path), deps.getPathDirname(current.path))
+            ) {
+                return true;
+            }
+            return false;
+        });
+        if (!existingItem) {
+            accumulator.push(current);
+        } else {
+            // Preserve type information.
+            // Possible we identified environment as unknown, but a later provider has identified env type.
+            if (existingItem.type === InterpreterType.Unknown && current.type !== InterpreterType.Unknown) {
+                existingItem.type = current.type;
+            }
+            const props: (keyof PythonInterpreter)[] = [
+                'envName',
+                'envPath',
+                'path',
+                'sysPrefix',
+                'architecture',
+                'sysVersion',
+                'version'
+            ];
+            for (const prop of props) {
+                if (!existingItem[prop] && current[prop]) {
+                    // tslint:disable-next-line: no-any
+                    (existingItem as any)[prop] = current[prop];
                 }
             }
-            return accumulator;
-        }, []);
-    }
+        }
+        return accumulator;
+    }, []);
+}
 
-    private async updateAll(interpreters: PythonInterpreter[]) {
-        const deps = {
-            getPipEnvInfo: this.pipEnvServiceHelper.getPipEnvInfo.bind(this.pipEnvServiceHelper)
-        };
-        // This stuff needs to be fast.
-        await Promise.all(
-            interpreters.map(async (item) => {
-                const info = await deps.getPipEnvInfo(item.path);
-                if (info) {
-                    item.type = InterpreterType.Pipenv;
-                    item.pipEnvWorkspaceFolder = info.workspaceFolder.fsPath;
-                    item.envName = info.envName || item.envName;
-                }
-            })
-        );
+/**
+ * Update the given env info with extra information.
+ *
+ * @param interp - the env info to update
+ * @param deps - functional dependencies
+ * @prop deps.getPipEnvInfo - provides extra pip-specific env info, if applicable
+ */
+async function updateInterpreter(
+    interp: PythonInterpreter,
+    deps: {
+        getPipEnvInfo(p: string): Promise<{ workspaceFolder: Uri; envName: string } | undefined>;
+    }
+) {
+    // This stuff needs to be fast.
+    const info = await deps.getPipEnvInfo(interp.path);
+    if (info) {
+        interp.type = InterpreterType.Pipenv;
+        interp.pipEnvWorkspaceFolder = info.workspaceFolder.fsPath;
+        if (info.envName) {
+            interp.envName = info.envName;
+        }
     }
 }
