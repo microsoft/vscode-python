@@ -65,9 +65,9 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                             state: CellState.init
                         }
                     ],
-                    isTrustedgetNotebookTrusted
+                    isTrusted: isNotebookTrusted
                 };
-                when(storageProvider.load(anything(), anything(), anything(), anything())).thenResolve(
+                when(storageProvider.get(anything(), anything(), anything(), anything())).thenResolve(
                     (model as unknown) as INotebookModel
                 );
 
@@ -143,7 +143,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                                 source: '# HEAD',
                                 metadata: {}
                             },
-                            fget 'a.ipynb',
+                            file: 'a.ipynb',
                             id: 'MyCellId2',
                             line: 0,
                             state: CellState.init
@@ -151,7 +151,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                     ],
                     isTrusted: isNotebookTrusted
                 };
-                when(storageProvider.load(anything(), anything(), anything(), anything())).thenResolve(
+                when(storageProvider.get(anything(), anything(), anything(), anything())).thenResolve(
                     (model as unknown) as INotebookModel
                 );
 
