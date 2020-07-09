@@ -6,6 +6,7 @@ import * as path from 'path';
 import {
     CancellationToken,
     CancellationTokenSource,
+    commands,
     Event,
     EventEmitter,
     Memento,
@@ -611,7 +612,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async launchNotebookTrustPrompt() {
-        const prompts = [localize.DataScience.trustNotebook(), localize.DataScience.doNotTrustNotebook()];
+        const prompts = [
+            localize.DataScience.trustNotebook(),
+            localize.DataScience.doNotTrustNotebook(),
+            localize.DataScience.trustAllNotebooks()
+        ];
         const selection = await this.applicationShell.showErrorMessage(
             localize.DataScience.launchNotebookTrustPrompt(),
             ...prompts
@@ -636,6 +641,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             } catch (err) {
                 traceError(err);
             }
+        } else if (selection === localize.DataScience.trustAllNotebooks()) {
+            // Take the user to the settings UI where they can manually turn on the alwaysTrustNotebooks setting
+            commands.executeCommand('workbench.action.openSettings', 'python.dataScience.alwaysTrustNotebooks');
         }
     }
 
