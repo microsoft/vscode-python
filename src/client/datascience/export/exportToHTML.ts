@@ -1,11 +1,11 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { ExportBase } from './exportBase';
 
 @injectable()
 export class ExportToHTML extends ExportBase {
-    public async export(source: Uri, target: Uri): Promise<void> {
+    public async export(source: Uri, target: Uri, token: CancellationToken): Promise<void> {
         const args = [
             source.fsPath,
             '--to',
@@ -15,6 +15,6 @@ export class ExportToHTML extends ExportBase {
             '--output-dir',
             path.dirname(target.fsPath)
         ];
-        await this.executeCommand(source, target, args);
+        await this.executeCommand(source, target, args, token);
     }
 }

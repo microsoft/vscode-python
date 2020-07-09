@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { IFileSystem } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IJupyterSubCommandExecutionService, INotebookImporter } from '../types';
@@ -18,7 +18,7 @@ export class ExportToPDF extends ExportBase {
         super(pythonExecutionFactory, jupyterService, fileSystem, importer);
     }
 
-    public async export(source: Uri, target: Uri): Promise<void> {
+    public async export(source: Uri, target: Uri, token: CancellationToken): Promise<void> {
         const args = [
             source.fsPath,
             '--to',
@@ -28,6 +28,6 @@ export class ExportToPDF extends ExportBase {
             '--output-dir',
             path.dirname(target.fsPath)
         ];
-        await this.executeCommand(source, target, args);
+        await this.executeCommand(source, target, args, token);
     }
 }
