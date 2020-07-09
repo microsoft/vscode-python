@@ -31,12 +31,18 @@ export class InterpreterLocatorHelper {
         @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper
     ) {}
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
+        const deps = {
+            arePathsSame: this.fs.arePathsSame,
+            getPipEnvInfo: this.pipEnvServiceHelper.getPipEnvInfo.bind(this.pipEnvServiceHelper),
+            normalizePath: path.normalize,
+            getPathDirname: path.dirname
+        };
         const items = interpreters
             .map((item) => {
                 return { ...item };
             })
             .map((item) => {
-                item.path = path.normalize(item.path);
+                item.path = deps.normalizePath(item.path);
                 return item;
             })
             .reduce<PythonInterpreter[]>((accumulator, current) => {
@@ -49,7 +55,7 @@ export class InterpreterLocatorHelper {
                         item.version.raw === currentVersion &&
                         item.path &&
                         current.path &&
-                        this.fs.arePathsSame(path.dirname(item.path), path.dirname(current.path))
+                        deps.arePathsSame(deps.getPathDirname(item.path), deps.getPathDirname(current.path))
                     ) {
                         return true;
                     }
@@ -84,7 +90,7 @@ export class InterpreterLocatorHelper {
         // This stuff needs to be fast.
         await Promise.all(
             items.map(async (item) => {
-                const info = await this.pipEnvServiceHelper.getPipEnvInfo(item.path);
+                const info = await deps.getPipEnvInfo(item.path);
                 if (info) {
                     item.type = InterpreterType.Pipenv;
                     item.pipEnvWorkspaceFolder = info.workspaceFolder.fsPath;
