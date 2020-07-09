@@ -6,8 +6,14 @@ import { traceError } from '../../../common/logger';
 import { IS_WINDOWS } from '../../../common/platform/constants';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPipEnvServiceHelper } from '../../../interpreter/locators/types';
-import { InterpreterType, PythonInterpreter } from '../../info';
-import { PythonVersion } from '../../info/pythonVersion';
+import {
+    areSameInterpreter,
+    InterpreterType,
+    normalizeInterpreter,
+    PythonInterpreter,
+    updateInterpreter
+} from '../../info';
+import { areSameVersion } from '../../info/pythonVersion';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
@@ -89,50 +95,6 @@ function mergeInterpreters(
 }
 
 /**
- * Determine if the given infos correspond to the same env.
- *
- * @param interp1 - one of the two envs to compare
- * @param interp2 - one of the two envs to compare
- * @param deps - functional dependencies
- * @prop deps.areSameVersion - determine if two versions are the same
- * @prop deps.inSameDirectory - determine if two files are in the same directory
- */
-function areSameInterpreter(
-    interp1: PythonInterpreter | undefined,
-    interp2: PythonInterpreter | undefined,
-    deps: {
-        areSameVersion(v1?: PythonVersion, v2?: PythonVersion): boolean;
-        inSameDirectory(p1?: string, p2?: string): boolean;
-    }
-): boolean {
-    if (!interp1 || !interp2) {
-        return false;
-    }
-    if (!deps.areSameVersion(interp1.version, interp2.version)) {
-        return false;
-    }
-    // Could be Python 3.6 with path = python.exe, and Python 3.6
-    // and path = python3.exe, so we check the parent directory.
-    if (!deps.inSameDirectory(interp1.path, interp2.path)) {
-        return false;
-    }
-    return true;
-}
-
-/**
- * Determine if the given versions are the same.
- *
- * @param version1 - one of the two versions to compare
- * @param version2 - one of the two versions to compare
- */
-function areSameVersion(version1?: PythonVersion, version2?: PythonVersion): boolean {
-    if (!version1 || !version2) {
-        return false;
-    }
-    return version1.raw === version2.raw;
-}
-
-/**
  * Determine if the given paths are in the same directory.
  *
  * @param path1 - one of the two paths to compare
@@ -155,51 +117,6 @@ function inSameDirectory(
     const dir1 = deps.getPathDirname(path1);
     const dir2 = deps.getPathDirname(path2);
     return deps.arePathsSame(dir1, dir2);
-}
-
-/**
- * Standardize the given env info.
- *
- * @param interp = the env info to normalize
- * @param deps - functional dependencies
- * @prop deps.normalizePath - (like `path.normalize`)
- */
-function normalizeInterpreter(
-    interp: PythonInterpreter,
-    deps: {
-        normalizePath(p: string): string;
-    }
-): void {
-    interp.path = deps.normalizePath(interp.path);
-}
-
-/**
- * Update one env info with another.
- *
- * @param interp - the info to update
- * @param other - the info to copy in
- */
-function updateInterpreter(interp: PythonInterpreter, other: PythonInterpreter): void {
-    // Preserve type information.
-    // Possible we identified environment as unknown, but a later provider has identified env type.
-    if (interp.type === InterpreterType.Unknown && other.type !== InterpreterType.Unknown) {
-        interp.type = other.type;
-    }
-    const props: (keyof PythonInterpreter)[] = [
-        'envName',
-        'envPath',
-        'path',
-        'sysPrefix',
-        'architecture',
-        'sysVersion',
-        'version'
-    ];
-    for (const prop of props) {
-        if (!interp[prop] && other[prop]) {
-            // tslint:disable-next-line: no-any
-            (interp as any)[prop] = other[prop];
-        }
-    }
 }
 
 /**

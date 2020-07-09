@@ -70,6 +70,22 @@ export type PythonInterpreter = InterpreterInformation & {
 };
 
 /**
+ * Standardize the given env info.
+ *
+ * @param interp = the env info to normalize
+ * @param deps - functional dependencies
+ * @prop deps.normalizePath - (like `path.normalize`)
+ */
+export function normalizeInterpreter(
+    interp: PythonInterpreter,
+    deps: {
+        normalizePath(p: string): string;
+    }
+): void {
+    interp.path = deps.normalizePath(interp.path);
+}
+
+/**
  * Convert the Python environment type to a user-facing name.
  */
 export function getInterpreterTypeName(interpreterType: InterpreterType) {
@@ -91,6 +107,66 @@ export function getInterpreterTypeName(interpreterType: InterpreterType) {
         }
         default: {
             return '';
+        }
+    }
+}
+
+/**
+ * Determine if the given infos correspond to the same env.
+ *
+ * @param interp1 - one of the two envs to compare
+ * @param interp2 - one of the two envs to compare
+ * @param deps - functional dependencies
+ * @prop deps.areSameVersion - determine if two versions are the same
+ * @prop deps.inSameDirectory - determine if two files are in the same directory
+ */
+export function areSameInterpreter(
+    interp1: PythonInterpreter | undefined,
+    interp2: PythonInterpreter | undefined,
+    deps: {
+        areSameVersion(v1?: PythonVersion, v2?: PythonVersion): boolean;
+        inSameDirectory(p1?: string, p2?: string): boolean;
+    }
+): boolean {
+    if (!interp1 || !interp2) {
+        return false;
+    }
+    if (!deps.areSameVersion(interp1.version, interp2.version)) {
+        return false;
+    }
+    // Could be Python 3.6 with path = python.exe, and Python 3.6
+    // and path = python3.exe, so we check the parent directory.
+    if (!deps.inSameDirectory(interp1.path, interp2.path)) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Update one env info with another.
+ *
+ * @param interp - the info to update
+ * @param other - the info to copy in
+ */
+export function updateInterpreter(interp: PythonInterpreter, other: PythonInterpreter): void {
+    // Preserve type information.
+    // Possible we identified environment as unknown, but a later provider has identified env type.
+    if (interp.type === InterpreterType.Unknown && other.type !== InterpreterType.Unknown) {
+        interp.type = other.type;
+    }
+    const props: (keyof PythonInterpreter)[] = [
+        'envName',
+        'envPath',
+        'path',
+        'sysPrefix',
+        'architecture',
+        'sysVersion',
+        'version'
+    ];
+    for (const prop of props) {
+        if (!interp[prop] && other[prop]) {
+            // tslint:disable-next-line: no-any
+            (interp as any)[prop] = other[prop];
         }
     }
 }
