@@ -7,7 +7,10 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
-import { IDisposableRegistry } from '../../common/types';
+import { ContextKey } from '../../common/contextKey';
+import { EnableTrustedNotebooks } from '../../common/experiments/groups';
+import '../../common/extensions';
+import { IDisposableRegistry, IExperimentService } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -23,9 +26,18 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IExperimentService) private readonly experiments: IExperimentService
     ) {}
     public async activate(): Promise<void> {
+        this.activateInBackground().ignoreErrors();
+    }
+    public async activateInBackground(): Promise<void> {
+        if (!(await this.experiments.inExperiment(EnableTrustedNotebooks.experiment))) {
+            return;
+        }
+        const context = new ContextKey('', this.commandManager);
+        context.set(true).ignoreErrors();
         this.disposables.push(this.commandManager.registerCommand(Commands.TrustNotebook, this.onTrustNotebook, this));
         this.disposables.push(this.commandManager.registerCommand(Commands.TrustedNotebook, noop));
     }
@@ -35,15 +47,16 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         if (!uri) {
             return;
         }
+
         const model = await this.storageProvider.get(uri);
         if (model.isTrusted) {
             return;
         }
 
-        const prompts = [DataScience.trustNotebook(), DataScience.doNotTrustNotebook()];
         const selection = await this.applicationShell.showErrorMessage(
             DataScience.launchNotebookTrustPrompt(),
-            ...prompts
+            DataScience.trustNotebook(),
+            DataScience.doNotTrustNotebook()
         );
         if (selection !== DataScience.trustNotebook() || model.isTrusted) {
             return;

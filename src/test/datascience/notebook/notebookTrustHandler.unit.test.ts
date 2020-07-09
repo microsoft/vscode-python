@@ -3,24 +3,19 @@
 
 'use strict';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import { teardown } from 'mocha';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { EventEmitter, TextDocument, Uri } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
-import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import { NotebookTrustHandler } from '../../../client/datascience/notebook/notebookTrustHandler';
-import {
-    INotebookEditor,
-    INotebookEditorProvider,
-    INotebookModel,
-    ITrustService
-} from '../../../client/datascience/types';
-import { disposeAllDisposables } from './helper';
+import { INotebookEditor, INotebookEditorProvider, ITrustService } from '../../../client/datascience/types';
+import { createNotebookDocument, createNotebookModel, disposeAllDisposables } from './helper';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -63,69 +58,61 @@ suite('Data Science - NativeNotebook TrustHandler', () => {
             assert.equal(cell.metadata.editable, trusted);
             if (cell.cellKind === vscodeNotebookEnums.CellKind.Code) {
                 assert.equal(cell.metadata.runnable, trusted);
+                // In our test all code cells have outputs.
+                if (trusted) {
+                    assert.ok(cell.outputs.length, 'No output in trusted cell');
+                } else {
+                    assert.lengthOf(cell.outputs, 0, 'Cannot have output in non-trusted notebook');
+                }
             }
         });
     }
-    test('Return notebook with 2 cells', async () => {
-        const nb1: NotebookDocument = {
-            cells: [],
-            fileName: '',
-            isDirty: false,
-            languages: [],
-            uri: Uri.file('a'),
-            viewType: JupyterNotebookView,
-            metadata: {
-                cellEditable: false,
-                cellHasExecutionOrder: true,
-                cellRunnable: false,
-                editable: false,
-                runnable: false
-            }
+    function createModels() {
+        const nbJson: Partial<nbformat.INotebookContent> = {
+            cells: [
+                {
+                    cell_type: 'markdown',
+                    source: [],
+                    metadata: {}
+                },
+                {
+                    cell_type: 'code',
+                    source: [],
+                    metadata: {},
+                    execution_count: 1,
+                    outputs: [
+                        {
+                            output_type: 'stream',
+                            name: 'stdout',
+                            text: 'Hello World'
+                        }
+                    ]
+                }
+            ]
         };
-        const nb2: NotebookDocument = Object.assign(JSON.parse(JSON.stringify(nb1)), { uri: Uri.file('b') });
-        const nb2a: NotebookDocument = Object.assign(JSON.parse(JSON.stringify(nb1)), {
-            uri: Uri.file('b'),
-            viewType: 'AnotherViewOfDocumentIpynb'
-        });
-        const markdownCell = {
-            cellKind: vscodeNotebookEnums.CellKind.Markdown,
-            language: 'markdown',
-            document: instance(mock<TextDocument>()),
-            metadata: { editable: false, runnable: false },
-            outputs: [],
-            uri: Uri.file('1')
-        };
-        const codeCell = {
-            cellKind: vscodeNotebookEnums.CellKind.Code,
-            language: 'python',
-            document: instance(mock<TextDocument>()),
-            metadata: { editable: false, runnable: false },
-            outputs: [],
-            uri: Uri.file('1')
-        };
-        nb1.cells.push({ ...markdownCell, notebook: nb1 });
-        nb2.cells.push({ ...JSON.parse(JSON.stringify(markdownCell)), notebook: nb2 });
-        nb1.cells.push({ ...codeCell, notebook: nb1 });
-        nb2.cells.push({ ...JSON.parse(JSON.stringify(codeCell)), notebook: nb2 });
-        const model1 = mock<INotebookModel>();
-        const model2 = mock<INotebookModel>();
-        when(model1.isTrusted).thenReturn(false);
-        when(model2.isTrusted).thenReturn(false);
-        when(model1.file).thenReturn(Uri.file('a'));
-        when(model2.file).thenReturn(Uri.file('b'));
+
+        return [createNotebookModel(false, Uri.file('a'), nbJson), createNotebookModel(false, Uri.file('b'), nbJson)];
+    }
+    test('When a notebook is trusted, the Notebook document is updated accordingly', async () => {
+        const [model1, model2] = createModels();
+        const [nb1, nb2, nbAnotherExtension] = [
+            createNotebookDocument(model1),
+            createNotebookDocument(model2),
+            createNotebookDocument(model2, 'AnotherExtensionNotebookEditorForIpynbFile')
+        ];
 
         // Initially un-trusted.
         assertDocumentTrust(nb1, false);
         assertDocumentTrust(nb2, false);
-        assertDocumentTrust(nb2a, false);
+        assertDocumentTrust(nbAnotherExtension, false);
 
         when(vscNotebook.notebookDocuments).thenReturn([nb1, nb2]);
         const editor1 = mock<INotebookEditor>();
         const editor2 = mock<INotebookEditor>();
-        when(editor1.file).thenReturn(Uri.file('a'));
-        when(editor2.file).thenReturn(Uri.file('b'));
-        when(editor1.model).thenReturn(instance(model1));
-        when(editor2.model).thenReturn(instance(model2));
+        when(editor1.file).thenReturn(model1.file);
+        when(editor2.file).thenReturn(model2.file);
+        when(editor1.model).thenReturn(model1);
+        when(editor2.model).thenReturn(model2);
         when(editorProvider.editors).thenReturn([instance(editor1), instance(editor2)]);
 
         // Trigger a change, even though none of the models are still trusted.
@@ -134,15 +121,22 @@ suite('Data Science - NativeNotebook TrustHandler', () => {
         // Still un-trusted.
         assertDocumentTrust(nb1, false);
         assertDocumentTrust(nb2, false);
-        assertDocumentTrust(nb2a, false);
+        assertDocumentTrust(nbAnotherExtension, false);
 
         // Trigger a change, after trusting second nb/model.
-        when(model2.isTrusted).thenReturn(true);
+        model2.update({
+            source: 'user',
+            kind: 'updateTrust',
+            oldDirty: model2.isDirty,
+            newDirty: model2.isDirty,
+            isNotebookTrusted: true
+        });
+
         onDidTrustNotebook.fire();
 
         // Nb1 is still un-trusted and nb1 is trusted.
         assertDocumentTrust(nb1, false);
         assertDocumentTrust(nb2, true);
-        assertDocumentTrust(nb2a, false); // This is a document from a different content provider, we should modify this.
+        assertDocumentTrust(nbAnotherExtension, false); // This is a document from a different content provider, we should modify this.
     });
 });
