@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { inject } from 'inversify';
 import { Uri } from 'vscode';
 import { IConfigurationService } from '../../../../common/types';
 import {
@@ -14,10 +13,10 @@ import {
 
 export class InterpreterHashProviderFactory {
     constructor(
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
-        @inject(IWindowsStoreHashProvider) private readonly windowsStoreHashProvider: IWindowsStoreHashProvider,
-        @inject(IInterpreterHashProvider) private readonly hashProvider: IInterpreterHashProvider
+        private readonly configService: IConfigurationService,
+        private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
+        private readonly windowsStoreHashProvider: IWindowsStoreHashProvider,
+        private readonly hashProvider: IInterpreterHashProvider
     ) {}
 
     public async create(options: { pythonPath: string } | { resource: Uri }): Promise<IInterpreterHashProvider> {
