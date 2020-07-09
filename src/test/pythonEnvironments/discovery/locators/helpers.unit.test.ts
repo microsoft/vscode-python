@@ -13,12 +13,23 @@ import * as TypeMoq from 'typemoq';
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { Architecture } from '../../../../client/common/utils/platform';
-import { IInterpreterHelper, IInterpreterLocatorHelper } from '../../../../client/interpreter/contracts';
+import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
 import { IPipEnvServiceHelper } from '../../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { InterpreterLocatorHelper } from '../../../../client/pythonEnvironments/discovery/locators/helpers';
+import {
+    inSameDirectory,
+    mergeInterpreters,
+    updateEnvInfo
+} from '../../../../client/pythonEnvironments/discovery/locators/helpers';
 import { PipEnvServiceHelper } from '../../../../client/pythonEnvironments/discovery/locators/services/pipEnvServiceHelper';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import {
+    areSameInterpreter,
+    InterpreterType,
+    normalizeInterpreter,
+    PythonInterpreter,
+    updateInterpreter
+} from '../../../../client/pythonEnvironments/info';
+import { areSameVersion } from '../../../../client/pythonEnvironments/info/pythonVersion';
 
 enum OS {
     Windows = 'Windows',
@@ -26,10 +37,38 @@ enum OS {
     Mac = 'Mac'
 }
 
+// This is a temporary compatiblity shim (for InterpreterLocatorHelper)
+// to avoid large-scale refactorying of the tests in this file.
+async function mergeAndUpdate(
+    interpreters: PythonInterpreter[],
+    fs: IFileSystem,
+    pipEnvServiceHelper: IPipEnvServiceHelper
+): Promise<PythonInterpreter[]> {
+    const deps = {
+        updateInterpreter,
+        areSameInterpreter: (i1: PythonInterpreter, i2: PythonInterpreter) =>
+            areSameInterpreter(i1, i2, {
+                areSameVersion,
+                inSameDirectory: (p1?: string, p2?: string) =>
+                    inSameDirectory(p1, p2, {
+                        arePathsSame: fs.arePathsSame,
+                        getPathDirname: path.dirname
+                    })
+            }),
+        normalizeInterpreter: (i: PythonInterpreter) => normalizeInterpreter(i, { normalizePath: path.normalize }),
+        getPipEnvInfo: (p: string) => pipEnvServiceHelper.getPipEnvInfo(p)
+    };
+    const merged = mergeInterpreters(interpreters, deps);
+    await Promise.all(
+        // At this point they are independent so we can update them separately.
+        merged.map(async (interp) => updateEnvInfo(interp, deps))
+    );
+    return merged;
+}
+
 suite('Interpreters - Locators Helper', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let platform: TypeMoq.IMock<IPlatformService>;
-    let helper: IInterpreterLocatorHelper;
     let fs: TypeMoq.IMock<IFileSystem>;
     let pipEnvHelper: IPipEnvServiceHelper;
     let interpreterServiceHelper: TypeMoq.IMock<IInterpreterHelper>;
@@ -44,8 +83,6 @@ suite('Interpreters - Locators Helper', () => {
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterHelper)))
             .returns(() => interpreterServiceHelper.object);
-
-        helper = new InterpreterLocatorHelper(fs.object, instance(pipEnvHelper));
     });
     test('Ensure default Mac interpreter is not excluded from the list of interpreters', async () => {
         platform.setup((p) => p.isWindows).returns(() => false);
@@ -81,7 +118,7 @@ suite('Interpreters - Locators Helper', () => {
         const expectedInterpreters = interpreters.slice(0);
         when(pipEnvHelper.getPipEnvInfo(anything())).thenResolve();
 
-        const items = await helper.mergeInterpreters(interpreters);
+        const items = await mergeAndUpdate(interpreters, fs.object, instance(pipEnvHelper));
 
         interpreterServiceHelper.verifyAll();
         platform.verifyAll();
@@ -145,7 +182,7 @@ suite('Interpreters - Locators Helper', () => {
             });
 
             when(pipEnvHelper.getPipEnvInfo(anything())).thenResolve();
-            const items = await helper.mergeInterpreters(interpreters);
+            const items = await mergeAndUpdate(interpreters, fs.object, instance(pipEnvHelper));
 
             interpreterServiceHelper.verifyAll();
             platform.verifyAll();
@@ -187,7 +224,7 @@ suite('Interpreters - Locators Helper', () => {
             });
 
             when(pipEnvHelper.getPipEnvInfo(anything())).thenResolve();
-            const items = await helper.mergeInterpreters(interpreters);
+            const items = await mergeAndUpdate(interpreters, fs.object, instance(pipEnvHelper));
 
             interpreterServiceHelper.verifyAll();
             platform.verifyAll();

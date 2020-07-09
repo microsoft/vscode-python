@@ -4,6 +4,7 @@
 // tslint:disable:no-use-before-declare max-classes-per-file
 
 import { inject, injectable, named, optional } from 'inversify';
+import * as path from 'path';
 import { SemVer } from 'semver';
 import { Disposable, Event, Uri } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
@@ -42,7 +43,7 @@ import {
 } from '../interpreter/locators/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonInterpreterLocatorService } from './discovery/locators';
-import { InterpreterLocatorHelper } from './discovery/locators/helpers';
+import { inSameDirectory, mergeInterpreters, updateEnvInfo } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
 import { CondaEnvironmentInfo, CondaInfo } from './discovery/locators/services/conda';
 import { CondaEnvFileService } from './discovery/locators/services/condaEnvFileService';
@@ -67,7 +68,8 @@ import {
 } from './discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { GetInterpreterLocatorOptions } from './discovery/locators/types';
-import { PythonInterpreter } from './info';
+import { areSameInterpreter, normalizeInterpreter, PythonInterpreter, updateInterpreter } from './info';
+import { areSameVersion } from './info/pythonVersion';
 
 export function registerForIOC(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelperProxy);
@@ -160,15 +162,31 @@ export function registerForIOC(serviceManager: IServiceManager) {
 
 @injectable()
 class InterpreterLocatorHelperProxy implements IInterpreterLocatorHelper {
-    private readonly impl: IInterpreterLocatorHelper;
     constructor(
-        @inject(IFileSystem) fs: IFileSystem,
-        @inject(IPipEnvServiceHelper) pipEnvServiceHelper: IPipEnvServiceHelper
-    ) {
-        this.impl = new InterpreterLocatorHelper(fs, pipEnvServiceHelper);
-    }
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper
+    ) {}
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
-        return this.impl.mergeInterpreters(interpreters);
+        const deps = {
+            updateInterpreter,
+            areSameInterpreter: (i1: PythonInterpreter, i2: PythonInterpreter) =>
+                areSameInterpreter(i1, i2, {
+                    areSameVersion,
+                    inSameDirectory: (p1?: string, p2?: string) =>
+                        inSameDirectory(p1, p2, {
+                            arePathsSame: this.fs.arePathsSame,
+                            getPathDirname: path.dirname
+                        })
+                }),
+            normalizeInterpreter: (i: PythonInterpreter) => normalizeInterpreter(i, { normalizePath: path.normalize }),
+            getPipEnvInfo: this.pipEnvServiceHelper.getPipEnvInfo.bind(this.pipEnvServiceHelper)
+        };
+        const merged = mergeInterpreters(interpreters, deps);
+        await Promise.all(
+            // At this point they are independent so we can update them separately.
+            merged.map(async (interp) => updateEnvInfo(interp, deps))
+        );
+        return merged;
     }
 }
 
