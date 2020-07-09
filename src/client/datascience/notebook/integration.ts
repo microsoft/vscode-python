@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
@@ -13,8 +12,7 @@ import {
 } from '../../common/application/types';
 import { NotebookEditorSupport } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../../common/types';
+import { IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
@@ -34,27 +32,12 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
-        @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(NotebookKernel) private readonly notebookKernel: NotebookKernel,
         @inject(NotebookOutputRenderer) private readonly renderer: NotebookOutputRenderer,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {}
-    public get isEnabled() {
-        const packageJsonFile = path.join(this.context.extensionPath, 'package.json');
-        const content = JSON.parse(this.fs.readFileSync(packageJsonFile));
-
-        // This code is temporary.
-        return (
-            content.enableProposedApi &&
-            Array.isArray(content.contributes.notebookOutputRenderer) &&
-            (content.contributes.notebookOutputRenderer as []).length > 0 &&
-            Array.isArray(content.contributes.notebookProvider) &&
-            (content.contributes.notebookProvider as []).length > 0
-        );
-    }
     public async activate(): Promise<void> {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.
