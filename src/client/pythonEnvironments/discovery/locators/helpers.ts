@@ -1,10 +1,9 @@
 import * as fsapi from 'fs-extra';
-import { inject } from 'inversify';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { traceError } from '../../../common/logger';
 import { IS_WINDOWS } from '../../../common/platform/constants';
 import { IFileSystem } from '../../../common/platform/types';
-import { IPipEnvServiceHelper } from '../../../interpreter/locators/types';
 import { InterpreterType, PythonInterpreter } from '../../info';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
@@ -27,16 +26,15 @@ export async function lookForInterpretersInDirectory(pathToCheck: string, _: IFi
 
 export class InterpreterLocatorHelper {
     constructor(
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper
+        private readonly deps: {
+            normalizePath(p: string): string;
+            getPathDirname(p: string): string;
+            arePathsSame(p1: string, p2: string): boolean;
+            getPipEnvInfo(p: string): Promise<{ workspaceFolder: Uri; envName: string } | undefined>;
+        }
     ) {}
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
-        const deps = {
-            arePathsSame: this.fs.arePathsSame,
-            getPipEnvInfo: this.pipEnvServiceHelper.getPipEnvInfo.bind(this.pipEnvServiceHelper),
-            normalizePath: path.normalize,
-            getPathDirname: path.dirname
-        };
+        const deps = this.deps;
         const items = interpreters
             .map((item) => {
                 return { ...item };

@@ -45,7 +45,12 @@ suite('Interpreters - Locators Helper', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterHelper)))
             .returns(() => interpreterServiceHelper.object);
 
-        helper = new InterpreterLocatorHelper(fs.object, instance(pipEnvHelper));
+        helper = new InterpreterLocatorHelper({
+            normalizePath: path.normalize,
+            getPathDirname: path.dirname,
+            arePathsSame: (p1: string, p2: string) => fs.object.arePathsSame(p1, p2),
+            getPipEnvInfo: (p: string) => instance(pipEnvHelper).getPipEnvInfo(p)
+        });
     });
     test('Ensure default Mac interpreter is not excluded from the list of interpreters', async () => {
         platform.setup((p) => p.isWindows).returns(() => false);

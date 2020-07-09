@@ -4,6 +4,7 @@
 // tslint:disable:no-use-before-declare max-classes-per-file
 
 import { inject, injectable, named, optional } from 'inversify';
+import * as path from 'path';
 import { SemVer } from 'semver';
 import { Disposable, Event, Uri } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
@@ -165,7 +166,12 @@ class InterpreterLocatorHelperProxy implements IInterpreterLocatorHelper {
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IPipEnvServiceHelper) pipEnvServiceHelper: IPipEnvServiceHelper
     ) {
-        this.impl = new InterpreterLocatorHelper(fs, pipEnvServiceHelper);
+        this.impl = new InterpreterLocatorHelper({
+            normalizePath: path.normalize,
+            getPathDirname: path.dirname,
+            arePathsSame: fs.arePathsSame,
+            getPipEnvInfo: (p: string) => pipEnvServiceHelper.getPipEnvInfo(p)
+        });
     }
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
         return this.impl.mergeInterpreters(interpreters);
