@@ -343,6 +343,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
+    public async hasCell(id: string): Promise<boolean> {
+        if (this.model && this.model.cells.find((c) => c.id === id)) {
+            return true;
+        }
+        return false;
+    }
+
     public runAllCells() {
         this.postMessage(InteractiveWindowMessages.NotebookRunAllCells).ignoreErrors();
     }

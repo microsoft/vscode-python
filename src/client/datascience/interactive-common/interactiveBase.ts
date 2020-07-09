@@ -476,6 +476,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         });
     }
 
+    public abstract hasCell(id: string): Promise<boolean>;
     protected onViewStateChanged(args: WebViewViewChangeEventArgs) {
         // Only activate if the active editor is empty. This means that
         // vscode thinks we are actually supposed to have focus. It would be
@@ -789,7 +790,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.shareMessage(InteractiveWindowMessages.AddedSysInfo, {
                     type: reason,
                     sysInfoCell: sysInfo,
-                    id: this.id
+                    id: this.id,
+                    notebookIdentity: (await this.getNotebookIdentity()).resource
                 });
             }
 

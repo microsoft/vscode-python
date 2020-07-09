@@ -119,6 +119,9 @@ export class NotebookEditor implements INotebookEditor {
     public redoCells(): void {
         this.commandManager.executeCommand('notebook.redo').then(noop, noop);
     }
+    public async hasCell(id: string): Promise<boolean> {
+        return this.model.cells.find((c) => c.id === id) ? true : false;
+    }
     public removeAllCells(): void {
         if (!this.vscodeNotebook.activeNotebookEditor) {
             return;

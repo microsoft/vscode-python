@@ -28,6 +28,7 @@ import {
     Resource,
     WORKSPACE_MEMENTO
 } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
@@ -99,6 +100,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private _owner: Uri | undefined;
     private _identity: Uri = createInteractiveIdentity();
     private _submitters: Uri[] = [];
+    private pendingHasCell = new Map<string, Deferred<boolean>>();
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
@@ -250,6 +252,10 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 this.handleMessage(message, payload, this.exportAs);
                 break;
 
+            case InteractiveWindowMessages.HasCellResponse:
+                this.handleMessage(message, payload, this.handleHasCellResponse);
+                break;
+
             default:
                 break;
         }
@@ -300,7 +306,21 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
     @captureTelemetry(Telemetry.ScrolledToCell)
     public scrollToCell(id: string): void {
-        this.postMessage(InteractiveWindowMessages.ScrollToCell, { id }).ignoreErrors();
+        this.show()
+            .then(() => {
+                return this.postMessage(InteractiveWindowMessages.ScrollToCell, { id });
+            })
+            .ignoreErrors();
+    }
+
+    public hasCell(id: string): Promise<boolean> {
+        let deferred = this.pendingHasCell.get(id);
+        if (!deferred) {
+            deferred = createDeferred<boolean>();
+            this.pendingHasCell.set(id, deferred);
+            this.postMessage(InteractiveWindowMessages.HasCell, id).ignoreErrors();
+        }
+        return deferred.promise;
     }
 
     public async getOwningResource(): Promise<Resource> {
@@ -494,6 +514,14 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // See what we're waiting for.
         if (this.waitingForExportCells) {
             this.export(cells).catch((ex) => traceError('Error exporting:', ex));
+        }
+    }
+
+    private handleHasCellResponse(response: { id: string; result: boolean }) {
+        const deferred = this.pendingHasCell.get(response.id);
+        if (deferred) {
+            deferred.resolve(response.result);
+            this.pendingHasCell.delete(response.id);
         }
     }
 }

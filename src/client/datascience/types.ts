@@ -504,6 +504,7 @@ export interface IInteractiveBase extends Disposable {
     removeAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
+    hasCell(id: string): Promise<boolean>;
 }
 
 export const IInteractiveWindow = Symbol('IInteractiveWindow');

@@ -141,7 +141,9 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             commandManager.registerCommand(Commands.ExportOutputAsNotebook, () => this.exportCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.ScrollToCell, (_file: string, id: string) => this.scrollToCell(id))
+            commandManager.registerCommand(Commands.ScrollToCell, (file: Uri, id: string) =>
+                this.scrollToCell(file, id)
+            )
         );
     }
 
@@ -475,11 +477,21 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         }
     }
 
-    private async scrollToCell(id: string): Promise<void> {
-        if (id) {
-            const interactiveWindow = this.interactiveWindowProvider.activeWindow;
-            if (interactiveWindow) {
-                interactiveWindow.scrollToCell(id);
+    private async scrollToCell(file: Uri, id: string): Promise<void> {
+        if (id && file) {
+            // Find the interactive windows that have this file as a submitter
+            const possibles = this.interactiveWindowProvider.windows.filter(
+                (w) => w.submitters.findIndex((s) => this.fileSystem.arePathsSame(s.fsPath, file.fsPath)) >= 0
+            );
+
+            // Scroll to cell in the one that has the cell. We need this so
+            // we don't activate all of them.
+            // tslint:disable-next-line: prefer-for-of
+            for (let i = 0; i < possibles.length; i += 1) {
+                if (await possibles[i].hasCell(id)) {
+                    possibles[i].scrollToCell(id);
+                    break;
+                }
             }
         }
     }

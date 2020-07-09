@@ -24,8 +24,7 @@ import {
     IDataScienceErrorHandler,
     IDebugLocationTracker,
     IInteractiveWindow,
-    IInteractiveWindowProvider,
-    INotebookProvider
+    IInteractiveWindowProvider
 } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
@@ -38,7 +37,6 @@ import { createDocument } from './helpers';
 suite('DataScience Code Watcher Unit Tests', () => {
     let codeWatcher: CodeWatcher;
     let interactiveWindowProvider: TypeMoq.IMock<IInteractiveWindowProvider>;
-    let notebookProvider: TypeMoq.IMock<INotebookProvider>;
     let activeInteractiveWindow: TypeMoq.IMock<IInteractiveWindow>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let commandManager: TypeMoq.IMock<ICommandManager>;
@@ -59,7 +57,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
     setup(() => {
         tokenSource = new CancellationTokenSource();
         interactiveWindowProvider = TypeMoq.Mock.ofType<IInteractiveWindowProvider>();
-        notebookProvider = TypeMoq.Mock.ofType<INotebookProvider>();
         activeInteractiveWindow = createTypeMoq<IInteractiveWindow>('history');
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         textEditor = TypeMoq.Mock.ofType<TextEditor>();
@@ -117,7 +114,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         const codeLensFactory = new CodeLensFactory(
             configService.object,
-            notebookProvider.object,
+            interactiveWindowProvider.object,
             fileSystem.object,
             documentManager.object
         );
@@ -158,7 +155,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         const codeLens = new CodeLensFactory(
             configService.object,
-            notebookProvider.object,
+            interactiveWindowProvider.object,
             fileSystem.object,
             documentManager.object
         );

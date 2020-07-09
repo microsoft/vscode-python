@@ -87,8 +87,8 @@ export class NotebookProvider implements INotebookProvider {
         const rawKernel = await this.rawNotebookProvider.supported();
 
         // Check our own promise cache
-        if (this.notebooks.get(options.identity.fsPath)) {
-            return this.notebooks.get(options.identity.fsPath)!!;
+        if (this.notebooks.get(options.identity.toString())) {
+            return this.notebooks.get(options.identity.toString())!!;
         }
 
         // Check to see if our provider already has this notebook
@@ -146,13 +146,13 @@ export class NotebookProvider implements INotebookProvider {
 
     // Cache the promise that will return a notebook
     private cacheNotebookPromise(identity: Uri, promise: Promise<INotebook>) {
-        this.notebooks.set(identity.fsPath, promise);
+        this.notebooks.set(identity.toString(), promise);
 
         // Remove promise from cache if the same promise still exists.
         const removeFromCache = () => {
-            const cachedPromise = this.notebooks.get(identity.fsPath);
+            const cachedPromise = this.notebooks.get(identity.toString());
             if (cachedPromise === promise) {
-                this.notebooks.delete(identity.fsPath);
+                this.notebooks.delete(identity.toString());
             }
         };
 
