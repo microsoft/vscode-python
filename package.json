@@ -28,7 +28,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.46.0"
+        "vscode": "^1.47.0"
     },
     "keywords": [
         "python",
@@ -43,7 +43,10 @@
         "Snippets",
         "Formatters",
         "Other",
-        "Extension Packs"
+        "Extension Packs",
+        "Data Science",
+        "Machine Learning",
+        "Notebooks"
     ],
     "activationEvents": [
         "onLanguage:python",
