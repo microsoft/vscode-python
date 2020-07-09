@@ -5,7 +5,6 @@
 
 // tslint:disable:no-require-imports
 
-import { inject, named } from 'inversify';
 import * as path from 'path';
 import untildify = require('untildify');
 import { Uri } from 'vscode';
@@ -21,11 +20,9 @@ import { BaseVirtualEnvService } from './baseVirtualEnvService';
 
 export class WorkspaceVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
-        @inject(IVirtualEnvironmentsSearchPathProvider)
-        @named('workspace')
         workspaceVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IInterpreterWatcherBuilder) private readonly builder: IInterpreterWatcherBuilder
+        serviceContainer: IServiceContainer,
+        private readonly builder: IInterpreterWatcherBuilder
     ) {
         super(workspaceVirtualEnvPathProvider, serviceContainer, 'WorkspaceVirtualEnvService', true);
     }
@@ -35,7 +32,7 @@ export class WorkspaceVirtualEnvService extends BaseVirtualEnvService {
 }
 
 export class WorkspaceVirtualEnvironmentsSearchPathProvider {
-    public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
+    public constructor(private serviceContainer: IServiceContainer) {}
     public async getSearchPaths(resource?: Uri): Promise<string[]> {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const paths: string[] = [];

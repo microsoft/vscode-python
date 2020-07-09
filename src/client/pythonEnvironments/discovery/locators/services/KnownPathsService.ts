@@ -84,7 +84,7 @@ export class KnownPathsService extends CacheableLocatorService {
 }
 
 export class KnownSearchPathsForInterpreters {
-    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
+    constructor(private readonly serviceContainer: IServiceContainer) {}
     /**
      * Return the paths where Python interpreters might be found.
      */

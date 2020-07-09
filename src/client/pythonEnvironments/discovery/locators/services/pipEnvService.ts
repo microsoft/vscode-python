@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../../common/application/types';
@@ -29,7 +28,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
     private readonly configService: IConfigurationService;
     private readonly pipEnvServiceHelper: IPipEnvServiceHelper;
 
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(serviceContainer: IServiceContainer) {
         super('PipEnvService', serviceContainer, true);
         this.helper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
         this.processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);

@@ -1,6 +1,5 @@
 // tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation
 
-import { inject } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
@@ -35,10 +34,10 @@ export class WindowsRegistryService extends CacheableLocatorService {
     private readonly pathUtils: IPathUtils;
     private readonly fs: IFileSystem;
     constructor(
-        @inject(IRegistry) private registry: IRegistry,
-        @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
+        private registry: IRegistry,
+        private readonly platform: IPlatformService,
+        serviceContainer: IServiceContainer,
+        private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
     ) {
         super('WindowsRegistryService', serviceContainer);
         this.pathUtils = serviceContainer.get<IPathUtils>(IPathUtils);

@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { inject } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../../../common/platform/types';
@@ -15,10 +14,7 @@ type PipEnvInformation = { pythonPath: string; workspaceFolder: string; envName:
 export class PipEnvServiceHelper implements IPipEnvServiceHelper {
     private initialized = false;
     private readonly state: IPersistentState<ReadonlyArray<PipEnvInformation>>;
-    constructor(
-        @inject(IPersistentStateFactory) private readonly statefactory: IPersistentStateFactory,
-        @inject(IFileSystem) private readonly fs: IFileSystem
-    ) {
+    constructor(private readonly statefactory: IPersistentStateFactory, private readonly fs: IFileSystem) {
         this.state = this.statefactory.createGlobalPersistentState<ReadonlyArray<PipEnvInformation>>(
             'PipEnvInformation',
             []

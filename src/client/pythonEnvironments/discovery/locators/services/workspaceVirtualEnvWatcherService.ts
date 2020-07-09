@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { inject } from 'inversify';
 import * as path from 'path';
 import { Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
@@ -11,7 +10,7 @@ import '../../../../common/extensions';
 import { traceDecorators, traceVerbose } from '../../../../common/logger';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../../common/process/types';
-import { IDisposableRegistry, Resource } from '../../../../common/types';
+import { Resource } from '../../../../common/types';
 
 const maxTimeToWaitForEnvCreation = 60_000;
 const timeToPollForEnvCreation = 2_000;
@@ -22,10 +21,10 @@ export class WorkspaceVirtualEnvWatcherService {
     private fsWatchers: FileSystemWatcher[] = [];
     private resource: Resource;
     constructor(
-        @inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory
+        private readonly disposableRegistry: Disposable[],
+        private readonly workspaceService: IWorkspaceService,
+        private readonly platformService: IPlatformService,
+        private readonly pythonExecFactory: IPythonExecutionFactory
     ) {
         this.didCreate = new EventEmitter<Resource>();
         disposableRegistry.push(this);
