@@ -85,6 +85,7 @@ import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 import type { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { commands } from 'vscode';
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { isTestExecution, PYTHON_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
@@ -611,7 +612,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async launchNotebookTrustPrompt() {
-        const prompts = [localize.DataScience.trustNotebook(), localize.DataScience.doNotTrustNotebook()];
+        const prompts = [
+            localize.DataScience.trustNotebook(),
+            localize.DataScience.doNotTrustNotebook(),
+            localize.DataScience.trustAllNotebooks()
+        ];
         const selection = await this.applicationShell.showErrorMessage(
             localize.DataScience.launchNotebookTrustPrompt(),
             ...prompts
@@ -636,6 +641,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             } catch (err) {
                 traceError(err);
             }
+        } else if (selection === localize.DataScience.trustAllNotebooks()) {
+            // Take the user to the settings UI where they can manually turn on the alwaysTrustNotebooks setting
+            commands.executeCommand('workbench.action.openSettings', 'python.dataScience.alwaysTrustNotebooks');
         }
     }
 
