@@ -109,7 +109,7 @@ suite('DataScience - Trust Command Handler', () => {
         assert.isFalse(model.isTrusted);
     });
     test('Executing command will update trust', async () => {
-        when(applicationShell.showErrorMessage(anything(), anything(), anything())).thenResolve(
+        when(applicationShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
             DataScience.trustNotebook() as any
         );
 

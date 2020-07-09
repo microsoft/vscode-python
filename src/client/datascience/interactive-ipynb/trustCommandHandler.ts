@@ -56,7 +56,8 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         const selection = await this.applicationShell.showErrorMessage(
             DataScience.launchNotebookTrustPrompt(),
             DataScience.trustNotebook(),
-            DataScience.doNotTrustNotebook()
+            DataScience.doNotTrustNotebook(),
+            DataScience.trustAllNotebooks()
         );
         if (selection !== DataScience.trustNotebook() || model.isTrusted) {
             return;
