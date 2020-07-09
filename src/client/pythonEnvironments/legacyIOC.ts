@@ -169,7 +169,7 @@ class InterpreterLocatorHelperProxy implements IInterpreterLocatorHelper {
         this.impl = new InterpreterLocatorHelper({
             normalizePath: path.normalize,
             getPathDirname: path.dirname,
-            arePathsSame: fs.arePathsSame,
+            arePathsSame: (p1: string, p2: string) => fs.arePathsSame(p1, p2),
             getPipEnvInfo: (p: string) => pipEnvServiceHelper.getPipEnvInfo(p)
         });
     }
