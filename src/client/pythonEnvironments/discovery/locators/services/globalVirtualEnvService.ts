@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { inject, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { Uri } from 'vscode';
