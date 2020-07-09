@@ -2938,9 +2938,9 @@
                     "scope": "application"
                 },
                 "python.dataScience.runStartupCommands": {
-                    "type": "string",
+                    "type": "array",
                     "default": "",
-                    "description": "A series of Python instructions or iPython magic commands separated by '\\n' that will be executed when the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
+                    "description": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
                     "scope": "application"
                 },
                 "python.dataScience.debugJustMyCode": {
