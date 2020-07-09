@@ -181,7 +181,7 @@ class InterpreterLocatorHelperProxy implements IInterpreterLocatorHelper {
                     areSameVersion,
                     inSameDirectory: (p1?: string, p2?: string) =>
                         inSameDirectory(p1, p2, {
-                            arePathsSame: this.fs.arePathsSame,
+                            arePathsSame: (p1b: string, p2b: string) => this.fs.arePathsSame(p1b, p2b),
                             getPathDirname: path.dirname
                         })
                 }),
