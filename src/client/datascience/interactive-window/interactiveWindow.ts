@@ -89,6 +89,9 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public get submitters(): Uri[] {
         return this._submitters;
     }
+    public get identity(): Uri {
+        return this._identity;
+    }
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private waitingForExportCells: boolean = false;
@@ -184,7 +187,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return Promise.resolve();
     }
 
-    public async load(owner: Resource): Promise<void> {
+    public async load(owner: Resource, title?: string): Promise<void> {
         // Set our owner and first submitter
         this._owner = owner;
         if (owner) {
@@ -200,6 +203,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // Update the title if possible
         if (this.owner && this.configService.getSettings().datascience.interactiveWindowMode === 'perFile') {
             this.setTitle(getInteractiveWindowTitle(this.owner));
+        } else if (title) {
+            this.setTitle(title);
         }
 
         // Make sure we're loaded first. InteractiveWindow doesn't makes sense without an active server.
@@ -334,7 +339,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
             // Activate the other side, and send as if came from a file
             this.interactiveWindowProvider
-                .getOrCreate(this.owner)
+                .synchronize(this)
                 .then((_v) => {
                     this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
                         code: info.code,

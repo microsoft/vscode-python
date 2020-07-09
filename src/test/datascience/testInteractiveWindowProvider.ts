@@ -76,6 +76,10 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
         return this.realProvider.windows;
     }
 
+    public synchronize(window: IInteractiveWindow): Promise<void> {
+        return this.realProvider.synchronize(window);
+    }
+
     public getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
         return this.realProvider.getOrCreate(resource);
     }

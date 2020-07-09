@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../common/application/types';
@@ -16,6 +16,7 @@ import {
     Resource
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
+import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../constants';
 import { PostOffice } from '../liveshare/postOffice';
@@ -31,26 +32,22 @@ interface ISyncData {
     waitable: Deferred<void>;
 }
 
-const UnownedKeyScheme = 'guid-key';
-
 @injectable()
 export class InteractiveWindowProvider implements IInteractiveWindowProvider, IAsyncDisposable {
     public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
         return this._onDidChangeActiveInteractiveWindow.event;
     }
     public get activeWindow(): IInteractiveWindow | undefined {
-        return this.activeInteractiveWindow;
+        return this._windows.find((w) => w.active && w.visible);
     }
     public get windows(): ReadonlyArray<IInteractiveWindow> {
         return this._windows;
     }
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
-    private activeInteractiveWindow: IInteractiveWindow | undefined;
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
     private postOffice: PostOffice;
     private id: string;
     private pendingSyncs: Map<string, ISyncData> = new Map<string, ISyncData>();
-    private activeInteractiveWindowExecuteHandler: Disposable | undefined;
     private _windows: IInteractiveWindow[] = [];
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
@@ -90,13 +87,30 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             result = this.create(resource);
 
             // Wait for synchronization in liveshare
-            await this.synchronizeCreate(resource);
+            await this.synchronize(result);
         }
+
         return result;
     }
 
     public dispose(): Promise<void> {
         return this.postOffice.dispose();
+    }
+
+    public async synchronize(window: IInteractiveWindow): Promise<void> {
+        // Create a new pending wait if necessary
+        if (this.postOffice.peerCount > 0 || this.postOffice.role === vsls.Role.Guest) {
+            const key = window.identity.toString();
+            const owner = window.owner?.toString();
+            const waitable = createDeferred<void>();
+            this.pendingSyncs.set(key, { count: this.postOffice.peerCount, waitable });
+
+            // Make sure all providers have an active interactive window
+            await this.postOffice.postCommand(LiveShareCommands.interactiveWindowCreate, this.id, key, owner);
+
+            // Wait for the waitable to be signaled or the peer count on the post office to change
+            await waitable.promise;
+        }
     }
 
     private get(owner: Resource): IInteractiveWindow | undefined {
@@ -113,9 +127,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         if (interactiveMode === 'multiple') {
             // Owner being undefined means create a new window, othewise use
             // the last active window.
-            return owner
-                ? this.activeInteractiveWindow || this.lastActiveInteractiveWindow || this._windows[0]
-                : undefined;
+            return owner ? this.activeWindow || this.lastActiveInteractiveWindow || this._windows[0] : undefined;
         }
 
         // Otherwise match the owner.
@@ -138,31 +150,30 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
         const result = this.serviceContainer.get<IInteractiveWindowLoadable>(IInteractiveWindow);
         this._windows.push(result);
-        this.activeInteractiveWindow = result;
+
+        // This is the last interactive window at the moment (as we're about to create it)
+        this.lastActiveInteractiveWindow = result;
 
         // When shutting down, we fire an event
-        const handler = this.activeInteractiveWindow.closed(this.onInteractiveWindowClosed);
-        this.disposables.push(this.activeInteractiveWindow);
+        const handler = result.closed(this.onInteractiveWindowClosed);
+        this.disposables.push(result);
         this.disposables.push(handler);
-        this.disposables.push(
-            this.activeInteractiveWindow.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this))
-        );
+        this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
+
+        const title =
+            this.configService.getSettings().datascience.interactiveWindowMode === 'multiple'
+                ? localize.DataScience.interactiveWindowTitleFormat().format(`#${this._windows.length}`)
+                : undefined;
 
         // Load in the background
-        result
-            .load(resource)
-            .then(() => this.raiseOnDidChangeActiveInteractiveWindow())
-            .catch((e) => this.errorHandler.handleError(e));
+        result.load(resource, title).catch((e) => this.errorHandler.handleError(e));
 
-        return this.activeInteractiveWindow;
+        return result;
     }
 
     private raiseOnDidChangeActiveInteractiveWindow() {
-        // Save the last window that was active
-        this.lastActiveInteractiveWindow = this.activeInteractiveWindow;
-
-        // Find the active window
-        this.activeInteractiveWindow = this._windows.find((w) => (w.active && w.visible ? true : false));
+        // Update last active window (remember changes to the active window)
+        this.lastActiveInteractiveWindow = this.activeWindow ? this.activeWindow : this.lastActiveInteractiveWindow;
         this._onDidChangeActiveInteractiveWindow.fire(this.activeWindow);
     }
     private onPeerCountChanged(newCount: number) {
@@ -179,10 +190,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         if (args.length > 1 && args[0].toString() !== this.id) {
             // The other side is creating a interactive window. Create on this side. We don't need to show
             // it as the running of new code should do that.
-            const key = Uri.parse(args[1].toString());
-            const resource = key.scheme === UnownedKeyScheme ? undefined : key;
-            if (!this.get(resource)) {
-                this.create(resource);
+            const owner = Uri.parse(args[2].toString());
+            if (!this.get(owner)) {
+                this.create(owner);
             }
 
             // Tell the requestor that we got its message (it should be waiting for all peers to sync)
@@ -209,29 +219,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
 
     private onInteractiveWindowClosed = (interactiveWindow: IInteractiveWindow) => {
         this._windows = this._windows.filter((w) => w !== interactiveWindow);
-        if (this.activeInteractiveWindow === interactiveWindow) {
-            this.activeInteractiveWindow = undefined;
-            if (this.activeInteractiveWindowExecuteHandler) {
-                this.activeInteractiveWindowExecuteHandler.dispose();
-                this.activeInteractiveWindowExecuteHandler = undefined;
-            }
+        if (this.lastActiveInteractiveWindow === interactiveWindow) {
             this.lastActiveInteractiveWindow = this._windows[0];
         }
         this.raiseOnDidChangeActiveInteractiveWindow();
     };
-
-    private async synchronizeCreate(owner: Resource): Promise<void> {
-        // Create a new pending wait if necessary
-        if (this.postOffice.peerCount > 0 || this.postOffice.role === vsls.Role.Guest) {
-            const key = owner ? owner.toString() : Uri.parse(`${UnownedKeyScheme}://${uuid}`).toString();
-            const waitable = createDeferred<void>();
-            this.pendingSyncs.set(key, { count: this.postOffice.peerCount, waitable });
-
-            // Make sure all providers have an active interactive window
-            await this.postOffice.postCommand(LiveShareCommands.interactiveWindowCreate, this.id, key);
-
-            // Wait for the waitable to be signaled or the peer count on the post office to change
-            await waitable.promise;
-        }
-    }
 }

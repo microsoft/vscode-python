@@ -48,7 +48,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         ) => IWebPanelMessageListener,
         @unmanaged() private rootPath: string,
         @unmanaged() private scripts: string[],
-        @unmanaged() private title: string,
+        @unmanaged() private _title: string,
         @unmanaged() private viewColumn: ViewColumn,
         @unmanaged() protected readonly useCustomEditorApi: boolean,
         @unmanaged() private readonly enableVariablesDuringDebugging: boolean,
@@ -103,8 +103,12 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             this.themeIsDarkPromise = undefined;
         }
     }
+    public get title() {
+        return this._title;
+    }
 
     public setTitle(newTitle: string) {
+        this._title = newTitle;
         if (!this.isDisposed && this.webPanel) {
             this.webPanel.setTitle(newTitle);
         }
