@@ -7,6 +7,7 @@ import { IS_WINDOWS } from '../../../common/platform/constants';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPipEnvServiceHelper } from '../../../interpreter/locators/types';
 import { InterpreterType, PythonInterpreter } from '../../info';
+import { PythonVersion } from '../../info/pythonVersion';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
@@ -34,9 +35,16 @@ export class InterpreterLocatorHelper {
 
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
         const deps = {
+            areSameInterpreter: (i1: PythonInterpreter, i2: PythonInterpreter) =>
+                areSameInterpreter(i1, i2, {
+                    areSameVersion,
+                    inSameDirectory: (p1?: string, p2?: string) =>
+                        inSameDirectory(p1, p2, {
+                            arePathsSame: this.fs.arePathsSame,
+                            getPathDirname: path.dirname
+                        })
+                }),
             normalizeInterpreter: (i: PythonInterpreter) => normalizeInterpreter(i, { normalizePath: path.normalize }),
-            arePathsSame: this.fs.arePathsSame,
-            getPathDirname: path.dirname,
             getPipEnvInfo: this.pipEnvServiceHelper.getPipEnvInfo.bind(this.pipEnvServiceHelper)
         };
         const merged = mergeInterpreters(interpreters, deps);
@@ -55,34 +63,18 @@ export class InterpreterLocatorHelper {
  *
  * @param interpreters - the env infos to merge
  * @param deps - functional dependencies
+ * @prop deps.areSameInterpreter - determine if 2 infos match the same env
  * @prop deps.normalizeInterpreter - standardize the given env info
- * @prop deps.arePathsSame - determine if two filenames point to the same file
- * @prop deps.getPathDirname - (like `path.dirname`)
  */
 function mergeInterpreters(
     interpreters: PythonInterpreter[],
     deps: {
-        normalizeInterpreter(interp: PythonInterpreter): void;
-        arePathsSame(p1: string, p2: string): boolean;
-        getPathDirname(p: string): string;
+        areSameInterpreter(i1: PythonInterpreter, i2: PythonInterpreter): boolean;
+        normalizeInterpreter(i: PythonInterpreter): void;
     }
 ): PythonInterpreter[] {
     return interpreters.reduce<PythonInterpreter[]>((accumulator, current) => {
-        const currentVersion = current && current.version ? current.version.raw : undefined;
-        const existingItem = accumulator.find((item) => {
-            // If same version and same base path, then ignore.
-            // Could be Python 3.6 with path = python.exe, and Python 3.6 and path = python3.exe.
-            if (
-                item.version &&
-                item.version.raw === currentVersion &&
-                item.path &&
-                current.path &&
-                deps.arePathsSame(deps.getPathDirname(item.path), deps.getPathDirname(current.path))
-            ) {
-                return true;
-            }
-            return false;
-        });
+        const existingItem = accumulator.find((item) => deps.areSameInterpreter(current, item));
         if (!existingItem) {
             const copied: PythonInterpreter = { ...current };
             deps.normalizeInterpreter(copied);
@@ -111,6 +103,75 @@ function mergeInterpreters(
         }
         return accumulator;
     }, []);
+}
+
+/**
+ * Determine if the given infos correspond to the same env.
+ *
+ * @param interp1 - one of the two envs to compare
+ * @param interp2 - one of the two envs to compare
+ * @param deps - functional dependencies
+ * @prop deps.areSameVersion - determine if two versions are the same
+ * @prop deps.inSameDirectory - determine if two files are in the same directory
+ */
+function areSameInterpreter(
+    interp1: PythonInterpreter | undefined,
+    interp2: PythonInterpreter | undefined,
+    deps: {
+        areSameVersion(v1?: PythonVersion, v2?: PythonVersion): boolean;
+        inSameDirectory(p1?: string, p2?: string): boolean;
+    }
+): boolean {
+    if (!interp1 || !interp2) {
+        return false;
+    }
+    if (!deps.areSameVersion(interp1.version, interp2.version)) {
+        return false;
+    }
+    // Could be Python 3.6 with path = python.exe, and Python 3.6
+    // and path = python3.exe, so we check the parent directory.
+    if (!deps.inSameDirectory(interp1.path, interp2.path)) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Determine if the given versions are the same.
+ *
+ * @param version1 - one of the two versions to compare
+ * @param version2 - one of the two versions to compare
+ */
+function areSameVersion(version1?: PythonVersion, version2?: PythonVersion): boolean {
+    if (!version1 || !version2) {
+        return false;
+    }
+    return version1.raw === version2.raw;
+}
+
+/**
+ * Determine if the given paths are in the same directory.
+ *
+ * @param path1 - one of the two paths to compare
+ * @param path2 - one of the two paths to compare
+ * @param deps - functional dependencies
+ * @prop deps.arePathsSame - determine if two filenames point to the same file
+ * @prop deps.getPathDirname - (like `path.dirname`)
+ */
+function inSameDirectory(
+    path1: string | undefined,
+    path2: string | undefined,
+    deps: {
+        arePathsSame(p1: string, p2: string): boolean;
+        getPathDirname(p: string): string;
+    }
+): boolean {
+    if (!path1 || !path2) {
+        return false;
+    }
+    const dir1 = deps.getPathDirname(path1);
+    const dir2 = deps.getPathDirname(path2);
+    return deps.arePathsSame(dir1, dir2);
 }
 
 /**
