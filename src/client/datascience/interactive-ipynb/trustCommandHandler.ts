@@ -36,7 +36,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         if (!(await this.experiments.inExperiment(EnableTrustedNotebooks.experiment))) {
             return;
         }
-        const context = new ContextKey('', this.commandManager);
+        const context = new ContextKey('python.datascience.trustfeatureenabled', this.commandManager);
         context.set(true).ignoreErrors();
         this.disposables.push(this.commandManager.registerCommand(Commands.TrustNotebook, this.onTrustNotebook, this));
         this.disposables.push(this.commandManager.registerCommand(Commands.TrustedNotebook, noop));
