@@ -28,7 +28,6 @@ import { JupyterNotebookView } from './constants';
 import { mapVSCNotebookCellsToNotebookCellModels } from './helpers/cellMappers';
 import { updateCellModelWithChangesToVSCCell } from './helpers/cellUpdateHelpers';
 import { isJupyterNotebook } from './helpers/helpers';
-import { NotebookIntegration } from './integration';
 import { NotebookEditor } from './notebookEditor';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
 
@@ -85,13 +84,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 if (uri) {
                     setSharedProperty('ds_notebookeditor', 'native');
                     captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false);
-                    const integration = serviceContainer.get<NotebookIntegration>(NotebookIntegration);
-                    // If user is not meant to be using VSC Notebooks, and it is not enabled,
-                    // then enable it for side by side usage.
-                    if (!integration.isEnabled && !useVSCodeNotebookEditorApi) {
-                        // At this point we need to reload VS Code, hence return and do not try to load nb, else it will fail.
-                        return integration.enableSideBySideUsage();
-                    }
                     this.open(uri).ignoreErrors();
                 }
             })
