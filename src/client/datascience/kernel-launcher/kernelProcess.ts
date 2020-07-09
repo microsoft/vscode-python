@@ -224,13 +224,11 @@ export class KernelProcess implements IKernelProcess {
                 this.interpreter
             );
 
-            if (kernelDaemonLaunch) {
-                this.kernelDaemon = kernelDaemonLaunch.daemon;
-                exeObs = kernelDaemonLaunch.observableOutput;
-            }
+            this.kernelDaemon = kernelDaemonLaunch.daemon;
+            exeObs = kernelDaemonLaunch.observableOutput;
         }
 
-        // If we are not python or if we failed with our daemon launch just use the ProcessExecutionFactory
+        // If we are not python just use the ProcessExecutionFactory
         if (!exeObs) {
             // First part of argument is always the executable.
             const executable = this._kernelSpec.argv[0];
