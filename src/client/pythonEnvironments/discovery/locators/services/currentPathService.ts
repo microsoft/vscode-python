@@ -125,7 +125,7 @@ export class CurrentPathService extends CacheableLocatorService {
 }
 
 export class PythonInPathCommandProvider {
-    constructor(private readonly platform: IPlatformService) {}
+    constructor(@inject(IPlatformService) private readonly platform: IPlatformService) {}
     public getCommands(): { command: string; args?: string[] }[] {
         const paths = ['python3.7', 'python3.6', 'python3', 'python2', 'python'].map((item) => {
             return { command: item };
