@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject } from 'inversify';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
@@ -16,10 +15,10 @@ import { parseCondaInfo } from './conda';
  */
 export class CondaEnvService extends CacheableLocatorService {
     constructor(
-        @inject(ICondaService) private condaService: ICondaService,
-        @inject(IInterpreterHelper) private helper: IInterpreterHelper,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IFileSystem) private fileSystem: IFileSystem
+        private condaService: ICondaService,
+        private helper: IInterpreterHelper,
+        serviceContainer: IServiceContainer,
+        private fileSystem: IFileSystem
     ) {
         super('CondaEnvService', serviceContainer);
     }

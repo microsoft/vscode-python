@@ -3,10 +3,8 @@
 
 'use strict';
 
-import { inject } from 'inversify';
 import { Disposable, Event, EventEmitter } from 'vscode';
 import { traceDecorators } from '../../../common/logger';
-import { IDisposableRegistry } from '../../../common/types';
 import { createDeferredFrom, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterLocatorService } from '../../../interpreter/contracts';
@@ -18,10 +16,7 @@ export class InterpreterLocatorProgressService {
     private readonly refreshing = new EventEmitter<void>();
     private readonly refreshed = new EventEmitter<void>();
     private readonly locators: IInterpreterLocatorService[] = [];
-    constructor(
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) private readonly disposables: Disposable[]
-    ) {
+    constructor(serviceContainer: IServiceContainer, private readonly disposables: Disposable[]) {
         this.locators = serviceContainer.getAll<IInterpreterLocatorService>(IInterpreterLocatorService);
     }
 

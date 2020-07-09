@@ -18,10 +18,8 @@ const untildify: (value: string) => string = require('untildify');
 
 export class GlobalVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
-        @inject(IVirtualEnvironmentsSearchPathProvider)
-        @named('global')
         globalVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
+        serviceContainer: IServiceContainer
     ) {
         super(globalVirtualEnvPathProvider, serviceContainer, 'VirtualEnvService');
     }
@@ -32,7 +30,7 @@ export class GlobalVirtualEnvironmentsSearchPathProvider {
     private readonly currentProcess: ICurrentProcess;
     private readonly virtualEnvMgr: IVirtualEnvironmentManager;
 
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(serviceContainer: IServiceContainer) {
         this.config = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.virtualEnvMgr = serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
         this.currentProcess = serviceContainer.get<ICurrentProcess>(ICurrentProcess);

@@ -1,4 +1,3 @@
-import { inject } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { traceDecorators } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
@@ -35,7 +34,7 @@ export class PythonInterpreterLocatorService {
     private readonly interpreterLocatorHelper: IInterpreterLocatorHelper;
     private readonly _hasInterpreters: Deferred<boolean>;
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    constructor(private serviceContainer: IServiceContainer) {
         this._hasInterpreters = createDeferred<boolean>();
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
         this.interpreterLocatorHelper = serviceContainer.get<IInterpreterLocatorHelper>(IInterpreterLocatorHelper);

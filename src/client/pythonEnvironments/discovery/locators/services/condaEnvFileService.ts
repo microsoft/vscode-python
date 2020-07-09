@@ -8,7 +8,6 @@
  * More details: https://github.com/microsoft/vscode-python/issues/8886
  */
 
-import { inject } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
@@ -24,10 +23,10 @@ import { AnacondaCompanyName } from './conda';
  */
 export class CondaEnvFileService extends CacheableLocatorService {
     constructor(
-        @inject(IInterpreterHelper) private helperService: IInterpreterHelper,
-        @inject(ICondaService) private condaService: ICondaService,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
+        private helperService: IInterpreterHelper,
+        private condaService: ICondaService,
+        private fileSystem: IFileSystem,
+        serviceContainer: IServiceContainer
     ) {
         super('CondaEnvFileService', serviceContainer);
     }

@@ -1,4 +1,3 @@
-import { inject, named, optional } from 'inversify';
 import * as path from 'path';
 import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
@@ -9,7 +8,7 @@ import { IFileSystem, IPlatformService } from '../../../../common/platform/types
 import { IProcessServiceFactory } from '../../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
-import { IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE } from '../../../../interpreter/contracts';
+import { IInterpreterLocatorService } from '../../../../interpreter/contracts';
 import { InterpreterType, PythonInterpreter } from '../../../info';
 import { CondaEnvironmentInfo, CondaInfo } from './conda';
 import { parseCondaEnvFileContents } from './condaHelper';
@@ -53,16 +52,13 @@ export class CondaService {
     private isAvailable: boolean | undefined;
 
     constructor(
-        @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
-        @inject(IPlatformService) private platform: IPlatformService,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
-        @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IInterpreterLocatorService)
-        @named(WINDOWS_REGISTRY_SERVICE)
-        @optional()
+        private processServiceFactory: IProcessServiceFactory,
+        private platform: IPlatformService,
+        private fileSystem: IFileSystem,
+        private persistentStateFactory: IPersistentStateFactory,
+        private configService: IConfigurationService,
+        private disposableRegistry: IDisposableRegistry,
+        private readonly workspaceService: IWorkspaceService,
         private registryLookupForConda?: IInterpreterLocatorService
     ) {
         this.addCondaPathChangedHandler();
