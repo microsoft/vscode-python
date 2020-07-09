@@ -8,6 +8,9 @@ import { InterpreterType, PythonInterpreter } from '../../info';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
+// tslint:disable-next-line:no-suspicious-comment
+// TODO: Switch back to using IFileSystem.
+// https://github.com/microsoft/vscode-python/issues/11338
 export async function lookForInterpretersInDirectory(pathToCheck: string, _: IFileSystem): Promise<string[]> {
     // Technically, we should be able to use fs.getFiles().  However,
     // that breaks some tests.  So we stick with the broader behavior.
