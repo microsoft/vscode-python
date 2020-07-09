@@ -51,6 +51,7 @@ import {
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
+    IInteractiveWindowLoadable,
     IInteractiveWindowProvider,
     IJupyterDebugger,
     IJupyterKernelSpec,
@@ -63,12 +64,12 @@ import {
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
-import { getInteractiveIdentity, getInteractiveWindowTitle } from './identity';
+import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
 
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 
 @injectable()
-export class InteractiveWindow extends InteractiveBase implements IInteractiveWindow {
+export class InteractiveWindow extends InteractiveBase implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
@@ -85,12 +86,16 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public get owner(): Resource {
         return this._owner;
     }
+    public get submitters(): Uri[] {
+        return this._submitters;
+    }
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private waitingForExportCells: boolean = false;
     private trackedJupyterStart: boolean = false;
     private _owner: Uri | undefined;
-
+    private _identity: Uri = createInteractiveIdentity();
+    private _submitters: Uri[] = [];
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
@@ -180,8 +185,11 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     public async load(owner: Resource): Promise<void> {
-        // Set our owner
+        // Set our owner and first submitter
         this._owner = owner;
+        if (owner) {
+            this._submitters.push(owner);
+        }
 
         // Start the server as soon as we open
         this.ensureConnectionAndNotebook().ignoreErrors();
@@ -353,9 +361,9 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     protected async getNotebookIdentity(): Promise<INotebookIdentity> {
-        // Use the owner in the identity
+        // Use this identity for the lifetime of the notebook
         return {
-            resource: getInteractiveIdentity(this.owner),
+            resource: this._identity,
             type: 'interactive'
         };
     }
@@ -400,9 +408,16 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         if (this.owner && !this.fileSystem.arePathsSame(file.fsPath, this.owner.fsPath)) {
             sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
         }
-        // Update the owner for this window
-        this._owner = file;
-        this.setTitle(getInteractiveWindowTitle(file));
+        // Update the owner for this window if not already set
+        if (!this._owner) {
+            this._owner = file;
+            this.setTitle(getInteractiveWindowTitle(file));
+        }
+
+        // Add to the list of 'submitters' for this window.
+        if (!this._submitters.find((s) => this.fileSystem.arePathsSame(s.fsPath, file.fsPath))) {
+            this._submitters.push(file);
+        }
 
         // Make sure our web panel opens.
         await this.show();

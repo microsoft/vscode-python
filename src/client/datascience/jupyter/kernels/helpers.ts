@@ -24,7 +24,7 @@ export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpe
 }
 
 // Create a default kernelspec with the given display name
-export function createDefaultKernelSpec(displayName?: string): IJupyterKernelSpec {
+export function createDefaultKernelSpec(displayName?: string, pythonPath?: string): IJupyterKernelSpec {
     // This creates a default kernel spec. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
     const defaultSpec: Kernel.ISpecModel = {
@@ -32,7 +32,13 @@ export function createDefaultKernelSpec(displayName?: string): IJupyterKernelSpe
         language: 'python',
         display_name: displayName || 'Python 3',
         metadata: {},
-        argv: ['python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
+        argv: [
+            pythonPath ? pythonPath.replace(/\\/g, '\\\\') : 'python',
+            '-m',
+            'ipykernel_launcher',
+            '-f',
+            connectionFilePlaceholder
+        ],
         env: {},
         resources: {}
     };

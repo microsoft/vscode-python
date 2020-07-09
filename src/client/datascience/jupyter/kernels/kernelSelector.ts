@@ -439,7 +439,7 @@ export class KernelSelector {
 
     // When switching to an interpreter in raw kernel mode then just create a default kernelspec for that interpreter to use
     private async useInterpreterAndDefaultKernel(interpreter: PythonInterpreter): Promise<KernelSpecInterpreter> {
-        const kernelSpec = createDefaultKernelSpec(interpreter.displayName);
+        const kernelSpec = createDefaultKernelSpec(interpreter.displayName, interpreter.path);
         return { kernelSpec, interpreter };
     }
 

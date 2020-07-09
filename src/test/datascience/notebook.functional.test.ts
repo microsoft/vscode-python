@@ -27,7 +27,7 @@ import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
-import { getInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
+import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
@@ -308,7 +308,7 @@ suite('DataScience notebook tests', () => {
                     }
                     launchingFile = launchingFile || path.join(srcDirectory(), 'foo.py');
                     const notebook = await notebookProvider.getOrCreateNotebook({
-                        identity: getInteractiveIdentity(Uri.file(launchingFile))
+                        identity: getDefaultInteractiveIdentity()
                     });
 
                     if (notebook) {
@@ -889,7 +889,7 @@ suite('DataScience notebook tests', () => {
                 const nonCancelSource = new CancellationTokenSource();
                 const server = await jupyterExecution.connectToNotebookServer(undefined, nonCancelSource.token);
                 const notebook = server
-                    ? await server.createNotebook(baseUri, getInteractiveIdentity(undefined))
+                    ? await server.createNotebook(baseUri, getDefaultInteractiveIdentity())
                     : undefined;
                 assert.ok(notebook, 'Server not found with a cancel token that does not cancel');
 

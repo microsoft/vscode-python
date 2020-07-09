@@ -456,11 +456,6 @@ export interface IInteractiveWindowProvider {
      */
     readonly onDidChangeActiveInteractiveWindow: Event<IInteractiveWindow | undefined>;
     /**
-     * Gets the interactive window associated with the owner. If owner is undefined, looks for an un-owned interactive window.
-     * @param owner resource that might be associated with an interactive window.
-     */
-    get(owner: Resource): IInteractiveWindow | undefined;
-    /**
      * Gets or creates a new interactive window and associates it with the owner. If no owner, marks as a non associated.
      * @param owner file that started this interactive window
      */
@@ -512,6 +507,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly visible: boolean;
     readonly active: boolean;
     readonly owner: Resource;
+    readonly submitters: Uri[];
     closed: Event<IInteractiveWindow>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;

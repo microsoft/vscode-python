@@ -173,7 +173,6 @@ suite('Interactive window command listener', async () => {
         ).thenResolve();
         when(fileSystem.arePathsSame(anything(), anything())).thenReturn(true);
 
-        when(interactiveWindowProvider.get(anything())).thenReturn(interactiveWindow.object);
         when(interactiveWindowProvider.getOrCreate(anything())).thenResolve(interactiveWindow.object);
         when(notebookImporter.importFromFile(anything())).thenResolve('imported');
         const metadata: nbformat.INotebookMetadata = {

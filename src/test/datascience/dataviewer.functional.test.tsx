@@ -19,7 +19,7 @@ import {
     IDataViewerDataProvider,
     IDataViewerFactory
 } from '../../client/datascience/data-viewing/types';
-import { getInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
+import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import {
     IJupyterVariable,
     IJupyterVariableDataProviderFactory,
@@ -133,7 +133,7 @@ suite('DataScience DataViewer tests', () => {
     async function injectCode(code: string): Promise<void> {
         const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
         notebook = await notebookProvider.getOrCreateNotebook({
-            identity: getInteractiveIdentity(undefined)
+            identity: getDefaultInteractiveIdentity()
         });
         if (notebook) {
             const cells = await notebook.execute(code, Identifiers.EmptyFileName, 0, uuid());

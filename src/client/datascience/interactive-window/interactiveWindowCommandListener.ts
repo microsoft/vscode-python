@@ -33,8 +33,7 @@ import {
     INotebookProvider,
     IStatusProvider
 } from '../types';
-import { createNewInteractiveIdentity } from './identity';
-// import { createNewInteractiveIdentity } from './identity';
+import { createExportInteractiveIdentity } from './identity';
 
 @injectable()
 export class InteractiveWindowCommandListener implements IDataScienceCommandListener {
@@ -324,7 +323,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         try {
             const settings = this.configuration.getSettings(document.uri);
             // Create a new notebook
-            notebook = await this.notebookProvider.getOrCreateNotebook({ identity: createNewInteractiveIdentity() });
+            notebook = await this.notebookProvider.getOrCreateNotebook({ identity: createExportInteractiveIdentity() });
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(
                 ...(await Promise.all(

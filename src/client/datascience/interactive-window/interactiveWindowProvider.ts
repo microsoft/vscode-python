@@ -74,18 +74,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.id = uuid();
     }
 
-    public get(owner: Resource): IInteractiveWindow | undefined {
-        return this._windows.find((w) => {
-            if (!owner && w.owner) {
-                return true;
-            }
-            if (owner && w.owner && this.fileSystem.arePathsSame(owner.fsPath, w.owner.fsPath)) {
-                return true;
-            }
-            return false;
-        });
-    }
-
     public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
         // See if we already have a match
         let result = this.get(resource);
@@ -101,6 +89,21 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
 
     public dispose(): Promise<void> {
         return this.postOffice.dispose();
+    }
+
+    private get(owner: Resource): IInteractiveWindow | undefined {
+        return this._windows.find((w) => {
+            if (!owner && !w.owner) {
+                return true;
+            }
+            if (owner && w.owner && this.fileSystem.arePathsSame(owner.fsPath, w.owner.fsPath)) {
+                return true;
+            }
+            if (owner && !w.owner) {
+                return true; // This is the case where there's an unowned window
+            }
+            return false;
+        });
     }
 
     private create(resource: Resource): IInteractiveWindow {
@@ -182,6 +185,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 this.activeInteractiveWindowExecuteHandler = undefined;
             }
         }
+        this._windows = this._windows.filter((w) => w !== interactiveWindow);
         this.raiseOnDidChangeActiveInteractiveWindow();
     };
 

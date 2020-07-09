@@ -10,7 +10,7 @@ import { Uri } from 'vscode';
 import { IDocumentManager } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
-import { getInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
+import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import {
     IJupyterDebugService,
     IJupyterVariable,
@@ -137,7 +137,7 @@ export async function verifyCanFetchData<T>(
     const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
     const notebook = await notebookProvider.getOrCreateNotebook({
         getOnly: true,
-        identity: getInteractiveIdentity(undefined)
+        identity: getDefaultInteractiveIdentity()
     });
     expect(notebook).to.not.be.undefined;
     const variableList = await variableFetcher.getVariables(notebook!, {

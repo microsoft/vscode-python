@@ -69,10 +69,6 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
         return this.realProvider.windows;
     }
 
-    public get(resource: Resource): IInteractiveWindow | undefined {
-        return this.realProvider.get(resource);
-    }
-
     public getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
         return this.realProvider.getOrCreate(resource);
     }

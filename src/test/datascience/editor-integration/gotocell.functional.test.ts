@@ -16,7 +16,7 @@ import { IDataScienceSettings } from '../../../client/common/types';
 import * as CellFactory from '../../../client/datascience/cellFactory';
 import { Commands, Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { getInteractiveIdentity } from '../../../client/datascience/interactive-window/identity';
+import { getDefaultInteractiveIdentity } from '../../../client/datascience/interactive-window/identity';
 import {
     ICell,
     ICodeLensFactory,
@@ -104,7 +104,7 @@ suite('DataScience gotocell tests', () => {
             if (!server) {
                 return undefined;
             } else {
-                const uri = getInteractiveIdentity(undefined);
+                const uri = getDefaultInteractiveIdentity();
                 const nb: INotebook = await server.createNotebook(undefined, uri);
                 const listener = (codeLensFactory as any) as IInteractiveWindowListener;
                 listener.onMessage(InteractiveWindowMessages.NotebookIdentity, {
