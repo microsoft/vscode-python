@@ -34,13 +34,12 @@ export class InterpreterLocatorHelper {
 
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
         const deps = {
+            normalizeInterpreter: (i: PythonInterpreter) => normalizeInterpreter(i, { normalizePath: path.normalize }),
             arePathsSame: this.fs.arePathsSame,
-            getPipEnvInfo: this.pipEnvServiceHelper.getPipEnvInfo.bind(this.pipEnvServiceHelper),
-            normalizePath: path.normalize,
-            getPathDirname: path.dirname
+            getPathDirname: path.dirname,
+            getPipEnvInfo: this.pipEnvServiceHelper.getPipEnvInfo.bind(this.pipEnvServiceHelper)
         };
-        const normalized = interpreters.map((interp) => normalizeInterpreter(interp, deps));
-        const merged = mergeInterpreters(normalized, deps);
+        const merged = mergeInterpreters(interpreters, deps);
         await Promise.all(
             // At this point they are independent so we can update them separately.
             merged.map(async (interp) => updateInterpreter(interp, deps))
@@ -50,36 +49,20 @@ export class InterpreterLocatorHelper {
 }
 
 /**
- * Make a copy of the env info and standardize the data.
- *
- * @param interp = the env info to normalize
- * @param deps - functional dependencies
- * @prop deps.normalizePath - (like `path.normalize`)
- */
-function normalizeInterpreter(
-    interp: PythonInterpreter,
-    deps: {
-        normalizePath(p: string): string;
-    }
-): PythonInterpreter {
-    const normalized = { ...interp };
-    normalized.path = deps.normalizePath(interp.path);
-    return normalized;
-}
-
-/**
  * Combine env info for matching environments.
  *
  * Environments are matched by path and version.
  *
  * @param interpreters - the env infos to merge
  * @param deps - functional dependencies
+ * @prop deps.normalizeInterpreter - standardize the given env info
  * @prop deps.arePathsSame - determine if two filenames point to the same file
  * @prop deps.getPathDirname - (like `path.dirname`)
  */
 function mergeInterpreters(
     interpreters: PythonInterpreter[],
     deps: {
+        normalizeInterpreter(interp: PythonInterpreter): void;
         arePathsSame(p1: string, p2: string): boolean;
         getPathDirname(p: string): string;
     }
@@ -101,7 +84,9 @@ function mergeInterpreters(
             return false;
         });
         if (!existingItem) {
-            accumulator.push(current);
+            const copied: PythonInterpreter = { ...current };
+            deps.normalizeInterpreter(copied);
+            accumulator.push(copied);
         } else {
             // Preserve type information.
             // Possible we identified environment as unknown, but a later provider has identified env type.
@@ -126,6 +111,22 @@ function mergeInterpreters(
         }
         return accumulator;
     }, []);
+}
+
+/**
+ * Standardize the given env info.
+ *
+ * @param interp = the env info to normalize
+ * @param deps - functional dependencies
+ * @prop deps.normalizePath - (like `path.normalize`)
+ */
+function normalizeInterpreter(
+    interp: PythonInterpreter,
+    deps: {
+        normalizePath(p: string): string;
+    }
+): void {
+    interp.path = deps.normalizePath(interp.path);
 }
 
 /**
