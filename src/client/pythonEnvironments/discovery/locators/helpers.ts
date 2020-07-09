@@ -35,6 +35,7 @@ export class InterpreterLocatorHelper {
 
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
         const deps = {
+            updateInterpreter,
             areSameInterpreter: (i1: PythonInterpreter, i2: PythonInterpreter) =>
                 areSameInterpreter(i1, i2, {
                     areSameVersion,
@@ -50,7 +51,7 @@ export class InterpreterLocatorHelper {
         const merged = mergeInterpreters(interpreters, deps);
         await Promise.all(
             // At this point they are independent so we can update them separately.
-            merged.map(async (interp) => updateInterpreter(interp, deps))
+            merged.map(async (interp) => updateEnvInfo(interp, deps))
         );
         return merged;
     }
@@ -71,6 +72,7 @@ function mergeInterpreters(
     deps: {
         areSameInterpreter(i1: PythonInterpreter, i2: PythonInterpreter): boolean;
         normalizeInterpreter(i: PythonInterpreter): void;
+        updateInterpreter(i: PythonInterpreter, o: PythonInterpreter): void;
     }
 ): PythonInterpreter[] {
     return interpreters.reduce<PythonInterpreter[]>((accumulator, current) => {
@@ -80,26 +82,7 @@ function mergeInterpreters(
             deps.normalizeInterpreter(copied);
             accumulator.push(copied);
         } else {
-            // Preserve type information.
-            // Possible we identified environment as unknown, but a later provider has identified env type.
-            if (existingItem.type === InterpreterType.Unknown && current.type !== InterpreterType.Unknown) {
-                existingItem.type = current.type;
-            }
-            const props: (keyof PythonInterpreter)[] = [
-                'envName',
-                'envPath',
-                'path',
-                'sysPrefix',
-                'architecture',
-                'sysVersion',
-                'version'
-            ];
-            for (const prop of props) {
-                if (!existingItem[prop] && current[prop]) {
-                    // tslint:disable-next-line: no-any
-                    (existingItem as any)[prop] = current[prop];
-                }
-            }
+            deps.updateInterpreter(existingItem, current);
         }
         return accumulator;
     }, []);
@@ -191,13 +174,42 @@ function normalizeInterpreter(
 }
 
 /**
+ * Update one env info with another.
+ *
+ * @param interp - the info to update
+ * @param other - the info to copy in
+ */
+function updateInterpreter(interp: PythonInterpreter, other: PythonInterpreter): void {
+    // Preserve type information.
+    // Possible we identified environment as unknown, but a later provider has identified env type.
+    if (interp.type === InterpreterType.Unknown && other.type !== InterpreterType.Unknown) {
+        interp.type = other.type;
+    }
+    const props: (keyof PythonInterpreter)[] = [
+        'envName',
+        'envPath',
+        'path',
+        'sysPrefix',
+        'architecture',
+        'sysVersion',
+        'version'
+    ];
+    for (const prop of props) {
+        if (!interp[prop] && other[prop]) {
+            // tslint:disable-next-line: no-any
+            (interp as any)[prop] = other[prop];
+        }
+    }
+}
+
+/**
  * Update the given env info with extra information.
  *
  * @param interp - the env info to update
  * @param deps - functional dependencies
  * @prop deps.getPipEnvInfo - provides extra pip-specific env info, if applicable
  */
-async function updateInterpreter(
+async function updateEnvInfo(
     interp: PythonInterpreter,
     deps: {
         getPipEnvInfo(p: string): Promise<{ workspaceFolder: Uri; envName: string } | undefined>;
