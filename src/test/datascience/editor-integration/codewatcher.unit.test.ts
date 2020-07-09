@@ -100,7 +100,8 @@ suite('DataScience Code Watcher Unit Tests', () => {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            widgetScriptSources: []
+            widgetScriptSources: [],
+            interactiveWindowMode: 'single'
         };
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
         vscodeNotebook.setup((d) => d.activeNotebookEditor).returns(() => undefined);

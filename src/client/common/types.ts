@@ -400,7 +400,10 @@ export interface IDataScienceSettings {
     widgetScriptSources: WidgetCDNs[];
     alwaysScrollOnNewCell?: boolean;
     showKernelSelectionOnInteractiveWindow?: boolean;
+    interactiveWindowMode: InteractiveWindowMode;
 }
+
+export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
 
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
 

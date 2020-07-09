@@ -198,7 +198,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         await this.loadWebPanel(this.owner ? path.dirname(this.owner.fsPath) : process.cwd());
 
         // Update the title if possible
-        if (this.owner) {
+        if (this.owner && this.configService.getSettings().datascience.interactiveWindowMode === 'perFile') {
             this.setTitle(getInteractiveWindowTitle(this.owner));
         }
 
@@ -411,7 +411,11 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // Update the owner for this window if not already set
         if (!this._owner) {
             this._owner = file;
-            this.setTitle(getInteractiveWindowTitle(file));
+
+            // Update the title if we're in per file mode
+            if (this.configService.getSettings().datascience.interactiveWindowMode === 'perFile') {
+                this.setTitle(getInteractiveWindowTitle(file));
+            }
         }
 
         // Add to the list of 'submitters' for this window.

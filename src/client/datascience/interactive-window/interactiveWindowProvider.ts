@@ -8,7 +8,13 @@ import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry, Resource } from '../../common/types';
+import {
+    IAsyncDisposable,
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    Resource
+} from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../constants';
@@ -40,6 +46,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     }
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
     private activeInteractiveWindow: IInteractiveWindow | undefined;
+    private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
     private postOffice: PostOffice;
     private id: string;
     private pendingSyncs: Map<string, ISyncData> = new Map<string, ISyncData>();
@@ -51,7 +58,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {
         asyncRegistry.push(this);
 
@@ -92,6 +100,25 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     }
 
     private get(owner: Resource): IInteractiveWindow | undefined {
+        // Get algorithm depends upon interactive mode
+        const interactiveMode = this.configService.getSettings().datascience.interactiveWindowMode;
+
+        // Single mode means there's only ever one.
+        if (interactiveMode === 'single') {
+            return this._windows.length > 0 ? this._windows[0] : undefined;
+        }
+
+        // Multiple means use last active window or create a new one
+        // if not owned.
+        if (interactiveMode === 'multiple') {
+            // Owner being undefined means create a new window, othewise use
+            // the last active window.
+            return owner
+                ? this.activeInteractiveWindow || this.lastActiveInteractiveWindow || this._windows[0]
+                : undefined;
+        }
+
+        // Otherwise match the owner.
         return this._windows.find((w) => {
             if (!owner && !w.owner) {
                 return true;
@@ -100,7 +127,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 return true;
             }
             if (owner && !w.owner) {
-                return true; // This is the case where there's an unowned window
+                return true; // This is the case where there's an unowned window. Use it for this file now.
             }
             return false;
         });
@@ -131,6 +158,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     }
 
     private raiseOnDidChangeActiveInteractiveWindow() {
+        // Save the last window that was active
+        this.lastActiveInteractiveWindow = this.activeInteractiveWindow;
+
         // Find the active window
         this.activeInteractiveWindow = this._windows.find((w) => (w.active && w.visible ? true : false));
         this._onDidChangeActiveInteractiveWindow.fire(this.activeWindow);
@@ -178,14 +208,15 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     }
 
     private onInteractiveWindowClosed = (interactiveWindow: IInteractiveWindow) => {
+        this._windows = this._windows.filter((w) => w !== interactiveWindow);
         if (this.activeInteractiveWindow === interactiveWindow) {
             this.activeInteractiveWindow = undefined;
             if (this.activeInteractiveWindowExecuteHandler) {
                 this.activeInteractiveWindowExecuteHandler.dispose();
                 this.activeInteractiveWindowExecuteHandler = undefined;
             }
+            this.lastActiveInteractiveWindow = this._windows[0];
         }
-        this._windows = this._windows.filter((w) => w !== interactiveWindow);
         this.raiseOnDidChangeActiveInteractiveWindow();
     };
 

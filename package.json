@@ -2164,6 +2164,17 @@
                         ]
                     ]
                 },
+                "python.dataScience.interactiveWindowMode": {
+                    "type": "string",
+                    "enum": [
+                        "perFile",
+                        "single",
+                        "multiple"
+                    ],
+                    "scope": "machine",
+                    "description": "Behavior of the Python Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
+                    "default": "multiple"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,

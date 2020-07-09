@@ -5,7 +5,12 @@ import { inject, injectable } from 'inversify';
 
 import { ILiveShareApi } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IAsyncDisposableRegistry, IDisposableRegistry, Resource } from '../../client/common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    Resource
+} from '../../client/common/types';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
@@ -29,7 +34,8 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IFileSystem) readonly fileSystem: IFileSystem,
-        @inject(IDataScienceErrorHandler) readonly errorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) readonly errorHandler: IDataScienceErrorHandler,
+        @inject(IConfigurationService) readonly configService: IConfigurationService
     ) {
         this.realProvider = new InteractiveWindowProvider(
             liveShare,
@@ -37,7 +43,8 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
             asyncRegistry,
             disposables,
             fileSystem,
-            errorHandler
+            errorHandler,
+            configService
         );
 
         // During a test, the 'create' function will end up being called during a live share. We need to hook its result too

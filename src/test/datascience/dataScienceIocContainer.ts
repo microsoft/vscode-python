@@ -1400,7 +1400,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             variableQueries: [],
             jupyterCommandLineArguments: [],
             disableJupyterAutoStart: false,
-            widgetScriptSources: ['jsdelivr.com', 'unpkg.com']
+            widgetScriptSources: ['jsdelivr.com', 'unpkg.com'],
+            interactiveWindowMode: 'single'
         };
         pythonSettings.downloadLanguageServer = false;
         const folders = ['Envs', '.virtualenvs'];
