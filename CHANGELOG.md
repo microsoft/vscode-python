@@ -85,6 +85,8 @@
    ([#12588](https://github.com/Microsoft/vscode-python/issues/12588))
 1. Open variable explorer when opening variable explorer during debugging.
    ([#12773](https://github.com/Microsoft/vscode-python/issues/12773))
+1. Use the given interpreter for launching the non-daemon python
+   ([#12821](https://github.com/Microsoft/vscode-python/issues/12821))
 
 ### Code Health
 
