@@ -322,10 +322,15 @@ suite('DataScience notebook tests', () => {
                 }
             }
 
-            function addMockData(code: string, result: string | number, mimeType?: string, cellType?: string) {
+            function addMockData(
+                code: string,
+                result: string | number | undefined,
+                mimeType?: string,
+                cellType?: string
+            ) {
                 if (ioc.mockJupyter) {
                     if (cellType && cellType === 'error') {
-                        ioc.mockJupyter.addError(code, result.toString());
+                        ioc.mockJupyter.addError(code, `${result}`);
                     } else {
                         ioc.mockJupyter.addCell(code, result, mimeType);
                     }
@@ -1477,7 +1482,7 @@ plt.show()`,
 
             // tslint:disable-next-line: no-function-expression
             runTest('Notebook launch retry', async function (_this: Mocha.Context) {
-                // Skipping for now. Renable to test idle timeouts
+                // Skipping for now. Re-enable to test idle timeouts
                 _this.skip();
                 ioc.getSettings().datascience.jupyterLaunchRetries = 1;
                 ioc.getSettings().datascience.jupyterLaunchTimeout = 10000;
@@ -1496,6 +1501,19 @@ plt.show()`,
                     const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
                     await exec.dispose();
                 }
+            });
+
+            runTest('Startup commands', async () => {
+                ioc.getSettings().datascience.runStartupCommands = ['a=1', 'b=2'];
+                addMockData(`a=1\\nb=2`, undefined);
+                addMockData(`print(a)`, 1);
+                addMockData(`print(b)`, 2);
+
+                const notebook = await createNotebook();
+                assert.ok(notebook, 'did not create notebook');
+
+                await verifySimple(notebook, `print(a)`, 1);
+                await verifySimple(notebook, `print(b)`, 2);
             });
         });
     });
