@@ -87,6 +87,8 @@
    ([#12773](https://github.com/Microsoft/vscode-python/issues/12773))
 1. Use the given interpreter for launching the non-daemon python
    ([#12821](https://github.com/Microsoft/vscode-python/issues/12821))
+1. Correct the color of the 'Collapse All' button in the Interactive Window
+   ([#12838](https://github.com/microsoft/vscode-python/issues/12838))
 
 ### Code Health
 
