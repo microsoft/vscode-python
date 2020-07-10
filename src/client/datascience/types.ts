@@ -894,6 +894,7 @@ export interface ICellHash {
     hash: string;
     executionCount: number;
     id: string; // Cell id as sent to jupyter
+    timestamp: number;
 }
 
 export interface IFileHashes {

@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import { Identifiers } from '../../../../client/datascience/constants';
-import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    IFinishCell,
+    InteractiveWindowMessages
+} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { removeLinesFromFrontAndBack } from '../../../common';
 import { createCellVM, extractInputText, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
@@ -132,9 +135,12 @@ export namespace Creation {
         return arg.prevState;
     }
 
-    export function finishCell(arg: InteractiveReducerArg<ICell>): IMainState {
-        if (isCellSupported(arg.prevState, arg.payload.data)) {
-            return Helpers.updateOrAdd(arg, prepareCellVM);
+    export function finishCell(arg: InteractiveReducerArg<IFinishCell>): IMainState {
+        if (isCellSupported(arg.prevState, arg.payload.data.cell)) {
+            return Helpers.updateOrAdd(
+                { ...arg, payload: { ...arg.payload, data: arg.payload.data.cell } },
+                prepareCellVM
+            );
         }
         return arg.prevState;
     }

@@ -200,7 +200,8 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
                 trimmedRightCode: stripped.map((s) => s.replace(/[ \t\r]+\n$/g, '\n')).join(''),
                 realCode,
                 runtimeLine,
-                id: cell.id
+                id: cell.id,
+                timestamp: Date.now()
             };
 
             traceInfo(`Adding hash for ${expectedCount} = ${hash.hash} with ${stripped.length} lines`);

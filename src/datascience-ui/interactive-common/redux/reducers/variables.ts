@@ -3,12 +3,12 @@
 'use strict';
 import { Reducer } from 'redux';
 import {
+    IFinishCell,
     IInteractiveWindowMapping,
     InteractiveWindowMessages
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
 import {
-    ICell,
     IJupyterVariable,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
@@ -203,9 +203,9 @@ function handleRestarted(arg: VariableReducerArg): IVariableState {
     };
 }
 
-function handleFinishCell(arg: VariableReducerArg<ICell>): IVariableState {
-    const executionCount = arg.payload.data.data.execution_count
-        ? parseInt(arg.payload.data.data.execution_count.toString(), 10)
+function handleFinishCell(arg: VariableReducerArg<IFinishCell>): IVariableState {
+    const executionCount = arg.payload.data.cell.data.execution_count
+        ? parseInt(arg.payload.data.cell.data.execution_count.toString(), 10)
         : undefined;
 
     // If the variables are visible, refresh them

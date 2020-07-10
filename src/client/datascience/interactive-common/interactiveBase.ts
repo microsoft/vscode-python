@@ -209,12 +209,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.disposables.push(this.jupyterVariables.refreshRequired(this.refreshVariables.bind(this)));
     }
 
-    public async show(): Promise<void> {
+    public async show(preserveFocus: boolean = true): Promise<void> {
         // Verify a server that matches us hasn't started already
         this.checkForNotebookProviderConnection().ignoreErrors();
 
         // Show our web panel.
-        return super.show(true);
+        return super.show(preserveFocus);
     }
 
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
@@ -734,7 +734,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 case CellState.error:
                 case CellState.finished:
                     // Tell the react controls we're done
-                    this.postMessage(InteractiveWindowMessages.FinishCell, cell).ignoreErrors();
+                    this.getNotebookIdentity()
+                        .then((i) => {
+                            return this.postMessage(InteractiveWindowMessages.FinishCell, {
+                                cell,
+                                notebookIdentity: i.resource
+                            });
+                        })
+                        .ignoreErrors();
 
                     // Remove from the list of unfinished cells
                     this.unfinishedCells = this.unfinishedCells.filter((c) => c.id !== cell.id);
@@ -992,10 +999,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    private finishOutstandingCells() {
+    private async finishOutstandingCells() {
+        const identity = await this.getNotebookIdentity();
         this.unfinishedCells.forEach((c) => {
             c.state = CellState.error;
-            this.postMessage(InteractiveWindowMessages.FinishCell, c).ignoreErrors();
+            this.postMessage(InteractiveWindowMessages.FinishCell, {
+                cell: c,
+                notebookIdentity: identity.resource
+            }).ignoreErrors();
         });
         this.unfinishedCells = [];
         this.potentiallyUnfinishedStatus.forEach((s) => s.dispose());
@@ -1006,7 +1017,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.restartingKernel = true;
 
         // First we need to finish all outstanding cells.
-        this.finishOutstandingCells();
+        await this.finishOutstandingCells();
 
         // Set our status
         const status = this.statusProvider.set(

@@ -13,7 +13,14 @@ import { noop } from '../../common/utils/misc';
 import { generateCellRangesFromDocument, ICellRange } from '../cellFactory';
 import { CodeLensCommands, Commands, Identifiers } from '../constants';
 import { InteractiveWindowMessages, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
-import { ICell, ICodeLensFactory, IFileHashes, IInteractiveWindowListener, IInteractiveWindowProvider } from '../types';
+import {
+    ICell,
+    ICellHashProvider,
+    ICodeLensFactory,
+    IFileHashes,
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider
+} from '../types';
 import { getCellHashProvider } from './cellhashprovider';
 
 type CodeLensCacheData = {
@@ -27,6 +34,7 @@ type CodeLensCacheData = {
 type PerNotebookData = {
     cellExecutionCounts: Map<string, string>;
     documentExecutionCounts: Map<string, number>;
+    hashProvider: ICellHashProvider | undefined;
 };
 
 /**
@@ -194,7 +202,8 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     private createNotebookData(): PerNotebookData {
         return {
             cellExecutionCounts: new Map<string, string>(),
-            documentExecutionCounts: new Map<string, number>()
+            documentExecutionCounts: new Map<string, number>(),
+            hashProvider: undefined
         };
     }
 
@@ -233,15 +242,25 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         }
     }
 
+    private getHashProviders(): ICellHashProvider[] {
+        // Make sure all notebook data have their hash provider if possible.
+        [...this.notebookData.entries()].forEach((kvp) => {
+            if (!kvp[1].hashProvider) {
+                const window = this.interactiveWindowProvider.windows.find((w) => w.identity.toString() === kvp[0]);
+                if (window && window.notebook) {
+                    kvp[1].hashProvider = getCellHashProvider(window.notebook);
+                }
+            }
+        });
+        return [...this.notebookData.values()].filter((v) => v.hashProvider).map((v) => v.hashProvider!);
+    }
+
     private getHashes(): IFileHashes[] {
         // Get all of the hash providers and get all of their hashes
-        const providers = [...this.notebookData.keys()]
-            .map((k) => this.interactiveWindowProvider.windows.find((w) => w.identity.toString() === k))
-            .filter((w) => w)
-            .map((w) => getCellHashProvider(w!.notebook!));
+        const providers = this.getHashProviders();
 
         // Combine them together into one big array
-        return providers.map((p) => p!.getHashes()).reduce((p, c) => [...p, ...c]);
+        return providers && providers.length ? providers.map((p) => p!.getHashes()).reduce((p, c) => [...p, ...c]) : [];
     }
 
     private onClosedDocument(doc: TextDocument) {
@@ -414,10 +433,15 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     }
 
     private createExecutionLens(document: TextDocument, range: Range, hashes: IFileHashes[]) {
-        const list = hashes.find((h) => this.fileSystem.arePathsSame(h.file, document.fileName));
+        const list = hashes
+            .filter((h) => this.fileSystem.arePathsSame(h.file, document.fileName))
+            .map((f) => f.hashes)
+            .flat();
         if (list) {
             // Match just the start of the range. Should be - 2 (1 for 1 based numbers and 1 for skipping the comment at the top)
-            const rangeMatches = list.hashes.filter((h) => h.line - 2 === range.start.line);
+            const rangeMatches = list
+                .filter((h) => h.line - 2 === range.start.line)
+                .sort((a, b) => a.timestamp - b.timestamp);
             if (rangeMatches && rangeMatches.length) {
                 const rangeMatch = rangeMatches[rangeMatches.length - 1];
                 const matchingExecutionCount = this.findMatchingCellExecutionCount(rangeMatch.id);
