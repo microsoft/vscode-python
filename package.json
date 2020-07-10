@@ -2171,7 +2171,7 @@
                         "single",
                         "multiple"
                     ],
-                    "scope": "machine",
+                    "scope": "resource",
                     "description": "Behavior of the Python Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
                     "default": "multiple"
                 },
