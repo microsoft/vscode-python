@@ -98,13 +98,15 @@ suite('DataScience - Trust Command Handler', () => {
         assert.equal(contextKeySet.callCount, 1);
     });
     test('Executing command will not update trust after dismissing the prompt', async () => {
-        when(applicationShell.showErrorMessage(anything(), anything(), anything())).thenResolve(undefined as any);
+        when(applicationShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+            undefined as any
+        );
 
         await trustCommandHandler.activate();
         await clock.runAllAsync();
         await trustNotebookCommandCallback(Uri.file('a'));
 
-        verify(applicationShell.showErrorMessage(anything(), anything(), anything())).once();
+        verify(applicationShell.showErrorMessage(anything(), anything(), anything(), anything())).once();
         verify(trustService.trustNotebook(anything(), anything())).never();
         assert.isFalse(model.isTrusted);
     });
@@ -118,7 +120,7 @@ suite('DataScience - Trust Command Handler', () => {
         await clock.runAllAsync();
         await trustNotebookCommandCallback(Uri.file('a'));
 
-        verify(applicationShell.showErrorMessage(anything(), anything(), anything())).once();
+        verify(applicationShell.showErrorMessage(anything(), anything(), anything(), anything())).once();
         verify(trustService.trustNotebook(anything(), anything())).once();
         assert.isTrue(model.isTrusted);
     });
