@@ -63,6 +63,7 @@
         "onCommand:python.viewTestOutput",
         "onCommand:python.viewOutput",
         "onCommand:python.datascience.viewJupyterOutput",
+        "onCOmmand:python.datascience.export",
         "onCommand:python.datascience.exportAsPythonScript",
         "onCommand:python.datascience.exportToHTML",
         "onCommand:python.datascience.exportToPDF",
@@ -360,6 +361,15 @@
                 "command": "python.datascience.viewJupyterOutput",
                 "title": "%python.command.python.datascience.viewJupyterOutput.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.export",
+                "title": "%DataScience.notebookExportAs%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/export_to_python.svg",
+                    "dark": "resources/dark/export_to_python.svg"
+                }
             },
             {
                 "command": "python.datascience.exportAsPythonScript",
@@ -849,6 +859,12 @@
                     "title": "%python.command.python.datascience.restartkernel.title%",
                     "group": "navigation",
                     "when": "notebookEditorFocused"
+                },
+                {
+                    "command": "python.datascience.export",
+                    "title": "%DataScience.notebookExportAs%",
+                    "group": "navigation",
+                    "when": "notebookEditorFocused"
                 }
             ],
             "explorer/context": [
@@ -1234,6 +1250,12 @@
                 {
                     "command": "python.datascience.gatherquality",
                     "title": "%DataScience.gatherQuality%",
+                    "category": "Python",
+                    "when": "false"
+                },
+                {
+                    "command": "python.datascience.export",
+                    "title": "%DataScience.notebookExportAs%",
                     "category": "Python",
                     "when": "false"
                 }

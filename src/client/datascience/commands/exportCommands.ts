@@ -4,12 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { QuickPickItem, QuickPickOptions } from 'vscode';
+import { QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
+import { IFileSystem } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
+import { isUri } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { ExportManager } from '../export/exportManager';
@@ -27,7 +29,8 @@ export class ExportCommands implements IDisposable {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IExportManager) private exportManager: ExportManager,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider
+        @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider,
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (model) => this.export(model, ExportFormat.python));
@@ -55,9 +58,22 @@ export class ExportCommands implements IDisposable {
         this.disposables.push(disposable);
     }
 
-    private async export(model: INotebookModel, exportMethod?: ExportFormat, defaultFileName?: string) {
+    private async export(modelOrUri: Uri | INotebookModel, exportMethod?: ExportFormat, defaultFileName?: string) {
+        defaultFileName = typeof defaultFileName === 'string' ? defaultFileName : undefined;
+        let model: INotebookModel | undefined;
+        if (modelOrUri && isUri(modelOrUri)) {
+            const uri = modelOrUri;
+            const editor = this.notebookProvider.editors.find((item) =>
+                this.fs.arePathsSame(item.file.fsPath, uri.fsPath)
+            );
+            if (editor && editor.model) {
+                model = editor.model;
+            }
+        } else {
+            model = modelOrUri;
+        }
         if (!model) {
-            // if no model was passed then this was called from the command pallete,
+            // if no model was passed then this was called from the command palette,
             // so we need to get the active editor
             const activeEditor = this.notebookProvider.activeEditor;
             if (!activeEditor || !activeEditor.model) {
