@@ -13,7 +13,6 @@ import '../../common/extensions';
 import { IDisposableRegistry, IExperimentService } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { DataScience } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { Commands } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { INotebookEditorProvider, ITrustService } from '../types';
@@ -39,7 +38,6 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         const context = new ContextKey('python.datascience.trustfeatureenabled', this.commandManager);
         context.set(true).ignoreErrors();
         this.disposables.push(this.commandManager.registerCommand(Commands.TrustNotebook, this.onTrustNotebook, this));
-        this.disposables.push(this.commandManager.registerCommand(Commands.TrustedNotebook, noop));
     }
     @swallowExceptions('Trusting notebook')
     private async onTrustNotebook(uri?: Uri) {
