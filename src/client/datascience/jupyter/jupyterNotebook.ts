@@ -289,8 +289,8 @@ export class JupyterNotebookBase implements INotebook {
 
             // Convert to string in case we get an array of startup commands.
             if (Array.isArray(setting)) {
-                    setting = setting.join(`\n`);
-            } 
+                setting = setting.join(`\n`);
+            }
 
             if (setting) {
                 // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
