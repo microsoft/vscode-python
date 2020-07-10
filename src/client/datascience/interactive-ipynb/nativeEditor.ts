@@ -9,6 +9,8 @@ import {
     commands,
     Event,
     EventEmitter,
+    ExtensionKind,
+    extensions,
     Memento,
     Uri,
     ViewColumn,
@@ -86,8 +88,6 @@ import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 import type { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { ExtensionKind } from 'vscode';
-import { extensions } from 'vscode';
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { isTestExecution, PVSC_EXTENSION_ID, PYTHON_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
