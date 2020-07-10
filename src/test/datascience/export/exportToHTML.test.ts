@@ -3,9 +3,8 @@
 
 // tslint:disable: no-var-requires no-require-imports no-invalid-this no-any
 import { assert } from 'chai';
-import { CancellationTokenSource } from 'monaco-editor';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { ExportFormat, IExport } from '../../../client/datascience/export/types';
 import { IExtensionTestApi } from '../../common';
