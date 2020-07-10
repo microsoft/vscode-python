@@ -73,7 +73,7 @@ export class ExportCommands implements IDisposable {
             model = modelOrUri;
         }
         if (!model) {
-            // if no model was passed then this was called from the command pallette,
+            // if no model was passed then this was called from the command palette,
             // so we need to get the active editor
             const activeEditor = this.notebookProvider.activeEditor;
             if (!activeEditor || !activeEditor.model) {
