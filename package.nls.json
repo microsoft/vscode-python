@@ -370,6 +370,7 @@
     "DataScience.fetchingDataViewer": "Fetching data ...",
     "DataScience.noRowsInDataViewer": "No rows match current filter",
     "DataScience.jupyterServer": "Jupyter Server",
+    "DataScience.trustNotebookCommandTitle": "Trust notebook",
     "DataScience.notebookIsTrusted": "Trusted",
     "DataScience.notebookIsNotTrusted": "Not Trusted",
     "DataScience.noKernel": "No Kernel",

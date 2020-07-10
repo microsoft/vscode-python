@@ -8,12 +8,12 @@ import * as os from 'os';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
-import { ConfigurationService } from '../../client/common/configuration/service';
-import { ExperimentService } from '../../client/common/experiments/service';
-import { FileSystem } from '../../client/common/platform/fileSystem';
-import { IExtensionContext } from '../../client/common/types';
-import { DigestStorage } from '../../client/datascience/interactive-ipynb/digestStorage';
-import { TrustService } from '../../client/datascience/interactive-ipynb/trustService';
+import { ConfigurationService } from '../../../client/common/configuration/service';
+import { ExperimentService } from '../../../client/common/experiments/service';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { IExtensionContext } from '../../../client/common/types';
+import { DigestStorage } from '../../../client/datascience/interactive-ipynb/digestStorage';
+import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 
 suite('DataScience - TrustService', () => {
     let trustService: TrustService;

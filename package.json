@@ -695,6 +695,25 @@
                 "enablement": "python.datascience.notebookeditor.canrestartNotebookkernel"
             },
             {
+                "command": "python.datascience.notebookeditor.trust",
+                "title": "%DataScience.trustNotebookCommandTitle%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/un-trusted.svg",
+                    "dark": "resources/dark/un-trusted.svg"
+                },
+                "enablement": "notebookEditorFocused && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
+            },
+            {
+                "command": "python.datascience.notebookeditor.trusted",
+                "title": "%DataScience.notebookIsTrusted%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/trusted.svg",
+                    "dark": "resources/dark/trusted.svg"
+                }
+            },
+            {
                 "command": "python.datascience.notebookeditor.runallcells",
                 "title": "%python.command.python.datascience.notebookeditor.runallcells.title%",
                 "category": "Python"
@@ -859,6 +878,18 @@
                     "title": "%python.command.python.datascience.restartkernel.title%",
                     "group": "navigation",
                     "when": "notebookEditorFocused"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.trust",
+                    "title": "%DataScience.trustNotebookCommandTitle%",
+                    "group": "navigation@1",
+                    "when": "notebookEditorFocused && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.trusted",
+                    "title": "%DataScience.notebookIsTrusted%",
+                    "group": "navigation@1",
+                    "when": "notebookEditorFocused && python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
                 },
                 {
                     "command": "python.datascience.export",
@@ -1137,6 +1168,18 @@
                     "title": "%python.command.python.datascience.restartkernel.title%",
                     "category": "Python",
                     "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.trust",
+                    "title": "%DataScience.trustNotebookCommandTitle%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled && notebookEditorFocused && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.trusted",
+                    "title": "%DataScience.notebookIsTrusted%",
+                    "category": "Python",
+                    "when": "config.noExists"
                 },
                 {
                     "command": "python.datascience.notebookeditor.runallcells",
