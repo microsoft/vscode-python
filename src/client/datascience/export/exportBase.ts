@@ -37,9 +37,7 @@ export class ExportBase implements IExport {
 
         const oldFileExists = await this.fileSystem.fileExists(target.fsPath);
         let oldFileTime;
-        let oldFileContents;
         if (oldFileExists) {
-            oldFileContents = await this.fileSystem.readFile(target.fsPath);
             oldFileTime = (await this.fileSystem.stat(target.fsPath)).mtime;
         }
 
@@ -54,21 +52,10 @@ export class ExportBase implements IExport {
         });
 
         if (token.isCancellationRequested) {
-            if (oldFileExists) {
-                const newFileTime = (await this.fileSystem.stat(target.fsPath)).mtime;
-                if (newFileTime !== oldFileTime) {
-                    // need to restore old file if it existed
-                    await this.fileSystem.deleteFile(target.fsPath);
-                    if (oldFileContents) {
-                        await this.fileSystem.writeFile(target.fsPath, oldFileContents);
-                    }
-                }
-            } else {
-                try {
-                    await this.fileSystem.deleteFile(target.fsPath);
-                    // tslint:disable-next-line: no-empty
-                } catch {}
-            }
+            try {
+                await this.fileSystem.deleteFile(target.fsPath);
+                // tslint:disable-next-line: no-empty
+            } catch {}
             return;
         }
 
