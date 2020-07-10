@@ -148,7 +148,10 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
 
         // If the document execution count doesn't match, then our goto cell lenses are out of date
         const documentCounts = this.getDocumentExecutionCounts(key);
-        if (documentCounts.find((n) => !cache?.cachedExecutionCounts.has(n))) {
+        if (
+            documentCounts.length !== cache.cachedExecutionCounts.size ||
+            documentCounts.find((n) => !cache?.cachedExecutionCounts.has(n))
+        ) {
             cache.gotoCellLens = [];
             cache.cachedExecutionCounts = new Set<number>(documentCounts);
             needUpdate = true;

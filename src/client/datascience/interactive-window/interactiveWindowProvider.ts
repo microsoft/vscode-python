@@ -3,10 +3,9 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Memento, Uri } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Memento, Uri } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell, ILiveShareApi } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import {
@@ -204,7 +203,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
 
         const title =
-            mode === 'multiple'
+            mode === 'multiple' || (mode === 'perFile' && !resource)
                 ? localize.DataScience.interactiveWindowTitleFormat().format(`#${this._windows.length}`)
                 : undefined;
 
