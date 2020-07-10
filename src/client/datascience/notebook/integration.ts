@@ -12,13 +12,15 @@ import {
 } from '../../common/application/types';
 import { NotebookEditorSupport } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
-import { IDisposableRegistry, IExperimentsManager } from '../../common/types';
+import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { NotebookKernel } from './notebookKernel';
 import { NotebookOutputRenderer } from './renderer';
 import { INotebookContentProvider } from './types';
+
+const EditorAssociationUpdatedKey = 'EditorAssociationUpdatedToUseNotebooks';
 
 /**
  * This class basically registers the necessary providers and the like with VSC.
@@ -36,7 +38,8 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(NotebookOutputRenderer) private readonly renderer: NotebookOutputRenderer,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IExtensionContext) private readonly extensionContext: IExtensionContext
     ) {}
     public async activate(): Promise<void> {
         // This condition is temporary.
@@ -44,6 +47,10 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         // Once the API is final, we won't need to modify the package.json.
         if (this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
             await this.enableNotebooks();
+        } else {
+            // Possible user was in experiment, then they opted out. In this case we need to revert the changes made to the settings file.
+            // Again, this is temporary code.
+            await this.disableNotebooks();
         }
         if (this.env.channel !== 'insiders') {
             return;
@@ -95,6 +102,9 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             return;
         }
 
+        await this.enableDisableEditorAssociation(true);
+    }
+    private async enableDisableEditorAssociation(enable: boolean) {
         // This code is temporary.
         const settings = this.workspace.getConfiguration('workbench', undefined);
         const editorAssociations = settings.get('editorAssociations') as {
@@ -102,16 +112,45 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             filenamePattern: string;
         }[];
 
+        // Update the settings.
         if (
-            !Array.isArray(editorAssociations) ||
-            editorAssociations.length === 0 ||
-            !editorAssociations.find((item) => item.viewType === JupyterNotebookView)
+            enable &&
+            (!Array.isArray(editorAssociations) ||
+                editorAssociations.length === 0 ||
+                !editorAssociations.find((item) => item.viewType === JupyterNotebookView))
         ) {
             editorAssociations.push({
                 viewType: 'jupyter-notebook',
                 filenamePattern: '*.ipynb'
             });
-            await settings.update('editorAssociations', editorAssociations, ConfigurationTarget.Global);
+            await Promise.all([
+                this.extensionContext.globalState.update(EditorAssociationUpdatedKey, true),
+                settings.update('editorAssociations', editorAssociations, ConfigurationTarget.Global)
+            ]);
         }
+
+        // Revert the settings.
+        if (
+            !enable &&
+            this.extensionContext.globalState.get<boolean>(EditorAssociationUpdatedKey, false) &&
+            Array.isArray(editorAssociations) &&
+            editorAssociations.find((item) => item.viewType === JupyterNotebookView)
+        ) {
+            const updatedSettings = editorAssociations.filter((item) => item.viewType !== JupyterNotebookView);
+            await Promise.all([
+                this.extensionContext.globalState.update(EditorAssociationUpdatedKey, false),
+                settings.update('editorAssociations', updatedSettings, ConfigurationTarget.Global)
+            ]);
+        }
+    }
+    private async disableNotebooks() {
+        if (this.env.channel === 'stable') {
+            return;
+        }
+        // If we never modified the settings, then nothing to do.
+        if (!this.extensionContext.globalState.get<boolean>(EditorAssociationUpdatedKey, false)) {
+            return;
+        }
+        await this.enableDisableEditorAssociation(false);
     }
 }
