@@ -1,11 +1,12 @@
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
+import * as path from 'path';
+import { CancellationToken, Uri } from 'vscode';
 import { IFileSystem } from '../../common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IJupyterSubCommandExecutionService, INotebookImporter } from '../types';
-import { IExport } from './types';
+import { ExportFormat, IExport } from './types';
 
 @injectable()
 export class ExportBase implements IExport {
@@ -18,37 +19,55 @@ export class ExportBase implements IExport {
     ) {}
 
     // tslint:disable-next-line: no-empty
-    public async export(_source: Uri, _target: Uri): Promise<void> {}
+    public async export(_source: Uri, _target: Uri, _token: CancellationToken): Promise<void> {}
 
     @reportAction(ReportableAction.PerformingExport)
-    public async executeCommand(source: Uri, target: Uri, args: string[]): Promise<void> {
+    public async executeCommand(
+        source: Uri,
+        target: Uri,
+        format: ExportFormat,
+        token: CancellationToken
+    ): Promise<void> {
+        if (token.isCancellationRequested) {
+            return;
+        }
+
         const service = await this.getExecutionService(source);
         if (!service) {
             return;
         }
 
-        const oldFileExists = await this.fileSystem.fileExists(target.fsPath);
-        let oldFileTime;
-        if (oldFileExists) {
-            oldFileTime = (await this.fileSystem.stat(target.fsPath)).mtime;
+        if (token.isCancellationRequested) {
+            return;
         }
 
+        const tempTarget = await this.fileSystem.createTemporaryFile(path.extname(target.fsPath));
+        const args = [
+            source.fsPath,
+            '--to',
+            format,
+            '--output',
+            path.basename(tempTarget.filePath),
+            '--output-dir',
+            path.dirname(tempTarget.filePath)
+        ];
         const result = await service.execModule('jupyter', ['nbconvert'].concat(args), {
             throwOnStdErr: false,
-            encoding: 'utf8'
+            encoding: 'utf8',
+            token: token
         });
 
-        // Need to check if export failed, since throwOnStdErr is not an
-        // indicator of a failed export.
-        if (!(await this.fileSystem.fileExists(target.fsPath))) {
+        if (token.isCancellationRequested) {
+            tempTarget.dispose();
+            return;
+        }
+
+        try {
+            await this.fileSystem.copyFile(tempTarget.filePath, target.fsPath);
+        } catch {
             throw new Error(result.stderr);
-        } else if (oldFileExists) {
-            // If we exported to a file that already exists we need to check that
-            // this file was actually overridden during export
-            const newFileTime = (await this.fileSystem.stat(target.fsPath)).mtime;
-            if (newFileTime === oldFileTime) {
-                throw new Error(result.stderr);
-            }
+        } finally {
+            tempTarget.dispose();
         }
     }
 

@@ -51,27 +51,31 @@ export class ExportManager implements IExportManager {
             await this.exportUtil.removeSvgs(source);
         }
 
-        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
+        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`, true);
         try {
             switch (format) {
                 case ExportFormat.python:
-                    await this.exportToPython.export(source, target);
+                    await this.exportToPython.export(source, target, reporter.token);
                     break;
 
                 case ExportFormat.pdf:
-                    await this.exportToPDF.export(source, target);
+                    await this.exportToPDF.export(source, target, reporter.token);
                     break;
 
                 case ExportFormat.html:
-                    await this.exportToHTML.export(source, target);
+                    await this.exportToHTML.export(source, target, reporter.token);
                     break;
 
                 default:
                     break;
             }
         } finally {
-            reporter.dispose();
             tempDir.dispose();
+            reporter.dispose();
+        }
+
+        if (reporter.token.isCancellationRequested) {
+            return;
         }
 
         return target;

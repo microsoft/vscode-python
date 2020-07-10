@@ -40,7 +40,7 @@ suite('Data Science - Export Manager', () => {
         when(exportUtil.generateTempDir()).thenResolve({ path: 'test', dispose: () => {} });
         when(exportUtil.makeFileInDirectory(anything(), anything(), anything())).thenResolve('foo');
         when(fileSystem.createTemporaryFile(anything())).thenResolve(instance(tempFile));
-        when(exportPdf.export(anything(), anything())).thenResolve();
+        when(exportPdf.export(anything(), anything(), anything())).thenResolve();
         when(filePicker.getExportFileLocation(anything(), anything())).thenResolve(Uri.file('foo'));
         // tslint:disable-next-line: no-any
         when(reporter.createProgressIndicator(anything())).thenReturn(instance(mock<IDisposable>()) as any);

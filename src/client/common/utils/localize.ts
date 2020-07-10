@@ -331,7 +331,7 @@ export namespace DataScience {
         'DataScience.installingMissingDependencies',
         'Installing missing dependencies'
     );
-    export const performingExport = localize('DataScience.performingExport', 'Performing export');
+    export const performingExport = localize('DataScience.performingExport', 'Performing Export');
     export const convertingToPDF = localize('DataScience.convertingToPDF', 'Converting to PDF');
     export const exportNotebookToPython = localize(
         'DataScience.exportNotebookToPython',
