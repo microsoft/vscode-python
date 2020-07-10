@@ -88,6 +88,7 @@ export namespace Commands {
     export const MoveCellsUp = 'python.datascience.moveCellsUp';
     export const MoveCellsDown = 'python.datascience.moveCellsDown';
     export const ChangeCellToMarkdown = 'python.datascience.changeCellToMarkdown';
+    export const ChangeCellToCode = 'python.datascience.changeCellToCode';
     export const ScrollToCell = 'python.datascience.scrolltocell';
     export const CreateNewNotebook = 'python.datascience.createnewnotebook';
     export const ViewJupyterOutput = 'python.datascience.viewJupyterOutput';

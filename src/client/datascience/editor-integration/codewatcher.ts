@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import {
     CodeLens,
@@ -639,42 +640,82 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     public async changeCellToMarkdown(): Promise<void> {
+        return this.applyToCells(async (editor, cell, _) => {
+            return this.changeCellTo(editor, cell, 'markdown');
+        }).then(() => Promise.resolve());
+    }
+
+    public async changeCellToCode(): Promise<void> {
+        return this.applyToCells(async (editor, cell, _) => {
+            return this.changeCellTo(editor, cell, 'code');
+        }).then(() => Promise.resolve());
+    }
+
+    private async applyToCells(
+        callback: (editor: TextEditor, cell: ICellRange, cellIndex: number) => Thenable<boolean>
+    ): Promise<boolean> {
         const editor = this.documentManager.activeTextEditor;
-        const cell = this.getCellFromPosition();
-        if (editor && cell) {
-            if (cell.cell_type === 'markdown') {
-                return Promise.resolve();
-            }
+        const startEndCellIndex = this.getStartEndCellIndex(editor?.selection);
+        if (!editor || !startEndCellIndex) {
+            return Promise.resolve(false);
+        }
+        const cells = this.codeLensFactory.cells;
+        const startIndex = startEndCellIndex[0];
+        const endIndex = startEndCellIndex[1];
+        for (let cellIndex = startIndex; cellIndex <= endIndex; cellIndex += 1) {
+            await callback(editor, cells[cellIndex], cellIndex);
+        }
+        return Promise.resolve(true);
+    }
 
-            const cellMatcher = new CellMatcher(this.configService.getSettings(editor.document.uri).datascience);
-            const definitionLine = editor.document.lineAt(cell.range.start.line);
-            const definitionText = editor.document.getText(definitionLine.range);
-            const definitionMatch = cellMatcher.codeExecRegEx.exec(definitionText);
-            if (!definitionMatch) {
-                return Promise.resolve();
-            }
-            const definitionExtra = definitionMatch[definitionMatch.length - 1];
+    private async changeCellTo(editor: TextEditor, cell: ICellRange, toCellType: nbformat.CellType): Promise<boolean> {
+        // change cell from code -> markdown or markdown -> code
+        if (toCellType === 'raw') {
+            throw Error('Cell Type raw not implemented');
+        }
 
-            const cellMarker = this.getDefaultCellMarker(editor.document.uri);
-            const newDefinitionText = `${cellMarker} [markdown]${definitionExtra}`;
-            await editor.edit(async (editBuilder) => {
-                editBuilder.replace(definitionLine.range, newDefinitionText);
-                cell.cell_type = 'markdown';
-                if (cell.range.start.line < cell.range.end.line) {
-                    editor.selection = new Selection(
-                        cell.range.start.line + 1,
-                        0,
-                        cell.range.end.line,
-                        cell.range.end.character
-                    );
-                    // ensure all lines in markdown cell have a comment.
-                    // these are not included in the test because it's unclear
-                    // how TypeMoq works with them.
-                    await commands.executeCommand('editor.action.removeCommentLine');
+        // don't change cell type if already that type
+        if (cell.cell_type === toCellType) {
+            return Promise.resolve(false);
+        }
+        const cellMatcher = new CellMatcher(this.configService.getSettings(editor.document.uri).datascience);
+        const definitionLine = editor.document.lineAt(cell.range.start.line);
+        const definitionText = editor.document.getText(definitionLine.range);
+
+        // new definition text
+        const cellMarker = this.getDefaultCellMarker(editor.document.uri);
+        const definitionMatch =
+            toCellType === 'markdown'
+                ? cellMatcher.codeExecRegEx.exec(definitionText) // code -> markdown
+                : cellMatcher.markdownExecRegEx.exec(definitionText); // markdown -> code
+        if (!definitionMatch) {
+            return Promise.resolve(false);
+        }
+        const definitionExtra = definitionMatch[definitionMatch.length - 1];
+        const newDefinitionText =
+            toCellType === 'markdown'
+                ? `${cellMarker} [markdown]${definitionExtra}` // code -> markdown
+                : `${cellMarker}${definitionExtra}`; // markdown -> code
+
+        return editor.edit(async (editBuilder) => {
+            editBuilder.replace(definitionLine.range, newDefinitionText);
+            cell.cell_type = toCellType;
+            if (cell.range.start.line < cell.range.end.line) {
+                editor.selection = new Selection(
+                    cell.range.start.line + 1,
+                    0,
+                    cell.range.end.line,
+                    cell.range.end.character
+                );
+                // ensure all lines in markdown cell have a comment.
+                // these are not included in the test because it's unclear
+                // how TypeMoq works with them.
+                await commands.executeCommand('editor.action.removeCommentLine');
+                if (toCellType === 'markdown') {
                     await commands.executeCommand('editor.action.addCommentLine');
                 }
-            });
-        }
+            }
+        });
     }
 
     private async moveCellsDirection(directionUp: boolean): Promise<void> {
@@ -807,7 +848,10 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    private getStartEndCellIndex(selection: Selection): number[] | undefined {
+    private getStartEndCellIndex(selection?: Selection): number[] | undefined {
+        if (!selection) {
+            return undefined;
+        }
         let startCellIndex = this.getCellIndex(selection.start);
         let endCellIndex = startCellIndex;
         // handle if the selection is the same line, hence same cell

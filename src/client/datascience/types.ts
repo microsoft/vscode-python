@@ -638,6 +638,7 @@ export interface ICodeWatcher {
     moveCellsUp(): Promise<void>;
     moveCellsDown(): Promise<void>;
     changeCellToMarkdown(): Promise<void>;
+    changeCellToCode(): Promise<void>;
     debugCurrentCell(): Promise<void>;
 }
 

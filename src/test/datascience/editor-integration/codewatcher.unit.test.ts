@@ -2036,7 +2036,7 @@ testing_L3
 
         expect(mockTextEditor.document.getText()).to.equal(
             `testing_L0
-# %%
+# %% [markdown]
 testing_L2
 testing_L3
 # %% [markdown] extra
@@ -2053,7 +2053,7 @@ testing_L6
 
     test('Change cell to markdown no change', async () => {
         const text = `testing_L0
-# %%
+# %% [markdown]
 testing_L2
 testing_L3
 # %% [markdown] extra
@@ -2066,6 +2066,84 @@ testing_L6
         mockTextEditor.selection = new Selection(1, 2, 5, 5);
 
         await codeWatcher.changeCellToMarkdown();
+
+        expect(mockTextEditor.document.getText()).to.equal(text);
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(1);
+        expect(mockTextEditor.selection.anchor.character).to.equal(2);
+        expect(mockTextEditor.selection.active.line).to.equal(5);
+        expect(mockTextEditor.selection.active.character).to.equal(5);
+    });
+
+    test('Change cell to code', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %% [markdown]
+# testing_L2
+# testing_L3
+# %% [markdown] extra
+# # testing_L5
+# testing_L6
+
+`
+        );
+
+        mockTextEditor.selection = new Selection(1, 2, 5, 5);
+
+        await codeWatcher.changeCellToCode();
+
+        // NOTE: When running the function in real environment there
+        // are comment lines added in addition to the [markdown] definition.
+        // It is unclear with TypeMoq how to test this particular behavior because
+        // the external `commands.executeCommmands` is being proxied along with
+        // all subsequent calls. Essentially, I must rely on those functions
+        // being unit tested.
+        /*
+            actual expected = `testing_L0
+# %%
+testing_L2
+testing_L3
+# %% [markdown] extra
+# # testing_L5
+# testing_L6
+
+`
+        */
+
+        expect(mockTextEditor.document.getText()).to.equal(
+            `testing_L0
+# %%
+# testing_L2
+# testing_L3
+# %% extra
+# # testing_L5
+# testing_L6
+
+`
+        );
+        expect(mockTextEditor.selection.anchor.line).to.equal(5);
+        expect(mockTextEditor.selection.anchor.character).to.equal(0);
+        expect(mockTextEditor.selection.active.line).to.equal(8);
+        expect(mockTextEditor.selection.active.character).to.equal(0);
+    });
+
+    test('Change cell to code no change', async () => {
+        const text = `testing_L0
+# %%
+# testing_L2
+# testing_L3
+# %% extra
+# # testing_L5
+# testing_L6
+
+`;
+        const mockTextEditor = initializeMockTextEditor(codeWatcher, documentManager, text);
+
+        mockTextEditor.selection = new Selection(1, 2, 5, 5);
+
+        await codeWatcher.changeCellToCode();
 
         expect(mockTextEditor.document.getText()).to.equal(text);
 
