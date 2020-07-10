@@ -4,7 +4,7 @@
 // tslint:disable:no-any
 
 import * as md5 from 'md5';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { Event, EventEmitter, Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import '../../../../common/extensions';
 import { traceDecorators, traceVerbose } from '../../../../common/logger';
@@ -12,7 +12,6 @@ import { IDisposableRegistry, IPersistentStateFactory } from '../../../../common
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { IInterpreterLocatorService, IInterpreterWatcher } from '../../../../interpreter/contracts';
-import { IServiceContainer } from '../../../../ioc/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { PythonInterpreter } from '../../../info';
@@ -59,8 +58,11 @@ export class CacheableLocatorPromiseCache {
     }
 }
 
+type CacheableLocatorServiceOptions = { cachePerWorkspace: boolean };
+
 export abstract class CacheableLocatorService implements IInterpreterLocatorService {
     protected readonly _hasInterpreters: Deferred<boolean>;
+    private readonly cachePerWorkspace: boolean;
     private readonly promisesPerResource = new CacheableLocatorPromiseCache();
     private readonly handlersAddedToResource = new Set<string>();
     private readonly cacheKeyPrefix: string;
@@ -69,12 +71,16 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
 
     constructor(
         private readonly name: string,
-        protected readonly serviceContainer: IServiceContainer,
-        private cachePerWorkspace: boolean = false
+        private readonly workspaceFolders: WorkspaceFolder[] | undefined,
+        protected readonly disposableRegistry: IDisposableRegistry,
+        protected readonly persistentStateFactory: IPersistentStateFactory,
+        protected readonly workspaceService: IWorkspaceService,
+        options: CacheableLocatorServiceOptions = { cachePerWorkspace: false }
     ) {
         this._hasInterpreters = createDeferred<boolean>();
         this.cacheKeyPrefix = `INTERPRETERS_CACHE_v3_${name}`;
         this._didTriggerInterpreterSuggestions = false;
+        this.cachePerWorkspace = options.cachePerWorkspace;
     }
 
     public get didTriggerInterpreterSuggestions(): boolean {
@@ -145,7 +151,6 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         }
         this.handlersAddedToResource.add(cacheKey);
         const watchers = await this.getInterpreterWatchers(resource);
-        const disposableRegisry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         watchers.forEach((watcher) => {
             watcher.onDidCreate(
                 () => {
@@ -154,7 +159,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                     this.getInterpreters(resource).ignoreErrors();
                 },
                 this,
-                disposableRegisry
+                this.disposableRegistry
             );
         });
     }
@@ -165,11 +170,16 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     protected abstract getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]>;
     protected createPersistenceStore(resource?: Uri) {
         const cacheKey = this.getCacheKey(resource);
-        const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         if (this.cachePerWorkspace) {
-            return persistentFactory.createWorkspacePersistentState<PythonInterpreter[]>(cacheKey, undefined as any);
+            return this.persistentStateFactory.createWorkspacePersistentState<PythonInterpreter[]>(
+                cacheKey,
+                undefined as any
+            );
         } else {
-            return persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(cacheKey, undefined as any);
+            return this.persistentStateFactory.createGlobalPersistentState<PythonInterpreter[]>(
+                cacheKey,
+                undefined as any
+            );
         }
     }
     protected getCachedInterpreters(resource?: Uri): PythonInterpreter[] | undefined {
@@ -192,13 +202,12 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         if (!resource || !this.cachePerWorkspace) {
             return this.cacheKeyPrefix;
         }
-        // Ensure we have separate caches per workspace where necessary.Î
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        if (!Array.isArray(workspaceService.workspaceFolders)) {
+        // Ensure we have separate caches per workspace where necessary.
+        if (!Array.isArray(this.workspaceFolders)) {
             return this.cacheKeyPrefix;
         }
 
-        const workspace = workspaceService.getWorkspaceFolder(resource);
+        const workspace = this.workspaceService.getWorkspaceFolder(resource);
         return workspace ? `${this.cacheKeyPrefix}:${md5(workspace.uri.fsPath)}` : this.cacheKeyPrefix;
     }
 }
