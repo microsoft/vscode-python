@@ -86,9 +86,11 @@ import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 import type { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { ExtensionKind } from 'vscode';
+import { extensions } from 'vscode';
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { isTestExecution, PYTHON_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
+import { isTestExecution, PVSC_EXTENSION_ID, PYTHON_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
 import { EnableTrustedNotebooks } from '../../common/experiments/groups';
 import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
@@ -641,9 +643,17 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             } catch (err) {
                 traceError(err);
             }
-        } else if (selection === localize.DataScience.trustAllNotebooks()) {
             // Take the user to the settings UI where they can manually turn on the alwaysTrustNotebooks setting
-            commands.executeCommand('workbench.action.openSettings', 'python.dataScience.alwaysTrustNotebooks');
+        } else if (selection === localize.DataScience.trustAllNotebooks()) {
+            // If remote session, open remote settings specifically
+            if (extensions.getExtension(PVSC_EXTENSION_ID)?.extensionKind === ExtensionKind.Workspace) {
+                commands.executeCommand(
+                    'workbench.action.openRemoteSettings',
+                    'python.dataScience.alwaysTrustNotebooks'
+                );
+            } else {
+                commands.executeCommand('workbench.action.openUserSettings', 'python.dataScience.alwaysTrustNotebooks');
+            }
         }
     }
 
