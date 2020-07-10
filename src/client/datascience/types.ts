@@ -644,9 +644,9 @@ export interface ICodeWatcher {
 
 export const ICodeLensFactory = Symbol('ICodeLensFactory');
 export interface ICodeLensFactory {
-    cells: ICellRange[];
     updateRequired: Event<void>;
     createCodeLenses(document: TextDocument): CodeLens[];
+    getCellRanges(document: TextDocument): ICellRange[];
 }
 
 export enum CellState {

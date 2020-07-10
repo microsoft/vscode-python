@@ -42,7 +42,6 @@ type CodeLensCacheData = {
  */
 @injectable()
 export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowListener {
-    public cells: ICellRange[];
     private updateEvent: EventEmitter<void> = new EventEmitter<void>();
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
@@ -62,7 +61,6 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager
     ) {
-        this.cells = [];
         this.documentManager.onDidCloseTextDocument(this.onClosedDocument.bind(this));
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings.bind(this));
     }
@@ -132,6 +130,16 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     }
 
     public createCodeLenses(document: TextDocument): CodeLens[] {
+        const cache = this.getCodeLensCacheData(document);
+        return [...cache.documentLenses, ...cache.gotoCellLens];
+    }
+
+    public getCellRanges(document: TextDocument): ICellRange[] {
+        const cache = this.getCodeLensCacheData(document);
+        return cache.cellRanges;
+    }
+
+    private getCodeLensCacheData(document: TextDocument): CodeLensCacheData {
         // See if we have a cached version of the code lenses for this document
         const key = document.fileName.toLocaleLowerCase();
         let cache = this.codeLensCache.get(key);
@@ -206,10 +214,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                 }
             });
         }
-
-        this.cells = cache.cellRanges;
-
-        return [...cache.documentLenses, ...cache.gotoCellLens];
+        return cache;
     }
 
     private setIdentity(identity: INotebookIdentity) {

@@ -62,6 +62,7 @@ export class CodeWatcher implements ICodeWatcher {
     private version: number = -1;
     private fileName: string = '';
     private codeLenses: CodeLens[] = [];
+    private cells: ICellRange[] = [];
     private cachedSettings: IDataScienceSettings | undefined;
     private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
     private updateRequiredDisposable: IDisposable | undefined;
@@ -89,6 +90,7 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Use the factory to generate our new code lenses.
         this.codeLenses = this.codeLensFactory.createCodeLenses(document);
+        this.cells = this.codeLensFactory.getCellRanges(document);
 
         // Listen for changes
         this.updateRequiredDisposable = this.codeLensFactory.updateRequired(this.onCodeLensFactoryUpdated.bind(this));
@@ -487,7 +489,7 @@ export class CodeWatcher implements ICodeWatcher {
         const endCellIndex = startEndCellIndex[1];
         const isAnchorLessEqualActive = editor.selection.anchor.isBeforeOrEqual(editor.selection.active);
 
-        const cells = this.codeLensFactory.cells;
+        const cells = this.cells;
         const selections: Selection[] = [];
         for (let i = startCellIndex; i <= endCellIndex; i += 1) {
             const cell = cells[i];
@@ -531,7 +533,7 @@ export class CodeWatcher implements ICodeWatcher {
 
         const isAnchorLessThanActive = editor.selection.anchor.isBefore(editor.selection.active);
 
-        const cells = this.codeLensFactory.cells;
+        const cells = this.cells;
         const startCellIndex = startEndCellIndex[0];
         const endCellIndex = startEndCellIndex[1];
         const startCell = cells[startCellIndex];
@@ -592,7 +594,7 @@ export class CodeWatcher implements ICodeWatcher {
 
         const isAnchorLessEqualActive = editor.selection.anchor.isBeforeOrEqual(editor.selection.active);
 
-        const cells = this.codeLensFactory.cells;
+        const cells = this.cells;
         const startCellIndex = startEndCellIndex[0];
         const endCellIndex = startEndCellIndex[1];
         const startCell = cells[startCellIndex];
@@ -667,7 +669,7 @@ export class CodeWatcher implements ICodeWatcher {
         if (!editor || !startEndCellIndex) {
             return Promise.resolve(false);
         }
-        const cells = this.codeLensFactory.cells;
+        const cells = this.cells;
         const startIndex = startEndCellIndex[0];
         const endIndex = startEndCellIndex[1];
         for (let cellIndex = startIndex; cellIndex <= endIndex; cellIndex += 1) {
@@ -737,7 +739,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
         const startCellIndex = startEndCellIndex[0];
         const endCellIndex = startEndCellIndex[1];
-        const cells = this.codeLensFactory.cells;
+        const cells = this.cells;
         const startCell = cells[startCellIndex];
         const endCell = cells[endCellIndex];
         if (!startCell || !endCell) {
@@ -923,6 +925,7 @@ export class CodeWatcher implements ICodeWatcher {
         // Update our code lenses.
         if (this.document) {
             this.codeLenses = this.codeLensFactory.createCodeLenses(this.document);
+            this.cells = this.codeLensFactory.getCellRanges(this.document);
         }
         this.codeLensUpdatedEvent.fire();
     }
@@ -1017,11 +1020,11 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     private getCellIndex(position: Position): number {
-        return this.codeLensFactory.cells.findIndex((cell) => position && cell.range.contains(position));
+        return this.cells.findIndex((cell) => position && cell.range.contains(position));
     }
 
     private getCellFromIndex(index: number): ICellRange {
-        const cells = this.codeLensFactory.cells;
+        const cells = this.cells;
         const indexBounded = getIndex(index, cells.length);
         return cells[indexBounded];
     }
@@ -1036,7 +1039,7 @@ export class CodeWatcher implements ICodeWatcher {
         if (position) {
             const index = this.getCellIndex(position);
             if (index >= 0) {
-                return this.codeLensFactory.cells[index];
+                return this.cells[index];
             }
         }
     }
