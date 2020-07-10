@@ -42,7 +42,7 @@ export class ExportManager implements IExportManager {
         // exporting to certain formats the filename is used within the exported document as the title.
         const fileName = path.basename(target.fsPath, path.extname(target.fsPath));
         const tempDir = await this.exportUtil.generateTempDir();
-        const sourceFilePath = await this.exportUtil.makeFileInDirectory(model, fileName, tempDir.path);
+        const sourceFilePath = await this.exportUtil.makeFileInDirectory(model, `${fileName}.ipynb`, tempDir.path);
         const source = Uri.file(sourceFilePath);
 
         if (format === ExportFormat.pdf) {

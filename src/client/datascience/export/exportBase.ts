@@ -44,7 +44,7 @@ export class ExportBase implements IExport {
             throw new Error(result.stderr);
         } else if (oldFileExists) {
             // If we exported to a file that already exists we need to check that
-            // this file was actually overriden during export
+            // this file was actually overridden during export
             const newFileTime = (await this.fileSystem.stat(target.fsPath)).mtime;
             if (newFileTime === oldFileTime) {
                 throw new Error(result.stderr);
@@ -53,8 +53,13 @@ export class ExportBase implements IExport {
     }
 
     protected async getExecutionService(source: Uri): Promise<IPythonExecutionService | undefined> {
+        const interpreter = await this.jupyterService.getSelectedInterpreter();
+        if (!interpreter) {
+            return;
+        }
         return this.pythonExecutionFactory.createActivatedEnvironment({
             resource: source,
+            interpreter,
             allowEnvironmentFetchExceptions: false,
             bypassCondaExecution: true
         });
