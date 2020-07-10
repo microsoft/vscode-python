@@ -6,13 +6,12 @@ import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { sleep } from '../../common/utils/async';
-import { ICell, IDataScienceErrorHandler, INotebookExporter, INotebookModel, INotebookStorage } from '../types';
+import { ICell, INotebookExporter, INotebookModel, INotebookStorage } from '../types';
 
 @injectable()
 export class ExportUtil {
     constructor(
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(INotebookStorage) private notebookStorage: INotebookStorage,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter
     ) {}
@@ -44,12 +43,7 @@ export class ExportUtil {
     public async makeFileInDirectory(model: INotebookModel, fileName: string, dirPath: string): Promise<string> {
         const newFilePath = path.join(dirPath, fileName);
 
-        try {
-            const content = model ? model.getContent() : '';
-            await this.fileSystem.writeFile(newFilePath, content, 'utf-8');
-        } catch (e) {
-            await this.errorHandler.handleError(e);
-        }
+        await this.fileSystem.writeFile(newFilePath, model.getContent(), 'utf-8');
 
         return newFilePath;
     }
