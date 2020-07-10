@@ -369,7 +369,8 @@
                 "icon": {
                     "light": "resources/light/export_to_python.svg",
                     "dark": "resources/dark/export_to_python.svg"
-                }
+                },
+                "enablement": "notebookViewType == jupyter-notebook && python.datascience.isnotebooktrusted"
             },
             {
                 "command": "python.datascience.exportAsPythonScript",
@@ -880,7 +881,7 @@
                     "command": "python.datascience.export",
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation",
-                    "when": "notebookViewType == jupyter-notebook && python.datascience.isnotebooktrusted"
+                    "when": "notebookViewType == jupyter-notebook"
                 }
             ],
             "explorer/context": [
