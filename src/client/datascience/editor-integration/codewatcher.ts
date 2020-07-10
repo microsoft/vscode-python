@@ -982,16 +982,14 @@ export class CodeWatcher implements ICodeWatcher {
         if (currentRunCellLens) {
             // Move the next cell if allowed.
             if (advance) {
-                // Either use the next cell that we found, or add a new one into the document
-                let nextRange: Range;
-                if (!nextRunCellLens) {
-                    nextRange = this.createNewCell(currentRunCellLens.range);
+                if (nextRunCellLens) {
+                    this.advanceToRange(nextRunCellLens.range);
                 } else {
-                    nextRange = nextRunCellLens.range;
-                }
-
-                if (nextRange) {
-                    this.advanceToRange(nextRange);
+                    // insert new cell at bottom after current
+                    const editor = this.documentManager.activeTextEditor;
+                    if (editor) {
+                        await this.insertCell(editor, currentRunCellLens.range.end.line + 1);
+                    }
                 }
             }
 
@@ -1059,24 +1057,6 @@ export class CodeWatcher implements ICodeWatcher {
             const code = this.document.getText();
             await this.addCode(code, this.getFileName(), 0, undefined, debug);
         }
-    }
-
-    // User has picked run and advance on the last cell of a document
-    // Create a new cell at the bottom and put their selection there, ready to type
-    private createNewCell(currentRange: Range): Range {
-        const editor = this.documentManager.activeTextEditor;
-        const newPosition = new Position(currentRange.end.line + 3, 0); // +3 to account for the added spaces and to position after the new mark
-
-        if (editor) {
-            editor.edit((editBuilder) => {
-                editBuilder.insert(
-                    new Position(currentRange.end.line + 1, 0),
-                    `\n\n${this.getDefaultCellMarker(editor.document.uri)}\n`
-                );
-            });
-        }
-
-        return new Range(newPosition, newPosition);
     }
 
     // Advance the cursor to the selected range
