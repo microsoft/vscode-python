@@ -335,6 +335,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runMatchingCell(this.documentManager.activeTextEditor.selection, true);
     }
 
+    @captureTelemetry(Telemetry.AddEmptyCellToBottom)
     public async addEmptyCellToBottom(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (editor) {
@@ -342,6 +343,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    @captureTelemetry(Telemetry.RunCurrentCellAndAddBelow)
     public async runCurrentCellAndAddBelow(): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return Promise.resolve();
@@ -379,6 +381,7 @@ export class CodeWatcher implements ICodeWatcher {
         );
     }
 
+    @captureTelemetry(Telemetry.InsertCellBelowPosition)
     public async insertCellBelowPosition(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (editor && editor.selection.end) {
@@ -386,6 +389,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    @captureTelemetry(Telemetry.InsertCellBelow)
     public async insertCellBelow(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (editor && editor.selection) {
@@ -398,6 +402,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    @captureTelemetry(Telemetry.InsertCellAbove)
     public async insertCellAbove(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (editor && editor.selection) {
@@ -410,6 +415,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    @captureTelemetry(Telemetry.DeleteCells)
     public async deleteCells(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (!editor || !editor.selection) {
@@ -450,6 +456,7 @@ export class CodeWatcher implements ICodeWatcher {
             });
     }
 
+    @captureTelemetry(Telemetry.SelectCell)
     public async selectCell(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (editor && editor.selection) {
@@ -466,6 +473,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    @captureTelemetry(Telemetry.SelectCellContents)
     public async selectCellContents(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (!editor || !editor.selection) {
@@ -503,6 +511,7 @@ export class CodeWatcher implements ICodeWatcher {
         editor.selections = selections;
     }
 
+    @captureTelemetry(Telemetry.ExtendSelectionByCellAbove)
     public async extendSelectionByCellAbove(): Promise<void> {
         // This behaves similarly to excel "Extend Selection by One Cell Above".
         // The direction of the selection matters (i.e. where the active cursor)
@@ -563,6 +572,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    @captureTelemetry(Telemetry.ExtendSelectionByCellBelow)
     public async extendSelectionByCellBelow(): Promise<void> {
         // This behaves similarly to excel "Extend Selection by One Cell Above".
         // The direction of the selection matters (i.e. where the active cursor)
@@ -625,20 +635,24 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    @captureTelemetry(Telemetry.MoveCellsUp)
     public async moveCellsUp(): Promise<void> {
         return this.moveCellsDirection(true);
     }
 
+    @captureTelemetry(Telemetry.MoveCellsDown)
     public async moveCellsDown(): Promise<void> {
         return this.moveCellsDirection(false);
     }
 
+    @captureTelemetry(Telemetry.ChangeCellToMarkdown)
     public async changeCellToMarkdown(): Promise<void> {
         return this.applyToCells(async (editor, cell, _) => {
             return this.changeCellTo(editor, cell, 'markdown');
         }).then(() => Promise.resolve());
     }
 
+    @captureTelemetry(Telemetry.ChangeCellToCode)
     public async changeCellToCode(): Promise<void> {
         return this.applyToCells(async (editor, cell, _) => {
             return this.changeCellTo(editor, cell, 'code');
