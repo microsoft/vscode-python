@@ -21,3 +21,8 @@ export const IExportManagerFilePicker = Symbol('IExportManagerFilePicker');
 export interface IExportManagerFilePicker {
     getExportFileLocation(format: ExportFormat, source: Uri, defaultFileName?: string): Promise<Uri | undefined>;
 }
+
+export interface IExportArgs {
+    source: string;
+    method: string;
+}

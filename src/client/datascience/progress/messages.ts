@@ -19,7 +19,8 @@ const progressMessages = {
     [ReportableAction.InstallingMissingDependencies]: DataScience.installingMissingDependencies(),
     [ReportableAction.ExportNotebookToPython]: DataScience.exportNotebookToPython(),
     [ReportableAction.PerformingExport]: DataScience.performingExport(),
-    [ReportableAction.ConvertingToPDF]: DataScience.convertingToPDF()
+    [ReportableAction.ConvertingToPDF]: DataScience.convertingToPDF(),
+    [ReportableAction.CopyingFile]: DataScience.copyingFile()
 };
 
 /**

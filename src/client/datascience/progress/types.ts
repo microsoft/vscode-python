@@ -53,5 +53,6 @@ export enum ReportableAction {
     InstallingMissingDependencies = 'InstallingMissingDependencies',
     ExportNotebookToPython = 'ExportNotebookToPython',
     PerformingExport = 'PerformingExport',
-    ConvertingToPDF = 'ConvertingToPDF'
+    ConvertingToPDF = 'ConvertingToPDF',
+    CopyingFile = 'CopyingFile'
 }
