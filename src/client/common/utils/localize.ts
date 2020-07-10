@@ -333,7 +333,6 @@ export namespace DataScience {
     );
     export const performingExport = localize('DataScience.performingExport', 'Performing Export');
     export const convertingToPDF = localize('DataScience.convertingToPDF', 'Converting to PDF');
-    export const copyingFile = localize('DataScience.copyingFile', 'Copying File');
     export const exportNotebookToPython = localize(
         'DataScience.exportNotebookToPython',
         'Exporting Notebook to Python'

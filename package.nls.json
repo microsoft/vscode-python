@@ -23,7 +23,7 @@
     "DataScience.checkingIfImportIsSupported": "Checking if import is supported",
     "DataScience.installingMissingDependencies": "Installing missing dependencies",
     "DataScience.exportNotebookToPython": "Exporting Notebook to Python",
-    "DataScience.performingExport": "Performing export",
+    "DataScience.performingExport": "Performing Export",
     "DataScience.convertingToPDF": "Converting to PDF",
     "DataScience.exportHTMLQuickPickLabel": "HTML",
     "DataScience.exportPDFQuickPickLabel": "PDF",
