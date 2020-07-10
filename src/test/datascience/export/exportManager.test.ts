@@ -43,7 +43,7 @@ suite('Data Science - Export Manager', () => {
         when(exportPdf.export(anything(), anything(), anything())).thenResolve();
         when(filePicker.getExportFileLocation(anything(), anything())).thenResolve(Uri.file('foo'));
         // tslint:disable-next-line: no-any
-        when(reporter.createProgressIndicator(anything())).thenReturn(instance(mock<IDisposable>()) as any);
+        when(reporter.createProgressIndicator(anything(), anything())).thenReturn(instance(mock<IDisposable>()) as any);
         exporter = new ExportManager(
             instance(exportPdf),
             instance(exportHtml),
