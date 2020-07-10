@@ -337,14 +337,8 @@ export class CodeWatcher implements ICodeWatcher {
 
     public async addEmptyCellToBottom(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
-        const cellDelineator = this.getDefaultCellMarker(editor?.document.uri);
         if (editor) {
-            editor.edit((editBuilder) => {
-                editBuilder.insert(new Position(editor.document.lineCount, 0), `\n\n${cellDelineator}\n`);
-            });
-
-            const newPosition = new Position(editor.document.lineCount + 3, 0); // +3 to account for the added spaces and to position after the new mark
-            return this.advanceToRange(new Range(newPosition, newPosition));
+            return this.insertCell(editor, editor.document.lineCount + 1);
         }
     }
 
