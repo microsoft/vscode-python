@@ -42,7 +42,7 @@ import {
 } from '../interpreter/locators/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonInterpreterLocatorService } from './discovery/locators';
-import { InterpreterLocatorHelper } from './discovery/locators/helpers';
+import { mergeInterpreters } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
 import { CondaEnvironmentInfo, CondaInfo } from './discovery/locators/services/conda';
 import { CondaEnvFileService } from './discovery/locators/services/condaEnvFileService';
@@ -160,15 +160,13 @@ export function registerForIOC(serviceManager: IServiceManager) {
 
 @injectable()
 class InterpreterLocatorHelperProxy implements IInterpreterLocatorHelper {
-    private readonly impl: IInterpreterLocatorHelper;
     constructor(
-        @inject(IFileSystem) fs: IFileSystem,
-        @inject(IPipEnvServiceHelper) pipEnvServiceHelper: IPipEnvServiceHelper
-    ) {
-        this.impl = new InterpreterLocatorHelper(fs, pipEnvServiceHelper);
-    }
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper
+    ) {}
+
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
-        return this.impl.mergeInterpreters(interpreters);
+        return mergeInterpreters(interpreters, this.fs, this.pipEnvServiceHelper);
     }
 }
 
