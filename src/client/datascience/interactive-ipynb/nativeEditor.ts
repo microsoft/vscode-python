@@ -6,7 +6,6 @@ import * as path from 'path';
 import {
     CancellationToken,
     CancellationTokenSource,
-    commands,
     Event,
     EventEmitter,
     Memento,
@@ -98,7 +97,6 @@ import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 @injectable()
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
-    public readonly type: 'old' | 'custom' = 'custom';
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
@@ -140,6 +138,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get isDirty(): boolean {
         return this.model ? this.model.isDirty : false;
     }
+    public readonly type: 'old' | 'custom' = 'custom';
     public model: Readonly<INotebookModel> | undefined;
     protected savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     protected closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
@@ -152,6 +151,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private startupTimer: StopWatch = new StopWatch();
     private loadedAllCells: boolean = false;
     private executeCancelTokens = new Set<CancellationTokenSource>();
+    private previouslyNotTrusted: boolean = false;
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -227,6 +227,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         );
         asyncRegistry.push(this);
 
+        asyncRegistry.push(this.trustService.onDidSetNotebookTrust(this.monitorChangesToTrust, this));
         this.synchronizer.subscribeToUserActions(this, this.postMessage.bind(this));
     }
 
@@ -251,6 +252,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Sign up for dirty events
         model.changed(this.modelChanged.bind(this));
+        this.previouslyNotTrusted = model.isTrusted;
     }
 
     // tslint:disable-next-line: no-any
@@ -596,7 +598,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         }
     }
-
+    private async monitorChangesToTrust() {
+        if (this.previouslyNotTrusted && this.model?.isTrusted) {
+            this.previouslyNotTrusted = false;
+            // Tell UI to update main state
+            this.postMessage(InteractiveWindowMessages.TrustNotebookComplete).ignoreErrors();
+        }
+    }
     private renameVariableExplorerHeights(name: string, updatedName: string) {
         // Updates the workspace storage to reflect the updated name of the notebook
         // should be called if the name of the notebook changes
@@ -612,38 +620,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async launchNotebookTrustPrompt() {
-        const prompts = [
-            localize.DataScience.trustNotebook(),
-            localize.DataScience.doNotTrustNotebook(),
-            localize.DataScience.trustAllNotebooks()
-        ];
-        const selection = await this.applicationShell.showErrorMessage(
-            localize.DataScience.launchNotebookTrustPrompt(),
-            ...prompts
-        );
-        if (!selection) {
-            return;
-        }
-        if (this.model && selection === localize.DataScience.trustNotebook() && !this.model.isTrusted) {
-            try {
-                const contents = this.model.getContent();
-                await this.trustService.trustNotebook(this.model.file, contents);
-                // Update model trust
-                this.model.update({
-                    source: 'user',
-                    kind: 'updateTrust',
-                    oldDirty: this.model.isDirty,
-                    newDirty: this.model.isDirty,
-                    isNotebookTrusted: true
-                });
-                // Tell UI to update main state
-                await this.postMessage(InteractiveWindowMessages.TrustNotebookComplete);
-            } catch (err) {
-                traceError(err);
-            }
-        } else if (selection === localize.DataScience.trustAllNotebooks()) {
-            // Take the user to the settings UI where they can manually turn on the alwaysTrustNotebooks setting
-            commands.executeCommand('workbench.action.openSettings', 'python.dataScience.alwaysTrustNotebooks');
+        if (this.model && !this.model.isTrusted) {
+            await this.commandManager.executeCommand(Commands.TrustNotebook, this.model.file);
         }
     }
 

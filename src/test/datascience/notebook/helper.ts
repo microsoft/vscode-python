@@ -9,16 +9,30 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
-import { commands, Uri } from 'vscode';
-import { NotebookCell } from '../../../../types/vscode-proposed';
+import { instance, mock } from 'ts-mockito';
+import { commands, TextDocument, Uri } from 'vscode';
+import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { CellDisplayOutput } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IDisposable } from '../../../client/common/types';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
-import { findMappedNotebookCellModel } from '../../../client/datascience/notebook/helpers/cellMappers';
+import { Identifiers } from '../../../client/datascience/constants';
+import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
+import {
+    findMappedNotebookCellModel,
+    mapVSCNotebookCellsToNotebookCellModels
+} from '../../../client/datascience/notebook/helpers/cellMappers';
+import { createVSCNotebookCellDataFromCell } from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
-import { ICell, INotebookEditorProvider, INotebookModel, INotebookProvider } from '../../../client/datascience/types';
+import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
+import {
+    CellState,
+    ICell,
+    INotebookEditorProvider,
+    INotebookModel,
+    INotebookProvider
+} from '../../../client/datascience/types';
 import { createEventHandler, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
@@ -364,4 +378,62 @@ export async function saveActiveNotebook(disposables: IDisposable[]) {
     await commands.executeCommand('workbench.action.files.saveAll');
 
     await waitForCondition(async () => savedEvent.all.some((e) => e.kind === 'save'), 5_000, 'Not saved');
+}
+
+export function createNotebookModel(trusted: boolean, uri: Uri, nb?: Partial<nbformat.INotebookContent>) {
+    const nbJson: nbformat.INotebookContent = {
+        cells: [],
+        metadata: {
+            orig_nbformat: 4
+        },
+        nbformat: 4,
+        nbformat_minor: 4,
+        ...(nb || {})
+    };
+
+    const cells = nbJson.cells.map((c, index) => {
+        return {
+            id: `NotebookImport#${index}`,
+            file: Identifiers.EmptyFileName,
+            line: 0,
+            state: CellState.finished,
+            data: c
+        };
+    });
+    return new VSCodeNotebookModel(trusted, uri, JSON.parse(JSON.stringify(cells)));
+}
+
+export function createNotebookDocument(
+    model: INotebookModel,
+    viewType: string = JupyterNotebookView
+): NotebookDocument {
+    const doc: NotebookDocument = {
+        cells: [],
+        fileName: model.file.fsPath,
+        isDirty: false,
+        languages: [],
+        uri: model.file,
+        viewType,
+        metadata: {
+            cellEditable: model.isTrusted,
+            cellHasExecutionOrder: true,
+            cellRunnable: model.isTrusted,
+            editable: model.isTrusted,
+            runnable: model.isTrusted
+        }
+    };
+    model.cells.forEach((cell, index) => {
+        const vscCell = createVSCNotebookCellDataFromCell(model, cell)!;
+        const vscDocumentCell: NotebookCell = {
+            ...vscCell,
+            uri: model.file.with({ fragment: `cell${index}` }),
+            notebook: doc,
+            document: instance(mock<TextDocument>())
+        };
+        doc.cells.push(vscDocumentCell);
+    });
+    if (viewType === JupyterNotebookView) {
+        mapVSCNotebookCellsToNotebookCellModels(doc, model);
+    }
+    return doc;
 }

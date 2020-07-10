@@ -63,6 +63,7 @@
         "onCommand:python.viewTestOutput",
         "onCommand:python.viewOutput",
         "onCommand:python.datascience.viewJupyterOutput",
+        "onCOmmand:python.datascience.export",
         "onCommand:python.datascience.exportAsPythonScript",
         "onCommand:python.datascience.exportToHTML",
         "onCommand:python.datascience.exportToPDF",
@@ -360,6 +361,15 @@
                 "command": "python.datascience.viewJupyterOutput",
                 "title": "%python.command.python.datascience.viewJupyterOutput.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.export",
+                "title": "%DataScience.notebookExportAs%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/export_to_python.svg",
+                    "dark": "resources/dark/export_to_python.svg"
+                }
             },
             {
                 "command": "python.datascience.exportAsPythonScript",
@@ -685,6 +695,25 @@
                 "enablement": "python.datascience.notebookeditor.canrestartNotebookkernel"
             },
             {
+                "command": "python.datascience.notebookeditor.trust",
+                "title": "%DataScience.trustNotebookCommandTitle%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/un-trusted.svg",
+                    "dark": "resources/dark/un-trusted.svg"
+                },
+                "enablement": "notebookEditorFocused && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
+            },
+            {
+                "command": "python.datascience.notebookeditor.trusted",
+                "title": "%DataScience.notebookIsTrusted%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/trusted.svg",
+                    "dark": "resources/dark/trusted.svg"
+                }
+            },
+            {
                 "command": "python.datascience.notebookeditor.runallcells",
                 "title": "%python.command.python.datascience.notebookeditor.runallcells.title%",
                 "category": "Python"
@@ -847,6 +876,24 @@
                 {
                     "command": "python.datascience.notebookeditor.restartkernel",
                     "title": "%python.command.python.datascience.restartkernel.title%",
+                    "group": "navigation",
+                    "when": "notebookEditorFocused"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.trust",
+                    "title": "%DataScience.trustNotebookCommandTitle%",
+                    "group": "navigation@1",
+                    "when": "notebookEditorFocused && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.trusted",
+                    "title": "%DataScience.notebookIsTrusted%",
+                    "group": "navigation@1",
+                    "when": "notebookEditorFocused && python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
+                },
+                {
+                    "command": "python.datascience.export",
+                    "title": "%DataScience.notebookExportAs%",
                     "group": "navigation",
                     "when": "notebookEditorFocused"
                 }
@@ -1123,6 +1170,18 @@
                     "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
+                    "command": "python.datascience.notebookeditor.trust",
+                    "title": "%DataScience.trustNotebookCommandTitle%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled && notebookEditorFocused && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.trusted",
+                    "title": "%DataScience.notebookIsTrusted%",
+                    "category": "Python",
+                    "when": "config.noExists"
+                },
+                {
                     "command": "python.datascience.notebookeditor.runallcells",
                     "title": "%python.command.python.datascience.notebookeditor.runallcells.title%",
                     "category": "Python",
@@ -1234,6 +1293,12 @@
                 {
                     "command": "python.datascience.gatherquality",
                     "title": "%DataScience.gatherQuality%",
+                    "category": "Python",
+                    "when": "false"
+                },
+                {
+                    "command": "python.datascience.export",
+                    "title": "%DataScience.notebookExportAs%",
                     "category": "Python",
                     "when": "false"
                 }
@@ -2941,9 +3006,9 @@
                     "scope": "application"
                 },
                 "python.dataScience.runStartupCommands": {
-                    "type": "string",
+                    "type": "array",
                     "default": "",
-                    "description": "A series of Python instructions or iPython magic commands separated by '\\n' that will be executed when the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
+                    "description": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
                     "scope": "application"
                 },
                 "python.dataScience.debugJustMyCode": {

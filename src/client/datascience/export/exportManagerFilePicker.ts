@@ -27,16 +27,20 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
     ): Promise<Uri | undefined> {
         // map each export method to a set of file extensions
         let fileExtensions;
+        let extension: string | undefined;
         switch (format) {
             case ExportFormat.python:
                 fileExtensions = PythonExtensions;
+                extension = '.py';
                 break;
 
             case ExportFormat.pdf:
+                extension = '.pdf';
                 fileExtensions = PDFExtensions;
                 break;
 
             case ExportFormat.html:
+                extension = '.html';
                 fileExtensions = HTMLExtensions;
                 break;
 
@@ -44,11 +48,11 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
                 return;
         }
 
-        const notebookFileName = defaultFileName
+        const targetFileName = defaultFileName
             ? defaultFileName
-            : path.basename(source.fsPath, path.extname(source.fsPath));
+            : `${path.basename(source.fsPath, path.extname(source.fsPath))}${extension}`;
 
-        const dialogUri = Uri.file(path.join(this.getLastFileSaveLocation().fsPath, notebookFileName));
+        const dialogUri = Uri.file(path.join(this.getLastFileSaveLocation().fsPath, targetFileName));
         const options: SaveDialogOptions = {
             defaultUri: dialogUri,
             saveLabel: 'Export',

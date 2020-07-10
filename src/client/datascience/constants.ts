@@ -90,6 +90,8 @@ export namespace Commands {
     export const SaveAsNotebookNonCustomEditor = 'python.datascience.notebookeditor.saveAs';
     export const OpenNotebookNonCustomEditor = 'python.datascience.notebookeditor.open';
     export const GatherQuality = 'python.datascience.gatherquality';
+    export const TrustNotebook = 'python.datascience.notebookeditor.trust';
+    export const TrustedNotebook = 'python.datascience.notebookeditor.trusted';
     export const EnableLoadingWidgetsFrom3rdPartySource =
         'python.datascience.enableLoadingWidgetScriptsFromThirdPartySource';
 }

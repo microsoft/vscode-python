@@ -26,12 +26,12 @@ import { createCodeCell, createMarkdownCell } from '../../../../datascience-ui/c
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError, traceWarning } from '../../../common/logger';
 import { CellState, ICell, INotebookModel } from '../../types';
+import { JupyterNotebookView } from '../constants';
 import { mapVSCNotebookCellToCellModel } from './cellMappers';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { JupyterNotebookView } from '../constants';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 interface IBaseCellVSCodeMetadata {
@@ -61,11 +61,11 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
         cells,
         languages: [defaultLanguage],
         metadata: {
-            cellEditable: true,
-            cellRunnable: true,
-            editable: true,
+            cellEditable: model.isTrusted,
+            cellRunnable: model.isTrusted,
+            editable: model.isTrusted,
             cellHasExecutionOrder: true,
-            runnable: true,
+            runnable: model.isTrusted,
             displayOrder: [
                 'application/vnd.*',
                 'application/vdom.*',
@@ -172,23 +172,16 @@ export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: I
         runState = vscodeNotebookEnums.NotebookCellRunState.Success;
     }
 
-    const notebookCellData: NotebookCellData = {
-        cellKind:
-            cell.data.cell_type === 'code' ? vscodeNotebookEnums.CellKind.Code : vscodeNotebookEnums.CellKind.Markdown,
-        language: cell.data.cell_type === 'code' ? defaultCodeLanguage : MARKDOWN_LANGUAGE,
-        metadata: {
-            editable: true,
-            executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
-            hasExecutionOrder: cell.data.cell_type === 'code',
-            runState,
-            runnable: cell.data.cell_type === 'code'
-        },
-        source: concatMultilineStringInput(cell.data.source),
-        outputs
+    const notebookCellMetadata: NotebookCellMetadata = {
+        editable: model.isTrusted,
+        executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
+        hasExecutionOrder: cell.data.cell_type === 'code',
+        runState,
+        runnable: cell.data.cell_type === 'code' && model.isTrusted
     };
 
     if (statusMessage) {
-        notebookCellData.metadata.statusMessage = statusMessage;
+        notebookCellMetadata.statusMessage = statusMessage;
     }
     const vscodeMetadata = (cell.data.metadata.vscode as unknown) as IBaseCellVSCodeMetadata | undefined;
     const startExecutionTime = vscodeMetadata?.start_execution_time
@@ -199,12 +192,27 @@ export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: I
         : undefined;
 
     if (startExecutionTime && typeof endExecutionTime === 'number') {
-        notebookCellData.metadata.runStartTime = startExecutionTime;
-        notebookCellData.metadata.lastRunDuration = endExecutionTime - startExecutionTime;
+        notebookCellMetadata.runStartTime = startExecutionTime;
+        notebookCellMetadata.lastRunDuration = endExecutionTime - startExecutionTime;
     }
 
-    updateVSCNotebookCellMetadata(notebookCellData.metadata, cell);
-    return notebookCellData;
+    updateVSCNotebookCellMetadata(notebookCellMetadata, cell);
+
+    // If not trusted, then clear the output in VSC Cell.
+    // At this point we have the original output in the ICell.
+    if (!model.isTrusted) {
+        while (outputs.length) {
+            outputs.shift();
+        }
+    }
+    return {
+        cellKind:
+            cell.data.cell_type === 'code' ? vscodeNotebookEnums.CellKind.Code : vscodeNotebookEnums.CellKind.Markdown,
+        language: cell.data.cell_type === 'code' ? defaultCodeLanguage : MARKDOWN_LANGUAGE,
+        metadata: notebookCellMetadata,
+        source: concatMultilineStringInput(cell.data.source),
+        outputs
+    };
 }
 
 export function createVSCCellOutputsFromOutputs(outputs?: nbformat.IOutput[]): CellOutput[] {

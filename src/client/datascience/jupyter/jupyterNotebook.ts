@@ -285,9 +285,15 @@ export class JupyterNotebookBase implements INotebook {
             }
 
             // Run any startup commands that we specified. Support the old form too
-            const setting = settings.runStartupCommands || settings.runMagicCommands;
+            let setting = settings.runStartupCommands || settings.runMagicCommands;
+
+            // Convert to string in case we get an array of startup commands.
+            if (Array.isArray(setting)) {
+                setting = setting.join(`\n`);
+            }
+
             if (setting) {
-                // Cleanup the linefeeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
+                // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
                 const cleanedUp = setting.replace(/\\n/g, '\n');
                 const cells = await this.executeSilently(cleanedUp, cancelToken);
                 traceInfo(`Run startup code for notebook: ${cleanedUp} - results: ${cells.length}`);

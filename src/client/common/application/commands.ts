@@ -175,7 +175,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ExportAsPythonScript]: [INotebookModel];
     [DSCommands.ExportToHTML]: [INotebookModel, string | undefined];
     [DSCommands.ExportToPDF]: [INotebookModel, string | undefined];
-    [DSCommands.Export]: [INotebookModel, string | undefined];
+    [DSCommands.Export]: [Uri | INotebookModel, string | undefined];
     [DSCommands.SwitchJupyterKernel]: [INotebook | undefined, 'raw' | 'jupyter'];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
     [DSCommands.SaveNotebookNonCustomEditor]: [Uri];
@@ -183,4 +183,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.OpenNotebookNonCustomEditor]: [Uri];
     [DSCommands.GatherQuality]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [undefined | never];
+    [DSCommands.TrustNotebook]: [undefined | never | Uri];
+    [DSCommands.TrustedNotebook]: [undefined | never];
 }
