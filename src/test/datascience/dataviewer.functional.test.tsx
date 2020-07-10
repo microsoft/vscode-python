@@ -66,7 +66,7 @@ suite('DataScience DataViewer tests', () => {
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
         // Setup our webview panel
-        const wrapper = ioc.createWebView(
+        const mounted = ioc.createWebView(
             () => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} testMode={true} />),
             'default'
         );
@@ -77,7 +77,7 @@ suite('DataScience DataViewer tests', () => {
             IJupyterVariableDataProviderFactory
         );
 
-        return wrapper;
+        return mounted.wrapper;
     }
 
     teardown(async () => {

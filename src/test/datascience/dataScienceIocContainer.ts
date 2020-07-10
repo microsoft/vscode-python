@@ -1189,7 +1189,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     // tslint:disable:any
     public createWebView(
         mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
-        type: 'notebook' | 'default',
+        id: string,
         role: vsls.Role = vsls.Role.None
     ) {
         // Force the container to mock actual live share if necessary
@@ -1199,7 +1199,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
-        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(type, mount).wrapper;
+        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(id, mount);
     }
 
     public getDefaultWrapper() {
@@ -1313,7 +1313,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public addDocument(code: string, file: string) {
-        this.documentManager.addDocument(code, file);
+        return this.documentManager.addDocument(code, file);
     }
 
     public addInterpreter(newInterpreter: PythonInterpreter, commands: SupportedCommands) {

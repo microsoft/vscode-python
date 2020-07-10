@@ -37,7 +37,8 @@ export type WaitForMessageOptions = {
 
 // tslint:disable: no-any
 export interface IMountedWebView extends IWebPanel, IDisposable {
-    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
+    readonly id: string;
+    readonly wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
     postMessage(ev: WebPanelMessage): void;
     changeViewState(active: boolean, visible: boolean): void;
     addMessageListener(callback: (m: string, p: any) => void): void;

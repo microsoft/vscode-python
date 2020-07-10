@@ -6,10 +6,15 @@ import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
 import { Uri } from 'vscode';
 
+import { Resource } from '../../client/common/types';
+import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
-import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import { ICodeWatcher, IDataScienceCodeLensProvider, IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addMockData, getCellResults, mountWebView } from './testHelpers';
+import { addMockData, getCellResults, mountWebView, mountConnectedMainPanel } from './testHelpers';
+import { CodeLens } from 'vscode';
+import { ICommandManager } from '../../client/common/application/types';
+import { IMountedWebView } from './mountedWebView';
 
 export function getInteractiveCellResults(
     ioc: DataScienceIocContainer,
@@ -21,9 +26,46 @@ export function getInteractiveCellResults(
     return getCellResults(ioc, 'default', wrapper, 'InteractiveCell', updater);
 }
 
-export async function getOrCreateInteractiveWindow(ioc: DataScienceIocContainer): Promise<IInteractiveWindow> {
+let singleMountedView: IMountedWebView;
+export async function getOrCreateMountedInteractiveWindow(
+    ioc: DataScienceIocContainer,
+    id: string,
+    owner?: Resource,
+): Promise<{ window: InteractiveWindow; mount: IMountedWebView }> {
+    const wrapper =
+        ioc.getSettings().datascience.interactiveWindowMode === 'single' && singleMountedView
+            ? singleMountedView
+            : ioc.createWebView(() => mountConnectedMainPanel('interactive'), id)
+    singleInteractiveWrapper = wrapper;
     const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-    return (await interactiveWindowProvider.getOrCreate(undefined)) as InteractiveWindow;
+    const window = (await interactiveWindowProvider.getOrCreate(owner)) as InteractiveWindow;
+    return { window, wrapper };
+}
+
+export async function getOrCreateInteractiveWindow(
+    ioc: DataScienceIocContainer,
+    owner?: Resource
+): Promise<IInteractiveWindow> {
+    const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+    return (await interactiveWindowProvider.getOrCreate(owner)) as InteractiveWindow;
+}
+
+export function createCodeWatcher(
+    docText: string,
+    docName: string,
+    ioc: DataScienceIocContainer
+): ICodeWatcher | undefined {
+    const doc = ioc.addDocument(docText, docName);
+    const codeLensProvider = ioc.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
+    return codeLensProvider.getCodeWatcher(doc);
+}
+
+export async function runCodeLens(codeLens: CodeLens | undefined, ioc: DataScienceIocContainer): Promise<void> {
+    const commandManager = ioc.get<ICommandManager>(ICommandManager);
+    if (codeLens && codeLens.command) {
+        // tslint:disable-next-line: no-any
+        await commandManager.executeCommand(codeLens.command.command as any, codeLens.command.arguments);
+    }
 }
 
 export function closeInteractiveWindow(ioc: DataScienceIocContainer, window: IInteractiveWindow) {

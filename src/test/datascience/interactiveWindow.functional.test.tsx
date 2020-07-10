@@ -34,7 +34,10 @@ import {
     closeInteractiveWindow,
     getInteractiveCellResults,
     getOrCreateInteractiveWindow,
-    runMountedTest
+    getOrCreateMountedInteractiveWindow,
+    runMountedTest,
+    createCodeWatcher,
+    runCodeLens
 } from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockEditor } from './mockTextEditor';
@@ -60,6 +63,7 @@ import {
     verifyLastCellInputState,
     waitForMessage
 } from './testHelpers';
+import { vscode_datascience_helpers } from '../../client/common/process/internal/scripts';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Interactive Window output tests', () => {
@@ -1200,5 +1204,63 @@ for i in range(0, 100):
         await addCode(ioc, interactiveWrapper, 'a=1\na');
 
         verifyHtmlOnCell(interactiveWrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+    });
+    test('Multiple interactive windows', async () => {
+        ioc.forceDataScienceSettingsChanged({ interactiveWindowMode: 'multiple' });
+        const pair1 = await getOrCreateMountedInteractiveWindow(ioc, '1');
+        const pair2 = await getOrCreateMountedInteractiveWindow(ioc, '2');
+        assert.notEqual(pair1.window.title, pair2.window.title, 'Two windows were not created.');
+        assert.notEqual(pair1.mount.wrapper, pair2.mount.wrapper, 'Two windows were not created.');
+    });
+    test('Multiple executes go to last active window', async () => {
+        ioc.forceDataScienceSettingsChanged({ interactiveWindowMode: 'multiple' });
+        const pair1 = await getOrCreateMountedInteractiveWindow(ioc, '1');
+
+        // Run a cell from a document
+        const fooWatcher = createCodeWatcher(`# %%\nprint('foo')`, 'foo.py', ioc);
+        const lenses = fooWatcher?.getCodeLenses();
+        assert.equal(lenses?.length, 3, 'No code lenses found');
+        await runCodeLens(lenses ? lenses[0] : undefined, ioc);
+        verifyHtmlOnCell(pair1.mount.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
+
+        // Create another window, run a cell again
+        const pair2 = await getOrCreateMountedInteractiveWindow(ioc, '2');
+        await runCodeLens(lenses ? lenses[0] : undefined, ioc);
+        verifyHtmlOnCell(pair2.mount.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
+
+        // Make the first window active
+        pair2.mount.changeViewState(false, false);
+        pair1.mount.changeViewState(true, true);
+
+        // Run another file
+        const barWatcher = createCodeWatcher(`# %%\nprint('bar')`, 'bar.py', ioc);
+        const lenses2 = barWatcher?.getCodeLenses();
+        assert.equal(lenses2?.length, 3, 'No code lenses found');
+        await runCodeLens(lenses2 ? lenses2[0] : undefined, ioc);
+        verifyHtmlOnCell(pair1.mount.wrapper, 'InteractiveCell', '<span>bar</span>', CellPosition.Last);
+
+    });
+    test('Multiple files', async () => {
+        ioc.forceDataScienceSettingsChanged({ interactiveWindowMode: 'perFile' });
+        const pair1 = await getOrCreateMountedInteractiveWindow(ioc, '1');
+
+        // Run a cell from a document
+        const fooWatcher = createCodeWatcher(`# %%\nprint('foo')`, 'foo.py', ioc);
+        const lenses = fooWatcher?.getCodeLenses();
+        assert.equal(lenses?.length, 3, 'No code lenses found');
+        await runCodeLens(lenses ? lenses[0] : undefined, ioc);
+        verifyHtmlOnCell(pair1.mount.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
+
+        // Create another window, run a cell again
+        const pair2 = await getOrCreateMountedInteractiveWindow(ioc, '2');
+        await runCodeLens(lenses ? lenses[0] : undefined, ioc);
+        verifyHtmlOnCell(pair2.mount.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
+
+        // Make the first window active
+        pair2.mount.changeViewState(false, false);
+        pair1.mount.changeViewState(true, true);
+
+        await runCodeLens(lenses ? lenses[0] : undefined, ioc);
+        verifyHtmlOnCell(pair2.mount.wrapper, 'InteractiveCell', '<span>foo</span>', 2);
     });
 });
