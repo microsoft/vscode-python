@@ -1,14 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 
-import { ILiveShareApi } from '../../client/common/application/types';
+import { Memento } from 'vscode';
+import { IApplicationShell, ILiveShareApi } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import {
+    GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
+    IMemento,
     Resource
 } from '../../client/common/types';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
@@ -35,7 +38,9 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IFileSystem) readonly fileSystem: IFileSystem,
         @inject(IDataScienceErrorHandler) readonly errorHandler: IDataScienceErrorHandler,
-        @inject(IConfigurationService) readonly configService: IConfigurationService
+        @inject(IConfigurationService) readonly configService: IConfigurationService,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
+        @inject(IApplicationShell) readonly appShell: IApplicationShell
     ) {
         this.realProvider = new InteractiveWindowProvider(
             liveShare,
@@ -44,7 +49,9 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
             disposables,
             fileSystem,
             errorHandler,
-            configService
+            configService,
+            globalMemento,
+            appShell
         );
 
         // During a test, the 'create' function will end up being called during a live share. We need to hook its result too

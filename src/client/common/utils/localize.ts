@@ -322,6 +322,25 @@ export namespace DataScience {
         'DataScience.interactiveWindowTitleFormat',
         'Python Interactive - {0}'
     );
+
+    export const interactiveWindowModeBannerTitle = localize(
+        'DataScience.interactiveWindowModeBannerTitle',
+        'Do you want to open a new Python Interactive window for this file? [More Information](command:workbench.action.openSettings?%5B%22python.dataScience.interactiveWindowMode%22%5D).'
+    );
+
+    export const interactiveWindowModeBannerSwitchYes = localize(
+        'DataScience.interactiveWindowModeBannerSwitchYes',
+        'Yes'
+    );
+    export const interactiveWindowModeBannerSwitchAlways = localize(
+        'DataScience.interactiveWindowModeBannerSwitchAlways',
+        'Always'
+    );
+    export const interactiveWindowModeBannerSwitchNo = localize(
+        'DataScience.interactiveWindowModeBannerSwitchNo',
+        'No'
+    );
+
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');
     export const badWebPanelFormatString = localize(
         'DataScience.badWebPanelFormatString',

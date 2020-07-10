@@ -27,7 +27,7 @@ import type { Data as WebSocketData } from 'ws';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
-import { IAsyncDisposable, IDataScienceSettings, IDisposable, Resource } from '../common/types';
+import { IAsyncDisposable, IDataScienceSettings, IDisposable, InteractiveWindowMode, Resource } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
@@ -532,7 +532,8 @@ export interface IInteractiveWindow extends IInteractiveBase {
 }
 
 export interface IInteractiveWindowLoadable extends IInteractiveWindow {
-    load(owner: Resource, title?: string): Promise<void>;
+    load(owner: Resource, mode: InteractiveWindowMode, title?: string): Promise<void>;
+    changeMode(newMode: InteractiveWindowMode): void;
 }
 
 // For native editing, the provider acts like the IDocumentManager for normal docs

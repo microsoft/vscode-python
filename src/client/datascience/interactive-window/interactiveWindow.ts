@@ -24,6 +24,7 @@ import {
     IExperimentService,
     IExperimentsManager,
     IMemento,
+    InteractiveWindowMode,
     IPersistentStateFactory,
     Resource,
     WORKSPACE_MEMENTO
@@ -101,6 +102,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private _identity: Uri = createInteractiveIdentity();
     private _submitters: Uri[] = [];
     private pendingHasCell = new Map<string, Deferred<boolean>>();
+    private mode: InteractiveWindowMode = 'multiple';
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
@@ -189,9 +191,19 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return Promise.resolve();
     }
 
-    public async load(owner: Resource, title?: string): Promise<void> {
+    public changeMode(mode: InteractiveWindowMode): void {
+        if (this.mode !== mode) {
+            this.mode = mode;
+            if (this.owner && mode === 'perFile') {
+                this.setTitle(getInteractiveWindowTitle(this.owner));
+            }
+        }
+    }
+
+    public async load(owner: Resource, mode: InteractiveWindowMode, title?: string): Promise<void> {
         // Set our owner and first submitter
         this._owner = owner;
+        this.mode = mode;
         if (owner) {
             this._submitters.push(owner);
         }
@@ -203,7 +215,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         await this.loadWebPanel(this.owner ? path.dirname(this.owner.fsPath) : process.cwd());
 
         // Update the title if possible
-        if (this.owner && this.configService.getSettings().datascience.interactiveWindowMode === 'perFile') {
+        if (this.owner && mode === 'perFile') {
             this.setTitle(getInteractiveWindowTitle(this.owner));
         } else if (title) {
             this.setTitle(title);
@@ -438,7 +450,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             this._owner = file;
 
             // Update the title if we're in per file mode
-            if (this.configService.getSettings().datascience.interactiveWindowMode === 'perFile') {
+            if (this.mode === 'perFile') {
                 this.setTitle(getInteractiveWindowTitle(file));
             }
         }

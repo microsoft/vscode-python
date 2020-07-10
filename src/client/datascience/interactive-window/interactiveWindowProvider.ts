@@ -1,18 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Uri } from 'vscode';
+import { Event, EventEmitter, Memento, Uri } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi } from '../../common/application/types';
+import { ConfigurationTarget } from 'vscode';
+import { IApplicationShell, ILiveShareApi } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import {
+    GLOBAL_MEMENTO,
     IAsyncDisposable,
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
+    IMemento,
+    InteractiveWindowMode,
     Resource
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -32,6 +36,8 @@ interface ISyncData {
     waitable: Deferred<void>;
 }
 
+const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
+
 @injectable()
 export class InteractiveWindowProvider implements IInteractiveWindowProvider, IAsyncDisposable {
     public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
@@ -48,7 +54,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     private postOffice: PostOffice;
     private id: string;
     private pendingSyncs: Map<string, ISyncData> = new Map<string, ISyncData>();
-    private _windows: IInteractiveWindow[] = [];
+    private _windows: IInteractiveWindowLoadable[] = [];
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -56,7 +62,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {
         asyncRegistry.push(this);
 
@@ -80,11 +88,14 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     }
 
     public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
+        // Ask for a configuration change if appropriate
+        const mode = await this.getInteractiveMode(resource);
+
         // See if we already have a match
-        let result = this.get(resource);
+        let result = this.get(resource, mode);
         if (!result) {
             // No match. Create a new item.
-            result = this.create(resource);
+            result = this.create(resource, mode);
 
             // Wait for synchronization in liveshare
             await this.synchronize(result);
@@ -113,10 +124,45 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         }
     }
 
-    private get(owner: Resource): IInteractiveWindow | undefined {
-        // Get algorithm depends upon interactive mode
-        const interactiveMode = this.configService.getSettings().datascience.interactiveWindowMode;
+    private async getInteractiveMode(resource: Resource): Promise<InteractiveWindowMode> {
+        let result = this.configService.getSettings(resource).datascience.interactiveWindowMode;
 
+        // Ask user if still at default value and they're opening a second file.
+        if (
+            result === 'multiple' &&
+            resource &&
+            !this.globalMemento.get(AskedForPerFileSettingKey) &&
+            this._windows.length === 1
+        ) {
+            // See if the first window was tied to a file or not.
+            const firstWindow = this._windows.find((w) => w.owner);
+            if (firstWindow) {
+                this.globalMemento.update(AskedForPerFileSettingKey, true);
+                const questions = [
+                    localize.DataScience.interactiveWindowModeBannerSwitchYes(),
+                    localize.DataScience.interactiveWindowModeBannerSwitchNo()
+                ];
+                // Ask user if they'd like to switch to per file or not.
+                const response = await this.appShell.showInformationMessage(
+                    localize.DataScience.interactiveWindowModeBannerTitle(),
+                    ...questions
+                );
+                if (response === questions[0]) {
+                    result = 'perFile';
+                    firstWindow.changeMode(result);
+                    await this.configService.updateSetting(
+                        'dataScience.interactiveWindowMode',
+                        result,
+                        resource,
+                        ConfigurationTarget.Global
+                    );
+                }
+            }
+        }
+        return result;
+    }
+
+    private get(owner: Resource, interactiveMode: InteractiveWindowMode): IInteractiveWindow | undefined {
         // Single mode means there's only ever one.
         if (interactiveMode === 'single') {
             return this._windows.length > 0 ? this._windows[0] : undefined;
@@ -138,14 +184,11 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             if (owner && w.owner && this.fileSystem.arePathsSame(owner.fsPath, w.owner.fsPath)) {
                 return true;
             }
-            if (owner && !w.owner) {
-                return true; // This is the case where there's an unowned window. Use it for this file now.
-            }
             return false;
         });
     }
 
-    private create(resource: Resource): IInteractiveWindow {
+    private create(resource: Resource, mode: InteractiveWindowMode): IInteractiveWindow {
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
         const result = this.serviceContainer.get<IInteractiveWindowLoadable>(IInteractiveWindow);
@@ -161,12 +204,12 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
 
         const title =
-            this.configService.getSettings().datascience.interactiveWindowMode === 'multiple'
+            mode === 'multiple'
                 ? localize.DataScience.interactiveWindowTitleFormat().format(`#${this._windows.length}`)
                 : undefined;
 
         // Load in the background
-        result.load(resource, title).catch((e) => this.errorHandler.handleError(e));
+        result.load(resource, mode, title).catch((e) => this.errorHandler.handleError(e));
 
         return result;
     }
@@ -191,8 +234,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             // The other side is creating a interactive window. Create on this side. We don't need to show
             // it as the running of new code should do that.
             const owner = Uri.parse(args[2].toString());
-            if (!this.get(owner)) {
-                this.create(owner);
+            const mode = await this.getInteractiveMode(owner);
+            if (!this.get(owner, mode)) {
+                this.create(owner, mode);
             }
 
             // Tell the requestor that we got its message (it should be waiting for all peers to sync)
