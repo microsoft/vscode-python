@@ -1020,7 +1020,7 @@ export namespace DataScience {
     );
     export const usingPreviewNotebookWithOtherNotebookWarning = localize(
         'DataScience.usingPreviewNotebookWithOtherNotebookWarning',
-        'Using the Preview Notebook Editor along with the stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
+        'Opening the same file in the Preview Notebook Editor and stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
     );
     export const launchNotebookTrustPrompt = localize(
         'DataScience.launchNotebookTrustPrompt',
