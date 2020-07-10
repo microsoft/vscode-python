@@ -839,66 +839,6 @@
                 },
                 {
                     "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
-                    "command": "python.datascience.insertCellBelowPosition",
-                    "group": "Python2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
-                    "command": "python.datascience.insertCellBelow",
-                    "group": "Python2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
-                    "command": "python.datascience.insertCellAbove",
-                    "group": "Python2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
-                    "command": "python.datascience.deleteCells",
-                    "group": "Python2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
-                    "command": "python.datascience.selectCell",
-                    "group": "Python2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
-                    "command": "python.datascience.selectCellContents",
-                    "group": "Python2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
-                    "command": "python.datascience.extendSelectionByCellAbove",
-                    "group": "Python2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
-                    "command": "python.datascience.extendSelectionByCellBelow",
-                    "group": "Python2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
-                    "command": "python.datascience.moveCellsUp",
-                    "group": "Python2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
-                    "command": "python.datascience.moveCellsDown",
-                    "group": "Python2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
-                    "command": "python.datascience.changeCellToMarkdown",
-                    "group": "Python2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
-                    "command": "python.datascience.changeCellToCode",
-                    "group": "Python2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
                     "command": "python.datascience.runcurrentcell",
                     "group": "Python2"
                 },
