@@ -59,22 +59,25 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
             DataScience.doNotTrustNotebook(),
             DataScience.trustAllNotebooks()
         );
-        if (selection === DataScience.trustAllNotebooks()) {
-            commands.executeCommand('workbench.action.openSettings', 'python.dataScience.alwaysTrustNotebooks');
-            return;
+
+        switch (selection) {
+            case DataScience.trustAllNotebooks():
+                commands.executeCommand('workbench.action.openSettings', 'python.dataScience.alwaysTrustNotebooks');
+                break;
+            case DataScience.trustNotebook():
+                // Update model trust
+                model.update({
+                    source: 'user',
+                    kind: 'updateTrust',
+                    oldDirty: model.isDirty,
+                    newDirty: model.isDirty,
+                    isNotebookTrusted: true
+                });
+                const contents = model.getContent();
+                await this.trustService.trustNotebook(model.file, contents);
+                break;
+            default:
+                break;
         }
-        if (selection === DataScience.doNotTrustNotebook()) {
-            return;
-        }
-        // Update model trust
-        model.update({
-            source: 'user',
-            kind: 'updateTrust',
-            oldDirty: model.isDirty,
-            newDirty: model.isDirty,
-            isNotebookTrusted: true
-        });
-        const contents = model.getContent();
-        await this.trustService.trustNotebook(model.file, contents);
     }
 }
