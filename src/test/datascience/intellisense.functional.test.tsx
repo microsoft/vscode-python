@@ -198,43 +198,43 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
             inst.state.model!.setValue('');
         }
 
-        InteractiveHelpers.runMountedTest(
+        InteractiveHelpers.runTest(
             'Simple autocomplete',
-            async (wrapper) => {
+            async () => {
                 // Create an interactive window so that it listens to the results.
-                await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
+                const { mount } = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
 
                 // Then enter some code. Don't submit, we're just testing that autocomplete appears
-                const suggestion = waitForSuggestion(wrapper);
-                typeCode(getInteractiveEditor(wrapper), 'print');
+                const suggestion = waitForSuggestion(mount.wrapper);
+                typeCode(getInteractiveEditor(mount.wrapper), 'print');
                 await suggestion.promise;
                 suggestion.disposable.dispose();
-                verifyIntellisenseVisible(wrapper, 'print');
+                verifyIntellisenseVisible(mount.wrapper, 'print');
 
                 // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
                 // while we're destroying the editor.
-                clearEditor(wrapper);
+                clearEditor(mount.wrapper);
             },
             () => {
                 return ioc;
             }
         );
 
-        InteractiveHelpers.runMountedTest(
+        InteractiveHelpers.runTest(
             'Multiple interpreters',
-            async (wrapper) => {
+            async () => {
                 // Create an interactive window so that it listens to the results.
-                await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
+                const { mount } = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
 
                 // Then enter some code. Don't submit, we're just testing that autocomplete appears
-                let suggestion = waitForSuggestion(wrapper);
-                typeCode(getInteractiveEditor(wrapper), 'print');
+                let suggestion = waitForSuggestion(mount.wrapper);
+                typeCode(getInteractiveEditor(mount.wrapper), 'print');
                 await suggestion.promise;
                 suggestion.disposable.dispose();
-                verifyIntellisenseVisible(wrapper, 'print');
+                verifyIntellisenseVisible(mount.wrapper, 'print');
 
                 // Clear the code
-                const editor = getInteractiveEditor(wrapper);
+                const editor = getInteractiveEditor(mount.wrapper);
                 const inst = editor.instance() as MonacoEditor;
                 inst.state.model!.setValue('');
 
@@ -250,11 +250,11 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
                 }
 
                 // Type in again, make sure it works (should use the current interpreter in the server)
-                suggestion = waitForSuggestion(wrapper);
-                typeCode(getInteractiveEditor(wrapper), 'print');
+                suggestion = waitForSuggestion(mount.wrapper);
+                typeCode(getInteractiveEditor(mount.wrapper), 'print');
                 await suggestion.promise;
                 suggestion.disposable.dispose();
-                verifyIntellisenseVisible(wrapper, 'print');
+                verifyIntellisenseVisible(mount.wrapper, 'print');
 
                 // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
                 // while we're destroying the editor.
@@ -265,25 +265,25 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
             }
         );
 
-        InteractiveHelpers.runMountedTest(
+        InteractiveHelpers.runTest(
             'Jupyter autocomplete',
-            async (wrapper) => {
+            async () => {
                 if (ioc.mockJupyter) {
                     // This test only works when mocking.
 
                     // Create an interactive window so that it listens to the results.
-                    await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
+                    const { mount } = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
 
                     // Then enter some code. Don't submit, we're just testing that autocomplete appears
-                    const suggestion = waitForSuggestion(wrapper);
-                    typeCode(getInteractiveEditor(wrapper), 'print');
+                    const suggestion = waitForSuggestion(mount.wrapper);
+                    typeCode(getInteractiveEditor(mount.wrapper), 'print');
                     await suggestion.promise;
                     suggestion.disposable.dispose();
-                    verifyIntellisenseVisible(wrapper, 'printly');
+                    verifyIntellisenseVisible(mount.wrapper, 'printly');
 
                     // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
                     // while we're destroying the editor.
-                    clearEditor(wrapper);
+                    clearEditor(mount.wrapper);
                 }
             },
             () => {
@@ -291,28 +291,28 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
             }
         );
 
-        InteractiveHelpers.runMountedTest(
+        InteractiveHelpers.runTest(
             'Jupyter autocomplete not timeout',
-            async (wrapper) => {
+            async () => {
                 if (ioc.mockJupyter) {
                     // This test only works when mocking.
 
                     // Create an interactive window so that it listens to the results.
-                    await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
+                    const { mount } = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
 
                     // Force a timeout on the jupyter completions so that it takes some amount of time
                     ioc.mockJupyter.getCurrentSession()!.setCompletionTimeout(100);
 
                     // Then enter some code. Don't submit, we're just testing that autocomplete appears
-                    const suggestion = waitForSuggestion(wrapper);
-                    typeCode(getInteractiveEditor(wrapper), 'print');
+                    const suggestion = waitForSuggestion(mount.wrapper);
+                    typeCode(getInteractiveEditor(mount.wrapper), 'print');
                     await suggestion.promise;
                     suggestion.disposable.dispose();
-                    verifyIntellisenseVisible(wrapper, 'printly');
+                    verifyIntellisenseVisible(mount.wrapper, 'printly');
 
                     // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
                     // while we're destroying the editor.
-                    clearEditor(wrapper);
+                    clearEditor(mount.wrapper);
                 }
             },
             () => {
@@ -320,26 +320,26 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
             }
         );
 
-        InteractiveHelpers.runMountedTest(
+        InteractiveHelpers.runTest(
             'Filtered Jupyter autocomplete, verify magic commands appear',
-            async (wrapper) => {
+            async () => {
                 if (ioc.mockJupyter) {
                     // This test only works when mocking.
 
                     // Create an interactive window so that it listens to the results.
-                    await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
+                    const { mount } = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
 
                     // Then enter some code. Don't submit, we're just testing that autocomplete appears
-                    const suggestion = waitForSuggestion(wrapper);
-                    typeCode(getInteractiveEditor(wrapper), 'print');
-                    enterEditorKey(wrapper, { code: ' ', ctrlKey: true });
+                    const suggestion = waitForSuggestion(mount.wrapper);
+                    typeCode(getInteractiveEditor(mount.wrapper), 'print');
+                    enterEditorKey(mount.wrapper, { code: ' ', ctrlKey: true });
                     await suggestion.promise;
                     suggestion.disposable.dispose();
-                    verifyIntellisenseNotVisible(wrapper, '%%bash');
+                    verifyIntellisenseNotVisible(mount.wrapper, '%%bash');
 
                     // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
                     // while we're destroying the editor.
-                    clearEditor(wrapper);
+                    clearEditor(mount.wrapper);
                 }
             },
             () => {
@@ -347,26 +347,26 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
             }
         );
 
-        InteractiveHelpers.runMountedTest(
+        InteractiveHelpers.runTest(
             'Filtered Jupyter autocomplete, verify magic commands are filtered',
-            async (wrapper) => {
+            async () => {
                 if (ioc.mockJupyter) {
                     // This test only works when mocking.
 
                     // Create an interactive window so that it listens to the results.
-                    await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
+                    const { mount } = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
 
                     // Then enter some code. Don't submit, we're just testing that autocomplete appears
-                    const suggestion = waitForSuggestion(wrapper);
-                    typeCode(getInteractiveEditor(wrapper), ' ');
-                    enterEditorKey(wrapper, { code: ' ', ctrlKey: true });
+                    const suggestion = waitForSuggestion(mount.wrapper);
+                    typeCode(getInteractiveEditor(mount.wrapper), ' ');
+                    enterEditorKey(mount.wrapper, { code: ' ', ctrlKey: true });
                     await suggestion.promise;
                     suggestion.disposable.dispose();
-                    verifyIntellisenseVisible(wrapper, '%%bash');
+                    verifyIntellisenseVisible(mount.wrapper, '%%bash');
 
                     // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
                     // while we're destroying the editor.
-                    clearEditor(wrapper);
+                    clearEditor(mount.wrapper);
                 }
             },
             () => {
@@ -459,20 +459,20 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
             }
         );
 
-        InteractiveHelpers.runMountedTest(
+        InteractiveHelpers.runTest(
             'Hover on interactive',
-            async (wrapper) => {
+            async () => {
                 // Create an interactive window so that it listens to the results.
-                const window = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
+                const { window, mount } = await InteractiveHelpers.getOrCreateInteractiveWindow(ioc);
                 addMockData(ioc, 'a=1\na', 1);
                 addMockData(ioc, 'b=2\nb', 2);
 
-                await InteractiveHelpers.addCode(ioc, wrapper, 'a=1\na');
-                await InteractiveHelpers.addCode(ioc, wrapper, 'b=2\nb');
+                await InteractiveHelpers.addCode(ioc, 'a=1\na');
+                await InteractiveHelpers.addCode(ioc, 'b=2\nb');
 
                 // Cause a hover event over the first character
-                await waitForHover('Interactive', wrapper, 1, 1);
-                verifyHoverVisible('Interactive', wrapper, 'a=1\na\nb=2\nb');
+                await waitForHover('Interactive', mount.wrapper, 1, 1);
+                verifyHoverVisible('Interactive', mount.wrapper, 'a=1\na\nb=2\nb');
 
                 await InteractiveHelpers.closeInteractiveWindow(ioc, window);
             },

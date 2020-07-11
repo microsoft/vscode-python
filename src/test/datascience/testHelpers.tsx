@@ -458,8 +458,7 @@ export function verifyLastCellInputState(
 
 export async function getCellResults(
     ioc: DataScienceIocContainer,
-    type: 'notebook' | 'default',
-    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    mountId: string,
     cellType: string,
     updater: () => Promise<void>,
     renderPromiseGenerator?: () => Promise<void>
@@ -467,7 +466,7 @@ export async function getCellResults(
     // Get a render promise with the expected number of renders
     const renderPromise = renderPromiseGenerator
         ? renderPromiseGenerator()
-        : ioc.getWebPanel(type).waitForMessage(InteractiveWindowMessages.ExecutionRendered);
+        : ioc.getWebPanel(mountId).waitForMessage(InteractiveWindowMessages.ExecutionRendered);
 
     // Call our function to update the react control
     await updater();
@@ -476,10 +475,10 @@ export async function getCellResults(
     await renderPromise;
 
     // Update wrapper so that it gets the latest values.
-    wrapper.update();
+    ioc.getWebPanel(mountId).wrapper.update();
 
     // Return the result
-    return wrapper.find(cellType);
+    return ioc.getWebPanel(mountId).wrapper.find(cellType);
 }
 
 export function simulateKey(

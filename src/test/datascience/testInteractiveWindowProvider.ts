@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-
+import * as uuid from 'uuid/v4';
 import { Memento } from 'vscode';
 import { IApplicationShell, ILiveShareApi } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -12,7 +12,8 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IMemento,
-    Resource
+    Resource,
+    InteractiveWindowMode
 } from '../../client/common/types';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -24,13 +25,21 @@ import {
     IInteractiveWindowProvider
 } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
+import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { mountConnectedMainPanel } from './testHelpers';
+import { IMountedWebView } from './mountedWebView';
+
+export interface ITestInteractiveWindowProvider {
+    getMountedWebView(window: IInteractiveWindow): IMountedWebView;
+}
 
 @injectable()
-export class TestInteractiveWindowProvider implements IInteractiveWindowProvider {
+export class TestInteractiveWindowProvider implements IInteractiveWindowProvider, ITestInteractiveWindowProvider {
     public get onDidChangeActiveInteractiveWindow() {
         return this.realProvider.onDidChangeActiveInteractiveWindow;
     }
     private realProvider: InteractiveWindowProvider;
+    private windowToMountMap = new Map<string, string>();
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
@@ -40,7 +49,8 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
         @inject(IDataScienceErrorHandler) readonly errorHandler: IDataScienceErrorHandler,
         @inject(IConfigurationService) readonly configService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
-        @inject(IApplicationShell) readonly appShell: IApplicationShell
+        @inject(IApplicationShell) readonly appShell: IApplicationShell,
+        @inject(DataScienceIocContainer) readonly ioc: DataScienceIocContainer
     ) {
         this.realProvider = new InteractiveWindowProvider(
             liveShare,
@@ -59,8 +69,17 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
         // tslint:disable-next-line: no-any
         const fungible = this.realProvider as any;
         const origCreate = fungible.create.bind(fungible);
-        fungible.create = async () => {
-            const result = origCreate();
+        fungible.create = (resource: Resource, mode: InteractiveWindowMode) => {
+            // Generate the mount wrapper using a custom id
+            const id = uuid();
+            this.ioc.createWebView(() => mountConnectedMainPanel('interactive'), id);
+
+            // Call the real create.
+            const result = origCreate(resource, mode);
+
+            // Associate the real create with our id in order to find the wrapper
+            this.windowToMountMap.set(result.identity.toString(), id);
+
             // During testing the MainPanel sends the init message before our interactive window is created.
             // Pretend like it's happening now
             // tslint:disable-next-line: no-any
@@ -89,5 +108,13 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
 
     public getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
         return this.realProvider.getOrCreate(resource);
+    }
+
+    public getMountedWebView(window: IInteractiveWindow | undefined): IMountedWebView {
+        const key = window ? window.identity.toString() : this.windows[0].identity.toString();
+        if (!this.windowToMountMap.has(key)) {
+            throw new Error('Test Failure: Window not mounted yet.');
+        }
+        return this.ioc.getWebPanel(this.windowToMountMap.get(key)!);
     }
 }

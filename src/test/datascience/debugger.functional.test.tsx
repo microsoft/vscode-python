@@ -171,7 +171,7 @@ suite('DataScience Debugger tests', () => {
         const expectedBreakLine = breakpoint && !breakpointFile ? breakpoint.start.line : 2; // 2 because of the 'breakpoint()' that gets added
 
         // Debug this code. We should either hit the breakpoint or stop on entry
-        const resultPromise = getInteractiveCellResults(ioc, ioc.getWebPanel(type).wrapper, async () => {
+        const resultPromise = getInteractiveCellResults(ioc, async () => {
             let breakPromise = createDeferred<void>();
 
             // Make sure that our code lens provider has signaled a change before we check the lenses
@@ -183,7 +183,7 @@ suite('DataScience Debugger tests', () => {
             }
 
             disposables.push(jupyterDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
-            const done = history.debugCode(code, Uri.file(fileName), 0, docManager.activeTextEditor);
+            const done = history.window.debugCode(code, Uri.file(fileName), 0, docManager.activeTextEditor);
             await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
             if (expectError) {
                 assert.ok(lastErrorMessage, 'Error did not occur when expected');
@@ -248,7 +248,7 @@ suite('DataScience Debugger tests', () => {
                 noop();
             }
         }
-        await history.dispose();
+        await history.window.dispose();
     }
 
     function verifyCodeLenses(expectedBreakLine: number | undefined) {
@@ -335,11 +335,11 @@ suite('DataScience Debugger tests', () => {
             const expectedBreakLine = 2; // 2 because of the 'breakpoint()' that gets added
 
             // Debug this code. We should either hit the breakpoint or stop on entry
-            const resultPromise = getInteractiveCellResults(ioc, ioc.getDefaultWrapper()!, async () => {
+            const resultPromise = getInteractiveCellResults(ioc, async () => {
                 const breakPromise = createDeferred<void>();
                 disposables.push(jupyterDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
                 const targetUri = Uri.file(fileName);
-                const done = history.debugCode(code, targetUri, 0, docManager.activeTextEditor);
+                const done = history.window.debugCode(code, targetUri, 0, docManager.activeTextEditor);
                 await waitForPromise(
                     Promise.race([done, breakPromise.promise]),
                     ioc.getSettings().datascience.jupyterLaunchTimeout * 2 // Give restarts a chance
@@ -360,7 +360,7 @@ suite('DataScience Debugger tests', () => {
 
             const cellResults = await resultPromise;
             assert.ok(cellResults, 'No cell results after finishing debugging');
-            await history.dispose();
+            await history.window.dispose();
         },
         createIOC
     );

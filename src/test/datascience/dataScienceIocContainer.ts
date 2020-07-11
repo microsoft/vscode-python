@@ -541,6 +541,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         languageServerType: LanguageServerType = LanguageServerType.Microsoft
     ) {
         this.serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
+        this.serviceManager.addSingletonInstance<DataScienceIocContainer>(DataScienceIocContainer, this);
 
         // Save our language server type
         this.languageServerType = languageServerType;
@@ -1207,11 +1208,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public getDefaultWebPanel() {
-        return this.getWebPanel('default');
+        return this.get<TestInteractiveWindowProvider>(IInteractiveWindowProvider).getMountedWebView(undefined);
     }
 
-    public getWebPanel(type: 'notebook' | 'default') {
-        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).get(type);
+    public getWebPanel(id: string) {
+        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).get(id);
     }
 
     public postMessage(m: WebPanelMessage, type: 'notebook' | 'default') {
