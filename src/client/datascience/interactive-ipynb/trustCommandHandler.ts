@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
+import { commands, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
@@ -59,7 +59,11 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
             DataScience.doNotTrustNotebook(),
             DataScience.trustAllNotebooks()
         );
-        if (selection !== DataScience.trustNotebook() || model.isTrusted) {
+        if (selection === DataScience.trustAllNotebooks()) {
+            commands.executeCommand('workbench.action.openSettings', 'python.dataScience.alwaysTrustNotebooks');
+            return;
+        }
+        if (selection === DataScience.doNotTrustNotebook()) {
             return;
         }
         // Update model trust
