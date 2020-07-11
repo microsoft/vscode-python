@@ -252,7 +252,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Sign up for dirty events
         model.changed(this.modelChanged.bind(this));
-        this.previouslyNotTrusted = model.isTrusted;
+        this.previouslyNotTrusted = !model.isTrusted;
     }
 
     // tslint:disable-next-line: no-any
@@ -602,7 +602,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (this.previouslyNotTrusted && this.model?.isTrusted) {
             this.previouslyNotTrusted = false;
             // Tell UI to update main state
-            this.postMessage(InteractiveWindowMessages.TrustNotebookComplete).ignoreErrors();
+            await this.postMessage(InteractiveWindowMessages.TrustNotebookComplete);
         }
     }
     private renameVariableExplorerHeights(name: string, updatedName: string) {
