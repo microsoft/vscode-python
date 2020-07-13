@@ -25,7 +25,21 @@ export class DigestStorage implements IDigestStorage {
     public async saveDigest(uri: Uri, signature: string) {
         const fileLocation = await this.getFileLocation(uri);
         // Since the signature is a hex digest, the character 'z' is being used to delimit the start and end of a single digest
-        await this.fs.appendFile(fileLocation, `z${signature}z\n`);
+        try {
+            await this.fs.appendFile(fileLocation, `z${signature}z\n`);
+        } catch (err) {
+            // The nbsignatures dir is only initialized on extension activation.
+            // If the user deletes it to reset trust, the next attempt to trust
+            // an untrusted notebook in the same session will fail because the parent
+            // directory does not exist.
+            if (isFileNotFoundError(err)) {
+                // Gracefully recover from such errors by reinitializing directory and retrying
+                await this.initDir();
+                await this.fs.appendFile(fileLocation, `z${signature}z\n`);
+            } else {
+                traceError(err);
+            }
+        }
     }
 
     public async containsDigest(uri: Uri, signature: string) {
