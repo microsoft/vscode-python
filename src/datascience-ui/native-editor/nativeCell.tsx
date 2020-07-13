@@ -281,7 +281,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     // tslint:disable-next-line: cyclomatic-complexity max-func-body-length
     private keyDownInput = (cellId: string, e: IKeyboardEvent) => {
-        if (!this.isNotebookTrusted() && isNotWhitelistedCommand(e)) {
+        if (!this.isNotebookTrusted() && isNotCellNavigationKeyboardEvent(e)) {
             return;
         }
         const isFocusedWhenNotSuggesting = this.isFocused() && e.editorInfo && !e.editorInfo.isSuggesting;
@@ -890,7 +890,7 @@ export function getConnectedNativeCell() {
     return connect(null, actionCreators)(NativeCell);
 }
 
-function isNotWhitelistedCommand(e: IKeyboardEvent) {
+function isNotCellNavigationKeyboardEvent(e: IKeyboardEvent) {
     return (
         e.code !== 'Enter' &&
         e.code !== 'NumpadEnter' &&
