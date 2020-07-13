@@ -281,6 +281,9 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     // tslint:disable-next-line: cyclomatic-complexity max-func-body-length
     private keyDownInput = (cellId: string, e: IKeyboardEvent) => {
+        if (!this.isNotebookTrusted()) {
+            return;
+        }
         const isFocusedWhenNotSuggesting = this.isFocused() && e.editorInfo && !e.editorInfo.isSuggesting;
         switch (e.code) {
             case 'ArrowUp':
