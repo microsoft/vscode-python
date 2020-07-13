@@ -602,7 +602,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (this.previouslyNotTrusted && this.model?.isTrusted) {
             this.previouslyNotTrusted = false;
             // Tell UI to update main state
-            await this.postMessage(InteractiveWindowMessages.TrustNotebookComplete);
+            this.postMessage(InteractiveWindowMessages.TrustNotebookComplete).ignoreErrors();
         }
     }
     private renameVariableExplorerHeights(name: string, updatedName: string) {
