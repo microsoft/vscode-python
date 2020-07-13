@@ -869,19 +869,19 @@
                     "command": "python.datascience.notebookeditor.restartkernel",
                     "title": "%python.command.python.datascience.restartkernel.title%",
                     "group": "navigation",
-                    "when": "notebookViewType == jupyter-notebook"
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "python.datascience.notebookeditor.trust",
                     "title": "%DataScience.trustNotebookCommandTitle%",
                     "group": "navigation@1",
-                    "when": "notebookViewType == jupyter-notebook && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
                 },
                 {
                     "command": "python.datascience.export",
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation",
-                    "when": "notebookViewType == jupyter-notebook"
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook'"
                 }
             ],
             "explorer/context": [
