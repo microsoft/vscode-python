@@ -33,6 +33,11 @@
    ([#12732](https://github.com/Microsoft/vscode-python/issues/12732))
 1. Show a prompt asking user to upgrade Code runner to new version to keep using it when in Deprecate PythonPath experiment.
    ([#12764](https://github.com/Microsoft/vscode-python/issues/12764))
+1. Opening notebooks in the preview Notebook editor for [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/).
+   * Install Python extension in the latest [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/).
+   * Wait for `Python Extension` to get activated (e.g. open a `Python` file).
+   * Right click on an `*.ipynb (Jupyter Notebook)` file and select `Open in preview Notebook Editor`.
+   ([#10496](https://github.com/Microsoft/vscode-python/issues/10496))
 
 ### Fixes
 
@@ -119,6 +124,10 @@
    ([#12656](https://github.com/Microsoft/vscode-python/issues/12656))
 1. Add more telemetry for "Select Interpreter" command.
    ([#12722](https://github.com/Microsoft/vscode-python/issues/12722))
+1. Add tests for trusted notebooks.
+   ([#12554](https://github.com/Microsoft/vscode-python/issues/12554))
+1. Update categories in `package.json`.
+   ([#12844](https://github.com/Microsoft/vscode-python/issues/12844))
 
 ### Thanks
 
