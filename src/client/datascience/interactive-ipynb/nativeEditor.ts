@@ -252,7 +252,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Sign up for dirty events
         model.changed(this.modelChanged.bind(this));
-        this.previouslyNotTrusted = model.isTrusted;
+        this.previouslyNotTrusted = !model.isTrusted;
     }
 
     // tslint:disable-next-line: no-any
