@@ -24,7 +24,12 @@ export class TerminalProvider implements Disposable {
         const configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const pythonSettings = configuration.getSettings(this.activeResourceService.getActiveResource());
 
-        if (pythonSettings.terminal.activateEnvInCurrentTerminal) {
+        const shouldActivate =
+            currentTerminal &&
+            'hideFromUser' in currentTerminal.creationOptions &&
+            !currentTerminal.creationOptions.hideFromUser;
+
+        if (pythonSettings.terminal.activateEnvInCurrentTerminal && shouldActivate) {
             if (currentTerminal) {
                 const terminalActivator = this.serviceContainer.get<ITerminalActivator>(ITerminalActivator);
                 await terminalActivator.activateEnvironmentInTerminal(currentTerminal, { preserveFocus: true });
