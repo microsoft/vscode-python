@@ -5,8 +5,11 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
+import { IApplicationShell } from '../../../client/common/application/types';
 import { IFileSystem, TemporaryFile } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
+import { ExportDependencyChecker } from '../../../client/datascience/export/exportDependencyChecker';
+import { ExportFileOpener } from '../../../client/datascience/export/exportFileOpener';
 import { ExportManager } from '../../../client/datascience/export/exportManager';
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
 import { ExportFormat, IExport, IExportManagerFilePicker } from '../../../client/datascience/export/types';
@@ -21,8 +24,11 @@ suite('Data Science - Export Manager', () => {
     let fileSystem: IFileSystem;
     let exportUtil: ExportUtil;
     let filePicker: IExportManagerFilePicker;
+    let tempFile: TemporaryFile;
+    let appShell: IApplicationShell;
+    let exportFileOpener: ExportFileOpener;
+    let exportDependencyChecker: ExportDependencyChecker;
     const model = mock<INotebookModel>();
-    const tempFile = mock<TemporaryFile>();
     setup(async () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
@@ -31,6 +37,10 @@ suite('Data Science - Export Manager', () => {
         exportPython = mock<IExport>();
         exportHtml = mock<IExport>();
         exportPdf = mock<IExport>();
+        tempFile = mock<TemporaryFile>();
+        appShell = mock<IApplicationShell>();
+        exportFileOpener = mock<ExportFileOpener>();
+        exportDependencyChecker = mock<ExportDependencyChecker>();
 
         // tslint:disable-next-line: no-any
         when(filePicker.getExportFileLocation(anything(), anything(), anything())).thenReturn(
@@ -51,7 +61,10 @@ suite('Data Science - Export Manager', () => {
             instance(fileSystem),
             instance(filePicker),
             instance(reporter),
-            instance(exportUtil)
+            instance(exportUtil),
+            instance(appShell),
+            instance(exportFileOpener),
+            instance(exportDependencyChecker)
         );
     });
 
