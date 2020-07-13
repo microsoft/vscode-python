@@ -201,9 +201,9 @@ import { CodeWatcher } from '../../client/datascience/editor-integration/codewat
 import { HoverProvider } from '../../client/datascience/editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { ExportBase } from '../../client/datascience/export/exportBase';
+import { ExportDependencyChecker } from '../../client/datascience/export/exportDependencyChecker';
+import { ExportFileOpener } from '../../client/datascience/export/exportFileOpener';
 import { ExportManager } from '../../client/datascience/export/exportManager';
-import { ExportManagerDependencyChecker } from '../../client/datascience/export/exportManagerDependencyChecker';
-import { ExportManagerFileOpener } from '../../client/datascience/export/exportManagerFileOpener';
 import { ExportManagerFilePicker } from '../../client/datascience/export/exportManagerFilePicker';
 import { ExportToHTML } from '../../client/datascience/export/exportToHTML';
 import { ExportToPDF } from '../../client/datascience/export/exportToPDF';
@@ -567,20 +567,18 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 instance(this.webPanelProvider)
             );
         }
-        this.serviceManager.addSingleton<IExportManager>(ExportManager, ExportManager);
-        this.serviceManager.addSingleton<IExportManager>(
-            ExportManagerDependencyChecker,
-            ExportManagerDependencyChecker
-        );
-        this.serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
-        this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
-        this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManagerFileOpener);
+        this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
+        this.serviceManager.addSingleton<ExportDependencyChecker>(ExportDependencyChecker, ExportDependencyChecker);
+        this.serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
         this.serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
         this.serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
         this.serviceManager.addSingleton<IExport>(IExport, ExportToPython, ExportFormat.python);
         this.serviceManager.addSingleton<IExport>(IExport, ExportBase, 'Export Base');
+        this.serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
         this.serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
         this.serviceManager.addSingleton<IExportManagerFilePicker>(IExportManagerFilePicker, ExportManagerFilePicker);
+
+        this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
         this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
         this.registerFileSystemTypes();
         this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());

@@ -1,26 +1,19 @@
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
 import * as localize from '../../common/utils/localize';
 import { ProgressReporter } from '../progress/progressReporter';
-import { IJupyterExecution, IJupyterInterpreterDependencyManager, INotebookModel } from '../types';
-import { ExportManager } from './exportManager';
-import { ExportFormat, IExportManager } from './types';
+import { IJupyterExecution, IJupyterInterpreterDependencyManager } from '../types';
+import { ExportFormat } from './types';
 
 @injectable()
-export class ExportManagerDependencyChecker implements IExportManager {
+export class ExportDependencyChecker {
     constructor(
-        @inject(ExportManager) private readonly manager: IExportManager,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IJupyterInterpreterDependencyManager)
         private readonly dependencyManager: IJupyterInterpreterDependencyManager,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter
     ) {}
 
-    public async export(
-        format: ExportFormat,
-        model: INotebookModel,
-        defaultFileName?: string
-    ): Promise<Uri | undefined> {
+    public async checkDependencies(format: ExportFormat) {
         // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
         try {
@@ -33,6 +26,5 @@ export class ExportManagerDependencyChecker implements IExportManager {
         } finally {
             reporter.dispose();
         }
-        return this.manager.export(format, model, defaultFileName);
     }
 }
