@@ -118,7 +118,7 @@ export class CodeWatcher implements ICodeWatcher {
     @captureTelemetry(Telemetry.DebugCurrentCell)
     public async debugCurrentCell() {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
-            return Promise.resolve();
+            return;
         }
 
         // Run the cell that matches the current cursor position.
@@ -294,9 +294,9 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunCell)
-    public runCell(range: Range): Promise<void> {
+    public async runCell(range: Range): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
-            return Promise.resolve();
+            return;
         }
 
         // Run the cell clicked. Advance if the cursor is inside this cell and we're allowed to
@@ -308,9 +308,9 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.DebugCurrentCell)
-    public debugCell(range: Range): Promise<void> {
+    public async debugCell(range: Range): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
-            return Promise.resolve();
+            return;
         }
 
         // Debug the cell clicked.
@@ -318,9 +318,9 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunCurrentCell)
-    public runCurrentCell(): Promise<void> {
+    public async runCurrentCell(): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
-            return Promise.resolve();
+            return;
         }
 
         // Run the cell that matches the current cursor position.
@@ -348,7 +348,7 @@ export class CodeWatcher implements ICodeWatcher {
     @captureTelemetry(Telemetry.RunCurrentCellAndAddBelow)
     public async runCurrentCellAndAddBelow(): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
-            return Promise.resolve();
+            return;
         }
 
         const editor = this.documentManager.activeTextEditor;
@@ -421,12 +421,12 @@ export class CodeWatcher implements ICodeWatcher {
     public async deleteCells(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (!editor || !editor.selection) {
-            return Promise.resolve();
+            return;
         }
 
         const firstLastCells = this.getStartEndCells(editor.selection);
         if (!firstLastCells) {
-            return Promise.resolve();
+            return;
         }
         const startCell = firstLastCells[0];
         const endCell = firstLastCells[1];
@@ -448,14 +448,10 @@ export class CodeWatcher implements ICodeWatcher {
             new Position(startLineNumber, startCharacterNumber),
             new Position(endLineNumber, endCharacterNumber)
         );
-        return editor
-            .edit((editBuilder) => {
-                editBuilder.replace(cellExtendedRange, '');
-                this.codeLensUpdatedEvent.fire();
-            })
-            .then(() => {
-                return Promise.resolve();
-            });
+        await editor.edit((editBuilder) => {
+            editBuilder.replace(cellExtendedRange, '');
+            this.codeLensUpdatedEvent.fire();
+        });
     }
 
     @captureTelemetry(Telemetry.SelectCell)
@@ -479,11 +475,11 @@ export class CodeWatcher implements ICodeWatcher {
     public async selectCellContents(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (!editor || !editor.selection) {
-            return Promise.resolve();
+            return;
         }
         const startEndCellIndex = this.getStartEndCellIndex(editor.selection);
         if (!startEndCellIndex) {
-            return Promise.resolve();
+            return;
         }
         const startCellIndex = startEndCellIndex[0];
         const endCellIndex = startEndCellIndex[1];
@@ -523,12 +519,12 @@ export class CodeWatcher implements ICodeWatcher {
         // selection range.
         const editor = this.documentManager.activeTextEditor;
         if (!editor || !editor.selection) {
-            return Promise.resolve();
+            return;
         }
         const currentSelection = editor.selection;
         const startEndCellIndex = this.getStartEndCellIndex(editor.selection);
         if (!startEndCellIndex) {
-            return Promise.resolve();
+            return;
         }
 
         const isAnchorLessThanActive = editor.selection.anchor.isBefore(editor.selection.active);
@@ -584,12 +580,12 @@ export class CodeWatcher implements ICodeWatcher {
         // selection range.
         const editor = this.documentManager.activeTextEditor;
         if (!editor || !editor.selection) {
-            return Promise.resolve();
+            return;
         }
         const currentSelection = editor.selection;
         const startEndCellIndex = this.getStartEndCellIndex(editor.selection);
         if (!startEndCellIndex) {
-            return Promise.resolve();
+            return;
         }
 
         const isAnchorLessEqualActive = editor.selection.anchor.isBeforeOrEqual(editor.selection.active);
@@ -649,16 +645,16 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.ChangeCellToMarkdown)
     public async changeCellToMarkdown(): Promise<void> {
-        return this.applyToCells(async (editor, cell, _) => {
+        await this.applyToCells(async (editor, cell, _) => {
             return this.changeCellTo(editor, cell, 'markdown');
-        }).then(() => Promise.resolve());
+        });
     }
 
     @captureTelemetry(Telemetry.ChangeCellToCode)
     public async changeCellToCode(): Promise<void> {
-        return this.applyToCells(async (editor, cell, _) => {
+        await this.applyToCells(async (editor, cell, _) => {
             return this.changeCellTo(editor, cell, 'code');
-        }).then(() => Promise.resolve());
+        });
     }
 
     private async applyToCells(
@@ -667,7 +663,7 @@ export class CodeWatcher implements ICodeWatcher {
         const editor = this.documentManager.activeTextEditor;
         const startEndCellIndex = this.getStartEndCellIndex(editor?.selection);
         if (!editor || !startEndCellIndex) {
-            return Promise.resolve(false);
+            return false;
         }
         const cells = this.cells;
         const startIndex = startEndCellIndex[0];
@@ -675,7 +671,7 @@ export class CodeWatcher implements ICodeWatcher {
         for (let cellIndex = startIndex; cellIndex <= endIndex; cellIndex += 1) {
             await callback(editor, cells[cellIndex], cellIndex);
         }
-        return Promise.resolve(true);
+        return true;
     }
 
     private async changeCellTo(editor: TextEditor, cell: ICellRange, toCellType: nbformat.CellType): Promise<boolean> {
@@ -686,7 +682,7 @@ export class CodeWatcher implements ICodeWatcher {
 
         // don't change cell type if already that type
         if (cell.cell_type === toCellType) {
-            return Promise.resolve(false);
+            return false;
         }
         const cellMatcher = new CellMatcher(this.configService.getSettings(editor.document.uri).datascience);
         const definitionLine = editor.document.lineAt(cell.range.start.line);
@@ -699,7 +695,7 @@ export class CodeWatcher implements ICodeWatcher {
                 ? cellMatcher.codeExecRegEx.exec(definitionText) // code -> markdown
                 : cellMatcher.markdownExecRegEx.exec(definitionText); // markdown -> code
         if (!definitionMatch) {
-            return Promise.resolve(false);
+            return false;
         }
         const definitionExtra = definitionMatch[definitionMatch.length - 1];
         const newDefinitionText =
@@ -731,11 +727,11 @@ export class CodeWatcher implements ICodeWatcher {
     private async moveCellsDirection(directionUp: boolean): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (!editor || !editor.selection) {
-            return Promise.resolve();
+            return;
         }
         const startEndCellIndex = this.getStartEndCellIndex(editor.selection);
         if (!startEndCellIndex) {
-            return Promise.resolve();
+            return;
         }
         const startCellIndex = startEndCellIndex[0];
         const endCellIndex = startEndCellIndex[1];
@@ -743,7 +739,7 @@ export class CodeWatcher implements ICodeWatcher {
         const startCell = cells[startCellIndex];
         const endCell = cells[endCellIndex];
         if (!startCell || !endCell) {
-            return Promise.resolve();
+            return;
         }
         const currentRange = new Range(startCell.range.start, endCell.range.end);
         const relativeSelectionRange = new Range(
@@ -756,7 +752,7 @@ export class CodeWatcher implements ICodeWatcher {
         let thenSetSelection: Thenable<boolean>;
         if (directionUp) {
             if (startCellIndex === 0) {
-                return Promise.resolve();
+                return;
             } else {
                 const aboveCell = cells[startCellIndex - 1];
                 const thenExchangeTextLines = this.exchangeTextLines(editor, aboveCell.range, currentRange);
@@ -774,7 +770,7 @@ export class CodeWatcher implements ICodeWatcher {
             }
         } else {
             if (endCellIndex === cells.length - 1) {
-                return Promise.resolve();
+                return;
             } else {
                 const belowCell = cells[endCellIndex + 1];
                 const thenExchangeTextLines = this.exchangeTextLines(editor, currentRange, belowCell.range);
@@ -798,7 +794,7 @@ export class CodeWatcher implements ICodeWatcher {
             if (isEditSuccessful && isActiveBeforeAnchor) {
                 editor.selection = new Selection(editor.selection.active, editor.selection.anchor);
             }
-            return Promise.resolve();
+            return;
         });
     }
 
@@ -888,7 +884,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    private async insertCell(editor: TextEditor, line: number): Promise<void> {
+    private insertCell(editor: TextEditor, line: number) {
         // insertCell
         //
         // Inserts a cell at current line defined as two new lines and then
@@ -999,7 +995,7 @@ export class CodeWatcher implements ICodeWatcher {
                     // insert new cell at bottom after current
                     const editor = this.documentManager.activeTextEditor;
                     if (editor) {
-                        await this.insertCell(editor, currentRunCellLens.range.end.line + 1);
+                        this.insertCell(editor, currentRunCellLens.range.end.line + 1);
                     }
                 }
             }
