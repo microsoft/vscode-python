@@ -1,4 +1,4 @@
-import { Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { INotebookModel } from '../types';
 
 export enum ExportFormat {
@@ -14,7 +14,7 @@ export interface IExportManager {
 
 export const IExport = Symbol('IExport');
 export interface IExport {
-    export(source: Uri, target: Uri): Promise<void>;
+    export(source: Uri, target: Uri, token: CancellationToken): Promise<void>;
 }
 
 export const IExportManagerFilePicker = Symbol('IExportManagerFilePicker');

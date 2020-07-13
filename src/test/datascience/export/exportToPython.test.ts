@@ -4,7 +4,7 @@
 // tslint:disable: no-var-requires no-require-imports no-invalid-this no-any
 import { assert } from 'chai';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
 import { IDocumentManager } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { ExportFormat, IExport } from '../../../client/datascience/export/types';
@@ -33,9 +33,11 @@ suite('DataScience - Export Python', () => {
         const fileSystem = api.serviceContainer.get<IFileSystem>(IFileSystem);
         const exportToPython = api.serviceContainer.get<IExport>(IExport, ExportFormat.python);
         const target = Uri.file((await fileSystem.createTemporaryFile('.py')).filePath);
+        const token = new CancellationTokenSource();
         await exportToPython.export(
             Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb')),
-            target
+            target,
+            token.token
         );
 
         const documentManager = api.serviceContainer.get<IDocumentManager>(IDocumentManager);

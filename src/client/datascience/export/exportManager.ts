@@ -42,7 +42,7 @@ export class ExportManager implements IExportManager {
         // exporting to certain formats the filename is used within the exported document as the title.
         const fileName = path.basename(target.fsPath, path.extname(target.fsPath));
         const tempDir = await this.exportUtil.generateTempDir();
-        const sourceFilePath = await this.exportUtil.makeFileInDirectory(model, fileName, tempDir.path);
+        const sourceFilePath = await this.exportUtil.makeFileInDirectory(model, `${fileName}.ipynb`, tempDir.path);
         const source = Uri.file(sourceFilePath);
 
         if (format === ExportFormat.pdf) {
@@ -51,27 +51,31 @@ export class ExportManager implements IExportManager {
             await this.exportUtil.removeSvgs(source);
         }
 
-        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
+        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`, true);
         try {
             switch (format) {
                 case ExportFormat.python:
-                    await this.exportToPython.export(source, target);
+                    await this.exportToPython.export(source, target, reporter.token);
                     break;
 
                 case ExportFormat.pdf:
-                    await this.exportToPDF.export(source, target);
+                    await this.exportToPDF.export(source, target, reporter.token);
                     break;
 
                 case ExportFormat.html:
-                    await this.exportToHTML.export(source, target);
+                    await this.exportToHTML.export(source, target, reporter.token);
                     break;
 
                 default:
                     break;
             }
         } finally {
-            reporter.dispose();
             tempDir.dispose();
+            reporter.dispose();
+        }
+
+        if (reporter.token.isCancellationRequested) {
+            return;
         }
 
         return target;

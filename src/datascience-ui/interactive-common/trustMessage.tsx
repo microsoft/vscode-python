@@ -22,7 +22,9 @@ export class TrustMessage extends React.PureComponent<ITrustMessageProps> {
         };
         const dynamicStyle: React.CSSProperties = {
             maxWidth: getMaxWidth(textSize),
-            color: this.props.isNotebookTrusted ? undefined : 'var(--vscode-editorError-foreground)',
+            color: this.props.isNotebookTrusted
+                ? 'var(--vscode-editor-foreground)'
+                : 'var(--vscode-editorError-foreground)',
             cursor: this.props.isNotebookTrusted ? undefined : 'pointer'
         };
 

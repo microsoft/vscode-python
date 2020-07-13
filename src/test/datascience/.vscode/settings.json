@@ -24,5 +24,6 @@
     "files.autoSave": "off",
     // We don't want jupyter to start when testing (DS functionality or anything else).
     "python.dataScience.disableJupyterAutoStart": true,
-    "python.logging.level": "debug"
+    "python.logging.level": "debug",
+    "python.dataScience.alwaysTrustNotebooks": true // In UI tests we don't want prompts for `Do you want to trust thie nb...`
 }
