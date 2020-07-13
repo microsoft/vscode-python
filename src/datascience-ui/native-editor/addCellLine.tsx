@@ -25,19 +25,23 @@ export class AddCellLine extends React.Component<IAddCellLineProps> {
         const plus = this.props.includePlus ? (
             <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.InsertBelow} />
         ) : null;
+        const disabled = !this.props.isNotebookTrusted;
+        const innerFilter = disabled ? 'image-button-inner-disabled-filter' : '';
         return (
             <div className={className}>
                 <button
                     role="button"
                     aria-pressed="false"
                     title={tooltip}
-                    disabled={!this.props.isNotebookTrusted}
+                    disabled={disabled}
                     aria-label={tooltip}
                     className="add-cell-line-button"
                     onClick={this.props.click}
                 >
-                    {plus}
-                    <span className="add-cell-line-divider" />
+                    <span className={innerFilter}>
+                        {plus}
+                        <span className="add-cell-line-divider" />
+                    </span>
                 </button>
             </div>
         );
