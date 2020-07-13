@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { isFileNotFoundError } from '../../common/platform/errors';
 import { IFileSystem } from '../../common/platform/types';
 import { IExtensionContext } from '../../common/types';
@@ -13,6 +13,7 @@ import { IDigestStorage } from '../types';
 export class DigestStorage implements IDigestStorage {
     public readonly key: Promise<string>;
     private digestDir: Promise<string>;
+    private loggedFileLocations = new Set();
 
     constructor(
         @inject(IFileSystem) private fs: IFileSystem,
@@ -26,6 +27,10 @@ export class DigestStorage implements IDigestStorage {
         const fileLocation = await this.getFileLocation(uri);
         // Since the signature is a hex digest, the character 'z' is being used to delimit the start and end of a single digest
         await this.fs.appendFile(fileLocation, `z${signature}z\n`);
+        if (!this.loggedFileLocations.has(fileLocation)) {
+            traceInfo(`Wrote trust for ${uri.toString()} to ${fileLocation}`);
+            this.loggedFileLocations.add(fileLocation);
+        }
     }
 
     public async containsDigest(uri: Uri, signature: string) {
