@@ -26,10 +26,20 @@ export class DigestStorage implements IDigestStorage {
     public async saveDigest(uri: Uri, signature: string) {
         const fileLocation = await this.getFileLocation(uri);
         // Since the signature is a hex digest, the character 'z' is being used to delimit the start and end of a single digest
-        await this.fs.appendFile(fileLocation, `z${signature}z\n`);
-        if (!this.loggedFileLocations.has(fileLocation)) {
-            traceInfo(`Wrote trust for ${uri.toString()} to ${fileLocation}`);
-            this.loggedFileLocations.add(fileLocation);
+        try {
+            await this.saveDigestInner(uri, fileLocation, signature);
+        } catch (err) {
+            // The nbsignatures dir is only initialized on extension activation.
+            // If the user deletes it to reset trust, the next attempt to trust
+            // an untrusted notebook in the same session will fail because the parent
+            // directory does not exist.
+            if (isFileNotFoundError(err)) {
+                // Gracefully recover from such errors by reinitializing directory and retrying
+                await this.initDir();
+                await this.saveDigestInner(uri, fileLocation, signature);
+            } else {
+                traceError(err);
+            }
         }
     }
 
@@ -43,6 +53,14 @@ export class DigestStorage implements IDigestStorage {
                 traceError(err); // Don't log the error if the file simply doesn't exist
             }
             return false;
+        }
+    }
+
+    private async saveDigestInner(uri: Uri, fileLocation: string, signature: string) {
+        await this.fs.appendFile(fileLocation, `z${signature}z\n`);
+        if (!this.loggedFileLocations.has(fileLocation)) {
+            traceInfo(`Wrote trust for ${uri.toString()} to ${fileLocation}`);
+            this.loggedFileLocations.add(fileLocation);
         }
     }
 
