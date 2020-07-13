@@ -281,6 +281,9 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     // tslint:disable-next-line: cyclomatic-complexity max-func-body-length
     private keyDownInput = (cellId: string, e: IKeyboardEvent) => {
+        if (!this.isNotebookTrusted() && !isCellNavigationKeyboardEvent(e)) {
+            return;
+        }
         const isFocusedWhenNotSuggesting = this.isFocused() && e.editorInfo && !e.editorInfo.isSuggesting;
         switch (e.code) {
             case 'ArrowUp':
@@ -885,4 +888,16 @@ export class NativeCell extends React.Component<INativeCellProps> {
 // Main export, return a redux connected editor
 export function getConnectedNativeCell() {
     return connect(null, actionCreators)(NativeCell);
+}
+
+function isCellNavigationKeyboardEvent(e: IKeyboardEvent) {
+    return (
+        e.code === 'Enter' ||
+        e.code === 'NumpadEnter' ||
+        e.code === 'ArrowUp' ||
+        e.code === 'k' ||
+        e.code === 'ArrowDown' ||
+        e.code === 'j' ||
+        e.code === 'Escape'
+    );
 }
