@@ -122,6 +122,11 @@ suite('Terminal Provider', () => {
                 .returns(() => activeResourceService.object);
 
             terminal = TypeMoq.Mock.ofType<Terminal>();
+            terminal
+                .setup((c) => c.creationOptions)
+                .returns(() => {
+                    return { hideFromUser: false };
+                });
         });
 
         test('If terminal.activateCurrentTerminal setting is set, provided terminal should be activated', async () => {
@@ -156,6 +161,34 @@ suite('Terminal Provider', () => {
                 .setup((a) => a.getActiveResource())
                 .returns(() => resource)
                 .verifiable(TypeMoq.Times.once());
+
+            terminalProvider = new TerminalProvider(serviceContainer.object);
+            await terminalProvider.initialize(terminal.object);
+
+            terminalActivator.verify(
+                (a) => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                TypeMoq.Times.never()
+            );
+            activeResourceService.verifyAll();
+            configService.verifyAll();
+        });
+
+        test('If terminal.activateCurrentTerminal setting is set, but hideFromUser is true, provided terminal should not be activated', async () => {
+            terminalSettings.setup((t) => t.activateEnvInCurrentTerminal).returns(() => true);
+            configService
+                .setup((c) => c.getSettings(resource))
+                .returns(() => pythonSettings.object)
+                .verifiable(TypeMoq.Times.once());
+            activeResourceService
+                .setup((a) => a.getActiveResource())
+                .returns(() => resource)
+                .verifiable(TypeMoq.Times.once());
+
+            terminal
+                .setup((c) => c.creationOptions)
+                .returns(() => {
+                    return { hideFromUser: true };
+                });
 
             terminalProvider = new TerminalProvider(serviceContainer.object);
             await terminalProvider.initialize(terminal.object);
