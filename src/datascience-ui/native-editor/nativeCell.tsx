@@ -892,12 +892,12 @@ export function getConnectedNativeCell() {
 
 function isCellNavigationKeyboardEvent(e: IKeyboardEvent) {
     return (
-        e.code !== 'Enter' &&
-        e.code !== 'NumpadEnter' &&
-        e.code !== 'ArrowUp' &&
-        e.code !== 'k' &&
-        e.code !== 'ArrowDown' &&
-        e.code !== 'j' &&
-        e.code !== 'Escape'
+        e.code === 'Enter' ||
+        e.code === 'NumpadEnter' ||
+        e.code === 'ArrowUp' ||
+        e.code === 'k' ||
+        e.code === 'ArrowDown' ||
+        e.code === 'j' ||
+        e.code === 'Escape'
     );
 }
