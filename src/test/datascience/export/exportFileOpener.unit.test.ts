@@ -8,22 +8,18 @@ import { TextEditor, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IBrowserService, IDisposable } from '../../../client/common/types';
-import { ExportManagerFileOpener } from '../../../client/datascience/export/exportManagerFileOpener';
-import { ExportFormat, IExportManager } from '../../../client/datascience/export/types';
+import { ExportFileOpener } from '../../../client/datascience/export/exportFileOpener';
+import { ExportFormat } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
-import { INotebookModel } from '../../../client/datascience/types';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 
 suite('Data Science - Export File Opener', () => {
-    let fileOpener: ExportManagerFileOpener;
-    let exporter: IExportManager;
+    let fileOpener: ExportFileOpener;
     let documentManager: IDocumentManager;
     let fileSystem: IFileSystem;
     let applicationShell: IApplicationShell;
     let browserService: IBrowserService;
-    const model = instance(mock<INotebookModel>());
     setup(async () => {
-        exporter = mock<IExportManager>();
         documentManager = mock<IDocumentManager>();
         fileSystem = mock<IFileSystem>();
         applicationShell = mock<IApplicationShell>();
@@ -37,8 +33,7 @@ suite('Data Science - Export File Opener', () => {
         when(documentManager.openTextDocument(anything())).thenResolve();
         when(documentManager.showTextDocument(anything())).thenReturn(Promise.resolve(instance(editor)));
         when(fileSystem.readFile(anything())).thenResolve();
-        fileOpener = new ExportManagerFileOpener(
-            instance(exporter),
+        fileOpener = new ExportFileOpener(
             instance(documentManager),
             instance(fileSystem),
             instance(applicationShell),
@@ -46,66 +41,49 @@ suite('Data Science - Export File Opener', () => {
         );
     });
 
-    test('No file is opened if nothing is exported', async () => {
-        when(exporter.export(anything(), anything())).thenResolve();
-        await fileOpener.export(ExportFormat.python, model, undefined);
-
-        verify(documentManager.showTextDocument(anything())).never();
-    });
     test('Python File is opened if exported', async () => {
         const uri = Uri.file('test.python');
-        when(exporter.export(anything(), anything(), anything())).thenResolve(uri);
-        await fileOpener.export(ExportFormat.python, model, undefined);
+        await fileOpener.openFile(ExportFormat.python, uri);
 
         verify(documentManager.showTextDocument(anything())).once();
     });
     test('HTML File opened if yes button pressed', async () => {
         const uri = Uri.file('test.html');
-        when(exporter.export(anything(), anything(), anything())).thenResolve(uri);
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
             Promise.resolve(getLocString('DataScience.openExportFileYes', 'Yes'))
         );
 
-        await fileOpener.export(ExportFormat.html, model);
+        await fileOpener.openFile(ExportFormat.html, uri);
 
         verify(browserService.launch(anything())).once();
     });
     test('HTML File not opened if no button button pressed', async () => {
         const uri = Uri.file('test.html');
-        when(exporter.export(anything(), anything())).thenResolve(uri);
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
             Promise.resolve(getLocString('DataScience.openExportFileNo', 'No'))
         );
 
-        await fileOpener.export(ExportFormat.html, model);
+        await fileOpener.openFile(ExportFormat.html, uri);
 
         verify(browserService.launch(anything())).never();
     });
-    test('Exporting to PDF displays message if operation fails', async () => {
-        when(exporter.export(anything(), anything(), anything())).thenThrow(new Error('Export failed...'));
-        when(applicationShell.showErrorMessage(anything())).thenResolve();
-        await fileOpener.export(ExportFormat.pdf, model);
-        verify(applicationShell.showErrorMessage(anything())).once();
-    });
     test('PDF File opened if yes button pressed', async () => {
         const uri = Uri.file('test.pdf');
-        when(exporter.export(anything(), anything(), anything())).thenResolve(uri);
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
             Promise.resolve(getLocString('DataScience.openExportFileYes', 'Yes'))
         );
 
-        await fileOpener.export(ExportFormat.pdf, model);
+        await fileOpener.openFile(ExportFormat.pdf, uri);
 
         verify(browserService.launch(anything())).once();
     });
     test('PDF File not opened if no button button pressed', async () => {
         const uri = Uri.file('test.pdf');
-        when(exporter.export(anything(), anything())).thenResolve(uri);
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
             Promise.resolve(getLocString('DataScience.openExportFileNo', 'No'))
         );
 
-        await fileOpener.export(ExportFormat.pdf, model);
+        await fileOpener.openFile(ExportFormat.pdf, uri);
 
         verify(browserService.launch(anything())).never();
     });

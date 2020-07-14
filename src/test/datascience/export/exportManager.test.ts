@@ -72,4 +72,24 @@ suite('Data Science - Export Manager', () => {
         await exporter.export(ExportFormat.pdf, model);
         verify(exportUtil.removeSvgs(anything())).once();
     });
+    test('Erorr messaeg is shown if export fails', async () => {
+        when(exportHtml.export(anything(), anything(), anything())).thenThrow(new Error('failed...'));
+        await exporter.export(ExportFormat.html, model);
+        verify(appShell.showErrorMessage(anything())).once();
+    });
+    test('Export to PDF is called when export method is PDF', async () => {
+        await exporter.export(ExportFormat.pdf, model);
+        verify(exportPdf.export(anything(), anything(), anything())).once();
+        verify(exportFileOpener.openFile(ExportFormat.pdf, anything())).once();
+    });
+    test('Export to HTML is called when export method is HTML', async () => {
+        await exporter.export(ExportFormat.html, model);
+        verify(exportPdf.export(anything(), anything(), anything())).once();
+        verify(exportFileOpener.openFile(ExportFormat.html, anything())).once();
+    });
+    test('Export to Python is called when export method is Python', async () => {
+        await exporter.export(ExportFormat.python, model);
+        verify(exportPdf.export(anything(), anything(), anything())).once();
+        verify(exportFileOpener.openFile(ExportFormat.python, anything())).once();
+    });
 });
