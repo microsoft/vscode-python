@@ -371,7 +371,8 @@ export enum Telemetry {
     RunByLineVariableHover = 'DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER',
     TrustAllNotebooks = 'DATASCIENCE.TRUST_ALL_NOTEBOOKS',
     TrustNotebook = 'DATASCIENCE.TRUST_NOTEBOOK',
-    DoNotTrustNotebook = 'DATASCIENCE.DO_NOT_TRUST_NOTEBOOK'
+    DoNotTrustNotebook = 'DATASCIENCE.DO_NOT_TRUST_NOTEBOOK',
+    NotebookTrustPromptShown = 'DATASCIENCE.NOTEBOOK_TRUST_PROMPT_SHOWN'
 }
 
 export enum NativeKeyboardCommandTelemetry {

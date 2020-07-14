@@ -2200,6 +2200,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunByLineVariableHover]: never | undefined;
 
     // Trusted notebooks events
+    [Telemetry.NotebookTrustPromptShown]: never | undefined;
     [Telemetry.TrustNotebook]: never | undefined;
     [Telemetry.TrustAllNotebooks]: never | undefined;
     [Telemetry.DoNotTrustNotebook]: never | undefined;

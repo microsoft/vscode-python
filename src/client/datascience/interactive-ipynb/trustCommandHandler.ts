@@ -58,6 +58,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
             DataScience.doNotTrustNotebook(),
             DataScience.trustAllNotebooks()
         );
+        sendTelemetryEvent(Telemetry.NotebookTrustPromptShown);
 
         switch (selection) {
             case DataScience.trustAllNotebooks():
