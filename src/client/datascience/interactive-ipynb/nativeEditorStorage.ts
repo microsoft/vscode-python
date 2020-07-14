@@ -348,18 +348,9 @@ export class NativeEditorStorage implements INotebookStorage {
         }
         const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
 
-        /* As an optimization, we don't call trustNotebook for hot exit, since our hot exit backup code gets called by VS
-        Code whenever the notebook model changes. This means it's called very often, perhaps even as often as autosave.
-        Instead, when loading a file that is dirty, we check if the actual file contents on disk are trusted. If so, we treat
-        the dirty contents as trusted as well. */
-        const contentsToCheck = isInitiallyDirty && trueContents !== undefined ? trueContents : contents;
-        const isTrusted =
-            contents === undefined || isUntitledFile(file)
-                ? true // If no contents or untitled, this is a newly created file, so it should be trusted
-                : await this.trustService.isNotebookTrusted(file, contentsToCheck!);
-        return this.factory.createModel(
+        const model = this.factory.createModel(
             {
-                trusted: isTrusted,
+                trusted: true,
                 file,
                 cells: remapped,
                 notebookJson: json,
@@ -369,6 +360,24 @@ export class NativeEditorStorage implements INotebookStorage {
             },
             forVSCodeNotebook
         );
+
+        /* As an optimization, we don't call trustNotebook for hot exit, since our hot exit backup code gets called by VS
+        Code whenever the notebook model changes. This means it's called very often, perhaps even as often as autosave.
+        Instead, when loading a file that is dirty, we check if the actual file contents on disk are trusted. If so, we treat
+        the dirty contents as trusted as well. */
+        if (contents !== undefined && !isUntitledFile(file)) {
+            // If no contents or untitled, this is a newly created file, so it should be trusted
+            const contentsToCheck = isInitiallyDirty && trueContents !== undefined ? trueContents : model.getContent();
+            model.update({
+                source: 'user',
+                kind: 'updateTrust',
+                oldDirty: model.isDirty,
+                newDirty: model.isDirty,
+                isNotebookTrusted: await this.trustService.isNotebookTrusted(file, contentsToCheck)
+            });
+        }
+
+        return model;
     }
 
     private getStaticStorageKey(file: Uri): string {
