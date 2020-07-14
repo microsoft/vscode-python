@@ -22,7 +22,6 @@
                 "<node_internals>/**"
             ],
             "env": {
-                "JUPYTER_PATH": "/Users/ianhuff/myJupyterDir",
                 // Enable this to turn on redux logging during debugging
                 "XVSC_PYTHON_FORCE_LOGGING": "1",
                 // Enable this to try out new experiments locally
