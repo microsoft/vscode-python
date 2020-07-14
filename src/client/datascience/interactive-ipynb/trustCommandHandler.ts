@@ -13,7 +13,8 @@ import '../../common/extensions';
 import { IDisposableRegistry, IExperimentService } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { DataScience } from '../../common/utils/localize';
-import { Commands } from '../constants';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Commands, Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { INotebookEditorProvider, ITrustService } from '../types';
 
@@ -61,6 +62,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         switch (selection) {
             case DataScience.trustAllNotebooks():
                 commands.executeCommand('workbench.action.openSettings', 'python.dataScience.alwaysTrustNotebooks');
+                sendTelemetryEvent(Telemetry.TrustAllNotebooks);
                 break;
             case DataScience.trustNotebook():
                 // Update model trust
@@ -73,6 +75,10 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
                 });
                 const contents = model.getContent();
                 await this.trustService.trustNotebook(model.file, contents);
+                sendTelemetryEvent(Telemetry.TrustNotebook);
+                break;
+            case DataScience.doNotTrustNotebook():
+                sendTelemetryEvent(Telemetry.DoNotTrustNotebook);
                 break;
             default:
                 break;
