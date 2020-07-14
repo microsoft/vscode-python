@@ -282,10 +282,10 @@ export class NativeEditorStorage implements INotebookStorage {
             const dirtyContents = skipDirtyContents ? undefined : await this.getStoredContents(file, backupId);
             if (dirtyContents) {
                 // This means we're dirty. Indicate dirty and load from this content
-                return this.loadContents(file, dirtyContents, true, contents, forVSCodeNotebook);
+                return this.loadContents(file, dirtyContents, true, forVSCodeNotebook);
             } else {
                 // Load without setting dirty
-                return this.loadContents(file, contents, undefined, undefined, forVSCodeNotebook);
+                return this.loadContents(file, contents, undefined, forVSCodeNotebook);
             }
         } catch (ex) {
             // May not exist at this time. Should always have a single cell though
@@ -308,7 +308,6 @@ export class NativeEditorStorage implements INotebookStorage {
         file: Uri,
         contents: string | undefined,
         isInitiallyDirty = false,
-        trueContents?: string,
         forVSCodeNotebook?: boolean
     ) {
         // tslint:disable-next-line: no-any
@@ -361,20 +360,19 @@ export class NativeEditorStorage implements INotebookStorage {
             forVSCodeNotebook
         );
 
-        // If no contents or untitled, this is a newly created file, so the model should remain trusted
-        if (contents !== undefined && !isUntitledFile(file)) {
-            /* As an optimization, we don't call trustNotebook for hot exit, since our hot exit backup code gets called by VS
-            Code whenever the notebook model changes. This means it's called very often, perhaps even as often as autosave.
-            Instead, when loading a file that is dirty, we check if the actual file contents on disk are trusted. If so, we treat
-            the dirty contents as trusted as well. */
-            const contentsToCheck = isInitiallyDirty && trueContents !== undefined ? trueContents : model.getContent();
-            model.update({
-                source: 'user',
-                kind: 'updateTrust',
-                oldDirty: model.isDirty,
-                newDirty: model.isDirty,
-                isNotebookTrusted: await this.trustService.isNotebookTrusted(file, contentsToCheck)
-            });
+        // If no contents or untitled, this is a newly created file
+        // If dirty, that means it's been edited before in our extension
+        if (contents !== undefined && !isUntitledFile(file) && !isInitiallyDirty) {
+            const isNotebookTrusted = await this.trustService.isNotebookTrusted(file, model.getContent());
+            if (isNotebookTrusted !== model.isTrusted) {
+                model.update({
+                    source: 'user',
+                    kind: 'updateTrust',
+                    oldDirty: model.isDirty,
+                    newDirty: model.isDirty,
+                    isNotebookTrusted
+                });
+            }
         }
 
         return model;
