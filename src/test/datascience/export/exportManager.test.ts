@@ -6,7 +6,7 @@
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../client/common/application/types';
-import { IFileSystem, TemporaryFile } from '../../../client/common/platform/types';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
 import { ExportDependencyChecker } from '../../../client/datascience/export/exportDependencyChecker';
 import { ExportFileOpener } from '../../../client/datascience/export/exportFileOpener';
@@ -24,7 +24,6 @@ suite('Data Science - Export Manager', () => {
     let fileSystem: IFileSystem;
     let exportUtil: ExportUtil;
     let filePicker: IExportManagerFilePicker;
-    let tempFile: TemporaryFile;
     let appShell: IApplicationShell;
     let exportFileOpener: ExportFileOpener;
     let exportDependencyChecker: ExportDependencyChecker;
@@ -37,21 +36,24 @@ suite('Data Science - Export Manager', () => {
         exportPython = mock<IExport>();
         exportHtml = mock<IExport>();
         exportPdf = mock<IExport>();
-        tempFile = mock<TemporaryFile>();
         appShell = mock<IApplicationShell>();
         exportFileOpener = mock<ExportFileOpener>();
         exportDependencyChecker = mock<ExportDependencyChecker>();
-
         // tslint:disable-next-line: no-any
         when(filePicker.getExportFileLocation(anything(), anything(), anything())).thenReturn(
             Promise.resolve(Uri.file('test.pdf'))
         );
         // tslint:disable-next-line: no-empty
+        when(appShell.showErrorMessage(anything())).thenResolve();
+        // tslint:disable-next-line: no-empty
         when(exportUtil.generateTempDir()).thenResolve({ path: 'test', dispose: () => {} });
         when(exportUtil.makeFileInDirectory(anything(), anything(), anything())).thenResolve('foo');
-        when(fileSystem.createTemporaryFile(anything())).thenResolve(instance(tempFile));
+        // tslint:disable-next-line: no-empty
+        when(fileSystem.createTemporaryFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
         when(exportPdf.export(anything(), anything(), anything())).thenResolve();
         when(filePicker.getExportFileLocation(anything(), anything())).thenResolve(Uri.file('foo'));
+        when(exportDependencyChecker.checkDependencies(anything())).thenResolve();
+        when(exportFileOpener.openFile(anything(), anything())).thenResolve();
         // tslint:disable-next-line: no-any
         when(reporter.createProgressIndicator(anything(), anything())).thenReturn(instance(mock<IDisposable>()) as any);
         exporter = new ExportManager(
@@ -72,10 +74,11 @@ suite('Data Science - Export Manager', () => {
         await exporter.export(ExportFormat.pdf, model);
         verify(exportUtil.removeSvgs(anything())).once();
     });
-    test('Erorr messaeg is shown if export fails', async () => {
+    test('Erorr message is shown if export fails', async () => {
         when(exportHtml.export(anything(), anything(), anything())).thenThrow(new Error('failed...'));
         await exporter.export(ExportFormat.html, model);
         verify(appShell.showErrorMessage(anything())).once();
+        verify(exportFileOpener.openFile(anything(), anything())).never();
     });
     test('Export to PDF is called when export method is PDF', async () => {
         await exporter.export(ExportFormat.pdf, model);
@@ -84,12 +87,12 @@ suite('Data Science - Export Manager', () => {
     });
     test('Export to HTML is called when export method is HTML', async () => {
         await exporter.export(ExportFormat.html, model);
-        verify(exportPdf.export(anything(), anything(), anything())).once();
+        verify(exportHtml.export(anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.html, anything())).once();
     });
     test('Export to Python is called when export method is Python', async () => {
         await exporter.export(ExportFormat.python, model);
-        verify(exportPdf.export(anything(), anything(), anything())).once();
+        verify(exportPython.export(anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.python, anything())).once();
     });
 });
