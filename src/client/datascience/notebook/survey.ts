@@ -82,7 +82,7 @@ export class NotebookSurveyBanner {
             return false;
         }
         const currentDate = new Date();
-        if (currentDate.getMonth() < 7) {
+        if (currentDate.getMonth() < 7 && currentDate.getFullYear() <= 2020) {
             return false;
         }
 
