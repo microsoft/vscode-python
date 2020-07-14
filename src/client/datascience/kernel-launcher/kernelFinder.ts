@@ -237,7 +237,11 @@ export class KernelFinder implements IKernelFinder {
     private async getDiskPaths(): Promise<string[]> {
         let paths: string[] = [];
         const vars = await this.envVarsProvider.getEnvironmentVariables();
-        const jupyterPathVar = vars.JUPYTER_PATH || '';
+        const jupyterPathVars = vars.JUPYTER_PATH
+            ? vars.JUPYTER_PATH.split(path.delimiter).map((jupyterPath) => {
+                  return path.join(jupyterPath, 'kernels');
+              })
+            : [];
 
         if (this.platformService.isWindows) {
             const activeInterpreter = await this.interpreterService.getActiveInterpreter();
@@ -252,9 +256,8 @@ export class KernelFinder implements IKernelFinder {
                     paths = [winPath];
                 }
 
-                if (jupyterPathVar !== '') {
-                    const jupyterPaths = jupyterPathVar.split(path.delimiter);
-                    jupyterPaths.forEach(async (jupyterPath) => {
+                if (jupyterPathVars.length > 0) {
+                    jupyterPathVars.forEach(async (jupyterPath) => {
                         const jupyterWinPath = await getRealPath(
                             this.file,
                             this.exeFactory,
@@ -269,9 +272,8 @@ export class KernelFinder implements IKernelFinder {
                 }
             } else {
                 paths = [path.join(this.pathUtils.home, winJupyterPath)];
-                if (jupyterPathVar !== '') {
-                    const jupyterPaths = jupyterPathVar.split(path.delimiter);
-                    paths.push(...jupyterPaths);
+                if (jupyterPathVars.length > 0) {
+                    paths.push(...jupyterPathVars);
                 }
             }
 
@@ -288,9 +290,8 @@ export class KernelFinder implements IKernelFinder {
                 path.join(this.pathUtils.home, secondPart)
             ];
 
-            if (jupyterPathVar !== '') {
-                const jupyterPaths = jupyterPathVar.split(path.delimiter);
-                paths.push(...jupyterPaths);
+            if (jupyterPathVars.length > 0) {
+                paths.push(...jupyterPathVars);
             }
         }
 
