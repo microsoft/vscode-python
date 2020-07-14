@@ -892,8 +892,7 @@ export function getConnectedNativeCell() {
 
 function isCellNavigationKeyboardEvent(e: IKeyboardEvent) {
     return (
-        e.code === 'Enter' ||
-        e.code === 'NumpadEnter' ||
+        ((e.code === 'Enter' || e.code === 'NumpadEnter') && !e.shiftKey && !e.ctrlKey && !e.altKey) ||
         e.code === 'ArrowUp' ||
         e.code === 'k' ||
         e.code === 'ArrowDown' ||
