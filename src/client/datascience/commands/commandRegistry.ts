@@ -153,7 +153,7 @@ export class CommandRegistry implements IDisposable {
         if (codeWatcher) {
             return codeWatcher.runAllCells();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -165,7 +165,7 @@ export class CommandRegistry implements IDisposable {
         if (codeWatcher) {
             return codeWatcher.runFileInteractive();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -177,7 +177,7 @@ export class CommandRegistry implements IDisposable {
         if (codeWatcher) {
             return codeWatcher.debugFileInteractive();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -239,7 +239,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.runCurrentCell();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -248,7 +248,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.runCurrentCellAndAdvance();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -257,7 +257,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.runSelectionOrLine(this.documentManager.activeTextEditor);
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -313,7 +313,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.runCurrentCellAndAddBelow();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -322,7 +322,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.insertCellBelowPosition();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -331,7 +331,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.insertCellBelow();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -340,7 +340,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.insertCellAbove();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -349,7 +349,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.deleteCells();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -358,7 +358,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.selectCell();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -367,7 +367,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.selectCellContents();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -376,7 +376,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.extendSelectionByCellAbove();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -385,7 +385,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.extendSelectionByCellBelow();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -394,7 +394,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.moveCellsUp();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -403,7 +403,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.moveCellsDown();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -412,7 +412,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.changeCellToMarkdown();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -421,7 +421,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.changeCellToCode();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -436,7 +436,7 @@ export class CommandRegistry implements IDisposable {
                 );
             }
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -451,7 +451,7 @@ export class CommandRegistry implements IDisposable {
                 );
             }
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -463,7 +463,7 @@ export class CommandRegistry implements IDisposable {
                 return activeCodeWatcher.debugCurrentCell();
             }
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
