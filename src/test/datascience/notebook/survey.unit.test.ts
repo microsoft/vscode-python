@@ -57,6 +57,7 @@ suite('Data Science - NativeNotebook Survey', () => {
         shell = mock<IApplicationShell>();
         browser = mock<IBrowserService>();
         clock = fakeTimers.install();
+        clock.setSystemTime(new Date(2020, 7, 1)); // Survey will work only after 1st August.
     });
     async function loadAndActivateExtension() {
         const surveyBanner = new NotebookSurveyBanner(instance(shell), instance(stateFactory), instance(browser));
