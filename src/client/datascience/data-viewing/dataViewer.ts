@@ -93,8 +93,8 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         }
     }
 
-    protected getOwningResource(): Promise<Resource> {
-        return Promise.resolve(undefined);
+    protected get owningResource(): Resource {
+        return undefined;
     }
 
     //tslint:disable-next-line:no-any

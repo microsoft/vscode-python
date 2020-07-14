@@ -19,26 +19,25 @@ import { InteractiveWindowMessageListener } from '../../client/datascience/inter
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { IDataScienceErrorHandler, IInteractiveWindow } from '../../client/datascience/types';
+import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { IMountedWebView } from './mountedWebView';
 import { mountConnectedMainPanel } from './testHelpers';
 
-export interface ITestInteractiveWindowProvider {
+export interface ITestInteractiveWindowProvider extends IInteractiveWindowProvider {
     getMountedWebView(window: IInteractiveWindow | undefined): IMountedWebView;
 }
 
 @injectable()
 export class TestInteractiveWindowProvider extends InteractiveWindowProvider implements ITestInteractiveWindowProvider {
-    private windowToMountMap = new Map<string, string>();
+    private windowToMountMap = new Map<string, IMountedWebView>();
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IFileSystem) fileSystem: IFileSystem,
-        @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
         @inject(IApplicationShell) appShell: IApplicationShell,
@@ -50,7 +49,6 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
             asyncRegistry,
             disposables,
             fileSystem,
-            errorHandler,
             configService,
             globalMemento,
             appShell
@@ -62,19 +60,19 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
         if (!this.windowToMountMap.has(key)) {
             throw new Error('Test Failure: Window not mounted yet.');
         }
-        return this.ioc.getWebPanel(this.windowToMountMap.get(key)!);
+        return this.windowToMountMap.get(key)!;
     }
 
     protected create(resource: Resource, mode: InteractiveWindowMode): IInteractiveWindow {
         // Generate the mount wrapper using a custom id
         const id = uuid();
-        this.ioc.createWebView(() => mountConnectedMainPanel('interactive'), id);
+        const mounted = this.ioc.createWebView(() => mountConnectedMainPanel('interactive'), id);
 
         // Call the real create
         const result = super.create(resource, mode);
 
         // Associate the real create with our id in order to find the wrapper
-        this.windowToMountMap.set(result.identity.toString(), id);
+        this.windowToMountMap.set(result.identity.toString(), mounted);
 
         // During testing the MainPanel sends the init message before our interactive window is created.
         // Pretend like it's happening now

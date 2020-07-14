@@ -98,8 +98,8 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         }, 3000);
     }
 
-    public async getOwningResource(): Promise<Resource> {
-        return Promise.resolve(undefined);
+    public get owningResource(): Resource {
+        return undefined;
     }
 
     public async close(): Promise<void> {

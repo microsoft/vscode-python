@@ -31,13 +31,7 @@ import { getInteractiveCellResults, getOrCreateInteractiveWindow } from './inter
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
-import {
-    getLastOutputCell,
-    openVariableExplorer,
-    runInteractiveTest,
-    runNativeTest,
-    waitForMessage
-} from './testHelpers';
+import { getLastOutputCell, openVariableExplorer, runInteractiveTest, runNativeTest } from './testHelpers';
 import { verifyVariables } from './variableTestHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
@@ -371,12 +365,11 @@ suite('DataScience Debugger tests', () => {
         'Run by line',
         async () => {
             // Create an editor so something is listening to messages
-            await createNewEditor(ioc);
-            const webPanel = ioc.getWebPanel('notebook');
-            const wrapper = webPanel.wrapper;
+            const ne = await createNewEditor(ioc);
+            const wrapper = ne.mount.wrapper;
 
             // Add a cell into the UI and wait for it to render and submit it.
-            await addCell(ioc, wrapper, 'a=1\na', true);
+            await addCell(ne.mount, 'a=1\na', true);
 
             // Step into this cell using the button
             let cell = getLastOutputCell(wrapper, 'NativeCell');
@@ -386,7 +379,7 @@ suite('DataScience Debugger tests', () => {
             // tslint:disable-next-line: no-any
             assert.equal((runByLineButton.instance().props as any).tooltip, 'Run by line');
 
-            const promise = webPanel.waitForMessage(InteractiveWindowMessages.ShowingIp);
+            const promise = ne.mount.waitForMessage(InteractiveWindowMessages.ShowingIp);
             runByLineButton.simulate('click');
             await promise;
 
@@ -404,11 +397,11 @@ suite('DataScience Debugger tests', () => {
         'Run by line state check',
         async () => {
             // Create an editor so something is listening to messages
-            await createNewEditor(ioc);
-            const wrapper = ioc.getWebPanel('notebook').wrapper;
+            const ne = await createNewEditor(ioc);
+            const wrapper = ne.mount.wrapper;
 
             // Add a cell into the UI and wait for it to render and submit it.
-            await addCell(ioc, wrapper, 'a=1\na=2\na=3', true);
+            await addCell(ne.mount, 'a=1\na=2\na=3', true);
 
             // Step into this cell using the button
             let cell = getLastOutputCell(wrapper, 'NativeCell');
@@ -418,7 +411,7 @@ suite('DataScience Debugger tests', () => {
             // tslint:disable-next-line: no-any
             assert.equal((runByLineButton.instance().props as any).tooltip, 'Run by line');
 
-            const promise = ioc.getWebPanel('notebook').waitForMessage(InteractiveWindowMessages.DebugStateChange, {
+            const promise = ne.mount.waitForMessage(InteractiveWindowMessages.DebugStateChange, {
                 withPayload: (p) => {
                     return p.oldState === DebugState.Design && p.newState === DebugState.Run;
                 }
@@ -434,13 +427,11 @@ suite('DataScience Debugger tests', () => {
             expect(runByLineButtonProps.disabled).to.equal(true, 'Run by line button not disabled when running');
 
             // Now wait for break mode
-            const breakPromise = ioc
-                .getWebPanel('notebook')
-                .waitForMessage(InteractiveWindowMessages.DebugStateChange, {
-                    withPayload: (p) => {
-                        return p.oldState === DebugState.Run && p.newState === DebugState.Break;
-                    }
-                });
+            const breakPromise = ne.mount.waitForMessage(InteractiveWindowMessages.DebugStateChange, {
+                withPayload: (p) => {
+                    return p.oldState === DebugState.Run && p.newState === DebugState.Break;
+                }
+            });
             await breakPromise;
 
             cell = getLastOutputCell(wrapper, 'NativeCell');

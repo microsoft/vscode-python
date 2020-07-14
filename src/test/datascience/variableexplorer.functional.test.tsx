@@ -13,13 +13,7 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { addCode, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
-import {
-    openVariableExplorer,
-    runDoubleTest,
-    runInteractiveTest,
-    waitForMessage,
-    waitForVariablesUpdated
-} from './testHelpers';
+import { openVariableExplorer, runDoubleTest, runInteractiveTest, waitForVariablesUpdated } from './testHelpers';
 import { verifyAfterStep, verifyCanFetchData, verifyVariables } from './variableTestHelpers';
 
 // tslint:disable: no-var-requires no-require-imports
@@ -83,9 +77,9 @@ const rangeInclusive = require('range-inclusive');
             const nodes = wrapper.find('InteractivePanel');
             if (nodes.length > 0) {
                 const variablesUpdated = waitForVariables
-                    ? waitForVariablesUpdated(ioc, 'default', waitForVariablesCount)
+                    ? waitForVariablesUpdated(ioc.getInteractiveWebPanel(undefined), waitForVariablesCount)
                     : Promise.resolve();
-                const result = await addCode(ioc, wrapper, code, expectError);
+                const result = await addCode(ioc, code, expectError);
                 await variablesUpdated;
                 return result;
             } else {
@@ -95,9 +89,9 @@ const rangeInclusive = require('range-inclusive');
                     createdNotebook = true;
                 }
                 const variablesUpdated = waitForVariables
-                    ? waitForVariablesUpdated(ioc, 'notebook', waitForVariablesCount)
+                    ? waitForVariablesUpdated(ioc.getNativeWebPanel(undefined), waitForVariablesCount)
                     : Promise.resolve();
-                await addCell(ioc, wrapper, code, true);
+                await addCell(ioc.getNativeWebPanel(undefined), code, true);
                 await variablesUpdated;
                 return wrapper;
             }
@@ -105,11 +99,14 @@ const rangeInclusive = require('range-inclusive');
 
         runInteractiveTest(
             'Variable explorer - Exclude',
-            async (wrapper) => {
+            async () => {
                 const basicCode: string = `import numpy as np
 import pandas as pd
 value = 'hello world'`;
                 const basicCode2: string = `value2 = 'hello world 2'`;
+
+                const mount = ioc.getInteractiveWebPanel(undefined);
+                const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
 
@@ -171,9 +168,12 @@ value = 'hello world'`;
 
         runInteractiveTest(
             'Variable explorer - Update',
-            async (wrapper) => {
+            async () => {
                 const basicCode: string = `value = 'hello world'`;
                 const basicCode2: string = `value2 = 'hello world 2'`;
+
+                const mount = ioc.getInteractiveWebPanel(undefined);
+                const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
 
@@ -267,10 +267,13 @@ value = 'hello world'`;
         // Test our display of basic types. We render 8 rows by default so only 8 values per test
         runInteractiveTest(
             'Variable explorer - Types A',
-            async (wrapper) => {
+            async () => {
                 const basicCode: string = `myList = [1, 2, 3]
 mySet = set([42])
 myDict = {'a': 1}`;
+
+                const mount = ioc.getInteractiveWebPanel(undefined);
+                const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
 
@@ -331,10 +334,10 @@ myDict = {'a': 1}`;
                 }
 
                 // Restart the kernel and repeat
-                const interactive = await getOrCreateInteractiveWindow(ioc);
+                const iw = await getOrCreateInteractiveWindow(ioc);
 
-                const variablesComplete = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
-                await interactive.restartKernel();
+                const variablesComplete = iw.mount.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+                await iw.window.restartKernel();
                 await variablesComplete; // Restart should cause a variable refresh
 
                 // Should have no variables
@@ -359,7 +362,7 @@ myDict = {'a': 1}`;
 
         runInteractiveTest(
             'Variable explorer - Basic B',
-            async (wrapper) => {
+            async () => {
                 const basicCode: string = `import numpy as np
 import pandas as pd
 myComplex = complex(1, 1)
@@ -370,6 +373,8 @@ myDataframe = pd.DataFrame(mynpArray)
 mySeries = myDataframe[0]
 myTuple = 1,2,3,4,5,6,7,8,9
 `;
+                const mount = ioc.getInteractiveWebPanel(undefined);
+                const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
 
@@ -503,10 +508,12 @@ Name: 0, dtype: float64`,
         // sure no perf problems with one or the other and to smoke test the native editor
         runDoubleTest(
             'Variable explorer - A lot of items',
-            async (t, wrapper) => {
+            async (t) => {
                 const basicCode: string = `for _i in range(1050):
     exec("var{}=[{} ** 2 % 17 for _l in range(100000)]".format(_i, _i))`;
 
+                const mount = t === 'native' ? ioc.getNativeWebPanel(undefined) : ioc.getInteractiveWebPanel(undefined);
+                const wrapper = mount.wrapper;
                 openVariableExplorer(wrapper);
 
                 // Wait for two variable completes so we get the visible list (should be about 16 items when finished)
@@ -520,11 +527,9 @@ Name: 0, dtype: float64`,
                 verifyVariables(wrapper, targetVariables);
 
                 // Force a scroll to the bottom
-                const complete = ioc
-                    .getWebPanel(t === 'native' ? 'notebook' : 'default')
-                    .waitForMessage(InteractiveWindowMessages.VariablesComplete, {
-                        numberOfTimes: 2
-                    });
+                const complete = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete, {
+                    numberOfTimes: 2
+                });
                 const grid = wrapper.find(AdazzleReactDataGrid);
                 const viewPort = grid.find('Viewport').instance();
                 const rowHeight = (viewPort.props as any).rowHeight as number;
@@ -564,13 +569,14 @@ Name: 0, dtype: float64`,
 
         runInteractiveTest(
             'Variable explorer - DataFrameInfo and Rows',
-            async (wrapper) => {
+            async () => {
                 const basicCode: string = `import numpy as np
 import pandas as pd
 mynpArray = np.array([1.0, 2.0, 3.0])
 myDataframe = pd.DataFrame(mynpArray)
 mySeries = myDataframe[0]
 `;
+                const wrapper = ioc.getInteractiveWebPanel(undefined).wrapper;
 
                 openVariableExplorer(wrapper);
 

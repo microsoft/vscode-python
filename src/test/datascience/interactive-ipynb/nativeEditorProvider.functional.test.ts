@@ -43,7 +43,6 @@ import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jup
 import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 import {
     IJupyterExecution,
-    INotebookEditor,
     INotebookModel,
     INotebookServerOptions,
     ITrustService
@@ -79,8 +78,6 @@ suite('DataScience - Native Editor Provider', () => {
     let customEditorService: typemoq.IMock<ICustomEditorService>;
     let registeredProvider: NativeEditorProvider;
     let panel: typemoq.IMock<WebviewPanel>;
-    let file: Uri;
-    let model: INotebookModel;
     let storageProvider: INotebookStorageProvider;
 
     setup(() => {
@@ -166,11 +163,7 @@ suite('DataScience - Native Editor Provider', () => {
             .returns((_a1) => {
                 return Promise.resolve({ mtime: startTime, type: FileType.File, ctime: startTime, size: 100 });
             });
-        const editor = typemoq.Mock.ofType<INotebookEditor>();
         when(configService.getSettings(anything())).thenReturn({ datascience: { useNotebookEditor: true } } as any);
-        editor.setup((e) => e.closed).returns(() => new EventEmitter<INotebookEditor>().event);
-        editor.setup((e) => e.executed).returns(() => new EventEmitter<INotebookEditor>().event);
-        editor.setup((e) => (e as any).then).returns(() => undefined);
         customEditorService.setup((e) => (e as any).then).returns(() => undefined);
         customEditorService
             .setup((c) => c.registerCustomEditorProvider(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
@@ -185,18 +178,6 @@ suite('DataScience - Native Editor Provider', () => {
                 doc.setup((d) => d.uri).returns(() => f);
                 return registeredProvider.resolveCustomEditor(doc.object, panel.object);
             });
-
-        editor
-            .setup((e) => e.load(typemoq.It.isAny(), typemoq.It.isAny()))
-            .returns((s, _p) => {
-                file = s.file;
-                model = s;
-                return Promise.resolve();
-            });
-        editor.setup((e) => e.show()).returns(() => Promise.resolve());
-        editor.setup((e) => e.file).returns(() => file);
-
-        when(svcContainer.get<INotebookEditor>(INotebookEditor)).thenReturn(editor.object);
     });
 
     function createNotebookProvider() {
@@ -268,23 +249,23 @@ suite('DataScience - Native Editor Provider', () => {
     test('Untitled files reopening with changed contents', async () => {
         let provider = createNotebookProvider();
         const n1 = await provider.createNew();
-        let cells = model!.cells;
+        let cells = n1.model!.cells;
         expect(cells).to.be.lengthOf(1);
-        insertCell(model!, 0, 'a=1');
-        await storageProvider.backup(model, CancellationToken.None);
+        insertCell(n1.model!, 0, 'a=1');
+        await storageProvider.backup(n1.model!, CancellationToken.None);
         const uri = n1.file;
 
         // Act like a reboot
         provider = createNotebookProvider();
-        await provider.open(uri);
-        cells = model!.cells;
+        const n2 = await provider.open(uri);
+        cells = n2.model!.cells;
         expect(cells).to.be.lengthOf(2);
         expect(concatMultilineStringInput(cells[0].data.source)).to.be.eq('a=1');
 
         // Act like another reboot but create a new file
         provider = createNotebookProvider();
-        await provider.createNew();
-        cells = model!.cells;
+        const n3 = await provider.createNew();
+        cells = n3.model!.cells;
         expect(cells).to.be.lengthOf(1);
     });
 });

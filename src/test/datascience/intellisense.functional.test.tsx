@@ -10,6 +10,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { LanguageServerType } from '../../client/activation/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { INotebookEditorProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
@@ -18,6 +19,7 @@ import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import * as InteractiveHelpers from './interactiveWindowTestHelpers';
 import * as NativeHelpers from './nativeEditorTestHelpers';
 import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typeCode } from './testHelpers';
+import { ITestNativeEditorProvider } from './testNativeEditorProvider';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 [LanguageServerType.Microsoft, LanguageServerType.Node].forEach((languageServerType) => {
@@ -440,24 +442,20 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
                 }
             }
         };
-        NativeHelpers.runMountedTest(
-            'Hover on notebook',
-            async (wrapper) => {
-                // Create an notebook so that it listens to the results.
-                const kernelIdle = ioc.getWebPanel('notebook').waitForMessage(InteractiveWindowMessages.KernelIdle);
-                const notebook = await NativeHelpers.openEditor(ioc, JSON.stringify(notebookJSON));
-                await notebook.show();
-                await kernelIdle;
+        NativeHelpers.runMountedTest('Hover on notebook', async () => {
+            // Create an notebook so that it listens to the results.
+            const kernelIdle = ioc
+                .get<ITestNativeEditorProvider>(INotebookEditorProvider)
+                .waitForMessage(undefined, InteractiveWindowMessages.KernelIdle);
+            const ne = await NativeHelpers.openEditor(ioc, JSON.stringify(notebookJSON));
+            await ne.editor.show();
+            await kernelIdle;
 
-                // Cause a hover event over the first character
-                await waitForHover('Native', wrapper, 1, 1);
-                verifyHoverVisible('Native', wrapper, 'a=1\na');
-                await NativeHelpers.closeNotebook(ioc, notebook);
-            },
-            () => {
-                return ioc;
-            }
-        );
+            // Cause a hover event over the first character
+            await waitForHover('Native', ne.mount.wrapper, 1, 1);
+            verifyHoverVisible('Native', ne.mount.wrapper, 'a=1\na');
+            await NativeHelpers.closeNotebook(ioc, ne.editor);
+        });
 
         InteractiveHelpers.runTest(
             'Hover on interactive',

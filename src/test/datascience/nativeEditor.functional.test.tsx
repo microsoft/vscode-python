@@ -56,10 +56,8 @@ import {
     closeNotebook,
     createNewEditor,
     getNativeCellResults,
-    mountNativeWebView,
     openEditor,
-    runMountedTest,
-    setupWebview
+    runMountedTest
 } from './nativeEditorTestHelpers';
 import {
     addContinuousMockData,
@@ -209,49 +207,37 @@ suite('DataScience Native Editor', () => {
                 //      asyncDump();
                 // });
 
-                runMountedTest(
-                    'Simple text',
-                    async (wrapper) => {
+                runMountedTest('Simple text', async () => {
+                    // Create an editor so something is listening to messages
+                    const { mount } = await createNewEditor(ioc);
+
+                    // Add a cell into the UI and wait for it to render
+                    await addCell(mount, 'a=1\na');
+
+                    verifyHtmlOnCell(mount.wrapper, 'NativeCell', '<span>1</span>', 1);
+                });
+
+                runMountedTest('Invalid session still runs', async (context) => {
+                    if (ioc.mockJupyter) {
+                        // Can only do this with the mock. Have to force the first call to waitForIdle on the
+                        // the jupyter session to fail
+                        ioc.mockJupyter.forcePendingIdleFailure();
+
                         // Create an editor so something is listening to messages
-                        await createNewEditor(ioc);
+                        const { mount } = await createNewEditor(ioc);
 
-                        // Add a cell into the UI and wait for it to render
-                        await addCell(ioc, wrapper, 'a=1\na');
+                        // Run the first cell. Should fail but then ask for another
+                        await addCell(mount, 'a=1\na');
 
-                        verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
-                    },
-                    () => {
-                        return ioc;
+                        verifyHtmlOnCell(mount.wrapper, 'NativeCell', '<span>1</span>', 1);
+                    } else {
+                        context.skip();
                     }
-                );
-
-                runMountedTest(
-                    'Invalid session still runs',
-                    async (wrapper, context) => {
-                        if (ioc.mockJupyter) {
-                            // Can only do this with the mock. Have to force the first call to waitForIdle on the
-                            // the jupyter session to fail
-                            ioc.mockJupyter.forcePendingIdleFailure();
-
-                            // Create an editor so something is listening to messages
-                            await createNewEditor(ioc);
-
-                            // Run the first cell. Should fail but then ask for another
-                            await addCell(ioc, wrapper, 'a=1\na');
-
-                            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
-                        } else {
-                            context.skip();
-                        }
-                    },
-                    () => {
-                        return ioc;
-                    }
-                );
+                });
 
                 runMountedTest(
                     'Invalid kernel still runs',
-                    async (wrapper, context) => {
+                    async (context) => {
                         if (ioc.mockJupyter) {
                             const kernelDesc = {
                                 name: 'foobar',

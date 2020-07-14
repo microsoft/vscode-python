@@ -158,7 +158,6 @@ import {
     ICryptoUtils,
     ICurrentProcess,
     IDataScienceSettings,
-    IDisposableRegistry,
     IExperimentService,
     IExperimentsManager,
     IExtensionContext,
@@ -217,9 +216,7 @@ import { NotebookProvider } from '../../client/datascience/interactive-common/no
 import { NotebookServerProvider } from '../../client/datascience/interactive-common/notebookServerProvider';
 import { AutoSaveService } from '../../client/datascience/interactive-ipynb/autoSaveService';
 import { DigestStorage } from '../../client/datascience/interactive-ipynb/digestStorage';
-import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
-import { NativeEditorOldWebView } from '../../client/datascience/interactive-ipynb/nativeEditorOldWebView';
 import { NativeEditorRunByLineListener } from '../../client/datascience/interactive-ipynb/nativeEditorRunByLineListener';
 import { NativeEditorStorage } from '../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
@@ -228,7 +225,6 @@ import {
     NotebookStorageProvider
 } from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { TrustService } from '../../client/datascience/interactive-ipynb/trustService';
-import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
 import { IPyWidgetMessageDispatcherFactory } from '../../client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory';
@@ -1213,10 +1209,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
     }
 
-    public getWebPanel(id: string) {
-        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).get(id);
-    }
-
     public getInteractiveWebPanel(window: IInteractiveWindow | undefined) {
         return this.get<TestInteractiveWindowProvider>(IInteractiveWindowProvider).getMountedWebView(window);
     }
@@ -1332,12 +1324,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.mockJupyter.addInterpreter(newInterpreter, commands);
         }
     }
-    public changeViewState(type: 'notebook' | 'default', active: boolean, visible: boolean) {
-        const webPanel = this.getWebPanel(type);
-        if (webPanel) {
-            webPanel.changeViewState(active, visible);
-        }
-    }
 
     public getWorkspaceConfig(section: string | undefined, resource?: Resource): MockWorkspaceConfiguration {
         if (!section || section !== 'python') {
@@ -1356,19 +1342,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.experimentState.set(experimentName, enabled);
     }
 
-    private computeWebPanelId(title: string): 'notebook' | 'default' {
-        // Should be based on title (for now)
-        if (title && (title.toLowerCase().endsWith('.ipynb') || title.toLowerCase().includes('notebook'))) {
-            return `notebook`;
-        }
-
-        return 'default';
-    }
-
     private async onCreateWebPanel(options: IWebPanelOptions) {
-        const id = this.computeWebPanelId(options.title);
-        const panel = this.getWebPanel(id);
-        this.get<IDisposableRegistry>(IDisposableRegistry).push(panel);
+        const panel = options.title.includes('Interactive')
+            ? this.getInteractiveWebPanel(undefined)
+            : this.getNativeWebPanel(undefined);
         panel.attach(options);
         return panel;
     }

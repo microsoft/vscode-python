@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import type { nbformat } from '@jupyterlab/coreutils';
-import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
 import {
@@ -12,22 +11,18 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
-import { UseCustomEditorApi } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import {
-    GLOBAL_MEMENTO,
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
     IExperimentsManager,
-    IMemento,
     InteractiveWindowMode,
     IPersistentStateFactory,
-    Resource,
-    WORKSPACE_MEMENTO
+    Resource
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -224,8 +219,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             }
         }
     }
-
-    public async load(owner: Resource, mode: InteractiveWindowMode, title?: string): Promise<void> {}
 
     public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
         return this.addOrDebugCode(code, file, line, false);

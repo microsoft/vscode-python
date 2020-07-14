@@ -32,7 +32,6 @@ import { noop, sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { IMountedWebView } from './mountedWebView';
-import { waitForMessage } from './testHelpers';
 
 // import { asyncDump } from '../common/asyncDump';
 suite('DataScience DataViewer tests', () => {
