@@ -23,7 +23,7 @@ def run(cwd, testRunner, args):
     args -- arguments passed into the test runner
     """
 
-    sys.path[0] = os.getcwd()
+    sys.path.insert(0, os.getcwd())
     os.chdir(cwd)
 
     try:
