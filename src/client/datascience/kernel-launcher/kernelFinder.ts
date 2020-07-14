@@ -246,10 +246,10 @@ export class KernelFinder implements IKernelFinder {
               })
             : [];
 
-        if (this.platformService.isWindows) {
-            const activeInterpreter = await this.interpreterService.getActiveInterpreter();
-            if (activeInterpreter) {
-                if (jupyterPathVars.length > 0) {
+        if (jupyterPathVars.length > 0) {
+            if (this.platformService.isWindows) {
+                const activeInterpreter = await this.interpreterService.getActiveInterpreter();
+                if (activeInterpreter) {
                     jupyterPathVars.forEach(async (jupyterPath) => {
                         const jupyterWinPath = await getRealPath(
                             this.file,
@@ -262,15 +262,11 @@ export class KernelFinder implements IKernelFinder {
                             paths.push(jupyterWinPath);
                         }
                     });
-                }
-            } else {
-                if (jupyterPathVars.length > 0) {
+                } else {
                     paths.push(...jupyterPathVars);
                 }
-            }
-        } else {
-            // Unix based
-            if (jupyterPathVars.length > 0) {
+            } else {
+                // Unix based
                 paths.push(...jupyterPathVars);
             }
         }
