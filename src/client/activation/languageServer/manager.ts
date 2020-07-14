@@ -4,6 +4,7 @@ import '../../common/extensions';
 
 import { inject, injectable, named } from 'inversify';
 
+import { ICommandManager } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
@@ -11,6 +12,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { Commands } from '../commands';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import {
     ILanguageServerAnalysisOptions,
@@ -20,8 +22,6 @@ import {
     ILanguageServerProxy,
     LanguageServerType
 } from '../types';
-import { ICommandManager } from '../../common/application/types';
-import { Commands } from '../commands';
 
 @injectable()
 export class DotNetLanguageServerManager implements ILanguageServerManager {
