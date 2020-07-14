@@ -835,6 +835,11 @@
                 "command": "python.datascience.latestExtension",
                 "title": "DataScience.latestExtension",
                 "category": "Python"
+            },
+            {
+                "command": "python.analysis.restartLanguageServer",
+                "title": "%python.command.python.analysis.restartLanguageServer.title%",
+                "category": "Python"
             }
         ],
         "menus": {

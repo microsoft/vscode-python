@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { instance, mock, verify, when } from 'ts-mockito';
+import { Disposable } from 'vscode';
+import { instance, mock, verify, when, anything } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient/node';
 import { DotNetLanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
@@ -22,6 +23,9 @@ import { IConfigurationService, IExperimentsManager } from '../../../client/comm
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { sleep } from '../../core';
+import { ICommandManager } from '../../../client/common/application/types';
+import { CommandManager } from '../../../client/common/application/commandManager';
+import { Commands } from '../../../client/activation/commands';
 
 use(chaiAsPromised);
 
@@ -37,6 +41,7 @@ suite('Language Server - Manager', () => {
     let folderService: ILanguageServerFolderService;
     let experimentsManager: IExperimentsManager;
     let configService: IConfigurationService;
+    let commandManager: ICommandManager;
     const languageClientOptions = ({ x: 1 } as any) as LanguageClientOptions;
     setup(() => {
         serviceContainer = mock(ServiceContainer);
@@ -46,13 +51,19 @@ suite('Language Server - Manager', () => {
         folderService = mock(DotNetLanguageServerFolderService);
         experimentsManager = mock(ExperimentsManager);
         configService = mock(ConfigurationService);
+
+        commandManager = mock(CommandManager);
+        const disposable = mock(Disposable);
+        when(commandManager.registerCommand(Commands.RestartLS, anything())).thenReturn(instance(disposable));
+
         manager = new DotNetLanguageServerManager(
             instance(serviceContainer),
             instance(analysisOptions),
             instance(lsExtension),
             instance(folderService),
             instance(experimentsManager),
-            instance(configService)
+            instance(configService),
+            instance(commandManager)
         );
     });
 

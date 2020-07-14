@@ -20,6 +20,8 @@ import {
     ILanguageServerProxy,
     LanguageServerType
 } from '../types';
+import { ICommandManager } from '../../common/application/types';
+import { Commands } from '../commands';
 
 @injectable()
 export class DotNetLanguageServerManager implements ILanguageServerManager {
@@ -39,8 +41,15 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
         @inject(ILanguageServerExtension) private readonly lsExtension: ILanguageServerExtension,
         @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
-    ) {}
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(ICommandManager) commandManager: ICommandManager
+    ) {
+        this.disposables.push(
+            commandManager.registerCommand(Commands.RestartLS, () => {
+                this.restartLanguageServer().ignoreErrors();
+            })
+        );
+    }
 
     private static versionTelemetryProps(instance: DotNetLanguageServerManager) {
         return {
