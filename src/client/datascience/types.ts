@@ -575,7 +575,6 @@ export interface INotebookEditor extends IInteractiveBase {
     readonly active: boolean;
     readonly model: INotebookModel | undefined;
     show(): Promise<void>;
-    load(storage: INotebookModel, webViewPanel?: WebviewPanel): Promise<void>;
     runAllCells(): void;
     runSelectedCell(): void;
     addCellBelow(): void;

@@ -4,19 +4,23 @@
 import * as assert from 'assert';
 import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
-import { Uri } from 'vscode';
+import { CodeLens, Uri } from 'vscode';
 
-import { CodeLens } from 'vscode';
 import { ICommandManager } from '../../client/common/application/types';
 import { Resource } from '../../client/common/types';
-import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
-import { ICodeWatcher, IDataScienceCodeLensProvider, IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import {
+    ICodeWatcher,
+    IDataScienceCodeLensProvider,
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    IJupyterExecution
+} from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { IMountedWebView } from './mountedWebView';
 import { addMockData } from './testHelpers';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 
 export async function getInteractiveCellResults(
     ioc: DataScienceIocContainer,
@@ -104,8 +108,8 @@ export async function addCode(
     uri: Uri = Uri.file('foo.py')
     // tslint:disable-next-line: no-any
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-    const { window, mount } = await getOrCreateInteractiveWindow(ioc);
-    return getInteractiveCellResults(ioc, mount.wrapper, async () => {
+    const { window } = await getOrCreateInteractiveWindow(ioc);
+    return getInteractiveCellResults(ioc, async () => {
         const success = await window.addCode(code, uri, 2);
         if (expectError) {
             assert.equal(success, false, `${code} did not produce an error`);

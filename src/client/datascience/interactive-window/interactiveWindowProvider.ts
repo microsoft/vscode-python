@@ -6,7 +6,15 @@ import * as uuid from 'uuid/v4';
 import { ConfigurationTarget, Event, EventEmitter, Memento, Uri } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { IApplicationShell, ILiveShareApi } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    ILiveShareApi,
+    IWebPanelProvider,
+    IWorkspaceService
+} from '../../common/application/types';
+import { UseCustomEditorApi } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import {
     GLOBAL_MEMENTO,
@@ -14,21 +22,38 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
+    IExperimentsManager,
     IMemento,
     InteractiveWindowMode,
-    Resource
+    IPersistentStateFactory,
+    Resource,
+    WORKSPACE_MEMENTO
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
-import { LiveShare, LiveShareCommands } from '../constants';
+import { Identifiers, LiveShare, LiveShareCommands } from '../constants';
+import { IDataViewerFactory } from '../data-viewing/types';
+import { ExportUtil } from '../export/exportUtil';
+import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { PostOffice } from '../liveshare/postOffice';
 import {
+    ICodeCssGenerator,
     IDataScienceErrorHandler,
     IInteractiveWindow,
+    IInteractiveWindowListener,
     IInteractiveWindowLoadable,
-    IInteractiveWindowProvider
+    IInteractiveWindowProvider,
+    IJupyterDebugger,
+    IJupyterVariableDataProviderFactory,
+    IJupyterVariables,
+    INotebookExporter,
+    INotebookProvider,
+    IStatusProvider,
+    IThemeFinder
 } from '../types';
+import { InteractiveWindow } from './interactiveWindow';
 
 interface ISyncData {
     count: number;
@@ -60,7 +85,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
@@ -121,6 +145,65 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             // Wait for the waitable to be signaled or the peer count on the post office to change
             await waitable.promise;
         }
+    }
+
+    protected create(resource: Resource, mode: InteractiveWindowMode): IInteractiveWindow {
+        const title =
+            mode === 'multiple' || (mode === 'perFile' && !resource)
+                ? localize.DataScience.interactiveWindowTitleFormat().format(`#${this._windows.length}`)
+                : undefined;
+
+        // Set it as soon as we create it. The .ctor for the interactive window
+        // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
+        const result = new InteractiveWindow(
+            this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
+            this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),
+            this.serviceContainer.get<IApplicationShell>(IApplicationShell),
+            this.serviceContainer.get<IDocumentManager>(IDocumentManager),
+            this.serviceContainer.get<IStatusProvider>(IStatusProvider),
+            this.serviceContainer.get<IWebPanelProvider>(IWebPanelProvider),
+            this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
+            this.serviceContainer.get<ICodeCssGenerator>(ICodeCssGenerator),
+            this.serviceContainer.get<IThemeFinder>(IThemeFinder),
+            this.serviceContainer.get<IFileSystem>(IFileSystem),
+            this.serviceContainer.get<IConfigurationService>(IConfigurationService),
+            this.serviceContainer.get<ICommandManager>(ICommandManager),
+            this.serviceContainer.get<INotebookExporter>(INotebookExporter),
+            this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
+            this,
+            this.serviceContainer.get<IDataViewerFactory>(IDataViewerFactory),
+            this.serviceContainer.get<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory),
+            this.serviceContainer.get<IJupyterVariables>(IJupyterVariables, Identifiers.ALL_VARIABLES),
+            this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger),
+            this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
+            this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory),
+            this.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO),
+            this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO),
+            this.serviceContainer.get<IExperimentsManager>(IExperimentsManager),
+            this.serviceContainer.get<KernelSwitcher>(KernelSwitcher),
+            this.serviceContainer.get<INotebookProvider>(INotebookProvider),
+            this.serviceContainer.get<boolean>(UseCustomEditorApi),
+            this.serviceContainer.get<IExperimentService>(IExperimentService),
+            this.serviceContainer.get<ExportUtil>(ExportUtil),
+            resource,
+            mode,
+            title
+        );
+        this._windows.push(result);
+
+        // This is the last interactive window at the moment (as we're about to create it)
+        this.lastActiveInteractiveWindow = result;
+
+        // When shutting down, we fire an event
+        const handler = result.closed(this.onInteractiveWindowClosed);
+        this.disposables.push(result);
+        this.disposables.push(handler);
+        this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
+
+        // Show in the background
+        result.show().ignoreErrors();
+
+        return result;
     }
 
     private async getInteractiveMode(resource: Resource): Promise<InteractiveWindowMode> {
@@ -185,32 +268,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             }
             return false;
         });
-    }
-
-    private create(resource: Resource, mode: InteractiveWindowMode): IInteractiveWindow {
-        // Set it as soon as we create it. The .ctor for the interactive window
-        // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
-        const result = this.serviceContainer.get<IInteractiveWindowLoadable>(IInteractiveWindow);
-        this._windows.push(result);
-
-        // This is the last interactive window at the moment (as we're about to create it)
-        this.lastActiveInteractiveWindow = result;
-
-        // When shutting down, we fire an event
-        const handler = result.closed(this.onInteractiveWindowClosed);
-        this.disposables.push(result);
-        this.disposables.push(handler);
-        this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
-
-        const title =
-            mode === 'multiple' || (mode === 'perFile' && !resource)
-                ? localize.DataScience.interactiveWindowTitleFormat().format(`#${this._windows.length}`)
-                : undefined;
-
-        // Load in the background
-        result.load(resource, mode, title).catch((e) => this.errorHandler.handleError(e));
-
-        return result;
     }
 
     private raiseOnDidChangeActiveInteractiveWindow() {

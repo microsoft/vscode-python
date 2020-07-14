@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Disposable, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import { Disposable, Event, EventEmitter, Memento, Uri, WebviewPanel } from 'vscode';
 import { CancellationToken } from 'vscode-languageclient/node';
 import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
 import {
@@ -13,20 +13,56 @@ import {
     CustomDocumentEditEvent,
     CustomDocumentOpenContext,
     CustomEditorProvider,
+    IApplicationShell,
+    ICommandManager,
     ICustomEditorService,
+    IDocumentManager,
+    ILiveShareApi,
+    IWebPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
+import { UseCustomEditorApi } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IFileSystem } from '../../common/platform/types';
+import {
+    GLOBAL_MEMENTO,
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentService,
+    IExperimentsManager,
+    IMemento,
+    WORKSPACE_MEMENTO
+} from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateNewNotebookUri } from '../common';
-import { Telemetry } from '../constants';
+import { Identifiers, Telemetry } from '../constants';
+import { IDataViewerFactory } from '../data-viewing/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
+import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { NotebookModelEditEvent } from '../notebookStorage/notebookModelEditEvent';
-import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../types';
+import {
+    ICodeCssGenerator,
+    IDataScienceErrorHandler,
+    IInteractiveWindowListener,
+    IJupyterDebugger,
+    IJupyterVariableDataProviderFactory,
+    IJupyterVariables,
+    INotebookEditor,
+    INotebookEditorProvider,
+    INotebookExporter,
+    INotebookImporter,
+    INotebookModel,
+    INotebookProvider,
+    IStatusProvider,
+    IThemeFinder,
+    ITrustService
+} from '../types';
+import { NativeEditor } from './nativeEditor';
 import { getNextUntitledCounter } from './nativeEditorStorage';
+import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 import { INotebookStorageProvider } from './notebookStorageProvider';
 
 // Class that is registered as the custom editor provider for notebooks. VS code will call into this class when
@@ -126,8 +162,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
 
     public async resolveCustomEditor(document: CustomDocument, panel: WebviewPanel) {
         this.customDocuments.set(document.uri.fsPath, document);
-        const editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
-        await this.loadNotebookEditor(editor, document.uri, panel);
+        await this.loadNotebookEditor(document.uri, panel);
     }
 
     public async resolveCustomDocument(document: CustomDocument): Promise<void> {
@@ -191,16 +226,55 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         return model;
     }
 
-    protected async loadNotebookEditor(editor: INotebookEditor, resource: Uri, panel?: WebviewPanel) {
+    protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): INotebookEditor {
+        const editor = new NativeEditor(
+            this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
+            this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),
+            this.serviceContainer.get<IApplicationShell>(IApplicationShell),
+            this.serviceContainer.get<IDocumentManager>(IDocumentManager),
+            this.serviceContainer.get<IWebPanelProvider>(IWebPanelProvider),
+            this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
+            this.serviceContainer.get<ICodeCssGenerator>(ICodeCssGenerator),
+            this.serviceContainer.get<IThemeFinder>(IThemeFinder),
+            this.serviceContainer.get<IStatusProvider>(IStatusProvider),
+            this.serviceContainer.get<IFileSystem>(IFileSystem),
+            this.serviceContainer.get<IConfigurationService>(IConfigurationService),
+            this.serviceContainer.get<ICommandManager>(ICommandManager),
+            this.serviceContainer.get<INotebookExporter>(INotebookExporter),
+            this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
+            this.serviceContainer.get<NativeEditorSynchronizer>(NativeEditorSynchronizer),
+            this.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider),
+            this.serviceContainer.get<IDataViewerFactory>(IDataViewerFactory),
+            this.serviceContainer.get<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory),
+            this.serviceContainer.get<IJupyterVariables>(IJupyterVariables, Identifiers.ALL_VARIABLES),
+            this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger),
+            this.serviceContainer.get<INotebookImporter>(INotebookImporter),
+            this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
+            this.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO),
+            this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO),
+            this.serviceContainer.get<IExperimentsManager>(IExperimentsManager),
+            this.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry),
+            this.serviceContainer.get<KernelSwitcher>(KernelSwitcher),
+            this.serviceContainer.get<INotebookProvider>(INotebookProvider),
+            this.serviceContainer.get<boolean>(UseCustomEditorApi),
+            this.serviceContainer.get<ITrustService>(ITrustService),
+            this.serviceContainer.get<IExperimentService>(IExperimentService),
+            model,
+            panel
+        );
+        this.openedEditor(editor);
+        return editor;
+    }
+
+    protected async loadNotebookEditor(resource: Uri, panel?: WebviewPanel) {
         try {
             // Get the model
             const model = await this.loadModel(resource);
 
             // Load it (should already be visible)
-            return editor
-                .load(model, panel)
-                .then(() => this.openedEditor(editor))
-                .then(() => editor);
+            const result = this.createNotebookEditor(model, panel);
+            await result.show();
+            return result;
         } catch (exc) {
             // Send telemetry indicating a failure
             sendTelemetryEvent(Telemetry.OpenNotebookFailure);

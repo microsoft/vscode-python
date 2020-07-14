@@ -390,7 +390,11 @@ import { MockWorkspaceFolder } from './mockWorkspaceFolder';
 import { IMountedWebViewFactory, MountedWebViewFactory } from './mountedWebViewFactory';
 import { TestExecutionLogger } from './testexecutionLogger';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
-import { TestNativeEditorProvider } from './testNativeEditorProvider';
+import {
+    ITestNativeEditorProvider,
+    TestNativeEditorProvider,
+    TestNativeEditorProviderOld
+} from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
 
@@ -605,7 +609,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             JupyterVariableDataProviderFactory
         );
         this.serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
-        this.serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
         this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
         this.serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
         this.serviceManager.add<IStartPage>(IStartPage, StartPage);
@@ -679,14 +682,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ICellHashListener
         ]);
         this.serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
-        this.serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, TestNativeEditorProvider);
+        this.serviceManager.addSingleton<INotebookEditorProvider>(
+            INotebookEditorProvider,
+            useCustomEditor ? TestNativeEditorProvider : TestNativeEditorProviderOld
+        );
         this.serviceManager.addSingleton<DataViewerDependencyService>(
             DataViewerDependencyService,
             DataViewerDependencyService
-        );
-        this.serviceManager.add<INotebookEditor>(
-            INotebookEditor,
-            useCustomEditor ? NativeEditor : NativeEditorOldWebView
         );
 
         this.serviceManager.addSingleton<IDataScienceCommandListener>(
@@ -1203,16 +1205,24 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(id, mount);
     }
 
-    public getDefaultWrapper() {
-        return this.getDefaultWebPanel().wrapper;
-    }
-
-    public getDefaultWebPanel() {
-        return this.get<TestInteractiveWindowProvider>(IInteractiveWindowProvider).getMountedWebView(undefined);
+    public getWrapper(type: 'notebook' | 'interactive') {
+        if (type === 'notebook') {
+            return this.getNativeWebPanel(undefined).wrapper;
+        } else {
+            return this.getInteractiveWebPanel(undefined).wrapper;
+        }
     }
 
     public getWebPanel(id: string) {
         return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).get(id);
+    }
+
+    public getInteractiveWebPanel(window: IInteractiveWindow | undefined) {
+        return this.get<TestInteractiveWindowProvider>(IInteractiveWindowProvider).getMountedWebView(window);
+    }
+
+    public getNativeWebPanel(window: INotebookEditor | undefined) {
+        return this.get<ITestNativeEditorProvider>(INotebookEditorProvider).getMountedWebView(window);
     }
 
     public postMessage(m: WebPanelMessage, type: 'notebook' | 'default') {

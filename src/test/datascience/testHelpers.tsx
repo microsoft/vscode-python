@@ -53,10 +53,13 @@ export enum CellPosition {
 // tslint:disable-next-line: unified-signatures
 export function waitForMessage(
     ioc: DataScienceIocContainer,
+    type: 'native' | 'interactive',
     message: string,
     options?: WaitForMessageOptions
 ): Promise<void> {
-    return ioc.getDefaultWebPanel().waitForMessage(message, options);
+    return type === 'native'
+        ? ioc.getNativeWebPanel(undefined).waitForMessage(message, options)
+        : ioc.getInteractiveWebPanel(undefined).waitForMessage(message, options);
 }
 
 async function testInnerLoop(

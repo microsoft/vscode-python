@@ -195,11 +195,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
         // Tell each listener our identity. Can't do it here though as were in the constructor for the base class
         setTimeout(() => {
-            this.getNotebookIdentity()
-                .then((identity) =>
-                    this.listeners.forEach((l) => l.onMessage(InteractiveWindowMessages.NotebookIdentity, identity))
-                )
-                .ignoreErrors();
+            this.listeners.forEach((l) =>
+                l.onMessage(InteractiveWindowMessages.NotebookIdentity, this.notebookIdentity)
+            );
         }, 0);
 
         // When a notebook provider first makes its connection check it to see if we should create a notebook
@@ -362,12 +360,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     public dispose() {
         super.dispose();
-        this.getNotebookIdentity()
-            .then((r) => {
-                // Tell listeners we're closing. They can decide if they should dispose themselves or not.
-                this.listeners.forEach((l) => l.onMessage(InteractiveWindowMessages.NotebookClose, r));
-            })
-            .ignoreErrors();
+        // Tell listeners we're closing. They can decide if they should dispose themselves or not.
+        this.listeners.forEach((l) => l.onMessage(InteractiveWindowMessages.NotebookClose, this.notebookIdentity));
         this.updateContexts(undefined);
     }
 
@@ -442,7 +436,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             );
 
             try {
-                const settings = this.configuration.getSettings(await this.getOwningResource());
+                const settings = this.configuration.getSettings(this.owningResource);
                 const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
 
                 const result = await this._notebook.interruptKernel(interruptTimeout);
@@ -520,11 +514,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Default is not to do anything. This only works in the native editor
     }
 
-    protected abstract getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined>;
+    protected abstract get notebookMetadata(): nbformat.INotebookMetadata | undefined;
 
     protected abstract updateContexts(info: IInteractiveWindowInfo | undefined): void;
 
-    protected abstract getNotebookIdentity(): Promise<INotebookIdentity>;
+    protected abstract get notebookIdentity(): INotebookIdentity;
 
     protected abstract closeBecauseOfFailure(exc: Error): Promise<void>;
 
@@ -565,7 +559,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             this._notebook && !this.perceivedJupyterStartupTelemetryCaptured ? new StopWatch() : undefined;
         let result = true;
         // Do not execute or render empty code cells
-        const cellMatcher = new CellMatcher(this.configService.getSettings(await this.getOwningResource()).datascience);
+        const cellMatcher = new CellMatcher(this.configService.getSettings(this.owningResource).datascience);
         if (cellMatcher.stripFirstMarker(code).length === 0) {
             return result;
         }
@@ -646,7 +640,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                         }
                     });
                 }
-                const owningResource = await this.getOwningResource();
+                const owningResource = this.owningResource;
                 const observable = this._notebook.executeObservable(code, file, line, id, false);
 
                 // Indicate we executed some code
@@ -734,14 +728,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 case CellState.error:
                 case CellState.finished:
                     // Tell the react controls we're done
-                    this.getNotebookIdentity()
-                        .then((i) => {
-                            return this.postMessage(InteractiveWindowMessages.FinishCell, {
-                                cell,
-                                notebookIdentity: i.resource
-                            });
-                        })
-                        .ignoreErrors();
+                    this.postMessage(InteractiveWindowMessages.FinishCell, {
+                        cell,
+                        notebookIdentity: this.notebookIdentity.resource
+                    }).ignoreErrors();
 
                     // Remove from the list of unfinished cells
                     this.unfinishedCells = this.unfinishedCells.filter((c) => c.id !== cell.id);
@@ -798,7 +788,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     type: reason,
                     sysInfoCell: sysInfo,
                     id: this.id,
-                    notebookIdentity: (await this.getNotebookIdentity()).resource
+                    notebookIdentity: this.notebookIdentity.resource
                 });
             }
 
@@ -878,12 +868,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async shouldAskForRestart(): Promise<boolean> {
-        const settings = this.configuration.getSettings(await this.getOwningResource());
+        const settings = this.configuration.getSettings(this.owningResource);
         return settings && settings.datascience && settings.datascience.askForKernelRestart === true;
     }
 
     private async disableAskForRestart(): Promise<void> {
-        const settings = this.configuration.getSettings(await this.getOwningResource());
+        const settings = this.configuration.getSettings(this.owningResource);
         if (settings && settings.datascience) {
             settings.datascience.askForKernelRestart = false;
             this.configuration
@@ -893,12 +883,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async shouldAskForLargeData(): Promise<boolean> {
-        const settings = this.configuration.getSettings(await this.getOwningResource());
+        const settings = this.configuration.getSettings(this.owningResource);
         return settings && settings.datascience && settings.datascience.askForLargeDataFrames === true;
     }
 
     private async disableAskForLargeData(): Promise<void> {
-        const settings = this.configuration.getSettings(await this.getOwningResource());
+        const settings = this.configuration.getSettings(this.owningResource);
         if (settings && settings.datascience) {
             settings.datascience.askForLargeDataFrames = false;
             this.configuration
@@ -1000,12 +990,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async finishOutstandingCells() {
-        const identity = await this.getNotebookIdentity();
         this.unfinishedCells.forEach((c) => {
             c.state = CellState.error;
             this.postMessage(InteractiveWindowMessages.FinishCell, {
                 cell: c,
-                notebookIdentity: identity.resource
+                notebookIdentity: this.notebookIdentity.resource
             }).ignoreErrors();
         });
         this.unfinishedCells = [];
@@ -1082,21 +1071,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook> {
         let notebook: INotebook | undefined;
         while (!notebook) {
-            const [resource, identity, metadata] = await Promise.all([
-                this.getOwningResource(),
-                this.getNotebookIdentity(),
-                this.getNotebookMetadata()
-            ]);
             try {
-                notebook = identity
-                    ? await this.notebookProvider.getOrCreateNotebook({
-                          identity: identity.resource,
-                          resource,
-                          metadata
-                      })
-                    : undefined;
+                notebook = await this.notebookProvider.getOrCreateNotebook({
+                    identity: this.notebookIdentity.resource,
+                    resource: this.owningResource,
+                    metadata: this.notebookMetadata
+                });
                 if (notebook) {
-                    const executionActivation = { ...identity, owningResource: resource };
+                    const executionActivation = { ...this.notebookIdentity, owningResource: this.owningResource };
                     this.postMessageToListeners(
                         InteractiveWindowMessages.NotebookExecutionActivated,
                         executionActivation
@@ -1107,7 +1089,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 if (e instanceof JupyterInvalidKernelError && serverConnection && serverConnection.localLaunch) {
                     // Ask the user for a new local kernel
                     const newKernel = await this.switcher.askForLocalKernel(
-                        resource,
+                        this.owningResource,
                         serverConnection.type,
                         e.kernelSpec
                     );
@@ -1249,7 +1231,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const line = editor.selection.start.line;
             const revealLine = line + 1;
             const defaultCellMarker =
-                this.configService.getSettings(await this.getOwningResource()).datascience.defaultCellMarker ||
+                this.configService.getSettings(this.owningResource).datascience.defaultCellMarker ||
                 Identifiers.DefaultCodeCellMarker;
             let newCode = `${source}${os.EOL}`;
             if (hasCellsAlready) {
@@ -1389,7 +1371,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Store variable explorer height based on file name in workspace storage
         if (payload !== undefined) {
             const updatedHeights = payload as { containerHeight: number; gridHeight: number };
-            const uri = await this.getOwningResource(); // Get file name
+            const uri = this.owningResource; // Get file name
 
             if (!uri) {
                 return;
@@ -1408,7 +1390,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async variableExplorerHeightRequest(): Promise<
         { containerHeight: number; gridHeight: number } | undefined
     > {
-        const uri = await this.getOwningResource(); // Get file name
+        const uri = this.owningResource; // Get file name
 
         if (!uri || isUntitledFile(uri)) {
             return; // don't resotre height of untitled notebooks

@@ -70,7 +70,6 @@ import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity
 
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 
-@injectable()
 export class InteractiveWindow extends InteractiveBase implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
@@ -104,36 +103,38 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private pendingHasCell = new Map<string, Deferred<boolean>>();
     private mode: InteractiveWindowMode = 'multiple';
     constructor(
-        @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
-        @inject(ILiveShareApi) liveShare: ILiveShareApi,
-        @inject(IApplicationShell) applicationShell: IApplicationShell,
-        @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IStatusProvider) statusProvider: IStatusProvider,
-        @inject(IWebPanelProvider) provider: IWebPanelProvider,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
-        @inject(IThemeFinder) themeFinder: IThemeFinder,
-        @inject(IFileSystem) fileSystem: IFileSystem,
-        @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(ICommandManager) commandManager: ICommandManager,
-        @inject(INotebookExporter) jupyterExporter: INotebookExporter,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IDataViewerFactory) dataExplorerFactory: IDataViewerFactory,
-        @inject(IJupyterVariableDataProviderFactory)
+        listeners: IInteractiveWindowListener[],
+        liveShare: ILiveShareApi,
+        applicationShell: IApplicationShell,
+        documentManager: IDocumentManager,
+        statusProvider: IStatusProvider,
+        provider: IWebPanelProvider,
+        disposables: IDisposableRegistry,
+        cssGenerator: ICodeCssGenerator,
+        themeFinder: IThemeFinder,
+        fileSystem: IFileSystem,
+        configuration: IConfigurationService,
+        commandManager: ICommandManager,
+        jupyterExporter: INotebookExporter,
+        workspaceService: IWorkspaceService,
+        private interactiveWindowProvider: IInteractiveWindowProvider,
+        dataExplorerFactory: IDataViewerFactory,
         jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) jupyterVariables: IJupyterVariables,
-        @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
-        @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
-        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) workspaceStorage: Memento,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
-        @inject(KernelSwitcher) switcher: KernelSwitcher,
-        @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
-        @inject(IExperimentService) expService: IExperimentService,
-        @inject(ExportUtil) private exportUtil: ExportUtil
+        jupyterVariables: IJupyterVariables,
+        jupyterDebugger: IJupyterDebugger,
+        errorHandler: IDataScienceErrorHandler,
+        private readonly stateFactory: IPersistentStateFactory,
+        globalStorage: Memento,
+        workspaceStorage: Memento,
+        experimentsManager: IExperimentsManager,
+        switcher: KernelSwitcher,
+        notebookProvider: INotebookProvider,
+        useCustomEditorApi: boolean,
+        expService: IExperimentService,
+        private exportUtil: ExportUtil,
+        owner: Resource,
+        mode: InteractiveWindowMode,
+        title: string | undefined
     ) {
         super(
             listeners,
@@ -176,6 +177,30 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
         // Send a telemetry event to indicate window is opening
         sendTelemetryEvent(Telemetry.OpenedInteractiveWindow);
+
+        // Set our owner and first submitter
+        this._owner = owner;
+        this.mode = mode;
+        if (owner) {
+            this._submitters.push(owner);
+        }
+
+        // Start the server as soon as we open
+        this.ensureConnectionAndNotebook().ignoreErrors();
+
+        // When opening we have to load the web panel.
+        this.loadWebPanel(this.owner ? path.dirname(this.owner.fsPath) : process.cwd())
+            .then(() => {
+                return this.addSysInfo(SysInfoReason.Start);
+            })
+            .catch((e) => this.errorHandler.handleError(e));
+
+        // Update the title if possible
+        if (this.owner && mode === 'perFile') {
+            this.setTitle(getInteractiveWindowTitle(this.owner));
+        } else if (title) {
+            this.setTitle(title);
+        }
     }
 
     public dispose() {
@@ -200,36 +225,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    public async load(owner: Resource, mode: InteractiveWindowMode, title?: string): Promise<void> {
-        // Set our owner and first submitter
-        this._owner = owner;
-        this.mode = mode;
-        if (owner) {
-            this._submitters.push(owner);
-        }
-
-        // Start the server as soon as we open
-        this.ensureConnectionAndNotebook().ignoreErrors();
-
-        // When showing we have to load the web panel.
-        await this.loadWebPanel(this.owner ? path.dirname(this.owner.fsPath) : process.cwd());
-
-        // Update the title if possible
-        if (this.owner && mode === 'perFile') {
-            this.setTitle(getInteractiveWindowTitle(this.owner));
-        } else if (title) {
-            this.setTitle(title);
-        }
-
-        // Make sure we're loaded first. InteractiveWindow doesn't makes sense without an active server.
-        await this.ensureConnectionAndNotebook();
-
-        // Make sure we have at least the initial sys info
-        await this.addSysInfo(SysInfoReason.Start);
-
-        // Then show our web panel.
-        return super.show();
-    }
+    public async load(owner: Resource, mode: InteractiveWindowMode, title?: string): Promise<void> {}
 
     public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
         return this.addOrDebugCode(code, file, line, false);
@@ -335,7 +331,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return deferred.promise;
     }
 
-    public async getOwningResource(): Promise<Resource> {
+    public get owningResource(): Resource {
         if (this.owner) {
             return this.owner;
         }
@@ -386,7 +382,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    protected async getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined> {
+    protected get notebookMetadata(): nbformat.INotebookMetadata | undefined {
         return undefined;
     }
 
@@ -397,7 +393,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // Do nothing as this data isn't stored in our options.
     }
 
-    protected async getNotebookIdentity(): Promise<INotebookIdentity> {
+    protected get notebookIdentity(): INotebookIdentity {
         // Use this identity for the lifetime of the notebook
         return {
             resource: this._identity,

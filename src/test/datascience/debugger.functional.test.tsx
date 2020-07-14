@@ -140,7 +140,7 @@ suite('DataScience Debugger tests', () => {
     });
 
     async function debugCell(
-        type: 'notebook' | 'default',
+        type: 'notebook' | 'interactive',
         code: string,
         breakpoint?: Range,
         breakpointFile?: string,
@@ -202,22 +202,24 @@ suite('DataScience Debugger tests', () => {
                 newLensDispose?.dispose();
 
                 // Step if allowed
-                if (stepAndVerify && ioc.getDefaultWrapper() && !ioc.mockJupyter) {
+                if (stepAndVerify && ioc.getWrapper(type) && !ioc.mockJupyter) {
                     // Verify variables work. Native editor should already open the variable explorer
                     // automatically
-                    if (type === 'default') {
-                        openVariableExplorer(ioc.getDefaultWrapper());
+                    if (type === 'interactive') {
+                        openVariableExplorer(ioc.getWrapper(type));
                     }
+                    const mountedWebPanel =
+                        type === 'notebook' ? ioc.getNativeWebPanel(undefined) : ioc.getInteractiveWebPanel(undefined);
                     breakPromise = createDeferred<void>();
                     await jupyterDebuggerService?.step();
                     await breakPromise.promise;
-                    await waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
-                    const variableRefresh = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
+                    await mountedWebPanel.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+                    const variableRefresh = mountedWebPanel.waitForMessage(InteractiveWindowMessages.VariablesComplete);
                     await jupyterDebuggerService?.requestVariables();
                     await variableRefresh;
 
                     // Force an update so we render whatever the current state is
-                    ioc.getDefaultWrapper().update();
+                    ioc.getWrapper(type).update();
 
                     // Then verify results.
                     stepAndVerify();
@@ -293,7 +295,7 @@ suite('DataScience Debugger tests', () => {
     runInteractiveTest(
         'Debug cell without breakpoint',
         async () => {
-            await debugCell('default', '#%%\nprint("bar")');
+            await debugCell('interactive', '#%%\nprint("bar")');
         },
         createIOC
     );
@@ -301,7 +303,7 @@ suite('DataScience Debugger tests', () => {
         'Check variables',
         async () => {
             ioc.setExperimentState(RunByLine.experiment, true);
-            await debugCell('default', '#%%\nx = [4, 6]\nx = 5', undefined, undefined, false, () => {
+            await debugCell('interactive', '#%%\nx = [4, 6]\nx = 5', undefined, undefined, false, () => {
                 const targetResult = {
                     name: 'x',
                     value: '[4, 6]',
@@ -312,7 +314,7 @@ suite('DataScience Debugger tests', () => {
                     count: 2,
                     truncated: false
                 };
-                verifyVariables(ioc!.getDefaultWrapper()!, [targetResult]);
+                verifyVariables(ioc!.getWrapper('interactive')!, [targetResult]);
             });
         },
         createIOC

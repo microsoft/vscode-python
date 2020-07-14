@@ -3,7 +3,6 @@
 'use strict';
 import '../../common/extensions';
 
-import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import { CancellationTokenSource, Memento, Uri, WebviewPanel } from 'vscode';
 
@@ -15,23 +14,19 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
-import { UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import {
-    GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
-    IExperimentsManager,
-    IMemento,
-    WORKSPACE_MEMENTO
+    IExperimentsManager
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
-import { Commands, Identifiers, Telemetry } from '../constants';
+import { Commands, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
@@ -61,7 +56,6 @@ enum AskForSaveResult {
     Cancel
 }
 
-@injectable()
 export class NativeEditorOldWebView extends NativeEditor {
     public readonly type = 'old';
     public get visible(): boolean {
@@ -74,39 +68,41 @@ export class NativeEditorOldWebView extends NativeEditor {
     private isPromptingToSaveToDisc: boolean = false;
 
     constructor(
-        @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
-        @inject(ILiveShareApi) liveShare: ILiveShareApi,
-        @inject(IApplicationShell) applicationShell: IApplicationShell,
-        @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IWebPanelProvider) provider: IWebPanelProvider,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
-        @inject(IThemeFinder) themeFinder: IThemeFinder,
-        @inject(IStatusProvider) statusProvider: IStatusProvider,
-        @inject(IFileSystem) fileSystem: IFileSystem,
-        @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(ICommandManager) commandManager: ICommandManager,
-        @inject(INotebookExporter) jupyterExporter: INotebookExporter,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(NativeEditorSynchronizer) synchronizer: NativeEditorSynchronizer,
-        @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
-        @inject(IDataViewerFactory) dataExplorerFactory: IDataViewerFactory,
-        @inject(IJupyterVariableDataProviderFactory)
+        listeners: IInteractiveWindowListener[],
+        liveShare: ILiveShareApi,
+        applicationShell: IApplicationShell,
+        documentManager: IDocumentManager,
+        provider: IWebPanelProvider,
+        disposables: IDisposableRegistry,
+        cssGenerator: ICodeCssGenerator,
+        themeFinder: IThemeFinder,
+        statusProvider: IStatusProvider,
+        fileSystem: IFileSystem,
+        configuration: IConfigurationService,
+        commandManager: ICommandManager,
+        jupyterExporter: INotebookExporter,
+        workspaceService: IWorkspaceService,
+        synchronizer: NativeEditorSynchronizer,
+        editorProvider: INotebookEditorProvider,
+        dataExplorerFactory: IDataViewerFactory,
+
         jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) jupyterVariables: IJupyterVariables,
-        @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
-        @inject(INotebookImporter) importer: INotebookImporter,
-        @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) workspaceStorage: Memento,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
-        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(KernelSwitcher) switcher: KernelSwitcher,
-        @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
-        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
-        @inject(ITrustService) trustService: ITrustService,
-        @inject(IExperimentService) expService: IExperimentService
+        jupyterVariables: IJupyterVariables,
+        jupyterDebugger: IJupyterDebugger,
+        importer: INotebookImporter,
+        errorHandler: IDataScienceErrorHandler,
+        globalStorage: Memento,
+        workspaceStorage: Memento,
+        experimentsManager: IExperimentsManager,
+        asyncRegistry: IAsyncDisposableRegistry,
+        switcher: KernelSwitcher,
+        notebookProvider: INotebookProvider,
+        useCustomEditorApi: boolean,
+        private readonly storage: INotebookStorageProvider,
+        trustService: ITrustService,
+        expService: IExperimentService,
+        model: INotebookModel,
+        webviewPanel: WebviewPanel | undefined
     ) {
         super(
             listeners,
@@ -139,14 +135,13 @@ export class NativeEditorOldWebView extends NativeEditor {
             notebookProvider,
             useCustomEditorApi,
             trustService,
-            expService
+            expService,
+            model,
+            webviewPanel
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.
         synchronizer.disable();
-    }
-    public async load(model: INotebookModel, webViewPanel: WebviewPanel): Promise<void> {
-        await super.load(model, webViewPanel);
 
         // Update our title to match
         this.setTitle(path.basename(model.file.fsPath));
@@ -156,8 +151,6 @@ export class NativeEditorOldWebView extends NativeEditor {
             this.setDirty().ignoreErrors();
         }
 
-        // Show ourselves
-        await this.show();
         this.model?.changed(() => {
             if (this.model?.isDirty) {
                 this.setDirty().ignoreErrors();
@@ -166,6 +159,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             }
         });
     }
+
     protected async close(): Promise<void> {
         // Ask user if they want to save. It seems hotExit has no bearing on
         // whether or not we should ask

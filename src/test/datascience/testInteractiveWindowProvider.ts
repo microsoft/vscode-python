@@ -12,47 +12,39 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IMemento,
-    Resource,
-    InteractiveWindowMode
+    InteractiveWindowMode,
+    Resource
 } from '../../client/common/types';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import {
-    IDataScienceErrorHandler,
-    IInteractiveWindow,
-    IInteractiveWindowProvider
-} from '../../client/datascience/types';
+import { IDataScienceErrorHandler, IInteractiveWindow } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { mountConnectedMainPanel } from './testHelpers';
 import { IMountedWebView } from './mountedWebView';
+import { mountConnectedMainPanel } from './testHelpers';
 
 export interface ITestInteractiveWindowProvider {
-    getMountedWebView(window: IInteractiveWindow): IMountedWebView;
+    getMountedWebView(window: IInteractiveWindow | undefined): IMountedWebView;
 }
 
 @injectable()
-export class TestInteractiveWindowProvider implements IInteractiveWindowProvider, ITestInteractiveWindowProvider {
-    public get onDidChangeActiveInteractiveWindow() {
-        return this.realProvider.onDidChangeActiveInteractiveWindow;
-    }
-    private realProvider: InteractiveWindowProvider;
+export class TestInteractiveWindowProvider extends InteractiveWindowProvider implements ITestInteractiveWindowProvider {
     private windowToMountMap = new Map<string, string>();
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IFileSystem) readonly fileSystem: IFileSystem,
-        @inject(IDataScienceErrorHandler) readonly errorHandler: IDataScienceErrorHandler,
-        @inject(IConfigurationService) readonly configService: IConfigurationService,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
-        @inject(IApplicationShell) readonly appShell: IApplicationShell,
-        @inject(DataScienceIocContainer) readonly ioc: DataScienceIocContainer
+        @inject(IFileSystem) fileSystem: IFileSystem,
+        @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
+        @inject(IConfigurationService) configService: IConfigurationService,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(DataScienceIocContainer) private readonly ioc: DataScienceIocContainer
     ) {
-        this.realProvider = new InteractiveWindowProvider(
+        super(
             liveShare,
             serviceContainer,
             asyncRegistry,
@@ -63,51 +55,6 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
             globalMemento,
             appShell
         );
-
-        // During a test, the 'create' function will end up being called during a live share. We need to hook its result too
-        // so just hook the 'create' function to fix all callers.
-        // tslint:disable-next-line: no-any
-        const fungible = this.realProvider as any;
-        const origCreate = fungible.create.bind(fungible);
-        fungible.create = (resource: Resource, mode: InteractiveWindowMode) => {
-            // Generate the mount wrapper using a custom id
-            const id = uuid();
-            this.ioc.createWebView(() => mountConnectedMainPanel('interactive'), id);
-
-            // Call the real create.
-            const result = origCreate(resource, mode);
-
-            // Associate the real create with our id in order to find the wrapper
-            this.windowToMountMap.set(result.identity.toString(), id);
-
-            // During testing the MainPanel sends the init message before our interactive window is created.
-            // Pretend like it's happening now
-            // tslint:disable-next-line: no-any
-            const listener = (result as any).messageListener as InteractiveWindowMessageListener;
-            listener.onMessage(InteractiveWindowMessages.Started, {});
-
-            // Also need the css request so that other messages can go through
-            const webHost = result as InteractiveWindow;
-            webHost.setTheme(false);
-
-            return result;
-        };
-    }
-
-    public get activeWindow(): IInteractiveWindow | undefined {
-        return this.realProvider.activeWindow;
-    }
-
-    public get windows(): ReadonlyArray<IInteractiveWindow> {
-        return this.realProvider.windows;
-    }
-
-    public synchronize(window: IInteractiveWindow): Promise<void> {
-        return this.realProvider.synchronize(window);
-    }
-
-    public getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
-        return this.realProvider.getOrCreate(resource);
     }
 
     public getMountedWebView(window: IInteractiveWindow | undefined): IMountedWebView {
@@ -116,5 +63,29 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
             throw new Error('Test Failure: Window not mounted yet.');
         }
         return this.ioc.getWebPanel(this.windowToMountMap.get(key)!);
+    }
+
+    protected create(resource: Resource, mode: InteractiveWindowMode): IInteractiveWindow {
+        // Generate the mount wrapper using a custom id
+        const id = uuid();
+        this.ioc.createWebView(() => mountConnectedMainPanel('interactive'), id);
+
+        // Call the real create
+        const result = super.create(resource, mode);
+
+        // Associate the real create with our id in order to find the wrapper
+        this.windowToMountMap.set(result.identity.toString(), id);
+
+        // During testing the MainPanel sends the init message before our interactive window is created.
+        // Pretend like it's happening now
+        // tslint:disable-next-line: no-any
+        const listener = (result as any).messageListener as InteractiveWindowMessageListener;
+        listener.onMessage(InteractiveWindowMessages.Started, {});
+
+        // Also need the css request so that other messages can go through
+        const webHost = result as InteractiveWindow;
+        webHost.setTheme(false);
+
+        return result;
     }
 }

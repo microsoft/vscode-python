@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationTokenSource, TextDocument, TextEditor, Uri } from 'vscode';
+import { CancellationTokenSource, TextDocument, TextEditor, Uri, WebviewPanel } from 'vscode';
 
 import { CancellationToken } from 'vscode-jsonrpc';
 import {
@@ -149,6 +149,14 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             debounceFunc();
         }
     }
+
+    protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): INotebookEditor {
+        const result = super.createNotebookEditor(model, panel);
+        this.activeEditors.set(model.file.fsPath, result);
+        this.disposables.push(result.closed(this.onClosedEditor.bind(this)));
+        return result;
+    }
+
     private autoSaveNotebookInHotExitFile(model: INotebookModel) {
         // Refetch settings each time as they can change before the debounce can happen
         const fileSettings = this.workspace.getConfiguration('files', model.file);
@@ -181,10 +189,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
     private async create(file: Uri): Promise<INotebookEditor> {
         let editor = this.activeEditors.get(file.fsPath);
         if (!editor) {
-            editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
-            this.activeEditors.set(file.fsPath, editor);
-            this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
-            await this.loadNotebookEditor(editor, file);
+            editor = await this.loadNotebookEditor(file);
             await this.showEditor(editor);
         }
         return editor;

@@ -87,8 +87,8 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
         }
     }
 
-    protected getOwningResource(): Promise<Resource> {
-        return Promise.resolve(undefined);
+    protected get owningResource() {
+        return undefined;
     }
 
     //tslint:disable-next-line:no-any
