@@ -130,7 +130,9 @@ export function updateVSCNotebookCellMetadata(cellMetadata: NotebookCellMetadata
     // tslint:disable-next-line: no-any
     const metadata: Record<string, any> = {};
     cellMetadata.custom.vscodeMetadata = metadata;
-    const propertiesToClone = ['metadata', 'attachments', 'outputs'];
+    // We put this only for VSC to display in diff view.
+    // Else we don't use this.
+    const propertiesToClone = ['metadata', 'attachments'];
     propertiesToClone.forEach((propertyToClone) => {
         if (cell.data[propertyToClone]) {
             metadata[propertyToClone] = cloneDeep(cell.data[propertyToClone]);
@@ -146,6 +148,21 @@ export function getDefaultCodeLanguage(model: INotebookModel) {
 }
 
 export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: ICell): NotebookCellData | undefined {
+    if (cell.data.cell_type === 'raw') {
+        const rawCell = cell.data;
+        return {
+            cellKind: vscodeNotebookEnums.CellKind.Code,
+            language: 'raw',
+            metadata: {
+                custom: {
+                    metadata: rawCell.metadata,
+                    attachments: rawCell.attachments
+                }
+            },
+            outputs: [],
+            source: concatMultilineStringInput(cell.data.source)
+        };
+    }
     if (cell.data.cell_type !== 'code' && cell.data.cell_type !== 'markdown') {
         traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.data.cell_type}`);
         return;
@@ -251,55 +268,20 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): CellOutput 
  * @returns {(CellDisplayOutput | undefined)}
  */
 function translateDisplayDataOutput(output: nbformat.IDisplayData): CellDisplayOutput | undefined {
-    const mimeTypes = Object.keys(output.data || {});
     // If no mimeType data, then there's nothing to display.
-    if (!mimeTypes.length) {
+    if (!Object.keys(output.data || {}).length) {
         return;
     }
-    // If we have images, then process those images.
-    // If we have PNG or JPEG images with a background, then add that background as HTML
     const data = { ...output.data };
-    if (mimeTypes.some(isImagePngOrJpegMimeType) && shouldConvertImageToHtml(output) && !output.data['text/html']) {
-        const mimeType = 'image/png' in data ? 'image/png' : 'image/jpeg';
-        const metadata = output.metadata || {};
-        const needsBackground = typeof metadata.needs_background === 'string';
-        const backgroundColor = metadata.needs_background === 'light' ? 'white' : 'black';
-        const divStyle = needsBackground ? `background-color:${backgroundColor};` : '';
-        const imgSrc = `data:${mimeType};base64,${output.data[mimeType]}`;
-
-        let height = '';
-        let width = '';
-        let imgStyle = '';
-        if (metadata[mimeType] && typeof metadata[mimeType] === 'object') {
-            // tslint:disable-next-line: no-any
-            const imageMetadata = metadata[mimeType] as any;
-            height = imageMetadata.height ? `height=${imageMetadata.height}` : '';
-            width = imageMetadata.width ? `width=${imageMetadata.width}` : '';
-            if (imageMetadata.unconfined === true) {
-                imgStyle = `style="max-width:none"`;
-            }
-        }
-
-        // Hack, use same classes as used in VSCode for images.
-        // This is to maintain consistently in displaying images (if we hadn't used HTML).
-        // See src/vs/workbench/contrib/notebook/browser/view/output/transforms/richTransform.ts
-        data[
-            'text/html'
-        ] = `<div class='display' style="overflow:scroll;${divStyle}"><img src="${imgSrc}" ${imgStyle} ${height} ${width}></div>`;
-    }
     return {
         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-        data
+        data,
+        metadata: {
+            custom: output.metadata || {}
+        }
     };
 }
 
-function shouldConvertImageToHtml(output: nbformat.IDisplayData) {
-    const metadata = output.metadata || {};
-    return typeof metadata.needs_background === 'string' || metadata['image/png'] || metadata['image/jpeg'];
-}
-function isImagePngOrJpegMimeType(mimeType: string) {
-    return mimeType === 'image/png' || mimeType === 'image/jpeg';
-}
 function translateStreamOutput(output: nbformat.IStream): CellStreamOutput | CellDisplayOutput {
     // Do not return as `CellOutputKind.Text`. VSC will not translate ascii output correctly.
     // Instead format the output as rich.

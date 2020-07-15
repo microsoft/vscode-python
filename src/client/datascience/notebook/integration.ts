@@ -81,6 +81,8 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                             'application/vnd.vegalite.v4+json',
                             'application/x-nteract-model-debug+json',
                             'image/gif',
+                            'image/png',
+                            'image/jpeg',
                             'text/latex',
                             'text/vnd.plotly.v1+html'
                         ]
