@@ -67,7 +67,7 @@ function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>
             return this.pendingMessageWait.deferred.promise;
         }
 
-        protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): INotebookEditor {
+        protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): NativeEditor {
             // Generate the mount wrapper using a custom id
             const id = uuid();
             const mounted = this.ioc!.createWebView(() => mountConnectedMainPanel('native'), id);

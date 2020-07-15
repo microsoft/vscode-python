@@ -117,6 +117,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     public get onExecutedCode(): Event<string> {
         return this.executeEvent.event;
     }
+    public get ready(): Event<void> {
+        return this.readyEvent.event;
+    }
+
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
     private perceivedJupyterStartupTelemetryCaptured: boolean = false;
@@ -128,6 +132,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private connectionAndNotebookPromise: Promise<void> | undefined;
     private notebookPromise: Promise<void> | undefined;
     private setDarkPromise: Deferred<boolean> | undefined;
+    private readyEvent = new EventEmitter<void>();
 
     constructor(
         @unmanaged() private readonly listeners: IInteractiveWindowListener[],
@@ -332,6 +337,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             case InteractiveWindowMessages.OpenSettings:
                 this.handleMessage(message, payload, this.openSettings);
                 break;
+
+            case InteractiveWindowMessages.MonacoReady:
+                this.readyEvent.fire();
+                break;
+
             default:
                 break;
         }

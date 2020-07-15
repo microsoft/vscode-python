@@ -49,7 +49,6 @@ import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDocumentManager } from './mockDocumentManager';
 import { IMountedWebView, WaitForMessageOptions } from './mountedWebView';
-import { IMountedWebViewFactory } from './mountedWebViewFactory';
 import {
     addCell,
     closeNotebook,
@@ -85,7 +84,7 @@ async function updateFileConfig(ioc: DataScienceIocContainer, key: string, value
     return ioc.get<IWorkspaceService>(IWorkspaceService).getConfiguration('file').update(key, value);
 }
 function waitForMessage(ioc: DataScienceIocContainer, message: string, options?: WaitForMessageOptions): Promise<void> {
-    return ioc.get<IMountedWebViewFactory>(IMountedWebViewFactory).get('notebook').waitForMessage(message, options);
+    return ioc.getNativeWebPanel(undefined).waitForMessage(message, options);
 }
 suite('DataScience Native Editor', () => {
     const originalPlatform = window.navigator.platform;

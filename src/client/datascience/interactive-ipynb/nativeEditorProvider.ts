@@ -226,7 +226,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         return model;
     }
 
-    protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): INotebookEditor {
+    protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): NativeEditor {
         const editor = new NativeEditor(
             this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
             this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),
@@ -273,7 +273,13 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
 
             // Load it (should already be visible)
             const result = this.createNotebookEditor(model, panel);
+
+            // Wait for monaco ready (it's not really useable until it has a language)
+            const readyPromise = createDeferred();
+            const disposable = result.ready(() => readyPromise.resolve());
             await result.show();
+            await readyPromise.promise;
+            disposable.dispose();
             return result;
         } catch (exc) {
             // Send telemetry indicating a failure

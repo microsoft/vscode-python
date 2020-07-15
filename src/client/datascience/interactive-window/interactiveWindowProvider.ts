@@ -116,13 +116,21 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         const mode = await this.getInteractiveMode(resource);
 
         // See if we already have a match
-        let result = this.get(resource, mode);
+        let result = this.get(resource, mode) as InteractiveWindow;
         if (!result) {
             // No match. Create a new item.
             result = this.create(resource, mode);
 
+            // Wait for monaco ready (it's not really useable until it has a language)
+            const readyPromise = createDeferred();
+            const disposable = result.ready(() => readyPromise.resolve());
+
             // Wait for synchronization in liveshare
             await this.synchronize(result);
+
+            // Wait for monaco ready
+            await readyPromise.promise;
+            disposable.dispose();
         }
 
         return result;
@@ -148,7 +156,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         }
     }
 
-    protected create(resource: Resource, mode: InteractiveWindowMode): IInteractiveWindow {
+    protected create(resource: Resource, mode: InteractiveWindowMode): InteractiveWindow {
         const title =
             mode === 'multiple' || (mode === 'perFile' && !resource)
                 ? localize.DataScience.interactiveWindowTitleFormat().format(`#${this._windows.length + 1}`)

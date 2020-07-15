@@ -53,7 +53,7 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
         return this.windowToMountMap.get(key)!;
     }
 
-    protected create(resource: Resource, mode: InteractiveWindowMode): IInteractiveWindow {
+    protected create(resource: Resource, mode: InteractiveWindowMode): InteractiveWindow {
         // Generate the mount wrapper using a custom id
         const id = uuid();
         const mounted = this.container

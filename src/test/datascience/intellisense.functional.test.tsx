@@ -126,6 +126,8 @@ import { ITestNativeEditorProvider } from './testNativeEditorProvider';
             assert.ok(innerText.includes(expectedSpan), `${innerText} not matching ${expectedSpan}`);
         }
 
+        // Note: If suggestions are hanging, verify suggestion results are returning by
+        // sticking a breakpoint here: node_modules\monaco-editor\esm\vs\editor\contrib\suggest\suggestModel.js#337 or so
         function waitForSuggestion(
             wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
         ): { disposable: IDisposable; promise: Promise<void> } {

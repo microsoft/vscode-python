@@ -60,7 +60,10 @@ function handleLoaded<T>(arg: MonacoReducerArg<T>): IMonacoState {
     // If have both, tell other side monaco is ready
     if (Tokenizer.hasOnigasm() && Tokenizer.hasLanguage(arg.prevState.language)) {
         onigasmPromise.resolve(true);
+
+        // Both queue to the reducers and to the extension side that we're ready
         queueIncomingAction(arg, InteractiveWindowMessages.MonacoReady);
+        postActionToExtension(arg, InteractiveWindowMessages.MonacoReady);
     }
 
     return arg.prevState;
@@ -116,7 +119,10 @@ function handleLoadTmLanguageResponse(arg: MonacoReducerArg<ILoadTmLanguageRespo
                     arg.payload.data.languageJSON
                 );
             }
+
+            // Both queue to the reducers and to the extension side that we're ready
             queueIncomingAction(arg, InteractiveWindowMessages.MonacoReady);
+            postActionToExtension(arg, InteractiveWindowMessages.MonacoReady);
         })
         .ignoreErrors();
 

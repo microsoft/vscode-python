@@ -51,6 +51,7 @@ import {
     IThemeFinder,
     ITrustService
 } from '../types';
+import { NativeEditor } from './nativeEditor';
 import { NativeEditorOldWebView } from './nativeEditorOldWebView';
 import { NativeEditorProvider } from './nativeEditorProvider';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
@@ -182,7 +183,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         }
     }
 
-    protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): INotebookEditor {
+    protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): NativeEditor {
         const editor = new NativeEditorOldWebView(
             this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
             this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),
