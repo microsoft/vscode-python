@@ -226,7 +226,7 @@ for i in range(10):
                 domDiv.focus();
 
                 // send the ctrl + 1/2 message, this should put focus back on the input box
-                ioc.postMessage({ type: InteractiveWindowMessages.Activate, payload: undefined }, 'default');
+                mount.postMessage({ type: InteractiveWindowMessages.Activate, payload: undefined });
 
                 // Then enter press shift + enter on the active element
                 const activeElement = document.activeElement;
@@ -286,7 +286,7 @@ for i in range(10):
 
             const domDiv = reactDiv.querySelector('div');
 
-            if (domDiv && ioc.postMessage) {
+            if (domDiv) {
                 domDiv.tabIndex = -1;
                 domDiv.focus();
 
@@ -1229,7 +1229,7 @@ for i in range(0, 100):
         // Run a cell from a document
         const fooWatcher = createCodeWatcher(`# %%\nprint('foo')`, 'foo.py', ioc);
         const lenses = fooWatcher?.getCodeLenses();
-        assert.equal(lenses?.length, 3, 'No code lenses found');
+        assert.equal(lenses?.length, 6, 'No code lenses found');
         await runCodeLens(lenses ? lenses[0] : undefined, ioc);
         verifyHtmlOnCell(pair1.mount.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
 
@@ -1245,7 +1245,7 @@ for i in range(0, 100):
         // Run another file
         const barWatcher = createCodeWatcher(`# %%\nprint('bar')`, 'bar.py', ioc);
         const lenses2 = barWatcher?.getCodeLenses();
-        assert.equal(lenses2?.length, 3, 'No code lenses found');
+        assert.equal(lenses2?.length, 6, 'No code lenses found');
         await runCodeLens(lenses2 ? lenses2[0] : undefined, ioc);
         verifyHtmlOnCell(pair1.mount.wrapper, 'InteractiveCell', '<span>bar</span>', CellPosition.Last);
     });
@@ -1256,7 +1256,7 @@ for i in range(0, 100):
         // Run a cell from a document
         const fooWatcher = createCodeWatcher(`# %%\nprint('foo')`, 'foo.py', ioc);
         const lenses = fooWatcher?.getCodeLenses();
-        assert.equal(lenses?.length, 3, 'No code lenses found');
+        assert.equal(lenses?.length, 6, 'No code lenses found');
         await runCodeLens(lenses ? lenses[0] : undefined, ioc);
         assert.equal(interactiveWindowProvider.windows.length, 1, 'Interactive window not created');
         const mounted1 = interactiveWindowProvider.getMountedWebView(interactiveWindowProvider.windows[0]);
@@ -1286,7 +1286,7 @@ for i in range(0, 100):
         // Run a cell from a document
         const fooWatcher = createCodeWatcher(`# %%\nprint('foo')`, 'foo.py', ioc);
         const lenses = fooWatcher?.getCodeLenses();
-        assert.equal(lenses?.length, 3, 'No code lenses found');
+        assert.equal(lenses?.length, 6, 'No code lenses found');
         await runCodeLens(lenses ? lenses[0] : undefined, ioc);
         assert.equal(interactiveWindowProvider.windows.length, 1, 'Interactive window not created');
         const mounted1 = interactiveWindowProvider.getMountedWebView(interactiveWindowProvider.windows[0]);

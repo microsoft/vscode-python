@@ -97,6 +97,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private _submitters: Uri[] = [];
     private pendingHasCell = new Map<string, Deferred<boolean>>();
     private mode: InteractiveWindowMode = 'multiple';
+    private loadPromise: Promise<void>;
     constructor(
         listeners: IInteractiveWindowListener[],
         liveShare: ILiveShareApi,
@@ -181,7 +182,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
 
         // When opening we have to load the web panel.
-        this.loadWebPanel(this.owner ? path.dirname(this.owner.fsPath) : process.cwd())
+        this.loadPromise = this.loadWebPanel(this.owner ? path.dirname(this.owner.fsPath) : process.cwd())
             .then(async () => {
                 // Always load our notebook.
                 await this.ensureConnectionAndNotebook();
@@ -197,6 +198,11 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         } else if (title) {
             this.setTitle(title);
         }
+    }
+
+    public async show(preserveFocus?: boolean): Promise<void> {
+        await this.loadPromise;
+        return super.show(preserveFocus);
     }
 
     public dispose() {

@@ -194,6 +194,9 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
         // Default cell used for a lot of tests.
         this.addCell('a=1\na', 1);
+
+        // Default used for variables
+        this.addCell('_rwho_ls = %who_ls\nprint(_rwho_ls)', '');
     }
 
     public getConnInfo(): IJupyterConnection {

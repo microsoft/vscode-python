@@ -105,6 +105,7 @@ import { ITestNativeEditorProvider } from './testNativeEditorProvider';
             wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
             expectedSpan: string
         ) {
+            wrapper.update();
             const innerTexts = getIntellisenseTextLines(wrapper);
             assert.ok(innerTexts.includes(expectedSpan), 'Intellisense row not matching');
         }

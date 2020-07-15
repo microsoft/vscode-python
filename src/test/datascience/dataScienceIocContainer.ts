@@ -85,8 +85,7 @@ import {
     IVSCodeNotebook,
     IWebPanelOptions,
     IWebPanelProvider,
-    IWorkspaceService,
-    WebPanelMessage
+    IWorkspaceService
 } from '../../client/common/application/types';
 import { WebPanelProvider } from '../../client/common/application/webPanels/webPanelProvider';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -1218,10 +1217,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     public getNativeWebPanel(window: INotebookEditor | undefined) {
         return this.get<ITestNativeEditorProvider>(INotebookEditorProvider).getMountedWebView(window);
-    }
-
-    public postMessage(m: WebPanelMessage, type: 'notebook' | 'default') {
-        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).get(type).postMessage(m);
     }
 
     public getContext(name: string): boolean {

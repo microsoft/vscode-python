@@ -54,6 +54,7 @@ export async function getOrCreateInteractiveWindow(
     const interactiveWindowProvider = ioc.get<TestInteractiveWindowProvider>(IInteractiveWindowProvider);
     const window = (await interactiveWindowProvider.getOrCreate(owner)) as InteractiveWindow;
     const mount = interactiveWindowProvider.getMountedWebView(window);
+    await window.show();
     return { window, mount };
 }
 

@@ -369,6 +369,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     public dispose() {
+        // Fire ready event in case anything is waiting on it.
+        this.readyEvent.fire();
+
+        // Dispose of the web panel.
         super.dispose();
         // Tell listeners we're closing. They can decide if they should dispose themselves or not.
         this.listeners.forEach((l) => l.onMessage(InteractiveWindowMessages.NotebookClose, this.notebookIdentity));

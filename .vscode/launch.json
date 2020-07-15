@@ -285,7 +285,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                // "--grep", "<suite>",
+                "--grep", "Opening a notebook",
                 "--timeout=300000",
                 "--exit"
             ],

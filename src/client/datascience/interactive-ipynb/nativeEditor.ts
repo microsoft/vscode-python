@@ -146,6 +146,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private startupTimer: StopWatch = new StopWatch();
     private loadedAllCells: boolean = false;
     private executeCancelTokens = new Set<CancellationTokenSource>();
+    private loadPromise: Promise<void>;
 
     constructor(
         listeners: IInteractiveWindowListener[],
@@ -228,12 +229,18 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Load the web panel using our file path so it can find
         // relative files next to the notebook.
-        super.loadWebPanel(path.dirname(this.file.fsPath), webviewPanel).catch((e) => this.errorHandler.handleError(e));
+        this.loadPromise = super
+            .loadWebPanel(path.dirname(this.file.fsPath), webviewPanel)
+            .catch((e) => this.errorHandler.handleError(e));
 
         // Sign up for dirty events
         this._model.changed(this.modelChanged.bind(this));
     }
 
+    public async show(preserveFocus?: boolean) {
+        await this.loadPromise;
+        return super.show(preserveFocus);
+    }
     public dispose(): Promise<void> {
         super.dispose();
         this.model?.dispose(); // NOSONAR

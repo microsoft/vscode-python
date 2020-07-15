@@ -40,9 +40,11 @@ export interface ITestNativeEditorProvider extends INotebookEditorProvider {
 function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>>(SuperClass: T) {
     return class extends SuperClass implements ITestNativeEditorProvider {
         private windowToMountMap = new Map<string, IMountedWebView>();
-        private pendingMessageWait:
-            | { message: string; options?: WaitForMessageOptions; deferred: Deferred<void> }
-            | undefined;
+        private pendingMessageWaits: {
+            message: string;
+            options?: WaitForMessageOptions;
+            deferred: Deferred<void>;
+        }[] = [];
 
         // tslint:disable-next-line: no-any
         constructor(...rest: any[]) {
@@ -63,8 +65,8 @@ function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>
             }
 
             // Otherwise pend for the next create.
-            this.pendingMessageWait = { message, options, deferred: createDeferred() };
-            return this.pendingMessageWait.deferred.promise;
+            this.pendingMessageWaits.push({ message, options, deferred: createDeferred() });
+            return this.pendingMessageWaits[this.pendingMessageWaits.length - 1].deferred.promise;
         }
 
         protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): NativeEditor {
@@ -73,15 +75,17 @@ function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>
             const mounted = this.ioc!.createWebView(() => mountConnectedMainPanel('native'), id);
 
             // Might have a pending wait for message
-            if (this.pendingMessageWait) {
-                const state = { ...this.pendingMessageWait };
-                this.pendingMessageWait = undefined;
-                mounted
-                    .waitForMessage(state.message, state.options)
-                    .then(() => {
-                        state.deferred.resolve();
-                    })
-                    .catch((e) => state.deferred.reject(e));
+            if (this.pendingMessageWaits.length) {
+                const list = [...this.pendingMessageWaits];
+                this.pendingMessageWaits = [];
+                list.forEach((p) => {
+                    mounted
+                        .waitForMessage(p.message, p.options)
+                        .then(() => {
+                            p.deferred.resolve();
+                        })
+                        .catch((e) => p.deferred.reject(e));
+                });
             }
 
             // Create the real editor.
