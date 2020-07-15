@@ -49,14 +49,18 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         if (typeof metadata.needs_background === 'string') {
             divStyle.backgroundColor = metadata.needs_background === 'light' ? 'white' : 'black';
         }
-        if (metadata.height) {
-            imgStyle.height = metadata.height;
-        }
-        if (metadata.width) {
-            imgStyle.width = metadata.width;
-        }
-        if (metadata.unconfined === true) {
-            imgStyle.maxWidth = 'none';
+        // tslint:disable-next-line: no-any
+        const imageMetadata = metadata[mimeType] as Record<string, any> | undefined;
+        if (imageMetadata) {
+            if (imageMetadata.height) {
+                imgStyle.height = imageMetadata.height;
+            }
+            if (imageMetadata.width) {
+                imgStyle.width = imageMetadata.width;
+            }
+            if (imageMetadata.unconfined === true) {
+                imgStyle.maxWidth = 'none';
+            }
         }
 
         // Hack, use same classes as used in VSCode for images (keep things as similar as possible).

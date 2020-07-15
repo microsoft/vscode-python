@@ -26,8 +26,7 @@ export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
                 data: {
                     [request.mimeType]: request.output.data[request.mimeType]
                 },
-                // Send metadata only for the mimeType we are interested in.
-                metadata: request.output.metadata?.custom ? request.output.metadata.custom[request.mimeType] : {}
+                metadata: request.output.metadata?.custom || {}
             };
         }
         const id = uuid();

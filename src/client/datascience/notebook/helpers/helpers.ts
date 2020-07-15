@@ -276,12 +276,12 @@ function translateDisplayDataOutput(
         return;
     }
     const data = { ...output.data };
+    // tslint:disable-next-line: no-any
+    const metadata = output.metadata ? ({ custom: output.metadata } as any) : undefined;
     return {
         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
         data,
-        metadata: {
-            custom: output.metadata || {} // Used be renderers & VS Code for diffing (it knows what has changed).
-        }
+        metadata // Used be renderers & VS Code for diffing (it knows what has changed).
     };
 }
 

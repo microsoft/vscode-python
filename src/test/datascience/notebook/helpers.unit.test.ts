@@ -211,8 +211,8 @@ suite('Data Science - NativeNotebook helpers', () => {
         });
 
         ['display_data', 'execute_result'].forEach((output_type) => {
-            suite(`Rich output for outputtype = ${output_type}`, () => {
-                test('Text mimetype output', async () => {
+            suite(`Rich output for output_type = ${output_type}`, () => {
+                test('Text mimeType output', async () => {
                     validateCellOutputTranslation(
                         [
                             {
@@ -227,7 +227,8 @@ suite('Data Science - NativeNotebook helpers', () => {
                                 outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                                 data: {
                                     'text/plain': 'Hello World!'
-                                }
+                                },
+                                metadata: undefined
                             }
                         ]
                     );
@@ -250,7 +251,8 @@ suite('Data Science - NativeNotebook helpers', () => {
                                 data: {
                                     'image/png': 'base64PNG',
                                     'image/jpeg': 'base64JPEG'
-                                }
+                                },
+                                metadata: undefined
                             }
                         ]
                     );
@@ -272,9 +274,10 @@ suite('Data Science - NativeNotebook helpers', () => {
                             {
                                 outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                                 data: {
-                                    'text/html':
-                                        '<div class=\'display\' style="overflow:scroll;background-color:white;"><img src="data:image/png;base64,base64PNG"   ></div>',
                                     'image/png': 'base64PNG'
+                                },
+                                metadata: {
+                                    custom: { needs_background: 'light' }
                                 }
                             }
                         ]
@@ -297,15 +300,16 @@ suite('Data Science - NativeNotebook helpers', () => {
                             {
                                 outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                                 data: {
-                                    'text/html':
-                                        '<div class=\'display\' style="overflow:scroll;background-color:black;"><img src="data:image/png;base64,base64PNG"   ></div>',
                                     'image/png': 'base64PNG'
+                                },
+                                metadata: {
+                                    custom: { needs_background: 'dark' }
                                 }
                             }
                         ]
                     );
                 });
-                test('png image with custom dimensionns', async () => {
+                test('png image with custom dimensions', async () => {
                     validateCellOutputTranslation(
                         [
                             {
@@ -322,9 +326,12 @@ suite('Data Science - NativeNotebook helpers', () => {
                             {
                                 outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                                 data: {
-                                    'text/html':
-                                        '<div class=\'display\' style="overflow:scroll;"><img src="data:image/png;base64,base64PNG"  height=111px width=999px></div>',
                                     'image/png': 'base64PNG'
+                                },
+                                metadata: {
+                                    custom: {
+                                        'image/png': { height: '111px', width: '999px' }
+                                    }
                                 }
                             }
                         ]
@@ -348,9 +355,13 @@ suite('Data Science - NativeNotebook helpers', () => {
                             {
                                 outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                                 data: {
-                                    'text/html':
-                                        '<div class=\'display\' style="overflow:scroll;"><img src="data:image/png;base64,base64PNG"   width=999px></div>',
                                     'image/png': 'base64PNG'
+                                },
+                                metadata: {
+                                    custom: {
+                                        unconfined: true,
+                                        'image/png': { width: '999px' }
+                                    }
                                 }
                             }
                         ]
