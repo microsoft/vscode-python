@@ -121,10 +121,10 @@ export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INot
 }
 
 /**
- * Updates the VSC Cell metadata with metadata from our cells.
- * If user exits without saving, then we have all metadata in VSC document.
- * This way when users copy a cell, we have everything in the old cell to create a duplicate of the Jupyter cell.
- * (Remember: VSC Cells less information compared to Jupyter cells).
+ * Stores the Jupyter Cell metadata into the VSCode Cells.
+ * This is used to facilitate:
+ * 1. When a user copies and pastes a cell, then the corresponding metadata is also copied across.
+ * 2. Diffing (VSC knows about metadata & stuff that contributes changes to a cell).
  */
 export function updateVSCNotebookCellMetadata(cellMetadata: NotebookCellMetadata, cell: ICell) {
     cellMetadata.custom = cellMetadata.custom ?? {};
