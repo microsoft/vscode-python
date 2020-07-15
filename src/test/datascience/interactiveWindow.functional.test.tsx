@@ -114,6 +114,7 @@ suite('DataScience Interactive Window output tests', () => {
 
     function verifyHtmlOnInteractiveCell(html: string | undefined | RegExp, cellIndex: number | CellPosition) {
         const iw = ioc.getInteractiveWebPanel(undefined).wrapper;
+        iw.update();
         verifyHtmlOnCell(iw, 'InteractiveCell', html, cellIndex);
     }
 

@@ -285,7 +285,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--grep", "Opening a notebook",
+                "--grep", "Mime Types",
                 "--timeout=300000",
                 "--exit"
             ],
