@@ -1506,14 +1506,14 @@ plt.show()`,
             runTest('Startup commands', async () => {
                 ioc.getSettings().datascience.runStartupCommands = ['a=1', 'b=2'];
                 addMockData(`a=1\\nb=2`, undefined);
-                addMockData(`print(a)`, 1);
-                addMockData(`print(b)`, 2);
+                addMockData(`a`, 1);
+                addMockData(`b`, 2);
 
                 const notebook = await createNotebook();
                 assert.ok(notebook, 'did not create notebook');
 
-                await verifySimple(notebook, `print(a)`, 1);
-                await verifySimple(notebook, `print(b)`, 2);
+                await verifySimple(notebook, `a`, 1);
+                await verifySimple(notebook, `b`, 2);
             });
         });
     });
