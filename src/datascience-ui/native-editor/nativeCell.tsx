@@ -598,6 +598,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.cellVM.cell.data.execution_count === null ||
             this.props.cellVM.hasBeenRun === null ||
             this.props.cellVM.hasBeenRun === false ||
+            this.props.cellVM.cell.state === CellState.executing ||
             this.isError() ||
             this.isMarkdownCell() ||
             !this.props.gatherIsInstalled;
