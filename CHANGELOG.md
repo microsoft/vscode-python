@@ -9,7 +9,8 @@
    ([#9679](https://github.com/Microsoft/vscode-python/issues/9679))
 1. Added "argsExpansion" to debugpy launch.json schema.
    ([#11678](https://github.com/Microsoft/vscode-python/issues/11678))
-1. The extension will now automatically load if a `pyproject.toml` file is present in the workspace root directory. (@BrandonLWhite)
+1. The extension will now automatically load if a `pyproject.toml` file is present in the workspace root directory.
+   (thanks [Brandon White](https://github.com/BrandonLWhite))
    ([#12056](https://github.com/Microsoft/vscode-python/issues/12056))
 1. Add ability to check and update whether a notebook is trusted.
    ([#12146](https://github.com/Microsoft/vscode-python/issues/12146))
@@ -29,14 +30,11 @@
    ([#12611](https://github.com/Microsoft/vscode-python/issues/12611))
 1. Include the JUPYTER_PATH environment variable when searching the disk for kernels.
    ([#12694](https://github.com/Microsoft/vscode-python/issues/12694))
-1. Added exporting to python, HTML and PDF from the interative window.
+1. Added exporting to python, HTML and PDF from the interactive window.
    ([#12732](https://github.com/Microsoft/vscode-python/issues/12732))
 1. Show a prompt asking user to upgrade Code runner to new version to keep using it when in Deprecate PythonPath experiment.
    ([#12764](https://github.com/Microsoft/vscode-python/issues/12764))
 1. Opening notebooks in the preview Notebook editor for [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/).
-   * Install Python extension in the latest [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/).
-   * Wait for `Python Extension` to get activated (e.g. open a `Python` file).
-   * Right click on an `*.ipynb (Jupyter Notebook)` file and select `Open in preview Notebook Editor`.
    ([#10496](https://github.com/Microsoft/vscode-python/issues/10496))
 
 ### Fixes
@@ -45,6 +43,8 @@
    ([#10579](https://github.com/Microsoft/vscode-python/issues/10579))
 1. Provided a method for external partners to participate in jupyter server URI picking/authentication.
    ([#10993](https://github.com/Microsoft/vscode-python/issues/10993))
+1. Check for hideFromUser before activating current terminal.
+   ([#11122](https://github.com/Microsoft/vscode-python/issues/11122))
 1. In Markdown cells, turn HTML links to markdown links so that nteract renders them.
    ([#11254](https://github.com/Microsoft/vscode-python/issues/11254))
 1. Prevent incorrect ipywidget display (double plots) due to synchronization issues.
