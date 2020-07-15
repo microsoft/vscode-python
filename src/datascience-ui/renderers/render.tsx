@@ -31,7 +31,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 return this.renderImage(mimeBundle, this.props.output.metadata);
 
             default:
-                return this.renderLatex(data);
+                return this.renderOutput(data);
         }
     }
     /**

@@ -3,10 +3,10 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
-import * as uuid from 'uuid/v4';
 import { CellOutputKind, NotebookOutputRenderer as VSCNotebookOutputRenderer, Uri } from 'vscode';
 import { NotebookRenderRequest } from 'vscode-proposed';
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { JupyterNotebookRenderer } from './constants';
 
 @injectable()
 export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
@@ -44,21 +44,11 @@ export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
                 metadata
             };
         }
-        const id = uuid();
         return `
-            <script id="${id}" data-mime-type="${request.mimeType}" type="application/vscode-jupyter+json">
+            <script data-renderer="${JupyterNotebookRenderer}" data-mime-type="${
+            request.mimeType
+        }" type="application/json">
                 ${JSON.stringify(outputToSend)}
-            </script>
-            <script type="text/javascript">
-                // Possible pre-render script has not yet loaded.
-                if (window['vscode-jupyter']){
-                    try {
-                        const tag = document.getElementById("${id}");
-                        window['vscode-jupyter']['renderOutput'](tag);
-                    } catch (ex){
-                        console.error("Failed to render ${request.mimeType}", ex);
-                    }
-                }
             </script>
             `;
     }
