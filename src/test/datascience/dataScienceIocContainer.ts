@@ -383,6 +383,7 @@ import { MockLiveShareApi } from './mockLiveShare';
 import { MockPythonSettings } from './mockPythonSettings';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { MockWorkspaceFolder } from './mockWorkspaceFolder';
+import { IMountedWebView } from './mountedWebView';
 import { IMountedWebViewFactory, MountedWebViewFactory } from './mountedWebViewFactory';
 import { TestExecutionLogger } from './testexecutionLogger';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
@@ -461,6 +462,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private experimentState = new Map<string, boolean>();
     private extensionRootPath: string | undefined;
     private languageServerType: LanguageServerType = LanguageServerType.Microsoft;
+    private pendingWebPanel: IMountedWebView | undefined;
 
     constructor(private readonly uiTest: boolean = false) {
         super();
@@ -1198,7 +1200,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
-        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(id, mount);
+        this.pendingWebPanel = this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(id, mount);
+        return this.pendingWebPanel;
     }
 
     public getWrapper(type: 'notebook' | 'interactive') {
@@ -1343,9 +1346,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     private async onCreateWebPanel(options: IWebPanelOptions) {
-        const panel = options.title.includes('Interactive')
-            ? this.getInteractiveWebPanel(undefined)
-            : this.getNativeWebPanel(undefined);
+        if (!this.pendingWebPanel) {
+            throw new Error('Creating web panel without a mount');
+        }
+        const panel = this.pendingWebPanel;
         panel.attach(options);
         return panel;
     }

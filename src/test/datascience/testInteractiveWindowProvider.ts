@@ -34,25 +34,15 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
     private windowToMountMap = new Map<string, IMountedWebView>();
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IServiceContainer) private readonly container: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
-        @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(DataScienceIocContainer) private readonly ioc: DataScienceIocContainer
+        @inject(IApplicationShell) appShell: IApplicationShell
     ) {
-        super(
-            liveShare,
-            serviceContainer,
-            asyncRegistry,
-            disposables,
-            fileSystem,
-            configService,
-            globalMemento,
-            appShell
-        );
+        super(liveShare, container, asyncRegistry, disposables, fileSystem, configService, globalMemento, appShell);
     }
 
     public getMountedWebView(window: IInteractiveWindow | undefined): IMountedWebView {
@@ -66,7 +56,9 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
     protected create(resource: Resource, mode: InteractiveWindowMode): IInteractiveWindow {
         // Generate the mount wrapper using a custom id
         const id = uuid();
-        const mounted = this.ioc.createWebView(() => mountConnectedMainPanel('interactive'), id);
+        const mounted = this.container
+            .get<DataScienceIocContainer>(DataScienceIocContainer)
+            .createWebView(() => mountConnectedMainPanel('interactive'), id);
 
         // Call the real create
         const result = super.create(resource, mode);

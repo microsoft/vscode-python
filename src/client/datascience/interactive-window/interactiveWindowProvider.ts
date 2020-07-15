@@ -60,7 +60,8 @@ interface ISyncData {
     waitable: Deferred<void>;
 }
 
-const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
+// Export for testing
+export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
 
 @injectable()
 export class InteractiveWindowProvider implements IInteractiveWindowProvider, IAsyncDisposable {
@@ -150,7 +151,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     protected create(resource: Resource, mode: InteractiveWindowMode): IInteractiveWindow {
         const title =
             mode === 'multiple' || (mode === 'perFile' && !resource)
-                ? localize.DataScience.interactiveWindowTitleFormat().format(`#${this._windows.length}`)
+                ? localize.DataScience.interactiveWindowTitleFormat().format(`#${this._windows.length + 1}`)
                 : undefined;
 
         // Set it as soon as we create it. The .ctor for the interactive window

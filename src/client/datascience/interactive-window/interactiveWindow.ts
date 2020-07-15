@@ -180,13 +180,14 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             this._submitters.push(owner);
         }
 
-        // Start the server as soon as we open
-        this.ensureConnectionAndNotebook().ignoreErrors();
-
         // When opening we have to load the web panel.
         this.loadWebPanel(this.owner ? path.dirname(this.owner.fsPath) : process.cwd())
-            .then(() => {
-                return this.addSysInfo(SysInfoReason.Start);
+            .then(async () => {
+                // Always load our notebook.
+                await this.ensureConnectionAndNotebook();
+
+                // Then the initial sys info
+                await this.addSysInfo(SysInfoReason.Start);
             })
             .catch((e) => this.errorHandler.handleError(e));
 

@@ -102,8 +102,8 @@ function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>
 
             return result;
         }
-        protected get ioc(): DataScienceIocContainer | undefined {
-            return undefined;
+        private get ioc(): DataScienceIocContainer | undefined {
+            return this.serviceContainer.get<DataScienceIocContainer>(DataScienceIocContainer);
         }
     };
 }
@@ -117,8 +117,7 @@ export class TestNativeEditorProvider extends TestNativeEditorProviderMixin(Nati
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(ICustomEditorService) customEditorService: ICustomEditorService,
-        @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
-        @inject(DataScienceIocContainer) protected ioc: DataScienceIocContainer
+        @inject(INotebookStorageProvider) storage: INotebookStorageProvider
     ) {
         super(serviceContainer, asyncRegistry, disposables, workspace, configuration, customEditorService, storage);
     }
@@ -137,8 +136,7 @@ export class TestNativeEditorProviderOld extends TestNativeEditorProviderMixin(N
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(ICommandManager) cmdManager: ICommandManager,
         @inject(IDataScienceErrorHandler) dataScienceErrorHandler: IDataScienceErrorHandler,
-        @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
-        @inject(DataScienceIocContainer) protected readonly ioc: DataScienceIocContainer
+        @inject(INotebookStorageProvider) storage: INotebookStorageProvider
     ) {
         super(
             serviceContainer,

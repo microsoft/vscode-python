@@ -212,7 +212,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 path.join(nativeEditorDir, 'commons.initial.bundle.js'),
                 path.join(nativeEditorDir, 'nativeEditor.js')
             ],
-            localize.DataScience.nativeEditorTitle(),
+            path.basename(_model.file.fsPath),
             ViewColumn.Active,
             experimentsManager,
             switcher,

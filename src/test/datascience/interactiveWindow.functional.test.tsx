@@ -7,11 +7,11 @@ import { parse } from 'node-html-parser';
 import * as os from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Selection, TextDocument, TextEditor, Uri } from 'vscode';
+import { Disposable, Memento, Selection, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { ReactWrapper } from 'enzyme';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
-import { IDataScienceSettings } from '../../client/common/types';
+import { GLOBAL_MEMENTO, IDataScienceSettings, IMemento } from '../../client/common/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
@@ -19,6 +19,7 @@ import { generateCellsFromDocument } from '../../client/datascience/cellFactory'
 import { EditorContexts } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
+import { AskedForPerFileSettingKey } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
@@ -1220,6 +1221,9 @@ for i in range(0, 100):
     });
     test('Multiple executes go to last active window', async () => {
         ioc.forceDataScienceSettingsChanged({ interactiveWindowMode: 'multiple' });
+        const globalMemento = ioc.get<Memento>(IMemento, GLOBAL_MEMENTO);
+        await globalMemento.update(AskedForPerFileSettingKey, true);
+
         const pair1 = await getOrCreateInteractiveWindow(ioc);
 
         // Run a cell from a document
@@ -1267,5 +1271,38 @@ for i in range(0, 100):
             interactiveWindowProvider.windows.find((w) => w.title.includes('bar'))
         );
         verifyHtmlOnCell(mounted2.wrapper, 'InteractiveCell', '<span>bar</span>', CellPosition.Last);
+    });
+    test('Per file asks and changes titles', async () => {
+        ioc.applicationShell
+            .setup((i) => i.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_a1: string, a2: string, _a3: string) => {
+                return Promise.resolve(a2);
+            });
+        ioc.forceDataScienceSettingsChanged({ interactiveWindowMode: 'multiple' });
+        const interactiveWindowProvider = ioc.get<ITestInteractiveWindowProvider>(IInteractiveWindowProvider);
+        const globalMemento = ioc.get<Memento>(IMemento, GLOBAL_MEMENTO);
+        await globalMemento.update(AskedForPerFileSettingKey, false);
+
+        // Run a cell from a document
+        const fooWatcher = createCodeWatcher(`# %%\nprint('foo')`, 'foo.py', ioc);
+        const lenses = fooWatcher?.getCodeLenses();
+        assert.equal(lenses?.length, 3, 'No code lenses found');
+        await runCodeLens(lenses ? lenses[0] : undefined, ioc);
+        assert.equal(interactiveWindowProvider.windows.length, 1, 'Interactive window not created');
+        const mounted1 = interactiveWindowProvider.getMountedWebView(interactiveWindowProvider.windows[0]);
+        verifyHtmlOnCell(mounted1.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
+
+        // Create another window, run a cell again
+        const barWatcher = createCodeWatcher(`# %%\nprint('bar')`, 'bar.py', ioc);
+        const lenses2 = barWatcher?.getCodeLenses();
+        await runCodeLens(lenses2 ? lenses2[0] : undefined, ioc);
+        assert.equal(interactiveWindowProvider.windows.length, 2, 'Interactive window not created');
+        const mounted2 = interactiveWindowProvider.getMountedWebView(
+            interactiveWindowProvider.windows.find((w) => w.title.includes('bar'))
+        );
+        verifyHtmlOnCell(mounted2.wrapper, 'InteractiveCell', '<span>bar</span>', CellPosition.Last);
+
+        // First window should now have foo in the title too
+        assert.ok(interactiveWindowProvider.windows[0].title.includes('foo'), 'Title of first window did not change');
     });
 });
