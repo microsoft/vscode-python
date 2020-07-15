@@ -61,7 +61,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             imgStyle.maxWidth = 'none';
         }
 
-        // Hack, use same classes as used in VSCode for images.
+        // Hack, use same classes as used in VSCode for images (keep things as similar as possible).
         // This is to maintain consistently in displaying images (if we hadn't used HTML).
         // See src/vs/workbench/contrib/notebook/browser/view/output/transforms/richTransform.ts
         // tslint:disable: react-a11y-img-has-alt
