@@ -16,12 +16,11 @@ export interface ICellOutputProps {
 }
 
 export class CellOutput extends React.Component<ICellOutputProps> {
-    // tslint:disable-next-line: no-any
     constructor(prop: ICellOutputProps) {
         super(prop);
     }
     public render() {
-        const mimeBundle = this.props.output.data as nbformat.IMimeBundle; // NOSONAR
+        const mimeBundle = this.props.output.data;
         const data: nbformat.MultilineString | JSONObject = mimeBundle[this.props.mimeType!];
 
         switch (this.props.mimeType) {
@@ -29,8 +28,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 return this.renderLatex(data);
             case 'image/png':
             case 'image/jpeg':
-                // tslint:disable-next-line: no-any
-                return this.renderImage(mimeBundle, this.props.output.metadata as any);
+                return this.renderImage(mimeBundle, this.props.output.metadata);
 
             default:
                 return this.renderLatex(data);
