@@ -22,23 +22,19 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     }
     public render() {
         const mimeBundle = this.props.output.data as nbformat.IMimeBundle; // NOSONAR
-        let data: nbformat.MultilineString | JSONObject = mimeBundle[this.props.mimeType!];
+        const data: nbformat.MultilineString | JSONObject = mimeBundle[this.props.mimeType!];
 
         switch (this.props.mimeType) {
             case 'text/latex':
-                // Fixup latex to make sure it has the requisite $$ around it
-                data = fixMarkdown(concatMultilineStringOutput(data as nbformat.MultilineString), true);
-                break;
+                return this.renderLatex(data);
             case 'image/png':
             case 'image/jpeg':
                 // tslint:disable-next-line: no-any
                 return this.renderImage(mimeBundle, this.props.output.metadata as any);
 
             default:
-                break;
+                return this.renderLatex(data);
         }
-
-        return this.renderOutput(data);
     }
     /**
      * Custom rendering of image/png and image/jpeg to handle custom Jupyter metadata.
@@ -85,5 +81,10 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 <Transform data={data} />
             </div>
         );
+    }
+    private renderLatex(data: nbformat.MultilineString | JSONObject) {
+        // Fixup latex to make sure it has the requisite $$ around it
+        data = fixMarkdown(concatMultilineStringOutput(data as nbformat.MultilineString), true);
+        return this.renderOutput(data);
     }
 }
