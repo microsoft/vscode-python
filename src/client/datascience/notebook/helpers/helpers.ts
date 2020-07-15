@@ -268,7 +268,9 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): CellOutput 
  * @param {nbformat.IDisplayData} output
  * @returns {(CellDisplayOutput | undefined)}
  */
-function translateDisplayDataOutput(output: nbformat.IDisplayData): CellDisplayOutput | undefined {
+function translateDisplayDataOutput(
+    output: nbformat.IDisplayData | nbformat.IDisplayUpdate | nbformat.IExecuteResult
+): CellDisplayOutput | undefined {
     // If no mimeType data, then there's nothing to display.
     if (!Object.keys(output.data || {}).length) {
         return;
@@ -278,7 +280,7 @@ function translateDisplayDataOutput(output: nbformat.IDisplayData): CellDisplayO
         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
         data,
         metadata: {
-            custom: output.metadata || {}
+            custom: output.metadata || {} // Used be renderers & VS Code for diffing (it knows what has changed).
         }
     };
 }
