@@ -19,7 +19,8 @@ import {
     ICodeLensFactory,
     IFileHashes,
     IInteractiveWindowListener,
-    IInteractiveWindowProvider
+    INotebook,
+    INotebookProvider
 } from '../types';
 import { getCellHashProvider } from './cellhashprovider';
 
@@ -54,12 +55,13 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     private codeLensCache = new Map<string, CodeLensCacheData>();
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager
     ) {
         this.documentManager.onDidCloseTextDocument(this.onClosedDocument.bind(this));
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings.bind(this));
+        this.notebookProvider.onNotebookCreated(this.onNotebookCreated.bind(this));
     }
 
     public dispose(): void {
@@ -198,8 +200,10 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     }
 
     private trackNotebook(identity: Uri) {
-        // Setup our per notebook data
-        this.notebookData.set(identity.toString(), this.createNotebookData());
+        // Setup our per notebook data if not already tracked.
+        if (!this.notebookData.has(identity.toString())) {
+            this.notebookData.set(identity.toString(), this.createNotebookData());
+        }
     }
 
     private createNotebookData(): PerNotebookData {
@@ -245,16 +249,22 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         }
     }
 
-    private getHashProviders(): ICellHashProvider[] {
-        // Make sure all notebook data have their hash provider if possible.
-        [...this.notebookData.entries()].forEach((kvp) => {
-            if (!kvp[1].hashProvider) {
-                const window = this.interactiveWindowProvider.windows.find((w) => w.identity.toString() === kvp[0]);
-                if (window && window.notebook) {
-                    kvp[1].hashProvider = getCellHashProvider(window.notebook);
-                }
-            }
+    private onNotebookCreated(args: { identity: Uri; notebook: INotebook }) {
+        const key = args.identity.toString();
+        let data = this.notebookData.get(key);
+        if (!data) {
+            data = this.createNotebookData();
+            this.notebookData.set(key, data);
+        }
+        if (data) {
+            data.hashProvider = getCellHashProvider(args.notebook);
+        }
+        args.notebook.onDisposed(() => {
+            this.notebookData.delete(key);
         });
+    }
+
+    private getHashProviders(): ICellHashProvider[] {
         return [...this.notebookData.values()].filter((v) => v.hashProvider).map((v) => v.hashProvider!);
     }
 

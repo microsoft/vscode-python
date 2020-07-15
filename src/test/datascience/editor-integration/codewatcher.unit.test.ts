@@ -7,6 +7,7 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CodeLens, Disposable, Range, Selection, TextEditor, Uri } from 'vscode';
 
+import { instance, mock } from 'ts-mockito';
 import {
     ICommandManager,
     IDebugService,
@@ -19,6 +20,7 @@ import { Commands, EditorContexts } from '../../../client/datascience/constants'
 import { CodeLensFactory } from '../../../client/datascience/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';
+import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
 import {
     ICodeWatcher,
     IDataScienceErrorHandler,
@@ -112,9 +114,11 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup config service
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
 
+        const notebookProvider = mock(NotebookProvider);
+
         const codeLensFactory = new CodeLensFactory(
             configService.object,
-            interactiveWindowProvider.object,
+            instance(notebookProvider),
             fileSystem.object,
             documentManager.object
         );
@@ -153,13 +157,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
                 return Promise.resolve();
             });
 
-        const codeLens = new CodeLensFactory(
-            configService.object,
-            interactiveWindowProvider.object,
-            fileSystem.object,
-            documentManager.object
-        );
-
         codeWatcher = new CodeWatcher(
             interactiveWindowProvider.object,
             fileSystem.object,
@@ -167,7 +164,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             documentManager.object,
             helper.object,
             dataScienceErrorHandler.object,
-            codeLens
+            codeLensFactory
         );
     });
 
