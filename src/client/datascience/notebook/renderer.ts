@@ -20,13 +20,28 @@ export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
     public render(document: NotebookDocument, request: NotebookRenderRequest) {
         let outputToSend = request.output;
         if (request.output.outputKind === CellOutputKind.Rich && request.mimeType in request.output.data) {
+            // tslint:disable-next-line: no-any
+            const metadata: Record<string, any> = {};
+            // Send metadata only for the mimeType we are interested in.
+            const customMetadata = request.output.metadata?.custom;
+            if (customMetadata) {
+                if (customMetadata[request.mimeType]) {
+                    metadata[request.mimeType] = customMetadata[request.mimeType];
+                }
+                if (customMetadata.needs_background) {
+                    metadata.needs_background = customMetadata.needs_background;
+                }
+                if (customMetadata.unconfined) {
+                    metadata.unconfined = customMetadata.unconfined;
+                }
+            }
             outputToSend = {
                 ...request.output,
                 // Send only what we need & ignore other mimeTypes.
                 data: {
                     [request.mimeType]: request.output.data[request.mimeType]
                 },
-                metadata: request.output.metadata?.custom || {}
+                metadata
             };
         }
         const id = uuid();
