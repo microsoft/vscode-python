@@ -107,6 +107,7 @@ export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INot
 
     // Add the metadata back to the cell if we have any.
     // Refer to `addCellMetadata` to see how metadata is stored in VSC Cells.
+    // This metadata would exist if the user copied and pasted an existing cell.
     if (vscCell.metadata.custom?.vscodeMetadata) {
         cell.data = {
             ...cell.data,
