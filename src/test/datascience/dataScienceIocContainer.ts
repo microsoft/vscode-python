@@ -182,7 +182,11 @@ import { EnvironmentVariablesService } from '../../client/common/variables/envir
 import { EnvironmentVariablesProvider } from '../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
+import { JupyterCommandLineSelectorCommand } from '../../client/datascience/commands/commandLineSelector';
+import { CommandRegistry } from '../../client/datascience/commands/commandRegistry';
 import { ExportCommands } from '../../client/datascience/commands/exportCommands';
+import { KernelSwitcherCommand } from '../../client/datascience/commands/kernelSwitcher';
+import { JupyterServerSelectorCommand } from '../../client/datascience/commands/serverSelector';
 import { DataScienceStartupTime, Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
 import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
@@ -228,6 +232,7 @@ import { InteractiveWindowCommandListener } from '../../client/datascience/inter
 import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
 import { IPyWidgetMessageDispatcherFactory } from '../../client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from '../../client/datascience/ipywidgets/ipyWidgetScriptSource';
+import { JupyterCommandLineSelector } from '../../client/datascience/jupyter/commandLineSelector';
 import { DebuggerVariableRegistration } from '../../client/datascience/jupyter/debuggerVariableRegistration';
 import { DebuggerVariables } from '../../client/datascience/jupyter/debuggerVariables';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
@@ -947,6 +952,22 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.datascience = TypeMoq.Mock.ofType<IDataScience>();
         this.serviceManager.addSingletonInstance<IDataScience>(IDataScience, this.datascience.object);
+        this.serviceManager.addSingleton<JupyterCommandLineSelector>(
+            JupyterCommandLineSelector,
+            JupyterCommandLineSelector
+        );
+        this.serviceManager.addSingleton<JupyterCommandLineSelectorCommand>(
+            JupyterCommandLineSelectorCommand,
+            JupyterCommandLineSelectorCommand
+        );
+
+        this.serviceManager.addSingleton<JupyterServerSelectorCommand>(
+            JupyterServerSelectorCommand,
+            JupyterServerSelectorCommand
+        );
+        this.serviceManager.addSingleton<KernelSwitcherCommand>(KernelSwitcherCommand, KernelSwitcherCommand);
+
+        this.serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
         this.serviceManager.addSingleton<IEnvironmentVariablesService>(
             IEnvironmentVariablesService,
@@ -1157,6 +1178,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
 
         await Promise.all(activationServices.map((a) => a.activate()));
+
+        // Make sure the command registry registers all commands
+        this.get<CommandRegistry>(CommandRegistry).register();
 
         // Then force our interpreter to be one that supports jupyter (unless in a mock state when we don't have to)
         if (!this.mockJupyter) {

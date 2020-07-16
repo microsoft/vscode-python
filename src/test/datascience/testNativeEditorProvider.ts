@@ -92,7 +92,9 @@ function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>
             const result = super.createNotebookEditor(model, panel);
 
             // Associate the real create with our mount in order to find the wrapper
-            this.windowToMountMap.set(result.file.toString(), mounted);
+            const key = result.file.toString();
+            this.windowToMountMap.set(key, mounted);
+            mounted.onDisposed(() => this.windowToMountMap.delete(key));
 
             // During testing the MainPanel sends the init message before our interactive window is created.
             // Pretend like it's happening now

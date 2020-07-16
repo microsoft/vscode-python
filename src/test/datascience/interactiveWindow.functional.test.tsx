@@ -1220,7 +1220,12 @@ for i in range(0, 100):
         assert.notEqual(pair1.window.title, pair2.window.title, 'Two windows were not created.');
         assert.notEqual(pair1.mount.wrapper, pair2.mount.wrapper, 'Two windows were not created.');
     });
+    const fooCode = `x = 'foo'\nx`;
+    const barCode = `y = 'bar'\ny`;
     test('Multiple executes go to last active window', async () => {
+        addMockData(ioc, fooCode, 'foo');
+        addMockData(ioc, barCode, 'bar');
+
         ioc.forceDataScienceSettingsChanged({ interactiveWindowMode: 'multiple' });
         const globalMemento = ioc.get<Memento>(IMemento, GLOBAL_MEMENTO);
         await globalMemento.update(AskedForPerFileSettingKey, true);
@@ -1228,15 +1233,15 @@ for i in range(0, 100):
         const pair1 = await getOrCreateInteractiveWindow(ioc);
 
         // Run a cell from a document
-        const fooWatcher = createCodeWatcher(`# %%\nprint('foo')`, 'foo.py', ioc);
+        const fooWatcher = createCodeWatcher(`# %%\n${fooCode}`, 'foo.py', ioc);
         const lenses = fooWatcher?.getCodeLenses();
         assert.equal(lenses?.length, 6, 'No code lenses found');
-        await runCodeLens(lenses ? lenses[0] : undefined, ioc);
+        await runCodeLens(fooWatcher!.getFileName(), lenses ? lenses[0] : undefined, ioc);
         verifyHtmlOnCell(pair1.mount.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
 
         // Create another window, run a cell again
         const pair2 = await getOrCreateInteractiveWindow(ioc);
-        await runCodeLens(lenses ? lenses[0] : undefined, ioc);
+        await runCodeLens(fooWatcher!.getFileName(), lenses ? lenses[0] : undefined, ioc);
         verifyHtmlOnCell(pair2.mount.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
 
         // Make the first window active
@@ -1244,29 +1249,31 @@ for i in range(0, 100):
         pair1.mount.changeViewState(true, true);
 
         // Run another file
-        const barWatcher = createCodeWatcher(`# %%\nprint('bar')`, 'bar.py', ioc);
+        const barWatcher = createCodeWatcher(`# %%\n${barCode}`, 'bar.py', ioc);
         const lenses2 = barWatcher?.getCodeLenses();
         assert.equal(lenses2?.length, 6, 'No code lenses found');
-        await runCodeLens(lenses2 ? lenses2[0] : undefined, ioc);
+        await runCodeLens(barWatcher!.getFileName(), lenses2 ? lenses2[0] : undefined, ioc);
         verifyHtmlOnCell(pair1.mount.wrapper, 'InteractiveCell', '<span>bar</span>', CellPosition.Last);
     });
     test('Per file', async () => {
+        addMockData(ioc, fooCode, 'foo');
+        addMockData(ioc, barCode, 'bar');
         ioc.forceDataScienceSettingsChanged({ interactiveWindowMode: 'perFile' });
         const interactiveWindowProvider = ioc.get<ITestInteractiveWindowProvider>(IInteractiveWindowProvider);
 
         // Run a cell from a document
-        const fooWatcher = createCodeWatcher(`# %%\nprint('foo')`, 'foo.py', ioc);
+        const fooWatcher = createCodeWatcher(`# %%\n${fooCode}`, 'foo.py', ioc);
         const lenses = fooWatcher?.getCodeLenses();
         assert.equal(lenses?.length, 6, 'No code lenses found');
-        await runCodeLens(lenses ? lenses[0] : undefined, ioc);
+        await runCodeLens(fooWatcher!.getFileName(), lenses ? lenses[0] : undefined, ioc);
         assert.equal(interactiveWindowProvider.windows.length, 1, 'Interactive window not created');
         const mounted1 = interactiveWindowProvider.getMountedWebView(interactiveWindowProvider.windows[0]);
         verifyHtmlOnCell(mounted1.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
 
         // Create another window, run a cell again
-        const barWatcher = createCodeWatcher(`# %%\nprint('bar')`, 'bar.py', ioc);
+        const barWatcher = createCodeWatcher(`# %%\n${barCode}`, 'bar.py', ioc);
         const lenses2 = barWatcher?.getCodeLenses();
-        await runCodeLens(lenses2 ? lenses2[0] : undefined, ioc);
+        await runCodeLens(barWatcher!.getFileName(), lenses2 ? lenses2[0] : undefined, ioc);
         assert.equal(interactiveWindowProvider.windows.length, 2, 'Interactive window not created');
         const mounted2 = interactiveWindowProvider.getMountedWebView(
             interactiveWindowProvider.windows.find((w) => w.title.includes('bar'))
@@ -1274,6 +1281,8 @@ for i in range(0, 100):
         verifyHtmlOnCell(mounted2.wrapper, 'InteractiveCell', '<span>bar</span>', CellPosition.Last);
     });
     test('Per file asks and changes titles', async () => {
+        addMockData(ioc, fooCode, 'foo');
+        addMockData(ioc, barCode, 'bar');
         ioc.applicationShell
             .setup((i) => i.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((_a1: string, a2: string, _a3: string) => {
@@ -1285,18 +1294,18 @@ for i in range(0, 100):
         await globalMemento.update(AskedForPerFileSettingKey, false);
 
         // Run a cell from a document
-        const fooWatcher = createCodeWatcher(`# %%\nprint('foo')`, 'foo.py', ioc);
+        const fooWatcher = createCodeWatcher(`# %%\n${fooCode}`, 'foo.py', ioc);
         const lenses = fooWatcher?.getCodeLenses();
         assert.equal(lenses?.length, 6, 'No code lenses found');
-        await runCodeLens(lenses ? lenses[0] : undefined, ioc);
+        await runCodeLens(fooWatcher!.getFileName(), lenses ? lenses[0] : undefined, ioc);
         assert.equal(interactiveWindowProvider.windows.length, 1, 'Interactive window not created');
         const mounted1 = interactiveWindowProvider.getMountedWebView(interactiveWindowProvider.windows[0]);
         verifyHtmlOnCell(mounted1.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
 
         // Create another window, run a cell again
-        const barWatcher = createCodeWatcher(`# %%\nprint('bar')`, 'bar.py', ioc);
+        const barWatcher = createCodeWatcher(`# %%\n${barCode}`, 'bar.py', ioc);
         const lenses2 = barWatcher?.getCodeLenses();
-        await runCodeLens(lenses2 ? lenses2[0] : undefined, ioc);
+        await runCodeLens(barWatcher!.getFileName(), lenses2 ? lenses2[0] : undefined, ioc);
         assert.equal(interactiveWindowProvider.windows.length, 2, 'Interactive window not created');
         const mounted2 = interactiveWindowProvider.getMountedWebView(
             interactiveWindowProvider.windows.find((w) => w.title.includes('bar'))

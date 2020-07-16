@@ -9,6 +9,7 @@ import { Disposable } from 'vscode';
 import { EnableTrustedNotebooks } from '../../client/common/experiments/groups';
 import { noop } from '../../client/common/utils/misc';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { INotebookEditorProvider } from '../../client/datascience/types';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
@@ -17,7 +18,6 @@ import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { WaitForMessageOptions } from './mountedWebView';
-import { IMountedWebViewFactory } from './mountedWebViewFactory';
 import { openEditor } from './nativeEditorTestHelpers';
 import {
     addMockData,
@@ -29,11 +29,15 @@ import {
     typeCode,
     verifyHtmlOnCell
 } from './testHelpers';
+import { ITestNativeEditorProvider } from './testNativeEditorProvider';
 
 use(chaiAsPromised);
 
 function waitForMessage(ioc: DataScienceIocContainer, message: string, options?: WaitForMessageOptions): Promise<void> {
-    return ioc.get<IMountedWebViewFactory>(IMountedWebViewFactory).get('notebook').waitForMessage(message, options);
+    return ioc
+        .get<ITestNativeEditorProvider>(INotebookEditorProvider)
+        .getMountedWebView(undefined)
+        .waitForMessage(message, options);
 }
 // tslint:disable:no-any no-multiline-string
 suite('Untrusted notebooks', () => {

@@ -64,7 +64,9 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
         const result = super.create(resource, mode);
 
         // Associate the real create with our id in order to find the wrapper
-        this.windowToMountMap.set(result.identity.toString(), mounted);
+        const key = result.identity.toString();
+        this.windowToMountMap.set(key, mounted);
+        mounted.onDisposed(() => this.windowToMountMap.delete(key));
 
         // During testing the MainPanel sends the init message before our interactive window is created.
         // Pretend like it's happening now

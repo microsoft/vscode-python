@@ -353,6 +353,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         // on the side (different view column).
         const gitSchemeEditor = this.documentManager.visibleTextEditors.find(
             (editorUri) =>
+                editorUri.document &&
                 editorUri.document.uri.scheme === 'git' &&
                 this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath)
         );
