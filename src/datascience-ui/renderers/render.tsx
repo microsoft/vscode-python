@@ -93,5 +93,5 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 }
 
 function isAltairPlot(mimeType: string) {
-    return mimeType.includes('application/vnd.vegalite.v4+json');
+    return mimeType.includes('application/vnd.vega');
 }
