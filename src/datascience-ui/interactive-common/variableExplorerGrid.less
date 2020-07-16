@@ -34,12 +34,24 @@
     background-color: var(--override-tabs-background, var(--vscode-notifications-background));
 }
 
+// Notifications-background doesn't work in high contrast mode, so skip the header color in high contrast themes
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Header {
+    background-color: var(--override-background, var(--vscode-editor-background));
+    border-color: var(--override-foreground, var(--vscode-editor-foreground));
+}
+
 #variable-explorer-data-grid .react-grid-HeaderCell {
     background-color: var(--override-lineHighlightBorder, var(--vscode-editor-lineHighlightBorder));
     color: var(--override-foreground, var(--vscode-editor-foreground));
     border-style: solid;
     border-color: var(--override-badge-background, var(--vscode-badge-background));
     padding: 2px;
+}
+
+// LineHighlightBorder doesn't work in high contrast mode, so skip the header cell color in high contrast themes
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-HeaderCell {
+    background-color: var(--override-background, var(--vscode-editor-background));
+    border-color: var(--override-foreground, var(--vscode-editor-foreground));
 }
 
 
@@ -57,22 +69,46 @@
     border-bottom-color: var(--override-badge-background, var(--vscode-badge-background));
 }
 
+// LineHighlightBorder doesn't work in high contrast mode, so skip the zebra striping in high contrast themes
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row--odd {
+    background-color: var(--override-background, var(--vscode-editor-background));
+    border-color: var(--override-foreground, var(--vscode-editor-foreground));
+}
+
 #variable-explorer-data-grid .react-grid-Cell {
     background-color: transparent;
     color: var(--override-foreground, var(--vscode-editor-foreground));
     border-style: none;
 }
 
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Cell {
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--override-foreground, var(--vscode-editor-foreground));
+}
+
 #variable-explorer-data-grid .react-grid-Cell:hover {
     background-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
+}
+
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Cell:hover {
+    color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
 }
 
 #variable-explorer-data-grid .react-grid-Row:hover {
     background-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
 }
 
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row:hover {
+    color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
+}
+
 #variable-explorer-data-grid .react-grid-Row:hover .react-grid-Cell {
     background-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
+}
+
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row:hover .react-grid-Cell {
+    color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
 }
 
 #variable-explorer-data-grid .rdg-selected {
