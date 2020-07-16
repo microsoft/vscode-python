@@ -111,6 +111,11 @@ body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row:hover .re
     color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
 }
 
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row:hover .react-grid-Cell .variable-explorer-button-cell {
+    color: var(--override-foreground, var(--vscode-editor-foreground));
+    background-color: var(--override-background, var(--vscode-editor-background));
+}
+
 #variable-explorer-data-grid .rdg-selected {
     visibility: hidden;
 }
