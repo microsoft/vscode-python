@@ -275,7 +275,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     private getRowHeight() {
-        //return this.props.fontSize + 9;
         return this.props.fontSize + 11;
     }
 

@@ -317,17 +317,16 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     // opening a new Data Viewer, and making sure the data is visible
     // They were tested up to a font size of 60, and the row height still allows the content to be seen
     private getAppropiateRowHeight(fontSize: number): number {
-        return 30;
-        //switch (true) {
-        //case fontSize < 15:
-        //return fontSize + 4;
-        //case fontSize < 20:
-        //return fontSize + 8;
-        //case fontSize < 30:
-        //return fontSize + 10;
-        //default:
-        //return fontSize + 12;
-        //}
+        switch (true) {
+            case fontSize < 15:
+                return fontSize + 4;
+            case fontSize < 20:
+                return fontSize + 8;
+            case fontSize < 30:
+                return fontSize + 10;
+            default:
+                return fontSize + 12;
+        }
     }
 
     // If the slickgrid gets focus and nothing is selected select the first item
