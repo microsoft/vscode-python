@@ -4,13 +4,16 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget } from 'vscode';
+import * as vscode from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { PYLANCE_EXTENSION_ID } from '../common/constants';
 import '../common/extensions';
 import { IConfigurationService, IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
 import { LanguageService } from '../common/utils/localize';
 import { getRandomBetween } from '../common/utils/random';
+
+export const PylanceExtensionUri = `${vscode.env.uriScheme}:extension/${PYLANCE_EXTENSION_ID}`;
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
@@ -97,7 +100,7 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
         );
 
         if (response === LanguageService.tryItNow()) {
-            await this.enableLanguageServer();
+            this.appShell.openUrl(PylanceExtensionUri);
             await this.disable();
         } else if (response === LanguageService.bannerLabelNo()) {
             await this.disable();
@@ -114,14 +117,5 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
         await this.persistentState
             .createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, false)
             .updateValue(false);
-    }
-
-    public async enableLanguageServer(): Promise<void> {
-        await this.configuration.updateSetting(
-            'languageServer',
-            LanguageServerType.Node,
-            undefined,
-            ConfigurationTarget.Global
-        );
     }
 }

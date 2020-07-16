@@ -8,7 +8,11 @@ import * as typemoq from 'typemoq';
 import { IApplicationEnvironment, IApplicationShell } from '../../../client/common/application/types';
 import { IConfigurationService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { LanguageService } from '../../../client/common/utils/localize';
-import { ProposeLSStateKeys, ProposePylanceBanner } from '../../../client/languageServices/proposeLanguageServerBanner';
+import {
+    ProposeLSStateKeys,
+    ProposePylanceBanner,
+    PylanceExtensionUri
+} from '../../../client/languageServices/proposeLanguageServerBanner';
 
 suite('Propose Pylance Banner', () => {
     let config: typemoq.IMock<IConfigurationService>;
@@ -30,7 +34,7 @@ suite('Propose Pylance Banner', () => {
         const testBanner = preparePopup(enabledValue, appShell.object, config.object, appEnv.object, 100);
         expect(testBanner.enabled).to.be.equal(true, 'Sampling 100/100 should always enable the banner.');
     });
-    test('Do not show banner when it is disabled', () => {
+    test('Do not show banner when it is disabled', async () => {
         appShell
             .setup((a) =>
                 a.showInformationMessage(
@@ -43,7 +47,8 @@ suite('Propose Pylance Banner', () => {
             .verifiable(typemoq.Times.never());
         const enabled: boolean = true;
         const testBanner = preparePopup(enabled, appShell.object, config.object, appEnv.object, 0);
-        testBanner.showBanner().ignoreErrors();
+        await testBanner.showBanner();
+        appShell.verifyAll();
     });
     test('shouldShowBanner must return false when Banner is implicitly disabled by sampling', () => {
         const enabled = true;
@@ -63,6 +68,24 @@ suite('Propose Pylance Banner', () => {
             false,
             'Explicitly disabled banner shouldShowBanner != false.'
         );
+    });
+    test('Clicking yes opens the extension marketplace entry', async () => {
+        appShell
+            .setup((a) =>
+                a.showInformationMessage(
+                    typemoq.It.isValue(message),
+                    typemoq.It.isValue(yes),
+                    typemoq.It.isValue(no),
+                    typemoq.It.isValue(later)
+                )
+            )
+            .returns(async () => yes)
+            .verifiable(typemoq.Times.once());
+        appShell.setup((a) => a.openUrl(PylanceExtensionUri)).verifiable(typemoq.Times.once());
+
+        const testBanner = preparePopup(true, appShell.object, config.object, appEnv.object, 100);
+        await testBanner.showBanner();
+        appShell.verifyAll();
     });
 });
 

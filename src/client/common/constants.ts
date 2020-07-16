@@ -114,4 +114,6 @@ export const UseCustomEditorApi = Symbol('USE_CUSTOM_EDITOR');
 export const UseVSCodeNotebookEditorApi = Symbol('USE_NATIVEEDITOR');
 export const UseProposedApi = Symbol('USE_VSC_PROPOSED_API');
 
+export const PYLANCE_EXTENSION_ID = 'ms-python.vscode-pylance';
+
 export * from '../constants';
