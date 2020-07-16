@@ -10,7 +10,7 @@
 
 ---
 
-[For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
+[For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [Pylance](https://github.com/microsoft/pylance-release) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
 
 ## Contributing a pull request
 
@@ -71,7 +71,7 @@ TypeScript errors and warnings will be displayed in the `Problems` window of Vis
 
 ### Run dev build and validate your changes
 
-To test changes, open the `vscode-python` folder in VSCode, and select the workspace titled `vscode`.
+To test changes, open the `vscode-python` folder in VSCode, and select the workspace titled `vscode-python`.
 Then, open the debug panel by clicking the `Run and Debug` icon on the sidebar, select the `Extension`
 option from the top menu, and click start. A new window will launch with the title
 `[Extension Development Host]`.
