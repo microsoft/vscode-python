@@ -39,7 +39,7 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
 
     public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {
         if (!isTestExecution()) {
-            await this.proposePylancePopup.showBanner();
+            this.proposePylancePopup.showBanner().ignoreErrors();
         }
         return super.start(resource, interpreter);
     }

@@ -41,7 +41,7 @@ export class NoLanguageServerExtensionActivator implements ILanguageServerActiva
     ) {}
     public async start(_resource: Resource, _interpreter?: PythonInterpreter): Promise<void> {
         if (!isTestExecution()) {
-            await this.proposePylancePopup.showBanner();
+            this.proposePylancePopup.showBanner().ignoreErrors();
         }
     }
     // tslint:disable-next-line: no-empty
