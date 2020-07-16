@@ -103,7 +103,7 @@ export namespace AttachProcess {
 export namespace LanguageService {
     export const proposePylanceMessage = localize(
         'LanguageService.proposePylanceMessage',
-        'Try out a new faster, feature-rich language server for Python by Microsoft - Pylance!'
+        'Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.'
     );
     export const tryItNow = localize('LanguageService.tryItNow', 'Try it now');
     export const remindMeLater = localize('LanguageService.remindMeLater', 'Remind me later');
