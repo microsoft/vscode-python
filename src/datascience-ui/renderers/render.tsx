@@ -75,10 +75,9 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     }
     private renderOutput(data: nbformat.MultilineString | JSONObject, mimeType?: string) {
         const Transform = getTransform(this.props.mimeType!);
-        const divStyle: Record<string, string | number> = {};
-        if (mimeType && isAltairPlot(mimeType)) {
-            divStyle.backgroundColor = 'white';
-        }
+        const divStyle: React.CSSProperties = {
+            backgroundColor: mimeType && isAltairPlot(mimeType) ? 'white' : undefined
+        };
         return (
             <div style={divStyle}>
                 <Transform data={data} />
