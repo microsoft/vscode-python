@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.7.0 (15 July 2020)
+## 2020.7.0 (16 July 2020)
 
 ### Enhancements
 
