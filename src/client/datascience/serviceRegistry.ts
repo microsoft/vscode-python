@@ -204,7 +204,7 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
     serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
-    serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
+    serviceManager.addSingleton<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
