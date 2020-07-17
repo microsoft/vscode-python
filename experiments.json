@@ -170,8 +170,8 @@
     {
         "name": "RunByLine - experiment",
         "salt": "RunByLine",
-        "max": 0,
-        "min": 20
+        "max": 20,
+        "min": 0
     },
     {
         "name": "CustomEditorSupport - control",
