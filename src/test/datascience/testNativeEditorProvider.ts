@@ -24,7 +24,8 @@ import {
     IDataScienceErrorHandler,
     INotebookEditor,
     INotebookEditorProvider,
-    INotebookModel
+    INotebookModel,
+    INotebookProvider
 } from '../../client/datascience/types';
 import { ClassType, IServiceContainer } from '../../client/ioc/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -123,9 +124,19 @@ export class TestNativeEditorProvider extends TestNativeEditorProviderMixin(Nati
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(ICustomEditorService) customEditorService: ICustomEditorService,
-        @inject(INotebookStorageProvider) storage: INotebookStorageProvider
+        @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
+        @inject(INotebookProvider) notebookProvider: INotebookProvider
     ) {
-        super(serviceContainer, asyncRegistry, disposables, workspace, configuration, customEditorService, storage);
+        super(
+            serviceContainer,
+            asyncRegistry,
+            disposables,
+            workspace,
+            configuration,
+            customEditorService,
+            storage,
+            notebookProvider
+        );
     }
 }
 
@@ -142,7 +153,8 @@ export class TestNativeEditorProviderOld extends TestNativeEditorProviderMixin(N
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(ICommandManager) cmdManager: ICommandManager,
         @inject(IDataScienceErrorHandler) dataScienceErrorHandler: IDataScienceErrorHandler,
-        @inject(INotebookStorageProvider) storage: INotebookStorageProvider
+        @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
+        @inject(INotebookProvider) notebookProvider: INotebookProvider
     ) {
         super(
             serviceContainer,
@@ -155,7 +167,8 @@ export class TestNativeEditorProviderOld extends TestNativeEditorProviderMixin(N
             documentManager,
             cmdManager,
             dataScienceErrorHandler,
-            storage
+            storage,
+            notebookProvider
         );
     }
 }

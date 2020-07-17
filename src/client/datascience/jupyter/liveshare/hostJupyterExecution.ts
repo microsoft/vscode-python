@@ -135,9 +135,11 @@ export class HostJupyterExecution
         }
     }
 
-    public getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
-        // See if we have this server or not.
-        return this.serverCache.get(options);
+    public async getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
+        if (!this._disposed) {
+            // See if we have this server or not.
+            return this.serverCache.get(options);
+        }
     }
 
     private onRemoteIsNotebookSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {

@@ -106,7 +106,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IConfigurationService) protected readonly configuration: IConfigurationService,
         @inject(ICustomEditorService) private customEditorService: ICustomEditorService,
-        @inject(INotebookStorageProvider) protected readonly storage: INotebookStorageProvider
+        @inject(INotebookStorageProvider) protected readonly storage: INotebookStorageProvider,
+        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider
     ) {
         traceInfo(`id is ${this._id}`);
 
@@ -312,9 +313,18 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     private trackModel(model: INotebookModel) {
         if (!this.models.has(model)) {
             this.models.add(model);
-            this.disposables.push(model.onDidDispose(() => this.models.delete(model)));
+            this.disposables.push(model.onDidDispose(this.onDisposedModel.bind(this, model)));
             this.disposables.push(model.onDidEdit(this.modelEdited.bind(this, model)));
         }
+    }
+
+    private onDisposedModel(model: INotebookModel) {
+        // When model goes away, dispose of the associated notebook (as all of the editors have closed down)
+        this.notebookProvider
+            .getOrCreateNotebook({ identity: model.file, getOnly: true })
+            .then((n) => n?.dispose())
+            .ignoreErrors();
+        this.models.delete(model);
     }
 
     private onChangedViewState(): void {
