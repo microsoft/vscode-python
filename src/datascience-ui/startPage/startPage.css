@@ -53,6 +53,12 @@
     white-space: nowrap;
 }
 
+.releaseNotesRow {
+    display: block;
+    min-height: 50px;
+    white-space: nowrap;
+}
+
 .link {
     display: inline;
     color: var(--vscode-debugIcon-continueForeground);
