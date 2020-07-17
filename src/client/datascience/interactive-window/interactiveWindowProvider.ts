@@ -125,13 +125,13 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             const readyPromise = createDeferred();
             const disposable = result.ready(() => readyPromise.resolve());
 
-            // Wait for synchronization in liveshare
-            await this.synchronize(result);
-
             // Wait for monaco ready
             await readyPromise.promise;
             disposable.dispose();
         }
+
+        // Wait for synchronization in liveshare
+        await this.synchronize(result);
 
         return result;
     }
@@ -298,7 +298,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         if (args.length > 1 && args[0].toString() !== this.id) {
             // The other side is creating a interactive window. Create on this side. We don't need to show
             // it as the running of new code should do that.
-            const owner = Uri.parse(args[2].toString());
+            const owner = args[2] ? Uri.parse(args[2].toString()) : undefined;
             const mode = await this.getInteractiveMode(owner);
             if (!this.get(owner, mode)) {
                 this.create(owner, mode);

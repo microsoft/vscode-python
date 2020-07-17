@@ -29,10 +29,8 @@ import {
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import { MockFileSystem } from './mockFileSystem';
-import { IMountedWebView } from './mountedWebView';
 import { addMockData, CellPosition, mountConnectedMainPanel, verifyHtmlOnCell } from './testHelpers';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
-
 //import { asyncDump } from '../common/asyncDump';
 //tslint:disable:trailing-comma no-any no-multiline-string
 
@@ -126,16 +124,17 @@ suite('DataScience LiveShare tests', () => {
 
     async function waitForResults(
         role: vsls.Role,
-        getHostMount: () => Promise<IMountedWebView>,
-        getGuestMount: () => Promise<IMountedWebView>,
         resultGenerator: (both: boolean) => Promise<void>
     ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+        const container = role === vsls.Role.Host ? hostContainer : guestContainer;
+
         // If just the host session has started or nobody, just run the host.
         const guestStarted = isSessionStarted(vsls.Role.Guest);
         if (!guestStarted) {
-            const hostRenderPromise = (await getHostMount()).waitForMessage(
-                InteractiveWindowMessages.ExecutionRendered
-            );
+            // NOTE: These tests aren't going to work unless there's more than just 'notebook' and 'default'
+            const hostRenderPromise = hostContainer
+                .get<TestInteractiveWindowProvider>(IInteractiveWindowProvider)
+                .waitForMessage(undefined, InteractiveWindowMessages.ExecutionRendered);
 
             // Generate our results
             await resultGenerator(false);
@@ -146,12 +145,12 @@ suite('DataScience LiveShare tests', () => {
             // Otherwise more complicated. We have to wait for renders on both
 
             // Get a render promise with the expected number of renders for both wrappers
-            const hostRenderPromise = (await getHostMount()).waitForMessage(
-                InteractiveWindowMessages.ExecutionRendered
-            );
-            const guestRenderPromise = (await getGuestMount())!.waitForMessage(
-                InteractiveWindowMessages.ExecutionRendered
-            );
+            const hostRenderPromise = hostContainer
+                .get<TestInteractiveWindowProvider>(IInteractiveWindowProvider)
+                .waitForMessage(undefined, InteractiveWindowMessages.ExecutionRendered);
+            const guestRenderPromise = guestContainer
+                .get<TestInteractiveWindowProvider>(IInteractiveWindowProvider)
+                .waitForMessage(undefined, InteractiveWindowMessages.ExecutionRendered);
 
             // Generate our results
             await resultGenerator(true);
@@ -162,44 +161,32 @@ suite('DataScience LiveShare tests', () => {
                 isSessionStarted(vsls.Role.Guest) ? guestRenderPromise : Promise.resolve()
             ]);
         }
-        const mount = role === vsls.Role.Host ? await getHostMount() : await getGuestMount();
-        return mount.wrapper;
+        return container.getInteractiveWebPanel(undefined).wrapper;
     }
 
     async function addCodeToRole(
         role: vsls.Role,
         code: string
     ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-        return waitForResults(
-            role,
-            async () => {
-                const { mount } = await getOrCreateInteractiveWindow(vsls.Role.Host);
-                return mount;
-            },
-            async () => {
-                const { mount } = await getOrCreateInteractiveWindow(vsls.Role.Guest);
-                return mount;
-            },
-            async (both: boolean) => {
-                if (!both) {
-                    const history = await getOrCreateInteractiveWindow(role);
-                    await history.window.addCode(code, Uri.file('foo.py'), 2);
-                } else {
-                    // Add code to the apropriate container
-                    const host = await getOrCreateInteractiveWindow(vsls.Role.Host);
+        return waitForResults(role, async (both: boolean) => {
+            if (!both) {
+                const history = await getOrCreateInteractiveWindow(role);
+                await history.window.addCode(code, Uri.file('foo.py'), 2);
+            } else {
+                // Add code to the apropriate container
+                const host = await getOrCreateInteractiveWindow(vsls.Role.Host);
 
-                    // Make sure guest is still creatable
-                    if (isSessionStarted(vsls.Role.Guest)) {
-                        const guest = await getOrCreateInteractiveWindow(vsls.Role.Guest);
-                        role === vsls.Role.Host
-                            ? await host.window.addCode(code, Uri.file('foo.py'), 2)
-                            : await guest.window.addCode(code, Uri.file('foo.py'), 2);
-                    } else {
-                        await host.window.addCode(code, Uri.file('foo.py'), 2);
-                    }
+                // Make sure guest is still creatable
+                if (isSessionStarted(vsls.Role.Guest)) {
+                    const guest = await getOrCreateInteractiveWindow(vsls.Role.Guest);
+                    role === vsls.Role.Host
+                        ? await host.window.addCode(code, Uri.file('foo.py'), 2)
+                        : await guest.window.addCode(code, Uri.file('foo.py'), 2);
+                } else {
+                    await host.window.addCode(code, Uri.file('foo.py'), 2);
                 }
             }
-        );
+        });
     }
 
     function startSession(role: vsls.Role): Promise<void> {
@@ -326,7 +313,7 @@ suite('DataScience LiveShare tests', () => {
 
         assert.ok(hostContainer.getInteractiveWebPanel(undefined), 'Host wrapper not created');
         verifyHtmlOnCell(
-            hostContainer.getInteractiveWebPanel(undefined).wrapper!,
+            hostContainer.getInteractiveWebPanel(undefined).wrapper,
             'InteractiveCell',
             '<span>1</span>',
             CellPosition.Last
@@ -352,22 +339,11 @@ suite('DataScience LiveShare tests', () => {
         codeWatcher.setDocument(document.object);
 
         // Send code using a codewatcher instead (we're sending it through the guest)
-        const wrapper = await waitForResults(
-            vsls.Role.Guest,
-            async () => {
-                const { mount } = await getOrCreateInteractiveWindow(vsls.Role.Host);
-                return mount;
-            },
-            async () => {
-                const { mount } = await getOrCreateInteractiveWindow(vsls.Role.Guest);
-                return mount;
-            },
-            async (both: boolean) => {
-                // Should always be both
-                assert.ok(both, 'Expected both guest and host to be used');
-                await codeWatcher.runAllCells();
-            }
-        );
+        const wrapper = await waitForResults(vsls.Role.Guest, async (both: boolean) => {
+            // Should always be both
+            assert.ok(both, 'Expected both guest and host to be used');
+            await codeWatcher.runAllCells();
+        });
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
         assert.ok(hostContainer.getInteractiveWebPanel(undefined), 'Host wrapper not created for some reason');
         verifyHtmlOnCell(

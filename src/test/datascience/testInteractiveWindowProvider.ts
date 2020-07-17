@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Memento } from 'vscode';
+import { Memento, Uri } from 'vscode';
 import { IApplicationShell, ILiveShareApi } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import {
@@ -15,6 +15,7 @@ import {
     InteractiveWindowMode,
     Resource
 } from '../../client/common/types';
+import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
@@ -24,14 +25,22 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { IMountedWebView } from './mountedWebView';
 import { mountConnectedMainPanel } from './testHelpers';
+import { WaitForMessageOptions } from './uiTests/helpers';
 
 export interface ITestInteractiveWindowProvider extends IInteractiveWindowProvider {
     getMountedWebView(window: IInteractiveWindow | undefined): IMountedWebView;
+    waitForMessage(identity: Uri | undefined, message: string, options?: WaitForMessageOptions): Promise<void>;
 }
 
 @injectable()
 export class TestInteractiveWindowProvider extends InteractiveWindowProvider implements ITestInteractiveWindowProvider {
     private windowToMountMap = new Map<string, IMountedWebView>();
+    private pendingMessageWaits: {
+        message: string;
+        options?: WaitForMessageOptions;
+        deferred: Deferred<void>;
+    }[] = [];
+
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) private readonly container: IServiceContainer,
@@ -53,12 +62,38 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
         return this.windowToMountMap.get(key)!;
     }
 
+    public waitForMessage(identity: Uri | undefined, message: string, options?: WaitForMessageOptions): Promise<void> {
+        // We may already have this editor. Check. Undefined may also match.
+        const key = identity ? identity.toString() : this.windows[0] ? this.windows[0].identity.toString() : undefined;
+        if (key && this.windowToMountMap.has(key)) {
+            return this.windowToMountMap.get(key)!.waitForMessage(message, options);
+        }
+
+        // Otherwise pend for the next create.
+        this.pendingMessageWaits.push({ message, options, deferred: createDeferred() });
+        return this.pendingMessageWaits[this.pendingMessageWaits.length - 1].deferred.promise;
+    }
+
     protected create(resource: Resource, mode: InteractiveWindowMode): InteractiveWindow {
         // Generate the mount wrapper using a custom id
         const id = uuid();
         const mounted = this.container
             .get<DataScienceIocContainer>(DataScienceIocContainer)
             .createWebView(() => mountConnectedMainPanel('interactive'), id);
+
+        // Might have a pending wait for message
+        if (this.pendingMessageWaits.length) {
+            const list = [...this.pendingMessageWaits];
+            this.pendingMessageWaits = [];
+            list.forEach((p) => {
+                mounted
+                    .waitForMessage(p.message, p.options)
+                    .then(() => {
+                        p.deferred.resolve();
+                    })
+                    .catch((e) => p.deferred.reject(e));
+            });
+        }
 
         // Call the real create
         const result = super.create(resource, mode);
