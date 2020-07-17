@@ -103,14 +103,16 @@ export class CommandRegistry implements IDisposable {
         this.disposables.push(disposable);
     }
 
-    private getCodeWatcher(file: string): ICodeWatcher | undefined {
-        const possibleDocuments = this.documentManager.textDocuments.filter((d) =>
-            this.fileSystem.arePathsSame(d.uri.fsPath, file)
-        );
-        if (possibleDocuments && possibleDocuments.length === 1) {
-            return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
-        } else if (possibleDocuments && possibleDocuments.length > 1) {
-            throw new Error(DataScience.documentMismatch().format(file));
+    private getCodeWatcher(file: Uri | undefined): ICodeWatcher | undefined {
+        if (file) {
+            const possibleDocuments = this.documentManager.textDocuments.filter((d) =>
+                this.fileSystem.arePathsSame(d.uri.fsPath, file.fsPath)
+            );
+            if (possibleDocuments && possibleDocuments.length === 1) {
+                return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
+            } else if (possibleDocuments && possibleDocuments.length > 1) {
+                throw new Error(DataScience.documentMismatch().format(file.fsPath));
+            }
         }
 
         return undefined;
@@ -137,7 +139,7 @@ export class CommandRegistry implements IDisposable {
             .catch(noop);
     }
 
-    private async runAllCells(file: string): Promise<void> {
+    private async runAllCells(file: Uri | undefined): Promise<void> {
         let codeWatcher = this.getCodeWatcher(file);
         if (!codeWatcher) {
             codeWatcher = this.getCurrentCodeWatcher();
@@ -149,7 +151,7 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async runFileInteractive(file: string): Promise<void> {
+    private async runFileInteractive(file: Uri): Promise<void> {
         let codeWatcher = this.getCodeWatcher(file);
         if (!codeWatcher) {
             codeWatcher = this.getCurrentCodeWatcher();
@@ -161,7 +163,7 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async debugFileInteractive(file: string): Promise<void> {
+    private async debugFileInteractive(file: Uri): Promise<void> {
         let codeWatcher = this.getCodeWatcher(file);
         if (!codeWatcher) {
             codeWatcher = this.getCurrentCodeWatcher();
@@ -176,7 +178,7 @@ export class CommandRegistry implements IDisposable {
     // Note: see codewatcher.ts where the runcell command args are attached. The reason we don't have any
     // objects for parameters is because they can't be recreated when passing them through the LiveShare API
     private async runCell(
-        file: string,
+        file: Uri,
         startLine: number,
         startChar: number,
         endLine: number,
@@ -188,7 +190,7 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async runAllCellsAbove(file: string, stopLine: number, stopCharacter: number): Promise<void> {
+    private async runAllCellsAbove(file: Uri, stopLine: number, stopCharacter: number): Promise<void> {
         if (file) {
             const codeWatcher = this.getCodeWatcher(file);
 
@@ -198,7 +200,7 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async runCellAndAllBelow(file: string, startLine: number, startCharacter: number): Promise<void> {
+    private async runCellAndAllBelow(file: Uri | undefined, startLine: number, startCharacter: number): Promise<void> {
         if (file) {
             const codeWatcher = this.getCodeWatcher(file);
 
@@ -254,7 +256,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async debugCell(
-        file: string,
+        file: Uri,
         startLine: number,
         startChar: number,
         endLine: number,

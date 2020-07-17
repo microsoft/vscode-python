@@ -335,7 +335,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     range,
                     Commands.AddCellBelow,
                     localize.DataScience.addCellBelowCommandTitle(),
-                    [document.fileName, range.start.line]
+                    [document.uri, range.start.line]
                 );
             case Commands.DebugCurrentCellPalette:
                 return this.generateCodeLens(
@@ -350,7 +350,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     break;
                 }
                 return this.generateCodeLens(range, Commands.DebugCell, localize.DataScience.debugCellCommandTitle(), [
-                    document.fileName,
+                    document.uri,
                     range.start.line,
                     range.start.character,
                     range.end.line,
@@ -389,7 +389,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
             case Commands.RunCurrentCell:
             case Commands.RunCell:
                 return this.generateCodeLens(range, Commands.RunCell, localize.DataScience.runCellLensCommandTitle(), [
-                    document.fileName,
+                    document.uri,
                     range.start.line,
                     range.start.character,
                     range.end.line,
@@ -401,7 +401,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     range,
                     Commands.RunAllCells,
                     localize.DataScience.runAllCellsLensCommandTitle(),
-                    [document.fileName, range.start.line, range.start.character]
+                    [document.uri, range.start.line, range.start.character]
                 );
 
             case Commands.RunAllCellsAbovePalette:
@@ -411,14 +411,14 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                         range,
                         Commands.RunAllCellsAbove,
                         localize.DataScience.runAllCellsAboveLensCommandTitle(),
-                        [document.fileName, range.start.line, range.start.character]
+                        [document.uri, range.start.line, range.start.character]
                     );
                 } else {
                     return this.generateCodeLens(
                         range,
                         Commands.RunCellAndAllBelow,
                         localize.DataScience.runCellAndAllBelowLensCommandTitle(),
-                        [document.fileName, range.start.line, range.start.character]
+                        [document.uri, range.start.line, range.start.character]
                     );
                 }
                 break;
@@ -428,7 +428,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     range,
                     Commands.RunCellAndAllBelow,
                     localize.DataScience.runCellAndAllBelowLensCommandTitle(),
-                    [document.fileName, range.start.line, range.start.character]
+                    [document.uri, range.start.line, range.start.character]
                 );
 
             default:
