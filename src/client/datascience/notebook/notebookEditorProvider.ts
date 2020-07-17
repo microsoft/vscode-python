@@ -62,6 +62,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private readonly trackedVSCodeNotebookEditors = new Set<VSCodeNotebookEditor>();
     private readonly notebookEditorsByUri = new Map<string, INotebookEditor>();
     private readonly notebooksWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
+    private numberOfCellUpdatesPerTrustedNotebook = new Map<Uri, number>();
+    private didNotebookChangeDueToTrustUpdate = new Map<Uri, boolean>();
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
         @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider,
@@ -131,6 +133,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     public async createNew(contents?: string): Promise<INotebookEditor> {
         setSharedProperty('ds_notebookeditor', 'native');
         const model = await this.storage.createNew(contents, true);
+        this.didNotebookChangeDueToTrustUpdate.set(model.file, false);
         return this.open(model.file);
     }
     private onEditorOpened(editor: INotebookEditor): void {
@@ -182,6 +185,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         this.notebookEditorsByUri.set(uri.toString(), editor);
         if (!model.isTrusted) {
             await this.commandManager.executeCommand(Commands.TrustNotebook, model.file);
+            this.didNotebookChangeDueToTrustUpdate.set(uri, true);
         }
     }
     private onDidChangeActiveVsCodeNotebookEditor(editor: VSCodeNotebookEditor | undefined) {
@@ -237,8 +241,18 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             throw new Error('NotebookModel not of type VSCodeNotebookModel');
         }
         if (updateCellModelWithChangesToVSCCell(e, model)) {
-            // If we have updated the notebook document, then trigger changes.
-            this.contentProvider.notifyChangesToDocument(e.document);
+            if (e.type === 'changeCellOutputs' && this.didNotebookChangeDueToTrustUpdate.get(e.document.uri)) {
+                // If we're still getting output updates as a result of trust updates, track the number we've seen so far
+                const numberOfCellUpdates = this.numberOfCellUpdatesPerTrustedNotebook.get(e.document.uri);
+                if (numberOfCellUpdates && numberOfCellUpdates >= model.cells.length - 1) {
+                    // Once we've seen updates for all the cells we can start indicating dirty on changeCellOutput again
+                    this.didNotebookChangeDueToTrustUpdate.set(e.document.uri, false);
+                    return;
+                }
+                this.numberOfCellUpdatesPerTrustedNotebook.set(e.document.uri, (numberOfCellUpdates ? numberOfCellUpdates : 0) + e.cells.length);
+            } else {
+                this.contentProvider.notifyChangesToDocument(e.document);
+            }
         }
     }
 }
