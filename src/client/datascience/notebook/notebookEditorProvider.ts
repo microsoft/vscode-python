@@ -249,7 +249,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                     this.didNotebookChangeDueToTrustUpdate.set(e.document.uri, false);
                     return;
                 }
-                this.numberOfCellUpdatesPerTrustedNotebook.set(e.document.uri, (numberOfCellUpdates ? numberOfCellUpdates : 0) + e.cells.length);
+                this.numberOfCellUpdatesPerTrustedNotebook.set(
+                    e.document.uri,
+                    (numberOfCellUpdates ? numberOfCellUpdates : 0) + e.cells.length
+                );
             } else {
                 this.contentProvider.notifyChangesToDocument(e.document);
             }
