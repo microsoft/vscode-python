@@ -1062,7 +1062,7 @@ export namespace StartPage {
 
     export const releaseNotes = localize(
         'StartPage.releaseNotes',
-        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features'
+        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features.'
     );
     export const tutorialAndDoc = localize(
         'StartPage.tutorialAndDoc',

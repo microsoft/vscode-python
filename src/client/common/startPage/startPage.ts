@@ -120,11 +120,9 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             case StartPageMessages.Started:
                 this.webviewDidLoad = true;
                 break;
-            case StartPageMessages.RequestReleaseNotesAndShowAgainSetting:
+            case StartPageMessages.RequestShowAgainSetting:
                 const settings = this.configuration.getSettings();
-                const filteredNotes = await this.handleReleaseNotesRequest();
-                await this.postMessage(StartPageMessages.SendReleaseNotes, {
-                    notes: filteredNotes,
+                await this.postMessage(StartPageMessages.SendSetting, {
                     showAgainSetting: settings.showStartPage
                 });
                 break;
@@ -243,12 +241,6 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         // if savedVersion != version, there was an update
         await this.context.globalState.update('extensionVersion', version);
         return shouldShowStartPage;
-    }
-
-    // This gets the release notes from StartPageReleaseNotes.md
-    private async handleReleaseNotesRequest(): Promise<string[]> {
-        const releaseNotes = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'StartPageReleaseNotes.md'));
-        return releaseNotes.splitLines();
     }
 
     private async activateBackground(): Promise<void> {
