@@ -390,7 +390,7 @@ export class KernelFinder implements IKernelFinder {
     private async getDefaultKernelSpec(resource: Resource): Promise<IJupyterKernelSpec> {
         const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
 
-        return createDefaultKernelSpec(activeInterpreter?.displayName, activeInterpreter?.path);
+        return createDefaultKernelSpec(activeInterpreter?.displayName);
     }
 
     private async readCache(): Promise<string[]> {
