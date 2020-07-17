@@ -5,9 +5,9 @@
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, CodeLens, Disposable, Range, Selection, TextEditor, Uri } from 'vscode';
+import { CancellationTokenSource, CodeLens, Disposable, EventEmitter, Range, Selection, TextEditor, Uri } from 'vscode';
 
-import { instance, mock } from 'ts-mockito';
+import { instance, mock, when } from 'ts-mockito';
 import {
     ICommandManager,
     IDebugService,
@@ -26,7 +26,8 @@ import {
     IDataScienceErrorHandler,
     IDebugLocationTracker,
     IInteractiveWindow,
-    IInteractiveWindowProvider
+    IInteractiveWindowProvider,
+    INotebook
 } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
@@ -114,7 +115,10 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup config service
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
 
+        const dummyEvent = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
         const notebookProvider = mock(NotebookProvider);
+        when((notebookProvider as any).then).thenReturn(undefined);
+        when(notebookProvider.onNotebookCreated).thenReturn(dummyEvent.event);
 
         const codeLensFactory = new CodeLensFactory(
             configService.object,
@@ -261,7 +265,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         codeWatcher.setDocument(document.object);
 
         // Verify meta data
-        expect(codeWatcher.getFileName()).to.be.equal(fileName, 'File name of CodeWatcher does not match');
+        expect(codeWatcher.getFileName().fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
         expect(codeWatcher.getVersion()).to.be.equal(version, 'File version of CodeWatcher does not match');
 
         // Verify code lenses
@@ -282,7 +286,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         codeWatcher.setDocument(document.object);
 
         // Verify meta data
-        expect(codeWatcher.getFileName()).to.be.equal(fileName, 'File name of CodeWatcher does not match');
+        expect(codeWatcher.getFileName().fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
         expect(codeWatcher.getVersion()).to.be.equal(version, 'File version of CodeWatcher does not match');
 
         // Verify code lenses
@@ -309,7 +313,7 @@ fourth line`;
         codeWatcher.setDocument(document.object);
 
         // Verify meta data
-        expect(codeWatcher.getFileName()).to.be.equal(fileName, 'File name of CodeWatcher does not match');
+        expect(codeWatcher.getFileName().fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
         expect(codeWatcher.getVersion()).to.be.equal(version, 'File version of CodeWatcher does not match');
 
         // Verify code lenses
@@ -345,7 +349,7 @@ fourth line
         codeWatcher.setDocument(document.object);
 
         // Verify meta data
-        expect(codeWatcher.getFileName()).to.be.equal(fileName, 'File name of CodeWatcher does not match');
+        expect(codeWatcher.getFileName().fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
         expect(codeWatcher.getVersion()).to.be.equal(version, 'File version of CodeWatcher does not match');
 
         // Verify code lenses
@@ -382,7 +386,7 @@ fourth line
         codeWatcher.setDocument(document.object);
 
         // Verify meta data
-        expect(codeWatcher.getFileName()).to.be.equal(fileName, 'File name of CodeWatcher does not match');
+        expect(codeWatcher.getFileName().fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
         expect(codeWatcher.getVersion()).to.be.equal(version, 'File version of CodeWatcher does not match');
 
         // Verify code lenses
