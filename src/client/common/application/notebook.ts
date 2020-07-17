@@ -25,6 +25,12 @@ import {
 
 @injectable()
 export class VSCodeNotebook implements IVSCodeNotebook {
+    public get activeNotebookKernel(): NotebookKernel | undefined {
+        return this.canUseNotebookApi ? this.notebook.activeNotebookKernel : undefined;
+    }
+    public get onDidChangeActiveNotebookKernel(): Event<void> {
+        return this.canUseNotebookApi ? this.notebook.onDidChangeActiveNotebookKernel : new EventEmitter<void>().event;
+    }
     public get onDidChangeActiveNotebookEditor(): Event<NotebookEditor | undefined> {
         return this.canUseNotebookApi
             ? this.notebook.onDidChangeActiveNotebookEditor

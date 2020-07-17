@@ -6,9 +6,10 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
-
 import { IPathUtils, Resource } from '../../../common/types';
+import { createDeferredFromPromise } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
+import { noop } from '../../../common/utils/misc';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { IDataScienceFileSystem, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
@@ -177,6 +178,10 @@ export class InterpreterKernelSelectionListProvider implements IKernelSelectionL
 export class KernelSelectionProvider {
     private localSuggestionsCache: IKernelSpecQuickPickItem[] = [];
     private remoteSuggestionsCache: IKernelSpecQuickPickItem[] = [];
+    private _listChanged = new EventEmitter<void>();
+    public get SelectionsChanged() {
+        return this._listChanged.event;
+    }
     constructor(
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
@@ -302,9 +307,22 @@ export class KernelSelectionProvider {
         };
 
         const liveItems = getSelections().then((items) => (this.localSuggestionsCache = items));
-        // If we have someting in cache, return that, while fetching in the background.
+        // If we have something in cache, return that, while fetching in the background.
         const cachedItems =
             this.localSuggestionsCache.length > 0 ? Promise.resolve(this.localSuggestionsCache) : liveItems;
+
+        const liveItemsDeferred = createDeferredFromPromise(liveItems);
+        const cachedItemsDeferred = createDeferredFromPromise(liveItems);
+        Promise.race([cachedItems, liveItems])
+            .then(() => {
+                // If the cached items completed first, then if later the live items completes we need to notify
+                // others that this selection has changed.
+                if (cachedItemsDeferred.completed && !liveItemsDeferred.completed) {
+                    liveItems.then(() => this._listChanged.fire()).catch(noop);
+                }
+            })
+            .catch(noop);
+
         return Promise.race([cachedItems, liveItems]);
     }
 }

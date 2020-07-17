@@ -41,7 +41,6 @@ class MultiCancellationTokenSource {
  * VSC will use this class to execute cells in a notebook.
  * This is where we hookup Jupyter with a Notebook in VSCode.
  */
-@injectable()
 export class NotebookKernel implements VSCNotebookKernel {
     get preloads(): Uri[] {
         return [];

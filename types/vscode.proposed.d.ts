@@ -236,6 +236,7 @@ declare module 'vscode' {
          * The document associated with this notebook editor.
          */
         readonly document: NotebookDocument;
+        readonly kernel: NotebookKernel;
 
         /**
          * The primary selected cell on this notebook editor.
