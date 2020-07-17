@@ -35,7 +35,6 @@ import {
     IExperimentsManager,
     Resource
 } from '../../common/types';
-import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../pythonEnvironments/info';

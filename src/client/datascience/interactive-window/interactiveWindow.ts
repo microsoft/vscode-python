@@ -503,8 +503,9 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
         if (model) {
             let defaultFileName;
-            if (this.lastFile) {
-                defaultFileName = path.basename(this.lastFile, path.extname(this.lastFile));
+            if (this.submitters && this.submitters.length) {
+                const lastSubmitter = this.submitters[this.submitters.length - 1];
+                defaultFileName = path.basename(lastSubmitter.fsPath, path.extname(lastSubmitter.fsPath));
             }
             this.commandManager.executeCommand(Commands.Export, model, defaultFileName);
         }
