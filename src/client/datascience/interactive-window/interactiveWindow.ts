@@ -206,11 +206,13 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     public dispose() {
-        const promise = super.dispose();
+        super.dispose();
+        if (this.notebook) {
+            this.notebook.dispose().ignoreErrors();
+        }
         if (this.closedEvent) {
             this.closedEvent.fire(this);
         }
-        return promise;
     }
 
     public addMessage(message: string): Promise<void> {
