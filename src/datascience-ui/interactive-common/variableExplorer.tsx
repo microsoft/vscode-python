@@ -113,7 +113,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 key: 'buttons',
                 name: '',
                 type: 'boolean',
-                width: 34,
+                width: 36,
                 sortable: false,
                 resizable: false,
                 formatter: (
@@ -275,7 +275,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     private getRowHeight() {
-        return this.props.fontSize + 9;
+        return this.props.fontSize + 11;
     }
 
     private setInitialHeight() {

@@ -354,7 +354,7 @@ export namespace DataScience {
         'DataScience.installingMissingDependencies',
         'Installing missing dependencies'
     );
-    export const performingExport = localize('DataScience.performingExport', 'Performing export');
+    export const performingExport = localize('DataScience.performingExport', 'Performing Export');
     export const convertingToPDF = localize('DataScience.convertingToPDF', 'Converting to PDF');
     export const exportNotebookToPython = localize(
         'DataScience.exportNotebookToPython',
@@ -1043,14 +1043,18 @@ export namespace DataScience {
     );
     export const usingPreviewNotebookWithOtherNotebookWarning = localize(
         'DataScience.usingPreviewNotebookWithOtherNotebookWarning',
-        'Using the Preview Notebook Editor along with the stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
+        'Opening the same file in the Preview Notebook Editor and stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
     );
     export const launchNotebookTrustPrompt = localize(
         'DataScience.launchNotebookTrustPrompt',
-        'A notebook could execute harmful code when opened. Some cells & outputs have been hidden. Do you trust this notebook? (To trust all notebooks by default, click [here](command:workbench.action.openSettings?%5B%22python.dataScience.alwaysTrustNotebooks%22%5D).) [Learn more.](https://aka.ms/trusted-notebooks)'
+        'A notebook could execute harmful code when opened. Some outputs have been hidden. Do you trust this notebook? [Learn more.](https://aka.ms/trusted-notebooks)'
     );
     export const trustNotebook = localize('DataScience.launchNotebookTrustPrompt.yes', 'Trust');
     export const doNotTrustNotebook = localize('DataScience.launchNotebookTrustPrompt.no', 'Do not trust');
+    export const trustAllNotebooks = localize(
+        'DataScience.launchNotebookTrustPrompt.trustAllNotebooks',
+        'Trust all notebooks'
+    );
     export const previewNotebookOnlySupportedInVSCInsiders = localize(
         'DataScience.previewNotebookOnlySupportedInVSCInsiders',
         'The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code.'

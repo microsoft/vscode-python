@@ -6,7 +6,7 @@
 import { ChildProcess } from 'child_process';
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
-import { ObservableExecutionResult } from '../../common/process/types';
+import { IPythonExecutionService, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
@@ -27,15 +27,10 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         resource: Resource,
         kernelSpec: IJupyterKernelSpec,
         interpreter?: PythonInterpreter
-    ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon } | undefined> {
+    ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon | undefined }> {
         const daemon = await this.daemonPool.get(resource, kernelSpec, interpreter);
 
-        // The daemon pool can return back a non-IPythonKernelDaemon if daemon service is not supported or for Python 2.
-        // Use a check for the daemon.start function here before we call it.
-        if (!daemon.start) {
-            return undefined;
-        }
-
+        // Check to see if we have the type of kernelspec that we expect
         const args = kernelSpec.argv.slice();
         const modulePrefixIndex = args.findIndex((item) => item === '-m');
         if (modulePrefixIndex === -1) {
@@ -49,11 +44,26 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         const moduleArgs = args.slice(modulePrefixIndex + 2);
         const env = kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? kernelSpec.env : undefined;
 
-        const observableOutput = await daemon.start(moduleName, moduleArgs, { env });
-        if (observableOutput.proc) {
-            this.processesToDispose.push(observableOutput.proc);
+        // The daemon pool can return back a non-IPythonKernelDaemon if daemon service is not supported or for Python 2.
+        // Use a check for the daemon.start function here before we call it.
+        if (!daemon.start) {
+            // If we don't have a KernelDaemon here then we have an execution service and should use that to launch
+            // Typing is a bit funk here, as createDaemon can return an execution service instead of the requested
+            // daemon class
+            // tslint:disable-next-line:no-any
+            const executionService = (daemon as any) as IPythonExecutionService;
+
+            const observableOutput = executionService.execModuleObservable(moduleName, moduleArgs, { env });
+
+            return { observableOutput, daemon: undefined };
+        } else {
+            // In the case that we do have a kernel deamon, just return it
+            const observableOutput = await daemon.start(moduleName, moduleArgs, { env });
+            if (observableOutput.proc) {
+                this.processesToDispose.push(observableOutput.proc);
+            }
+            return { observableOutput, daemon };
         }
-        return { observableOutput, daemon };
     }
     public dispose() {
         while (this.processesToDispose.length) {

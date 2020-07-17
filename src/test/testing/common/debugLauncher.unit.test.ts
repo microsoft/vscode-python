@@ -24,7 +24,6 @@ import { IConfigurationService, IPythonSettings, ITestingSettings } from '../../
 import { DebuggerTypeName } from '../../../client/debugger/constants';
 import { IDebugEnvironmentVariablesService } from '../../../client/debugger/extension/configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/launch';
-import { ILaunchDebugConfigurationResolverExperiment } from '../../../client/debugger/extension/configuration/types';
 import { DebugOptions } from '../../../client/debugger/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { DebugLauncher } from '../../../client/testing/common/debugLauncher';
@@ -44,7 +43,6 @@ suite('Unit Tests - Debug Launcher', () => {
     let filesystem: TypeMoq.IMock<IFileSystem>;
     let settings: TypeMoq.IMock<IPythonSettings>;
     let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
-    let configExperiment: TypeMoq.IMock<ILaunchDebugConfigurationResolverExperiment>;
     let hasWorkspaceFolders: boolean;
     setup(async () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
@@ -86,11 +84,6 @@ suite('Unit Tests - Debug Launcher', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IDebugEnvironmentVariablesService)))
             .returns(() => debugEnvHelper.object);
 
-        configExperiment = TypeMoq.Mock.ofType<ILaunchDebugConfigurationResolverExperiment>(undefined);
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(ILaunchDebugConfigurationResolverExperiment)))
-            .returns(() => configExperiment.object);
-
         debugLauncher = new DebugLauncher(serviceContainer.object, getNewResolver(configService.object));
     });
     function getNewResolver(configService: IConfigurationService) {
@@ -101,19 +94,13 @@ suite('Unit Tests - Debug Launcher', () => {
         validator
             .setup((v) => v.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true));
-        configExperiment
-            .setup((c) => c.modifyConfigurationBasedOnExperiment(TypeMoq.It.isAny()))
-            .returns(() => {
-                return;
-            });
         return new LaunchConfigurationResolver(
             workspaceService.object,
             TypeMoq.Mock.ofType<IDocumentManager>(undefined, TypeMoq.MockBehavior.Strict).object,
             validator.object,
             platformService.object,
             configService,
-            debugEnvHelper.object,
-            configExperiment.object
+            debugEnvHelper.object
         );
     }
     function setupDebugManager(

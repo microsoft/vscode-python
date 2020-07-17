@@ -146,8 +146,11 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         NodeLanguageServerProxy.versionTelemetryProps
     )
     protected async serverReady(): Promise<void> {
-        while (this.languageClient && !this.languageClient!.initializeResult) {
+        while (this.languageClient && !this.languageClient.initializeResult) {
             await sleep(100);
+        }
+        if (this.languageClient) {
+            await this.languageClient.onReady();
         }
         this.startupCompleted.resolve();
     }

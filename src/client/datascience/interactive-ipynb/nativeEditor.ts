@@ -91,7 +91,6 @@ import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
-    public readonly type: 'old' | 'custom' = 'custom';
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
@@ -136,6 +135,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get model(): Readonly<INotebookModel> {
         return this._model;
     }
+    public readonly type: 'old' | 'custom' = 'custom';
     protected savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     protected closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     protected modifiedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
@@ -147,6 +147,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private loadedAllCells: boolean = false;
     private executeCancelTokens = new Set<CancellationTokenSource>();
     private loadPromise: Promise<void>;
+    private previouslyNotTrusted: boolean = false;
 
     constructor(
         listeners: IInteractiveWindowListener[],
@@ -223,6 +224,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         );
         asyncRegistry.push(this);
 
+        asyncRegistry.push(this.trustService.onDidSetNotebookTrust(this.monitorChangesToTrust, this));
         this.synchronizer.subscribeToUserActions(this, this.postMessage.bind(this));
 
         traceInfo(`Loading web panel for ${this.model.file}`);
@@ -235,6 +237,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Sign up for dirty events
         this._model.changed(this.modelChanged.bind(this));
+        this.previouslyNotTrusted = !this._model.isTrusted;
     }
 
     public async show(preserveFocus?: boolean) {
@@ -588,7 +591,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         }
     }
-
+    private async monitorChangesToTrust() {
+        if (this.previouslyNotTrusted && this.model?.isTrusted) {
+            this.previouslyNotTrusted = false;
+            // Tell UI to update main state
+            this.postMessage(InteractiveWindowMessages.TrustNotebookComplete).ignoreErrors();
+        }
+    }
     private renameVariableExplorerHeights(name: string, updatedName: string) {
         // Updates the workspace storage to reflect the updated name of the notebook
         // should be called if the name of the notebook changes
@@ -604,31 +613,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async launchNotebookTrustPrompt() {
-        const prompts = [localize.DataScience.trustNotebook(), localize.DataScience.doNotTrustNotebook()];
-        const selection = await this.applicationShell.showErrorMessage(
-            localize.DataScience.launchNotebookTrustPrompt(),
-            ...prompts
-        );
-        if (!selection) {
-            return;
-        }
-        if (this.model && selection === localize.DataScience.trustNotebook() && !this.model.isTrusted) {
-            try {
-                const contents = this.model.getContent();
-                await this.trustService.trustNotebook(this.model.file, contents);
-                // Update model trust
-                this.model.update({
-                    source: 'user',
-                    kind: 'updateTrust',
-                    oldDirty: this.model.isDirty,
-                    newDirty: this.model.isDirty,
-                    isNotebookTrusted: true
-                });
-                // Tell UI to update main state
-                await this.postMessage(InteractiveWindowMessages.TrustNotebookComplete);
-            } catch (err) {
-                traceError(err);
-            }
+        if (this.model && !this.model.isTrusted) {
+            await this.commandManager.executeCommand(Commands.TrustNotebook, this.model.file);
         }
     }
 
@@ -723,7 +709,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (!activeEditor || !activeEditor.model) {
             return;
         }
-        this.commandManager.executeCommand(Commands.Export, activeEditor.model);
+        this.commandManager.executeCommand(Commands.Export, activeEditor.model, undefined);
     }
 
     private logNativeCommand(args: INativeCommand) {

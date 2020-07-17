@@ -4,12 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { QuickPickItem, QuickPickOptions } from 'vscode';
+import { QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
+import { IFileSystem } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
+import { isUri } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { ExportManager } from '../export/exportManager';
@@ -27,13 +29,20 @@ export class ExportCommands implements IDisposable {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IExportManager) private exportManager: ExportManager,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider
+        @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider,
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (model) => this.export(model, ExportFormat.python));
-        this.registerCommand(Commands.ExportToHTML, (model) => this.export(model, ExportFormat.html));
-        this.registerCommand(Commands.ExportToPDF, (model) => this.export(model, ExportFormat.pdf));
-        this.registerCommand(Commands.Export, (model) => this.export(model));
+        this.registerCommand(Commands.ExportToHTML, (model, defaultFileName?) =>
+            this.export(model, ExportFormat.html, defaultFileName)
+        );
+        this.registerCommand(Commands.ExportToPDF, (model, defaultFileName?) =>
+            this.export(model, ExportFormat.pdf, defaultFileName)
+        );
+        this.registerCommand(Commands.Export, (model, defaultFileName?) =>
+            this.export(model, undefined, defaultFileName)
+        );
     }
 
     public dispose() {
@@ -49,9 +58,22 @@ export class ExportCommands implements IDisposable {
         this.disposables.push(disposable);
     }
 
-    private async export(model: INotebookModel, exportMethod?: ExportFormat) {
+    private async export(modelOrUri: Uri | INotebookModel, exportMethod?: ExportFormat, defaultFileName?: string) {
+        defaultFileName = typeof defaultFileName === 'string' ? defaultFileName : undefined;
+        let model: INotebookModel | undefined;
+        if (modelOrUri && isUri(modelOrUri)) {
+            const uri = modelOrUri;
+            const editor = this.notebookProvider.editors.find((item) =>
+                this.fs.arePathsSame(item.file.fsPath, uri.fsPath)
+            );
+            if (editor && editor.model) {
+                model = editor.model;
+            }
+        } else {
+            model = modelOrUri;
+        }
         if (!model) {
-            // if no model was passed then this was called from the command pallete,
+            // if no model was passed then this was called from the command palette,
             // so we need to get the active editor
             const activeEditor = this.notebookProvider.activeEditor;
             if (!activeEditor || !activeEditor.model) {
@@ -65,11 +87,11 @@ export class ExportCommands implements IDisposable {
         }
 
         if (exportMethod) {
-            await this.exportManager.export(exportMethod, model);
+            await this.exportManager.export(exportMethod, model, defaultFileName);
         } else {
             // if we don't have an export method we need to ask for one and display the
             // quickpick menu
-            const pickedItem = await this.showExportQuickPickMenu(model).then((item) => item);
+            const pickedItem = await this.showExportQuickPickMenu(model, defaultFileName).then((item) => item);
             if (pickedItem !== undefined) {
                 pickedItem.handler();
             } else {
@@ -78,7 +100,7 @@ export class ExportCommands implements IDisposable {
         }
     }
 
-    private getExportQuickPickItems(model: INotebookModel): IExportQuickPickItem[] {
+    private getExportQuickPickItems(model: INotebookModel, defaultFileName?: string): IExportQuickPickItem[] {
         return [
             {
                 label: DataScience.exportPythonQuickPickLabel(),
@@ -97,7 +119,7 @@ export class ExportCommands implements IDisposable {
                     sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                         format: ExportFormat.html
                     });
-                    this.commandManager.executeCommand(Commands.ExportToHTML, model);
+                    this.commandManager.executeCommand(Commands.ExportToHTML, model, defaultFileName);
                 }
             },
             {
@@ -107,14 +129,17 @@ export class ExportCommands implements IDisposable {
                     sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                         format: ExportFormat.pdf
                     });
-                    this.commandManager.executeCommand(Commands.ExportToPDF, model);
+                    this.commandManager.executeCommand(Commands.ExportToPDF, model, defaultFileName);
                 }
             }
         ];
     }
 
-    private async showExportQuickPickMenu(model: INotebookModel): Promise<IExportQuickPickItem | undefined> {
-        const items = this.getExportQuickPickItems(model);
+    private async showExportQuickPickMenu(
+        model: INotebookModel,
+        defaultFileName?: string
+    ): Promise<IExportQuickPickItem | undefined> {
+        const items = this.getExportQuickPickItems(model, defaultFileName);
 
         const options: QuickPickOptions = {
             ignoreFocusOut: false,

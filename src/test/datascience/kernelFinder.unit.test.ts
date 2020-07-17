@@ -51,7 +51,7 @@ suite('Kernel Finder', () => {
         specFile: path.join('1', 'share', 'jupyter', 'kernels', kernelName, 'kernel.json')
     };
     // Change this to your actual JUPYTER_PATH value and see it appearing on the paths in the kernelFinder
-    const JupyterPathEnvVar = '';
+    let JupyterPathEnvVar = '';
 
     function setupFileSystem() {
         fileSystem
@@ -103,8 +103,12 @@ suite('Kernel Finder', () => {
         let interpreter0Kernel: IJupyterKernelSpec;
         let interpreter1Kernel: IJupyterKernelSpec;
         let globalKernel: IJupyterKernelSpec;
+        let jupyterPathKernelA: IJupyterKernelSpec;
+        let jupyterPathKernelB: IJupyterKernelSpec;
         let loadError = false;
         setup(() => {
+            JupyterPathEnvVar = `Users/testuser/jupyterPathDirA${path.delimiter}Users/testuser/jupyterPathDirB`;
+
             activeInterpreter = {
                 path: context.object.globalStoragePath,
                 displayName: 'activeInterpreter',
@@ -191,6 +195,26 @@ suite('Kernel Finder', () => {
                 argv: ['<python path>', '-m', 'ipykernel_launcher', '-f', '{connection_file}']
             };
 
+            jupyterPathKernelA = {
+                name: 'jupyterPathKernelA',
+                language: 'python',
+                path: '<python path>',
+                display_name: 'Python 3',
+                metadata: {},
+                env: {},
+                argv: ['<python path>', '-m', 'ipykernel_launcher', '-f', '{connection_file}']
+            };
+
+            jupyterPathKernelB = {
+                name: 'jupyterPathKernelB',
+                language: 'python',
+                path: '<python path>',
+                display_name: 'Python 3',
+                metadata: {},
+                env: {},
+                argv: ['<python path>', '-m', 'ipykernel_launcher', '-f', '{connection_file}']
+            };
+
             platformService.reset();
             platformService.setup((ps) => ps.isWindows).returns(() => false);
             platformService.setup((ps) => ps.isMac).returns(() => true);
@@ -229,6 +253,7 @@ suite('Kernel Finder', () => {
                 .setup((fs) => fs.search(typemoq.It.isAnyString(), interpreter1Path, typemoq.It.isAny()))
                 .returns(() => Promise.resolve([path.join(interpreter1Kernel.name, 'kernel.json')]));
 
+            // Global path setup
             const globalPath = path.join('usr', 'share', 'jupyter', 'kernels');
             const globalFullPath = path.join(globalPath, globalKernel.name, 'kernel.json');
             fileSystem
@@ -244,6 +269,26 @@ suite('Kernel Finder', () => {
             fileSystem
                 .setup((fs) => fs.search(typemoq.It.isAnyString(), globalBPath, typemoq.It.isAny()))
                 .returns(() => Promise.resolve([]));
+
+            // Jupyter path setup
+            const jupyterPathKernelAPath = path.join('Users', 'testuser', 'jupyterPathDirA', 'kernels');
+            const jupyterPathKernelAFullPath = path.join(
+                jupyterPathKernelAPath,
+                jupyterPathKernelA.name,
+                'kernel.json'
+            );
+            const jupyterPathKernelBPath = path.join('Users', 'testuser', 'jupyterPathDirB', 'kernels');
+            const jupyterPathKernelBFullPath = path.join(
+                jupyterPathKernelBPath,
+                jupyterPathKernelB.name,
+                'kernel.json'
+            );
+            fileSystem
+                .setup((fs) => fs.search(typemoq.It.isAnyString(), jupyterPathKernelAPath, typemoq.It.isAny()))
+                .returns(() => Promise.resolve([path.join(jupyterPathKernelA.name, 'kernel.json')]));
+            fileSystem
+                .setup((fs) => fs.search(typemoq.It.isAnyString(), jupyterPathKernelBPath, typemoq.It.isAny()))
+                .returns(() => Promise.resolve([path.join(jupyterPathKernelB.name, 'kernel.json')]));
 
             // Set the file system to return our kernelspec json
             fileSystem
@@ -264,6 +309,10 @@ suite('Kernel Finder', () => {
                             return Promise.resolve(JSON.stringify(interpreter1Kernel));
                         case globalFullPath:
                             return Promise.resolve(JSON.stringify(globalKernel));
+                        case jupyterPathKernelAFullPath:
+                            return Promise.resolve(JSON.stringify(jupyterPathKernelA));
+                        case jupyterPathKernelBFullPath:
+                            return Promise.resolve(JSON.stringify(jupyterPathKernelB));
                         default:
                             return Promise.resolve('');
                     }
@@ -292,7 +341,9 @@ suite('Kernel Finder', () => {
             expect(specs[1]).to.deep.include(activeKernelB);
             expect(specs[2]).to.deep.include(interpreter0Kernel);
             expect(specs[3]).to.deep.include(interpreter1Kernel);
-            expect(specs[4]).to.deep.include(globalKernel);
+            expect(specs[4]).to.deep.include(jupyterPathKernelA);
+            expect(specs[5]).to.deep.include(jupyterPathKernelB);
+            expect(specs[6]).to.deep.include(globalKernel);
             fileSystem.reset();
         });
 
@@ -303,7 +354,9 @@ suite('Kernel Finder', () => {
             expect(specs[0]).to.deep.include(activeKernelB);
             expect(specs[1]).to.deep.include(interpreter0Kernel);
             expect(specs[2]).to.deep.include(interpreter1Kernel);
-            expect(specs[3]).to.deep.include(globalKernel);
+            expect(specs[3]).to.deep.include(jupyterPathKernelA);
+            expect(specs[4]).to.deep.include(jupyterPathKernelB);
+            expect(specs[5]).to.deep.include(globalKernel);
             fileSystem.reset();
         });
     });

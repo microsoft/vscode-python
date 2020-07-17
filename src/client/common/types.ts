@@ -388,7 +388,7 @@ export interface IDataScienceSettings {
     addGotoCodeLenses?: boolean;
     useNotebookEditor?: boolean;
     runMagicCommands?: string;
-    runStartupCommands: string;
+    runStartupCommands: string | string[];
     debugJustMyCode: boolean;
     defaultCellMarker?: string;
     verboseLogging?: boolean;

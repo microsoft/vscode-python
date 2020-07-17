@@ -2,13 +2,13 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2020.7.0-rc",
+    "version": "2020.8.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
-    "enableProposedApi": false,
+    "enableProposedApi": true,
     "author": {
         "name": "Microsoft Corporation"
     },
@@ -28,7 +28,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.46.0"
+        "vscode": "^1.47.0"
     },
     "keywords": [
         "python",
@@ -43,7 +43,10 @@
         "Snippets",
         "Formatters",
         "Other",
-        "Extension Packs"
+        "Extension Packs",
+        "Data Science",
+        "Machine Learning",
+        "Notebooks"
     ],
     "activationEvents": [
         "onLanguage:python",
@@ -60,6 +63,7 @@
         "onCommand:python.viewTestOutput",
         "onCommand:python.viewOutput",
         "onCommand:python.datascience.viewJupyterOutput",
+        "onCOmmand:python.datascience.export",
         "onCommand:python.datascience.exportAsPythonScript",
         "onCommand:python.datascience.exportToHTML",
         "onCommand:python.datascience.exportToPDF",
@@ -357,6 +361,16 @@
                 "command": "python.datascience.viewJupyterOutput",
                 "title": "%python.command.python.datascience.viewJupyterOutput.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.export",
+                "title": "%DataScience.notebookExportAs%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/export_to_python.svg",
+                    "dark": "resources/dark/export_to_python.svg"
+                },
+                "enablement": "notebookViewType == jupyter-notebook && python.datascience.isnotebooktrusted"
             },
             {
                 "command": "python.datascience.exportAsPythonScript",
@@ -682,6 +696,16 @@
                 "enablement": "python.datascience.notebookeditor.canrestartNotebookkernel"
             },
             {
+                "command": "python.datascience.notebookeditor.trust",
+                "title": "%DataScience.trustNotebookCommandTitle%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/un-trusted.svg",
+                    "dark": "resources/dark/un-trusted.svg"
+                },
+                "enablement": "notebookViewType == jupyter-notebook && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
+            },
+            {
                 "command": "python.datascience.notebookeditor.runallcells",
                 "title": "%python.command.python.datascience.notebookeditor.runallcells.title%",
                 "category": "Python"
@@ -845,7 +869,19 @@
                     "command": "python.datascience.notebookeditor.restartkernel",
                     "title": "%python.command.python.datascience.restartkernel.title%",
                     "group": "navigation",
-                    "when": "notebookEditorFocused"
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook'"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.trust",
+                    "title": "%DataScience.trustNotebookCommandTitle%",
+                    "group": "navigation@1",
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
+                },
+                {
+                    "command": "python.datascience.export",
+                    "title": "%DataScience.notebookExportAs%",
+                    "group": "navigation",
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook'"
                 }
             ],
             "explorer/context": [
@@ -890,19 +926,19 @@
                     "command": "python.datascience.exportAsPythonScript",
                     "title": "%python.command.python.datascience.exportAsPythonScript.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.exportToHTML",
                     "title": "%python.command.python.datascience.exportToHTML.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.exportToPDF",
                     "title": "%python.command.python.datascience.exportToPDF.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.switchOffInsidersChannel",
@@ -1120,6 +1156,12 @@
                     "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
+                    "command": "python.datascience.notebookeditor.trust",
+                    "title": "%DataScience.trustNotebookCommandTitle%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled && notebookEditorFocused && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
+                },
+                {
                     "command": "python.datascience.notebookeditor.runallcells",
                     "title": "%python.command.python.datascience.notebookeditor.runallcells.title%",
                     "category": "Python",
@@ -1231,6 +1273,12 @@
                 {
                     "command": "python.datascience.gatherquality",
                     "title": "%DataScience.gatherQuality%",
+                    "category": "Python",
+                    "when": "false"
+                },
+                {
+                    "command": "python.datascience.export",
+                    "title": "%DataScience.notebookExportAs%",
                     "category": "Python",
                     "when": "false"
                 }
@@ -2949,9 +2997,9 @@
                     "scope": "application"
                 },
                 "python.dataScience.runStartupCommands": {
-                    "type": "string",
+                    "type": "array",
                     "default": "",
-                    "description": "A series of Python instructions or iPython magic commands separated by '\\n' that will be executed when the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
+                    "description": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
                     "scope": "application"
                 },
                 "python.dataScience.debugJustMyCode": {
@@ -3096,7 +3144,45 @@
                     "when": "testsDiscovered"
                 }
             ]
-        }
+        },
+        "notebookOutputRenderer": [
+            {
+                "viewType": "jupyter-notebook-renderer",
+                "displayName": "Jupyter Notebook Renderer",
+                "mimeTypes": [
+                    "application/geo+json",
+                    "application/vdom.v1+json",
+                    "application/vnd.dataresource+json",
+                    "application/vnd.plotly.v1+json",
+                    "application/vnd.vega.v2+json",
+                    "application/vnd.vega.v3+json",
+                    "application/vnd.vega.v4+json",
+                    "application/vnd.vega.v5+json",
+                    "application/vnd.vegalite.v1+json",
+                    "application/vnd.vegalite.v2+json",
+                    "application/vnd.vegalite.v3+json",
+                    "application/vnd.vegalite.v4+json",
+                    "application/x-nteract-model-debug+json",
+                    "image/gif",
+                    "image/png",
+                    "image/jpeg",
+                    "text/latex",
+                    "text/vnd.plotly.v1+html"
+                ]
+            }
+        ],
+        "notebookProvider": [
+            {
+                "viewType": "jupyter-notebook",
+                "displayName": "Jupyter Notebook (preview)",
+                "selector": [
+                    {
+                        "filenamePattern": "*.ipynb"
+                    }
+                ],
+                "priority": "option"
+            }
+        ]
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
@@ -3158,7 +3244,7 @@
         "is-online": "^8.2.1",
         "jsonc-parser": "^2.0.3",
         "line-by-line": "^0.1.6",
-        "lodash": "^4.17.15",
+        "lodash": "^4.17.19",
         "log4js": "^6.1.2",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
@@ -3226,7 +3312,6 @@
         "@nteract/transform-vega": "^6.0.3",
         "@nteract/transforms": "^4.4.7",
         "@phosphor/widgets": "^1.9.3",
-        "@raghb1/node-memwatch": "^3.0.1",
         "@sinonjs/fake-timers": "^6.0.1",
         "@testing-library/react": "^9.4.0",
         "@types/ansi-regex": "^4.0.0",
