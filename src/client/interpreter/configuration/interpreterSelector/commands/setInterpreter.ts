@@ -112,7 +112,8 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
             const uris = await this.applicationShell.showOpenDialog({
                 filters: this.platformService.isWindows ? filtersObject : undefined,
                 openLabel: InterpreterQuickPickList.browsePath.openButtonLabel(),
-                canSelectMany: false
+                canSelectMany: false,
+                title: InterpreterQuickPickList.browsePath.title()
             });
             if (uris && uris.length > 0) {
                 state.path = uris[0].fsPath;
