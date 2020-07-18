@@ -244,7 +244,8 @@ suite('Set Interpreter Command', () => {
             const expectedParams = {
                 filters: filtersObject,
                 openLabel: InterpreterQuickPickList.browsePath.openButtonLabel(),
-                canSelectMany: false
+                canSelectMany: false,
+                title: InterpreterQuickPickList.browsePath.title()
             };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             multiStepInput
@@ -268,7 +269,8 @@ suite('Set Interpreter Command', () => {
             const expectedParams = {
                 filters: undefined,
                 openLabel: InterpreterQuickPickList.browsePath.openButtonLabel(),
-                canSelectMany: false
+                canSelectMany: false,
+                title: InterpreterQuickPickList.browsePath.title()
             };
             multiStepInput
                 .setup((i) => i.showQuickPick(TypeMoq.It.isAny()))
