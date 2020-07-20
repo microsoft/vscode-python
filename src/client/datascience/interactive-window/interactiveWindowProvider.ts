@@ -294,7 +294,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
 
     // tslint:disable-next-line:no-any
     private async onRemoteCreate(...args: any[]) {
-        // Should be 3 args, the originator of the create, the key, and the owner.
+        // Should be 3 args, the originator of the create, the key, and the owner. Key isn't used here
+        // but it is passed through to the response.
         if (args.length > 1 && args[0].toString() !== this.id) {
             // The other side is creating a interactive window. Create on this side. We don't need to show
             // it as the running of new code should do that.
@@ -311,7 +312,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
 
     // tslint:disable-next-line:no-any
     private onRemoteSync(...args: any[]) {
-        // Should be 3 args, the originator of the create, the key, and the owner
+        // Should be 3 args, the originator of the create, the key, and the owner (owner used on other call)
         if (args.length > 1 && args[0].toString() === this.id) {
             // Update our pending wait count on the matching pending sync
             const key = args[1].toString();
