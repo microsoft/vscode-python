@@ -11,4 +11,3 @@ variables:
   npm_config_cache: $(Pipeline.Workspace)/.npm
   vmImageMacOS: 'macOS-10.15'
   TS_NODE_FILES: true # Temporarily enabled to allow using types from vscode.proposed.d.ts from ts-node (for tests).
-  extension_version: $(Year:yyyy).$(Month)
