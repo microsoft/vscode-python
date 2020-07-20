@@ -106,7 +106,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .setup((tc) => tc.getCodeLenses())
             .returns(() => [])
             .verifiable(TypeMoq.Times.exactly(2));
-        targetCodeWatcher.setup((tc) => tc.getFileName()).returns(() => uri);
+        targetCodeWatcher.setup((tc) => tc.uri).returns(() => uri);
         targetCodeWatcher.setup((tc) => tc.getVersion()).returns(() => 1);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
@@ -170,7 +170,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .setup((tc) => tc.getCodeLenses())
             .returns(() => [])
             .verifiable(TypeMoq.Times.exactly(3));
-        targetCodeWatcher.setup((tc) => tc.getFileName()).returns(() => Uri.file('test.py'));
+        targetCodeWatcher.setup((tc) => tc.uri).returns(() => Uri.file('test.py'));
         targetCodeWatcher.setup((tc) => tc.getVersion()).returns(() => 1);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))

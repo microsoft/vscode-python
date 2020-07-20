@@ -31,7 +31,6 @@ export class CodeWatcher implements ICodeWatcher {
     private static sentExecuteCellTelemetry: boolean = false;
     private document?: TextDocument;
     private version: number = -1;
-    private fileName: Uri = Uri.parse('');
     private codeLenses: CodeLens[] = [];
     private cachedSettings: IDataScienceSettings | undefined;
     private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
@@ -51,8 +50,7 @@ export class CodeWatcher implements ICodeWatcher {
     public setDocument(document: TextDocument) {
         this.document = document;
 
-        // Cache these, we don't want to pull an old version if the document is updated
-        this.fileName = document.uri;
+        // Cache the version, we don't want to pull an old version if the document is updated
         this.version = document.version;
 
         // Get document cells here. Make a copy of our settings.
@@ -72,8 +70,8 @@ export class CodeWatcher implements ICodeWatcher {
         return this.codeLensUpdatedEvent.event;
     }
 
-    public getFileName() {
-        return this.fileName;
+    public get uri() {
+        return this.document?.uri;
     }
 
     public getVersion() {
@@ -130,9 +128,9 @@ export class CodeWatcher implements ICodeWatcher {
 
                 // Note: We do a get or create active before all addCode commands to make sure that we either have a history up already
                 // or if we do not we need to start it up as these commands are all expected to start a new history if needed
-                const success = await this.addCode(code, this.getFileName(), range.start.line);
+                const success = await this.addCode(code, this.document.uri, range.start.line);
                 if (!success) {
-                    await this.addErrorMessage(this.getFileName(), leftCount);
+                    await this.addErrorMessage(this.document.uri, leftCount);
                     break;
                 }
             }
@@ -181,9 +179,9 @@ export class CodeWatcher implements ICodeWatcher {
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
                 const code = this.document.getText(range);
-                const success = await this.addCode(code, this.getFileName(), lens.range.start.line);
+                const success = await this.addCode(code, this.document.uri, lens.range.start.line);
                 if (!success) {
-                    await this.addErrorMessage(this.getFileName(), leftCount);
+                    await this.addErrorMessage(this.document.uri, leftCount);
                     break;
                 }
             } else {
@@ -209,9 +207,9 @@ export class CodeWatcher implements ICodeWatcher {
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
                 const code = this.document.getText(lens.range);
-                const success = await this.addCode(code, this.getFileName(), lens.range.start.line);
+                const success = await this.addCode(code, this.document.uri, lens.range.start.line);
                 if (!success) {
-                    await this.addErrorMessage(this.getFileName(), leftCount);
+                    await this.addErrorMessage(this.document.uri, leftCount);
                     break;
                 }
             }
@@ -234,7 +232,7 @@ export class CodeWatcher implements ICodeWatcher {
             if (!normalizedCode || normalizedCode.trim().length === 0) {
                 return;
             }
-            await this.addCode(normalizedCode, this.getFileName(), activeEditor.selection.start.line, activeEditor);
+            await this.addCode(normalizedCode, this.document.uri, activeEditor.selection.start.line, activeEditor);
         }
     }
 
@@ -247,7 +245,7 @@ export class CodeWatcher implements ICodeWatcher {
             );
 
             if (code && code.trim().length) {
-                await this.addCode(code, this.getFileName(), 0);
+                await this.addCode(code, this.document.uri, 0);
             }
         }
     }
@@ -261,7 +259,7 @@ export class CodeWatcher implements ICodeWatcher {
             );
 
             if (code && code.trim().length) {
-                await this.addCode(code, this.getFileName(), targetLine);
+                await this.addCode(code, this.document.uri, targetLine);
             }
         }
     }
@@ -456,7 +454,7 @@ export class CodeWatcher implements ICodeWatcher {
                 const code = this.document.getText(currentRunCellLens.range);
                 await this.addCode(
                     code,
-                    this.getFileName(),
+                    this.document.uri,
                     currentRunCellLens.range.start.line,
                     this.documentManager.activeTextEditor,
                     debug
@@ -487,7 +485,7 @@ export class CodeWatcher implements ICodeWatcher {
     private async runFileInteractiveInternal(debug: boolean) {
         if (this.document) {
             const code = this.document.getText();
-            await this.addCode(code, this.getFileName(), 0, undefined, debug);
+            await this.addCode(code, this.document.uri, 0, undefined, debug);
         }
     }
 

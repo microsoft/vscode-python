@@ -265,7 +265,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         codeWatcher.setDocument(document.object);
 
         // Verify meta data
-        expect(codeWatcher.getFileName().fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
+        expect(codeWatcher.uri?.fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
         expect(codeWatcher.getVersion()).to.be.equal(version, 'File version of CodeWatcher does not match');
 
         // Verify code lenses
@@ -286,7 +286,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         codeWatcher.setDocument(document.object);
 
         // Verify meta data
-        expect(codeWatcher.getFileName().fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
+        expect(codeWatcher.uri?.fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
         expect(codeWatcher.getVersion()).to.be.equal(version, 'File version of CodeWatcher does not match');
 
         // Verify code lenses
@@ -313,7 +313,7 @@ fourth line`;
         codeWatcher.setDocument(document.object);
 
         // Verify meta data
-        expect(codeWatcher.getFileName().fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
+        expect(codeWatcher.uri?.fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
         expect(codeWatcher.getVersion()).to.be.equal(version, 'File version of CodeWatcher does not match');
 
         // Verify code lenses
@@ -349,7 +349,7 @@ fourth line
         codeWatcher.setDocument(document.object);
 
         // Verify meta data
-        expect(codeWatcher.getFileName().fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
+        expect(codeWatcher.uri?.fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
         expect(codeWatcher.getVersion()).to.be.equal(version, 'File version of CodeWatcher does not match');
 
         // Verify code lenses
@@ -386,7 +386,7 @@ fourth line
         codeWatcher.setDocument(document.object);
 
         // Verify meta data
-        expect(codeWatcher.getFileName().fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
+        expect(codeWatcher.uri?.fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
         expect(codeWatcher.getVersion()).to.be.equal(version, 'File version of CodeWatcher does not match');
 
         // Verify code lenses
