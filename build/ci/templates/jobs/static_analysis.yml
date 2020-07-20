@@ -8,7 +8,7 @@ jobs:
         inputs:
           softwareFolder: '$(Build.SourcesDirectory)/src'
           softwareName: 'ms-python.python'
-          softwareVersionNum: '$(extension_version)'
+          softwareVersionNum: '$(Build.SourceBranchName)'
           softwareBuildNum: '$(Build.BuildId)'
           symbolsFolder: 'SRV*http://symweb'
         continueOnError: true
