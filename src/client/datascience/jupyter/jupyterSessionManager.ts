@@ -244,9 +244,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
         // Before we connect, see if we are trying to make an insecure connection, if we are, warn the user
         await this.secureConnectionCheck(connInfo);
-        //if (!this.isSecureConnection(connInfo)) {
-        //await this.insecureServerWarningPrompt();
-        //}
 
         // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
         // tslint:disable-next-line:no-any
@@ -361,7 +358,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
 
         // If they are local launch, https, or have a token, then they are secure
-        if (connInfo.localLaunch || connInfo.baseUrl.startsWith('https') || connInfo.token) {
+        if (connInfo.localLaunch || connInfo.baseUrl.startsWith('https') || connInfo.token !== 'null') {
             return;
         }
 
