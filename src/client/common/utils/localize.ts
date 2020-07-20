@@ -1032,6 +1032,15 @@ export namespace DataScience {
         'DataScience.launchNotebookTrustPrompt.trustAllNotebooks',
         'Trust all notebooks'
     );
+    export const insecureSessionMessage = localize(
+        'DataScience.insecureSessionMessage',
+        'Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?'
+    );
+    export const insecureSessionAlwaysConnect = localize('DataScience.insecureSessionAlwaysConnect', 'Always');
+    export const insecureSessionDenied = localize(
+        'DataScience.insecureSessionDenied',
+        'Denied connection to insecure server.'
+    );
     export const previewNotebookOnlySupportedInVSCInsiders = localize(
         'DataScience.previewNotebookOnlySupportedInVSCInsiders',
         'The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code.'

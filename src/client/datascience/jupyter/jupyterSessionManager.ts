@@ -5,9 +5,10 @@ import type { ContentsManager, ServerConnection, Session, SessionManager } from 
 import { Agent as HttpsAgent } from 'https';
 import * as nodeFetch from 'node-fetch';
 import { CancellationToken } from 'vscode-jsonrpc';
+import { IApplicationShell } from '../../common/application/types';
 
 import { traceError, traceInfo } from '../../common/logger';
-import { IConfigurationService, IOutputChannel } from '../../common/types';
+import { IConfigurationService, IOutputChannel, IPersistentState, IPersistentStateFactory } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -27,6 +28,9 @@ import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
 import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
 
+// Key for our insecure connection global state
+const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
+
 // tslint:disable: no-any
 
 export class JupyterSessionManager implements IJupyterSessionManager {
@@ -35,6 +39,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private connInfo: IJupyterConnection | undefined;
     private serverSettings: ServerConnection.ISettings | undefined;
     private _jupyterlab?: typeof import('@jupyterlab/services');
+    private readonly userAllowsInsecureConnections: IPersistentState<boolean>;
     private get jupyterlab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterlab) {
             // tslint:disable-next-line: no-require-imports
@@ -48,8 +53,15 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private failOnPassword: boolean | undefined,
         private kernelSelector: KernelSelector,
         private outputChannel: IOutputChannel,
-        private configService: IConfigurationService
-    ) {}
+        private configService: IConfigurationService,
+        private readonly appShell: IApplicationShell,
+        private readonly stateFactory: IPersistentStateFactory
+    ) {
+        this.userAllowsInsecureConnections = this.stateFactory.createGlobalPersistentState<boolean>(
+            GlobalStateUserAllowsInsecureConnections,
+            false
+        );
+    }
 
     public async dispose() {
         traceInfo(`Disposing session manager`);
@@ -229,6 +241,11 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             wsUrl: connInfo.baseUrl.replace('http', 'ws')
         };
 
+        // Before we connect, see if we are trying to make an insecure connection, if we are, warn the user
+        if (!this.isSecureConnection(connInfo)) {
+            await this.insecureServerWarningPrompt();
+        }
+
         // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
         // tslint:disable-next-line:no-any
         let requestInit: any = { cache: 'no-store', credentials: 'same-origin' };
@@ -304,5 +321,53 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
         traceInfo(`Creating server with settings : ${JSON.stringify(serverSettings)}`);
         return this.jupyterlab.ServerConnection.makeSettings(serverSettings);
+    }
+
+    // If connecting on HTTP without a token prompt the user that this connection may not be secure
+    private async insecureServerWarningPrompt(): Promise<void> {
+        const insecureMessage = localize.DataScience.insecureSessionMessage();
+        const insecureLabels = [
+            localize.Common.bannerLabelYes(),
+            localize.Common.bannerLabelNo(),
+            localize.DataScience.insecureSessionAlwaysConnect()
+        ];
+        const response = await this.appShell.showWarningMessage(insecureMessage, ...insecureLabels);
+
+        switch (response) {
+            case localize.Common.bannerLabelYes():
+                // On yes just proceed as normal
+                break;
+
+            case localize.DataScience.insecureSessionAlwaysConnect():
+                // For always turn on the global state value
+                await this.userAllowsInsecureConnections.updateValue(true);
+                break;
+
+            case localize.Common.bannerLabelNo():
+            default:
+                // For no or no choice throw to disallow the connect. Give the use a localized message
+                // as they will see this when the connection fails
+                throw new Error(localize.DataScience.insecureSessionDenied());
+                break;
+        }
+    }
+
+    // Check our server settings to see if our connection is secure
+    private isSecureConnection(connInfo: IJupyterConnection): boolean {
+        // Insecure if !local && !https && !token
+        return false;
+
+        // IANHU: Combine forms
+        if (connInfo.localLaunch) {
+            return true;
+        }
+
+        if (connInfo.baseUrl.startsWith('https')) {
+            return true;
+        }
+
+        if (connInfo.token) {
+            return true;
+        }
     }
 }
