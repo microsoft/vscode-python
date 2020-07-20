@@ -241,6 +241,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         try {
             nb.clear(cell.uri.toString()); // NOSONAR
             editor.notifyExecution(cell.document.getText());
+            await nb.setLaunchingFile(model.file.path);
             const observable = nb.executeObservable(
                 cell.document.getText(),
                 document.fileName,

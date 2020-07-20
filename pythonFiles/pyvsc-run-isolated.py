@@ -4,13 +4,14 @@
 if __name__ != "__main__":
     raise Exception("{} cannot be imported".format(__name__))
 
+import os.path
 import runpy
 import sys
 
 # We "isolate" the script/module (sys.argv[1]) by
-# deleting sys.path[0] and then sending the target
+# replacing sys.path[0] with a dummy path and then sending the target
 # on to runpy.
-del sys.path[0]
+sys.path[0] = os.path.join(os.path.dirname(__file__), ".does-not-exist")
 del sys.argv[0]
 module = sys.argv[0]
 if module == "-c":
