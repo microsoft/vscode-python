@@ -10,7 +10,7 @@ import sys
 # We "isolate" the script/module (sys.argv[1]) by
 # replacing sys.path[0] with a dummy path and then sending the target
 # on to runpy.
-sys.path[0] = os.path.join(os.path.dirname(__file__), '.does-not-exist')
+sys.path[0] = os.path.join(os.path.dirname(__file__), ".does-not-exist")
 del sys.argv[0]
 module = sys.argv[0]
 if module == "-c":
