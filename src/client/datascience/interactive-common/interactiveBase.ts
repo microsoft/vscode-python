@@ -1003,7 +1003,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    private async finishOutstandingCells() {
+    private finishOutstandingCells() {
         this.unfinishedCells.forEach((c) => {
             c.state = CellState.error;
             this.postMessage(InteractiveWindowMessages.FinishCell, {
@@ -1020,7 +1020,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.restartingKernel = true;
 
         // First we need to finish all outstanding cells.
-        await this.finishOutstandingCells();
+        this.finishOutstandingCells();
 
         // Set our status
         const status = this.statusProvider.set(
