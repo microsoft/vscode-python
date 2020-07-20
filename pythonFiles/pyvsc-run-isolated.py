@@ -4,6 +4,7 @@
 if __name__ != "__main__":
     raise Exception("{} cannot be imported".format(__name__))
 
+import os.path
 import runpy
 import sys
 
