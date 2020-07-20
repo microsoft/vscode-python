@@ -294,7 +294,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
 
     // tslint:disable-next-line:no-any
     private async onRemoteCreate(...args: any[]) {
-        // Should be two args, the originator of the create and the key/resource
+        // Should be 3 args, the originator of the create, the key, and the owner.
         if (args.length > 1 && args[0].toString() !== this.id) {
             // The other side is creating a interactive window. Create on this side. We don't need to show
             // it as the running of new code should do that.
