@@ -77,6 +77,7 @@ suite('Propose Pylance Banner', () => {
             .verifiable(typemoq.Times.never());
         const testBanner = preparePopup(false, appShell.object, config.object, true);
         await testBanner.showBanner();
+        appShell.verifyAll();
     });
     test('Clicking No should disable the banner', async () => {
         appShell
@@ -95,6 +96,7 @@ suite('Propose Pylance Banner', () => {
         const testBanner = preparePopup(true, appShell.object, config.object, true);
         await testBanner.showBanner();
         expect(testBanner.enabled).to.be.equal(false, 'Banner should be permanently disabled when user clicked No');
+        appShell.verifyAll();
     });
     test('Clicking Later should disable banner in session', async () => {
         appShell
@@ -116,6 +118,7 @@ suite('Propose Pylance Banner', () => {
             true,
             'Banner should not be permanently disabled when user clicked Later'
         );
+        appShell.verifyAll();
     });
     test('Clicking Yes opens the extension marketplace entry', async () => {
         appShell
@@ -134,6 +137,7 @@ suite('Propose Pylance Banner', () => {
         const testBanner = preparePopup(true, appShell.object, config.object, true);
         await testBanner.showBanner();
         expect(testBanner.enabled).to.be.equal(false, 'Banner should be permanently disabled after opening store URL');
+        appShell.verifyAll();
     });
 });
 
