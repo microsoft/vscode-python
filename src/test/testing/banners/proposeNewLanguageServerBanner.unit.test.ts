@@ -78,7 +78,7 @@ suite('Propose Pylance Banner', () => {
         const testBanner = preparePopup(false, appShell.object, config.object, true);
         await testBanner.showBanner();
     });
-    test('Clicking No shoule disable the banner', async () => {
+    test('Clicking No should disable the banner', async () => {
         appShell
             .setup((a) =>
                 a.showInformationMessage(
@@ -96,7 +96,7 @@ suite('Propose Pylance Banner', () => {
         await testBanner.showBanner();
         expect(testBanner.enabled).to.be.equal(false, 'Banner should be permanently disabled when user clicked No');
     });
-    test('Clicking Later shoule disable banner in session', async () => {
+    test('Clicking Later should disable banner in session', async () => {
         appShell
             .setup((a) =>
                 a.showInformationMessage(
