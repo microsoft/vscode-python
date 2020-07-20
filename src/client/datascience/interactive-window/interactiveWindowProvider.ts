@@ -311,7 +311,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
 
     // tslint:disable-next-line:no-any
     private onRemoteSync(...args: any[]) {
-        // Should be a single arg, the originator of the create
+        // Should be 3 args, the originator of the create, the key, and the owner
         if (args.length > 1 && args[0].toString() === this.id) {
             // Update our pending wait count on the matching pending sync
             const key = args[1].toString();
