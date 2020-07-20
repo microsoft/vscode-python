@@ -28,7 +28,6 @@ import { JupyterNotebookView } from './constants';
 import { mapVSCNotebookCellsToNotebookCellModels } from './helpers/cellMappers';
 import { updateCellModelWithChangesToVSCCell } from './helpers/cellUpdateHelpers';
 import { isJupyterNotebook } from './helpers/helpers';
-import { NotebookIntegration } from './integration';
 import { NotebookEditor } from './notebookEditor';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
 
@@ -85,13 +84,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 if (uri) {
                     setSharedProperty('ds_notebookeditor', 'native');
                     captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false);
-                    const integration = serviceContainer.get<NotebookIntegration>(NotebookIntegration);
-                    // If user is not meant to be using VSC Notebooks, and it is not enabled,
-                    // then enable it for side by side usage.
-                    if (!integration.isEnabled && !useVSCodeNotebookEditorApi) {
-                        // At this point we need to reload VS Code, hence return and do not try to load nb, else it will fail.
-                        return integration.enableSideBySideUsage();
-                    }
                     this.open(uri).ignoreErrors();
                 }
             })
@@ -160,7 +152,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             return;
         }
         const uri = doc.uri;
-        const model = await this.storage.load(uri, undefined, undefined, true);
+        const model = await this.storage.get(uri, undefined, undefined, true);
         mapVSCNotebookCellsToNotebookCellModels(doc, model);
         // In open method we might be waiting.
         let editor = this.notebookEditorsByUri.get(uri.toString());
@@ -188,6 +180,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString())!;
         deferred.resolve(editor);
         this.notebookEditorsByUri.set(uri.toString(), editor);
+        if (!model.isTrusted) {
+            await this.commandManager.executeCommand(Commands.TrustNotebook, model.file);
+        }
     }
     private onDidChangeActiveVsCodeNotebookEditor(editor: VSCodeNotebookEditor | undefined) {
         if (!editor) {
@@ -237,7 +232,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (!isJupyterNotebook(e.document)) {
             return;
         }
-        const model = await this.storage.load(e.document.uri, undefined, undefined, true);
+        const model = await this.storage.get(e.document.uri, undefined, undefined, true);
         if (!(model instanceof VSCodeNotebookModel)) {
             throw new Error('NotebookModel not of type VSCodeNotebookModel');
         }

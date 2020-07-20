@@ -2192,10 +2192,20 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartPageOpenFileBrowser]: never | undefined;
     [Telemetry.StartPageOpenFolder]: never | undefined;
     [Telemetry.StartPageOpenWorkspace]: never | undefined;
+
+    // Run by line events
     [Telemetry.RunByLineStart]: never | undefined;
     [Telemetry.RunByLineStep]: never | undefined;
     [Telemetry.RunByLineStop]: never | undefined;
     [Telemetry.RunByLineVariableHover]: never | undefined;
+
+    // Trusted notebooks events
+    [Telemetry.NotebookTrustPromptShown]: never | undefined;
+    [Telemetry.TrustNotebook]: never | undefined;
+    [Telemetry.TrustAllNotebooks]: never | undefined;
+    [Telemetry.DoNotTrustNotebook]: never | undefined;
+
+    // Native notebooks events
     [VSCodeNativeTelemetry.AddCell]: never | undefined;
     [VSCodeNativeTelemetry.DeleteCell]: never | undefined;
     [VSCodeNativeTelemetry.MoveCell]: never | undefined;

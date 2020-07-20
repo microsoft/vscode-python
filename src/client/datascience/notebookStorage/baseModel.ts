@@ -78,6 +78,9 @@ export abstract class BaseNotebookModel implements INotebookModel {
             case 'version':
                 changed = this.updateVersionInfo(change.interpreter, change.kernelSpec);
                 break;
+            case 'updateTrust':
+                this._isTrusted = change.isNotebookTrusted;
+                break;
             default:
                 break;
         }
@@ -193,12 +196,8 @@ export abstract class BaseNotebookModel implements INotebookModel {
         this.ensureNotebookJson();
 
         // Reuse our original json except for the cells.
-        const json = {
-            cells: this.cells.map((c) => pruneCell(c.data)),
-            metadata: this.notebookJson.metadata,
-            nbformat: this.notebookJson.nbformat,
-            nbformat_minor: this.notebookJson.nbformat_minor
-        };
+        const json = { ...this.notebookJson };
+        json.cells = this.cells.map((c) => pruneCell(c.data));
         return JSON.stringify(json, null, this.indentAmount);
     }
 }

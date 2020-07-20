@@ -57,7 +57,7 @@ suite('Unit Tests Test Explorer Tree View', () => {
     test('Invoking the command handler will reveal the node in the tree', async () => {
         const data = {} as any;
         treeView
-            .setup((t) => t.reveal(typemoq.It.isAny()))
+            .setup((t) => t.reveal(typemoq.It.isAny(), { select: false }))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
         when(appShell.createTreeView('python_tests', anything())).thenReturn(treeView.object);

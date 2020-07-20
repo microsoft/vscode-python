@@ -18,7 +18,6 @@ import { OSType } from '../../../../../client/common/utils/platform';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { IDebugEnvironmentVariablesService } from '../../../../../client/debugger/extension/configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/launch';
-import { ILaunchDebugConfigurationResolverExperiment } from '../../../../../client/debugger/extension/configuration/types';
 import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
 import { getOSType } from '../../../../common';
@@ -38,21 +37,19 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         let documentManager: TypeMoq.IMock<IDocumentManager>;
         let diagnosticsService: TypeMoq.IMock<IInvalidPythonPathInDebuggerService>;
         let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
-        let configExperiment: TypeMoq.IMock<ILaunchDebugConfigurationResolverExperiment>;
         function createMoqWorkspaceFolder(folderPath: string) {
             const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
             folder.setup((f) => f.uri).returns(() => Uri.file(folderPath));
             return folder.object;
         }
         function setupIoc(pythonPath: string, workspaceFolder?: WorkspaceFolder) {
-            const confgService = TypeMoq.Mock.ofType<IConfigurationService>();
+            const configService = TypeMoq.Mock.ofType<IConfigurationService>();
             workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
             documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
             platformService = TypeMoq.Mock.ofType<IPlatformService>();
             diagnosticsService = TypeMoq.Mock.ofType<IInvalidPythonPathInDebuggerService>();
             debugEnvHelper = TypeMoq.Mock.ofType<IDebugEnvironmentVariablesService>();
-            configExperiment = TypeMoq.Mock.ofType<ILaunchDebugConfigurationResolverExperiment>();
 
             pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
             helper = TypeMoq.Mock.ofType<IInterpreterHelper>();
@@ -71,25 +68,19 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             if (workspaceFolder) {
                 settings.setup((s) => s.envFile).returns(() => path.join(workspaceFolder!.uri.fsPath, '.env2'));
             }
-            confgService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+            configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
             setUpOSMocks(osType, platformService);
             debugEnvHelper
                 .setup((x) => x.getEnvironmentVariables(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve({}));
-            configExperiment
-                .setup((c) => c.modifyConfigurationBasedOnExperiment(TypeMoq.It.isAny()))
-                .returns(() => {
-                    return;
-                });
 
             debugProvider = new LaunchConfigurationResolver(
                 workspaceService.object,
                 documentManager.object,
                 diagnosticsService.object,
                 platformService.object,
-                confgService.object,
-                debugEnvHelper.object,
-                configExperiment.object
+                configService.object,
+                debugEnvHelper.object
             );
         }
         function setupActiveEditor(fileName: string | undefined, languageId: string) {

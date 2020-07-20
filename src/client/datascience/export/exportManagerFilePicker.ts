@@ -20,19 +20,27 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceStorage: Memento
     ) {}
 
-    public async getExportFileLocation(format: ExportFormat, source: Uri): Promise<Uri | undefined> {
+    public async getExportFileLocation(
+        format: ExportFormat,
+        source: Uri,
+        defaultFileName?: string
+    ): Promise<Uri | undefined> {
         // map each export method to a set of file extensions
         let fileExtensions;
+        let extension: string | undefined;
         switch (format) {
             case ExportFormat.python:
                 fileExtensions = PythonExtensions;
+                extension = '.py';
                 break;
 
             case ExportFormat.pdf:
+                extension = '.pdf';
                 fileExtensions = PDFExtensions;
                 break;
 
             case ExportFormat.html:
+                extension = '.html';
                 fileExtensions = HTMLExtensions;
                 break;
 
@@ -40,8 +48,11 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
                 return;
         }
 
-        const notebookFileName = path.basename(source.fsPath, path.extname(source.fsPath));
-        const dialogUri = Uri.file(path.join(this.getLastFileSaveLocation().fsPath, notebookFileName));
+        const targetFileName = defaultFileName
+            ? defaultFileName
+            : `${path.basename(source.fsPath, path.extname(source.fsPath))}${extension}`;
+
+        const dialogUri = Uri.file(path.join(this.getLastFileSaveLocation().fsPath, targetFileName));
         const options: SaveDialogOptions = {
             defaultUri: dialogUri,
             saveLabel: 'Export',

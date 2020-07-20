@@ -102,8 +102,12 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
     }
     @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_READY, undefined, true)
     protected async serverReady(): Promise<void> {
-        while (this.languageClient && !this.languageClient!.initializeResult) {
+        // languageClient can be disposed in awaits.
+        while (this.languageClient && !this.languageClient.initializeResult) {
             await sleep(100);
+        }
+        if (this.languageClient) {
+            await this.languageClient.onReady();
         }
         this.startupCompleted.resolve();
     }

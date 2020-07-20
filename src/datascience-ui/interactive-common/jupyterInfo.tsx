@@ -5,6 +5,8 @@ import * as React from 'react';
 import { Image, ImageName } from '../react-common/image';
 import { getLocString } from '../react-common/locReactSide';
 import { IFont, IServerState, ServerStatus } from './mainState';
+import { TrustMessage } from './trustMessage';
+import { getMaxWidth } from './utils';
 
 export interface IJupyterInfoProps {
     baseTheme: string;
@@ -39,13 +41,13 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
         const dynamicFont: React.CSSProperties = {
             fontSize: 'var(--vscode-font-size)', // Use the same font and size as the menu
             fontFamily: 'var(--vscode-font-family)',
-            maxWidth: this.getMaxWidth(serverTextSize + displayNameTextSize + 5) // plus 5 for the line and margins
+            maxWidth: getMaxWidth(serverTextSize + displayNameTextSize + 5) // plus 5 for the line and margins
         };
         const serverTextWidth: React.CSSProperties = {
-            maxWidth: this.getMaxWidth(serverTextSize)
+            maxWidth: getMaxWidth(serverTextSize)
         };
         const displayNameTextWidth: React.CSSProperties = {
-            maxWidth: this.getMaxWidth(displayNameTextSize)
+            maxWidth: getMaxWidth(displayNameTextSize)
         };
 
         return (
@@ -93,35 +95,12 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
 
     private renderTrustMessage() {
         if (this.props.shouldShowTrustMessage) {
-            const text = this.props.isNotebookTrusted
-                ? getLocString('DataScience.notebookIsTrusted', 'Trusted')
-                : getLocString('DataScience.notebookIsNotTrusted', 'Not Trusted');
-            const textSize = text.length;
-            const maxWidth: React.CSSProperties = {
-                maxWidth: this.getMaxWidth(textSize + 5) // plus 5 for the line and margins,
-            };
-            const dynamicStyle: React.CSSProperties = {
-                maxWidth: this.getMaxWidth(textSize),
-                color: this.props.isNotebookTrusted ? undefined : 'var(--vscode-editorError-foreground)',
-                cursor: this.props.isNotebookTrusted ? undefined : 'pointer'
-            };
-
             return (
-                <div className="kernel-status" style={maxWidth}>
-                    <button
-                        type="button"
-                        disabled={this.props.isNotebookTrusted}
-                        aria-disabled={this.props.isNotebookTrusted}
-                        className={`jupyter-info-section${
-                            this.props.isNotebookTrusted ? '' : ' jupyter-info-section-hoverable'
-                        }`} // Disable animation on hover for already-trusted notebooks
-                        style={dynamicStyle}
-                        onClick={this.props.launchNotebookTrustPrompt}
-                    >
-                        <div className="kernel-status-text">{text}</div>
-                    </button>
-                    <div className="kernel-status-divider" />
-                </div>
+                <TrustMessage
+                    shouldShowTrustMessage={this.props.shouldShowTrustMessage}
+                    isNotebookTrusted={this.props.isNotebookTrusted}
+                    launchNotebookTrustPrompt={this.props.launchNotebookTrustPrompt}
+                />
             );
         }
     }
@@ -133,12 +112,5 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
         return this.props.kernel.jupyterServerStatus === ServerStatus.NotStarted
             ? ImageName.JupyterServerDisconnected
             : ImageName.JupyterServerConnected;
-    }
-
-    private getMaxWidth(charLength: number): string {
-        // This comes from a linear regression
-        const width = 0.57674 * charLength + 1.70473;
-        const unit = 'em';
-        return Math.round(width).toString() + unit;
     }
 }

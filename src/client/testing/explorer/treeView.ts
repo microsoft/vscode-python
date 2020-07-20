@@ -40,6 +40,6 @@ export class TreeViewService implements IExtensionSingleActivationService, IDisp
         );
     }
     public async onRevealTestItem(testItem: TestDataItem): Promise<void> {
-        await this.treeView.reveal(testItem);
+        await this.treeView.reveal(testItem, { select: false });
     }
 }

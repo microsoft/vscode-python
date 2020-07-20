@@ -3,13 +3,12 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import * as path from 'path';
 import { traceDecorators } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../../common/process/types';
 import { IPersistentStateFactory } from '../../../../common/types';
-import { IInterpreterHashProvider, IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
 
 /**
@@ -54,8 +53,7 @@ export function isRestrictedWindowsStoreInterpreterPath(pythonPath: string): boo
  * @implements {IWindowsStoreInterpreter}
  * @implements {IInterpreterHashProvider}
  */
-@injectable()
-export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInterpreterHashProvider {
+export class WindowsStoreInterpreter {
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private readonly persistentFactory: IPersistentStateFactory,

@@ -33,157 +33,173 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
             instance(compatSupport)
         );
     });
+    [true, false].forEach((isNotebookTrusted) => {
+        suite(isNotebookTrusted ? 'Trusted Notebook' : 'Un-trusted notebook', () => {
+            test('Return notebook with 2 cells', async () => {
+                const model: Partial<INotebookModel> = {
+                    cells: [
+                        {
+                            data: {
+                                cell_type: 'code',
+                                execution_count: 10,
+                                hasExecutionOrder: true,
+                                outputs: [],
+                                source: 'print(1)',
+                                metadata: {}
+                            },
+                            file: 'a.ipynb',
+                            id: 'MyCellId1',
+                            line: 0,
+                            state: CellState.init
+                        },
+                        {
+                            data: {
+                                cell_type: 'markdown',
+                                hasExecutionOrder: false,
+                                source: '# HEAD',
+                                metadata: {}
+                            },
+                            file: 'a.ipynb',
+                            id: 'MyCellId2',
+                            line: 0,
+                            state: CellState.init
+                        }
+                    ],
+                    isTrusted: isNotebookTrusted
+                };
+                when(storageProvider.get(anything(), anything(), anything(), anything())).thenResolve(
+                    (model as unknown) as INotebookModel
+                );
 
-    test('Return notebook with 2 cells', async () => {
-        const model: Partial<INotebookModel> = {
-            cells: [
-                {
-                    data: {
-                        cell_type: 'code',
-                        execution_count: 10,
-                        hasExecutionOrder: true,
+                const notebook = await contentProvider.openNotebook(fileUri, {});
+
+                assert.isOk(notebook);
+                assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
+                // ignore metadata we add.
+                notebook.cells.forEach((cell) => delete cell.metadata.custom);
+
+                assert.equal(notebook.metadata.cellEditable, isNotebookTrusted);
+                assert.equal(notebook.metadata.cellRunnable, isNotebookTrusted);
+                assert.equal(notebook.metadata.editable, isNotebookTrusted);
+                assert.equal(notebook.metadata.runnable, isNotebookTrusted);
+
+                assert.deepEqual(notebook.cells, [
+                    {
+                        cellKind: (vscodeNotebookEnums as any).CellKind.Code,
+                        language: PYTHON_LANGUAGE,
                         outputs: [],
                         source: 'print(1)',
-                        metadata: {}
+                        metadata: {
+                            editable: isNotebookTrusted,
+                            executionOrder: 10,
+                            hasExecutionOrder: true,
+                            runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
+                            runnable: isNotebookTrusted
+                        }
                     },
-                    file: 'a.ipynb',
-                    id: 'MyCellId1',
-                    line: 0,
-                    state: CellState.init
-                },
-                {
-                    data: {
-                        cell_type: 'markdown',
-                        hasExecutionOrder: false,
+                    {
+                        cellKind: (vscodeNotebookEnums as any).CellKind.Markdown,
+                        language: MARKDOWN_LANGUAGE,
+                        outputs: [],
                         source: '# HEAD',
-                        metadata: {}
+                        metadata: {
+                            editable: isNotebookTrusted,
+                            executionOrder: undefined,
+                            hasExecutionOrder: false,
+                            runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
+                            runnable: false
+                        }
+                    }
+                ]);
+            });
+
+            test('Return notebook with csharp language', async () => {
+                const model: Partial<INotebookModel> = {
+                    metadata: {
+                        language_info: {
+                            name: 'csharp'
+                        },
+                        orig_nbformat: 5
                     },
-                    file: 'a.ipynb',
-                    id: 'MyCellId2',
-                    line: 0,
-                    state: CellState.init
-                }
-            ]
-        };
-        when(storageProvider.load(anything(), anything(), anything(), anything())).thenResolve(
-            (model as unknown) as INotebookModel
-        );
+                    cells: [
+                        {
+                            data: {
+                                cell_type: 'code',
+                                execution_count: 10,
+                                hasExecutionOrder: true,
+                                outputs: [],
+                                source: 'Console.WriteLine("1")',
+                                metadata: {}
+                            },
+                            file: 'a.ipynb',
+                            id: 'MyCellId1',
+                            line: 0,
+                            state: CellState.init
+                        },
+                        {
+                            data: {
+                                cell_type: 'markdown',
+                                hasExecutionOrder: false,
+                                source: '# HEAD',
+                                metadata: {}
+                            },
+                            file: 'a.ipynb',
+                            id: 'MyCellId2',
+                            line: 0,
+                            state: CellState.init
+                        }
+                    ],
+                    isTrusted: isNotebookTrusted
+                };
+                when(storageProvider.get(anything(), anything(), anything(), anything())).thenResolve(
+                    (model as unknown) as INotebookModel
+                );
 
-        const notebook = await contentProvider.openNotebook(fileUri, {});
+                const notebook = await contentProvider.openNotebook(fileUri, {});
 
-        assert.isOk(notebook);
-        assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
-        // ignore metadata we add.
-        notebook.cells.forEach((cell) => delete cell.metadata.custom);
+                assert.isOk(notebook);
+                assert.deepEqual(notebook.languages, ['csharp']);
 
-        assert.deepEqual(notebook.cells, [
-            {
-                cellKind: (vscodeNotebookEnums as any).CellKind.Code,
-                language: PYTHON_LANGUAGE,
-                outputs: [],
-                source: 'print(1)',
-                metadata: {
-                    editable: true,
-                    executionOrder: 10,
-                    hasExecutionOrder: true,
-                    runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
-                    runnable: true
-                }
-            },
-            {
-                cellKind: (vscodeNotebookEnums as any).CellKind.Markdown,
-                language: MARKDOWN_LANGUAGE,
-                outputs: [],
-                source: '# HEAD',
-                metadata: {
-                    editable: true,
-                    executionOrder: undefined,
-                    hasExecutionOrder: false,
-                    runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
-                    runnable: false
-                }
-            }
-        ]);
-    });
+                assert.equal(notebook.metadata.cellEditable, isNotebookTrusted);
+                assert.equal(notebook.metadata.cellRunnable, isNotebookTrusted);
+                assert.equal(notebook.metadata.editable, isNotebookTrusted);
+                assert.equal(notebook.metadata.runnable, isNotebookTrusted);
 
-    test('Return notebook with csharp language', async () => {
-        const model: Partial<INotebookModel> = {
-            metadata: {
-                language_info: {
-                    name: 'csharp'
-                },
-                orig_nbformat: 5
-            },
-            cells: [
-                {
-                    data: {
-                        cell_type: 'code',
-                        execution_count: 10,
-                        hasExecutionOrder: true,
+                // ignore metadata we add.
+                notebook.cells.forEach((cell: NotebookCellData) => delete cell.metadata.custom);
+
+                assert.deepEqual(notebook.cells, [
+                    {
+                        cellKind: (vscodeNotebookEnums as any).CellKind.Code,
+                        language: 'csharp',
                         outputs: [],
                         source: 'Console.WriteLine("1")',
-                        metadata: {}
+                        metadata: {
+                            editable: isNotebookTrusted,
+                            executionOrder: 10,
+                            hasExecutionOrder: true,
+                            runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
+                            runnable: isNotebookTrusted
+                        }
                     },
-                    file: 'a.ipynb',
-                    id: 'MyCellId1',
-                    line: 0,
-                    state: CellState.init
-                },
-                {
-                    data: {
-                        cell_type: 'markdown',
-                        hasExecutionOrder: false,
+                    {
+                        cellKind: (vscodeNotebookEnums as any).CellKind.Markdown,
+                        language: MARKDOWN_LANGUAGE,
+                        outputs: [],
                         source: '# HEAD',
-                        metadata: {}
-                    },
-                    file: 'a.ipynb',
-                    id: 'MyCellId2',
-                    line: 0,
-                    state: CellState.init
-                }
-            ]
-        };
-        when(storageProvider.load(anything(), anything(), anything(), anything())).thenResolve(
-            (model as unknown) as INotebookModel
-        );
-
-        const notebook = await contentProvider.openNotebook(fileUri, {});
-
-        assert.isOk(notebook);
-        assert.deepEqual(notebook.languages, ['csharp']);
-        // ignore metadata we add.
-        notebook.cells.forEach((cell: NotebookCellData) => delete cell.metadata.custom);
-
-        assert.deepEqual(notebook.cells, [
-            {
-                cellKind: (vscodeNotebookEnums as any).CellKind.Code,
-                language: 'csharp',
-                outputs: [],
-                source: 'Console.WriteLine("1")',
-                metadata: {
-                    editable: true,
-                    executionOrder: 10,
-                    hasExecutionOrder: true,
-                    runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
-                    runnable: true
-                }
-            },
-            {
-                cellKind: (vscodeNotebookEnums as any).CellKind.Markdown,
-                language: MARKDOWN_LANGUAGE,
-                outputs: [],
-                source: '# HEAD',
-                metadata: {
-                    editable: true,
-                    executionOrder: undefined,
-                    hasExecutionOrder: false,
-                    runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
-                    runnable: false
-                }
-            }
-        ]);
-    });
-    test('Verify mime types and order', () => {
-        // https://github.com/microsoft/vscode-python/issues/11880
+                        metadata: {
+                            editable: isNotebookTrusted,
+                            executionOrder: undefined,
+                            hasExecutionOrder: false,
+                            runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
+                            runnable: false
+                        }
+                    }
+                ]);
+            });
+            test('Verify mime types and order', () => {
+                // https://github.com/microsoft/vscode-python/issues/11880
+            });
+        });
     });
 });

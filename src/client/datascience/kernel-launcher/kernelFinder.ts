@@ -234,27 +234,23 @@ export class KernelFinder implements IKernelFinder {
         return uniqueInterpreterPrefixPaths.map((prefixPath) => path.join(prefixPath, baseKernelPath));
     }
 
-    private async getDiskPaths(): Promise<string[]> {
-        let paths: string[] = [];
+    // Find any paths associated with the JUPYTER_PATH env var. Can be a list of dirs.
+    // We need to look at the 'kernels' sub-directory and these paths are supposed to come first in the searching
+    // https://jupyter.readthedocs.io/en/latest/projects/jupyter-directories.html#envvar-JUPYTER_PATH
+    private async getJupyterPathPaths(): Promise<string[]> {
+        const paths: string[] = [];
         const vars = await this.envVarsProvider.getEnvironmentVariables();
-        const jupyterPathVar = vars.JUPYTER_PATH || '';
+        const jupyterPathVars = vars.JUPYTER_PATH
+            ? vars.JUPYTER_PATH.split(path.delimiter).map((jupyterPath) => {
+                  return path.join(jupyterPath, 'kernels');
+              })
+            : [];
 
-        if (this.platformService.isWindows) {
-            const activeInterpreter = await this.interpreterService.getActiveInterpreter();
-            if (activeInterpreter) {
-                const winPath = await getRealPath(
-                    this.file,
-                    this.exeFactory,
-                    activeInterpreter.path,
-                    path.join(this.pathUtils.home, winJupyterPath)
-                );
-                if (winPath) {
-                    paths = [winPath];
-                }
-
-                if (jupyterPathVar !== '') {
-                    const jupyterPaths = jupyterPathVar.split(path.delimiter);
-                    jupyterPaths.forEach(async (jupyterPath) => {
+        if (jupyterPathVars.length > 0) {
+            if (this.platformService.isWindows) {
+                const activeInterpreter = await this.interpreterService.getActiveInterpreter();
+                if (activeInterpreter) {
+                    jupyterPathVars.forEach(async (jupyterPath) => {
                         const jupyterWinPath = await getRealPath(
                             this.file,
                             this.exeFactory,
@@ -266,13 +262,36 @@ export class KernelFinder implements IKernelFinder {
                             paths.push(jupyterWinPath);
                         }
                     });
+                } else {
+                    paths.push(...jupyterPathVars);
                 }
             } else {
-                paths = [path.join(this.pathUtils.home, winJupyterPath)];
-                if (jupyterPathVar !== '') {
-                    const jupyterPaths = jupyterPathVar.split(path.delimiter);
-                    paths.push(...jupyterPaths);
+                // Unix based
+                paths.push(...jupyterPathVars);
+            }
+        }
+
+        return paths;
+    }
+
+    private async getDiskPaths(): Promise<string[]> {
+        // Paths specified in JUPYTER_PATH are supposed to come first in searching
+        const paths: string[] = await this.getJupyterPathPaths();
+
+        if (this.platformService.isWindows) {
+            const activeInterpreter = await this.interpreterService.getActiveInterpreter();
+            if (activeInterpreter) {
+                const winPath = await getRealPath(
+                    this.file,
+                    this.exeFactory,
+                    activeInterpreter.path,
+                    path.join(this.pathUtils.home, winJupyterPath)
+                );
+                if (winPath) {
+                    paths.push(winPath);
                 }
+            } else {
+                paths.push(path.join(this.pathUtils.home, winJupyterPath));
             }
 
             if (process.env.ALLUSERSPROFILE) {
@@ -282,16 +301,11 @@ export class KernelFinder implements IKernelFinder {
             // Unix based
             const secondPart = this.platformService.isMac ? macJupyterPath : linuxJupyterPath;
 
-            paths = [
+            paths.push(
                 path.join('usr', 'share', 'jupyter', 'kernels'),
                 path.join('usr', 'local', 'share', 'jupyter', 'kernels'),
                 path.join(this.pathUtils.home, secondPart)
-            ];
-
-            if (jupyterPathVar !== '') {
-                const jupyterPaths = jupyterPathVar.split(path.delimiter);
-                paths.push(...jupyterPaths);
-            }
+            );
         }
 
         return paths;
