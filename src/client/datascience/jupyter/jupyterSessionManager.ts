@@ -338,19 +338,19 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 return true;
 
             case localize.Common.doNotShowAgain():
-                // For always turn on the global state value
+                // For don't ask again turn on the global true
                 await this.userAllowsInsecureConnections.updateValue(true);
                 return true;
 
             case localize.Common.bannerLabelNo():
             default:
-                // No or for no choice return back false
+                // No or for no choice return back false to block
                 return false;
         }
     }
 
-    // Check for a secure remote connection. If we don't have one ask the user if they want to connect
-    // if they don't throw to bail out of the connection process
+    // Check if our server connection is considered secure. If it is not, ask the user if they want to connect
+    // If not, throw to bail out on the process
     private async secureConnectionCheck(connInfo: IJupyterConnection): Promise<void> {
         // If they have turned on global server trust then everything is secure
         if (this.userAllowsInsecureConnections.value) {
