@@ -34,6 +34,7 @@ const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnec
 // tslint:disable: no-any
 
 export class JupyterSessionManager implements IJupyterSessionManager {
+    private static secureServers = new Map<string, Promise<boolean>>();
     private sessionManager: SessionManager | undefined;
     private contentsManager: ContentsManager | undefined;
     private connInfo: IJupyterConnection | undefined;
@@ -242,9 +243,10 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         };
 
         // Before we connect, see if we are trying to make an insecure connection, if we are, warn the user
-        if (!this.isSecureConnection(connInfo)) {
-            await this.insecureServerWarningPrompt();
-        }
+        await this.secureConnectionCheck(connInfo);
+        //if (!this.isSecureConnection(connInfo)) {
+        //await this.insecureServerWarningPrompt();
+        //}
 
         // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
         // tslint:disable-next-line:no-any
@@ -324,50 +326,56 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     // If connecting on HTTP without a token prompt the user that this connection may not be secure
-    private async insecureServerWarningPrompt(): Promise<void> {
+    private async insecureServerWarningPrompt(): Promise<boolean> {
         const insecureMessage = localize.DataScience.insecureSessionMessage();
         const insecureLabels = [
             localize.Common.bannerLabelYes(),
             localize.Common.bannerLabelNo(),
-            localize.DataScience.insecureSessionAlwaysConnect()
+            localize.Common.doNotShowAgain()
         ];
         const response = await this.appShell.showWarningMessage(insecureMessage, ...insecureLabels);
 
         switch (response) {
             case localize.Common.bannerLabelYes():
                 // On yes just proceed as normal
-                break;
+                return true;
 
-            case localize.DataScience.insecureSessionAlwaysConnect():
+            case localize.Common.doNotShowAgain():
                 // For always turn on the global state value
                 await this.userAllowsInsecureConnections.updateValue(true);
-                break;
+                return true;
 
             case localize.Common.bannerLabelNo():
             default:
-                // For no or no choice throw to disallow the connect. Give the use a localized message
-                // as they will see this when the connection fails
-                throw new Error(localize.DataScience.insecureSessionDenied());
-                break;
+                // No or for no choice return back false
+                return false;
         }
     }
 
-    // Check our server settings to see if our connection is secure
-    private isSecureConnection(connInfo: IJupyterConnection): boolean {
-        // Insecure if !local && !https && !token
-        return false;
-
-        // IANHU: Combine forms
-        if (connInfo.localLaunch) {
-            return true;
+    // Check for a secure remote connection. If we don't have one ask the user if they want to connect
+    // if they don't throw to bail out of the connection process
+    private async secureConnectionCheck(connInfo: IJupyterConnection): Promise<void> {
+        // If they have turned on global server trust then everything is secure
+        if (this.userAllowsInsecureConnections.value) {
+            return;
         }
 
-        if (connInfo.baseUrl.startsWith('https')) {
-            return true;
+        // If they are local launch, https, or have a token, then they are secure
+        if (connInfo.localLaunch || connInfo.baseUrl.startsWith('https') || connInfo.token) {
+            return;
         }
 
-        if (connInfo.token) {
-            return true;
+        // At this point prompt the user, cache the promise so we don't ask multiple times for the same server
+        let serverSecurePromise = JupyterSessionManager.secureServers.get(connInfo.baseUrl);
+
+        if (serverSecurePromise === undefined) {
+            serverSecurePromise = this.insecureServerWarningPrompt();
+            JupyterSessionManager.secureServers.set(connInfo.baseUrl, serverSecurePromise);
+        }
+
+        // If our server is not secure, throw here to bail out on the process
+        if (!(await serverSecurePromise)) {
+            throw new Error(localize.DataScience.insecureSessionDenied());
         }
     }
 }

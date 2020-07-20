@@ -37,7 +37,6 @@
     "DataScience.launchNotebookTrustPrompt.no": "Do not trust",
     "DataScience.launchNotebookTrustPrompt.trustAllNotebooks": "Trust all notebooks",
     "DataScience.insecureSessionMessage": "Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?",
-    "DataScience.insecureSessionAlwaysConnect": "Always",
     "DataScience.insecureSessionDenied": "Denied connection to insecure server.",
     "python.command.python.viewLanguageServerOutput.title": "Show Language Server Output",
     "python.command.python.selectAndRunTestMethod.title": "Run Test Method ...",
