@@ -99,3 +99,8 @@ export enum RemoveKernelToolbarInInteractiveWindow {
 export enum EnableTrustedNotebooks {
     experiment = 'EnableTrustedNotebooks'
 }
+
+// Experiment to offer switch to Pylance language server
+export enum TryPylance {
+    experiment = 'tryPylance'
+}

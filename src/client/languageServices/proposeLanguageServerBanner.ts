@@ -6,27 +6,24 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { LanguageServerType } from '../activation/types';
-import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { IApplicationShell } from '../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../common/constants';
+import { TryPylance } from '../common/experiments/groups';
 import '../common/extensions';
-import { IConfigurationService, IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
+import {
+    IConfigurationService,
+    IExperimentService,
+    IPersistentStateFactory,
+    IPythonExtensionBanner
+} from '../common/types';
 import { LanguageService } from '../common/utils/localize';
-import { getRandomBetween } from '../common/utils/random';
 
 export const PylanceExtensionUri = `${vscode.env.uriScheme}:extension/${PYLANCE_EXTENSION_ID}`;
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
-    ShowBanner = 'ProposePylanceBanner'
+    ShowBanner = 'TryPylanceBanner'
 }
-
-const frequencyPerServerType = new Map<LanguageServerType, number>([
-    [LanguageServerType.Node, 0],
-    [LanguageServerType.Microsoft, 50],
-    [LanguageServerType.None, 50],
-    // Banner for Jedi users is suppressed until further notice.
-    [LanguageServerType.Jedi, 0]
-]);
 
 /*
 This class represents a popup that propose that the user try out a new
@@ -37,48 +34,20 @@ function enables the popup for this user.
 */
 @injectable()
 export class ProposePylanceBanner implements IPythonExtensionBanner {
-    private initialized?: boolean;
     private disabledInCurrentSession: boolean = false;
-    private sampleSizePerHundred = 0;
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IApplicationEnvironment) private appEnvirontment: IApplicationEnvironment,
-        sampleSizePerHundred = -1
-    ) {
-        if (this.appEnvirontment.channel === 'insiders') {
-            this.sampleSizePerHundred = 100;
-        } else {
-            if (sampleSizePerHundred >= 0) {
-                this.sampleSizePerHundred = sampleSizePerHundred;
-            } else {
-                const lsType = this.configuration.getSettings().languageServer ?? LanguageServerType.Jedi;
-                this.sampleSizePerHundred = frequencyPerServerType.get(lsType) ?? 0;
-            }
-        }
-        this.initialize();
-    }
+        @inject(IExperimentService) private experiments: IExperimentService
+    ) {}
 
-    public initialize() {
-        if (this.initialized) {
-            return;
-        }
-        this.initialized = true;
-
-        // Don't even bother adding handlers if banner has been turned off.
-        if (!this.enabled) {
-            return;
-        }
-
-        const randomSample: number = getRandomBetween(0, 100);
-        if (randomSample >= this.sampleSizePerHundred) {
-            this.disable().ignoreErrors();
-            return;
-        }
-    }
     public get enabled(): boolean {
+        const lsType = this.configuration.getSettings().languageServer ?? LanguageServerType.Jedi;
+        if (lsType === LanguageServerType.Jedi || lsType === LanguageServerType.Node) {
+            return false;
+        }
         return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
     }
 
@@ -110,7 +79,8 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
     }
 
     public async shouldShowBanner(): Promise<boolean> {
-        return Promise.resolve(this.enabled && !this.disabledInCurrentSession);
+        const inExperiment = await this.experiments.inExperiment(TryPylance.experiment);
+        return inExperiment && this.enabled && !this.disabledInCurrentSession;
     }
 
     public async disable(): Promise<void> {
