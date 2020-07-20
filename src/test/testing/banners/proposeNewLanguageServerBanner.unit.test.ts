@@ -55,7 +55,7 @@ suite('Propose Pylance Banner', () => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
     });
     testData.forEach((t) => {
-        test(`${t.inExperiment ? 'In' : 'Not in'} experiment and "python.languageServer": "${t.lsType}" should  ${
+        test(`${t.inExperiment ? 'In' : 'Not in'} experiment and "python.languageServer": "${t.lsType}" should ${
             t.shouldShowBanner ? 'show' : 'not show'
         } banner`, async () => {
             settings.setup((x) => x.languageServer).returns(() => t.lsType);
