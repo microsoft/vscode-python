@@ -233,7 +233,7 @@ export class PythonSettings implements IPythonSettings {
 
         let ls = pythonSettings.get<LanguageServerType>('languageServer') ?? LanguageServerType.Jedi;
         ls = systemVariables.resolveAny(ls);
-        if (!(ls in LanguageServerType)) {
+        if (!Object.values(LanguageServerType).includes(ls)) {
             ls = LanguageServerType.Jedi;
         }
         this.languageServer = ls;
