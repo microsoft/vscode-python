@@ -11,7 +11,7 @@ import { JupyterInterpreterStateStore } from '../../../../client/datascience/jup
 import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 import { MockMemento } from '../../../mocks/mementos';
 
-suite('Data Science - Jupyter Interpreter State', () => {
+suite('DataScience - Jupyter Interpreter State', () => {
     let selected: JupyterInterpreterStateStore;
     let memento: Memento;
     let interpreterService: JupyterInterpreterService;

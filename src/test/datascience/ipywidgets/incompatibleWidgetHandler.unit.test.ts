@@ -4,7 +4,7 @@ import { assert } from 'chai';
 import { warnAboutWidgetVersionsThatAreNotSupported } from '../../../datascience-ui/ipywidgets/incompatibleWidgetHandler';
 
 // tslint:disable: max-func-body-length no-any
-suite('Data Science - Incompatible Widgets', () => {
+suite('DataScience - Incompatible Widgets', () => {
     suite('Using qgrid widget with CDN turned on', () => {
         async function testLoadingQgrid(versionToLoad: string, warningExpectedToBeDisplayed: boolean) {
             let warningDisplayed = false;

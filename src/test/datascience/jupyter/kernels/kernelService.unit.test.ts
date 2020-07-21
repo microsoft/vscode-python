@@ -35,7 +35,7 @@ import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnv
 import { FakeClock } from '../../../common';
 
 // tslint:disable-next-line: max-func-body-length
-suite('Data Science - KernelService', () => {
+suite('DataScience - KernelService', () => {
     let kernelService: KernelService;
     let interperterService: IInterpreterService;
     let fs: IFileSystem;

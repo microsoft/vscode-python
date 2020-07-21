@@ -23,7 +23,7 @@ import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../cli
 import { InterpreterType } from '../../../../client/pythonEnvironments/info';
 
 // tslint:disable-next-line: max-func-body-length
-suite('Data Science - KernelSelections', () => {
+suite('DataScience - KernelSelections', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
     let kernelFinder: IKernelFinder;

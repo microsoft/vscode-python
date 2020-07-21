@@ -23,7 +23,7 @@ import { createPythonInterpreter } from '../../../utils/interpreters';
 
 // tslint:disable: max-func-body-length
 
-suite('Data Science - Jupyter Interpreter Service', () => {
+suite('DataScience - Jupyter Interpreter Service', () => {
     let jupyterInterpreterService: JupyterInterpreterService;
     let interpreterSelector: JupyterInterpreterSelector;
     let interpreterConfiguration: JupyterInterpreterDependencyService;

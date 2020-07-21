@@ -20,7 +20,7 @@ import { createNotebookDocument, createNotebookModel, disposeAllDisposables } fr
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 // tslint:disable: no-any
-suite('Data Science - NativeNotebook TrustHandler', () => {
+suite('DataScience - NativeNotebook TrustHandler', () => {
     let trustHandler: IExtensionSingleActivationService;
     let trustService: ITrustService;
     let vscNotebook: IVSCodeNotebook;

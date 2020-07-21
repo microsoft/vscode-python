@@ -16,7 +16,7 @@ import { ExportFormat, IExport, IExportManagerFilePicker } from '../../../client
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { INotebookModel } from '../../../client/datascience/types';
 
-suite('Data Science - Export Manager', () => {
+suite('DataScience - Export Manager', () => {
     let exporter: ExportManager;
     let exportPython: IExport;
     let exportHtml: IExport;

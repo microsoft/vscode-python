@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { InputHistory } from '../../datascience-ui/interactive-common/inputHistory';
 
-suite('Data Science InputHistory', () => {
+suite('DataScience InputHistory', () => {
     test('input history', async () => {
         let history = new InputHistory();
         history.add('1', true);

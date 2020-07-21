@@ -26,7 +26,7 @@ import { IJupyterConnection, IJupyterKernelSpec } from '../../../client/datascie
 import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - JupyterSession', () => {
+suite('DataScience - JupyterSession', () => {
     type ISession = Session.ISession & {
         /**
          * Whether this is a remote session that we attached to.

@@ -18,7 +18,7 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { DataViewerDependencyService } from '../../../client/datascience/data-viewing/dataViewerDependencyService';
 import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
 
-suite('Data Science - DataViewerDependencyService', () => {
+suite('DataScience - DataViewerDependencyService', () => {
     let dependencyService: DataViewerDependencyService;
     let appShell: IApplicationShell;
     let pythonExecFactory: IPythonExecutionFactory;

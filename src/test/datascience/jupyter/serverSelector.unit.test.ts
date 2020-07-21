@@ -23,7 +23,7 @@ import { MockInputBox } from '../mockInputBox';
 import { MockQuickPick } from '../mockQuickPick';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - Jupyter Server URI Selector', () => {
+suite('DataScience - Jupyter Server URI Selector', () => {
     let quickPick: MockQuickPick | undefined;
     let cmdManager: ICommandManager;
     let dsSettings: IDataScienceSettings;

@@ -13,7 +13,7 @@ import { ExportFormat } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 
-suite('Data Science - Export File Opener', () => {
+suite('DataScience - Export File Opener', () => {
     let fileOpener: ExportFileOpener;
     let documentManager: IDocumentManager;
     let fileSystem: IFileSystem;

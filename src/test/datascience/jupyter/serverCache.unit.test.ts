@@ -14,7 +14,7 @@ import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { MockJupyterServer } from '../mockJupyterServer';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - ServerCache', () => {
+suite('DataScience - ServerCache', () => {
     let serverCache: ServerCache;
     const fileSystem = mock(FileSystem);
     const workspaceService = mock(WorkspaceService);

@@ -14,7 +14,7 @@ import { KernelSwitcher } from '../../../client/datascience/jupyter/kernels/kern
 import { IInteractiveWindowProvider, INotebookEditorProvider } from '../../../client/datascience/types';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - KernelSwitcher Command', () => {
+suite('DataScience - KernelSwitcher Command', () => {
     let notebookCommands: NotebookCommands;
     let commandManager: ICommandManager;
     let interactiveWindowProvider: IInteractiveWindowProvider;

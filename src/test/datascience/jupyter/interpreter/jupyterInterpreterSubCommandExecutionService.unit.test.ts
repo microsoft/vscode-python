@@ -36,7 +36,7 @@ use(chaiPromise);
 
 // tslint:disable: max-func-body-length
 
-suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
+suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
     let jupyterInterpreter: JupyterInterpreterService;
     let interperterService: IInterpreterService;
     let jupyterDependencyService: JupyterInterpreterDependencyService;

@@ -24,7 +24,7 @@ import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnv
 import { noop } from '../../../core';
 
 // tslint:disable: max-func-body-length no-any
-suite('Data Science - Kernel Switcher', () => {
+suite('DataScience - Kernel Switcher', () => {
     let kernelSwitcher: KernelSwitcher;
     let configService: IConfigurationService;
     let kernelSelector: KernelSelector;

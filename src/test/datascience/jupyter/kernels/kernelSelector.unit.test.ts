@@ -31,7 +31,7 @@ import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnv
 
 // tslint:disable: max-func-body-length no-unused-expression
 
-suite('Data Science - KernelSelector', () => {
+suite('DataScience - KernelSelector', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
     let sessionManager: IJupyterSessionManager;

@@ -15,7 +15,7 @@ import { DataScienceSurveyBanner, DSSurveyStateKeys } from '../../client/datasci
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { INotebookEditor } from '../../client/datascience/types';
 
-suite('Data Science Survey Banner', () => {
+suite('DataScience Survey Banner', () => {
     let appShell: typemoq.IMock<IApplicationShell>;
     let browser: typemoq.IMock<IBrowserService>;
     const targetUri: string = 'https://microsoft.com';
@@ -29,7 +29,7 @@ suite('Data Science Survey Banner', () => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         browser = typemoq.Mock.ofType<IBrowserService>();
     });
-    test('Data science banner should be enabled after we hit our execution count', async () => {
+    test('DataScience banner should be enabled after we hit our execution count', async () => {
         const enabledValue: boolean = true;
         const executionCount: number = 1000;
         const testBanner: DataScienceSurveyBanner = preparePopup(
@@ -62,7 +62,7 @@ suite('Data Science Survey Banner', () => {
         browser.reset();
     });
 
-    test('Data science banner should be enabled after we hit our notebook count', async () => {
+    test('DataScience banner should be enabled after we hit our notebook count', async () => {
         const enabledValue: boolean = true;
         const testBanner: DataScienceSurveyBanner = preparePopup(
             0,

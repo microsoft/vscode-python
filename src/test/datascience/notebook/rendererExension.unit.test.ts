@@ -12,7 +12,7 @@ import { JupyterNotebookView, RendererExtensionId } from '../../../client/datasc
 import { RendererExtension } from '../../../client/datascience/notebook/rendererExtension';
 import { RendererExtensionDownloader } from '../../../client/datascience/notebook/rendererExtensionDownloader';
 
-suite('Data Science - NativeNotebook Renderer Extension', () => {
+suite('DataScience - NativeNotebook Renderer Extension', () => {
     let rendererExtension: IExtensionSingleActivationService;
     let downloader: RendererExtensionDownloader;
     let vscNotebook: IVSCodeNotebook;

@@ -20,7 +20,7 @@ import { NativeEditorProvider } from '../../../client/datascience/interactive-ip
 import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - Commands', () => {
+suite('DataScience - Commands', () => {
     let kernelSwitcherCommand: NotebookCommands;
     let serverSelectorCommand: JupyterServerSelectorCommand;
     let commandLineCommand: JupyterCommandLineSelectorCommand;
