@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
+import { IApplicationShell } from '../../common/application/types';
 
-import { IConfigurationService, IOutputChannel } from '../../common/types';
+import { IConfigurationService, IOutputChannel, IPersistentStateFactory } from '../../common/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import {
     IJupyterConnection,
@@ -20,7 +21,9 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
         @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect,
         @inject(IConfigurationService) private config: IConfigurationService,
         @inject(KernelSelector) private kernelSelector: KernelSelector,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory
     ) {}
 
     /**
@@ -35,7 +38,9 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
             failOnPassword,
             this.kernelSelector,
             this.jupyterOutput,
-            this.config
+            this.config,
+            this.appShell,
+            this.stateFactory
         );
         await result.initialize(connInfo);
         return result;

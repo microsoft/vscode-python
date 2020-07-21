@@ -32,6 +32,7 @@ export function getDefaultSettings() {
         codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
         variableExplorerExclude: 'module;function;builtin_function_or_method',
         enablePlotViewer: true,
+        interactiveWindowMode: 'multiple',
         extraSettings: {
             editor: {
                 cursor: 'line',

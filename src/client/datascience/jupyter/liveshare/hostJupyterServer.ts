@@ -29,7 +29,6 @@ import { IServiceContainer } from '../../../ioc/types';
 import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import {
-    IDataScience,
     IJupyterSession,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
@@ -54,7 +53,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
     private sharedPort: vscode.Disposable | undefined;
     constructor(
         private liveShare: ILiveShareApi,
-        _dataScience: IDataScience,
+        _startupTime: number,
         asyncRegistry: IAsyncDisposableRegistry,
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,

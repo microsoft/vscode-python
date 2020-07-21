@@ -37,7 +37,7 @@ export class KernelSwitcherCommand implements IDisposable {
         if (!notebook) {
             notebook =
                 this.notebookEditorProvider.activeEditor?.notebook ??
-                this.interactiveWindowProvider.getActive()?.notebook;
+                this.interactiveWindowProvider.activeWindow?.notebook;
         }
         return this.kernelSwitcher.switchKernel(notebook, type);
     }

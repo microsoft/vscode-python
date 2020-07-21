@@ -140,7 +140,9 @@ export enum InteractiveWindowMessages {
     ShowBreak = 'show_break',
     ShowingIp = 'showing_ip',
     DebugStateChange = 'debug_state_change',
-    KernelIdle = 'kernel_idle'
+    KernelIdle = 'kernel_idle',
+    HasCell = 'has_cell',
+    HasCellResponse = 'has_cell_response'
 }
 
 export enum IPyWidgetMessages {
@@ -210,6 +212,12 @@ export interface IAddedSysInfo {
     type: SysInfoReason;
     id: string;
     sysInfoCell: ICell;
+    notebookIdentity: Uri;
+}
+
+export interface IFinishCell {
+    cell: ICell;
+    notebookIdentity: Uri;
 }
 
 export interface IExecuteInfo {
@@ -565,7 +573,7 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_mirror_execute]: { id: string; msg: KernelMessage.IExecuteRequestMsg };
     public [InteractiveWindowMessages.StartCell]: ICell;
     public [InteractiveWindowMessages.ForceVariableRefresh]: never | undefined;
-    public [InteractiveWindowMessages.FinishCell]: ICell;
+    public [InteractiveWindowMessages.FinishCell]: IFinishCell;
     public [InteractiveWindowMessages.UpdateCellWithExecutionResults]: ICell;
     public [InteractiveWindowMessages.GotoCodeCell]: IGotoCode;
     public [InteractiveWindowMessages.CopyCodeCell]: ICopyCode;
@@ -677,4 +685,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ShowingIp]: never | undefined;
     public [InteractiveWindowMessages.KernelIdle]: never | undefined;
     public [InteractiveWindowMessages.DebugStateChange]: IDebugStateChange;
+    public [InteractiveWindowMessages.HasCell]: string;
+    public [InteractiveWindowMessages.HasCellResponse]: { id: string; result: boolean };
 }

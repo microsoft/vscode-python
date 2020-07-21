@@ -71,7 +71,7 @@ suite('Data Science - KernelSwitcher Command', () => {
         test('Should switch kernel using the active Interactive Window', async () => {
             const interactiveWindow = mock(JupyterNotebookBase);
             // tslint:disable-next-line: no-any
-            when(interactiveWindowProvider.getActive()).thenReturn({ notebook: instance(interactiveWindow) } as any);
+            when(interactiveWindowProvider.activeWindow).thenReturn({ notebook: instance(interactiveWindow) } as any);
 
             await commandHandler.bind(kernelSwitcherCommand)();
 
@@ -83,7 +83,7 @@ suite('Data Science - KernelSwitcher Command', () => {
             // tslint:disable-next-line: no-any
             when(notebookEditorProvider.activeEditor).thenReturn({ notebook: instance(nativeEditor) } as any);
             // tslint:disable-next-line: no-any
-            when(interactiveWindowProvider.getActive()).thenReturn({ notebook: instance(interactiveWindow) } as any);
+            when(interactiveWindowProvider.activeWindow).thenReturn({ notebook: instance(interactiveWindow) } as any);
 
             await commandHandler.bind(kernelSwitcherCommand)();
 

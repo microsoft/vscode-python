@@ -4,7 +4,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ConfigurationTarget, EventEmitter, ViewColumn } from 'vscode';
+import { ConfigurationTarget, EventEmitter, Uri, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Commands, Telemetry } from '../../datascience/constants';
@@ -98,8 +98,8 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         }, 3000);
     }
 
-    public async getOwningResource(): Promise<Resource> {
-        return Promise.resolve(undefined);
+    public get owningResource(): Resource {
+        return undefined;
     }
 
     public async close(): Promise<void> {
@@ -157,7 +157,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                     content: `#%%\nprint("${localize.StartPage.helloWorld()}")`
                 });
                 await this.documentManager.showTextDocument(doc2, 1, true);
-                await this.commandManager.executeCommand(Commands.RunAllCells, '');
+                await this.commandManager.executeCommand(Commands.RunAllCells, Uri.parse(''));
                 break;
             case StartPageMessages.OpenCommandPalette:
                 sendTelemetryEvent(Telemetry.StartPageOpenCommandPalette);

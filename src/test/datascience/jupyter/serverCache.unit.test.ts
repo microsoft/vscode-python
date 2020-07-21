@@ -53,7 +53,8 @@ suite('Data Science - ServerCache', () => {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            widgetScriptSources: []
+            widgetScriptSources: [],
+            interactiveWindowMode: 'single'
         };
         when(configService.getSettings(anything())).thenReturn(pythonSettings);
         serverCache = new ServerCache(instance(configService), instance(workspaceService), instance(fileSystem));

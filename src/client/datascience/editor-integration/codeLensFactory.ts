@@ -12,11 +12,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCellRangesFromDocument, ICellRange } from '../cellFactory';
 import { CodeLensCommands, Commands, Identifiers } from '../constants';
-import {
-    INotebookIdentity,
-    InteractiveWindowMessages,
-    SysInfoReason
-} from '../interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
 import {
     ICell,
     ICellHashProvider,
@@ -26,13 +22,20 @@ import {
     INotebook,
     INotebookProvider
 } from '../types';
+import { getCellHashProvider } from './cellhashprovider';
 
 type CodeLensCacheData = {
     cachedDocumentVersion: number | undefined;
-    cachedExecutionCount: number | undefined;
+    cachedExecutionCounts: Set<number>;
     documentLenses: CodeLens[];
     cellRanges: ICellRange[];
     gotoCellLens: CodeLens[];
+};
+
+type PerNotebookData = {
+    cellExecutionCounts: Map<string, string>;
+    documentExecutionCounts: Map<string, number>;
+    hashProvider: ICellHashProvider | undefined;
 };
 
 /**
@@ -48,12 +51,8 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         // tslint:disable-next-line: no-any
         payload: any;
     }>();
-    private cellExecutionCounts = new Map<string, string>();
-    private documentExecutionCounts = new Map<string, number>();
-    private hashProvider: ICellHashProvider | undefined;
-    private interactiveIdentity: Uri | undefined; // Once we have more than one interactive window, this logic won't work anymore
+    private notebookData = new Map<string, PerNotebookData>();
     private codeLensCache = new Map<string, CodeLensCacheData>();
-
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
@@ -62,6 +61,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     ) {
         this.documentManager.onDidCloseTextDocument(this.onClosedDocument.bind(this));
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings.bind(this));
+        this.notebookProvider.onNotebookCreated(this.onNotebookCreated.bind(this));
     }
 
     public dispose(): void {
@@ -77,44 +77,31 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     public onMessage(message: string, payload?: any) {
         switch (message) {
             case InteractiveWindowMessages.NotebookIdentity:
-                this.setIdentity(payload);
+                if (payload.type === 'interactive') {
+                    this.trackNotebook(payload.resource);
+                }
                 break;
 
             case InteractiveWindowMessages.NotebookClose:
-                if (payload.resource.toString() === this.interactiveIdentity?.toString()) {
-                    this.interactiveIdentity = undefined;
-                    this.hashProvider = undefined;
-                    this.documentExecutionCounts.clear();
-
-                    // Clear out any goto cell code lenses.
-                    this.updateEvent.fire();
+                if (payload.type === 'interactive') {
+                    this.untrackNotebook(payload.resource);
                 }
-                break;
-            case InteractiveWindowMessages.NotebookExecutionActivated:
-                this.initCellHashProvider();
                 break;
 
             case InteractiveWindowMessages.AddedSysInfo:
                 if (payload && payload.type) {
                     const reason = payload.type as SysInfoReason;
                     if (reason !== SysInfoReason.Interrupt) {
-                        this.documentExecutionCounts.clear();
-                        // Clear out any goto cell code lenses.
-                        this.updateEvent.fire();
+                        this.clearExecutionCounts(payload.notebookIdentity);
                     }
                 }
                 break;
 
             case InteractiveWindowMessages.FinishCell:
-                const cell = payload as ICell;
+                const cell = payload.cell as ICell;
                 if (cell && cell.data && cell.data.execution_count) {
                     if (cell.file && cell.file !== Identifiers.EmptyFileName) {
-                        this.cellExecutionCounts.set(cell.id, cell.data.execution_count.toString());
-                        this.documentExecutionCounts.set(
-                            cell.file.toLocaleLowerCase(),
-                            parseInt(cell.data.execution_count.toString(), 10)
-                        );
-                        this.updateEvent.fire();
+                        this.updateExecutionCounts(payload.notebookIdentity, cell);
                     }
                 }
                 break;
@@ -138,7 +125,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         if (!cache) {
             cache = {
                 cachedDocumentVersion: undefined,
-                cachedExecutionCount: undefined,
+                cachedExecutionCounts: new Set<number>(),
                 documentLenses: [],
                 cellRanges: [],
                 gotoCellLens: []
@@ -161,10 +148,14 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
             needUpdate = true;
         }
 
-        // If the document execution count doesn't match, then our goto cell lens is out of date
-        if (cache.cachedExecutionCount !== this.documentExecutionCounts.get(key)) {
+        // If the document execution count doesn't match, then our goto cell lenses are out of date
+        const documentCounts = this.getDocumentExecutionCounts(key);
+        if (
+            documentCounts.length !== cache.cachedExecutionCounts.size ||
+            documentCounts.find((n) => !cache?.cachedExecutionCounts.has(n))
+        ) {
             cache.gotoCellLens = [];
-            cache.cachedExecutionCount = this.documentExecutionCounts.get(key);
+            cache.cachedExecutionCounts = new Set<number>(documentCounts);
             needUpdate = true;
         }
 
@@ -191,46 +182,98 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         if (
             needUpdate &&
             cache.gotoCellLens.length === 0 &&
-            this.hashProvider &&
             cache.cellRanges.length &&
             this.configService.getSettings(document.uri).datascience.addGotoCodeLenses
         ) {
-            const hashes = this.hashProvider.getHashes();
-            cache.cellRanges.forEach((r) => {
-                const codeLens = this.createExecutionLens(document, r.range, hashes);
-                if (codeLens) {
-                    cache?.gotoCellLens.push(codeLens); // NOSONAR
-                }
-            });
+            const hashes = this.getHashes();
+            if (hashes && hashes.length) {
+                cache.cellRanges.forEach((r) => {
+                    const codeLens = this.createExecutionLens(document, r.range, hashes);
+                    if (codeLens) {
+                        cache?.gotoCellLens.push(codeLens); // NOSONAR
+                    }
+                });
+            }
         }
 
         return [...cache.documentLenses, ...cache.gotoCellLens];
     }
 
-    private setIdentity(identity: INotebookIdentity) {
-        if (identity.type === 'interactive') {
-            this.interactiveIdentity = identity.resource;
+    private trackNotebook(identity: Uri) {
+        // Setup our per notebook data if not already tracked.
+        if (!this.notebookData.has(identity.toString())) {
+            this.notebookData.set(identity.toString(), this.createNotebookData());
         }
     }
 
-    private initCellHashProvider() {
-        // Try getting our notebook. This should fail if
-        // the user hasn't opened the interactive window yet.
-        this.getInteractiveWindowNotebook()
-            .then((nb) => {
-                if (nb) {
-                    // From the notebook, find the logger that is the cell hash provider
-                    // tslint:disable-next-line: no-any
-                    this.hashProvider = (nb.getLoggers().find((l) => (l as any).getHashes) as any) as ICellHashProvider;
-                }
-            })
-            .ignoreErrors();
+    private createNotebookData(): PerNotebookData {
+        return {
+            cellExecutionCounts: new Map<string, string>(),
+            documentExecutionCounts: new Map<string, number>(),
+            hashProvider: undefined
+        };
     }
 
-    private async getInteractiveWindowNotebook(): Promise<INotebook | undefined> {
-        return this.interactiveIdentity
-            ? this.notebookProvider.getOrCreateNotebook({ identity: this.interactiveIdentity, getOnly: true })
-            : undefined;
+    private untrackNotebook(identity: Uri) {
+        this.notebookData.delete(identity.toString());
+        this.updateEvent.fire();
+    }
+
+    private clearExecutionCounts(identity: Uri) {
+        const data = this.notebookData.get(identity.toString());
+        if (data) {
+            data.cellExecutionCounts.clear();
+            data.documentExecutionCounts.clear();
+            this.updateEvent.fire();
+        }
+    }
+
+    private getDocumentExecutionCounts(key: string): number[] {
+        return [...this.notebookData.values()]
+            .map((d) => d.documentExecutionCounts.get(key))
+            .filter((n) => n !== undefined) as number[];
+    }
+
+    private updateExecutionCounts(identity: Uri, cell: ICell) {
+        let data = this.notebookData.get(identity.toString());
+        if (!data) {
+            data = this.createNotebookData();
+        }
+        if (data && cell.data.execution_count) {
+            data.cellExecutionCounts.set(cell.id, cell.data.execution_count?.toString());
+            data.documentExecutionCounts.set(
+                cell.file.toLowerCase(),
+                parseInt(cell.data.execution_count.toString(), 10)
+            );
+            this.updateEvent.fire();
+        }
+    }
+
+    private onNotebookCreated(args: { identity: Uri; notebook: INotebook }) {
+        const key = args.identity.toString();
+        let data = this.notebookData.get(key);
+        if (!data) {
+            data = this.createNotebookData();
+            this.notebookData.set(key, data);
+        }
+        if (data) {
+            data.hashProvider = getCellHashProvider(args.notebook);
+        }
+        args.notebook.onDisposed(() => {
+            this.notebookData.delete(key);
+        });
+    }
+
+    private getHashProviders(): ICellHashProvider[] {
+        return [...this.notebookData.values()].filter((v) => v.hashProvider).map((v) => v.hashProvider!);
+    }
+
+    private getHashes(): IFileHashes[] {
+        // Get all of the hash providers and get all of their hashes
+        const providers = this.getHashProviders();
+
+        // Combine them together into one big array
+        return providers && providers.length ? providers.map((p) => p!.getHashes()).reduce((p, c) => [...p, ...c]) : [];
     }
 
     private onClosedDocument(doc: TextDocument) {
@@ -292,7 +335,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     range,
                     Commands.AddCellBelow,
                     localize.DataScience.addCellBelowCommandTitle(),
-                    [document.fileName, range.start.line]
+                    [document.uri, range.start.line]
                 );
             case Commands.DebugCurrentCellPalette:
                 return this.generateCodeLens(
@@ -307,7 +350,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     break;
                 }
                 return this.generateCodeLens(range, Commands.DebugCell, localize.DataScience.debugCellCommandTitle(), [
-                    document.fileName,
+                    document.uri,
                     range.start.line,
                     range.start.character,
                     range.end.line,
@@ -346,7 +389,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
             case Commands.RunCurrentCell:
             case Commands.RunCell:
                 return this.generateCodeLens(range, Commands.RunCell, localize.DataScience.runCellLensCommandTitle(), [
-                    document.fileName,
+                    document.uri,
                     range.start.line,
                     range.start.character,
                     range.end.line,
@@ -358,7 +401,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     range,
                     Commands.RunAllCells,
                     localize.DataScience.runAllCellsLensCommandTitle(),
-                    [document.fileName, range.start.line, range.start.character]
+                    [document.uri, range.start.line, range.start.character]
                 );
 
             case Commands.RunAllCellsAbovePalette:
@@ -368,14 +411,14 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                         range,
                         Commands.RunAllCellsAbove,
                         localize.DataScience.runAllCellsAboveLensCommandTitle(),
-                        [document.fileName, range.start.line, range.start.character]
+                        [document.uri, range.start.line, range.start.character]
                     );
                 } else {
                     return this.generateCodeLens(
                         range,
                         Commands.RunCellAndAllBelow,
                         localize.DataScience.runCellAndAllBelowLensCommandTitle(),
-                        [document.fileName, range.start.line, range.start.character]
+                        [document.uri, range.start.line, range.start.character]
                     );
                 }
                 break;
@@ -385,7 +428,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     range,
                     Commands.RunCellAndAllBelow,
                     localize.DataScience.runCellAndAllBelowLensCommandTitle(),
-                    [document.fileName, range.start.line, range.start.character]
+                    [document.uri, range.start.line, range.start.character]
                 );
 
             default:
@@ -396,21 +439,31 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         return undefined;
     }
 
+    private findMatchingCellExecutionCount(cellId: string) {
+        // Cell ids on interactive window are generated on the fly so there shouldn't be dupes
+        const data = [...this.notebookData.values()].find((d) => d.cellExecutionCounts.get(cellId));
+        return data?.cellExecutionCounts.get(cellId);
+    }
+
     private createExecutionLens(document: TextDocument, range: Range, hashes: IFileHashes[]) {
-        const list = hashes.find((h) => this.fileSystem.arePathsSame(h.file, document.fileName));
+        const list = hashes
+            .filter((h) => this.fileSystem.arePathsSame(h.file, document.fileName))
+            .map((f) => f.hashes)
+            .flat();
         if (list) {
             // Match just the start of the range. Should be - 2 (1 for 1 based numbers and 1 for skipping the comment at the top)
-            const rangeMatches = list.hashes.filter((h) => h.line - 2 === range.start.line);
+            const rangeMatches = list
+                .filter((h) => h.line - 2 === range.start.line)
+                .sort((a, b) => a.timestamp - b.timestamp);
             if (rangeMatches && rangeMatches.length) {
                 const rangeMatch = rangeMatches[rangeMatches.length - 1];
-                if (this.cellExecutionCounts.has(rangeMatch.id)) {
+                const matchingExecutionCount = this.findMatchingCellExecutionCount(rangeMatch.id);
+                if (matchingExecutionCount !== undefined) {
                     return this.generateCodeLens(
                         range,
                         Commands.ScrollToCell,
-                        localize.DataScience.scrollToCellTitleFormatMessage().format(
-                            this.cellExecutionCounts.get(rangeMatch.id)!
-                        ),
-                        [document.fileName, rangeMatch.id]
+                        localize.DataScience.scrollToCellTitleFormatMessage().format(matchingExecutionCount),
+                        [document.uri, rangeMatch.id]
                     );
                 }
             }

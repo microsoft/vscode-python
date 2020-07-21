@@ -9,6 +9,7 @@ import { Disposable } from 'vscode';
 import { EnableTrustedNotebooks } from '../../client/common/experiments/groups';
 import { noop } from '../../client/common/utils/misc';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { INotebookEditorProvider } from '../../client/datascience/types';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
@@ -17,8 +18,7 @@ import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { WaitForMessageOptions } from './mountedWebView';
-import { IMountedWebViewFactory } from './mountedWebViewFactory';
-import { openEditor, setupWebview } from './nativeEditorTestHelpers';
+import { openEditor } from './nativeEditorTestHelpers';
 import {
     addMockData,
     enterEditorKey,
@@ -29,11 +29,15 @@ import {
     typeCode,
     verifyHtmlOnCell
 } from './testHelpers';
+import { ITestNativeEditorProvider } from './testNativeEditorProvider';
 
 use(chaiAsPromised);
 
 function waitForMessage(ioc: DataScienceIocContainer, message: string, options?: WaitForMessageOptions): Promise<void> {
-    return ioc.get<IMountedWebViewFactory>(IMountedWebViewFactory).get('notebook').waitForMessage(message, options);
+    return ioc
+        .get<ITestNativeEditorProvider>(INotebookEditorProvider)
+        .getMountedWebView(undefined)
+        .waitForMessage(message, options);
 }
 // tslint:disable:no-any no-multiline-string
 suite('Untrusted notebooks', () => {
@@ -214,21 +218,14 @@ suite('Untrusted notebooks', () => {
     }
 
     async function setupFunction(this: Mocha.Context, fileContents?: any) {
-        const wrapperPossiblyUndefined = await setupWebview(ioc);
-        if (wrapperPossiblyUndefined) {
-            wrapper = wrapperPossiblyUndefined;
-
-            addMockData(ioc, 'b=2\nb', 2);
-            addMockData(ioc, 'c=3\nc', 3);
-            // Use a real file so we can save notebook to a file.
-            // This is used in some tests (saving).
-            notebookFile = await createTemporaryFile('.ipynb');
-            await fs.writeFile(notebookFile.filePath, fileContents ? fileContents : baseFile);
-            await openEditor(ioc, fileContents ? fileContents : baseFile, notebookFile.filePath);
-        } else {
-            // tslint:disable-next-line: no-invalid-this
-            this.skip();
-        }
+        addMockData(ioc, 'b=2\nb', 2);
+        addMockData(ioc, 'c=3\nc', 3);
+        // Use a real file so we can save notebook to a file.
+        // This is used in some tests (saving).
+        notebookFile = await createTemporaryFile('.ipynb');
+        await fs.writeFile(notebookFile.filePath, fileContents ? fileContents : baseFile);
+        const ne = await openEditor(ioc, fileContents ? fileContents : baseFile, notebookFile.filePath);
+        wrapper = ne.mount.wrapper;
     }
     function clickCell(cellIndex: number) {
         wrapper.update();

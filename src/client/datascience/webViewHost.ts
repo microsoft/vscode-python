@@ -48,7 +48,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         ) => IWebPanelMessageListener,
         @unmanaged() private rootPath: string,
         @unmanaged() private scripts: string[],
-        @unmanaged() private title: string,
+        @unmanaged() private _title: string,
         @unmanaged() private viewColumn: ViewColumn,
         @unmanaged() protected readonly useCustomEditorApi: boolean,
         @unmanaged() private readonly enableVariablesDuringDebugging: boolean,
@@ -103,8 +103,12 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             this.themeIsDarkPromise = undefined;
         }
     }
+    public get title() {
+        return this._title;
+    }
 
     public setTitle(newTitle: string) {
+        this._title = newTitle;
         if (!this.isDisposed && this.webPanel) {
             this.webPanel.setTitle(newTitle);
         }
@@ -125,7 +129,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         return this.webPanel?.asWebviewUri(localResource);
     }
 
-    protected abstract getOwningResource(): Promise<Resource>;
+    protected abstract get owningResource(): Resource;
 
     //tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
@@ -173,7 +177,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
     }
 
     protected async generateDataScienceExtraSettings(): Promise<IDataScienceExtraSettings> {
-        const resource = await this.getOwningResource();
+        const resource = this.owningResource;
         const editor = this.workspaceService.getConfiguration('editor');
         const workbench = this.workspaceService.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
@@ -315,7 +319,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         const isDark = settings.ignoreVscodeTheme
             ? false
             : await this.themeFinder.isThemeDark(settings.extraSettings.theme);
-        const resource = await this.getOwningResource();
+        const resource = this.owningResource;
         const css = await this.cssGenerator.generateThemeCss(resource, requestIsDark, settings.extraSettings.theme);
         return this.postMessageInternal(CssMessages.GetCssResponse, {
             css,
@@ -329,7 +333,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         const settings = await this.generateDataScienceExtraSettings();
         const isDark = settings.ignoreVscodeTheme ? false : request?.isDark;
         this.setTheme(isDark);
-        const resource = await this.getOwningResource();
+        const resource = this.owningResource;
         const monacoTheme = await this.cssGenerator.generateMonacoTheme(resource, isDark, settings.extraSettings.theme);
         return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
     }

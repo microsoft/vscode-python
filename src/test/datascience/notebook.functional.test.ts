@@ -27,7 +27,7 @@ import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
-import { Identifiers } from '../../client/datascience/constants';
+import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
@@ -306,11 +306,11 @@ suite('DataScience notebook tests', () => {
                         const newSettings = { ...ioc.getSettings().datascience, jupyterServerURI: uri };
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, newSettings);
                     }
+                    launchingFile = launchingFile || path.join(srcDirectory(), 'foo.py');
                     const notebook = await notebookProvider.getOrCreateNotebook({
-                        identity: Uri.parse(Identifiers.InteractiveWindowIdentity)
+                        identity: getDefaultInteractiveIdentity()
                     });
 
-                    launchingFile = launchingFile || path.join(srcDirectory(), 'foo.py');
                     if (notebook) {
                         await notebook.setLaunchingFile(launchingFile);
                     }
@@ -520,12 +520,95 @@ suite('DataScience notebook tests', () => {
                             )
                         )
                         .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
+                    appShell
+                        .setup((a) =>
+                            a.showWarningMessage(
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                            )
+                        )
+                        .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
                     appShell.setup((a) => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
                     appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
                     ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
                 }
             );
 
+            // For a connection to a remote machine that is not secure deny the connection and we should not connect
+            runTest(
+                'Remote Deny Insecure',
+                async () => {
+                    const pythonService = await createPythonService();
+
+                    if (pythonService) {
+                        const configFile = path.join(
+                            EXTENSION_ROOT_DIR,
+                            'src',
+                            'test',
+                            'datascience',
+                            'serverConfigFiles',
+                            'remoteNoAuth.py'
+                        );
+                        const uri = await startRemoteServer(pythonService, [
+                            '-m',
+                            'jupyter',
+                            'notebook',
+                            `--config=${configFile}`
+                        ]);
+
+                        // Try to create, we expect a failure here as we will deny the insecure connection
+                        await createNotebook(uri, undefined, true);
+                    }
+                },
+                undefined,
+                () => {
+                    const dummyDisposable = {
+                        dispose: () => {
+                            return;
+                        }
+                    };
+                    const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+                    appShell
+                        .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                        .returns((e) => {
+                            throw e;
+                        });
+                    appShell
+                        .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(''));
+                    appShell
+                        .setup((a) =>
+                            a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                        )
+                        .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
+                    appShell
+                        .setup((a) =>
+                            a.showInformationMessage(
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                            )
+                        )
+                        .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
+                    // This is the call to app shell that we are changing from the above test
+                    appShell
+                        .setup((a) =>
+                            a.showWarningMessage(
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                            )
+                        )
+                        .returns((_a1: string, _a2: string, a3: string, _a4: string) => Promise.resolve(a3));
+                    appShell.setup((a) => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+                    appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+                    ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+                }
+            );
             runTest('Remote Password', async () => {
                 const pythonService = await createPythonService();
 
@@ -894,7 +977,7 @@ suite('DataScience notebook tests', () => {
                 const nonCancelSource = new CancellationTokenSource();
                 const server = await jupyterExecution.connectToNotebookServer(undefined, nonCancelSource.token);
                 const notebook = server
-                    ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
+                    ? await server.createNotebook(baseUri, getDefaultInteractiveIdentity())
                     : undefined;
                 assert.ok(notebook, 'Server not found with a cancel token that does not cancel');
 
@@ -1484,8 +1567,8 @@ plt.show()`,
             runTest('Notebook launch retry', async function (_this: Mocha.Context) {
                 // Skipping for now. Re-enable to test idle timeouts
                 _this.skip();
-                ioc.getSettings().datascience.jupyterLaunchRetries = 1;
-                ioc.getSettings().datascience.jupyterLaunchTimeout = 10000;
+                // ioc.getSettings().datascience.jupyterLaunchRetries = 1;
+                // ioc.getSettings().datascience.jupyterLaunchTimeout = 10000;
                 //         ioc.getSettings().datascience.runStartupCommands = '%config Application.log_level="DEBUG"';
                 //         const log = `import logging
                 // logger = logging.getLogger()
@@ -1494,13 +1577,13 @@ plt.show()`,
                 // fhandler.setFormatter(formatter)
                 // logger.addHandler(fhandler)
                 // logger.setLevel(logging.DEBUG)`;
-                for (let i = 0; i < 100; i += 1) {
-                    const notebook = await createNotebook();
-                    assert.ok(notebook, 'did not create notebook');
-                    await notebook!.dispose();
-                    const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
-                    await exec.dispose();
-                }
+                // for (let i = 0; i < 100; i += 1) {
+                //     const notebook = await createNotebook();
+                //     assert.ok(notebook, 'did not create notebook');
+                //     await notebook!.dispose();
+                //     const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
+                //     await exec.dispose();
+                // }
             });
 
             runTest('Startup commands', async () => {

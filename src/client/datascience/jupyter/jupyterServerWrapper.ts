@@ -19,9 +19,8 @@ import {
 } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
+import { DataScienceStartupTime, JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import {
-    IDataScience,
     IJupyterConnection,
     IJupyterSessionManagerFactory,
     INotebook,
@@ -40,7 +39,7 @@ interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {}
 type JupyterServerClassType = {
     new (
         liveShare: ILiveShareApi,
-        dataScience: IDataScience,
+        startupTime: number,
         asyncRegistry: IAsyncDisposableRegistry,
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
@@ -67,7 +66,7 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
-        @inject(IDataScience) dataScience: IDataScience,
+        @inject(DataScienceStartupTime) startupTime: number,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
@@ -87,7 +86,7 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
             HostJupyterServer,
             GuestJupyterServer,
             liveShare,
-            dataScience,
+            startupTime,
             asyncRegistry,
             disposableRegistry,
             configService,

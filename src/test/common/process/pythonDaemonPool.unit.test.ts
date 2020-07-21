@@ -104,7 +104,7 @@ suite('Daemon - Python Daemon Pool', () => {
         // 2 = 2 for standard daemon + 1 observable daemon.
         expect(sendRequestStub.callCount).equal(3);
         expect(listenStub.callCount).equal(3);
-    });
+    }).timeout(5000);
     test('Create specific number of daemons when initializing', async () => {
         // Create and initialize the pool.
         const pool = new DaemonPool(
@@ -120,7 +120,7 @@ suite('Daemon - Python Daemon Pool', () => {
         // 3 = 2 for standard daemon + 1 observable daemon.
         expect(sendRequestStub.callCount).equal(8);
         expect(listenStub.callCount).equal(8);
-    });
+    }).timeout(5000);
     test('Throw error if daemon does not respond to ping within 5s', async () => {
         clock = fakeTimers.install();
         sendRequestStub.reset();
@@ -144,7 +144,7 @@ suite('Daemon - Python Daemon Pool', () => {
         await clock.runAllAsync();
 
         await expect(promise).to.eventually.be.rejectedWith('Timeout');
-    });
+    }).timeout(5000);
     test('If executing python is fast, then use the daemon', async () => {
         const getInterpreterInformationStub = sinon.stub(
             PythonDaemonExecutionService.prototype,
@@ -183,7 +183,7 @@ suite('Daemon - Python Daemon Pool', () => {
         expect(info1).to.deep.equal(interpreterInfoFromDaemon);
         expect(info2).to.deep.equal(interpreterInfoFromDaemon);
         expect(info3).to.deep.equal(interpreterInfoFromDaemon);
-    });
+    }).timeout(5000);
     test('If executing python code takes too long (> 1s), then return standard PythonExecutionService', async () => {
         clock = fakeTimers.install();
         const getInterpreterInformationStub = sinon.stub(
@@ -276,7 +276,7 @@ suite('Daemon - Python Daemon Pool', () => {
             // Make sure to remove the stub or other tests will take too long.
             getInterpreterInformationStub.restore();
         }
-    });
+    }).timeout(5000);
     test('If executing python is fast, then use the daemon (for observables)', async () => {
         const execModuleObservable = sinon.stub(PythonDaemonExecutionService.prototype, 'execModuleObservable');
         const out = new Observable<Output<string>>((s) => {
@@ -309,5 +309,5 @@ suite('Daemon - Python Daemon Pool', () => {
         expect(execModuleObservable.callCount).to.equal(1);
         // Verify we used the python execution service.
         verify(pythonExecService.execModuleObservable(anything(), anything(), anything())).once();
-    });
+    }).timeout(5000);
 });

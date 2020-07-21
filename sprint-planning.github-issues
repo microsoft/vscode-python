@@ -1,0 +1,98 @@
+[
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "# Query constants",
+    "editable": true
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$pvsc=repo:microsoft/vscode-python\n$not_DS=-label:\"data science\"\n$open=is:open",
+    "editable": true
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "# Priority issues 🚨",
+    "editable": true
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "## P0",
+    "editable": true
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$pvsc $not_DS $open label:\"P0\"",
+    "editable": true
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "## P1",
+    "editable": true
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$pvsc $not_DS $open label:\"P1\"",
+    "editable": true
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "# Regressions 🔙",
+    "editable": true
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$pvsc $not_DS $open label:\"reason-regression\"",
+    "editable": true
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "# Partner asks",
+    "editable": true
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$pvsc $not_DS $open label:\"partner ask\"",
+    "editable": true
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "# Upvotes 👍",
+    "editable": true
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "## Enhancements 💪",
+    "editable": true
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$pvsc $not_DS $open sort:reactions-+1-desc label:\"type-enhancement\" ",
+    "editable": true
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "## Bugs 🐜",
+    "editable": true
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$pvsc $not_DS $open sort:reactions-+1-desc label:\"type-bug\"",
+    "editable": true
+  }
+]

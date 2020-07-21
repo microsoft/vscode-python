@@ -1,6 +1,6 @@
 import { ReactWrapper } from 'enzyme';
 import { noop } from 'lodash';
-import { Uri } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
 import {
     IWebPanel,
     IWebPanelMessageListener,
@@ -37,7 +37,9 @@ export type WaitForMessageOptions = {
 
 // tslint:disable: no-any
 export interface IMountedWebView extends IWebPanel, IDisposable {
-    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
+    readonly id: string;
+    readonly wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
+    readonly onDisposed: Event<void>;
     postMessage(ev: WebPanelMessage): void;
     changeViewState(active: boolean, visible: boolean): void;
     addMessageListener(callback: (m: string, p: any) => void): void;
@@ -55,12 +57,9 @@ export class MountedWebView implements IMountedWebView, IDisposable {
     private disposed = false;
     private active = true;
     private visible = true;
+    private disposedEvent = new EventEmitter<void>();
 
-    constructor(
-        mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
-        public readonly id: string,
-        private disposedCallback: () => void
-    ) {
+    constructor(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, public readonly id: string) {
         // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.
         const globalAcquireVsCodeApi = (): IVsCodeApi => {
             return {
@@ -95,6 +94,9 @@ export class MountedWebView implements IMountedWebView, IDisposable {
         window.addEventListener = oldListener;
     }
 
+    public get onDisposed() {
+        return this.disposedEvent.event;
+    }
     public attach(options: IWebPanelOptions) {
         this.webPanelListener = options.listener;
 
@@ -208,7 +210,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
             if (this.wrapper.length) {
                 this.wrapper.unmount();
             }
-            this.disposedCallback();
+            this.disposedEvent.fire();
         }
     }
 

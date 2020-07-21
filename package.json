@@ -89,7 +89,7 @@
         "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.datascience.createnewnotebook",
         "onCommand:python.startPage.open",
-        "onCommand:python.datascience.showhistorypane",
+        "onCommand:python.datascience.createnewinteractive",
         "onCommand:python.datascience.importnotebook",
         "onCommand:python.datascience.importnotebookfile",
         "onCommand:python.datascience.opennotebook",
@@ -127,6 +127,11 @@
                 "command": "python.datascience.runcurrentcelladvance",
                 "key": "shift+enter",
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
+            },
+            {
+                "command": "notebook.cell.execute",
+                "key": "shift+enter",
+                "when": "notebookCellListFocused"
             },
             {
                 "command": "python.datascience.runcurrentcell",
@@ -549,8 +554,8 @@
                 "category": "Python"
             },
             {
-                "command": "python.datascience.showhistorypane",
-                "title": "%python.command.python.datascience.showhistorypane.title%",
+                "command": "python.datascience.createnewinteractive",
+                "title": "%python.command.python.datascience.createnewinteractive.title%",
                 "category": "Python"
             },
             {
@@ -881,7 +886,7 @@
                     "command": "python.datascience.export",
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation",
-                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook'"
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && python.datascience.isnotebooktrusted"
                 }
             ],
             "explorer/context": [
@@ -1032,10 +1037,10 @@
                     "when": "editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled"
                 },
                 {
-                    "command": "python.datascience.showhistorypane",
-                    "title": "%python.command.python.datascience.showhistorypane.title%",
+                    "command": "python.datascience.createnewinteractive",
+                    "title": "%python.command.python.datascience.createnewinteractive.title%",
                     "category": "Python",
-                    "when": "python.datascience.featureenabled && !python.datascience.isinteractiveactive"
+                    "when": "python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.runallcells",
@@ -2212,6 +2217,17 @@
                         ]
                     ]
                 },
+                "python.dataScience.interactiveWindowMode": {
+                    "type": "string",
+                    "enum": [
+                        "perFile",
+                        "single",
+                        "multiple"
+                    ],
+                    "scope": "resource",
+                    "description": "Behavior of the Python Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
+                    "default": "multiple"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,
@@ -3223,6 +3239,7 @@
         "detect-indent": "^6.0.0",
         "diff-match-patch": "^1.0.0",
         "fast-deep-equal": "^2.0.1",
+        "font-awesome": "^4.7.0",
         "fs-extra": "^4.0.3",
         "fuzzy": "^0.1.3",
         "get-port": "^3.2.0",
@@ -3371,7 +3388,7 @@
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
         "chai-http": "^4.3.0",
-        "codecov": "^3.6.5",
+        "codecov": "^3.7.1",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^5.1.1",
         "cors": "^2.8.5",

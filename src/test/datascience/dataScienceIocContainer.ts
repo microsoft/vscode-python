@@ -85,8 +85,7 @@ import {
     IVSCodeNotebook,
     IWebPanelOptions,
     IWebPanelProvider,
-    IWorkspaceService,
-    WebPanelMessage
+    IWorkspaceService
 } from '../../client/common/application/types';
 import { WebPanelProvider } from '../../client/common/application/webPanels/webPanelProvider';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -158,7 +157,6 @@ import {
     ICryptoUtils,
     ICurrentProcess,
     IDataScienceSettings,
-    IDisposableRegistry,
     IExperimentService,
     IExperimentsManager,
     IExtensionContext,
@@ -184,8 +182,12 @@ import { EnvironmentVariablesService } from '../../client/common/variables/envir
 import { EnvironmentVariablesProvider } from '../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
+import { JupyterCommandLineSelectorCommand } from '../../client/datascience/commands/commandLineSelector';
+import { CommandRegistry } from '../../client/datascience/commands/commandRegistry';
 import { ExportCommands } from '../../client/datascience/commands/exportCommands';
-import { Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
+import { KernelSwitcherCommand } from '../../client/datascience/commands/kernelSwitcher';
+import { JupyterServerSelectorCommand } from '../../client/datascience/commands/serverSelector';
+import { DataScienceStartupTime, Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
 import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerDependencyService } from '../../client/datascience/data-viewing/dataViewerDependencyService';
@@ -217,9 +219,7 @@ import { NotebookProvider } from '../../client/datascience/interactive-common/no
 import { NotebookServerProvider } from '../../client/datascience/interactive-common/notebookServerProvider';
 import { AutoSaveService } from '../../client/datascience/interactive-ipynb/autoSaveService';
 import { DigestStorage } from '../../client/datascience/interactive-ipynb/digestStorage';
-import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
-import { NativeEditorOldWebView } from '../../client/datascience/interactive-ipynb/nativeEditorOldWebView';
 import { NativeEditorRunByLineListener } from '../../client/datascience/interactive-ipynb/nativeEditorRunByLineListener';
 import { NativeEditorStorage } from '../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
@@ -228,11 +228,11 @@ import {
     NotebookStorageProvider
 } from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { TrustService } from '../../client/datascience/interactive-ipynb/trustService';
-import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
 import { IPyWidgetMessageDispatcherFactory } from '../../client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from '../../client/datascience/ipywidgets/ipyWidgetScriptSource';
+import { JupyterCommandLineSelector } from '../../client/datascience/jupyter/commandLineSelector';
 import { DebuggerVariableRegistration } from '../../client/datascience/jupyter/debuggerVariableRegistration';
 import { DebuggerVariables } from '../../client/datascience/jupyter/debuggerVariables';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
@@ -387,10 +387,15 @@ import { MockLiveShareApi } from './mockLiveShare';
 import { MockPythonSettings } from './mockPythonSettings';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { MockWorkspaceFolder } from './mockWorkspaceFolder';
+import { IMountedWebView } from './mountedWebView';
 import { IMountedWebViewFactory, MountedWebViewFactory } from './mountedWebViewFactory';
 import { TestExecutionLogger } from './testexecutionLogger';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
-import { TestNativeEditorProvider } from './testNativeEditorProvider';
+import {
+    ITestNativeEditorProvider,
+    TestNativeEditorProvider,
+    TestNativeEditorProviderOld
+} from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
 
@@ -461,6 +466,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private experimentState = new Map<string, boolean>();
     private extensionRootPath: string | undefined;
     private languageServerType: LanguageServerType = LanguageServerType.Microsoft;
+    private pendingWebPanel: IMountedWebView | undefined;
 
     constructor(private readonly uiTest: boolean = false) {
         super();
@@ -540,6 +546,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         useCustomEditor: boolean = false,
         languageServerType: LanguageServerType = LanguageServerType.Microsoft
     ) {
+        this.serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
+        this.serviceManager.addSingletonInstance<DataScienceIocContainer>(DataScienceIocContainer, this);
+
         // Save our language server type
         this.languageServerType = languageServerType;
 
@@ -600,7 +609,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             JupyterVariableDataProviderFactory
         );
         this.serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
-        this.serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
         this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
         this.serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
         this.serviceManager.add<IStartPage>(IStartPage, StartPage);
@@ -674,14 +682,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ICellHashListener
         ]);
         this.serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
-        this.serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, TestNativeEditorProvider);
+        this.serviceManager.addSingleton<INotebookEditorProvider>(
+            INotebookEditorProvider,
+            useCustomEditor ? TestNativeEditorProvider : TestNativeEditorProviderOld
+        );
         this.serviceManager.addSingleton<DataViewerDependencyService>(
             DataViewerDependencyService,
             DataViewerDependencyService
-        );
-        this.serviceManager.add<INotebookEditor>(
-            INotebookEditor,
-            useCustomEditor ? NativeEditor : NativeEditorOldWebView
         );
 
         this.serviceManager.addSingleton<IDataScienceCommandListener>(
@@ -801,7 +808,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [
             INotebookExecutionLogger
         ]);
-        this.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
+        this.serviceManager.addSingleton<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
         this.serviceManager.add<IGatherLogger>(IGatherLogger, GatherLogger, undefined, [INotebookExecutionLogger]);
         this.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, TestExecutionLogger);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory, undefined, [
@@ -941,10 +948,24 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             configurationService.object
         );
 
-        const startTime = Date.now();
         this.datascience = TypeMoq.Mock.ofType<IDataScience>();
-        this.datascience.setup((d) => d.activationStartTime).returns(() => startTime);
         this.serviceManager.addSingletonInstance<IDataScience>(IDataScience, this.datascience.object);
+        this.serviceManager.addSingleton<JupyterCommandLineSelector>(
+            JupyterCommandLineSelector,
+            JupyterCommandLineSelector
+        );
+        this.serviceManager.addSingleton<JupyterCommandLineSelectorCommand>(
+            JupyterCommandLineSelectorCommand,
+            JupyterCommandLineSelectorCommand
+        );
+
+        this.serviceManager.addSingleton<JupyterServerSelectorCommand>(
+            JupyterServerSelectorCommand,
+            JupyterServerSelectorCommand
+        );
+        this.serviceManager.addSingleton<KernelSwitcherCommand>(KernelSwitcherCommand, KernelSwitcherCommand);
+
+        this.serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
         this.serviceManager.addSingleton<IEnvironmentVariablesService>(
             IEnvironmentVariablesService,
@@ -1157,6 +1178,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         await Promise.all(activationServices.map((a) => a.activate()));
 
+        // Make sure the command registry registers all commands
+        this.get<CommandRegistry>(CommandRegistry).register();
+
         // Then force our interpreter to be one that supports jupyter (unless in a mock state when we don't have to)
         if (!this.mockJupyter) {
             const interpreterService = this.serviceManager.get<IInterpreterService>(IInterpreterService);
@@ -1188,7 +1212,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     // tslint:disable:any
     public createWebView(
         mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
-        type: 'notebook' | 'default',
+        id: string,
         role: vsls.Role = vsls.Role.None
     ) {
         // Force the container to mock actual live share if necessary
@@ -1198,23 +1222,24 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
-        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(type, mount).wrapper;
+        this.pendingWebPanel = this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(id, mount);
+        return this.pendingWebPanel;
     }
 
-    public getDefaultWrapper() {
-        return this.getDefaultWebPanel().wrapper;
+    public getWrapper(type: 'notebook' | 'interactive') {
+        if (type === 'notebook') {
+            return this.getNativeWebPanel(undefined).wrapper;
+        } else {
+            return this.getInteractiveWebPanel(undefined).wrapper;
+        }
     }
 
-    public getDefaultWebPanel() {
-        return this.getWebPanel('default');
+    public getInteractiveWebPanel(window: IInteractiveWindow | undefined) {
+        return this.get<TestInteractiveWindowProvider>(IInteractiveWindowProvider).getMountedWebView(window);
     }
 
-    public getWebPanel(type: 'notebook' | 'default') {
-        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).get(type);
-    }
-
-    public postMessage(m: WebPanelMessage, type: 'notebook' | 'default') {
-        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).get(type).postMessage(m);
+    public getNativeWebPanel(window: INotebookEditor | undefined) {
+        return this.get<ITestNativeEditorProvider>(INotebookEditorProvider).getMountedWebView(window);
     }
 
     public getContext(name: string): boolean {
@@ -1312,18 +1337,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public addDocument(code: string, file: string) {
-        this.documentManager.addDocument(code, file);
+        return this.documentManager.addDocument(code, file);
     }
 
     public addInterpreter(newInterpreter: PythonInterpreter, commands: SupportedCommands) {
         if (this.mockJupyter) {
             this.mockJupyter.addInterpreter(newInterpreter, commands);
-        }
-    }
-    public changeViewState(type: 'notebook' | 'default', active: boolean, visible: boolean) {
-        const webPanel = this.getWebPanel(type);
-        if (webPanel) {
-            webPanel.changeViewState(active, visible);
         }
     }
 
@@ -1344,19 +1363,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.experimentState.set(experimentName, enabled);
     }
 
-    private computeWebPanelId(title: string): 'notebook' | 'default' {
-        // Should be based on title (for now)
-        if (title && (title.toLowerCase().endsWith('.ipynb') || title.toLowerCase().includes('notebook'))) {
-            return `notebook`;
-        }
-
-        return 'default';
-    }
-
     private async onCreateWebPanel(options: IWebPanelOptions) {
-        const id = this.computeWebPanelId(options.title);
-        const panel = this.getWebPanel(id);
-        this.get<IDisposableRegistry>(IDisposableRegistry).push(panel);
+        if (!this.pendingWebPanel) {
+            throw new Error('Creating web panel without a mount');
+        }
+        const panel = this.pendingWebPanel;
         panel.attach(options);
         return panel;
     }
@@ -1399,7 +1410,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             variableQueries: [],
             jupyterCommandLineArguments: [],
             disableJupyterAutoStart: false,
-            widgetScriptSources: ['jsdelivr.com', 'unpkg.com']
+            widgetScriptSources: ['jsdelivr.com', 'unpkg.com'],
+            interactiveWindowMode: 'single'
         };
         pythonSettings.downloadLanguageServer = false;
         const folders = ['Envs', '.virtualenvs'];

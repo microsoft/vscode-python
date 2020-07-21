@@ -44,7 +44,7 @@ export namespace Commands {
     export const RunCell = 'python.datascience.runcell';
     export const RunCurrentCell = 'python.datascience.runcurrentcell';
     export const RunCurrentCellAdvance = 'python.datascience.runcurrentcelladvance';
-    export const ShowHistoryPane = 'python.datascience.showhistorypane';
+    export const CreateNewInteractive = 'python.datascience.createnewinteractive';
     export const ImportNotebook = 'python.datascience.importnotebook';
     export const ImportNotebookFile = 'python.datascience.importnotebookfile';
     export const OpenNotebook = 'python.datascience.opennotebook';
@@ -181,7 +181,7 @@ export enum Telemetry {
     /**
      * Whether auto save feature in VS Code is enabled or not.
      */
-    ShowHistoryPane = 'DATASCIENCE.SHOW_HISTORY_PANE',
+    CreateNewInteractive = 'DATASCIENCE.CREATE_NEW_INTERACTIVE',
     ExpandAll = 'DATASCIENCE.EXPAND_ALL',
     CollapseAll = 'DATASCIENCE.COLLAPSE_ALL',
     SelectJupyterURI = 'DATASCIENCE.SELECT_JUPYTER_URI',
@@ -472,7 +472,6 @@ export namespace Identifiers {
     export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
     export const EditCellId = '3D3AB152-ADC1-4501-B813-4B83B49B0C10';
     export const SvgSizeTag = 'sizeTag={{0}, {1}}';
-    export const InteractiveWindowIdentity = 'history://EC155B3B-DC18-49DC-9E99-9A948AA2F27B';
     export const InteractiveWindowIdentityScheme = 'history';
     export const DefaultCodeCellMarker = '# %%';
     export const DefaultCommTarget = 'jupyter.widget';
@@ -554,3 +553,4 @@ export namespace LiveShareCommands {
 
 export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
 export const OurNotebookProvider = 'OurNotebookProvider';
+export const DataScienceStartupTime = Symbol('DataScienceStartupTime');

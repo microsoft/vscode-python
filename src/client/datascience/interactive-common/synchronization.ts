@@ -135,6 +135,8 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.GetVariablesResponse]: MessageType.other,
     [InteractiveWindowMessages.GotoCodeCell]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.GotoCodeCell]: MessageType.syncWithLiveShare,
+    [InteractiveWindowMessages.HasCell]: MessageType.other,
+    [InteractiveWindowMessages.HasCellResponse]: MessageType.other,
     [InteractiveWindowMessages.Interrupt]: MessageType.other,
     [InteractiveWindowMessages.IPyWidgetLoadSuccess]: MessageType.other,
     [InteractiveWindowMessages.IPyWidgetLoadFailure]: MessageType.other,

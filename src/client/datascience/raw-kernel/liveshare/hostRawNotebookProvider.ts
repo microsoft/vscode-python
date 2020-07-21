@@ -29,7 +29,6 @@ import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
-    IDataScience,
     IJupyterKernelSpec,
     INotebook,
     INotebookExecutionInfo,
@@ -50,7 +49,7 @@ export class HostRawNotebookProvider
     private disposed = false;
     constructor(
         private liveShare: ILiveShareApi,
-        _dataScience: IDataScience,
+        _t: number,
         private disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,

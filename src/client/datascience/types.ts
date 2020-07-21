@@ -19,15 +19,14 @@ import {
     Range,
     TextDocument,
     TextEditor,
-    Uri,
-    WebviewPanel
+    Uri
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import type { Data as WebSocketData } from 'ws';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
-import { IAsyncDisposable, IDataScienceSettings, IDisposable, Resource } from '../common/types';
+import { IAsyncDisposable, IDataScienceSettings, IDisposable, InteractiveWindowMode, Resource } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
@@ -44,7 +43,6 @@ export type PromiseFunction = (...any: any[]) => Promise<any>;
 // Main interface
 export const IDataScience = Symbol('IDataScience');
 export interface IDataScience extends Disposable {
-    activationStartTime: number;
     activate(): Promise<void>;
 }
 
@@ -444,10 +442,28 @@ export interface INotebookExporter extends Disposable {
 
 export const IInteractiveWindowProvider = Symbol('IInteractiveWindowProvider');
 export interface IInteractiveWindowProvider {
+    /**
+     * The active interactive window if it has the focus.
+     */
+    readonly activeWindow: IInteractiveWindow | undefined;
+    /**
+     * List of open interactive windows
+     */
+    readonly windows: ReadonlyArray<IInteractiveWindow>;
+    /**
+     * Event fired when the active interactive window changes
+     */
     readonly onDidChangeActiveInteractiveWindow: Event<IInteractiveWindow | undefined>;
-    onExecutedCode: Event<string>;
-    getActive(): IInteractiveWindow | undefined;
-    getOrCreateActive(): Promise<IInteractiveWindow>;
+    /**
+     * Gets or creates a new interactive window and associates it with the owner. If no owner, marks as a non associated.
+     * @param owner file that started this interactive window
+     */
+    getOrCreate(owner: Resource): Promise<IInteractiveWindow>;
+    /**
+     * Synchronizes with the other peers in a live share connection to make sure it has the same window open
+     * @param window window on this side
+     */
+    synchronize(window: IInteractiveWindow): Promise<void>;
 }
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
@@ -480,7 +496,6 @@ export interface ILocalResourceUriConverter {
 export interface IInteractiveBase extends Disposable {
     onExecutedCode: Event<string>;
     notebook?: INotebook;
-    show(): Promise<void>;
     startProgress(): void;
     stopProgress(): void;
     undoCells(): void;
@@ -488,6 +503,7 @@ export interface IInteractiveBase extends Disposable {
     removeAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
+    hasCell(id: string): Promise<boolean>;
 }
 
 export const IInteractiveWindow = Symbol('IInteractiveWindow');
@@ -495,18 +511,16 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly onDidChangeViewState: Event<void>;
     readonly visible: boolean;
     readonly active: boolean;
+    readonly owner: Resource;
+    readonly submitters: Uri[];
+    readonly identity: Uri;
+    readonly title: string;
     closed: Event<IInteractiveWindow>;
-    addCode(
-        code: string,
-        file: string,
-        line: number,
-        editor?: TextEditor,
-        runningStopWatch?: StopWatch
-    ): Promise<boolean>;
+    addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;
     debugCode(
         code: string,
-        file: string,
+        file: Uri,
         line: number,
         editor?: TextEditor,
         runningStopWatch?: StopWatch
@@ -515,6 +529,10 @@ export interface IInteractiveWindow extends IInteractiveBase {
     collapseAllCells(): void;
     exportCells(): void;
     scrollToCell(id: string): void;
+}
+
+export interface IInteractiveWindowLoadable extends IInteractiveWindow {
+    changeMode(newMode: InteractiveWindowMode): void;
 }
 
 // For native editing, the provider acts like the IDocumentManager for normal docs
@@ -554,8 +572,8 @@ export interface INotebookEditor extends IInteractiveBase {
     readonly file: Uri;
     readonly visible: boolean;
     readonly active: boolean;
-    readonly model: INotebookModel | undefined;
-    load(storage: INotebookModel, webViewPanel?: WebviewPanel): Promise<void>;
+    readonly model: INotebookModel;
+    show(): Promise<void>;
     runAllCells(): void;
     runSelectedCell(): void;
     addCellBelow(): void;
@@ -609,9 +627,9 @@ export interface IDataScienceCodeLensProvider extends CodeLensProvider {
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
 export interface ICodeWatcher {
+    readonly uri: Uri | undefined;
     codeLensUpdated: Event<void>;
     setDocument(document: TextDocument): void;
-    getFileName(): string;
     getVersion(): number;
     getCodeLenses(): CodeLens[];
     getCachedSettings(): IDataScienceSettings | undefined;
@@ -875,6 +893,7 @@ export interface ICellHash {
     hash: string;
     executionCount: number;
     id: string; // Cell id as sent to jupyter
+    timestamp: number;
 }
 
 export interface IFileHashes {

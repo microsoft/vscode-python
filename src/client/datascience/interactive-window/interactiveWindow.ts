@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
-import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
 import {
@@ -13,22 +11,20 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
-import { UseCustomEditorApi } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import {
-    GLOBAL_MEMENTO,
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
     IExperimentsManager,
-    IMemento,
+    InteractiveWindowMode,
     IPersistentStateFactory,
-    Resource,
-    WORKSPACE_MEMENTO
+    Resource
 } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
@@ -52,6 +48,7 @@ import {
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
+    IInteractiveWindowLoadable,
     IInteractiveWindowProvider,
     IJupyterDebugger,
     IJupyterKernelSpec,
@@ -64,11 +61,11 @@ import {
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
+import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
 
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 
-@injectable()
-export class InteractiveWindow extends InteractiveBase implements IInteractiveWindow {
+export class InteractiveWindow extends InteractiveBase implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
@@ -82,43 +79,58 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public get closed(): Event<IInteractiveWindow> {
         return this.closedEvent.event;
     }
+    public get owner(): Resource {
+        return this._owner;
+    }
+    public get submitters(): Uri[] {
+        return this._submitters;
+    }
+    public get identity(): Uri {
+        return this._identity;
+    }
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private waitingForExportCells: boolean = false;
     private trackedJupyterStart: boolean = false;
-    private lastFile: string | undefined;
-
+    private _owner: Uri | undefined;
+    private _identity: Uri = createInteractiveIdentity();
+    private _submitters: Uri[] = [];
+    private pendingHasCell = new Map<string, Deferred<boolean>>();
+    private mode: InteractiveWindowMode = 'multiple';
+    private loadPromise: Promise<void>;
     constructor(
-        @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
-        @inject(ILiveShareApi) liveShare: ILiveShareApi,
-        @inject(IApplicationShell) applicationShell: IApplicationShell,
-        @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IStatusProvider) statusProvider: IStatusProvider,
-        @inject(IWebPanelProvider) provider: IWebPanelProvider,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
-        @inject(IThemeFinder) themeFinder: IThemeFinder,
-        @inject(IFileSystem) fileSystem: IFileSystem,
-        @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(ICommandManager) commandManager: ICommandManager,
-        @inject(INotebookExporter) jupyterExporter: INotebookExporter,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IDataViewerFactory) dataExplorerFactory: IDataViewerFactory,
-        @inject(IJupyterVariableDataProviderFactory)
+        listeners: IInteractiveWindowListener[],
+        liveShare: ILiveShareApi,
+        applicationShell: IApplicationShell,
+        documentManager: IDocumentManager,
+        statusProvider: IStatusProvider,
+        provider: IWebPanelProvider,
+        disposables: IDisposableRegistry,
+        cssGenerator: ICodeCssGenerator,
+        themeFinder: IThemeFinder,
+        fileSystem: IFileSystem,
+        configuration: IConfigurationService,
+        commandManager: ICommandManager,
+        jupyterExporter: INotebookExporter,
+        workspaceService: IWorkspaceService,
+        private interactiveWindowProvider: IInteractiveWindowProvider,
+        dataExplorerFactory: IDataViewerFactory,
         jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) jupyterVariables: IJupyterVariables,
-        @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
-        @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
-        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) workspaceStorage: Memento,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
-        @inject(KernelSwitcher) switcher: KernelSwitcher,
-        @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
-        @inject(IExperimentService) expService: IExperimentService,
-        @inject(ExportUtil) private exportUtil: ExportUtil
+        jupyterVariables: IJupyterVariables,
+        jupyterDebugger: IJupyterDebugger,
+        errorHandler: IDataScienceErrorHandler,
+        private readonly stateFactory: IPersistentStateFactory,
+        globalStorage: Memento,
+        workspaceStorage: Memento,
+        experimentsManager: IExperimentsManager,
+        switcher: KernelSwitcher,
+        notebookProvider: INotebookProvider,
+        useCustomEditorApi: boolean,
+        expService: IExperimentService,
+        private exportUtil: ExportUtil,
+        owner: Resource,
+        mode: InteractiveWindowMode,
+        title: string | undefined
     ) {
         super(
             listeners,
@@ -150,7 +162,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 path.join(historyReactDir, 'commons.initial.bundle.js'),
                 path.join(historyReactDir, 'interactiveWindow.js')
             ],
-            localize.DataScience.historyTitle(),
+            localize.DataScience.interactiveWindowTitle(),
             ViewColumn.Two,
             experimentsManager,
             switcher,
@@ -161,14 +173,46 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
         // Send a telemetry event to indicate window is opening
         sendTelemetryEvent(Telemetry.OpenedInteractiveWindow);
+
+        // Set our owner and first submitter
+        this._owner = owner;
+        this.mode = mode;
+        if (owner) {
+            this._submitters.push(owner);
+        }
+
+        // When opening we have to load the web panel.
+        this.loadPromise = this.loadWebPanel(this.owner ? path.dirname(this.owner.fsPath) : process.cwd())
+            .then(async () => {
+                // Always load our notebook.
+                await this.ensureConnectionAndNotebook();
+
+                // Then the initial sys info
+                await this.addSysInfo(SysInfoReason.Start);
+            })
+            .catch((e) => this.errorHandler.handleError(e));
+
+        // Update the title if possible
+        if (this.owner && mode === 'perFile') {
+            this.setTitle(getInteractiveWindowTitle(this.owner));
+        } else if (title) {
+            this.setTitle(title);
+        }
+    }
+
+    public async show(preserveFocus?: boolean): Promise<void> {
+        await this.loadPromise;
+        return super.show(preserveFocus);
     }
 
     public dispose() {
-        const promise = super.dispose();
+        super.dispose();
+        if (this.notebook) {
+            this.notebook.dispose().ignoreErrors();
+        }
         if (this.closedEvent) {
             this.closedEvent.fire(this);
         }
-        return promise;
     }
 
     public addMessage(message: string): Promise<void> {
@@ -176,25 +220,16 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return Promise.resolve();
     }
 
-    public async show(): Promise<void> {
-        // Start the server as soon as we open
-        this.ensureConnectionAndNotebook().ignoreErrors();
-
-        // When showing we have to load the web panel. Make sure
-        // we use the last file sent through add code.
-        await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());
-
-        // Make sure we're loaded first. InteractiveWindow doesn't makes sense without an active server.
-        await this.ensureConnectionAndNotebook();
-
-        // Make sure we have at least the initial sys info
-        await this.addSysInfo(SysInfoReason.Start);
-
-        // Then show our web panel.
-        return super.show();
+    public changeMode(mode: InteractiveWindowMode): void {
+        if (this.mode !== mode) {
+            this.mode = mode;
+            if (this.owner && mode === 'perFile') {
+                this.setTitle(getInteractiveWindowTitle(this.owner));
+            }
+        }
     }
 
-    public async addCode(code: string, file: string, line: number): Promise<boolean> {
+    public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
         return this.addOrDebugCode(code, file, line, false);
     }
 
@@ -227,15 +262,21 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 this.handleMessage(message, payload, this.exportAs);
                 break;
 
+            case InteractiveWindowMessages.HasCellResponse:
+                this.handleMessage(message, payload, this.handleHasCellResponse);
+                break;
+
             default:
                 break;
         }
     }
 
-    public async debugCode(code: string, file: string, line: number): Promise<boolean> {
+    public async debugCode(code: string, file: Uri, line: number): Promise<boolean> {
         let saved = true;
         // Make sure the file is saved before debugging
-        const doc = this.documentManager.textDocuments.find((d) => this.fileSystem.arePathsSame(d.fileName, file));
+        const doc = this.documentManager.textDocuments.find((d) =>
+            this.fileSystem.arePathsSame(d.fileName, file.fsPath)
+        );
         if (doc && doc.isUntitled) {
             // Before we start, get the list of documents
             const beforeSave = [...this.documentManager.textDocuments];
@@ -247,7 +288,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             if (saved) {
                 const diff = this.documentManager.textDocuments.filter((f) => beforeSave.indexOf(f) === -1);
                 if (diff && diff.length > 0) {
-                    file = diff[0].fileName;
+                    file = diff[0].uri;
 
                     // Open the new document
                     await this.documentManager.openTextDocument(file);
@@ -275,12 +316,26 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
     @captureTelemetry(Telemetry.ScrolledToCell)
     public scrollToCell(id: string): void {
-        this.postMessage(InteractiveWindowMessages.ScrollToCell, { id }).ignoreErrors();
+        this.show(false)
+            .then(() => {
+                return this.postMessage(InteractiveWindowMessages.ScrollToCell, { id });
+            })
+            .ignoreErrors();
     }
 
-    public async getOwningResource(): Promise<Resource> {
-        if (this.lastFile) {
-            return Uri.file(this.lastFile);
+    public hasCell(id: string): Promise<boolean> {
+        let deferred = this.pendingHasCell.get(id);
+        if (!deferred) {
+            deferred = createDeferred<boolean>();
+            this.pendingHasCell.set(id, deferred);
+            this.postMessage(InteractiveWindowMessages.HasCell, id).ignoreErrors();
+        }
+        return deferred.promise;
+    }
+
+    public get owningResource(): Resource {
+        if (this.owner) {
+            return this.owner;
         }
         const root = this.workspaceService.rootPath;
         if (root) {
@@ -314,7 +369,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
             // Activate the other side, and send as if came from a file
             this.interactiveWindowProvider
-                .getOrCreateActive()
+                .synchronize(this)
                 .then((_v) => {
                     this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
                         code: info.code,
@@ -329,7 +384,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    protected async getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined> {
+    protected get notebookMetadata(): nbformat.INotebookMetadata | undefined {
         return undefined;
     }
 
@@ -340,10 +395,10 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // Do nothing as this data isn't stored in our options.
     }
 
-    protected async getNotebookIdentity(): Promise<INotebookIdentity> {
-        // Always the same identity (for now)
+    protected get notebookIdentity(): INotebookIdentity {
+        // Use this identity for the lifetime of the notebook
         return {
-            resource: Uri.parse(Identifiers.InteractiveWindowIdentity),
+            resource: this._identity,
             type: 'interactive'
         };
     }
@@ -384,21 +439,33 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return super.ensureConnectionAndNotebook();
     }
 
-    private async addOrDebugCode(code: string, file: string, line: number, debug: boolean): Promise<boolean> {
-        if (this.lastFile && !this.fileSystem.arePathsSame(file, this.lastFile)) {
+    private async addOrDebugCode(code: string, file: Uri, line: number, debug: boolean): Promise<boolean> {
+        if (this.owner && !this.fileSystem.arePathsSame(file.fsPath, this.owner.fsPath)) {
             sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
         }
-        // Save the last file we ran with.
-        this.lastFile = file;
+        // Update the owner for this window if not already set
+        if (!this._owner) {
+            this._owner = file;
+
+            // Update the title if we're in per file mode
+            if (this.mode === 'perFile') {
+                this.setTitle(getInteractiveWindowTitle(file));
+            }
+        }
+
+        // Add to the list of 'submitters' for this window.
+        if (!this._submitters.find((s) => this.fileSystem.arePathsSame(s.fsPath, file.fsPath))) {
+            this._submitters.push(file);
+        }
 
         // Make sure our web panel opens.
         await this.show();
 
         // Tell the webpanel about the new directory.
-        this.updateCwd(path.dirname(file));
+        this.updateCwd(path.dirname(file.fsPath));
 
         // Call the internal method.
-        return this.submitCode(code, file, line, undefined, undefined, debug ? { runByLine: false } : undefined);
+        return this.submitCode(code, file.fsPath, line, undefined, undefined, debug ? { runByLine: false } : undefined);
     }
 
     @captureTelemetry(Telemetry.ExportNotebookInteractive, undefined, false)
@@ -438,8 +505,9 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
         if (model) {
             let defaultFileName;
-            if (this.lastFile) {
-                defaultFileName = path.basename(this.lastFile, path.extname(this.lastFile));
+            if (this.submitters && this.submitters.length) {
+                const lastSubmitter = this.submitters[this.submitters.length - 1];
+                defaultFileName = path.basename(lastSubmitter.fsPath, path.extname(lastSubmitter.fsPath));
             }
             this.commandManager.executeCommand(Commands.Export, model, defaultFileName);
         }
@@ -461,6 +529,14 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // See what we're waiting for.
         if (this.waitingForExportCells) {
             this.export(cells).catch((ex) => traceError('Error exporting:', ex));
+        }
+    }
+
+    private handleHasCellResponse(response: { id: string; result: boolean }) {
+        const deferred = this.pendingHasCell.get(response.id);
+        if (deferred) {
+            deferred.resolve(response.result);
+            this.pendingHasCell.delete(response.id);
         }
     }
 }

@@ -20,6 +20,7 @@ import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { ExportFormat, IExportManager } from '../../client/datascience/export/types';
+import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { NotebookStorageProvider } from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
@@ -147,7 +148,8 @@ suite('Interactive window command listener', async () => {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            widgetScriptSources: []
+            widgetScriptSources: [],
+            interactiveWindowMode: 'single'
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
@@ -172,8 +174,7 @@ suite('Interactive window command listener', async () => {
         ).thenResolve();
         when(fileSystem.arePathsSame(anything(), anything())).thenReturn(true);
 
-        when(interactiveWindowProvider.getActive()).thenReturn(interactiveWindow.object);
-        when(interactiveWindowProvider.getOrCreateActive()).thenResolve(interactiveWindow.object);
+        when(interactiveWindowProvider.getOrCreate(anything())).thenResolve(interactiveWindow.object);
         when(notebookImporter.importFromFile(anything())).thenResolve('imported');
         const metadata: nbformat.INotebookMetadata = {
             language_info: {
@@ -205,11 +206,14 @@ suite('Interactive window command listener', async () => {
         when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));
         when(applicationShell.showInformationMessage(anything())).thenReturn(Promise.resolve('moo'));
 
+        const notebookProvider = mock(NotebookProvider);
+
         const result = new InteractiveWindowCommandListener(
             disposableRegistry,
             instance(interactiveWindowProvider),
             instance(notebookExporter),
             instance(jupyterExecution),
+            instance(notebookProvider),
             documentManager,
             instance(applicationShell),
             instance(fileSystem),

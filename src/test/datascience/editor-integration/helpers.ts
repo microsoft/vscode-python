@@ -31,6 +31,7 @@ export function createDocument(
         .setup((d) => d.version)
         .returns(() => fileVersion)
         .verifiable(times);
+    document.setup((d) => d.uri).returns(() => Uri.file(fileName));
 
     // Next add the lines in
     document.setup((d) => d.lineCount).returns(() => inputLines.length);

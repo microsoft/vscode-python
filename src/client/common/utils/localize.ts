@@ -317,7 +317,30 @@ export namespace DataScience {
         '{0} (From {1} extension)'
     );
     export const unknownPackage = localize('DataScience.unknownPackage', 'unknown');
-    export const historyTitle = localize('DataScience.historyTitle', 'Python Interactive');
+    export const interactiveWindowTitle = localize('DataScience.interactiveWindowTitleFormat', 'Python Interactive');
+    export const interactiveWindowTitleFormat = localize(
+        'DataScience.interactiveWindowTitleFormat',
+        'Python Interactive - {0}'
+    );
+
+    export const interactiveWindowModeBannerTitle = localize(
+        'DataScience.interactiveWindowModeBannerTitle',
+        'Do you want to open a new Python Interactive window for this file? [More Information](command:workbench.action.openSettings?%5B%22python.dataScience.interactiveWindowMode%22%5D).'
+    );
+
+    export const interactiveWindowModeBannerSwitchYes = localize(
+        'DataScience.interactiveWindowModeBannerSwitchYes',
+        'Yes'
+    );
+    export const interactiveWindowModeBannerSwitchAlways = localize(
+        'DataScience.interactiveWindowModeBannerSwitchAlways',
+        'Always'
+    );
+    export const interactiveWindowModeBannerSwitchNo = localize(
+        'DataScience.interactiveWindowModeBannerSwitchNo',
+        'No'
+    );
+
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');
     export const badWebPanelFormatString = localize(
         'DataScience.badWebPanelFormatString',
@@ -1031,6 +1054,14 @@ export namespace DataScience {
     export const trustAllNotebooks = localize(
         'DataScience.launchNotebookTrustPrompt.trustAllNotebooks',
         'Trust all notebooks'
+    );
+    export const insecureSessionMessage = localize(
+        'DataScience.insecureSessionMessage',
+        'Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?'
+    );
+    export const insecureSessionDenied = localize(
+        'DataScience.insecureSessionDenied',
+        'Denied connection to insecure server.'
     );
     export const previewNotebookOnlySupportedInVSCInsiders = localize(
         'DataScience.previewNotebookOnlySupportedInVSCInsiders',

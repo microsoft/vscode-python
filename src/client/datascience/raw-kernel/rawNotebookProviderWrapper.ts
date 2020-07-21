@@ -17,7 +17,7 @@ import {
     Resource
 } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
+import { DataScienceStartupTime, JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
@@ -25,7 +25,6 @@ import { IKernelLauncher } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     ConnectNotebookProviderOptions,
-    IDataScience,
     INotebook,
     IRawConnection,
     IRawNotebookProvider,
@@ -40,7 +39,7 @@ interface IRawNotebookProviderInterface extends IRoleBasedObject, IRawNotebookPr
 type RawNotebookProviderClassType = {
     new (
         liveShare: ILiveShareApi,
-        dataScience: IDataScience,
+        startupTime: number,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         configService: IConfigurationService,
@@ -65,7 +64,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
-        @inject(IDataScience) dataScience: IDataScience,
+        @inject(DataScienceStartupTime) startupTime: number,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
@@ -86,7 +85,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             HostRawNotebookProvider,
             GuestRawNotebookProvider,
             liveShare,
-            dataScience,
+            startupTime,
             disposableRegistry,
             asyncRegistry,
             configService,

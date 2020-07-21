@@ -16,6 +16,7 @@ import {
 } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import '../../common/extensions';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
@@ -72,7 +73,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(UseVSCodeNotebookEditorApi) useVSCodeNotebookEditorApi: boolean
+        @inject(UseVSCodeNotebookEditorApi) useVSCodeNotebookEditorApi: boolean,
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem
     ) {
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(
@@ -144,6 +146,16 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (this.openedEditors.has(editor)) {
             this.openedEditors.delete(editor);
             this._onDidCloseNotebookEditor.fire(editor);
+
+            // Find all notebooks associated with this editor (ipynb file).
+            const otherEditors = this.editors.filter(
+                (e) => this.fileSystem.arePathsSame(e.file.fsPath, editor.file.fsPath) && e !== editor
+            );
+
+            // If we have no editors for this file, then dispose the notebook.
+            if (otherEditors.length === 0) {
+                editor.notebook?.dispose();
+            }
         }
     }
 
