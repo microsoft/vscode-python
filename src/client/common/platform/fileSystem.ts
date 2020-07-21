@@ -200,17 +200,11 @@ export class RawFileSystem implements IRawFileSystem {
         return Buffer.from(data);
     }
 
-    public async readText(filename: string | vscode.Uri): Promise<string> {
-        if (typeof filename === 'string') {
-            const uri = vscode.Uri.file(filename);
-            const result = await this.vscfs.readFile(uri);
-            const data = Buffer.from(result);
-            return data.toString(ENCODING);
-        } else {
-            const result = await this.vscfs.readFile(filename);
-            const data = Buffer.from(result);
-            return data.toString(ENCODING);
-        }
+    public async readText(file: string | vscode.Uri): Promise<string> {
+        const uri = typeof file === 'string' ? vscode.Uri.file(file) : file;
+        const result = await this.vscfs.readFile(uri);
+        const data = Buffer.from(result);
+        return data.toString(ENCODING);
     }
 
     public async writeText(filename: string, text: string): Promise<void> {
