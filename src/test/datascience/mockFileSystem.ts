@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { Uri } from 'vscode';
 import { LegacyFileSystem } from '../serviceRegistry';
 
 export class MockFileSystem extends LegacyFileSystem {
@@ -10,12 +11,13 @@ export class MockFileSystem extends LegacyFileSystem {
     constructor() {
         super();
     }
-    public async readFile(filePath: string): Promise<string> {
-        const contents = this.contentOverloads.get(filePath);
+    public async readFile(file: string | Uri): Promise<string> {
+        const contents =
+            typeof file === 'string' ? this.contentOverloads.get(file) : this.contentOverloads.get(file.fsPath);
         if (contents) {
             return contents;
         }
-        return super.readFile(filePath);
+        return super.readFile(file);
     }
     public addFileContents(filePath: string, contents: string): void {
         this.contentOverloads.set(filePath, contents);
