@@ -1,3 +1,18 @@
+# CI build (PR merge)
+
+name: '$(Year:yyyy).$(Month).0.$(BuildID)-ci-static-analysis'
+
+# Notes: Only trigger a commit for master and release, and skip build/rebuild
+#        on changes in the news and .vscode folders.
+trigger:
+  branches:
+    include: ['master', 'release*']
+  paths:
+    exclude: ['/news/1 Enhancements', '/news/2 Fixes', '/news/3 Code Health', '/.vscode']
+
+# Not the PR build for merges to master and release.
+pr: none
+
 jobs:
   - job: 'Static_Analysis'
     pool:
@@ -37,5 +52,27 @@ jobs:
         inputs:
           ExternalRelease: true
           IsSoftware: true
+        continueOnError: true
 
       - task: VulnerabilityAssessment@0
+        continueOnError: true
+
+      - task: TSLint@1
+        inputs:
+          RuleLibrary: 'tslint'
+          Ruleset: 'tsrecommended'
+          FileSelectionType: 'fileGlob'
+          Files: '$(Build.SourcesDirectory)\src\**\*.ts'
+          OutputFormat: 'json'
+          ToolVersion: 'latest'
+          TypeScriptVersion: 'latest'
+        continueOnError: true
+
+      - task: Semmle@0
+        inputs:
+          sourceCodeDirectory: '$(Build.SourcesDirectory)\pythonFiles'
+          language: 'python'
+          querySuite: 'Recommended'
+          timeout: '1800'
+          ram: '16384'
+          addProjectDirToScanningExclusionList: true

@@ -22,11 +22,6 @@ stages:
     jobs:
       - template: templates/jobs/build_compile.yml
 
-  - stage: Analysis
-    dependsOn: []
-    jobs:
-      - template: templates/jobs/static_analysis.yml
-
   # Each item in each matrix has a number of possible values it may
   # define.  They are detailed in templates/test_phases.yml.  The only
   # required value is "TestsToRun".
