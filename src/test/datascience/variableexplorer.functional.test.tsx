@@ -21,6 +21,7 @@ const rangeInclusive = require('range-inclusive');
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 [false, true].forEach((runByLine) => {
+//[false].forEach((runByLine) => {
     suite(`IANHU DataScience Interactive Window variable explorer tests with RunByLine set to ${runByLine}`, () => {
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
@@ -269,9 +270,13 @@ value = 'hello world'`;
         runInteractiveTest(
             'Variable explorer - Types A',
             async () => {
+                //const basicCode: string = `myList = [1, 2, 3]
+                //mySet = set([42])
+                //myDict = {'a': 1}`;
                 const basicCode: string = `myList = [1, 2, 3]
 mySet = set([42])
-myDict = {'a': 1}`;
+myDict = {'a': 1}
+myTuple = 1,2,3,4,5,6,7,8,9`;
 
                 //const mount = ioc.getInteractiveWebPanel(undefined);
                 const { mount } = await getOrCreateInteractiveWindow(ioc);
@@ -280,7 +285,7 @@ myDict = {'a': 1}`;
                 openVariableExplorer(wrapper);
 
                 await addCodeImpartial(wrapper, 'a=1\na');
-                await addCodeImpartial(wrapper, basicCode, true);
+                await addCodeImpartial(wrapper, basicCode, true, 2);
 
                 const targetVariables: IJupyterVariable[] = [
                     {
@@ -324,6 +329,16 @@ myDict = {'a': 1}`;
                         shape: '',
                         count: 1,
                         truncated: false
+                    },
+                    {
+                        name: 'myTuple',
+                        value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
+                        supportsDataExplorer: false,
+                        type: 'tuple',
+                        size: 54,
+                        shape: '9',
+                        count: 0,
+                        truncated: false
                     }
                 ];
                 verifyVariables(wrapper, targetVariables);
@@ -365,6 +380,16 @@ myDict = {'a': 1}`;
         runInteractiveTest(
             'Variable explorer - Basic B',
             async () => {
+                //const basicCode: string = `import numpy as np
+                //import pandas as pd
+                //myComplex = complex(1, 1)
+                //myInt = 99999999
+                //myFloat = 9999.9999
+                //mynpArray = np.array([1.0, 2.0, 3.0])
+                //myDataframe = pd.DataFrame(mynpArray)
+                //mySeries = myDataframe[0]
+                //myTuple = 1,2,3,4,5,6,7,8,9
+                //`;
                 const basicCode: string = `import numpy as np
 import pandas as pd
 myComplex = complex(1, 1)
@@ -373,7 +398,6 @@ myFloat = 9999.9999
 mynpArray = np.array([1.0, 2.0, 3.0])
 myDataframe = pd.DataFrame(mynpArray)
 mySeries = myDataframe[0]
-myTuple = 1,2,3,4,5,6,7,8,9
 `;
                 //const mount = ioc.getInteractiveWebPanel(undefined);
                 //const wrapper = mount.wrapper;
@@ -455,16 +479,16 @@ Name: 0, dtype: float64`,
                         count: 0,
                         truncated: false
                     },
-                    {
-                        name: 'myTuple',
-                        value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
-                        supportsDataExplorer: false,
-                        type: 'tuple',
-                        size: 54,
-                        shape: '9',
-                        count: 0,
-                        truncated: false
-                    },
+                    //{
+                    //name: 'myTuple',
+                    //value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
+                    //supportsDataExplorer: false,
+                    //type: 'tuple',
+                    //size: 54,
+                    //shape: '9',
+                    //count: 0,
+                    //truncated: false
+                    //},
                     {
                         name: 'mynpArray',
                         value: '[1. 2. 3.]',
@@ -480,7 +504,7 @@ Name: 0, dtype: float64`,
 
                 // Step into the first cell over again. Should have the same variables
                 if (runByLine) {
-                    targetVariables[7].value = 'array([1., 2., 3.])'; // Debugger shows np array differently
+                    targetVariables[6].value = 'array([1., 2., 3.])'; // Debugger shows np array differently
                     await verifyAfterStep(ioc, wrapper, () => {
                         verifyVariables(wrapper, targetVariables);
                         return Promise.resolve();
@@ -531,7 +555,7 @@ Name: 0, dtype: float64`,
                     .map(generateVar)
                     .sort((a: IJupyterVariable, b: IJupyterVariable) => a.name.localeCompare(b.name));
 
-                const targetVariables = allVariables.slice(0, 16);
+                const targetVariables = allVariables.slice(0, 14);
                 verifyVariables(wrapper, targetVariables);
 
                 // Force a scroll to the bottom
@@ -549,7 +573,7 @@ Name: 0, dtype: float64`,
                 await complete;
 
                 // Now we should have the bottom. For some reason only 10 come back here.
-                const bottomVariables = allVariables.slice(1041, 1051);
+                const bottomVariables = allVariables.slice(1041, 1050);
                 verifyVariables(wrapper, bottomVariables);
 
                 // Step into the first cell over again. Should have the same variables
@@ -559,7 +583,7 @@ Name: 0, dtype: float64`,
                         .map((v) => {
                             return { ...v, value: undefined };
                         })
-                        .slice(0, 10);
+                        .slice(0, 9);
                     await verifyAfterStep(
                         ioc,
                         wrapper,

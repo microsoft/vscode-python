@@ -59,10 +59,10 @@ export function verifyVariables(
     // Then search for results.
     const foundRows = wrapper.find('div.react-grid-Row');
 
-    //expect(foundRows.length).to.be.equal(
-    //targetVariables.length,
-    //'Different number of variable explorer rows and target variables'
-    //);
+    expect(foundRows.length).to.be.equal(
+        targetVariables.length,
+        'Different number of variable explorer rows and target variables'
+    );
 
     foundRows.forEach((row, index) => {
         verifyRow(row, targetVariables[index]);
