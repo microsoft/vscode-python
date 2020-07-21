@@ -460,6 +460,7 @@ suite('DataScience notebook tests', () => {
 
             // Connect to a server that doesn't have a token or password, customers use this and we regressed it once
             runTest(
+                //'IANHU Remote No Auth',
                 'Remote No Auth',
                 async () => {
                     const pythonService = await createPythonService();
@@ -538,6 +539,7 @@ suite('DataScience notebook tests', () => {
 
             // For a connection to a remote machine that is not secure deny the connection and we should not connect
             runTest(
+                //'IANHU Remote Deny Insecure',
                 'Remote Deny Insecure',
                 async () => {
                     const pythonService = await createPythonService();

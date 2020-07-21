@@ -18,6 +18,7 @@ import {
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { resetIdentity } from '../../client/datascience/interactive-window/identity';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
@@ -52,6 +53,9 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
         @inject(IApplicationShell) appShell: IApplicationShell
     ) {
         super(liveShare, container, asyncRegistry, disposables, fileSystem, configService, globalMemento, appShell);
+
+        // Reset our identity IDs when we create a new TestInteractiveWindowProvider
+        resetIdentity();
     }
 
     public getMountedWebView(window: IInteractiveWindow | undefined): IMountedWebView {

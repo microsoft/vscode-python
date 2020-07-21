@@ -21,7 +21,7 @@ const rangeInclusive = require('range-inclusive');
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 [false, true].forEach((runByLine) => {
-    suite(`DataScience Interactive Window variable explorer tests with RunByLine set to ${runByLine}`, () => {
+    suite(`IANHU DataScience Interactive Window variable explorer tests with RunByLine set to ${runByLine}`, () => {
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
         let createdNotebook = false;
@@ -105,7 +105,7 @@ import pandas as pd
 value = 'hello world'`;
                 const basicCode2: string = `value2 = 'hello world 2'`;
 
-                const mount = ioc.getInteractiveWebPanel(undefined);
+                const { mount } = await getOrCreateInteractiveWindow(ioc);
                 const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
@@ -172,7 +172,8 @@ value = 'hello world'`;
                 const basicCode: string = `value = 'hello world'`;
                 const basicCode2: string = `value2 = 'hello world 2'`;
 
-                const mount = ioc.getInteractiveWebPanel(undefined);
+                //const mount = ioc.getInteractiveWebPanel(undefined);
+                const { mount } = await getOrCreateInteractiveWindow(ioc);
                 const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
@@ -272,7 +273,8 @@ value = 'hello world'`;
 mySet = set([42])
 myDict = {'a': 1}`;
 
-                const mount = ioc.getInteractiveWebPanel(undefined);
+                //const mount = ioc.getInteractiveWebPanel(undefined);
+                const { mount } = await getOrCreateInteractiveWindow(ioc);
                 const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
@@ -373,7 +375,11 @@ myDataframe = pd.DataFrame(mynpArray)
 mySeries = myDataframe[0]
 myTuple = 1,2,3,4,5,6,7,8,9
 `;
-                const mount = ioc.getInteractiveWebPanel(undefined);
+                //const mount = ioc.getInteractiveWebPanel(undefined);
+                //const wrapper = mount.wrapper;
+
+                //const wrapper = ioc.getWrapper('interactive');
+                const { mount } = await getOrCreateInteractiveWindow(ioc);
                 const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
@@ -512,7 +518,9 @@ Name: 0, dtype: float64`,
                 const basicCode: string = `for _i in range(1050):
     exec("var{}=[{} ** 2 % 17 for _l in range(100000)]".format(_i, _i))`;
 
-                const mount = t === 'native' ? ioc.getNativeWebPanel(undefined) : ioc.getInteractiveWebPanel(undefined);
+                //const mount = t === 'native' ? ioc.getNativeWebPanel(undefined) : ioc.getInteractiveWebPanel(undefined);
+                //const { mount } = await getOrCreateInteractiveWindow(ioc);
+                const { mount } = t === 'native' ? await createNewEditor(ioc) : await getOrCreateInteractiveWindow(ioc);
                 const wrapper = mount.wrapper;
                 openVariableExplorer(wrapper);
 
@@ -527,9 +535,10 @@ Name: 0, dtype: float64`,
                 verifyVariables(wrapper, targetVariables);
 
                 // Force a scroll to the bottom
-                const complete = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete, {
-                    numberOfTimes: 2
-                });
+                //const complete = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete, {
+                //numberOfTimes: 2
+                //});
+                const complete = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete);
                 const grid = wrapper.find(AdazzleReactDataGrid);
                 const viewPort = grid.find('Viewport').instance();
                 const rowHeight = (viewPort.props as any).rowHeight as number;
@@ -558,7 +567,7 @@ Name: 0, dtype: float64`,
                             verifyVariables(wrapper, nonValued);
                             return Promise.resolve();
                         },
-                        3 // 3 refreshes because the variable explorer is scrolled to the bottom.
+                        2 // 2 refreshes because the variable explorer is scrolled to the bottom.
                     );
                 }
             },
@@ -576,7 +585,9 @@ mynpArray = np.array([1.0, 2.0, 3.0])
 myDataframe = pd.DataFrame(mynpArray)
 mySeries = myDataframe[0]
 `;
-                const wrapper = ioc.getInteractiveWebPanel(undefined).wrapper;
+                //const wrapper = ioc.getInteractiveWebPanel(undefined).wrapper;
+                const { mount } = await getOrCreateInteractiveWindow(ioc);
+                const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
 
