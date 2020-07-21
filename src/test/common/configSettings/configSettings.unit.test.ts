@@ -193,18 +193,29 @@ suite('Python Settings', async () => {
         config.verifyAll();
     });
 
-    test('Invalid languageServer type is fixed', () => {
-        expected.languageServer = 'invalid' as any;
-        initializeConfig(expected);
-        config
-            .setup((c) => c.get<LanguageServerType>('languageServer'))
-            .returns(() => expected.languageServer)
-            .verifiable(TypeMoq.Times.once());
+    function testLanguageServer(languageServer: LanguageServerType, expectedValue: LanguageServerType) {
+        test(`languageServer=${languageServer}`, () => {
+            expected.pythonPath = 'python3';
+            expected.languageServer = languageServer;
+            initializeConfig(expected);
+            config
+                .setup((c) => c.get<LanguageServerType>('languageServer'))
+                .returns(() => expected.languageServer)
+                .verifiable(TypeMoq.Times.once());
 
-        settings.update(config.object);
+            settings.update(config.object);
 
-        expect(settings.languageServer).to.be.equal(LanguageServerType.Jedi);
-        config.verifyAll();
+            expect(settings.languageServer).to.be.equal(expectedValue);
+            config.verifyAll();
+        });
+    }
+
+    suite('languageServer settings', async () => {
+        Object.values(LanguageServerType).forEach(async (languageServer) => {
+            testLanguageServer(languageServer, languageServer);
+        });
+
+        testLanguageServer('invalid' as LanguageServerType, LanguageServerType.Jedi);
     });
 
     function testExperiments(enabled: boolean) {
