@@ -1,5 +1,10 @@
 # Changelog
 
+## 2020.7.1 (22 July 2020)
+
+1. Ensure languageServer value is valid when sending telemetry.
+   ([#13064](https://github.com/Microsoft/vscode-python/pull/13064))
+
 ## 2020.7.0 (16 July 2020)
 
 ### Enhancements
