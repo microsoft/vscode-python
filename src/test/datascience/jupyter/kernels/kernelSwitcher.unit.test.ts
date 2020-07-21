@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
@@ -125,8 +126,17 @@ suite('DataScience - Kernel Switcher', () => {
                             Common.cancel() as any
                         );
 
-                        await kernelSwitcher.switchKernelWithRetry(instance(notebook), newKernelSpec);
-                        verify(kernelSelector.askForLocalKernel(anything(), anything(), anything())).once();
+                        // This wouldn't normally fail for remote because sessions should always start if
+                        // the remote server is up but both should throw
+                        try {
+                            await kernelSwitcher.switchKernelWithRetry(instance(notebook), newKernelSpec);
+                            assert.fail('Should throw exception');
+                        } catch {
+                            // This is expected
+                        }
+                        if (isLocalConnection) {
+                            verify(kernelSelector.askForLocalKernel(anything(), anything(), anything())).once();
+                        }
                     });
                 });
             });

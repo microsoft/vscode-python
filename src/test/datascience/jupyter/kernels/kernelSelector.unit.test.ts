@@ -6,6 +6,8 @@ import * as sinon from 'sinon';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken } from 'vscode-jsonrpc';
 
+import type { Kernel } from '@jupyterlab/services';
+import { EventEmitter } from 'vscode';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
@@ -68,6 +70,9 @@ suite('DataScience - KernelSelector', () => {
         interpreterService = mock(InterpreterService);
         kernelFinder = mock<IKernelFinder>();
         const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
+        const dummySessionEvent = new EventEmitter<Kernel.IKernelConnection>();
+        when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(dummySessionEvent.event);
+        when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(dummySessionEvent.event);
         const configService = mock(ConfigurationService);
         kernelSelector = new KernelSelector(
             instance(kernelSelectionProvider),
