@@ -6,8 +6,10 @@ declare let __webpack_public_path__: string;
 // eslint-disable-next-line prefer-const
 __webpack_public_path__ = (window as any).__jupyter_widgets_assets_path__ || __webpack_public_path__;
 
-import '@jupyter-widgets/controls/css/widgets.css';
 import '@phosphor/widgets/style/index.css';
+import 'font-awesome/css/font-awesome.css';
+
+import '@jupyter-widgets/controls/css/widgets.css';
 
 // Load json schema validator
 const Ajv = require('ajv');

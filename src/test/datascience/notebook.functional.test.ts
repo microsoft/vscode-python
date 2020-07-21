@@ -520,12 +520,95 @@ suite('DataScience notebook tests', () => {
                             )
                         )
                         .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
+                    appShell
+                        .setup((a) =>
+                            a.showWarningMessage(
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                            )
+                        )
+                        .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
                     appShell.setup((a) => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
                     appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
                     ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
                 }
             );
 
+            // For a connection to a remote machine that is not secure deny the connection and we should not connect
+            runTest(
+                'Remote Deny Insecure',
+                async () => {
+                    const pythonService = await createPythonService();
+
+                    if (pythonService) {
+                        const configFile = path.join(
+                            EXTENSION_ROOT_DIR,
+                            'src',
+                            'test',
+                            'datascience',
+                            'serverConfigFiles',
+                            'remoteNoAuth.py'
+                        );
+                        const uri = await startRemoteServer(pythonService, [
+                            '-m',
+                            'jupyter',
+                            'notebook',
+                            `--config=${configFile}`
+                        ]);
+
+                        // Try to create, we expect a failure here as we will deny the insecure connection
+                        await createNotebook(uri, undefined, true);
+                    }
+                },
+                undefined,
+                () => {
+                    const dummyDisposable = {
+                        dispose: () => {
+                            return;
+                        }
+                    };
+                    const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+                    appShell
+                        .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                        .returns((e) => {
+                            throw e;
+                        });
+                    appShell
+                        .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(''));
+                    appShell
+                        .setup((a) =>
+                            a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                        )
+                        .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
+                    appShell
+                        .setup((a) =>
+                            a.showInformationMessage(
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                            )
+                        )
+                        .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
+                    // This is the call to app shell that we are changing from the above test
+                    appShell
+                        .setup((a) =>
+                            a.showWarningMessage(
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                            )
+                        )
+                        .returns((_a1: string, _a2: string, a3: string, _a4: string) => Promise.resolve(a3));
+                    appShell.setup((a) => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+                    appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+                    ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+                }
+            );
             runTest('Remote Password', async () => {
                 const pythonService = await createPythonService();
 
