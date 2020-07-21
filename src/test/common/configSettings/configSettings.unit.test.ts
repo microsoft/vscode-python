@@ -193,6 +193,20 @@ suite('Python Settings', async () => {
         config.verifyAll();
     });
 
+    test('Invalid languageServer type is fixed', () => {
+        expected.languageServer = 'invalid' as any;
+        initializeConfig(expected);
+        config
+            .setup((c) => c.get<LanguageServerType>('languageServer'))
+            .returns(() => expected.languageServer)
+            .verifiable(TypeMoq.Times.once());
+
+        settings.update(config.object);
+
+        expect(settings.languageServer).to.be.equal(LanguageServerType.Jedi);
+        config.verifyAll();
+    });
+
     function testExperiments(enabled: boolean) {
         expected.pythonPath = 'python3';
         // tslint:disable-next-line:no-any

@@ -188,7 +188,6 @@ export class LanguageServerExtensionActivationService
         // Configuration is non-default, so `languageServer` should be present.
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const lstType = configurationService.getSettings(this.resource).languageServer;
-        this.sendTelemetryForChosenLanguageServer(lstType).ignoreErrors();
         return lstType === LanguageServerType.Jedi;
     }
 
@@ -252,6 +251,8 @@ export class LanguageServerExtensionActivationService
                 serverType = LanguageServerType.Jedi;
                 break;
         }
+
+        this.sendTelemetryForChosenLanguageServer(serverType).ignoreErrors();
 
         await this.logStartup(serverType);
         let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);

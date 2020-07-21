@@ -231,11 +231,11 @@ export class PythonSettings implements IPythonSettings {
             pythonSettings.get<boolean>('autoUpdateLanguageServer', true)
         )!;
 
-        let ls = pythonSettings.get<LanguageServerType>('languageServer');
-        if (!ls) {
-            ls = LanguageServerType.Jedi;
+        const ls = pythonSettings.get<LanguageServerType>('languageServer') ?? LanguageServerType.Jedi;
+        this.languageServer = systemVariables.resolveAny(ls);
+        if (!(this.languageServer in LanguageServerType)) {
+            this.languageServer = LanguageServerType.Jedi;
         }
-        this.languageServer = systemVariables.resolveAny(ls)!;
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
