@@ -21,7 +21,7 @@ const rangeInclusive = require('range-inclusive');
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 [false, true].forEach((runByLine) => {
-    suite(`IANHU DataScience Interactive Window variable explorer tests with RunByLine set to ${runByLine}`, () => {
+    suite(`DataScience Interactive Window variable explorer tests with RunByLine set to ${runByLine}`, () => {
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
         let createdNotebook = false;

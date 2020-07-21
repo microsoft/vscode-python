@@ -1181,8 +1181,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Make sure the command registry registers all commands
         this.get<CommandRegistry>(CommandRegistry).register();
 
-        // Reset our identity count for interactive window
-
         // Then force our interpreter to be one that supports jupyter (unless in a mock state when we don't have to)
         if (!this.mockJupyter) {
             const interpreterService = this.serviceManager.get<IInterpreterService>(IInterpreterService);
