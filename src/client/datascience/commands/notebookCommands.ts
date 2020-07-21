@@ -65,7 +65,7 @@ export class NotebookCommands implements IDisposable {
                 connection?.type || this.notebookProvider.type,
                 currentKernelSpecName
             );
-            if (kernel && identity) {
+            if (kernel) {
                 await this.setKernel(kernel, identity, resource);
             }
         }
