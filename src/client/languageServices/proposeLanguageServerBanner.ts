@@ -13,6 +13,7 @@ import '../common/extensions';
 import {
     IConfigurationService,
     IExperimentService,
+    IExtensions,
     IPersistentStateFactory,
     IPythonExtensionBanner
 } from '../common/types';
@@ -40,7 +41,8 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IExperimentService) private experiments: IExperimentService
+        @inject(IExperimentService) private experiments: IExperimentService,
+        @inject(IExtensions) readonly extensions: IExtensions
     ) {}
 
     public get enabled(): boolean {
@@ -79,6 +81,11 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
     }
 
     public async shouldShowBanner(): Promise<boolean> {
+        // Do not prompt if Pylance is already installed.
+        if (this.extensions.getExtension(PYLANCE_EXTENSION_ID)) {
+            return false;
+        }
+        // Only prompt for users in experiment.
         const inExperiment = await this.experiments.inExperiment(TryPylance.experiment);
         return inExperiment && this.enabled && !this.disabledInCurrentSession;
     }
