@@ -36,6 +36,7 @@ export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
     export const RunAllCellsAbove = 'python.datascience.runallcellsabove';
     export const RunCellAndAllBelow = 'python.datascience.runcellandallbelow';
+    export const SetJupyterKernel = 'python.datascience.setKernel';
     export const SwitchJupyterKernel = 'python.datascience.switchKernel';
     export const RunAllCellsAbovePalette = 'python.datascience.runallcellsabove.palette';
     export const RunCellAndAllBelowPalette = 'python.datascience.runcurrentcellandallbelow.palette';

@@ -41,7 +41,6 @@ import {
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
-import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import {
     ICell,
     ICodeCssGenerator,
@@ -124,7 +123,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         globalStorage: Memento,
         workspaceStorage: Memento,
         experimentsManager: IExperimentsManager,
-        switcher: KernelSwitcher,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         expService: IExperimentService,
@@ -167,7 +165,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             localize.DataScience.interactiveWindowTitle(),
             ViewColumn.Two,
             experimentsManager,
-            switcher,
             notebookProvider,
             useCustomEditorApi,
             expService,

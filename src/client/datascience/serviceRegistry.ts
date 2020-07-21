@@ -15,7 +15,7 @@ import { CodeCssGenerator } from './codeCssGenerator';
 import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
 import { CommandRegistry } from './commands/commandRegistry';
 import { ExportCommands } from './commands/exportCommands';
-import { KernelSwitcherCommand } from './commands/kernelSwitcher';
+import { NotebookCommands } from './commands/notebookCommands';
 import { JupyterServerSelectorCommand } from './commands/serverSelector';
 import { DataScienceStartupTime, Identifiers, OurNotebookProvider, VSCodeNotebookProvider } from './constants';
 import { ActiveEditorContextService } from './context/activeEditorContext';
@@ -276,7 +276,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
     serviceManager.addSingleton<KernelService>(KernelService, KernelService);
     serviceManager.addSingleton<KernelSwitcher>(KernelSwitcher, KernelSwitcher);
-    serviceManager.addSingleton<KernelSwitcherCommand>(KernelSwitcherCommand, KernelSwitcherCommand);
+    serviceManager.addSingleton<NotebookCommands>(NotebookCommands, NotebookCommands);
     serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);

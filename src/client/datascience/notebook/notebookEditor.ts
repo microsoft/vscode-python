@@ -13,8 +13,6 @@ import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
-import { KernelSelector, KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
-import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import {
     INotebook,
     INotebookEditor,
@@ -82,9 +80,7 @@ export class NotebookEditor implements INotebookEditor {
         private readonly statusProvider: IStatusProvider,
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
-        disposables: IDisposableRegistry,
-        private readonly selector: KernelSelector,
-        private readonly switcher: KernelSwitcher
+        disposables: IDisposableRegistry
     ) {
         disposables.push(model.onDidEdit(() => this._modified.fire(this)));
         disposables.push(
@@ -142,27 +138,6 @@ export class NotebookEditor implements INotebookEditor {
     public notifyExecution(code: string) {
         this._executed.fire(this);
         this.executedCode.fire(code);
-    }
-
-    public async selectNewKernel() {
-        try {
-            this.startProgress();
-            // Make sure we have a connection or we can't get remote kernels.
-            const connection = await this.notebookProvider.connect({ getOnly: false, disableUI: false });
-
-            // Select a new kernel using the connection information
-            const kernel = await this.selector.selectJupyterKernel(
-                this.model.file,
-                connection,
-                connection?.type || this.notebookProvider.type,
-                this.model.metadata?.kernelspec?.display_name || this.model.metadata?.kernelspec?.name
-            );
-            if (kernel) {
-                await this.setKernel(kernel);
-            }
-        } finally {
-            this.stopProgress();
-        }
     }
 
     public async interruptKernel(): Promise<void> {
@@ -296,22 +271,6 @@ export class NotebookEditor implements INotebookEditor {
             this.configurationService
                 .updateSetting('dataScience.askForKernelRestart', false, undefined, ConfigurationTarget.Global)
                 .ignoreErrors();
-        }
-    }
-
-    private async setKernel(kernel: KernelSpecInterpreter) {
-        const specOrModel = kernel?.kernelModel || kernel?.kernelSpec;
-        if (kernel && specOrModel) {
-            const notebook = await this.notebookProvider.getOrCreateNotebook({
-                resource: this.file,
-                identity: this.file,
-                getOnly: true
-            });
-
-            // If we have a notebook, change its kernel now
-            if (notebook) {
-                return this.switcher.switchKernelWithRetry(notebook, kernel);
-            }
         }
     }
 }

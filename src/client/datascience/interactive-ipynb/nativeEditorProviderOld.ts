@@ -33,7 +33,6 @@ import { Commands, Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
-import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import {
     ICodeCssGenerator,
@@ -222,7 +221,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO),
             this.serviceContainer.get<IExperimentsManager>(IExperimentsManager),
             this.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry),
-            this.serviceContainer.get<KernelSwitcher>(KernelSwitcher),
             this.serviceContainer.get<INotebookProvider>(INotebookProvider),
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
             this.serviceContainer.get<INotebookStorageProvider>(INotebookStorageProvider),

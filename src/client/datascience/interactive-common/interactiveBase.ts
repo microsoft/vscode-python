@@ -71,8 +71,7 @@ import {
 } from '../interactive-common/interactiveWindowTypes';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
-import { KernelSelector, KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
-import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { CssMessages, SharedMessages } from '../messages';
 import {
@@ -163,7 +162,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         title: string,
         viewColumn: ViewColumn,
         experimentsManager: IExperimentsManager,
-        private switcher: KernelSwitcher,
         private readonly notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         expService: IExperimentService,
@@ -488,27 +486,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     public abstract hasCell(id: string): Promise<boolean>;
-
-    public async selectNewKernel() {
-        try {
-            this.startProgress();
-            // Make sure we have a connection or we can't get remote kernels.
-            const connection = await this.notebookProvider.connect({ getOnly: false, disableUI: false });
-
-            // Select a new kernel using the connection information
-            const kernel = await this.selector.selectJupyterKernel(
-                this.owningResource,
-                connection,
-                connection?.type || this.notebookProvider.type,
-                this.notebookMetadata?.kernelspec?.display_name || this.notebookMetadata?.kernelspec?.name
-            );
-            if (kernel) {
-                await this.setKernel(kernel);
-            }
-        } finally {
-            this.stopProgress();
-        }
-    }
 
     protected onViewStateChanged(args: WebViewViewChangeEventArgs) {
         // Only activate if the active editor is empty. This means that
@@ -870,31 +847,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    private async setKernel(kernel: KernelSpecInterpreter) {
-        const specOrModel = kernel?.kernelModel || kernel?.kernelSpec;
-        if (kernel && specOrModel) {
-            // Update our model to point to this new kernel spec.
-            await this.updateNotebookOptions(specOrModel, kernel.interpreter);
-
-            // If we have a notebook, change its kernel now
-            if (this._notebook) {
-                return this.switcher.switchKernelWithRetry(this._notebook, kernel);
-            } else {
-                // Send update directly to UI if no notebook.
-                const displayName = specOrModel.display_name || specOrModel.name || '';
-                this.postMessage(InteractiveWindowMessages.UpdateKernel, {
-                    jupyterServerStatus: ServerStatus.NotStarted,
-                    localizedUri: '',
-                    displayName,
-                    language: translateKernelLanguageToMonaco(kernel?.kernelSpec?.language ?? PYTHON_LANGUAGE)
-                }).ignoreErrors();
-
-                // Try creating a notebook again with this new kernel.
-                this.ensureConnectionAndNotebook().ignoreErrors();
-            }
-        }
-    }
-
     private combineData(
         oldData: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | undefined,
         cell: ICell
@@ -1128,6 +1080,16 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         sendTelemetryEvent(event);
     };
 
+    private selectNewKernel() {
+        // This is handled by a command.
+        this.commandManager.executeCommand(
+            Commands.SwitchJupyterKernel,
+            this.notebookIdentity.resource,
+            this.owningResource,
+            this.notebookMetadata?.kernelspec?.display_name || this.notebookMetadata?.kernelspec?.name
+        );
+    }
+
     private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook> {
         let notebook: INotebook | undefined;
         while (!notebook) {
@@ -1154,7 +1116,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                         e.kernelSpec
                     );
                     if (newKernel?.kernelSpec) {
-                        await this.setKernel(newKernel);
+                        this.commandManager.executeCommand(
+                            Commands.SetJupyterKernel,
+                            newKernel,
+                            this.notebookIdentity.resource,
+                            this.owningResource
+                        );
                     }
                 } else {
                     throw e;

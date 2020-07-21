@@ -30,7 +30,6 @@ import { Commands, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
-import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
@@ -96,7 +95,6 @@ export class NativeEditorOldWebView extends NativeEditor {
         workspaceStorage: Memento,
         experimentsManager: IExperimentsManager,
         asyncRegistry: IAsyncDisposableRegistry,
-        switcher: KernelSwitcher,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private readonly storage: INotebookStorageProvider,
@@ -133,7 +131,6 @@ export class NativeEditorOldWebView extends NativeEditor {
             workspaceStorage,
             experimentsManager,
             asyncRegistry,
-            switcher,
             notebookProvider,
             useCustomEditorApi,
             trustService,

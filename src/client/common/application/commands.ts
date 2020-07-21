@@ -6,7 +6,8 @@
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/languageServer/constants';
 import { Commands as DSCommands } from '../../datascience/constants';
-import { INotebook, INotebookModel, INotebookProviderConnection } from '../../datascience/types';
+import { KernelSpecInterpreter } from '../../datascience/jupyter/kernels/kernelSelector';
+import { INotebookModel } from '../../datascience/types';
 import { CommandSource } from '../../testing/common/constants';
 import { TestFunction, TestsToRun } from '../../testing/common/types';
 import { TestDataItem, TestWorkspaceFolder } from '../../testing/types';
@@ -176,13 +177,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ExportToHTML]: [INotebookModel, string | undefined];
     [DSCommands.ExportToPDF]: [INotebookModel, string | undefined];
     [DSCommands.Export]: [Uri | INotebookModel, string | undefined];
-    [DSCommands.SwitchJupyterKernel]: [
-        undefined | Uri,
-        INotebookProviderConnection | undefined,
-        'raw' | 'jupyter',
-        string | undefined,
-        INotebook | undefined
-    ];
+    [DSCommands.SetJupyterKernel]: [KernelSpecInterpreter, Uri, undefined | Uri];
+    [DSCommands.SwitchJupyterKernel]: [undefined | Uri, undefined | Uri, undefined | string];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
     [DSCommands.SaveNotebookNonCustomEditor]: [Uri];
     [DSCommands.SaveAsNotebookNonCustomEditor]: [Uri, Uri];
