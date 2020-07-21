@@ -161,9 +161,9 @@ export class GatherListener implements IInteractiveWindowListener {
             }
 
             sendTelemetryEvent(Telemetry.GatherStats, undefined, {
-                linesAvailable: linesAvailable ? linesAvailable : -1,
+                linesAvailable: linesAvailable ? linesAvailable - cell.data.source.length : -1,
                 linesInGatheredCell: cell.data.source.length,
-                gatheredLines: slicedProgram.splitLines().length
+                gatheredLines: slicedProgram.splitLines().length - cell.data.source.length
             });
         }
     };
