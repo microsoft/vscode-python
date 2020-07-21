@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import cloneDeep = require('lodash/cloneDeep');
 import { extensions } from 'vscode';
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { CellMatcher } from '../cellMatcher';
@@ -13,7 +13,10 @@ import { ICell as IVscCell, IGatherLogger, IGatherProvider } from '../types';
 @injectable()
 export class GatherLogger implements IGatherLogger {
     private gather: IGatherProvider | undefined;
-    constructor(@inject(IConfigurationService) private configService: IConfigurationService) {
+    constructor(
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IExtensionContext) private context: IExtensionContext
+    ) {
         this.initGatherExtension().ignoreErrors();
     }
 
@@ -42,6 +45,16 @@ export class GatherLogger implements IGatherLogger {
                 cloneCell.data.source = cellMatcher.stripFirstMarker(concatMultilineStringInput(vscCell.data.source));
 
                 this.gather.logExecution(cloneCell);
+
+                // We save the amount lines the code had before gathering for telemetry purposes.
+                let gatherCount: number | undefined = this.context.globalState.get('gatherCount');
+
+                if (gatherCount) {
+                    gatherCount += vscCell.data.source.length;
+                    this.context.globalState.update('gatherCount', gatherCount);
+                } else {
+                    this.context.globalState.update('gatherCount', 0);
+                }
             }
         }
     }

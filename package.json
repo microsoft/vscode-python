@@ -770,6 +770,11 @@
                 "command": "python.datascience.gatherquality",
                 "title": "DataScience.gatherQuality",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.latestExtension",
+                "title": "DataScience.latestExtension",
+                "category": "Python"
             }
         ],
         "menus": {
@@ -1278,6 +1283,12 @@
                 {
                     "command": "python.datascience.gatherquality",
                     "title": "%DataScience.gatherQuality%",
+                    "category": "Python",
+                    "when": "false"
+                },
+                {
+                    "command": "python.datascience.latestExtension",
+                    "title": "%DataScience.latestExtension%",
                     "category": "Python",
                     "when": "false"
                 },

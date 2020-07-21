@@ -7,7 +7,7 @@ import { IApplicationShell, IDocumentManager } from '../../common/application/ty
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, Resource } from '../../common/types';
+import { IConfigurationService, IExtensionContext, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -50,7 +50,8 @@ export class GatherListener implements IInteractiveWindowListener {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IFileSystem) private fileSystem: IFileSystem
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IExtensionContext) private context: IExtensionContext
     ) {}
 
     public dispose() {
@@ -80,6 +81,7 @@ export class GatherListener implements IInteractiveWindowListener {
             case InteractiveWindowMessages.RestartKernel:
                 if (this.gatherProvider) {
                     this.gatherProvider.resetLog();
+                    this.context.globalState.update('gatherCount', 0);
                 }
                 break;
 
@@ -143,6 +145,8 @@ export class GatherListener implements IInteractiveWindowListener {
             ? this.gatherProvider.gatherCode(cell)
             : localize.DataScience.gatherError();
 
+        const linesAvailable: number | undefined = this.context.globalState.get('gatherCount');
+
         if (!slicedProgram) {
             sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'err' });
         } else {
@@ -155,6 +159,12 @@ export class GatherListener implements IInteractiveWindowListener {
                 await this.showNotebook(slicedProgram, cell);
                 sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'notebook' });
             }
+
+            sendTelemetryEvent(Telemetry.GatherStats, undefined, {
+                linesAvailable: linesAvailable ? linesAvailable : -1,
+                linesInGatheredCell: cell.data.source.length,
+                gatheredLines: slicedProgram.splitLines().length
+            });
         }
     };
 
