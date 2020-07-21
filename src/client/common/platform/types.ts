@@ -111,7 +111,7 @@ export interface IRawFileSystem {
     // Return the raw bytes of the given file.
     readData(filename: string): Promise<Buffer>;
     // Return the text of the given file (decoded from UTF-8).
-    readText(filename: string): Promise<string>;
+    readText(filename: string | vscode.Uri): Promise<string>;
     // Write the given text to the file (UTF-8 encoded).
     writeText(filename: string, data: {}): Promise<void>;
     // Write the given text to the end of the file (UTF-8 encoded).
@@ -204,7 +204,7 @@ export interface IFileSystem {
     createDirectory(path: string): Promise<void>;
     deleteDirectory(path: string): Promise<void>;
     listdir(dirname: string): Promise<[string, FileType][]>;
-    readFile(filePath: string): Promise<string>;
+    readFile(filePath: string | vscode.Uri): Promise<string>;
     readData(filePath: string): Promise<Buffer>;
     writeFile(filePath: string, text: string | Buffer, options?: string | fsextra.WriteFileOptions): Promise<void>;
     appendFile(filename: string, text: string | Buffer): Promise<void>;

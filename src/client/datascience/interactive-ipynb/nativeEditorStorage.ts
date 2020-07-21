@@ -266,7 +266,7 @@ export class NativeEditorStorage implements INotebookStorage {
             // Attempt to read the contents if a viable file
             const contents = NativeEditorStorage.isUntitledFile(file)
                 ? possibleContents
-                : await this.fileSystem.readFile(file.fsPath);
+                : await this.fileSystem.readFile(file);
 
             const skipDirtyContents = typeof options === 'boolean' ? options : !!options;
             // Use backupId provided, else use static storage key.
