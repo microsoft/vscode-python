@@ -1,6 +1,6 @@
 # CI build (PR merge)
 
-name: '$(Year:yyyy).$(Month).0.$(BuildID)-ci-static-analysis'
+name: 'VSCode-Python-ci-static-analysis'
 
 # Notes: Only trigger a commit for master and release, and skip build/rebuild
 #        on changes in the news and .vscode folders.
@@ -76,3 +76,7 @@ jobs:
           timeout: '1800'
           ram: '16384'
           addProjectDirToScanningExclusionList: true
+
+      - task: CredScan@3
+        inputs:
+          outputFormat: 'csv'
