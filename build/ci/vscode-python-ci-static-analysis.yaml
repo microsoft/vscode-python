@@ -59,6 +59,13 @@ jobs:
           TypeScriptVersion: 'latest'
         continueOnError: true
 
+      - task: ESLint@1
+        inputs:
+          Configuration: 'recommended'
+          TargetType: 'eslint'
+          ErrorLevel: 'warn'
+        continueOnError: true
+
       - task: Semmle@0
         inputs:
           sourceCodeDirectory: '$(Build.SourcesDirectory)\pythonFiles'
@@ -67,10 +74,11 @@ jobs:
           timeout: '1800'
           ram: '16384'
           addProjectDirToScanningExclusionList: true
+        continueOnError: true
 
       - task: CredScan@3
+        continueOnError: true
         inputs:
-          outputFormat: 'csv'
 
       - task: UsePythonVersion@0
         inputs:
@@ -84,3 +92,15 @@ jobs:
             python -m pip install -U pip
             python -m pip install bandit
             python -m bandit -r "$(Build.SourcesDirectory)\pythonFiles"
+        continueOnError: true
+
+      - task: SdtReport@2
+        inputs:
+          GdnExportAllTools: true
+
+      - task: PublishSecurityAnalysisLogs@3
+        inputs:
+          ArtifactName: 'CodeAnalysisLogs'
+          ArtifactType: 'Container'
+          AllTools: true
+          ToolLogsNotFoundAction: 'Standard'
