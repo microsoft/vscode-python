@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { Extension } from 'vscode';
 import { LanguageServerType } from '../../../client/activation/types';
-import { IApplicationShell } from '../../../client/common/application/types';
+import { IApplicationEnvironment, IApplicationShell } from '../../../client/common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../../client/common/constants';
 import { TryPylance } from '../../../client/common/experiments/groups';
 import {
@@ -20,9 +20,9 @@ import {
 } from '../../../client/common/types';
 import { LanguageService } from '../../../client/common/utils/localize';
 import {
+    getPylanceExtensionUri,
     ProposeLSStateKeys,
-    ProposePylanceBanner,
-    PylanceExtensionUri
+    ProposePylanceBanner
 } from '../../../client/languageServices/proposeLanguageServerBanner';
 
 interface IExperimentLsCombination {
@@ -44,6 +44,7 @@ const testData: IExperimentLsCombination[] = [
 suite('Propose Pylance Banner', () => {
     let config: typemoq.IMock<IConfigurationService>;
     let appShell: typemoq.IMock<IApplicationShell>;
+    let appEnv: typemoq.IMock<IApplicationEnvironment>;
     let settings: typemoq.IMock<IPythonSettings>;
 
     const message = LanguageService.proposePylanceMessage();
@@ -56,13 +57,15 @@ suite('Propose Pylance Banner', () => {
         settings = typemoq.Mock.ofType<IPythonSettings>();
         config.setup((x) => x.getSettings(typemoq.It.isAny())).returns(() => settings.object);
         appShell = typemoq.Mock.ofType<IApplicationShell>();
+        appEnv = typemoq.Mock.ofType<IApplicationEnvironment>();
+        appEnv.setup((x) => x.uriScheme).returns(() => 'scheme');
     });
     testData.forEach((t) => {
         test(`${t.inExperiment ? 'In' : 'Not in'} experiment and "python.languageServer": "${t.lsType}" should ${
             t.shouldShowBanner ? 'show' : 'not show'
         } banner`, async () => {
             settings.setup((x) => x.languageServer).returns(() => t.lsType);
-            const testBanner = preparePopup(true, appShell.object, config.object, t.inExperiment, false);
+            const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.inExperiment, false);
             const actual = await testBanner.shouldShowBanner();
             expect(actual).to.be.equal(t.shouldShowBanner, `shouldShowBanner() returned ${actual}`);
         });
@@ -70,7 +73,7 @@ suite('Propose Pylance Banner', () => {
     testData.forEach((t) => {
         test(`When Pylance is installed, banner should not be shown when "python.languageServer": "${t.lsType}"`, async () => {
             settings.setup((x) => x.languageServer).returns(() => t.lsType);
-            const testBanner = preparePopup(true, appShell.object, config.object, t.inExperiment, true);
+            const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.inExperiment, true);
             const actual = await testBanner.shouldShowBanner();
             expect(actual).to.be.equal(false, `shouldShowBanner() returned ${actual}`);
         });
@@ -86,7 +89,7 @@ suite('Propose Pylance Banner', () => {
                 )
             )
             .verifiable(typemoq.Times.never());
-        const testBanner = preparePopup(false, appShell.object, config.object, true, false);
+        const testBanner = preparePopup(false, appShell.object, appEnv.object, config.object, true, false);
         await testBanner.showBanner();
         appShell.verifyAll();
     });
@@ -102,9 +105,9 @@ suite('Propose Pylance Banner', () => {
             )
             .returns(async () => no)
             .verifiable(typemoq.Times.once());
-        appShell.setup((a) => a.openUrl(PylanceExtensionUri)).verifiable(typemoq.Times.never());
+        appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.never());
 
-        const testBanner = preparePopup(true, appShell.object, config.object, true, false);
+        const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
         await testBanner.showBanner();
         expect(testBanner.enabled).to.be.equal(false, 'Banner should be permanently disabled when user clicked No');
         appShell.verifyAll();
@@ -121,9 +124,9 @@ suite('Propose Pylance Banner', () => {
             )
             .returns(async () => later)
             .verifiable(typemoq.Times.once());
-        appShell.setup((a) => a.openUrl(PylanceExtensionUri)).verifiable(typemoq.Times.never());
+        appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.never());
 
-        const testBanner = preparePopup(true, appShell.object, config.object, true, false);
+        const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
         await testBanner.showBanner();
         expect(testBanner.enabled).to.be.equal(
             true,
@@ -143,9 +146,9 @@ suite('Propose Pylance Banner', () => {
             )
             .returns(async () => yes)
             .verifiable(typemoq.Times.once());
-        appShell.setup((a) => a.openUrl(PylanceExtensionUri)).verifiable(typemoq.Times.once());
+        appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.once());
 
-        const testBanner = preparePopup(true, appShell.object, config.object, true, false);
+        const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
         await testBanner.showBanner();
         expect(testBanner.enabled).to.be.equal(false, 'Banner should be permanently disabled after opening store URL');
         appShell.verifyAll();
@@ -155,6 +158,7 @@ suite('Propose Pylance Banner', () => {
 function preparePopup(
     enabledValue: boolean,
     appShell: IApplicationShell,
+    appEnv: IApplicationEnvironment,
     config: IConfigurationService,
     inExperiment: boolean,
     pylanceInstalled: boolean
@@ -196,5 +200,5 @@ function preparePopup(
     extensions
         .setup((x) => x.getExtension(PYLANCE_EXTENSION_ID))
         .returns(() => (pylanceInstalled ? extension.object : undefined));
-    return new ProposePylanceBanner(appShell, myfactory.object, config, experiments.object, extensions.object);
+    return new ProposePylanceBanner(appShell, appEnv, myfactory.object, config, experiments.object, extensions.object);
 }

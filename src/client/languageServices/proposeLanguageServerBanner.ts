@@ -4,9 +4,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as vscode from 'vscode';
 import { LanguageServerType } from '../activation/types';
-import { IApplicationShell } from '../common/application/types';
+import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../common/constants';
 import { TryPylance } from '../common/experiments/groups';
 import '../common/extensions';
@@ -19,7 +18,9 @@ import {
 } from '../common/types';
 import { LanguageService } from '../common/utils/localize';
 
-export const PylanceExtensionUri = `${vscode.env.uriScheme}:extension/${PYLANCE_EXTENSION_ID}`;
+export function getPylanceExtensionUri(appEnv: IApplicationEnvironment): string {
+    return `${appEnv.uriScheme}:extension/${PYLANCE_EXTENSION_ID}`;
+}
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
@@ -39,6 +40,7 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
+        @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IExperimentService) private experiments: IExperimentService,
@@ -71,7 +73,7 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
         );
 
         if (response === LanguageService.tryItNow()) {
-            this.appShell.openUrl(PylanceExtensionUri);
+            this.appShell.openUrl(getPylanceExtensionUri(this.appEnv));
             await this.disable();
         } else if (response === LanguageService.bannerLabelNo()) {
             await this.disable();
