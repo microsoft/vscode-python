@@ -171,7 +171,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (!editor) {
             const notebookProvider = this.serviceContainer.get<INotebookProvider>(INotebookProvider);
             const executionService = this.serviceContainer.get<INotebookExecutionService>(INotebookExecutionService);
-
             editor = new NotebookEditor(
                 model,
                 doc,

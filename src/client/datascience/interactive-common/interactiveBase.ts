@@ -71,7 +71,7 @@ import {
 } from '../interactive-common/interactiveWindowTypes';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
-import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { KernelSelector, KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { CssMessages, SharedMessages } from '../messages';
 import {
@@ -208,6 +208,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
         // When a notebook provider first makes its connection check it to see if we should create a notebook
         this.disposables.push(notebookProvider.onConnectionMade(this.checkForNotebookProviderConnection.bind(this)));
+
+        // When a notebook provider indicates a kernel change, change our UI
+        this.disposables.push(notebookProvider.onPotentialKernelChanged(this.potentialKernelChanged.bind(this)));
 
         // When the variable service requests a refresh, refresh our variable list
         this.disposables.push(this.jupyterVariables.refreshRequired(this.refreshVariables.bind(this)));
@@ -1205,6 +1208,25 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             } catch (e) {
                 this.errorHandler.handleError(e).ignoreErrors();
             }
+        }
+    }
+
+    private async potentialKernelChanged(data: { identity: Uri; kernel: KernelSpecInterpreter }): Promise<void> {
+        const specOrModel = data.kernel.kernelModel || data.kernel.kernelSpec;
+        if (!this._notebook && specOrModel && this.notebookIdentity.resource.toString() === data.identity.toString()) {
+            // No notebook, send update to UI anyway
+            this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                jupyterServerStatus: ServerStatus.NotStarted,
+                localizedUri: '',
+                displayName: specOrModel?.display_name || specOrModel?.name || '',
+                language: translateKernelLanguageToMonaco(data.kernel.kernelSpec?.language ?? PYTHON_LANGUAGE)
+            }).ignoreErrors();
+
+            // Update our model
+            this.updateNotebookOptions(specOrModel, data.kernel.interpreter).ignoreErrors();
+
+            // Try creating a notebook again with this new kernel.
+            this.ensureConnectionAndNotebook().ignoreErrors();
         }
     }
 

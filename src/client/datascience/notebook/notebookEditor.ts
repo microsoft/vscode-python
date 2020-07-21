@@ -139,7 +139,6 @@ export class NotebookEditor implements INotebookEditor {
         this._executed.fire(this);
         this.executedCode.fire(code);
     }
-
     public async interruptKernel(): Promise<void> {
         this.executionService.cancelPendingExecutions(this.document);
 
