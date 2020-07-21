@@ -28,4 +28,12 @@ export class MockJupyterManagerFactory implements IJupyterSessionManagerFactory 
     public getManager(): MockJupyterManager {
         return this.mockJupyterManager;
     }
+
+    public get onRestartSessionCreated() {
+        return this.mockJupyterManager.onRestartSessionCreated;
+    }
+
+    public get onRestartSessionUsed() {
+        return this.mockJupyterManager.onRestartSessionUsed;
+    }
 }

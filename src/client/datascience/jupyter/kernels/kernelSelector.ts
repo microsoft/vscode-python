@@ -9,7 +9,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
-import { IConfigurationService, Resource } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -70,8 +70,16 @@ export class KernelSelector {
         @inject(IKernelDependencyService) private readonly kernelDepdencyService: IKernelDependencyService,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        @inject(IConfigurationService) private configService: IConfigurationService
-    ) {}
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+    ) {
+        disposableRegistry.push(
+            this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
+        );
+        disposableRegistry.push(
+            this.jupyterSessionManagerFactory.onRestartSessionUsed(this.removeKernelFromIgnoreList.bind(this))
+        );
+    }
 
     /**
      * Ensure kernels such as those associated with the restart session are not displayed in the kernel picker.

@@ -20,6 +20,7 @@ import {
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
+import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
@@ -140,12 +141,7 @@ export class HostRawNotebookProvider
             ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingIPyKernel())
             : undefined;
 
-        const rawSession = new RawJupyterSession(
-            this.kernelLauncher,
-            this.kernelSelector,
-            resource,
-            this.outputChannel
-        );
+        const rawSession = new RawJupyterSession(this.kernelLauncher, resource, this.outputChannel, noop, noop);
         try {
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
 

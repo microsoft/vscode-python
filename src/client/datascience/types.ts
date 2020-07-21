@@ -373,10 +373,14 @@ export type ISessionWithSocket = Session.ISession & {
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
 export interface IJupyterSessionManagerFactory {
+    readonly onRestartSessionCreated: Event<Kernel.IKernelConnection>;
+    readonly onRestartSessionUsed: Event<Kernel.IKernelConnection>;
     create(connInfo: IJupyterConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager>;
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
+    readonly onRestartSessionCreated: Event<Kernel.IKernelConnection>;
+    readonly onRestartSessionUsed: Event<Kernel.IKernelConnection>;
     startNew(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         cancelToken?: CancellationToken

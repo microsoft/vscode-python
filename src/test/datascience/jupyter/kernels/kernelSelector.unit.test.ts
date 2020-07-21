@@ -77,7 +77,8 @@ suite('Data Science - KernelSelector', () => {
             instance(dependencyService),
             instance(kernelFinder),
             instance(jupyterSessionManagerFactory),
-            instance(configService)
+            instance(configService),
+            []
         );
     });
     teardown(() => sinon.restore());

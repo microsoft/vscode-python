@@ -3,7 +3,8 @@
 'use strict';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import type { Session } from '@jupyterlab/services';
+import type { Kernel, Session } from '@jupyterlab/services';
+import { EventEmitter } from 'vscode';
 import { noop } from '../../../common/utils/misc';
 import {
     IJupyterConnection,
@@ -17,10 +18,20 @@ import { LiveKernelModel } from '../kernels/types';
 export class GuestJupyterSessionManager implements IJupyterSessionManager {
     private connInfo: IJupyterConnection | undefined;
 
+    private restartSessionCreatedEvent = new EventEmitter<Kernel.IKernelConnection>();
+    private restartSessionUsedEvent = new EventEmitter<Kernel.IKernelConnection>();
+
     public constructor(private realSessionManager: IJupyterSessionManager) {
         noop();
     }
 
+    public get onRestartSessionCreated() {
+        return this.restartSessionCreatedEvent.event;
+    }
+
+    public get onRestartSessionUsed() {
+        return this.restartSessionUsedEvent.event;
+    }
     public startNew(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         cancelToken?: CancellationToken
