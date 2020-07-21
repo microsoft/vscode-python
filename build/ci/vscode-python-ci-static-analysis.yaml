@@ -66,16 +66,6 @@ jobs:
           ErrorLevel: 'warn'
         continueOnError: true
 
-      - task: Semmle@0
-        inputs:
-          sourceCodeDirectory: '$(Build.SourcesDirectory)\pythonFiles'
-          language: 'python'
-          querySuite: 'Recommended'
-          timeout: '1800'
-          ram: '16384'
-          addProjectDirToScanningExclusionList: true
-        continueOnError: true
-
       - task: CredScan@3
         continueOnError: true
         inputs:
