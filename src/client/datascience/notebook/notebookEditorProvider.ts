@@ -23,6 +23,8 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, setSharedProperty } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
 import { JupyterNotebookView } from './constants';
@@ -171,6 +173,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (!editor) {
             const notebookProvider = this.serviceContainer.get<INotebookProvider>(INotebookProvider);
             const executionService = this.serviceContainer.get<INotebookExecutionService>(INotebookExecutionService);
+            const kernelSelector = this.serviceContainer.get<KernelSelector>(KernelSelector);
+            const kernelSwitcher = this.serviceContainer.get<KernelSwitcher>(KernelSwitcher);
+
             editor = new NotebookEditor(
                 model,
                 doc,
@@ -182,7 +187,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 this.statusProvider,
                 this.appShell,
                 this.configurationService,
-                this.disposables
+                this.disposables,
+                kernelSelector,
+                kernelSwitcher
             );
             this.onEditorOpened(editor);
         }

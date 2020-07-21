@@ -29,6 +29,7 @@ import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import {
     ICodeCssGenerator,
@@ -102,7 +103,8 @@ export class NativeEditorOldWebView extends NativeEditor {
         trustService: ITrustService,
         expService: IExperimentService,
         model: INotebookModel,
-        webviewPanel: WebviewPanel | undefined
+        webviewPanel: WebviewPanel | undefined,
+        selector: KernelSelector
     ) {
         super(
             listeners,
@@ -137,7 +139,8 @@ export class NativeEditorOldWebView extends NativeEditor {
             trustService,
             expService,
             model,
-            webviewPanel
+            webviewPanel,
+            selector
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.

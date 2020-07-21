@@ -32,6 +32,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { Commands, Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import {
@@ -228,7 +229,8 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.serviceContainer.get<ITrustService>(ITrustService),
             this.serviceContainer.get<IExperimentService>(IExperimentService),
             model,
-            panel
+            panel,
+            this.serviceContainer.get<KernelSelector>(KernelSelector)
         );
         this.activeEditors.set(model.file.fsPath, editor);
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));

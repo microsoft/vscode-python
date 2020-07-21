@@ -40,6 +40,7 @@ import {
     NotebookModelChange,
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import {
     ICell,
@@ -130,7 +131,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         private exportUtil: ExportUtil,
         owner: Resource,
         mode: InteractiveWindowMode,
-        title: string | undefined
+        title: string | undefined,
+        selector: KernelSelector
     ) {
         super(
             listeners,
@@ -168,7 +170,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             switcher,
             notebookProvider,
             useCustomEditorApi,
-            expService
+            expService,
+            selector
         );
 
         // Send a telemetry event to indicate window is opening

@@ -36,6 +36,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { ExportUtil } from '../export/exportUtil';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { PostOffice } from '../liveshare/postOffice';
 import {
@@ -196,7 +197,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<ExportUtil>(ExportUtil),
             resource,
             mode,
-            title
+            title,
+            this.serviceContainer.get<KernelSelector>(KernelSelector)
         );
         this._windows.push(result);
 

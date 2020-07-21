@@ -8,6 +8,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
+import { ConfigurationService } from '../../../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { Resource } from '../../../../client/common/types';
 import * as localize from '../../../../client/common/utils/localize';
@@ -15,6 +16,7 @@ import { noop } from '../../../../client/common/utils/misc';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { StopWatch } from '../../../../client/common/utils/stopWatch';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
+import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { defaultKernelSpecName } from '../../../../client/datascience/jupyter/kernels/helpers';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
@@ -22,7 +24,7 @@ import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/k
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IKernelSpecQuickPickItem, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
 import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
-import { IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
+import { IJupyterSessionManager } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
@@ -65,13 +67,17 @@ suite('Data Science - KernelSelector', () => {
         dependencyService = mock(KernelDependencyService);
         interpreterService = mock(InterpreterService);
         kernelFinder = mock<IKernelFinder>();
+        const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
+        const configService = mock(ConfigurationService);
         kernelSelector = new KernelSelector(
             instance(kernelSelectionProvider),
             instance(appShell),
             instance(kernelService),
             instance(interpreterService),
             instance(dependencyService),
-            instance(kernelFinder)
+            instance(kernelFinder),
+            instance(jupyterSessionManagerFactory),
+            instance(configService)
         );
     });
     teardown(() => sinon.restore());
@@ -551,7 +557,7 @@ suite('Data Science - KernelSelector', () => {
                 StopWatch,
                 (IJupyterSessionManager | undefined)?,
                 (CancellationToken | undefined)?,
-                (IJupyterKernelSpec | LiveKernelModel)?
+                string?
             ],
             // tslint:disable-next-line: no-any
             Promise<any>

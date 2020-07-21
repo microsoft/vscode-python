@@ -5,7 +5,6 @@ import '../../common/extensions';
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
-import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
@@ -72,7 +71,7 @@ import {
 } from '../interactive-common/interactiveWindowTypes';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
-import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
+import { KernelSelector, KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { CssMessages, SharedMessages } from '../messages';
@@ -104,7 +103,6 @@ import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
 
-@injectable()
 export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {
     public get notebook(): INotebook | undefined {
         return this._notebook;
@@ -121,6 +119,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         return this.readyEvent.event;
     }
 
+    protected abstract get notebookMetadata(): nbformat.INotebookMetadata | undefined;
+
+    protected abstract get notebookIdentity(): INotebookIdentity;
+
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
     private perceivedJupyterStartupTelemetryCaptured: boolean = false;
@@ -135,36 +137,37 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private readyEvent = new EventEmitter<void>();
 
     constructor(
-        @unmanaged() private readonly listeners: IInteractiveWindowListener[],
-        @unmanaged() liveShare: ILiveShareApi,
-        @unmanaged() protected applicationShell: IApplicationShell,
-        @unmanaged() protected documentManager: IDocumentManager,
-        @unmanaged() provider: IWebPanelProvider,
-        @unmanaged() private disposables: IDisposableRegistry,
-        @unmanaged() cssGenerator: ICodeCssGenerator,
-        @unmanaged() themeFinder: IThemeFinder,
-        @unmanaged() private statusProvider: IStatusProvider,
-        @unmanaged() protected fileSystem: IFileSystem,
-        @unmanaged() protected configuration: IConfigurationService,
-        @unmanaged() protected jupyterExporter: INotebookExporter,
-        @unmanaged() workspaceService: IWorkspaceService,
-        @unmanaged() private dataExplorerFactory: IDataViewerFactory,
-        @unmanaged() private jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        @unmanaged() private jupyterVariables: IJupyterVariables,
-        @unmanaged() private jupyterDebugger: IJupyterDebugger,
-        @unmanaged() protected errorHandler: IDataScienceErrorHandler,
-        @unmanaged() protected readonly commandManager: ICommandManager,
-        @unmanaged() protected globalStorage: Memento,
-        @unmanaged() protected workspaceStorage: Memento,
-        @unmanaged() rootPath: string,
-        @unmanaged() scripts: string[],
-        @unmanaged() title: string,
-        @unmanaged() viewColumn: ViewColumn,
-        @unmanaged() experimentsManager: IExperimentsManager,
-        @unmanaged() private switcher: KernelSwitcher,
-        @unmanaged() private readonly notebookProvider: INotebookProvider,
-        @unmanaged() useCustomEditorApi: boolean,
-        @unmanaged() expService: IExperimentService
+        private readonly listeners: IInteractiveWindowListener[],
+        liveShare: ILiveShareApi,
+        protected applicationShell: IApplicationShell,
+        protected documentManager: IDocumentManager,
+        provider: IWebPanelProvider,
+        private disposables: IDisposableRegistry,
+        cssGenerator: ICodeCssGenerator,
+        themeFinder: IThemeFinder,
+        private statusProvider: IStatusProvider,
+        protected fileSystem: IFileSystem,
+        protected configuration: IConfigurationService,
+        protected jupyterExporter: INotebookExporter,
+        workspaceService: IWorkspaceService,
+        private dataExplorerFactory: IDataViewerFactory,
+        private jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
+        private jupyterVariables: IJupyterVariables,
+        private jupyterDebugger: IJupyterDebugger,
+        protected errorHandler: IDataScienceErrorHandler,
+        protected readonly commandManager: ICommandManager,
+        protected globalStorage: Memento,
+        protected workspaceStorage: Memento,
+        rootPath: string,
+        scripts: string[],
+        title: string,
+        viewColumn: ViewColumn,
+        experimentsManager: IExperimentsManager,
+        private switcher: KernelSwitcher,
+        private readonly notebookProvider: INotebookProvider,
+        useCustomEditorApi: boolean,
+        expService: IExperimentService,
+        private selector: KernelSelector
     ) {
         super(
             configuration,
@@ -327,7 +330,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 break;
 
             case InteractiveWindowMessages.SelectKernel:
-                this.handleMessage(message, payload, this.selectKernel);
+                this.handleMessage(message, payload, this.selectNewKernel);
                 break;
 
             case InteractiveWindowMessages.SelectJupyterServer:
@@ -485,6 +488,28 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     public abstract hasCell(id: string): Promise<boolean>;
+
+    public async selectNewKernel() {
+        try {
+            this.startProgress();
+            // Make sure we have a connection or we can't get remote kernels.
+            const connection = await this.notebookProvider.connect({ getOnly: false, disableUI: false });
+
+            // Select a new kernel using the connection information
+            const kernel = await this.selector.selectJupyterKernel(
+                this.owningResource,
+                connection,
+                connection?.type || this.notebookProvider.type,
+                this.notebookMetadata?.kernelspec?.display_name || this.notebookMetadata?.kernelspec?.name
+            );
+            if (kernel) {
+                await this.setKernel(kernel);
+            }
+        } finally {
+            this.stopProgress();
+        }
+    }
+
     protected onViewStateChanged(args: WebViewViewChangeEventArgs) {
         // Only activate if the active editor is empty. This means that
         // vscode thinks we are actually supposed to have focus. It would be
@@ -528,16 +553,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Default is not to do anything. This only works in the native editor
     }
 
-    protected abstract get notebookMetadata(): nbformat.INotebookMetadata | undefined;
-
     protected abstract updateContexts(info: IInteractiveWindowInfo | undefined): void;
-
-    protected abstract get notebookIdentity(): INotebookIdentity;
 
     protected abstract closeBecauseOfFailure(exc: Error): Promise<void>;
 
     protected abstract updateNotebookOptions(
-        kernelSpec: IJupyterKernelSpec,
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel,
         interpreter: PythonInterpreter | undefined
     ): Promise<void>;
 
@@ -832,6 +853,48 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
+    // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
+    // the same protection to not be called twice
+    // tslint:disable-next-line: member-ordering
+    protected async ensureNotebook(serverConnection: INotebookProviderConnection): Promise<void> {
+        if (!this.notebookPromise) {
+            this.notebookPromise = this.ensureNotebookImpl(serverConnection);
+        }
+        try {
+            await this.notebookPromise;
+        } catch (e) {
+            // Reset the load promise. Don't want to keep hitting the same error
+            this.notebookPromise = undefined;
+
+            throw e;
+        }
+    }
+
+    private async setKernel(kernel: KernelSpecInterpreter) {
+        const specOrModel = kernel?.kernelModel || kernel?.kernelSpec;
+        if (kernel && specOrModel) {
+            // Update our model to point to this new kernel spec.
+            await this.updateNotebookOptions(specOrModel, kernel.interpreter);
+
+            // If we have a notebook, change its kernel now
+            if (this._notebook) {
+                return this.switcher.switchKernelWithRetry(this._notebook, kernel);
+            } else {
+                // Send update directly to UI if no notebook.
+                const displayName = specOrModel.display_name || specOrModel.name || '';
+                this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                    jupyterServerStatus: ServerStatus.NotStarted,
+                    localizedUri: '',
+                    displayName,
+                    language: translateKernelLanguageToMonaco(kernel?.kernelSpec?.language ?? PYTHON_LANGUAGE)
+                }).ignoreErrors();
+
+                // Try creating a notebook again with this new kernel.
+                this.ensureConnectionAndNotebook().ignoreErrors();
+            }
+        }
+    }
+
     private combineData(
         oldData: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | undefined,
         cell: ICell
@@ -1065,23 +1128,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         sendTelemetryEvent(event);
     };
 
-    // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
-    // the same protection to not be called twice
-    // tslint:disable-next-line: member-ordering
-    protected async ensureNotebook(serverConnection: INotebookProviderConnection): Promise<void> {
-        if (!this.notebookPromise) {
-            this.notebookPromise = this.ensureNotebookImpl(serverConnection);
-        }
-        try {
-            await this.notebookPromise;
-        } catch (e) {
-            // Reset the load promise. Don't want to keep hitting the same error
-            this.notebookPromise = undefined;
-
-            throw e;
-        }
-    }
-
     private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook> {
         let notebook: INotebook | undefined;
         while (!notebook) {
@@ -1102,14 +1148,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 // If we get an invalid kernel error, make sure to ask the user to switch
                 if (e instanceof JupyterInvalidKernelError && serverConnection && serverConnection.localLaunch) {
                     // Ask the user for a new local kernel
-                    const newKernel = await this.switcher.askForLocalKernel(
+                    const newKernel = await this.selector.askForLocalKernel(
                         this.owningResource,
                         serverConnection.type,
                         e.kernelSpec
                     );
                     if (newKernel?.kernelSpec) {
-                        // Update the notebook metadata
-                        await this.updateNotebookOptions(newKernel.kernelSpec, newKernel.interpreter);
+                        await this.setKernel(newKernel);
                     }
                 } else {
                     throw e;
@@ -1465,34 +1510,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private async selectServer() {
         await this.commandManager.executeCommand(Commands.SelectJupyterURI);
-    }
-
-    private async selectKernel() {
-        try {
-            this.startProgress();
-            const kernel = (await this.commandManager.executeCommand(
-                Commands.SwitchJupyterKernel,
-                this._notebook,
-                this._notebook?.connection?.type || this.notebookProvider.type
-            )) as KernelSpecInterpreter;
-            if (!this._notebook && kernel?.kernelSpec) {
-                // No notebook, send update to UI anyway
-                this.postMessage(InteractiveWindowMessages.UpdateKernel, {
-                    jupyterServerStatus: ServerStatus.NotStarted,
-                    localizedUri: '',
-                    displayName: kernel.kernelSpec.display_name || kernel.kernelSpec.name || '',
-                    language: translateKernelLanguageToMonaco(kernel.kernelSpec.language ?? PYTHON_LANGUAGE)
-                }).ignoreErrors();
-
-                // Update our model
-                this.updateNotebookOptions(kernel.kernelSpec, kernel.interpreter).ignoreErrors();
-
-                // Try creating a notebook again with this new kernel.
-                this.ensureConnectionAndNotebook().ignoreErrors();
-            }
-        } finally {
-            this.stopProgress();
-        }
     }
     private async kernelChangeHandler(kernel: IJupyterKernelSpec | LiveKernelModel) {
         // Check if we are changing to LiveKernelModel
