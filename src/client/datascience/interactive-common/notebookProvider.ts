@@ -145,6 +145,8 @@ export class NotebookProvider implements INotebookProvider {
         return promise;
     }
 
+    // This method is here so that the kernel selector can pick a kernel and not have
+    // to know about any of the UI that's active.
     public firePotentialKernelChanged(identity: Uri, kernel: KernelSpecInterpreter) {
         this._potentialKernelChanged.fire({ identity, kernel });
     }

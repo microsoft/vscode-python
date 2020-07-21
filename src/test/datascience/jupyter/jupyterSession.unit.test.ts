@@ -47,6 +47,8 @@ suite('Data Science - JupyterSession', () => {
     }
 
     let jupyterSession: JupyterSession;
+    let restartSessionCreatedEvent: Deferred<void>;
+    let restartSessionUsedEvent: Deferred<void>;
     let connection: typemoq.IMock<IJupyterConnection>;
     let serverSettings: typemoq.IMock<ServerConnection.ISettings>;
     let kernelSpec: typemoq.IMock<IJupyterKernelSpec | LiveKernelModel>;
@@ -58,6 +60,8 @@ suite('Data Science - JupyterSession', () => {
     let kernelChangedSignal: ISignal<Session.ISession, IKernelChangedArgs>;
 
     setup(() => {
+        restartSessionCreatedEvent = createDeferred();
+        restartSessionUsedEvent = createDeferred();
         connection = typemoq.Mock.ofType<IJupyterConnection>();
         serverSettings = typemoq.Mock.ofType<ServerConnection.ISettings>();
         kernelSpec = typemoq.Mock.ofType<IJupyterKernelSpec | LiveKernelModel>();
@@ -81,10 +85,10 @@ suite('Data Science - JupyterSession', () => {
             instance(contentsManager),
             channel,
             () => {
-                noop();
+                restartSessionCreatedEvent.resolve();
             },
             () => {
-                noop();
+                restartSessionUsedEvent.resolve();
             }
         );
     });
@@ -282,6 +286,8 @@ suite('Data Science - JupyterSession', () => {
                 newKernelConnection = mock(DefaultKernel);
                 newStatusChangedSignal = mock(Signal);
                 newKernelChangedSignal = mock(Signal);
+                restartSessionCreatedEvent = createDeferred();
+                restartSessionUsedEvent = createDeferred();
                 when(newSession.statusChanged).thenReturn(instance(newStatusChangedSignal));
                 when(newSession.kernelChanged).thenReturn(instance(newKernelChangedSignal));
                 // tslint:disable-next-line: no-any
@@ -357,6 +363,7 @@ suite('Data Science - JupyterSession', () => {
                     await jupyterSession.restart(0);
 
                     // We should kill session and switch to new session, startig a new restart session.
+                    await restartSessionCreatedEvent.promise;
                     await oldSessionShutDown.promise;
                     verify(session.shutdown()).once();
                     verify(session.dispose()).once();

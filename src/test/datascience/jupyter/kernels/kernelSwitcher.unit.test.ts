@@ -114,7 +114,7 @@ suite('Data Science - Kernel Switcher', () => {
                     });
 
                     test('Switch to new kernel', async () => {
-                        await kernelSwitcher.switchKernelWithRetry(notebook, newKernelSpec);
+                        await kernelSwitcher.switchKernelWithRetry(instance(notebook), newKernelSpec);
                         verify(notebook.setKernelSpec(anything(), anything(), anything())).once();
                     });
                     test('Switch to new kernel with error', async () => {
@@ -125,7 +125,7 @@ suite('Data Science - Kernel Switcher', () => {
                             Common.cancel() as any
                         );
 
-                        await kernelSwitcher.switchKernelWithRetry(notebook, newKernelSpec);
+                        await kernelSwitcher.switchKernelWithRetry(instance(notebook), newKernelSpec);
                         verify(kernelSelector.askForLocalKernel(anything(), anything(), anything())).once();
                     });
                 });
