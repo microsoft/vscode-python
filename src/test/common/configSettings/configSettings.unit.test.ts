@@ -194,7 +194,7 @@ suite('Python Settings', async () => {
     });
 
     function testLanguageServer(languageServer: LanguageServerType, expectedValue: LanguageServerType) {
-        test(`languageServer=${languageServer}`, () => {
+        test(languageServer, () => {
             expected.pythonPath = 'python3';
             expected.languageServer = languageServer;
             initializeConfig(expected);
