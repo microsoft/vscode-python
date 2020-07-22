@@ -29,12 +29,7 @@ import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
-import {
-    ILanguageServerActivator,
-    ILanguageServerDownloader,
-    ILanguageServerFolderService,
-    ILanguageServerManager
-} from '../types';
+import { ILanguageServerActivator, ILanguageServerManager } from '../types';
 
 /**
  * Starts the language server managers per workspaces (currently one for first workspace).
@@ -50,8 +45,6 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         protected readonly manager: ILanguageServerManager,
         private readonly workspace: IWorkspaceService,
         protected readonly fs: IFileSystem,
-        protected readonly lsDownloader: ILanguageServerDownloader,
-        protected readonly languageServerFolderService: ILanguageServerFolderService,
         protected readonly configurationService: IConfigurationService
     ) {}
 

@@ -12,7 +12,7 @@ import { IConfigurationService, IExtensions, Resource } from '../../common/types
 import { Common, Pylance } from '../../common/utils/localize';
 import { getPylanceExtensionUri } from '../../languageServices/proposeLanguageServerBanner';
 import { LanguageServerActivatorBase } from '../common/activatorBase';
-import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../types';
+import { ILanguageServerManager } from '../types';
 
 /**
  * Starts the Node.js-based language server managers per workspaces (currently one for first workspace).
@@ -28,14 +28,12 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(ILanguageServerManager) manager: ILanguageServerManager,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IFileSystem) fs: IFileSystem,
-        @inject(ILanguageServerDownloader) lsDownloader: ILanguageServerDownloader,
-        @inject(ILanguageServerFolderService) languageServerFolderService: ILanguageServerFolderService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment
     ) {
-        super(manager, workspace, fs, lsDownloader, languageServerFolderService, configurationService);
+        super(manager, workspace, fs, configurationService);
     }
 
     public async ensureLanguageServerIsAvailable(resource: Resource): Promise<void> {

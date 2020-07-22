@@ -26,14 +26,15 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(ILanguageServerManager) manager: ILanguageServerManager,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IFileSystem) fs: IFileSystem,
-        @inject(ILanguageServerDownloader) lsDownloader: ILanguageServerDownloader,
-        @inject(ILanguageServerFolderService) languageServerFolderService: ILanguageServerFolderService,
+        @inject(ILanguageServerDownloader) private readonly lsDownloader: ILanguageServerDownloader,
+        @inject(ILanguageServerFolderService)
+        private readonly languageServerFolderService: ILanguageServerFolderService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IPythonExtensionBanner)
         @named(BANNER_NAME_PROPOSE_LS)
         private proposePylancePopup: IPythonExtensionBanner
     ) {
-        super(manager, workspace, fs, lsDownloader, languageServerFolderService, configurationService);
+        super(manager, workspace, fs, configurationService);
     }
 
     public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {
@@ -83,15 +84,17 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
     ): Promise<string | undefined> {
         const settings = this.configurationService.getSettings(resource);
         if (settings.downloadLanguageServer === false) {
-            // Development mde
+            // Development mode
             return;
         }
         const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
-        const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
-        const mscorlib = path.join(languageServerFolderPath, fileName);
-        if (!(await this.fs.fileExists(mscorlib))) {
-            await this.lsDownloader.downloadLanguageServer(languageServerFolderPath, resource);
+        if (languageServerFolder) {
+            const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
+            const mscorlib = path.join(languageServerFolderPath, fileName);
+            if (!(await this.fs.fileExists(mscorlib))) {
+                await this.lsDownloader.downloadLanguageServer(languageServerFolderPath, resource);
+            }
+            return languageServerFolderPath;
         }
-        return languageServerFolderPath;
     }
 }
