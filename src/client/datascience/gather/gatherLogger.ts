@@ -19,6 +19,12 @@ export class GatherLogger implements IGatherLogger {
         @inject(IExtensionContext) private context: IExtensionContext
     ) {
         this.initGatherExtension().ignoreErrors();
+        try {
+            this.context.globalState.update('gatherLinesCount', 0);
+            this.context.globalState.update('gatherCellsCount', 0);
+        } catch (e) {
+            traceError(e);
+        }
     }
 
     public dispose() {
