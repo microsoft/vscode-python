@@ -10,7 +10,7 @@ import { IDisposable } from '../../common/types';
 import { Commands } from '../constants';
 import { KernelSelector, KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { IInteractiveWindowProvider, INotebookEditorProvider, INotebookProvider } from '../types';
+import { IInteractiveWindowProvider, INotebookEditorProvider, INotebookProvider, ISwitchKernelOptions } from '../types';
 
 @injectable()
 export class NotebookCommands implements IDisposable {
@@ -32,45 +32,39 @@ export class NotebookCommands implements IDisposable {
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
-    private async switchKernel(
-        identity: Uri | undefined,
-        resource: Uri | undefined,
-        currentKernelSpecName: string | undefined
-    ) {
+    private async switchKernel(options: ISwitchKernelOptions | undefined) {
         // If no identity, spec, or resource, look at the active editor or interactive window.
-        // Only one is possible to be active at any point in time, so we shouldn't get into a case
-        // where the interactive window calls this with an unknown resource and we use the
-        // file for a notebook.
-        if (!identity) {
-            identity = this.notebookEditorProvider.activeEditor
-                ? this.notebookEditorProvider.activeEditor.file
-                : this.interactiveWindowProvider.activeWindow?.identity;
+        // Only one is possible to be active at any point in time
+        if (!options) {
+            options = this.notebookEditorProvider.activeEditor
+                ? {
+                      identity: this.notebookEditorProvider.activeEditor.file,
+                      resource: this.notebookEditorProvider.activeEditor.file,
+                      currentKernelDisplayName:
+                          this.notebookEditorProvider.activeEditor.model.metadata?.kernelspec?.display_name ||
+                          this.notebookEditorProvider.activeEditor.model.metadata?.kernelspec?.name
+                  }
+                : {
+                      identity: this.interactiveWindowProvider.activeWindow?.identity,
+                      resource: this.interactiveWindowProvider.activeWindow?.owner,
+                      currentKernelDisplayName:
+                          this.interactiveWindowProvider.activeWindow?.notebook?.getKernelSpec()?.display_name ||
+                          this.interactiveWindowProvider.activeWindow?.notebook?.getKernelSpec()?.name
+                  };
         }
-        if (!resource) {
-            resource = this.notebookEditorProvider.activeEditor
-                ? this.notebookEditorProvider.activeEditor.file
-                : this.interactiveWindowProvider.activeWindow?.owner;
-        }
-        if (!currentKernelSpecName) {
-            currentKernelSpecName = this.notebookEditorProvider.activeEditor
-                ? this.notebookEditorProvider.activeEditor.model.metadata?.kernelspec?.display_name ||
-                  this.notebookEditorProvider.activeEditor.model.metadata?.kernelspec?.name
-                : this.interactiveWindowProvider.activeWindow?.notebook?.getKernelSpec()?.display_name ||
-                  this.interactiveWindowProvider.activeWindow?.notebook?.getKernelSpec()?.name;
-        }
-        if (identity) {
+        if (options.identity) {
             // Make sure we have a connection or we can't get remote kernels.
             const connection = await this.notebookProvider.connect({ getOnly: false, disableUI: false });
 
             // Select a new kernel using the connection information
             const kernel = await this.kernelSelector.selectJupyterKernel(
-                identity,
+                options.identity,
                 connection,
                 connection?.type || this.notebookProvider.type,
-                currentKernelSpecName
+                options.currentKernelDisplayName
             );
             if (kernel) {
-                await this.setKernel(kernel, identity, resource);
+                await this.setKernel(kernel, options.identity, options.resource);
             }
         }
     }

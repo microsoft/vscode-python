@@ -1313,3 +1313,9 @@ export interface ITrustService {
     isNotebookTrusted(uri: Uri, notebookContents: string): Promise<boolean>;
     trustNotebook(uri: Uri, notebookContents: string): Promise<void>;
 }
+
+export interface ISwitchKernelOptions {
+    identity: Resource;
+    resource: Resource;
+    currentKernelDisplayName: string | undefined;
+}
