@@ -1151,6 +1151,20 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 }
             }
         );
+        when(this.applicationShell.showWarningMessage(anyString())).thenReturn(Promise.resolve(''));
+        when(this.applicationShell.showWarningMessage(anyString(), anything())).thenReturn(Promise.resolve(''));
+        when(this.applicationShell.showWarningMessage(anyString(), anything(), anything())).thenCall((_a1, a2, _a3) =>
+            Promise.resolve(a2)
+        );
+        when(this.applicationShell.showWarningMessage(anyString(), anything(), anything(), anything())).thenCall(
+            (_a1, a2, _a3, a4) => {
+                if (typeof a2 === 'string') {
+                    return Promise.resolve(a2);
+                } else {
+                    return Promise.resolve(a4);
+                }
+            }
+        );
         when(this.applicationShell.showSaveDialog(anything())).thenReturn(Promise.resolve(Uri.file('test.ipynb')));
         when(this.applicationShell.setStatusBarMessage(anything())).thenReturn(dummyDisposable);
         when(this.applicationShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));

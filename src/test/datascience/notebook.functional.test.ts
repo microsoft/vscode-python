@@ -515,7 +515,14 @@ suite('DataScience notebook tests', () => {
                         ]);
 
                         // Try to create, we expect a failure here as we will deny the insecure connection
-                        await createNotebook(uri, undefined, true);
+                        let madeItPast = false;
+                        try {
+                            await createNotebook(uri, undefined);
+                            madeItPast = true;
+                        } catch (exc) {
+                            assert.ok(exc.toString().includes('insecure'), `Invalid exception thrown: ${exc}`);
+                        }
+                        assert.notOk(madeItPast, 'Should have thrown an exception');
                     }
                 },
                 undefined
