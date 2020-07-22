@@ -82,7 +82,8 @@ export class GatherListener implements IInteractiveWindowListener {
                 if (this.gatherProvider) {
                     this.gatherProvider.resetLog();
                     try {
-                        this.context.globalState.update('gatherCount', 0);
+                        this.context.globalState.update('gatherLinesCount', 0);
+                        this.context.globalState.update('gatherCellsCount', 0);
                     } catch (e) {
                         traceError(e);
                     }
