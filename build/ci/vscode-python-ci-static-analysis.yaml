@@ -94,3 +94,8 @@ jobs:
           ArtifactType: 'Container'
           AllTools: true
           ToolLogsNotFoundAction: 'Standard'
+
+      - task: TSAUpload@2
+        inputs:
+          GdnPublishTsaOnboard: true
+          GdnPublishTsaConfigFile: '$(Build.SourcesDirectory)\build\ci\TSAOptions.json'
