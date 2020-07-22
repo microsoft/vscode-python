@@ -88,8 +88,9 @@ export class GatherListener implements IInteractiveWindowListener {
                 break;
 
             case InteractiveWindowMessages.FinishCell:
-                if (payload.cell) {
-                    const lineCount: number = payload.cell.data.source.length as number;
+                const cell = payload as ICell;
+                if (cell && cell.data && cell.data.source) {
+                    const lineCount: number = cell.data.source.length as number;
                     this.linesSubmitted += lineCount;
                     this.cellsSubmitted += 1;
                 }
