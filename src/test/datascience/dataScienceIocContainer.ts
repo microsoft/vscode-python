@@ -20,6 +20,7 @@ import {
     FileSystemWatcher,
     Memento,
     Uri,
+    WindowState,
     WorkspaceFolder,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
@@ -27,7 +28,6 @@ import * as vsls from 'vsls/vscode';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 
 import { promisify } from 'util';
-import { WindowState } from 'vscode';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import { LanguageServerDownloader } from '../../client/activation/common/downloader';
 import { JediExtensionActivator } from '../../client/activation/jedi';
