@@ -107,7 +107,7 @@ function isANotebookOpen() {
     // tslint:disable
     if (
         Array.isArray((vscode as any).notebook.visibleNotebookEditors) &&
-        vscode.notebook.visibleNotebookEditors.length
+        (vscode as any).notebook.visibleNotebookEditors.length
     ) {
         return true;
     }

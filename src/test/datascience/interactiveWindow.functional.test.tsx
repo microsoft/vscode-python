@@ -1237,12 +1237,12 @@ for i in range(0, 100):
         const lenses = fooWatcher?.getCodeLenses();
         assert.equal(lenses?.length, 6, 'No code lenses found');
         await runCodeLens(fooWatcher!.uri!, lenses ? lenses[0] : undefined, ioc);
-        verifyHtmlOnCell(pair1.mount.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
+        verifyHtmlOnCell(pair1.mount.wrapper, 'InteractiveCell', 'foo', CellPosition.Last);
 
         // Create another window, run a cell again
         const pair2 = await getOrCreateInteractiveWindow(ioc);
         await runCodeLens(fooWatcher!.uri!, lenses ? lenses[0] : undefined, ioc);
-        verifyHtmlOnCell(pair2.mount.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
+        verifyHtmlOnCell(pair2.mount.wrapper, 'InteractiveCell', 'foo', CellPosition.Last);
 
         // Make the first window active
         pair2.mount.changeViewState(false, false);
@@ -1253,7 +1253,7 @@ for i in range(0, 100):
         const lenses2 = barWatcher?.getCodeLenses();
         assert.equal(lenses2?.length, 6, 'No code lenses found');
         await runCodeLens(barWatcher!.uri!, lenses2 ? lenses2[0] : undefined, ioc);
-        verifyHtmlOnCell(pair1.mount.wrapper, 'InteractiveCell', '<span>bar</span>', CellPosition.Last);
+        verifyHtmlOnCell(pair1.mount.wrapper, 'InteractiveCell', 'bar', CellPosition.Last);
     });
     test('Per file', async () => {
         addMockData(ioc, fooCode, 'foo');
@@ -1268,7 +1268,7 @@ for i in range(0, 100):
         await runCodeLens(fooWatcher!.uri!, lenses ? lenses[0] : undefined, ioc);
         assert.equal(interactiveWindowProvider.windows.length, 1, 'Interactive window not created');
         const mounted1 = interactiveWindowProvider.getMountedWebView(interactiveWindowProvider.windows[0]);
-        verifyHtmlOnCell(mounted1.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
+        verifyHtmlOnCell(mounted1.wrapper, 'InteractiveCell', 'foo', CellPosition.Last);
 
         // Create another window, run a cell again
         const barWatcher = createCodeWatcher(`# %%\n${barCode}`, 'bar.py', ioc);
@@ -1278,7 +1278,7 @@ for i in range(0, 100):
         const mounted2 = interactiveWindowProvider.getMountedWebView(
             interactiveWindowProvider.windows.find((w) => w.title.includes('bar'))
         );
-        verifyHtmlOnCell(mounted2.wrapper, 'InteractiveCell', '<span>bar</span>', CellPosition.Last);
+        verifyHtmlOnCell(mounted2.wrapper, 'InteractiveCell', 'bar', CellPosition.Last);
     });
     test('Per file asks and changes titles', async () => {
         addMockData(ioc, fooCode, 'foo');
@@ -1300,7 +1300,7 @@ for i in range(0, 100):
         await runCodeLens(fooWatcher!.uri!, lenses ? lenses[0] : undefined, ioc);
         assert.equal(interactiveWindowProvider.windows.length, 1, 'Interactive window not created');
         const mounted1 = interactiveWindowProvider.getMountedWebView(interactiveWindowProvider.windows[0]);
-        verifyHtmlOnCell(mounted1.wrapper, 'InteractiveCell', '<span>foo</span>', CellPosition.Last);
+        verifyHtmlOnCell(mounted1.wrapper, 'InteractiveCell', 'foo', CellPosition.Last);
 
         // Create another window, run a cell again
         const barWatcher = createCodeWatcher(`# %%\n${barCode}`, 'bar.py', ioc);
@@ -1310,7 +1310,7 @@ for i in range(0, 100):
         const mounted2 = interactiveWindowProvider.getMountedWebView(
             interactiveWindowProvider.windows.find((w) => w.title.includes('bar'))
         );
-        verifyHtmlOnCell(mounted2.wrapper, 'InteractiveCell', '<span>bar</span>', CellPosition.Last);
+        verifyHtmlOnCell(mounted2.wrapper, 'InteractiveCell', 'bar', CellPosition.Last);
 
         // First window should now have foo in the title too
         assert.ok(interactiveWindowProvider.windows[0].title.includes('foo'), 'Title of first window did not change');
