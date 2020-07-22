@@ -126,6 +126,8 @@ export interface INotebookCompletion {
     metadata: {};
 }
 
+export type INotebookMetadataLive = nbformat.INotebookMetadata & { id?: string };
+
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
@@ -133,7 +135,7 @@ export interface INotebookServer extends IAsyncDisposable {
     createNotebook(
         resource: Resource,
         identity: Uri,
-        notebookMetadata?: nbformat.INotebookMetadata,
+        notebookMetadata?: INotebookMetadataLive,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
     getNotebook(identity: Uri, cancelToken?: CancellationToken): Promise<INotebook | undefined>;
@@ -253,7 +255,7 @@ export interface INotebookServerOptions {
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
     purpose: string;
-    metadata?: nbformat.INotebookMetadata;
+    metadata?: INotebookMetadataLive;
     disableUI?: boolean;
     skipSearchingForKernel?: boolean;
     allowUI(): boolean;
@@ -1046,7 +1048,7 @@ export interface INotebookModel {
     readonly cells: readonly Readonly<ICell>[];
     readonly onDidEdit: Event<NotebookModelChange>;
     readonly isDisposed: boolean;
-    readonly metadata: nbformat.INotebookMetadata | undefined;
+    readonly metadata: INotebookMetadataLive | undefined;
     readonly isTrusted: boolean;
     getContent(): string;
     update(change: NotebookModelChange): void;
@@ -1100,7 +1102,7 @@ export type GetNotebookOptions = {
     identity: Uri;
     getOnly?: boolean;
     disableUI?: boolean;
-    metadata?: nbformat.INotebookMetadata;
+    metadata?: nbformat.INotebookMetadata & { id?: string };
     token?: CancellationToken;
 };
 

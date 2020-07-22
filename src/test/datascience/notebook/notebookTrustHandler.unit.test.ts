@@ -11,10 +11,12 @@ import { EventEmitter, Uri } from 'vscode';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
+import { CryptoUtils } from '../../../client/common/crypto';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
 import { NotebookTrustHandler } from '../../../client/datascience/notebook/notebookTrustHandler';
 import { INotebookEditor, INotebookEditorProvider, ITrustService } from '../../../client/datascience/types';
+import { MockMemento } from '../../mocks/mementos';
 import { createNotebookDocument, createNotebookModel, disposeAllDisposables } from './helper';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -28,6 +30,7 @@ suite('DataScience - NativeNotebook TrustHandler', () => {
     let fs: IFileSystem;
     let disposables: IDisposable[];
     let onDidTrustNotebook: EventEmitter<void>;
+    let testIndex = 0;
     setup(async () => {
         disposables = [];
         trustService = mock<ITrustService>();
@@ -91,7 +94,14 @@ suite('DataScience - NativeNotebook TrustHandler', () => {
             ]
         };
 
-        return [createNotebookModel(false, Uri.file('a'), nbJson), createNotebookModel(false, Uri.file('b'), nbJson)];
+        const crypto = mock(CryptoUtils);
+        testIndex += 1;
+        when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
+
+        return [
+            createNotebookModel(false, Uri.file('a'), new MockMemento(), instance(crypto), nbJson),
+            createNotebookModel(false, Uri.file('b'), new MockMemento(), instance(crypto), nbJson)
+        ];
     }
     test('When a notebook is trusted, the Notebook document is updated accordingly', async () => {
         const [model1, model2] = createModels();

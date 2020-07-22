@@ -26,6 +26,7 @@ import {
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     IKernelDependencyService,
+    INotebookMetadataLive,
     INotebookProviderConnection
 } from '../../types';
 import { createDefaultKernelSpec } from './helpers';
@@ -252,13 +253,29 @@ export class KernelSelector {
     public async getKernelForRemoteConnection(
         resource: Resource,
         sessionManager?: IJupyterSessionManager,
-        notebookMetadata?: nbformat.INotebookMetadata,
+        notebookMetadata?: INotebookMetadataLive,
         cancelToken?: CancellationToken
     ): Promise<KernelSpecInterpreter> {
-        const [interpreter, specs] = await Promise.all([
+        const [interpreter, specs, runningKernels, sessions] = await Promise.all([
             this.interpreterService.getActiveInterpreter(resource),
-            this.kernelService.getKernelSpecs(sessionManager, cancelToken)
+            this.kernelService.getKernelSpecs(sessionManager, cancelToken),
+            sessionManager?.getRunningKernels(),
+            sessionManager?.getRunningSessions()
         ]);
+
+        // First check for a live active session.
+        if (notebookMetadata && notebookMetadata.id) {
+            const liveMatch = runningKernels?.find((k) => k.id === notebookMetadata.id);
+            const session = sessions?.find((s) => s.kernel.id === liveMatch?.id);
+            if (liveMatch && session) {
+                return {
+                    kernelModel: { ...liveMatch, session },
+                    interpreter: interpreter
+                };
+            }
+        }
+
+        // No running session, try matching based on interpreter
         let bestMatch: IJupyterKernelSpec | undefined;
         let bestScore = -1;
         for (let i = 0; specs && i < specs?.length; i = i + 1) {

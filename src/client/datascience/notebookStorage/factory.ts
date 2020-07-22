@@ -3,8 +3,9 @@
 
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
+import { Memento, Uri } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
+import { ICryptoUtils } from '../../common/types';
 import { ICell, INotebookModel } from '../types';
 import { NativeEditorNotebookModel } from './notebookModel';
 import { INotebookModelFactory } from './types';
@@ -19,6 +20,8 @@ export class NotebookModelFactory implements INotebookModelFactory {
             file: Uri;
             cells: ICell[];
             notebookJson?: Partial<nbformat.INotebookContent>;
+            globalMemento: Memento;
+            crypto: ICryptoUtils;
             indentAmount?: string;
             pythonNumber?: number;
             initiallyDirty?: boolean;
@@ -30,6 +33,8 @@ export class NotebookModelFactory implements INotebookModelFactory {
                 options.trusted,
                 options.file,
                 options.cells,
+                options.globalMemento,
+                options.crypto,
                 options.notebookJson,
                 options.indentAmount,
                 options.pythonNumber
@@ -39,6 +44,8 @@ export class NotebookModelFactory implements INotebookModelFactory {
             options.trusted,
             options.file,
             options.cells,
+            options.globalMemento,
+            options.crypto,
             options.notebookJson,
             options.indentAmount,
             options.pythonNumber,

@@ -3,10 +3,11 @@
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
-import { Uri } from 'vscode';
+import { Memento, Uri } from 'vscode';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { traceError } from '../../common/logger';
+import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { ICell } from '../types';
 import { BaseNotebookModel } from './baseModel';
@@ -28,11 +29,13 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         isTrusted: boolean,
         file: Uri,
         cells: ICell[],
+        globalMemento: Memento,
+        crypto: ICryptoUtils,
         json: Partial<nbformat.INotebookContent> = {},
         indentAmount: string = ' ',
         pythonNumber: number = 3
     ) {
-        super(isTrusted, file, cells, json, indentAmount, pythonNumber);
+        super(isTrusted, file, cells, globalMemento, crypto, json, indentAmount, pythonNumber);
     }
     /**
      * Unfortunately Notebook models are created early, well before a VSC Notebook Document is created.

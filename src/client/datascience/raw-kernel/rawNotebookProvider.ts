@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -16,6 +15,7 @@ import { Telemetry } from '../constants';
 import {
     ConnectNotebookProviderOptions,
     INotebook,
+    INotebookMetadataLive,
     IRawConnection,
     IRawNotebookProvider,
     IRawNotebookSupportedService
@@ -82,7 +82,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         identity: Uri,
         resource: Resource,
         disableUI: boolean,
-        notebookMetadata: nbformat.INotebookMetadata,
+        notebookMetadata: INotebookMetadataLive,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         return this.createNotebookInstance(resource, identity, disableUI, notebookMetadata, cancelToken);
@@ -141,7 +141,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         _resource: Resource,
         _identity: Uri,
         _disableUI?: boolean,
-        _notebookMetadata?: nbformat.INotebookMetadata,
+        _notebookMetadata?: INotebookMetadataLive,
         _cancelToken?: CancellationToken
     ): Promise<INotebook> {
         throw new Error('You forgot to override createNotebookInstance');

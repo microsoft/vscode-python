@@ -312,6 +312,8 @@ suite('DataScience Native Editor', () => {
                     }
                 });
 
+                runMountedTest('Remote kernel can be switched and remembered', async () => {});
+
                 runMountedTest('Mime Types', async () => {
                     // Create an editor so something is listening to messages
                     await createNewEditor(ioc);

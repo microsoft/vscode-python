@@ -2,13 +2,16 @@
 // Licensed under the MIT License.
 
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
-import { Event, EventEmitter, Uri } from 'vscode';
+import { Event, EventEmitter, Memento, Uri } from 'vscode';
+import { ICryptoUtils } from '../../common/types';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { pruneCell } from '../common';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { isUntitled } from '../interactive-ipynb/nativeEditorStorage';
 import { LiveKernelModel } from '../jupyter/kernels/types';
-import { ICell, IJupyterKernelSpec, INotebookModel } from '../types';
+import { ICell, IJupyterKernelSpec, INotebookMetadataLive, INotebookModel } from '../types';
+
+const ActiveKernelIdKeyPrefix = `Active_Kernel_Id_For_`;
 
 export abstract class BaseNotebookModel implements INotebookModel {
     public get onDidDispose() {
@@ -36,8 +39,13 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public get onDidEdit(): Event<NotebookModelChange> {
         return this._editEventEmitter.event;
     }
-    public get metadata(): nbformat.INotebookMetadata | undefined {
-        return this.notebookJson.metadata;
+    public get metadata(): INotebookMetadataLive | undefined {
+        return this.kernelId && this.notebookJson.metadata
+            ? {
+                  ...this.notebookJson.metadata,
+                  id: this.kernelId
+              }
+            : this.notebookJson.metadata;
     }
     public get isTrusted() {
         return this._isTrusted;
@@ -47,15 +55,19 @@ export abstract class BaseNotebookModel implements INotebookModel {
     protected _isDisposed?: boolean;
     protected _changedEmitter = new EventEmitter<NotebookModelChange>();
     protected _editEventEmitter = new EventEmitter<NotebookModelChange>();
+    private kernelId: string | undefined;
     constructor(
         protected _isTrusted: boolean,
         protected _file: Uri,
         protected _cells: ICell[],
+        protected globalMemento: Memento,
+        private crypto: ICryptoUtils,
         protected notebookJson: Partial<nbformat.INotebookContent> = {},
         public readonly indentAmount: string = ' ',
         private readonly pythonNumber: number = 3
     ) {
         this.ensureNotebookJson();
+        this.kernelId = this.getStoredKernelId();
     }
     public dispose() {
         this._isDisposed = true;
@@ -143,6 +155,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
                 name: kernelSpec.name || kernelSpec.display_name || '',
                 display_name: kernelSpec.display_name || kernelSpec.name || ''
             };
+            this.kernelId = kernelSpec.id;
             changed = true;
         } else if (kernelSpec && this.notebookJson.metadata && this.notebookJson.metadata.kernelspec) {
             // Spec exists, just update name and display_name
@@ -150,13 +163,19 @@ export abstract class BaseNotebookModel implements INotebookModel {
             const displayName = kernelSpec.display_name || kernelSpec.name || '';
             if (
                 this.notebookJson.metadata.kernelspec.name !== name ||
-                this.notebookJson.metadata.kernelspec.display_name !== displayName
+                this.notebookJson.metadata.kernelspec.display_name !== displayName ||
+                this.kernelId !== kernelSpec.id
             ) {
                 changed = true;
                 this.notebookJson.metadata.kernelspec.name = name;
                 this.notebookJson.metadata.kernelspec.display_name = displayName;
+                this.kernelId = kernelSpec.id;
             }
         }
+
+        // Update our kernel id in our global storage too
+        this.setStoredKernelId(kernelSpec?.id);
+
         return changed;
     }
 
@@ -199,5 +218,14 @@ export abstract class BaseNotebookModel implements INotebookModel {
         const json = { ...this.notebookJson };
         json.cells = this.cells.map((c) => pruneCell(c.data));
         return JSON.stringify(json, null, this.indentAmount);
+    }
+
+    private getStoredKernelId(): string | undefined {
+        const key = `${ActiveKernelIdKeyPrefix}${this.crypto.createHash(this._file.toString(), 'string')}`;
+        return this.globalMemento.get(key);
+    }
+    private setStoredKernelId(id: string | undefined) {
+        const key = `${ActiveKernelIdKeyPrefix}${this.crypto.createHash(this._file.toString(), 'string')}`;
+        return this.globalMemento.update(key, id);
     }
 }
