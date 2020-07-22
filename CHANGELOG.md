@@ -2,8 +2,10 @@
 
 ## 2020.7.1 (22 July 2020)
 
-1. Ensure languageServer value is valid when sending telemetry.
-   ([#13064](https://github.com/Microsoft/vscode-python/pull/13064))
+1.  Fix language server setting when provided an invalid value, send config event more consistently.
+    ([#13064](https://github.com/Microsoft/vscode-python/pull/13064))
+1.  Add banner for pylance, and remove old LS experiment.
+    ([#12817](https://github.com/microsoft/vscode-python/pull/12817))
 
 ## 2020.7.0 (16 July 2020)
 
