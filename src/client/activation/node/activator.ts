@@ -5,10 +5,12 @@ import { CancellationToken, CompletionItem, ProviderResult } from 'vscode';
 // tslint:disable-next-line: import-name
 import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
 import { CompletionResolveRequest } from 'vscode-languageclient/node';
-import { IWorkspaceService } from '../../common/application/types';
-import { traceDecorators } from '../../common/logger';
+import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, Resource } from '../../common/types';
+import { IConfigurationService, IExtensions, Resource } from '../../common/types';
+import { Common, Pylance } from '../../common/utils/localize';
+import { getPylanceExtensionUri } from '../../languageServices/proposeLanguageServerBanner';
 import { LanguageServerActivatorBase } from '../common/activatorBase';
 import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../types';
 
@@ -28,14 +30,36 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(IFileSystem) fs: IFileSystem,
         @inject(ILanguageServerDownloader) lsDownloader: ILanguageServerDownloader,
         @inject(ILanguageServerFolderService) languageServerFolderService: ILanguageServerFolderService,
-        @inject(IConfigurationService) configurationService: IConfigurationService
+        @inject(IConfigurationService) configurationService: IConfigurationService,
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment
     ) {
         super(manager, workspace, fs, lsDownloader, languageServerFolderService, configurationService);
     }
 
-    @traceDecorators.error('Failed to ensure language server is available')
     public async ensureLanguageServerIsAvailable(resource: Resource): Promise<void> {
-        await this.ensureLanguageServerFileIsAvailable(resource, 'server.bundle.js');
+        const settings = this.configurationService.getSettings(resource);
+        if (settings.downloadLanguageServer === false) {
+            // Development mode.
+            return;
+        }
+        // Check if Pylance extension is installed.
+        if (this.extensions.getExtension(PYLANCE_EXTENSION_ID)) {
+            return;
+        }
+        // Point user to Pylance at the store.
+        const response = await this.appShell.showErrorMessage(
+            Pylance.installPylanceMessage(),
+            Common.bannerLabelYes(),
+            Common.bannerLabelNo()
+        );
+        if (response === Common.bannerLabelYes()) {
+            this.appShell.openUrl(getPylanceExtensionUri(this.appEnv));
+        }
+        // At this time there is no Pylance installed yet.
+        // throwing will cause activator to use Jedi temporarily.
+        throw new Error(Pylance.pylanceNotInstalledMessage());
     }
 
     public resolveCompletionItem(item: CompletionItem, token: CancellationToken): ProviderResult<CompletionItem> {

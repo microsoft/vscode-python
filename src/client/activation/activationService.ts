@@ -19,6 +19,7 @@ import {
     Resource
 } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
+import { LanguageService } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
@@ -248,7 +249,7 @@ export class LanguageServerExtensionActivationService
             if (serverType === LanguageServerType.Jedi) {
                 throw ex;
             }
-            await this.logStartup(serverType);
+            this.output.appendLine(LanguageService.lsFailedToStart());
             serverType = LanguageServerType.Jedi;
             server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
             await server.start(resource, interpreter);
@@ -268,16 +269,16 @@ export class LanguageServerExtensionActivationService
         let outputLine;
         switch (serverType) {
             case LanguageServerType.Jedi:
-                outputLine = 'Starting Jedi Python language engine.';
+                outputLine = LanguageService.startingJedi();
                 break;
             case LanguageServerType.Microsoft:
-                outputLine = 'Starting Microsoft Python language server.';
+                outputLine = LanguageService.startingMicrosoft();
                 break;
             case LanguageServerType.Node:
-                outputLine = 'Starting Pylance language server.';
+                outputLine = LanguageService.startingPylance();
                 break;
             case LanguageServerType.None:
-                outputLine = 'Editor support is inactive since language server is set to None.';
+                outputLine = LanguageService.startingNone();
                 break;
             default:
                 throw new Error('Unknown langauge server type in activator.');

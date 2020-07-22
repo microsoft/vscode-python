@@ -64,7 +64,7 @@ suite('Localization', () => {
         // Force a config change
         setLocale('it');
 
-        const val = localize.LanguageService.bannerLabelYes();
+        const val = localize.ExtensionSurveyBanner.bannerLabelYes();
         assert.equal(val, 'Sì, prenderò il sondaggio ora', 'bannerLabelYes is not being translated');
         done();
     });

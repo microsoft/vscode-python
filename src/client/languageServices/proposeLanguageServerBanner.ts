@@ -16,7 +16,7 @@ import {
     IPersistentStateFactory,
     IPythonExtensionBanner
 } from '../common/types';
-import { LanguageService } from '../common/utils/localize';
+import { Common, Pylance } from '../common/utils/localize';
 
 export function getPylanceExtensionUri(appEnv: IApplicationEnvironment): string {
     return `${appEnv.uriScheme}:extension/${PYLANCE_EXTENSION_ID}`;
@@ -66,16 +66,16 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
         }
 
         const response = await this.appShell.showInformationMessage(
-            LanguageService.proposePylanceMessage(),
-            LanguageService.tryItNow(),
-            LanguageService.bannerLabelNo(),
-            LanguageService.remindMeLater()
+            Pylance.proposePylanceMessage(),
+            Pylance.tryItNow(),
+            Common.bannerLabelNo(),
+            Pylance.remindMeLater()
         );
 
-        if (response === LanguageService.tryItNow()) {
+        if (response === Pylance.tryItNow()) {
             this.appShell.openUrl(getPylanceExtensionUri(this.appEnv));
             await this.disable();
-        } else if (response === LanguageService.bannerLabelNo()) {
+        } else if (response === Common.bannerLabelNo()) {
             await this.disable();
         } else {
             this.disabledInCurrentSession = true;
