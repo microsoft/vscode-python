@@ -219,7 +219,7 @@ suite('DataScience - Notebook Commands', () => {
                         return instance(notebook);
                     });
 
-                    await commandHandler.bind(notebookCommands)(uri);
+                    await commandHandler.bind(notebookCommands)({ identity: uri });
                     verify(
                         notebook.setKernelSpec(
                             argThat((o) => {
@@ -313,7 +313,7 @@ suite('DataScience - Notebook Commands', () => {
                 test('With no notebook, should still fire change', async () => {
                     when(notebookProvider.getOrCreateNotebook(anything())).thenResolve(undefined);
                     const uri = Uri.parse('history://foobar');
-                    await commandHandler.bind(notebookCommands)(uri);
+                    await commandHandler.bind(notebookCommands)({ identity: uri });
                     verify(notebookProvider.firePotentialKernelChanged(anything(), anything())).once();
                 });
             });
