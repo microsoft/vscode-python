@@ -59,7 +59,7 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
     }
 
     public getMountedWebView(window: IInteractiveWindow | undefined): IMountedWebView {
-        const key = window ? window.identity.toString() : this.windows[0].identity.toString();
+        const key = window ? window.identity.toString() : this.windows[0]?.identity.toString();
         if (!this.windowToMountMap.has(key)) {
             throw new Error('Test Failure: Window not mounted yet.');
         }

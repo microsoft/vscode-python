@@ -225,13 +225,19 @@ export class JupyterNotebookBase implements INotebook {
                 this.sessionStatusChanged.dispose();
                 this.onStatusChangedEvent = undefined;
             }
-
-            traceInfo(`Shutting down session ${this.identity.toString()}`);
-            if (this.session) {
-                await this.session.dispose().catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
-            }
             this.loggers.forEach((d) => d.dispose());
             this.disposed.fire();
+
+            try {
+                traceInfo(`Shutting down session ${this.identity.toString()}`);
+                if (this.session) {
+                    await this.session
+                        .dispose()
+                        .catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
+                }
+            } catch (exc) {
+                traceError(`Exception shutting down session `, exc);
+            }
         }
     }
 

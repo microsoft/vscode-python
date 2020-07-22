@@ -80,6 +80,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
         this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
         this.registerCommand(Commands.GatherQuality, this.reportGatherQuality);
+        this.registerCommand(Commands.LatestExtension, this.openPythonExtensionPage);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
@@ -394,7 +395,11 @@ export class CommandRegistry implements IDisposable {
     }
 
     private reportGatherQuality(val: string) {
-        sendTelemetryEvent(Telemetry.GatherQualityReport, undefined, { result: val === 'no' ? 'no' : 'yes' });
-        env.openExternal(Uri.parse(`https://aka.ms/gathersurvey?succeed=${val}`));
+        sendTelemetryEvent(Telemetry.GatherQualityReport, undefined, { result: val[0] === 'no' ? 'no' : 'yes' });
+        env.openExternal(Uri.parse(`https://aka.ms/gathersurvey?succeed=${val[0]}`));
+    }
+
+    private openPythonExtensionPage() {
+        env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-python.python`));
     }
 }

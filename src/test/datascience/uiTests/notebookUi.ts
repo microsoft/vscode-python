@@ -5,6 +5,7 @@
 
 import { assert } from 'chai';
 import { ElementHandle } from 'playwright-chromium';
+import { sleep } from '../../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { INotebookEditor } from '../../../client/datascience/types';
 import { BaseWebUI } from './helpers';
@@ -37,8 +38,13 @@ export class NotebookEditorUI extends BaseWebUI {
         // Make sure to wait for idle so that the button is clickable.
         await this.waitForIdle();
 
+        // Wait just a bit longer to make sure button is visible (not sure why it isn't clicking the button sometimes)
+        await sleep(500);
+
         // Click the run button.
         const runButton = await this.getToolbarButton(cellIndex, CellToolbarButton.run);
+        // tslint:disable-next-line: no-console
+        console.log(`Executing cell ${cellIndex} by clicking ${runButton.toString()}`);
         await Promise.all([runButton.click({ button: 'left', force: true, timeout: 0 }), renderedPromise]);
     }
 

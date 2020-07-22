@@ -80,7 +80,7 @@ jobs:
           script: |
             python -m pip install -U pip
             python -m pip install bandit
-            python -m bandit -r "$(Build.SourcesDirectory)\pythonFiles"
+            python -m bandit -s B101 -x "$(Build.SourcesDirectory)\pythonFiles\tests\**\*"-r "$(Build.SourcesDirectory)\pythonFiles"
         continueOnError: true
 
       - task: SdtReport@2
