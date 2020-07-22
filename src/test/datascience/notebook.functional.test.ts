@@ -22,7 +22,7 @@ import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { LocalZMQKernel } from '../../client/common/experiments/groups';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IPythonExecutionFactory, IPythonExecutionService, Output } from '../../client/common/process/types';
+import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -52,9 +52,9 @@ import { generateTestState, ICellViewModel } from '../../datascience-ui/interact
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
-import { getIPConnectionInfo } from './jupyterHelpers';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
+import { createPythonService, startRemoteServer } from './remoteTestHelpers';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 suite('DataScience notebook tests', () => {
@@ -62,7 +62,6 @@ suite('DataScience notebook tests', () => {
         suite(`${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'}`, () => {
             const disposables: Disposable[] = [];
             let notebookProvider: INotebookProvider;
-            let pythonFactory: IPythonExecutionFactory;
 
             let ioc: DataScienceIocContainer;
             let modifiedConfig = false;
@@ -82,7 +81,6 @@ suite('DataScience notebook tests', () => {
                 ioc.registerDataScienceTypes();
                 await ioc.activate();
                 notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
-                pythonFactory = ioc.get<IPythonExecutionFactory>(IPythonExecutionFactory);
             });
 
             suiteSetup(() => {
@@ -97,7 +95,7 @@ suite('DataScience notebook tests', () => {
                 try {
                     if (modifiedConfig) {
                         traceInfo('Attempting to put jupyter default config back');
-                        const procService = await createPythonService();
+                        const procService = await createPythonService(ioc);
                         if (procService) {
                             await procService.exec(['-m', 'jupyter', 'notebook', '--generate-config', '-y'], {});
                         }
@@ -352,61 +350,8 @@ suite('DataScience notebook tests', () => {
                 }
             }
 
-            async function createPythonService(
-                versionRequirement?: number
-            ): Promise<IPythonExecutionService | undefined> {
-                if (!ioc.mockJupyter) {
-                    const python = await ioc.getJupyterCapableInterpreter();
-
-                    if (
-                        python &&
-                        python.version?.major &&
-                        (!versionRequirement || python.version?.major > versionRequirement)
-                    ) {
-                        return pythonFactory.createActivatedEnvironment({
-                            resource: undefined,
-                            interpreter: python,
-                            allowEnvironmentFetchExceptions: true,
-                            bypassCondaExecution: true
-                        });
-                    }
-                }
-            }
-
-            async function startRemoteServer(pythonService: IPythonExecutionService, args: string[]): Promise<string> {
-                const connectionFound = createDeferred();
-                const exeResult = pythonService.execObservable(args, {
-                    throwOnStdErr: false
-                });
-                disposables.push(exeResult);
-                exeResult.out.subscribe(
-                    (output: Output<string>) => {
-                        traceInfo(`Remote server output: ${output.out}`);
-                        const connectionURL = getIPConnectionInfo(output.out);
-                        if (connectionURL) {
-                            connectionFound.resolve(connectionURL);
-                        }
-                    },
-                    (e) => {
-                        traceInfo(`Remote server error: ${e}`);
-                        connectionFound.reject(e);
-                    }
-                );
-
-                traceInfo('Connecting to remote server');
-                const connString = await connectionFound.promise;
-                const uri = connString as string;
-
-                // Wait another 3 seconds to give notebook time to be ready. Not sure
-                // how else to know when it's okay to connect to. Mac on azure seems
-                // to connect too fast and then is unable to actually communicate.
-                await sleep(3000);
-
-                return uri;
-            }
-
             runTest('Remote Self Certs', async (_this: Mocha.Context) => {
-                const pythonService = await createPythonService(2);
+                const pythonService = await createPythonService(ioc, 2);
 
                 // Skip test for older python and raw kernel and mac
                 if (pythonService && !useRawKernel && os.platform() !== 'darwin') {
@@ -433,7 +378,7 @@ suite('DataScience notebook tests', () => {
                         'jkey.key'
                     );
 
-                    const uri = await startRemoteServer(pythonService, [
+                    const uri = await startRemoteServer(ioc, pythonService, [
                         '-m',
                         'jupyter',
                         'notebook',
@@ -462,7 +407,7 @@ suite('DataScience notebook tests', () => {
             runTest(
                 'Remote No Auth',
                 async () => {
-                    const pythonService = await createPythonService();
+                    const pythonService = await createPythonService(ioc);
 
                     if (pythonService) {
                         const configFile = path.join(
@@ -473,7 +418,7 @@ suite('DataScience notebook tests', () => {
                             'serverConfigFiles',
                             'remoteNoAuth.py'
                         );
-                        const uri = await startRemoteServer(pythonService, [
+                        const uri = await startRemoteServer(ioc, pythonService, [
                             '-m',
                             'jupyter',
                             'notebook',
@@ -540,7 +485,7 @@ suite('DataScience notebook tests', () => {
             runTest(
                 'Remote Deny Insecure',
                 async () => {
-                    const pythonService = await createPythonService();
+                    const pythonService = await createPythonService(ioc);
 
                     if (pythonService) {
                         const configFile = path.join(
@@ -551,7 +496,7 @@ suite('DataScience notebook tests', () => {
                             'serverConfigFiles',
                             'remoteNoAuth.py'
                         );
-                        const uri = await startRemoteServer(pythonService, [
+                        const uri = await startRemoteServer(ioc, pythonService, [
                             '-m',
                             'jupyter',
                             'notebook',
@@ -610,7 +555,7 @@ suite('DataScience notebook tests', () => {
                 }
             );
             runTest('Remote Password', async () => {
-                const pythonService = await createPythonService();
+                const pythonService = await createPythonService(ioc);
 
                 if (pythonService && !useRawKernel && os.platform() !== 'darwin') {
                     const configFile = path.join(
@@ -621,7 +566,7 @@ suite('DataScience notebook tests', () => {
                         'serverConfigFiles',
                         'remotePassword.py'
                     );
-                    const uri = await startRemoteServer(pythonService, [
+                    const uri = await startRemoteServer(ioc, pythonService, [
                         '-m',
                         'jupyter',
                         'notebook',
@@ -641,7 +586,7 @@ suite('DataScience notebook tests', () => {
             });
 
             runTest('Remote', async () => {
-                const pythonService = await createPythonService();
+                const pythonService = await createPythonService(ioc);
 
                 if (pythonService) {
                     const configFile = path.join(
@@ -653,7 +598,7 @@ suite('DataScience notebook tests', () => {
                         'remoteToken.py'
                     );
 
-                    const uri = await startRemoteServer(pythonService, [
+                    const uri = await startRemoteServer(ioc, pythonService, [
                         '-m',
                         'jupyter',
                         'notebook',
@@ -1251,7 +1196,7 @@ plt.show()`,
                 assert.ok(usable, 'Cant find jupyter enabled python');
 
                 // Manually generate an invalid jupyter config
-                const procService = await createPythonService();
+                const procService = await createPythonService(ioc);
                 assert.ok(procService, 'Can not get a process service');
                 const results = await procService!.exec(['-m', 'jupyter', 'notebook', '--generate-config', '-y'], {});
 

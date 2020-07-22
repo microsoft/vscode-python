@@ -7,6 +7,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as dedent from 'dedent';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
+import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { anything, objectContaining, when } from 'ts-mockito';
@@ -57,6 +58,7 @@ import {
     openEditor,
     runMountedTest
 } from './nativeEditorTestHelpers';
+import { createPythonService, startRemoteServer } from './remoteTestHelpers';
 import {
     addContinuousMockData,
     addMockData,
@@ -312,7 +314,27 @@ suite('DataScience Native Editor', () => {
                     }
                 });
 
-                runMountedTest('Remote kernel can be switched and remembered', async () => {});
+                runMountedTest('Remote kernel can be switched and remembered', async () => {
+                    const pythonService = await createPythonService(ioc, 2);
+
+                    // Skip test for older python and raw kernel and mac
+                    if (pythonService && os.platform() !== 'darwin') {
+                        const uri = await startRemoteServer(ioc, pythonService, ['-m', 'jupyter', 'notebook']);
+
+                        // Set this as the URI to use when connecting
+                        ioc.forceDataScienceSettingsChanged({ jupyterServerURI: uri });
+
+                        // Create a notebook and run a cell.
+                        const notebook = await createNewEditor(ioc);
+                        await addCell(notebook.mount, 'a=1\na', true);
+
+                        // Create another notebook and connect it to the already running kernel of the other one
+                        when(ioc.applicationShell);
+                        const n2 = await createNewEditor(ioc);
+                        n2.editor.se;
+
+                    }
+                });
 
                 runMountedTest('Mime Types', async () => {
                     // Create an editor so something is listening to messages
