@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 
 import { IWorkspaceService } from '../../common/application/types';
+import { isTestExecution } from '../../common/constants';
 import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, Resource } from '../../common/types';
+import { BANNER_NAME_PROPOSE_LS, IConfigurationService, IPythonExtensionBanner, Resource } from '../../common/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { LanguageServerActivatorBase } from '../common/activatorBase';
 import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../types';
 
@@ -27,9 +29,19 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(IFileSystem) fs: IFileSystem,
         @inject(ILanguageServerDownloader) lsDownloader: ILanguageServerDownloader,
         @inject(ILanguageServerFolderService) languageServerFolderService: ILanguageServerFolderService,
-        @inject(IConfigurationService) configurationService: IConfigurationService
+        @inject(IConfigurationService) configurationService: IConfigurationService,
+        @inject(IPythonExtensionBanner)
+        @named(BANNER_NAME_PROPOSE_LS)
+        private proposePylancePopup: IPythonExtensionBanner
     ) {
         super(manager, workspace, fs, lsDownloader, languageServerFolderService, configurationService);
+    }
+
+    public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {
+        if (!isTestExecution()) {
+            this.proposePylancePopup.showBanner().ignoreErrors();
+        }
+        return super.start(resource, interpreter);
     }
 
     @traceDecorators.error('Failed to ensure language server is available')

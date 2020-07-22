@@ -88,4 +88,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         const version = parse(this.packageJson.version);
         return !version || version.prerelease.length > 0 ? 'insiders' : 'stable';
     }
+    public get uriScheme(): string {
+        return vscode.env.uriScheme;
+    }
 }

@@ -1,6 +1,3 @@
-export const LSControl = 'LS - control';
-export const LSEnabled = 'LS - enabled';
-
 // Experiment to check whether to always display the test explorer.
 export enum AlwaysDisplayTestExplorerGroups {
     control = 'AlwaysDisplayTestExplorer - control',
@@ -98,4 +95,9 @@ export enum RemoveKernelToolbarInInteractiveWindow {
 // Experiment to turn on trusted notebooks checks
 export enum EnableTrustedNotebooks {
     experiment = 'EnableTrustedNotebooks'
+}
+
+// Experiment to offer switch to Pylance language server
+export enum TryPylance {
+    experiment = 'tryPylance'
 }

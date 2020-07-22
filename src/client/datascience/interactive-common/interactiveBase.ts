@@ -1086,12 +1086,15 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private selectNewKernel() {
         // This is handled by a command.
-        this.commandManager.executeCommand(
-            Commands.SwitchJupyterKernel,
-            this.notebookIdentity.resource,
-            this.owningResource,
-            this.notebookMetadata?.kernelspec?.display_name || this.notebookMetadata?.kernelspec?.name
-        );
+        this.commandManager.executeCommand(Commands.SwitchJupyterKernel, {
+            identity: this.notebookIdentity.resource,
+            resource: this.owningResource,
+            currentKernelDisplayName:
+                this.notebookMetadata?.kernelspec?.display_name ||
+                this.notebookMetadata?.kernelspec?.name ||
+                this._notebook?.getKernelSpec()?.display_name ||
+                this._notebook?.getKernelSpec()?.name
+        });
     }
 
     private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook> {
@@ -1225,9 +1228,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
             // Update our model
             this.updateNotebookOptions(specOrModel, data.kernel.interpreter).ignoreErrors();
-
-            // Try creating a notebook again with this new kernel.
-            this.ensureConnectionAndNotebook().ignoreErrors();
         }
     }
 

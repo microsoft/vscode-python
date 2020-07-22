@@ -150,6 +150,7 @@ import {
     TerminalActivationProviders
 } from '../../client/common/terminal/types';
 import {
+    BANNER_NAME_PROPOSE_LS,
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
     IBrowserService,
@@ -168,6 +169,7 @@ import {
     IOutputChannel,
     IPathUtils,
     IPersistentStateFactory,
+    IPythonExtensionBanner,
     IPythonSettings,
     IsWindows,
     ProductType,
@@ -365,6 +367,7 @@ import { InterpreterVersionService } from '../../client/interpreter/interpreterV
 import { registerInterpreterTypes } from '../../client/interpreter/serviceRegistry';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
+import { ProposePylanceBanner } from '../../client/languageServices/proposeLanguageServerBanner';
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
@@ -766,6 +769,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 LanguageServerType.Microsoft
             );
             this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager);
+            this.serviceManager.add<IPythonExtensionBanner>(
+                IPythonExtensionBanner,
+                ProposePylanceBanner,
+                BANNER_NAME_PROPOSE_LS
+            );
         } else if (languageServerType === LanguageServerType.Node) {
             this.serviceManager.add<ILanguageServerActivator>(
                 ILanguageServerActivator,

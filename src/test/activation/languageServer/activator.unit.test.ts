@@ -21,9 +21,10 @@ import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { IConfigurationService, IPythonExtensionBanner, IPythonSettings } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
+import { ProposePylanceBanner } from '../../../client/languageServices/proposeLanguageServerBanner';
 import { sleep } from '../../core';
 
 // tslint:disable:max-func-body-length
@@ -37,6 +38,7 @@ suite('Language Server - Activator', () => {
     let lsFolderService: ILanguageServerFolderService;
     let configuration: IConfigurationService;
     let settings: IPythonSettings;
+    let banner: IPythonExtensionBanner;
     setup(() => {
         manager = mock(DotNetLanguageServerManager);
         workspaceService = mock(WorkspaceService);
@@ -45,6 +47,7 @@ suite('Language Server - Activator', () => {
         lsFolderService = mock(DotNetLanguageServerFolderService);
         configuration = mock(ConfigurationService);
         settings = mock(PythonSettings);
+        banner = mock(ProposePylanceBanner);
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
         activator = new DotNetLanguageServerActivator(
             instance(manager),
@@ -52,7 +55,8 @@ suite('Language Server - Activator', () => {
             instance(fs),
             instance(lsDownloader),
             instance(lsFolderService),
-            instance(configuration)
+            instance(configuration),
+            instance(banner)
         );
     });
     test('Manager must be started without any workspace', async () => {
