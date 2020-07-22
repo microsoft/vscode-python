@@ -68,7 +68,6 @@ jobs:
 
       - task: CredScan@3
         continueOnError: true
-        inputs:
 
       - task: UsePythonVersion@0
         inputs:
