@@ -3,8 +3,7 @@ import { inject, injectable } from 'inversify';
 import cloneDeep = require('lodash/cloneDeep');
 import { extensions } from 'vscode';
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
-import { traceError } from '../../common/logger';
-import { IConfigurationService, IExtensionContext } from '../../common/types';
+import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { CellMatcher } from '../cellMatcher';
@@ -14,17 +13,8 @@ import { ICell as IVscCell, IGatherLogger, IGatherProvider } from '../types';
 @injectable()
 export class GatherLogger implements IGatherLogger {
     private gather: IGatherProvider | undefined;
-    constructor(
-        @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IExtensionContext) private context: IExtensionContext
-    ) {
+    constructor(@inject(IConfigurationService) private configService: IConfigurationService) {
         this.initGatherExtension().ignoreErrors();
-        try {
-            this.context.globalState.update('gatherLinesCount', 0);
-            this.context.globalState.update('gatherCellsCount', 0);
-        } catch (e) {
-            traceError(e);
-        }
     }
 
     public dispose() {
@@ -52,28 +42,6 @@ export class GatherLogger implements IGatherLogger {
                 cloneCell.data.source = cellMatcher.stripFirstMarker(concatMultilineStringInput(vscCell.data.source));
 
                 this.gather.logExecution(cloneCell);
-
-                try {
-                    // We save the amount lines and cells the code had before gathering for telemetry purposes.
-                    let gatherLinesCount: number | undefined = this.context.globalState.get('gatherLinesCount');
-                    let gatherCellsCount: number | undefined = this.context.globalState.get('gatherCellsCount');
-
-                    if (gatherLinesCount) {
-                        gatherLinesCount += vscCell.data.source.length;
-                        this.context.globalState.update('gatherLinesCount', gatherLinesCount);
-                    } else {
-                        this.context.globalState.update('gatherLinesCount', 0);
-                    }
-
-                    if (gatherCellsCount) {
-                        gatherCellsCount += 1;
-                        this.context.globalState.update('gatherCellsCount', gatherCellsCount);
-                    } else {
-                        this.context.globalState.update('gatherCellsCount', 0);
-                    }
-                } catch (e) {
-                    traceError(e);
-                }
             }
         }
     }

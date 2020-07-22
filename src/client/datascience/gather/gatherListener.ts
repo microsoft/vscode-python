@@ -7,7 +7,7 @@ import { IApplicationShell, IDocumentManager } from '../../common/application/ty
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IExtensionContext, Resource } from '../../common/types';
+import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -42,6 +42,8 @@ export class GatherListener implements IInteractiveWindowListener {
     private notebookUri: Uri | undefined;
     private gatherProvider: IGatherProvider | undefined;
     private gatherTimer: StopWatch | undefined;
+    private linesSubmitted: number = 0;
+    private cellsSubmitted: number = 0;
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -50,8 +52,7 @@ export class GatherListener implements IInteractiveWindowListener {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IExtensionContext) private context: IExtensionContext
+        @inject(IFileSystem) private fileSystem: IFileSystem
     ) {}
 
     public dispose() {
@@ -79,15 +80,17 @@ export class GatherListener implements IInteractiveWindowListener {
                 break;
 
             case InteractiveWindowMessages.RestartKernel:
+                this.linesSubmitted = 0;
+                this.cellsSubmitted = 0;
                 if (this.gatherProvider) {
                     this.gatherProvider.resetLog();
-                    try {
-                        this.context.globalState.update('gatherLinesCount', 0);
-                        this.context.globalState.update('gatherCellsCount', 0);
-                    } catch (e) {
-                        traceError(e);
-                    }
                 }
+                break;
+
+            case InteractiveWindowMessages.FinishCell:
+                const lineCount: number = payload.cell.data.source.length as number;
+                this.linesSubmitted += lineCount;
+                this.cellsSubmitted += 1;
                 break;
 
             default:
@@ -163,19 +166,12 @@ export class GatherListener implements IInteractiveWindowListener {
                 sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'notebook' });
             }
 
-            try {
-                const linesSubmitted: number | undefined = this.context.globalState.get('gatherLinesCount');
-                const cellsSubmitted: number | undefined = this.context.globalState.get('gatherCellsCount');
-
-                sendTelemetryEvent(Telemetry.GatherStats, undefined, {
-                    linesSubmitted: linesSubmitted ? linesSubmitted : -1,
-                    cellsSubmitted: cellsSubmitted ? cellsSubmitted : -1,
-                    linesGathered: slicedProgram.splitLines().length,
-                    cellsGathered: this.getNumberOfCells(slicedProgram)
-                });
-            } catch (e) {
-                traceError(e);
-            }
+            sendTelemetryEvent(Telemetry.GatherStats, undefined, {
+                linesSubmitted: this.linesSubmitted,
+                cellsSubmitted: this.cellsSubmitted,
+                linesGathered: slicedProgram.splitLines().length,
+                cellsGathered: generateCellsFromString(slicedProgram).length
+            });
         }
     };
 
@@ -275,18 +271,5 @@ export class GatherListener implements IInteractiveWindowListener {
         editor.edit((editBuilder) => {
             editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
         });
-    }
-
-    private getNumberOfCells(program: string): number {
-        let cellCount = 0;
-        const settings = this.configService.getSettings();
-        const cellMarker = settings.datascience.defaultCellMarker || '# %%';
-        const regex = new RegExp(cellMarker, 'gi');
-
-        while (regex.exec(program)) {
-            cellCount += 1;
-        }
-
-        return cellCount;
     }
 }
