@@ -102,18 +102,18 @@ export namespace AttachProcess {
 
 export namespace Pylance {
     export const proposePylanceMessage = localize(
-        'LanguageService.proposePylanceMessage',
+        'Pylance.proposePylanceMessage',
         'Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.'
     );
-    export const tryItNow = localize('LanguageService.tryItNow', 'Try it now');
-    export const remindMeLater = localize('LanguageService.remindMeLater', 'Remind me later');
+    export const tryItNow = localize('Pylance.tryItNow', 'Try it now');
+    export const remindMeLater = localize('Pylance.remindMeLater', 'Remind me later');
 
     export const installPylanceMessage = localize(
-        'LanguageService.installPylanceMessage',
+        'Pylance.installPylanceMessage',
         'Pylance extension is not installed. Click Yes to open Pylance installation page.'
     );
     export const pylanceNotInstalledMessage = localize(
-        'LanguageService.pylanceNotInstalledMessage',
+        'Pylance.pylanceNotInstalledMessage',
         'Pylance extension is not installed.'
     );
 }
