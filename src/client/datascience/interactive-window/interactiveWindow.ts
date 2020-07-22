@@ -485,7 +485,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                     filters: filtersObject
                 });
                 if (uri) {
-                    await this.jupyterExporter.exportToFile(cells, uri.fsPath);
+                    await this.jupyterExporter.exportToFile(cells, uri);
                 }
             } finally {
                 this.stopProgress();

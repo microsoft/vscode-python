@@ -12,7 +12,7 @@ import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -22,6 +22,7 @@ import {
     CellState,
     ICell,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IJupyterExecution,
     INotebookEditorProvider,
     INotebookExporter,
@@ -34,7 +35,7 @@ export class JupyterExporter implements INotebookExporter {
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fileSystem: IDataScienceFileSystem,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
@@ -46,20 +47,20 @@ export class JupyterExporter implements INotebookExporter {
         noop();
     }
 
-    public async exportToFile(cells: ICell[], file: string, showOpenPrompt: boolean = true): Promise<void> {
+    public async exportToFile(cells: ICell[], file: Uri, showOpenPrompt: boolean = true): Promise<void> {
         let directoryChange;
         const settings = this.configService.getSettings();
         if (settings.datascience.changeDirOnImportExport) {
             directoryChange = file;
         }
 
-        const notebook = await this.translateToNotebook(cells, directoryChange);
+        const notebook = await this.translateToNotebook(cells, directoryChange?.fsPath);
 
         try {
             // tslint:disable-next-line: no-any
             const contents = JSON.stringify(notebook);
-            await this.trustService.trustNotebook(Uri.file(file.toLowerCase()), contents);
-            await this.fileSystem.writeFile(file, contents, { encoding: 'utf8', flag: 'w' });
+            await this.trustService.trustNotebook(file, contents);
+            await this.fileSystem.writeFile(file, contents);
             if (!showOpenPrompt) {
                 return;
             }
@@ -68,16 +69,16 @@ export class JupyterExporter implements INotebookExporter {
                 ? localize.DataScience.exportOpenQuestion()
                 : undefined;
             this.showInformationMessage(
-                localize.DataScience.exportDialogComplete().format(file),
+                localize.DataScience.exportDialogComplete().format(file.fsPath),
                 openQuestion1,
                 openQuestion2
             ).then(async (str: string | undefined) => {
                 try {
                     if (str === openQuestion2 && openQuestion2) {
                         // If the user wants to, open the notebook they just generated.
-                        await this.jupyterExecution.spawnNotebook(file);
+                        await this.jupyterExecution.spawnNotebook(file.fsPath);
                     } else if (str === openQuestion1) {
-                        await this.ipynbProvider.open(Uri.file(file));
+                        await this.ipynbProvider.open(file);
                     }
                 } catch (e) {
                     await this.errorHandler.handleError(e);
@@ -171,7 +172,7 @@ export class JupyterExporter implements INotebookExporter {
             const filename = cell.file;
 
             // First check that this is an absolute file that exists (we add in temp files to run system cell)
-            if (path.isAbsolute(filename) && (await this.fileSystem.fileExists(filename))) {
+            if (path.isAbsolute(filename) && (await this.fileSystem.localPathExists(filename))) {
                 // We've already check that workspace folders above
                 for (const folder of this.workspaceService.workspaceFolders!) {
                     if (filename.toLowerCase().startsWith(folder.uri.fsPath.toLowerCase())) {
