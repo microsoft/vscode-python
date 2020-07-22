@@ -1224,9 +1224,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
             // Update our model
             this.updateNotebookOptions(specOrModel, data.kernel.interpreter).ignoreErrors();
-
-            // Try creating a notebook again with this new kernel.
-            this.ensureConnectionAndNotebook().ignoreErrors();
         }
     }
 
