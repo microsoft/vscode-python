@@ -81,7 +81,11 @@ export class GatherListener implements IInteractiveWindowListener {
             case InteractiveWindowMessages.RestartKernel:
                 if (this.gatherProvider) {
                     this.gatherProvider.resetLog();
-                    this.context.globalState.update('gatherCount', 0);
+                    try {
+                        this.context.globalState.update('gatherCount', 0);
+                    } catch (e) {
+                        traceError(e);
+                    }
                 }
                 break;
 
@@ -145,8 +149,6 @@ export class GatherListener implements IInteractiveWindowListener {
             ? this.gatherProvider.gatherCode(cell)
             : localize.DataScience.gatherError();
 
-        const linesAvailable: number | undefined = this.context.globalState.get('gatherCount');
-
         if (!slicedProgram) {
             sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'err' });
         } else {
@@ -160,11 +162,19 @@ export class GatherListener implements IInteractiveWindowListener {
                 sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'notebook' });
             }
 
-            sendTelemetryEvent(Telemetry.GatherStats, undefined, {
-                linesAvailable: linesAvailable ? linesAvailable - cell.data.source.length : -1,
-                linesInGatheredCell: cell.data.source.length,
-                gatheredLines: slicedProgram.splitLines().length - cell.data.source.length
-            });
+            try {
+                const linesSubmitted: number | undefined = this.context.globalState.get('gatherLinesCount');
+                const cellsSubmitted: number | undefined = this.context.globalState.get('gatherCellsCount');
+
+                sendTelemetryEvent(Telemetry.GatherStats, undefined, {
+                    linesSubmitted: linesSubmitted ? linesSubmitted : -1,
+                    cellsSubmitted: cellsSubmitted ? cellsSubmitted : -1,
+                    linesGathered: slicedProgram.splitLines().length,
+                    cellsGathered: this.getNumberOfCells(slicedProgram)
+                });
+            } catch (e) {
+                traceError(e);
+            }
         }
     };
 
@@ -264,5 +274,18 @@ export class GatherListener implements IInteractiveWindowListener {
         editor.edit((editBuilder) => {
             editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
         });
+    }
+
+    private getNumberOfCells(program: string): number {
+        let cellCount = 0;
+        const settings = this.configService.getSettings();
+        const cellMarker = settings.datascience.defaultCellMarker || '# %%';
+        const regex = new RegExp(cellMarker, 'gi');
+
+        while (regex.exec(program)) {
+            cellCount += 1;
+        }
+
+        return cellCount;
     }
 }

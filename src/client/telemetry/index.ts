@@ -2042,9 +2042,10 @@ export interface IEventNamePropertyMapping {
         result: 'err' | 'script' | 'notebook' | 'unavailable';
     };
     [Telemetry.GatherStats]: {
-        linesAvailable: number; // Code lines before executing gather, does not include the gathered cell.
-        linesInGatheredCell: number; // Code lines of the gathered cell.
-        gatheredLines: number; // Code lines after executing gather, does not include the gathered cell.
+        linesSubmitted: number;
+        cellsSubmitted: number;
+        linesGathered: number;
+        cellsGathered: number;
     };
     /**
      * Telemetry event sent when a gathered notebook has been saved by the user.

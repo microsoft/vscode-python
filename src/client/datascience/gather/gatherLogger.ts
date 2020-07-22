@@ -3,6 +3,7 @@ import { inject, injectable } from 'inversify';
 import cloneDeep = require('lodash/cloneDeep');
 import { extensions } from 'vscode';
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
+import { traceError } from '../../common/logger';
 import { IConfigurationService, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -46,14 +47,26 @@ export class GatherLogger implements IGatherLogger {
 
                 this.gather.logExecution(cloneCell);
 
-                // We save the amount lines the code had before gathering for telemetry purposes.
-                let gatherCount: number | undefined = this.context.globalState.get('gatherCount');
+                try {
+                    // We save the amount lines and cells the code had before gathering for telemetry purposes.
+                    let gatherLinesCount: number | undefined = this.context.globalState.get('gatherLinesCount');
+                    let gatherCellsCount: number | undefined = this.context.globalState.get('gatherCellsCount');
 
-                if (gatherCount) {
-                    gatherCount += vscCell.data.source.length;
-                    this.context.globalState.update('gatherCount', gatherCount);
-                } else {
-                    this.context.globalState.update('gatherCount', 0);
+                    if (gatherLinesCount) {
+                        gatherLinesCount += vscCell.data.source.length;
+                        this.context.globalState.update('gatherLinesCount', gatherLinesCount);
+                    } else {
+                        this.context.globalState.update('gatherLinesCount', 0);
+                    }
+
+                    if (gatherCellsCount) {
+                        gatherCellsCount += 1;
+                        this.context.globalState.update('gatherCellsCount', gatherCellsCount);
+                    } else {
+                        this.context.globalState.update('gatherCellsCount', 0);
+                    }
+                } catch (e) {
+                    traceError(e);
                 }
             }
         }
