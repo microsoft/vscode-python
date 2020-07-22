@@ -1283,11 +1283,6 @@ for i in range(0, 100):
     test('Per file asks and changes titles', async () => {
         addMockData(ioc, fooCode, 'foo');
         addMockData(ioc, barCode, 'bar');
-        ioc.applicationShell
-            .setup((i) => i.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((_a1: string, a2: string, _a3: string) => {
-                return Promise.resolve(a2);
-            });
         ioc.forceDataScienceSettingsChanged({ interactiveWindowMode: 'multiple' });
         const interactiveWindowProvider = ioc.get<ITestInteractiveWindowProvider>(IInteractiveWindowProvider);
         const globalMemento = ioc.get<Memento>(IMemento, GLOBAL_MEMENTO);

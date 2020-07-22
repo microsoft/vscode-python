@@ -7,6 +7,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as dedent from 'dedent';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
+import { IDisposable } from 'monaco-editor';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { anything, objectContaining, when } from 'ts-mockito';
@@ -903,7 +904,9 @@ df.head()`;
                             await promise;
                         }
                     }
-                    await ioc.dispose();
+                    if (ioc) {
+                        await ioc.dispose();
+                    }
                     try {
                         notebookFile.cleanupCallback();
                     } catch {
@@ -2074,11 +2077,19 @@ df.head()`;
                         }
                         await initIoc();
 
+                        const eventCallback = (
+                            listener: (e: WindowState) => any,
+                            _thisArgs?: any,
+                            _disposables?: IDisposable[] | Disposable
+                        ) => {
+                            windowStateChangeHandlers.push(listener);
+                            return {
+                                dispose: noop
+                            };
+                        };
                         windowStateChangeHandlers = [];
                         // Keep track of all handlers for the onDidChangeWindowState event.
-                        ioc.applicationShell
-                            .setup((app) => app.onDidChangeWindowState(TypeMoq.It.isAny()))
-                            .callback((cb) => windowStateChangeHandlers.push(cb));
+                        when(ioc.applicationShell.onDidChangeWindowState).thenReturn(eventCallback);
 
                         // tslint:disable-next-line: no-invalid-this
                         await setupFunction.call(this);
