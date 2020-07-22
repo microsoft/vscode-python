@@ -560,6 +560,7 @@
     "DataScienceRendererExtension.downloadCompletedOutputMessage": "Notebook Renderers extension download complete.",
     "DataScience.uriProviderDescriptionFormat": "{0} (From {1} extension)",
     "DataScience.unknownPackage": "unknown",
+    "DataScience.interactiveWindowTitle" : "Python Interactive",
     "DataScience.interactiveWindowTitleFormat" : "Python Interactive - {0}",
     "DataScience.interactiveWindowModeBannerTitle" : "Do you want to open a new Python Interactive window for this file? [More Information](command:workbench.action.openSettings?%5B%22python.dataScience.interactiveWindowMode%22%5D).",
     "DataScience.interactiveWindowModeBannerSwitchYes" : "Yes",

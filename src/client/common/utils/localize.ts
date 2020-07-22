@@ -324,7 +324,7 @@ export namespace DataScience {
         '{0} (From {1} extension)'
     );
     export const unknownPackage = localize('DataScience.unknownPackage', 'unknown');
-    export const interactiveWindowTitle = localize('DataScience.interactiveWindowTitleFormat', 'Python Interactive');
+    export const interactiveWindowTitle = localize('DataScience.interactiveWindowTitle', 'Python Interactive');
     export const interactiveWindowTitleFormat = localize(
         'DataScience.interactiveWindowTitleFormat',
         'Python Interactive - {0}'
