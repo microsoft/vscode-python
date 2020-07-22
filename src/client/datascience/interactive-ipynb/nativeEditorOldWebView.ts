@@ -15,7 +15,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -33,6 +33,7 @@ import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IInteractiveWindowListener,
     IJupyterDebugger,
     IJupyterVariableDataProviderFactory,
@@ -77,7 +78,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
         statusProvider: IStatusProvider,
-        fileSystem: IFileSystem,
+        fs: IDataScienceFileSystem,
         configuration: IConfigurationService,
         commandManager: ICommandManager,
         jupyterExporter: INotebookExporter,
@@ -114,7 +115,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             cssGenerator,
             themeFinder,
             statusProvider,
-            fileSystem,
+            fs,
             configuration,
             commandManager,
             jupyterExporter,

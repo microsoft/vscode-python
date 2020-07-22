@@ -24,7 +24,7 @@ import { ILanguageServer, ILanguageServerCache } from '../../../activation/types
 import { IWorkspaceService } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
 import { traceError, traceWarning } from '../../../common/logger';
-import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
+import { TemporaryFile } from '../../../common/platform/types';
 import { Resource } from '../../../common/types';
 import { createDeferred, Deferred, sleep, waitForPromise } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
@@ -35,6 +35,7 @@ import { sendTelemetryWhenDone } from '../../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../../constants';
 import {
     ICell,
+    IDataScienceFileSystem,
     IInteractiveWindowListener,
     IJupyterVariables,
     INotebook,
@@ -86,7 +87,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
     constructor(
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(ILanguageServerCache) private languageServerCache: ILanguageServerCache,
@@ -161,8 +162,8 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 const dummyFilePath = path.join(dir, HiddenFileFormatString.format(uuid().replace(/-/g, '')));
                 this.documentPromise.resolve(new IntellisenseDocument(dummyFilePath));
             } else {
-                this.fileSystem
-                    .createTemporaryFile('.py')
+                this.fs
+                    .createTemporaryLocalFile('.py')
                     .then((t) => {
                         this.temporaryFile = t;
                         const dummyFilePath = this.temporaryFile.filePath;
@@ -195,7 +196,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         // See if the resource or the interpreter are different
         if (
             (newPath && !oldPath) ||
-            (newPath && oldPath && !this.fileSystem.arePathsSame(newPath, oldPath)) ||
+            (newPath && oldPath && !this.fs.arePathsSame(newPath, oldPath)) ||
             interpreter?.path !== this.interpreter?.path ||
             this.languageServer === undefined
         ) {

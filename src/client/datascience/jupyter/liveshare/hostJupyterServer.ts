@@ -14,7 +14,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { isTestExecution } from '../../../common/constants';
 import { traceInfo } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
+
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -29,6 +29,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import {
+    IDataScienceFileSystem,
     IJupyterSession,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
@@ -61,7 +62,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         private workspaceService: IWorkspaceService,
         serviceContainer: IServiceContainer,
         private appService: IApplicationShell,
-        private fs: IFileSystem,
+        private fs: IDataScienceFileSystem,
         private readonly kernelSelector: KernelSelector,
         private readonly interpreterService: IInterpreterService,
         outputChannel: IOutputChannel

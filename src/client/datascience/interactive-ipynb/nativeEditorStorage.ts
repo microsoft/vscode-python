@@ -6,14 +6,21 @@ import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { traceError } from '../../common/logger';
 import { isFileNotFoundError } from '../../common/platform/errors';
-import { IFileSystem } from '../../common/platform/types';
+
 import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, KnownNotebookLanguages, Telemetry } from '../constants';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { INotebookModelFactory } from '../notebookStorage/types';
-import { CellState, IJupyterExecution, INotebookModel, INotebookStorage, ITrustService } from '../types';
+import {
+    CellState,
+    IDataScienceFileSystem,
+    IJupyterExecution,
+    INotebookModel,
+    INotebookStorage,
+    ITrustService
+} from '../types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
@@ -58,7 +65,7 @@ export class NativeEditorStorage implements INotebookStorage {
 
     constructor(
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(ICryptoUtils) private crypto: ICryptoUtils,
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
@@ -98,7 +105,7 @@ export class NativeEditorStorage implements INotebookStorage {
     }
     public async save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
         const contents = model.getContent();
-        const parallelize = [this.fileSystem.writeFile(model.file.fsPath, contents, 'utf-8')];
+        const parallelize = [this.fs.writeFile(model.file, contents)];
         if (model.isTrusted) {
             parallelize.push(this.trustService.trustNotebook(model.file, contents));
         }
@@ -114,7 +121,7 @@ export class NativeEditorStorage implements INotebookStorage {
     public async saveAs(model: INotebookModel, file: Uri): Promise<void> {
         const old = model.file;
         const contents = model.getContent();
-        const parallelize = [this.fileSystem.writeFile(file.fsPath, contents, 'utf-8')];
+        const parallelize = [this.fs.writeFile(file, contents)];
         if (model.isTrusted) {
             parallelize.push(this.trustService.trustNotebook(file, contents));
         }
@@ -189,12 +196,12 @@ export class NativeEditorStorage implements INotebookStorage {
         try {
             if (!cancelToken?.isCancellationRequested) {
                 if (contents) {
-                    await this.fileSystem.createDirectory(path.dirname(filePath));
+                    await this.fs.createLocalDirectory(path.dirname(filePath));
                     if (!cancelToken?.isCancellationRequested) {
-                        await this.fileSystem.writeFile(filePath, contents);
+                        await this.fs.writeLocalFile(filePath, contents);
                     }
                 } else {
-                    await this.fileSystem.deleteFile(filePath).catch((ex) => {
+                    await this.fs.deleteLocal(filePath).catch((ex) => {
                         // No need to log error if file doesn't exist.
                         if (!isFileNotFoundError(ex)) {
                             traceError('Failed to delete hotExit file. Possible it does not exist', ex);
@@ -264,9 +271,7 @@ export class NativeEditorStorage implements INotebookStorage {
     ): Promise<INotebookModel> {
         try {
             // Attempt to read the contents if a viable file
-            const contents = NativeEditorStorage.isUntitledFile(file)
-                ? possibleContents
-                : await this.fileSystem.readFile(file.fsPath);
+            const contents = NativeEditorStorage.isUntitledFile(file) ? possibleContents : await this.fs.readFile(file);
 
             const skipDirtyContents = typeof options === 'boolean' ? options : !!options;
             // Use backupId provided, else use static storage key.
@@ -406,14 +411,13 @@ export class NativeEditorStorage implements INotebookStorage {
     }
 
     private async getStoredContentsFromFile(file: Uri, key: string): Promise<string | undefined> {
-        const filePath = this.getHashedFileName(key);
         try {
             // Use this to read from the extension global location
-            const contents = await this.fileSystem.readFile(filePath);
+            const contents = await this.fs.readLocalFile(file.fsPath);
             const data = JSON.parse(contents);
             // Check whether the file has been modified since the last time the contents were saved.
             if (data && data.lastModifiedTimeMs && file.scheme === 'file') {
-                const stat = await this.fileSystem.stat(file.fsPath);
+                const stat = await this.fs.statLocal(file.fsPath);
                 if (stat.mtime > data.lastModifiedTimeMs) {
                     return;
                 }
@@ -440,7 +444,7 @@ export class NativeEditorStorage implements INotebookStorage {
 
             // Check whether the file has been modified since the last time the contents were saved.
             if (data && data.lastModifiedTimeMs && file.scheme === 'file') {
-                const stat = await this.fileSystem.stat(file.fsPath);
+                const stat = await this.fs.statLocal(file.fsPath);
                 if (stat.mtime > data.lastModifiedTimeMs) {
                     return;
                 }

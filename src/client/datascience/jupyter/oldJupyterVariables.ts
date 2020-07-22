@@ -10,13 +10,14 @@ import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Identifiers, Settings } from '../constants';
 import {
     ICell,
+    IDataScienceFileSystem,
     IJupyterVariable,
     IJupyterVariables,
     IJupyterVariablesRequest,
@@ -54,7 +55,7 @@ export class OldJupyterVariables implements IJupyterVariables {
     private refreshEventEmitter = new EventEmitter<void>();
 
     constructor(
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {}
 
@@ -110,10 +111,10 @@ export class OldJupyterVariables implements IJupyterVariables {
             'vscode_datascience_helpers',
             'getJupyterVariableDataFrameInfo.py'
         );
-        this.fetchDataFrameInfoScript = await this.fileSystem.readFile(file);
+        this.fetchDataFrameInfoScript = await this.fs.readLocalFile(file);
 
         file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getJupyterVariableShape.py');
-        this.fetchVariableShapeScript = await this.fileSystem.readFile(file);
+        this.fetchVariableShapeScript = await this.fs.readLocalFile(file);
 
         file = path.join(
             EXTENSION_ROOT_DIR,
@@ -121,7 +122,7 @@ export class OldJupyterVariables implements IJupyterVariables {
             'vscode_datascience_helpers',
             'getJupyterVariableDataFrameRows.py'
         );
-        this.fetchDataFrameRowsScript = await this.fileSystem.readFile(file);
+        this.fetchDataFrameRowsScript = await this.fs.readLocalFile(file);
 
         this.filesLoaded = true;
     }

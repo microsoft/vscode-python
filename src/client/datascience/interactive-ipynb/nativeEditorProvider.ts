@@ -23,7 +23,7 @@ import {
 } from '../../common/application/types';
 import { UseCustomEditorApi } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
@@ -46,6 +46,7 @@ import { NotebookModelEditEvent } from '../notebookStorage/notebookModelEditEven
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IInteractiveWindowListener,
     IJupyterDebugger,
     IJupyterVariableDataProviderFactory,
@@ -238,7 +239,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             this.serviceContainer.get<ICodeCssGenerator>(ICodeCssGenerator),
             this.serviceContainer.get<IThemeFinder>(IThemeFinder),
             this.serviceContainer.get<IStatusProvider>(IStatusProvider),
-            this.serviceContainer.get<IFileSystem>(IFileSystem),
+            this.serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem),
             this.serviceContainer.get<IConfigurationService>(IConfigurationService),
             this.serviceContainer.get<ICommandManager>(ICommandManager),
             this.serviceContainer.get<INotebookExporter>(INotebookExporter),
