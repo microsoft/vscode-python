@@ -27,6 +27,7 @@ import * as vsls from 'vsls/vscode';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 
 import { promisify } from 'util';
+import { WindowState } from 'vscode';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import { LanguageServerDownloader } from '../../client/activation/common/downloader';
 import { JediExtensionActivator } from '../../client/activation/jedi';
@@ -159,6 +160,7 @@ import {
     ICryptoUtils,
     ICurrentProcess,
     IDataScienceSettings,
+    IDisposable,
     IExperimentService,
     IExperimentsManager,
     IExtensionContext,
@@ -1168,6 +1170,16 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(this.applicationShell.showSaveDialog(anything())).thenReturn(Promise.resolve(Uri.file('test.ipynb')));
         when(this.applicationShell.setStatusBarMessage(anything())).thenReturn(dummyDisposable);
         when(this.applicationShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
+        const eventCallback = (
+            _listener: (e: WindowState) => any,
+            _thisArgs?: any,
+            _disposables?: IDisposable[] | Disposable
+        ) => {
+            return {
+                dispose: noop
+            };
+        };
+        when(this.applicationShell.onDidChangeWindowState).thenReturn(eventCallback);
 
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
