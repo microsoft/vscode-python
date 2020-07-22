@@ -6,7 +6,7 @@ import { createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -21,6 +21,7 @@ import {
 } from '../interactive-common/interactiveWindowTypes';
 import {
     ICell,
+    IDataScienceFileSystem,
     IGatherLogger,
     IGatherProvider,
     IInteractiveWindowListener,
@@ -50,7 +51,7 @@ export class GatherListener implements IInteractiveWindowListener {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IFileSystem) private fileSystem: IFileSystem
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem
     ) {}
 
     public dispose() {
@@ -227,7 +228,7 @@ export class GatherListener implements IInteractiveWindowListener {
         // Don't want to open the gathered code on top of the interactive window
         let viewColumn: ViewColumn | undefined;
         const fileNameMatch = this.documentManager.visibleTextEditors.filter((textEditor) =>
-            this.fileSystem.arePathsSame(textEditor.document.fileName, filename)
+            this.fs.arePathsSame(textEditor.document.fileName, filename)
         );
         const definedVisibleEditors = this.documentManager.visibleTextEditors.filter(
             (textEditor) => textEditor.viewColumn !== undefined

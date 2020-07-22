@@ -9,7 +9,7 @@ import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IPlatformService } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IExtensionContext, IInstaller, InstallerResponse, IPathUtils, Product, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
@@ -19,7 +19,7 @@ import { getRealPath } from '../common';
 import { Telemetry } from '../constants';
 import { createDefaultKernelSpec, defaultKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
-import { IJupyterKernelSpec } from '../types';
+import { IDataScienceFileSystem, IJupyterKernelSpec } from '../types';
 import { getKernelInterpreter } from './helpers';
 import { IKernelFinder } from './types';
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -54,7 +54,7 @@ export class KernelFinder implements IKernelFinder {
         @named(KNOWN_PATH_SERVICE)
         private readonly interpreterLocator: IInterpreterLocatorService,
         @inject(IPlatformService) private platformService: IPlatformService,
-        @inject(IFileSystem) private file: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IInstaller) private installer: IInstaller,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
@@ -190,7 +190,7 @@ export class KernelFinder implements IKernelFinder {
     private async loadKernelSpec(specPath: string): Promise<IJupyterKernelSpec | undefined> {
         let kernelJson;
         try {
-            kernelJson = JSON.parse(await this.file.readFile(specPath));
+            kernelJson = JSON.parse(await this.fs.readLocalFile(specPath));
         } catch {
             traceError(`Failed to parse kernelspec ${specPath}`);
             return undefined;
@@ -252,7 +252,7 @@ export class KernelFinder implements IKernelFinder {
                 if (activeInterpreter) {
                     jupyterPathVars.forEach(async (jupyterPath) => {
                         const jupyterWinPath = await getRealPath(
-                            this.file,
+                            this.fs,
                             this.exeFactory,
                             activeInterpreter.path,
                             jupyterPath
@@ -282,7 +282,7 @@ export class KernelFinder implements IKernelFinder {
             const activeInterpreter = await this.interpreterService.getActiveInterpreter();
             if (activeInterpreter) {
                 const winPath = await getRealPath(
-                    this.file,
+                    this.fs,
                     this.exeFactory,
                     activeInterpreter.path,
                     path.join(this.pathUtils.home, winJupyterPath)
@@ -313,7 +313,7 @@ export class KernelFinder implements IKernelFinder {
 
     // Given a set of paths, search for kernel.json files and return back the full paths of all of them that we find
     private async kernelGlobSearch(paths: string[]): Promise<string[]> {
-        const promises = paths.map((kernelPath) => this.file.search(`**/kernel.json`, kernelPath, true));
+        const promises = paths.map((kernelPath) => this.fs.searchLocal(`**/kernel.json`, kernelPath, true));
         const searchResults = await Promise.all(promises);
 
         // Append back on the start of each path so we have the full path in the results
@@ -396,7 +396,7 @@ export class KernelFinder implements IKernelFinder {
     private async readCache(): Promise<string[]> {
         try {
             return JSON.parse(
-                await this.file.readFile(path.join(this.context.globalStoragePath, cacheFile))
+                await this.fs.readLocalFile(path.join(this.context.globalStoragePath, cacheFile))
             ) as string[];
         } catch {
             traceInfo('No kernelSpec cache found.');
@@ -413,7 +413,7 @@ export class KernelFinder implements IKernelFinder {
 
     private async writeCache(cache: string[]) {
         if (this.cacheDirty) {
-            await this.file.writeFile(path.join(this.context.globalStoragePath, cacheFile), JSON.stringify(cache));
+            await this.fs.writeLocalFile(path.join(this.context.globalStoragePath, cacheFile), JSON.stringify(cache));
             this.cacheDirty = false;
         }
     }
