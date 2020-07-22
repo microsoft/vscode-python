@@ -7,19 +7,13 @@ import * as path from 'path';
 // @ts-ignore
 import * as pidusage from 'pidusage';
 import { CancellationToken, CancellationTokenSource, CompletionItemKind, Disposable, SymbolKind, Uri } from 'vscode';
-import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IS_WINDOWS } from '../common/platform/constants';
 import { IFileSystem } from '../common/platform/types';
 import * as internalPython from '../common/process/internal/python';
 import * as internalScripts from '../common/process/internal/scripts';
 import { IPythonExecutionFactory } from '../common/process/types';
-import {
-    BANNER_NAME_PROPOSE_LS,
-    IConfigurationService,
-    IPythonExtensionBanner,
-    IPythonSettings
-} from '../common/types';
+import { IConfigurationService, IPythonSettings } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { swallowExceptions } from '../common/utils/decorators';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -157,7 +151,6 @@ export class JediProxy implements Disposable {
     private pidUsageFailures = { timer: new StopWatch(), counter: 0 };
     private lastCmdIdProcessed?: number;
     private lastCmdIdProcessedForPidUsage?: number;
-    private proposeNewLanguageServerPopup: IPythonExtensionBanner;
     private readonly disposables: Disposable[] = [];
     private timer?: NodeJS.Timer | number;
 
@@ -174,12 +167,6 @@ export class JediProxy implements Disposable {
         this.startLanguageServer()
             .then(() => this.initialized.resolve())
             .ignoreErrors();
-
-        this.proposeNewLanguageServerPopup = serviceContainer.get<IPythonExtensionBanner>(
-            IPythonExtensionBanner,
-            BANNER_NAME_PROPOSE_LS
-        );
-
         this.checkJediMemoryFootprint().ignoreErrors();
     }
 
@@ -332,9 +319,6 @@ export class JediProxy implements Disposable {
     private async startLanguageServer(): Promise<void> {
         const newAutoComletePaths = await this.buildAutoCompletePaths();
         this.additionalAutoCompletePaths = newAutoComletePaths;
-        if (!isTestExecution()) {
-            await this.proposeNewLanguageServerPopup.showBanner();
-        }
         return this.restartLanguageServer();
     }
     private restartLanguageServer(): Promise<void> {

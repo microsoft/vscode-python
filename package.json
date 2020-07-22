@@ -1822,7 +1822,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "LS - enabled",
                             "AlwaysDisplayTestExplorer - experiment",
                             "ShowExtensionSurveyPrompt - enabled",
                             "Reload - experiment",
@@ -1836,6 +1835,7 @@
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
                             "EnableTrustedNotebooks",
+                            "tryPylance",
                             "All"
                         ]
                     },
@@ -1847,7 +1847,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "LS - enabled",
                             "AlwaysDisplayTestExplorer - experiment",
                             "ShowExtensionSurveyPrompt - enabled",
                             "Reload - experiment",
@@ -1861,6 +1860,7 @@
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
                             "EnableTrustedNotebooks",
+                            "tryPylance",
                             "All"
                         ]
                     },

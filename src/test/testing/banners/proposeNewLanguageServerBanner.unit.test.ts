@@ -3,103 +3,202 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
+import { expect } from 'chai';
+import * as typemoq from 'typemoq';
+import { Extension } from 'vscode';
+import { LanguageServerType } from '../../../client/activation/types';
+import { IApplicationEnvironment, IApplicationShell } from '../../../client/common/application/types';
+import { PYLANCE_EXTENSION_ID } from '../../../client/common/constants';
+import { TryPylance } from '../../../client/common/experiments/groups';
+import {
+    IConfigurationService,
+    IExperimentService,
+    IExtensions,
+    IPersistentState,
+    IPersistentStateFactory,
+    IPythonSettings
+} from '../../../client/common/types';
+import { LanguageService } from '../../../client/common/utils/localize';
+import {
+    getPylanceExtensionUri,
+    ProposeLSStateKeys,
+    ProposePylanceBanner
+} from '../../../client/languageServices/proposeLanguageServerBanner';
 
-// import { expect } from 'chai';
-// import * as typemoq from 'typemoq';
-// import { IApplicationShell } from '../../../client/common/application/types';
-// import { IConfigurationService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
-// import {
-//     ProposeLanguageServerBanner,
-//     ProposeLSStateKeys
-// } from '../../../client/languageServices/proposeLanguageServerBanner';
+interface IExperimentLsCombination {
+    inExperiment: boolean;
+    lsType: LanguageServerType;
+    shouldShowBanner: boolean;
+}
+const testData: IExperimentLsCombination[] = [
+    { inExperiment: true, lsType: LanguageServerType.None, shouldShowBanner: true },
+    { inExperiment: true, lsType: LanguageServerType.Microsoft, shouldShowBanner: true },
+    { inExperiment: true, lsType: LanguageServerType.Node, shouldShowBanner: false },
+    { inExperiment: true, lsType: LanguageServerType.Jedi, shouldShowBanner: false },
+    { inExperiment: false, lsType: LanguageServerType.None, shouldShowBanner: false },
+    { inExperiment: false, lsType: LanguageServerType.Microsoft, shouldShowBanner: false },
+    { inExperiment: false, lsType: LanguageServerType.Node, shouldShowBanner: false },
+    { inExperiment: false, lsType: LanguageServerType.Jedi, shouldShowBanner: false }
+];
 
-// suite('Propose New Language Server Banner', () => {
-//     let config: typemoq.IMock<IConfigurationService>;
-//     let appShell: typemoq.IMock<IApplicationShell>;
-//     const message =
-//         'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.';
-//     const yes = 'Try it now';
-//     const no = 'No thanks';
-//     const later = 'Remind me Later';
+suite('Propose Pylance Banner', () => {
+    let config: typemoq.IMock<IConfigurationService>;
+    let appShell: typemoq.IMock<IApplicationShell>;
+    let appEnv: typemoq.IMock<IApplicationEnvironment>;
+    let settings: typemoq.IMock<IPythonSettings>;
 
-//     setup(() => {
-//         config = typemoq.Mock.ofType<IConfigurationService>();
-//         appShell = typemoq.Mock.ofType<IApplicationShell>();
-//     });
-//     test('Is debugger enabled upon creation?', () => {
-//         const enabledValue: boolean = true;
-//         const testBanner: ProposeLanguageServerBanner = preparePopup(enabledValue, 100, appShell.object, config.object);
-//         expect(testBanner.enabled).to.be.equal(true, 'Sampling 100/100 should always enable the banner.');
-//     });
-//     test('Do not show banner when it is disabled', () => {
-//         appShell
-//             .setup((a) =>
-//                 a.showInformationMessage(
-//                     typemoq.It.isValue(message),
-//                     typemoq.It.isValue(yes),
-//                     typemoq.It.isValue(no),
-//                     typemoq.It.isValue(later)
-//                 )
-//             )
-//             .verifiable(typemoq.Times.never());
-//         const enabled: boolean = true;
-//         const testBanner: ProposeLanguageServerBanner = preparePopup(enabled, 0, appShell.object, config.object);
-//         testBanner.showBanner().ignoreErrors();
-//     });
-//     test('shouldShowBanner must return false when Banner is implicitly disabled by sampling', () => {
-//         const enabled: boolean = true;
-//         const testBanner: ProposeLanguageServerBanner = preparePopup(enabled, 0, appShell.object, config.object);
-//         expect(testBanner.enabled).to.be.equal(false, 'We implicitly disabled the banner, it should never show.');
-//     });
-//     test('shouldShowBanner must return false when Banner is explicitly disabled', async () => {
-//         const enabled: boolean = true;
-//         const testBanner: ProposeLanguageServerBanner = preparePopup(enabled, 100, appShell.object, config.object);
+    const message = LanguageService.proposePylanceMessage();
+    const yes = LanguageService.tryItNow();
+    const no = LanguageService.bannerLabelNo();
+    const later = LanguageService.remindMeLater();
 
-//         expect(await testBanner.shouldShowBanner()).to.be.equal(
-//             true,
-//             '100% sample size should always make the banner enabled.'
-//         );
-//         await testBanner.disable();
-//         expect(await testBanner.shouldShowBanner()).to.be.equal(
-//             false,
-//             'Explicitly disabled banner shouldShowBanner != false.'
-//         );
-//     });
-// });
+    setup(() => {
+        config = typemoq.Mock.ofType<IConfigurationService>();
+        settings = typemoq.Mock.ofType<IPythonSettings>();
+        config.setup((x) => x.getSettings(typemoq.It.isAny())).returns(() => settings.object);
+        appShell = typemoq.Mock.ofType<IApplicationShell>();
+        appEnv = typemoq.Mock.ofType<IApplicationEnvironment>();
+        appEnv.setup((x) => x.uriScheme).returns(() => 'scheme');
+    });
+    testData.forEach((t) => {
+        test(`${t.inExperiment ? 'In' : 'Not in'} experiment and "python.languageServer": "${t.lsType}" should ${
+            t.shouldShowBanner ? 'show' : 'not show'
+        } banner`, async () => {
+            settings.setup((x) => x.languageServer).returns(() => t.lsType);
+            const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.inExperiment, false);
+            const actual = await testBanner.shouldShowBanner();
+            expect(actual).to.be.equal(t.shouldShowBanner, `shouldShowBanner() returned ${actual}`);
+        });
+    });
+    testData.forEach((t) => {
+        test(`When Pylance is installed, banner should not be shown when "python.languageServer": "${t.lsType}"`, async () => {
+            settings.setup((x) => x.languageServer).returns(() => t.lsType);
+            const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, t.inExperiment, true);
+            const actual = await testBanner.shouldShowBanner();
+            expect(actual).to.be.equal(false, `shouldShowBanner() returned ${actual}`);
+        });
+    });
+    test('Do not show banner when it is disabled', async () => {
+        appShell
+            .setup((a) =>
+                a.showInformationMessage(
+                    typemoq.It.isValue(message),
+                    typemoq.It.isValue(yes),
+                    typemoq.It.isValue(no),
+                    typemoq.It.isValue(later)
+                )
+            )
+            .verifiable(typemoq.Times.never());
+        const testBanner = preparePopup(false, appShell.object, appEnv.object, config.object, true, false);
+        await testBanner.showBanner();
+        appShell.verifyAll();
+    });
+    test('Clicking No should disable the banner', async () => {
+        appShell
+            .setup((a) =>
+                a.showInformationMessage(
+                    typemoq.It.isValue(message),
+                    typemoq.It.isValue(yes),
+                    typemoq.It.isValue(no),
+                    typemoq.It.isValue(later)
+                )
+            )
+            .returns(async () => no)
+            .verifiable(typemoq.Times.once());
+        appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.never());
 
-// function preparePopup(
-//     enabledValue: boolean,
-//     sampleValue: number,
-//     appShell: IApplicationShell,
-//     config: IConfigurationService
-// ): ProposeLanguageServerBanner {
-//     const myfactory: typemoq.IMock<IPersistentStateFactory> = typemoq.Mock.ofType<IPersistentStateFactory>();
-//     const val: typemoq.IMock<IPersistentState<boolean>> = typemoq.Mock.ofType<IPersistentState<boolean>>();
-//     val.setup((a) => a.updateValue(typemoq.It.isValue(true))).returns(() => {
-//         enabledValue = true;
-//         return Promise.resolve();
-//     });
-//     val.setup((a) => a.updateValue(typemoq.It.isValue(false))).returns(() => {
-//         enabledValue = false;
-//         return Promise.resolve();
-//     });
-//     val.setup((a) => a.value).returns(() => {
-//         return enabledValue;
-//     });
-//     myfactory
-//         .setup((a) =>
-//             a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(true))
-//         )
-//         .returns(() => {
-//             return val.object;
-//         });
-//     myfactory
-//         .setup((a) =>
-//             a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(false))
-//         )
-//         .returns(() => {
-//             return val.object;
-//         });
-//     return new ProposeLanguageServerBanner(appShell, myfactory.object, config, sampleValue);
-// }
+        const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
+        await testBanner.showBanner();
+        expect(testBanner.enabled).to.be.equal(false, 'Banner should be permanently disabled when user clicked No');
+        appShell.verifyAll();
+    });
+    test('Clicking Later should disable banner in session', async () => {
+        appShell
+            .setup((a) =>
+                a.showInformationMessage(
+                    typemoq.It.isValue(message),
+                    typemoq.It.isValue(yes),
+                    typemoq.It.isValue(no),
+                    typemoq.It.isValue(later)
+                )
+            )
+            .returns(async () => later)
+            .verifiable(typemoq.Times.once());
+        appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.never());
+
+        const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
+        await testBanner.showBanner();
+        expect(testBanner.enabled).to.be.equal(
+            true,
+            'Banner should not be permanently disabled when user clicked Later'
+        );
+        appShell.verifyAll();
+    });
+    test('Clicking Yes opens the extension marketplace entry', async () => {
+        appShell
+            .setup((a) =>
+                a.showInformationMessage(
+                    typemoq.It.isValue(message),
+                    typemoq.It.isValue(yes),
+                    typemoq.It.isValue(no),
+                    typemoq.It.isValue(later)
+                )
+            )
+            .returns(async () => yes)
+            .verifiable(typemoq.Times.once());
+        appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.once());
+
+        const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
+        await testBanner.showBanner();
+        expect(testBanner.enabled).to.be.equal(false, 'Banner should be permanently disabled after opening store URL');
+        appShell.verifyAll();
+    });
+});
+
+function preparePopup(
+    enabledValue: boolean,
+    appShell: IApplicationShell,
+    appEnv: IApplicationEnvironment,
+    config: IConfigurationService,
+    inExperiment: boolean,
+    pylanceInstalled: boolean
+): ProposePylanceBanner {
+    const myfactory = typemoq.Mock.ofType<IPersistentStateFactory>();
+    const val = typemoq.Mock.ofType<IPersistentState<boolean>>();
+    val.setup((a) => a.updateValue(typemoq.It.isValue(true))).returns(() => {
+        enabledValue = true;
+        return Promise.resolve();
+    });
+    val.setup((a) => a.updateValue(typemoq.It.isValue(false))).returns(() => {
+        enabledValue = false;
+        return Promise.resolve();
+    });
+    val.setup((a) => a.value).returns(() => {
+        return enabledValue;
+    });
+    myfactory
+        .setup((a) =>
+            a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(true))
+        )
+        .returns(() => {
+            return val.object;
+        });
+    myfactory
+        .setup((a) =>
+            a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(false))
+        )
+        .returns(() => {
+            return val.object;
+        });
+
+    const experiments = typemoq.Mock.ofType<IExperimentService>();
+    experiments.setup((x) => x.inExperiment(TryPylance.experiment)).returns(() => Promise.resolve(inExperiment));
+
+    const extensions = typemoq.Mock.ofType<IExtensions>();
+    // tslint:disable-next-line: no-any
+    const extension = typemoq.Mock.ofType<Extension<any>>();
+    extensions
+        .setup((x) => x.getExtension(PYLANCE_EXTENSION_ID))
+        .returns(() => (pylanceInstalled ? extension.object : undefined));
+    return new ProposePylanceBanner(appShell, appEnv, myfactory.object, config, experiments.object, extensions.object);
+}
