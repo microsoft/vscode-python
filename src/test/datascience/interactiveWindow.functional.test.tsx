@@ -709,6 +709,8 @@ for i in range(0, 100):
                 );
 
                 // Then open a second time and make sure it uses this new path
+                const secondPath = await interpreterService.getActiveInterpreter(secondUri);
+                assert.notEqual(secondPath?.path, activeInterpreter?.path, 'Second path was not set');
                 const newWindow = (await interactiveWindowProvider.getOrCreate(undefined)) as InteractiveWindow;
                 await addCode(ioc, 'a=1\na', false, secondUri);
                 assert.notEqual(
