@@ -8,12 +8,12 @@ import { Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
-import { IFileSystem } from '../../common/platform/types';
+
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { OurNotebookProvider, VSCodeNotebookProvider } from '../constants';
-import { INotebookEditorProvider } from '../types';
+import { IDataScienceFileSystem, INotebookEditorProvider } from '../types';
 
 @injectable()
 export class NotebookEditorCompatibilitySupport implements IExtensionSingleActivationService {
@@ -24,7 +24,7 @@ export class NotebookEditorCompatibilitySupport implements IExtensionSingleActiv
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(UseVSCodeNotebookEditorApi) private readonly useVSCodeNotebookEditorApi: boolean,
 
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {}
     public async activate(): Promise<void> {

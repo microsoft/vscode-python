@@ -16,7 +16,7 @@ import {
 } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import '../../common/extensions';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
@@ -24,7 +24,13 @@ import { captureTelemetry, setSharedProperty } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
-import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
+import {
+    IDataScienceFileSystem,
+    INotebookEditor,
+    INotebookEditorProvider,
+    INotebookProvider,
+    IStatusProvider
+} from '../types';
 import { JupyterNotebookView } from './constants';
 import { mapVSCNotebookCellsToNotebookCellModels } from './helpers/cellMappers';
 import { updateCellModelWithChangesToVSCCell } from './helpers/cellUpdateHelpers';
@@ -74,7 +80,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(UseVSCodeNotebookEditorApi) useVSCodeNotebookEditorApi: boolean,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(
@@ -149,7 +155,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
 
             // Find all notebooks associated with this editor (ipynb file).
             const otherEditors = this.editors.filter(
-                (e) => this.fileSystem.arePathsSame(e.file.fsPath, editor.file.fsPath) && e !== editor
+                (e) => this.fs.arePathsSame(e.file.fsPath, editor.file.fsPath) && e !== editor
             );
 
             // If we have no editors for this file, then dispose the notebook.

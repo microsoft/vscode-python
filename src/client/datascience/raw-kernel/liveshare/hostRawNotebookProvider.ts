@@ -10,7 +10,7 @@ import * as vsls from 'vsls/vscode';
 import type { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
+
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -29,6 +29,7 @@ import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
+    IDataScienceFileSystem,
     IJupyterKernelSpec,
     INotebook,
     INotebookExecutionInfo,
@@ -55,7 +56,7 @@ export class HostRawNotebookProvider
         private configService: IConfigurationService,
         private workspaceService: IWorkspaceService,
         private appShell: IApplicationShell,
-        private fs: IFileSystem,
+        private fs: IDataScienceFileSystem,
         private serviceContainer: IServiceContainer,
         private kernelLauncher: IKernelLauncher,
         private kernelSelector: KernelSelector,
