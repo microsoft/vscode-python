@@ -13,7 +13,7 @@ import { IDisposableRegistry } from '../../../../client/common/types';
 import { JupyterInterpreterSelectionCommand } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterSelectionCommand';
 import { JupyterInterpreterService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 
-suite('Data Science - Jupyter Interpreter Command', () => {
+suite('DataScience - Jupyter Interpreter Command', () => {
     let interpreterCommand: IExtensionSingleActivationService;
     let disposableRegistry: IDisposableRegistry;
     let commandManager: ICommandManager;

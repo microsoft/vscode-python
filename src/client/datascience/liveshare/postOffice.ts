@@ -207,6 +207,7 @@ export class PostOffice implements IAsyncDisposable {
         // Startup or shutdown our connection to the other side
         if (api.session) {
             if (this.currentRole !== api.session.role) {
+                this.currentRole = api.session.role;
                 // We're changing our role.
                 if (this.hostServer) {
                     await api.unshareService(this.name);
@@ -218,7 +219,6 @@ export class PostOffice implements IAsyncDisposable {
             }
 
             // Startup our proxy or server
-            this.currentRole = api.session.role;
             if (api.session.role === vsls.Role.Host) {
                 this.hostServer = await api.shareService(this.name);
 

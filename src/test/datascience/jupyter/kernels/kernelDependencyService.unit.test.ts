@@ -15,7 +15,7 @@ import { createPythonInterpreter } from '../../../utils/interpreters';
 // tslint:disable: no-any
 
 // tslint:disable-next-line: max-func-body-length
-suite('Data Science - Kernel Dependency Service', () => {
+suite('DataScience - Kernel Dependency Service', () => {
     let dependencyService: KernelDependencyService;
     let appShell: IApplicationShell;
     let installer: IInstaller;

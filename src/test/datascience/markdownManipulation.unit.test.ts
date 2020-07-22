@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { fixMarkdown } from '../../datascience-ui/interactive-common/markdownManipulation';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - Markdown Manipulation', () => {
+suite('DataScience - Markdown Manipulation', () => {
     const markdown1 = `\\begin{align}
 \\nabla \\cdot \\vec{\\mathbf{E}} & = 4 \\pi \\rho \\\\
 \\nabla \\times \\vec{\\mathbf{E}}\\, +\\, \\frac1c\\, \\frac{\\partial\\vec{\\mathbf{B}}}{\\partial t} & = \\vec{\\mathbf{0}} \\\\

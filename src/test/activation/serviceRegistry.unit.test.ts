@@ -57,7 +57,7 @@ import { DataScienceSurveyBanner } from '../../client/datascience/dataScienceSur
 import { InteractiveShiftEnterBanner } from '../../client/datascience/shiftEnterBanner';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceManager } from '../../client/ioc/types';
-import { ProposeLanguageServerBanner } from '../../client/languageServices/proposeLanguageServerBanner';
+import { ProposePylanceBanner } from '../../client/languageServices/proposeLanguageServerBanner';
 
 // tslint:disable:max-func-body-length
 
@@ -101,7 +101,7 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         verify(
             serviceManager.addSingleton<IPythonExtensionBanner>(
                 IPythonExtensionBanner,
-                ProposeLanguageServerBanner,
+                ProposePylanceBanner,
                 BANNER_NAME_PROPOSE_LS
             )
         ).once();

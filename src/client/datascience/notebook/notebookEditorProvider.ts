@@ -16,6 +16,7 @@ import {
 } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import '../../common/extensions';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
@@ -28,7 +29,6 @@ import { JupyterNotebookView } from './constants';
 import { mapVSCNotebookCellsToNotebookCellModels } from './helpers/cellMappers';
 import { updateCellModelWithChangesToVSCCell } from './helpers/cellUpdateHelpers';
 import { isJupyterNotebook } from './helpers/helpers';
-import { NotebookIntegration } from './integration';
 import { NotebookEditor } from './notebookEditor';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
 
@@ -73,7 +73,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(UseVSCodeNotebookEditorApi) useVSCodeNotebookEditorApi: boolean
+        @inject(UseVSCodeNotebookEditorApi) useVSCodeNotebookEditorApi: boolean,
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem
     ) {
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(
@@ -85,13 +86,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 if (uri) {
                     setSharedProperty('ds_notebookeditor', 'native');
                     captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false);
-                    const integration = serviceContainer.get<NotebookIntegration>(NotebookIntegration);
-                    // If user is not meant to be using VSC Notebooks, and it is not enabled,
-                    // then enable it for side by side usage.
-                    if (!integration.isEnabled && !useVSCodeNotebookEditorApi) {
-                        // At this point we need to reload VS Code, hence return and do not try to load nb, else it will fail.
-                        return integration.enableSideBySideUsage();
-                    }
                     this.open(uri).ignoreErrors();
                 }
             })
@@ -152,6 +146,16 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (this.openedEditors.has(editor)) {
             this.openedEditors.delete(editor);
             this._onDidCloseNotebookEditor.fire(editor);
+
+            // Find all notebooks associated with this editor (ipynb file).
+            const otherEditors = this.editors.filter(
+                (e) => this.fileSystem.arePathsSame(e.file.fsPath, editor.file.fsPath) && e !== editor
+            );
+
+            // If we have no editors for this file, then dispose the notebook.
+            if (otherEditors.length === 0) {
+                editor.notebook?.dispose();
+            }
         }
     }
 
@@ -160,7 +164,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             return;
         }
         const uri = doc.uri;
-        const model = await this.storage.load(uri, undefined, undefined, true);
+        const model = await this.storage.get(uri, undefined, undefined, true);
         mapVSCNotebookCellsToNotebookCellModels(doc, model);
         // In open method we might be waiting.
         let editor = this.notebookEditorsByUri.get(uri.toString());
@@ -188,6 +192,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString())!;
         deferred.resolve(editor);
         this.notebookEditorsByUri.set(uri.toString(), editor);
+        if (!model.isTrusted) {
+            await this.commandManager.executeCommand(Commands.TrustNotebook, model.file);
+        }
     }
     private onDidChangeActiveVsCodeNotebookEditor(editor: VSCodeNotebookEditor | undefined) {
         if (!editor) {
@@ -237,7 +244,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (!isJupyterNotebook(e.document)) {
             return;
         }
-        const model = await this.storage.load(e.document.uri, undefined, undefined, true);
+        const model = await this.storage.get(e.document.uri, undefined, undefined, true);
         if (!(model instanceof VSCodeNotebookModel)) {
             throw new Error('NotebookModel not of type VSCodeNotebookModel');
         }

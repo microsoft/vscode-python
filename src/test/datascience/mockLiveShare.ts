@@ -30,6 +30,8 @@ class MockLiveService implements vsls.SharedService, vsls.SharedServiceProxy {
     private defaultCancellationSource = new CancellationTokenSource();
     private sibling: MockLiveService | undefined;
 
+    constructor(public readonly role: vsls.Role) {}
+
     public setSibling(sibling: MockLiveService) {
         this.sibling = sibling;
     }
@@ -365,8 +367,8 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
     }
 
     private generateServicePair(): MockLiveService[] {
-        const hostService = new MockLiveService();
-        const guestService = new MockLiveService();
+        const hostService = new MockLiveService(vsls.Role.Host);
+        const guestService = new MockLiveService(vsls.Role.Guest);
         hostService.setSibling(guestService);
         guestService.setSibling(hostService);
         // Host is always first

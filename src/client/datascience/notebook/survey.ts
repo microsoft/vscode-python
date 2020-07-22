@@ -81,6 +81,11 @@ export class NotebookSurveyBanner {
         if (!this.enabled || this.disabledInCurrentSession) {
             return false;
         }
+        const currentDate = new Date();
+        if (currentDate.getMonth() < 7 && currentDate.getFullYear() <= 2020) {
+            return false;
+        }
+
         const data = this.persistentState.createGlobalPersistentState<NotebookSurveyUsageData>(storageKey, {});
 
         const totalActionsInPreviousSessions =

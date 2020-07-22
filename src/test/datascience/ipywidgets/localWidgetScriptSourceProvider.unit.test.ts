@@ -14,7 +14,7 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 
 // tslint:disable: max-func-body-length no-any
-suite('Data Science - ipywidget - Local Widget Script Source', () => {
+suite('DataScience - ipywidget - Local Widget Script Source', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let notebook: INotebook;
     let resourceConverter: ILocalResourceUriConverter;

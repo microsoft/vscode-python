@@ -14,7 +14,7 @@ import {
 } from '../../../client/datascience/types';
 
 // tslint:disable: max-func-body-length no-any
-suite('Data Science - Kernel Daemon Pool PreWarmer', () => {
+suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     let prewarmer: KernelDaemonPreWarmer;
     let notebookEditorProvider: INotebookEditorProvider;
     let interactiveProvider: IInteractiveWindowProvider;

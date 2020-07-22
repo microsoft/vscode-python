@@ -1,7 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { Contents, ContentsManager, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import type {
+    Contents,
+    ContentsManager,
+    Kernel,
+    ServerConnection,
+    Session,
+    SessionManager
+} from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
@@ -18,7 +25,6 @@ import { ReportableAction } from '../progress/types';
 import { IJupyterConnection, IJupyterKernelSpec, ISessionWithSocket } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWebSockets } from './jupyterWebSocket';
-import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
 
 export class JupyterSession extends BaseJupyterSession {
@@ -29,10 +35,11 @@ export class JupyterSession extends BaseJupyterSession {
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager,
-        kernelSelector: KernelSelector,
-        private readonly outputChannel: IOutputChannel
+        private readonly outputChannel: IOutputChannel,
+        private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
+        restartSessionUsed: (id: Kernel.IKernelConnection) => void
     ) {
-        super(kernelSelector);
+        super(restartSessionUsed);
         this.kernelSpec = kernelSpec;
     }
 
@@ -127,7 +134,7 @@ export class JupyterSession extends BaseJupyterSession {
                     cancelToken
                 );
                 await this.waitForIdleOnSession(result, 30000);
-                this.kernelSelector.addKernelToIgnoreList(result.kernel);
+                this.restartSessionCreated(result.kernel);
                 return result;
             } catch (exc) {
                 traceInfo(`Error waiting for restart session: ${exc}`);

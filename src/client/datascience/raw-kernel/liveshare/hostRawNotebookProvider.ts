@@ -20,6 +20,7 @@ import {
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
+import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
@@ -29,7 +30,6 @@ import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
-    IDataScience,
     IJupyterKernelSpec,
     INotebook,
     INotebookExecutionInfo,
@@ -50,7 +50,7 @@ export class HostRawNotebookProvider
     private disposed = false;
     constructor(
         private liveShare: ILiveShareApi,
-        _dataScience: IDataScience,
+        _t: number,
         private disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,
@@ -141,12 +141,7 @@ export class HostRawNotebookProvider
             ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingIPyKernel())
             : undefined;
 
-        const rawSession = new RawJupyterSession(
-            this.kernelLauncher,
-            this.kernelSelector,
-            resource,
-            this.outputChannel
-        );
+        const rawSession = new RawJupyterSession(this.kernelLauncher, resource, this.outputChannel, noop, noop);
         try {
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
 

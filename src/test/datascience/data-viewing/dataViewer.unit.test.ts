@@ -19,7 +19,7 @@ import { IDataViewer, IDataViewerDataProvider } from '../../../client/datascienc
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
 import { ICodeCssGenerator, IThemeFinder } from '../../../client/datascience/types';
 
-suite('Data Science - DataViewer', () => {
+suite('DataScience - DataViewer', () => {
     let dataViewer: IDataViewer;
     let webPanelProvider: IWebPanelProvider;
     let configService: IConfigurationService;

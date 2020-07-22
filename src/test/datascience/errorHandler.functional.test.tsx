@@ -4,14 +4,12 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
-import * as vsls from 'vsls/vscode';
 import { IDocumentManager } from '../../client/common/application/types';
 import { JupyterInterpreterSubCommandExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
 import { JupyterInstallError } from '../../client/datascience/jupyter/jupyterInstallError';
 import { ICodeWatcher, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockDocumentManager } from './mockDocumentManager';
-import { mountConnectedMainPanel } from './testHelpers';
 
 suite('DataScience Error Handler Functional Tests', () => {
     let ioc: DataScienceIocContainer;
@@ -37,8 +35,6 @@ suite('DataScience Error Handler Functional Tests', () => {
 
         jupyterExecution.setup((jup) => jup.getUsableJupyterPython()).returns(() => Promise.resolve(undefined));
         ioc.serviceManager.rebindInstance<IJupyterExecution>(IJupyterExecution, jupyterExecution.object);
-
-        ioc.createWebView(() => mountConnectedMainPanel('interactive'), 'default', vsls.Role.None);
 
         ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         ioc.get<IJupyterExecution>(IJupyterExecution);

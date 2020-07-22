@@ -28,11 +28,9 @@ import { PyramidLaunchDebugConfigurationProvider } from '../../../client/debugge
 import { RemoteAttachDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/remoteAttach';
 import { AttachConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/attach';
 import { LaunchConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/launch';
-import { LaunchDebugConfigurationExperiment } from '../../../client/debugger/extension/configuration/resolvers/launchConfigExperiment';
 import {
     IDebugConfigurationProviderFactory,
-    IDebugConfigurationResolver,
-    ILaunchDebugConfigurationResolverExperiment
+    IDebugConfigurationResolver
 } from '../../../client/debugger/extension/configuration/types';
 import { ChildProcessAttachEventHandler } from '../../../client/debugger/extension/hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from '../../../client/debugger/extension/hooks/childProcessAttachService';
@@ -201,12 +199,6 @@ suite('Debugging - Service Registry', () => {
             serviceManager.addSingleton<IOutdatedDebuggerPromptFactory>(
                 IOutdatedDebuggerPromptFactory,
                 OutdatedDebuggerPromptFactory
-            )
-        ).once();
-        verify(
-            serviceManager.addSingleton<ILaunchDebugConfigurationResolverExperiment>(
-                ILaunchDebugConfigurationResolverExperiment,
-                LaunchDebugConfigurationExperiment
             )
         ).once();
         verify(

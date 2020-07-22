@@ -10,7 +10,7 @@
  */
 
 import * as assert from 'assert';
-import { NotebookCell } from '../../../../../types/vscode-proposed';
+import { NotebookCell, NotebookDocument } from '../../../../../types/vscode-proposed';
 import {
     NotebookCellLanguageChangeEvent,
     NotebookCellOutputsChangeEvent,
@@ -20,8 +20,13 @@ import { traceError } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { VSCodeNativeTelemetry } from '../../constants';
 import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
+import { INotebookModel } from '../../types';
 import { findMappedNotebookCellModel } from './cellMappers';
-import { createCellFromVSCNotebookCell, updateVSCNotebookCellMetadata } from './helpers';
+import {
+    createCellFromVSCNotebookCell,
+    createVSCCellOutputsFromOutputs,
+    updateVSCNotebookCellMetadata
+} from './helpers';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -49,6 +54,48 @@ export function updateCellModelWithChangesToVSCCell(
             // tslint:disable-next-line: no-string-literal
             assert.fail(`Unsupported cell change ${change['type']}`);
     }
+}
+
+/**
+ * Updates a notebook document as a result of trusting it.
+ */
+export function updateVSCNotebookAfterTrustingNotebook(document: NotebookDocument, model: INotebookModel) {
+    const areAllCellsEditableAndRunnable = document.cells.every((cell) => {
+        if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
+            return cell.metadata.editable;
+        } else {
+            return cell.metadata.editable && cell.metadata.runnable;
+        }
+    });
+    const isDocumentEditableAndRunnable =
+        document.metadata.cellEditable &&
+        document.metadata.cellRunnable &&
+        document.metadata.editable &&
+        document.metadata.runnable;
+
+    // If already trusted, then nothing to do.
+    if (isDocumentEditableAndRunnable && areAllCellsEditableAndRunnable) {
+        return;
+    }
+
+    document.metadata.cellEditable = true;
+    document.metadata.cellRunnable = true;
+    document.metadata.editable = true;
+    document.metadata.runnable = true;
+
+    document.cells.forEach((cell) => {
+        cell.metadata.editable = true;
+        if (cell.cellKind !== vscodeNotebookEnums.CellKind.Markdown) {
+            cell.metadata.runnable = true;
+        }
+
+        // Restore the output once we trust the notebook.
+        const cellModel = findMappedNotebookCellModel(cell, model.cells);
+        if (cellModel) {
+            // tslint:disable-next-line: no-any
+            cell.outputs = createVSCCellOutputsFromOutputs(cellModel.data.outputs as any);
+        }
+    });
 }
 
 export function clearCellForExecution(vscCell: NotebookCell, model: VSCodeNotebookModel) {

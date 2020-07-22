@@ -15,9 +15,9 @@ import { CodeCssGenerator } from './codeCssGenerator';
 import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
 import { CommandRegistry } from './commands/commandRegistry';
 import { ExportCommands } from './commands/exportCommands';
-import { KernelSwitcherCommand } from './commands/kernelSwitcher';
+import { NotebookCommands } from './commands/notebookCommands';
 import { JupyterServerSelectorCommand } from './commands/serverSelector';
-import { Identifiers, OurNotebookProvider, VSCodeNotebookProvider } from './constants';
+import { DataScienceStartupTime, Identifiers, OurNotebookProvider, VSCodeNotebookProvider } from './constants';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { DataViewer } from './data-viewing/dataViewer';
 import { DataViewerDependencyService } from './data-viewing/dataViewerDependencyService';
@@ -36,9 +36,9 @@ import { Decorator } from './editor-integration/decorator';
 import { HoverProvider } from './editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
 import { ExportBase } from './export/exportBase';
+import { ExportDependencyChecker } from './export/exportDependencyChecker';
+import { ExportFileOpener } from './export/exportFileOpener';
 import { ExportManager } from './export/exportManager';
-import { ExportManagerDependencyChecker } from './export/exportManagerDependencyChecker';
-import { ExportManagerFileOpener } from './export/exportManagerFileOpener';
 import { ExportManagerFilePicker } from './export/exportManagerFilePicker';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
@@ -66,6 +66,7 @@ import { NativeEditorStorage } from './interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
 import { NativeEditorViewTracker } from './interactive-ipynb/nativeEditorViewTracker';
 import { INotebookStorageProvider, NotebookStorageProvider } from './interactive-ipynb/notebookStorageProvider';
+import { TrustCommandHandler } from './interactive-ipynb/trustCommandHandler';
 import { TrustService } from './interactive-ipynb/trustService';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
@@ -186,6 +187,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     const usingCustomEditor = inCustomEditorApiExperiment;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
     serviceManager.addSingletonInstance<boolean>(UseVSCodeNotebookEditorApi, useVSCodeNotebookAPI);
+    serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
 
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);
@@ -202,7 +204,7 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
     serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
-    serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
+    serviceManager.addSingleton<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
@@ -246,6 +248,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NativeEditorViewTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookUsageTracker);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, TrustCommandHandler);
     serviceManager.addSingleton<IInteractiveWindowListener>(IInteractiveWindowListener, DataScienceSurveyBannerLogger);
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [ICellHashListener]);
@@ -273,7 +276,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
     serviceManager.addSingleton<KernelService>(KernelService, KernelService);
     serviceManager.addSingleton<KernelSwitcher>(KernelSwitcher, KernelSwitcher);
-    serviceManager.addSingleton<KernelSwitcherCommand>(KernelSwitcherCommand, KernelSwitcherCommand);
+    serviceManager.addSingleton<NotebookCommands>(NotebookCommands, NotebookCommands);
     serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
@@ -291,9 +294,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, JupyterDebugService, Identifiers.RUN_BY_LINE_DEBUGSERVICE);
     serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
     serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory, JupyterVariableDataProviderFactory);
-    serviceManager.addSingleton<IExportManager>(ExportManager, ExportManager);
-    serviceManager.addSingleton<IExportManager>(ExportManagerDependencyChecker, ExportManagerDependencyChecker);
-    serviceManager.addSingleton<IExportManager>(IExportManager, ExportManagerFileOpener);
+    serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
+    serviceManager.addSingleton<ExportDependencyChecker>(ExportDependencyChecker, ExportDependencyChecker);
+    serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
     serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
     serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
     serviceManager.addSingleton<IExport>(IExport, ExportToPython, ExportFormat.python);

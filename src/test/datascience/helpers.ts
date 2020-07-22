@@ -36,7 +36,8 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
         debugJustMyCode: true,
         variableQueries: [],
         jupyterCommandLineArguments: [],
-        widgetScriptSources: []
+        widgetScriptSources: [],
+        interactiveWindowMode: 'single'
     };
 }
 

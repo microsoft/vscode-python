@@ -26,12 +26,12 @@ import { createCodeCell, createMarkdownCell } from '../../../../datascience-ui/c
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError, traceWarning } from '../../../common/logger';
 import { CellState, ICell, INotebookModel } from '../../types';
+import { JupyterNotebookView } from '../constants';
 import { mapVSCNotebookCellToCellModel } from './cellMappers';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { JupyterNotebookView } from '../constants';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 interface IBaseCellVSCodeMetadata {
@@ -61,11 +61,11 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
         cells,
         languages: [defaultLanguage],
         metadata: {
-            cellEditable: true,
-            cellRunnable: true,
-            editable: true,
+            cellEditable: model.isTrusted,
+            cellRunnable: model.isTrusted,
+            editable: model.isTrusted,
             cellHasExecutionOrder: true,
-            runnable: true,
+            runnable: model.isTrusted,
             displayOrder: [
                 'application/vnd.*',
                 'application/vdom.*',
@@ -107,6 +107,7 @@ export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INot
 
     // Add the metadata back to the cell if we have any.
     // Refer to `addCellMetadata` to see how metadata is stored in VSC Cells.
+    // This metadata would exist if the user copied and pasted an existing cell.
     if (vscCell.metadata.custom?.vscodeMetadata) {
         cell.data = {
             ...cell.data,
@@ -120,17 +121,19 @@ export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INot
 }
 
 /**
- * Updates the VSC Cell metadata with metadata from our cells.
- * If user exits without saving, then we have all metadata in VSC document.
- * This way when users copy a cell, we have everything in the old cell to create a duplicate of the Jupyter cell.
- * (Remember: VSC Cells less information compared to Jupyter cells).
+ * Stores the Jupyter Cell metadata into the VSCode Cells.
+ * This is used to facilitate:
+ * 1. When a user copies and pastes a cell, then the corresponding metadata is also copied across.
+ * 2. Diffing (VSC knows about metadata & stuff that contributes changes to a cell).
  */
 export function updateVSCNotebookCellMetadata(cellMetadata: NotebookCellMetadata, cell: ICell) {
     cellMetadata.custom = cellMetadata.custom ?? {};
     // tslint:disable-next-line: no-any
     const metadata: Record<string, any> = {};
     cellMetadata.custom.vscodeMetadata = metadata;
-    const propertiesToClone = ['metadata', 'attachments', 'outputs'];
+    // We put this only for VSC to display in diff view.
+    // Else we don't use this.
+    const propertiesToClone = ['metadata', 'attachments'];
     propertiesToClone.forEach((propertyToClone) => {
         if (cell.data[propertyToClone]) {
             metadata[propertyToClone] = cloneDeep(cell.data[propertyToClone]);
@@ -146,6 +149,21 @@ export function getDefaultCodeLanguage(model: INotebookModel) {
 }
 
 export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: ICell): NotebookCellData | undefined {
+    if (cell.data.cell_type === 'raw') {
+        const rawCell = cell.data;
+        return {
+            cellKind: vscodeNotebookEnums.CellKind.Code,
+            language: 'raw',
+            metadata: {
+                custom: {
+                    metadata: rawCell.metadata,
+                    attachments: rawCell.attachments
+                }
+            },
+            outputs: [],
+            source: concatMultilineStringInput(cell.data.source)
+        };
+    }
     if (cell.data.cell_type !== 'code' && cell.data.cell_type !== 'markdown') {
         traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.data.cell_type}`);
         return;
@@ -172,23 +190,16 @@ export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: I
         runState = vscodeNotebookEnums.NotebookCellRunState.Success;
     }
 
-    const notebookCellData: NotebookCellData = {
-        cellKind:
-            cell.data.cell_type === 'code' ? vscodeNotebookEnums.CellKind.Code : vscodeNotebookEnums.CellKind.Markdown,
-        language: cell.data.cell_type === 'code' ? defaultCodeLanguage : MARKDOWN_LANGUAGE,
-        metadata: {
-            editable: true,
-            executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
-            hasExecutionOrder: cell.data.cell_type === 'code',
-            runState,
-            runnable: cell.data.cell_type === 'code'
-        },
-        source: concatMultilineStringInput(cell.data.source),
-        outputs
+    const notebookCellMetadata: NotebookCellMetadata = {
+        editable: model.isTrusted,
+        executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
+        hasExecutionOrder: cell.data.cell_type === 'code',
+        runState,
+        runnable: cell.data.cell_type === 'code' && model.isTrusted
     };
 
     if (statusMessage) {
-        notebookCellData.metadata.statusMessage = statusMessage;
+        notebookCellMetadata.statusMessage = statusMessage;
     }
     const vscodeMetadata = (cell.data.metadata.vscode as unknown) as IBaseCellVSCodeMetadata | undefined;
     const startExecutionTime = vscodeMetadata?.start_execution_time
@@ -199,12 +210,27 @@ export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: I
         : undefined;
 
     if (startExecutionTime && typeof endExecutionTime === 'number') {
-        notebookCellData.metadata.runStartTime = startExecutionTime;
-        notebookCellData.metadata.lastRunDuration = endExecutionTime - startExecutionTime;
+        notebookCellMetadata.runStartTime = startExecutionTime;
+        notebookCellMetadata.lastRunDuration = endExecutionTime - startExecutionTime;
     }
 
-    updateVSCNotebookCellMetadata(notebookCellData.metadata, cell);
-    return notebookCellData;
+    updateVSCNotebookCellMetadata(notebookCellMetadata, cell);
+
+    // If not trusted, then clear the output in VSC Cell.
+    // At this point we have the original output in the ICell.
+    if (!model.isTrusted) {
+        while (outputs.length) {
+            outputs.shift();
+        }
+    }
+    return {
+        cellKind:
+            cell.data.cell_type === 'code' ? vscodeNotebookEnums.CellKind.Code : vscodeNotebookEnums.CellKind.Markdown,
+        language: cell.data.cell_type === 'code' ? defaultCodeLanguage : MARKDOWN_LANGUAGE,
+        metadata: notebookCellMetadata,
+        source: concatMultilineStringInput(cell.data.source),
+        outputs
+    };
 }
 
 export function createVSCCellOutputsFromOutputs(outputs?: nbformat.IOutput[]): CellOutput[] {
@@ -242,56 +268,23 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): CellOutput 
  * @param {nbformat.IDisplayData} output
  * @returns {(CellDisplayOutput | undefined)}
  */
-function translateDisplayDataOutput(output: nbformat.IDisplayData): CellDisplayOutput | undefined {
-    const mimeTypes = Object.keys(output.data || {});
+function translateDisplayDataOutput(
+    output: nbformat.IDisplayData | nbformat.IDisplayUpdate | nbformat.IExecuteResult
+): CellDisplayOutput | undefined {
     // If no mimeType data, then there's nothing to display.
-    if (!mimeTypes.length) {
+    if (!Object.keys(output.data || {}).length) {
         return;
     }
-    // If we have images, then process those images.
-    // If we have PNG or JPEG images with a background, then add that background as HTML
     const data = { ...output.data };
-    if (mimeTypes.some(isImagePngOrJpegMimeType) && shouldConvertImageToHtml(output) && !output.data['text/html']) {
-        const mimeType = 'image/png' in data ? 'image/png' : 'image/jpeg';
-        const metadata = output.metadata || {};
-        const needsBackground = typeof metadata.needs_background === 'string';
-        const backgroundColor = metadata.needs_background === 'light' ? 'white' : 'black';
-        const divStyle = needsBackground ? `background-color:${backgroundColor};` : '';
-        const imgSrc = `data:${mimeType};base64,${output.data[mimeType]}`;
-
-        let height = '';
-        let width = '';
-        let imgStyle = '';
-        if (metadata[mimeType] && typeof metadata[mimeType] === 'object') {
-            // tslint:disable-next-line: no-any
-            const imageMetadata = metadata[mimeType] as any;
-            height = imageMetadata.height ? `height=${imageMetadata.height}` : '';
-            width = imageMetadata.width ? `width=${imageMetadata.width}` : '';
-            if (imageMetadata.unconfined === true) {
-                imgStyle = `style="max-width:none"`;
-            }
-        }
-
-        // Hack, use same classes as used in VSCode for images.
-        // This is to maintain consistently in displaying images (if we hadn't used HTML).
-        // See src/vs/workbench/contrib/notebook/browser/view/output/transforms/richTransform.ts
-        data[
-            'text/html'
-        ] = `<div class='display' style="overflow:scroll;${divStyle}"><img src="${imgSrc}" ${imgStyle} ${height} ${width}></div>`;
-    }
+    // tslint:disable-next-line: no-any
+    const metadata = output.metadata ? ({ custom: output.metadata } as any) : undefined;
     return {
         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-        data
+        data,
+        metadata // Used be renderers & VS Code for diffing (it knows what has changed).
     };
 }
 
-function shouldConvertImageToHtml(output: nbformat.IDisplayData) {
-    const metadata = output.metadata || {};
-    return typeof metadata.needs_background === 'string' || metadata['image/png'] || metadata['image/jpeg'];
-}
-function isImagePngOrJpegMimeType(mimeType: string) {
-    return mimeType === 'image/png' || mimeType === 'image/jpeg';
-}
 function translateStreamOutput(output: nbformat.IStream): CellStreamOutput | CellDisplayOutput {
     // Do not return as `CellOutputKind.Text`. VSC will not translate ascii output correctly.
     // Instead format the output as rich.

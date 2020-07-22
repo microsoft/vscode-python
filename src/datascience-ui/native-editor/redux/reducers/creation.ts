@@ -5,6 +5,7 @@
 import { noop } from '../../../../client/common/utils/misc';
 import {
     IEditorContentChange,
+    IFinishCell,
     ILoadAllCells,
     NotebookModelChange
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -202,8 +203,11 @@ export namespace Creation {
         return Helpers.updateOrAdd(arg, (c: ICell, s: IMainState) => prepareCellVM(c, true, s.settings));
     }
 
-    export function finishCell(arg: NativeEditorReducerArg<ICell>): IMainState {
-        return Helpers.updateOrAdd(arg, (c: ICell, s: IMainState) => prepareCellVM(c, true, s.settings));
+    export function finishCell(arg: NativeEditorReducerArg<IFinishCell>): IMainState {
+        return Helpers.updateOrAdd(
+            { ...arg, payload: { ...arg.payload, data: arg.payload.data.cell } },
+            (c: ICell, s: IMainState) => prepareCellVM(c, true, s.settings)
+        );
     }
 
     export function deleteAllCells(arg: NativeEditorReducerArg<IAddCellAction>): IMainState {

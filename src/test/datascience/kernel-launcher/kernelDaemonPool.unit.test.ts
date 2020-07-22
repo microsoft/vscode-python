@@ -18,7 +18,7 @@ import { sleep } from '../../core';
 import { createPythonInterpreter } from '../../utils/interpreters';
 
 // tslint:disable: max-func-body-length no-any
-suite('Data Science - Kernel Daemon Pool', () => {
+suite('DataScience - Kernel Daemon Pool', () => {
     const interpreter1 = createPythonInterpreter({ path: 'interpreter1' });
     const interpreter2 = createPythonInterpreter({ path: 'interpreter2' });
     const interpreter3 = createPythonInterpreter({ path: 'interpreter3' });

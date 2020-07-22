@@ -6,7 +6,7 @@ import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { Resource } from '../../client/common/types';
-import { Identifiers } from '../../client/datascience/constants';
+import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
@@ -28,7 +28,7 @@ export class MockJupyterNotebook implements INotebook {
         return this.providerConnection;
     }
     public get identity(): Uri {
-        return Uri.parse(Identifiers.InteractiveWindowIdentity);
+        return getDefaultInteractiveIdentity();
     }
     public kernelSocket = new Observable<KernelSocketInformation | undefined>();
     public get onSessionStatusChanged(): Event<ServerStatus> {

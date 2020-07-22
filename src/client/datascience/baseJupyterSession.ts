@@ -19,7 +19,6 @@ import { Identifiers, Telemetry } from './constants';
 import { JupyterInvalidKernelError } from './jupyter/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyter/jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
-import { KernelSelector } from './jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from './jupyter/kernels/types';
 import { suppressShutdownErrors } from './raw-kernel/rawKernel';
 import { IJupyterKernelSpec, IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
@@ -78,7 +77,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     private _jupyterLab?: typeof import('@jupyterlab/services');
 
-    constructor(protected readonly kernelSelector: KernelSelector) {
+    constructor(private restartSessionUsed: (id: Kernel.IKernelConnection) => void) {
         this.statusHandler = this.onStatusChanged.bind(this);
     }
     public dispose(): Promise<void> {
@@ -130,8 +129,11 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         let newSession: ISessionWithSocket | undefined;
 
         // If we are already using this kernel in an active session just return back
-        if (this.kernelSpec?.name === kernel.name && this.session) {
-            return;
+        if (this.session && this.kernelSpec) {
+            // Name and id have to match (id is only for active sessions)
+            if (this.kernelSpec.name === kernel.name && this.kernelSpec.id === kernel.id) {
+                return;
+            }
         }
 
         newSession = await this.createNewKernelSession(kernel, timeoutMS, interpreter);
@@ -180,7 +182,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             if (!this.session) {
                 throw new Error(localize.DataScience.sessionDisposed());
             }
-            this.kernelSelector.removeKernelFromIgnoreList(this.session.kernel);
+            this.restartSessionUsed(this.session.kernel);
             traceInfo(`Got new session ${this.session.kernel.id}`);
 
             // Rewire our status changed event.

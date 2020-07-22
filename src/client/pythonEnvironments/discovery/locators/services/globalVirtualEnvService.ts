@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { Uri } from 'vscode';
@@ -16,7 +16,6 @@ import { BaseVirtualEnvService } from './baseVirtualEnvService';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify: (value: string) => string = require('untildify');
 
-@injectable()
 export class GlobalVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
         @inject(IVirtualEnvironmentsSearchPathProvider)
@@ -28,8 +27,7 @@ export class GlobalVirtualEnvService extends BaseVirtualEnvService {
     }
 }
 
-@injectable()
-export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvironmentsSearchPathProvider {
+export class GlobalVirtualEnvironmentsSearchPathProvider {
     private readonly config: IConfigurationService;
     private readonly currentProcess: ICurrentProcess;
     private readonly virtualEnvMgr: IVirtualEnvironmentManager;

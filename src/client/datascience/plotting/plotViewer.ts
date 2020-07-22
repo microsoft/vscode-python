@@ -13,7 +13,7 @@ import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../c
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposable, Resource } from '../../common/types';
+import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { ICodeCssGenerator, IPlotViewer, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
@@ -87,8 +87,8 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
         }
     }
 
-    protected getOwningResource(): Promise<Resource> {
-        return Promise.resolve(undefined);
+    protected get owningResource() {
+        return undefined;
     }
 
     //tslint:disable-next-line:no-any

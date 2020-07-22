@@ -4,7 +4,7 @@
 // tslint:disable: no-var-requires no-require-imports no-invalid-this no-any
 import { assert } from 'chai';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { ExportFormat, IExport } from '../../../client/datascience/export/types';
 import { IExtensionTestApi } from '../../common';
@@ -34,9 +34,11 @@ suite('DataScience - Export HTML', () => {
         const file = await fileSystem.createTemporaryFile('.html');
         const target = Uri.file(file.filePath);
         await file.dispose();
+        const token = new CancellationTokenSource();
         await exportToHTML.export(
             Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb')),
-            target
+            target,
+            token.token
         );
 
         assert.equal(await fileSystem.fileExists(target.fsPath), true);

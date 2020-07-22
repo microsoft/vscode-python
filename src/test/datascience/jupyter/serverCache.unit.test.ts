@@ -14,7 +14,7 @@ import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { MockJupyterServer } from '../mockJupyterServer';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - ServerCache', () => {
+suite('DataScience - ServerCache', () => {
     let serverCache: ServerCache;
     const fileSystem = mock(FileSystem);
     const workspaceService = mock(WorkspaceService);
@@ -53,7 +53,8 @@ suite('Data Science - ServerCache', () => {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            widgetScriptSources: []
+            widgetScriptSources: [],
+            interactiveWindowMode: 'single'
         };
         when(configService.getSettings(anything())).thenReturn(pythonSettings);
         serverCache = new ServerCache(instance(configService), instance(workspaceService), instance(fileSystem));

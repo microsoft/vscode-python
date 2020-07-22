@@ -7,11 +7,12 @@ import { DebugService } from '../../../client/common/application/debugService';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { StartPage } from '../../../client/common/startPage/startPage';
 import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../../client/datascience/commands/commandRegistry';
 import { ExportCommands } from '../../../client/datascience/commands/exportCommands';
-import { KernelSwitcherCommand } from '../../../client/datascience/commands/kernelSwitcher';
+import { NotebookCommands } from '../../../client/datascience/commands/notebookCommands';
 import { JupyterServerSelectorCommand } from '../../../client/datascience/commands/serverSelector';
 import { Commands } from '../../../client/datascience/constants';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
@@ -19,14 +20,14 @@ import { NativeEditorProvider } from '../../../client/datascience/interactive-ip
 import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - Commands', () => {
-    let kernelSwitcherCommand: KernelSwitcherCommand;
+suite('DataScience - Commands', () => {
+    let kernelSwitcherCommand: NotebookCommands;
     let serverSelectorCommand: JupyterServerSelectorCommand;
     let commandLineCommand: JupyterCommandLineSelectorCommand;
     let commandRegistry: CommandRegistry;
     let commandManager: ICommandManager;
     setup(() => {
-        kernelSwitcherCommand = mock(KernelSwitcherCommand);
+        kernelSwitcherCommand = mock(NotebookCommands);
         serverSelectorCommand = mock(JupyterServerSelectorCommand);
         commandLineCommand = mock(JupyterCommandLineSelectorCommand);
 
@@ -39,6 +40,7 @@ suite('Data Science - Commands', () => {
         const appShell = mock(ApplicationShell);
         const startPage = mock(StartPage);
         const exportCommand = mock(ExportCommands);
+        const fileSystem = mock(FileSystem);
 
         commandRegistry = new CommandRegistry(
             documentManager,
@@ -54,7 +56,8 @@ suite('Data Science - Commands', () => {
             instance(appShell),
             new MockOutputChannel('Jupyter'),
             instance(startPage),
-            instance(exportCommand)
+            instance(exportCommand),
+            instance(fileSystem)
         );
     });
 

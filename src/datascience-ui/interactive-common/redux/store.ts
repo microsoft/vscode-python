@@ -213,7 +213,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             action.type &&
             action.type === InteractiveWindowMessages.FinishCell &&
             action.payload.data &&
-            action.payload.data.data?.cell_type === 'code'
+            action.payload.data.cell.data?.cell_type === 'code'
         ) {
             // Send async so happens after the render is actually finished.
             sendMessage(InteractiveWindowMessages.ExecutionRendered);

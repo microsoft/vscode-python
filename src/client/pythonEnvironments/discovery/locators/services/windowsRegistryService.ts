@@ -1,6 +1,6 @@
 // tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation
 
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
@@ -14,7 +14,6 @@ import { InterpreterType, PythonInterpreter } from '../../../info';
 import { parsePythonVersion } from '../../../info/pythonVersion';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
-import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 // tslint:disable-next-line:variable-name
@@ -32,7 +31,6 @@ type CompanyInterpreter = {
     arch?: Architecture;
 };
 
-@injectable()
 export class WindowsRegistryService extends CacheableLocatorService {
     private readonly pathUtils: IPathUtils;
     private readonly fs: IFileSystem;
@@ -40,7 +38,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
         @inject(IRegistry) private registry: IRegistry,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
+        @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
     ) {
         super('WindowsRegistryService', serviceContainer);
         this.pathUtils = serviceContainer.get<IPathUtils>(IPathUtils);

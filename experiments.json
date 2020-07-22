@@ -66,18 +66,6 @@
         "max": 0
     },
     {
-        "name": "LS - enabled",
-        "salt": "LS",
-        "min": 0,
-        "max": 4
-    },
-    {
-        "name": "LS - control",
-        "salt": "LS",
-        "min": 20,
-        "max": 24
-    },
-    {
         "name": "UseTerminalToGetActivatedEnvVars - experiment",
         "salt": "UseTerminalToGetActivatedEnvVars",
         "min": 0,
@@ -164,13 +152,13 @@
     {
         "name": "RunByLine - control",
         "salt": "RunByLine",
-        "min": 0,
+        "min": 20,
         "max": 100
     },
     {
         "name": "RunByLine - experiment",
         "salt": "RunByLine",
-        "max": 0,
+        "max": 20,
         "min": 0
     },
     {

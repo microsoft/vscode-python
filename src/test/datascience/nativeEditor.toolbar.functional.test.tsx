@@ -8,6 +8,7 @@ import * as sinon from 'sinon';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { getNamesAndValues } from '../../client/common/utils/enum';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
+import { TrustMessage } from '../../datascience-ui/interactive-common/trustMessage';
 import { INativeEditorToolbarProps, Toolbar } from '../../datascience-ui/native-editor/toolbar';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { noop } from '../core';
@@ -27,6 +28,8 @@ enum Button {
     Save = 8,
     Export = 9
 }
+const allowList: Button[] = []; // List of buttons to be enabled while a notebook is untrusted
+
 suite('DataScience Native Toolbar', () => {
     const noopAny: any = noop;
     let props: INativeEditorToolbarProps;
@@ -72,7 +75,15 @@ suite('DataScience Native Toolbar', () => {
     function getToolbarButton(button: Button) {
         return wrapper.find(ImageButton).at(button);
     }
-
+    function getTrustMessage() {
+        return wrapper.find(TrustMessage);
+    }
+    function clickTrustMessage() {
+        const handler = getTrustMessage().props().launchNotebookTrustPrompt;
+        if (handler) {
+            handler();
+        }
+    }
     function assertEnabled(button: Button) {
         assert.isFalse(getToolbarButton(button).props().disabled);
     }
@@ -209,6 +220,76 @@ suite('DataScience Native Toolbar', () => {
             mountToolbar();
             clickButton(Button.InterruptKernel);
             assert.isTrue(((props.interruptKernel as any) as sinon.SinonStub).calledOnce);
+        });
+    });
+    suite('When trusted', () => {
+        test('Trust message shows "Trusted"', () => {
+            mountToolbar();
+            const message = getTrustMessage();
+            assert.equal(message.text(), 'Trusted');
+        });
+        test('Clicking trust message does nothing', () => {
+            mountToolbar();
+            clickTrustMessage();
+            assert.isTrue(((props.launchNotebookTrustPrompt as any) as sinon.SinonStub).notCalled);
+        });
+    });
+    suite('When untrusted', () => {
+        setup(() => {
+            props = {
+                baseTheme: '',
+                busy: false,
+                cellCount: 0,
+                dirty: false,
+                export: sinon.stub(),
+                exportAs: sinon.stub(),
+                font: { family: '', size: 1 },
+                interruptKernel: sinon.stub(),
+                kernel: {
+                    displayName: '',
+                    jupyterServerStatus: ServerStatus.Busy,
+                    localizedUri: '',
+                    language: PYTHON_LANGUAGE
+                },
+                restartKernel: sinon.stub(),
+                selectKernel: noopAny,
+                selectServer: noopAny,
+                addCell: sinon.stub(),
+                clearAllOutputs: sinon.stub(),
+                executeAbove: sinon.stub(),
+                executeAllCells: sinon.stub(),
+                executeCellAndBelow: sinon.stub(),
+                save: sinon.stub(),
+                selectionFocusedInfo: {},
+                sendCommand: noopAny,
+                toggleVariableExplorer: sinon.stub(),
+                setVariableExplorerHeight: sinon.stub(),
+                launchNotebookTrustPrompt: sinon.stub(),
+                variablesVisible: false,
+                isNotebookTrusted: false,
+                shouldShowTrustMessage: true
+            };
+        });
+        test('All toolbar buttons are disabled unless explicitly added to allowlist', () => {
+            mountToolbar();
+            const buttons = wrapper.find(ImageButton);
+            let index = 0;
+            buttons.forEach((_b) => {
+                if (!allowList.includes(index)) {
+                    assertDisabled(index);
+                }
+                index += 1;
+            });
+        });
+        test('Trust message shows "Not Trusted"', () => {
+            mountToolbar();
+            const message = getTrustMessage();
+            assert.equal(message.text(), 'Not Trusted');
+        });
+        test('Clicking trust message dispatches launchNotebookTrustPrompt', () => {
+            mountToolbar();
+            clickTrustMessage();
+            assert.isTrue(((props.launchNotebookTrustPrompt as any) as sinon.SinonStub).calledOnce);
         });
     });
 });

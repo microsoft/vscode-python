@@ -98,6 +98,15 @@ export namespace Transfer {
         return arg.prevState;
     }
 
+    export function hasCell(arg: CommonReducerArg<CommonActionType, string>): IMainState {
+        const foundCell = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data);
+        postActionToExtension(arg, InteractiveWindowMessages.HasCellResponse, {
+            id: arg.payload.data,
+            result: foundCell !== undefined
+        });
+        return arg.prevState;
+    }
+
     export function gotoCell(arg: CommonReducerArg<CommonActionType, ICellAction>): IMainState {
         const cellVM = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data.cellId);
         if (cellVM && cellVM.cell.data.cell_type === 'code') {

@@ -79,7 +79,9 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     }
 
     private onDidCloseTextDocument(e: vscode.TextDocument) {
-        const index = this.activeCodeWatchers.findIndex((item) => item.getFileName() === e.fileName);
+        const index = this.activeCodeWatchers.findIndex(
+            (item) => item.uri && this.fileSystem.arePathsSame(item.uri.fsPath, e.fileName)
+        );
         if (index >= 0) {
             this.activeCodeWatchers.splice(index, 1);
         }
@@ -163,7 +165,9 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     }
 
     private matchWatcher(fileName: string, version: number, settings: IDataScienceSettings): ICodeWatcher | undefined {
-        const index = this.activeCodeWatchers.findIndex((item) => item.getFileName() === fileName);
+        const index = this.activeCodeWatchers.findIndex(
+            (item) => item.uri && this.fileSystem.arePathsSame(item.uri.fsPath, fileName)
+        );
         if (index >= 0) {
             const item = this.activeCodeWatchers[index];
             if (item.getVersion() === version) {

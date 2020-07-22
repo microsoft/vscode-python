@@ -1024,6 +1024,10 @@ export interface IApplicationEnvironment {
      * The version of the editor.
      */
     readonly vscodeVersion: string;
+    /**
+     * The custom uri scheme the editor registers to in the operating system.
+     */
+    readonly uriScheme: string;
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');

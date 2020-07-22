@@ -5,7 +5,6 @@ import '../../common/extensions';
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
-import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
@@ -72,8 +71,7 @@ import {
 } from '../interactive-common/interactiveWindowTypes';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
-import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
-import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
+import { KernelSelector, KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { CssMessages, SharedMessages } from '../messages';
 import {
@@ -104,7 +102,6 @@ import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
 
-@injectable()
 export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {
     public get notebook(): INotebook | undefined {
         return this._notebook;
@@ -117,6 +114,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     public get onExecutedCode(): Event<string> {
         return this.executeEvent.event;
     }
+    public get ready(): Event<void> {
+        return this.readyEvent.event;
+    }
+
+    protected abstract get notebookMetadata(): nbformat.INotebookMetadata | undefined;
+
+    protected abstract get notebookIdentity(): INotebookIdentity;
+
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
     private perceivedJupyterStartupTelemetryCaptured: boolean = false;
@@ -128,38 +133,39 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private connectionAndNotebookPromise: Promise<void> | undefined;
     private notebookPromise: Promise<void> | undefined;
     private setDarkPromise: Deferred<boolean> | undefined;
+    private readyEvent = new EventEmitter<void>();
 
     constructor(
-        @unmanaged() private readonly listeners: IInteractiveWindowListener[],
-        @unmanaged() liveShare: ILiveShareApi,
-        @unmanaged() protected applicationShell: IApplicationShell,
-        @unmanaged() protected documentManager: IDocumentManager,
-        @unmanaged() provider: IWebPanelProvider,
-        @unmanaged() private disposables: IDisposableRegistry,
-        @unmanaged() cssGenerator: ICodeCssGenerator,
-        @unmanaged() themeFinder: IThemeFinder,
-        @unmanaged() private statusProvider: IStatusProvider,
-        @unmanaged() protected fileSystem: IFileSystem,
-        @unmanaged() protected configuration: IConfigurationService,
-        @unmanaged() protected jupyterExporter: INotebookExporter,
-        @unmanaged() workspaceService: IWorkspaceService,
-        @unmanaged() private dataExplorerFactory: IDataViewerFactory,
-        @unmanaged() private jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        @unmanaged() private jupyterVariables: IJupyterVariables,
-        @unmanaged() private jupyterDebugger: IJupyterDebugger,
-        @unmanaged() protected errorHandler: IDataScienceErrorHandler,
-        @unmanaged() protected readonly commandManager: ICommandManager,
-        @unmanaged() protected globalStorage: Memento,
-        @unmanaged() protected workspaceStorage: Memento,
-        @unmanaged() rootPath: string,
-        @unmanaged() scripts: string[],
-        @unmanaged() title: string,
-        @unmanaged() viewColumn: ViewColumn,
-        @unmanaged() experimentsManager: IExperimentsManager,
-        @unmanaged() private switcher: KernelSwitcher,
-        @unmanaged() private readonly notebookProvider: INotebookProvider,
-        @unmanaged() useCustomEditorApi: boolean,
-        @unmanaged() expService: IExperimentService
+        private readonly listeners: IInteractiveWindowListener[],
+        liveShare: ILiveShareApi,
+        protected applicationShell: IApplicationShell,
+        protected documentManager: IDocumentManager,
+        provider: IWebPanelProvider,
+        private disposables: IDisposableRegistry,
+        cssGenerator: ICodeCssGenerator,
+        themeFinder: IThemeFinder,
+        private statusProvider: IStatusProvider,
+        protected fileSystem: IFileSystem,
+        protected configuration: IConfigurationService,
+        protected jupyterExporter: INotebookExporter,
+        workspaceService: IWorkspaceService,
+        private dataExplorerFactory: IDataViewerFactory,
+        private jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
+        private jupyterVariables: IJupyterVariables,
+        private jupyterDebugger: IJupyterDebugger,
+        protected errorHandler: IDataScienceErrorHandler,
+        protected readonly commandManager: ICommandManager,
+        protected globalStorage: Memento,
+        protected workspaceStorage: Memento,
+        rootPath: string,
+        scripts: string[],
+        title: string,
+        viewColumn: ViewColumn,
+        experimentsManager: IExperimentsManager,
+        private readonly notebookProvider: INotebookProvider,
+        useCustomEditorApi: boolean,
+        expService: IExperimentService,
+        private selector: KernelSelector
     ) {
         super(
             configuration,
@@ -195,26 +201,27 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
         // Tell each listener our identity. Can't do it here though as were in the constructor for the base class
         setTimeout(() => {
-            this.getNotebookIdentity()
-                .then((identity) =>
-                    this.listeners.forEach((l) => l.onMessage(InteractiveWindowMessages.NotebookIdentity, identity))
-                )
-                .ignoreErrors();
+            this.listeners.forEach((l) =>
+                l.onMessage(InteractiveWindowMessages.NotebookIdentity, this.notebookIdentity)
+            );
         }, 0);
 
         // When a notebook provider first makes its connection check it to see if we should create a notebook
         this.disposables.push(notebookProvider.onConnectionMade(this.checkForNotebookProviderConnection.bind(this)));
 
+        // When a notebook provider indicates a kernel change, change our UI
+        this.disposables.push(notebookProvider.onPotentialKernelChanged(this.potentialKernelChanged.bind(this)));
+
         // When the variable service requests a refresh, refresh our variable list
         this.disposables.push(this.jupyterVariables.refreshRequired(this.refreshVariables.bind(this)));
     }
 
-    public async show(): Promise<void> {
+    public async show(preserveFocus: boolean = true): Promise<void> {
         // Verify a server that matches us hasn't started already
         this.checkForNotebookProviderConnection().ignoreErrors();
 
         // Show our web panel.
-        return super.show(true);
+        return super.show(preserveFocus);
     }
 
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
@@ -324,7 +331,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 break;
 
             case InteractiveWindowMessages.SelectKernel:
-                this.handleMessage(message, payload, this.selectKernel);
+                this.handleMessage(message, payload, this.selectNewKernel);
                 break;
 
             case InteractiveWindowMessages.SelectJupyterServer:
@@ -334,6 +341,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             case InteractiveWindowMessages.OpenSettings:
                 this.handleMessage(message, payload, this.openSettings);
                 break;
+
+            case InteractiveWindowMessages.MonacoReady:
+                this.readyEvent.fire();
+                break;
+
             default:
                 break;
         }
@@ -361,13 +373,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     public dispose() {
+        // Fire ready event in case anything is waiting on it.
+        this.readyEvent.fire();
+
+        // Dispose of the web panel.
         super.dispose();
-        this.getNotebookIdentity()
-            .then((r) => {
-                // Tell listeners we're closing. They can decide if they should dispose themselves or not.
-                this.listeners.forEach((l) => l.onMessage(InteractiveWindowMessages.NotebookClose, r));
-            })
-            .ignoreErrors();
+        // Tell listeners we're closing. They can decide if they should dispose themselves or not.
+        this.listeners.forEach((l) => l.onMessage(InteractiveWindowMessages.NotebookClose, this.notebookIdentity));
         this.updateContexts(undefined);
     }
 
@@ -442,7 +454,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             );
 
             try {
-                const settings = this.configuration.getSettings(await this.getOwningResource());
+                const settings = this.configuration.getSettings(this.owningResource);
                 const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
 
                 const result = await this._notebook.interruptKernel(interruptTimeout);
@@ -475,6 +487,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             this.applicationShell.showErrorMessage(err);
         });
     }
+
+    public abstract hasCell(id: string): Promise<boolean>;
 
     protected onViewStateChanged(args: WebViewViewChangeEventArgs) {
         // Only activate if the active editor is empty. This means that
@@ -519,16 +533,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Default is not to do anything. This only works in the native editor
     }
 
-    protected abstract getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined>;
-
     protected abstract updateContexts(info: IInteractiveWindowInfo | undefined): void;
-
-    protected abstract getNotebookIdentity(): Promise<INotebookIdentity>;
 
     protected abstract closeBecauseOfFailure(exc: Error): Promise<void>;
 
     protected abstract updateNotebookOptions(
-        kernelSpec: IJupyterKernelSpec,
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel,
         interpreter: PythonInterpreter | undefined
     ): Promise<void>;
 
@@ -564,7 +574,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             this._notebook && !this.perceivedJupyterStartupTelemetryCaptured ? new StopWatch() : undefined;
         let result = true;
         // Do not execute or render empty code cells
-        const cellMatcher = new CellMatcher(this.configService.getSettings(await this.getOwningResource()).datascience);
+        const cellMatcher = new CellMatcher(this.configService.getSettings(this.owningResource).datascience);
         if (cellMatcher.stripFirstMarker(code).length === 0) {
             return result;
         }
@@ -645,7 +655,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                         }
                     });
                 }
-                const owningResource = await this.getOwningResource();
+                const owningResource = this.owningResource;
                 const observable = this._notebook.executeObservable(code, file, line, id, false);
 
                 // Indicate we executed some code
@@ -733,7 +743,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 case CellState.error:
                 case CellState.finished:
                     // Tell the react controls we're done
-                    this.postMessage(InteractiveWindowMessages.FinishCell, cell).ignoreErrors();
+                    this.postMessage(InteractiveWindowMessages.FinishCell, {
+                        cell,
+                        notebookIdentity: this.notebookIdentity.resource
+                    }).ignoreErrors();
 
                     // Remove from the list of unfinished cells
                     this.unfinishedCells = this.unfinishedCells.filter((c) => c.id !== cell.id);
@@ -789,7 +802,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.shareMessage(InteractiveWindowMessages.AddedSysInfo, {
                     type: reason,
                     sysInfoCell: sysInfo,
-                    id: this.id
+                    id: this.id,
+                    notebookIdentity: this.notebookIdentity.resource
                 });
             }
 
@@ -815,6 +829,23 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         } catch (e) {
             // Reset the load promise. Don't want to keep hitting the same error
             this.connectionAndNotebookPromise = undefined;
+            throw e;
+        }
+    }
+
+    // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
+    // the same protection to not be called twice
+    // tslint:disable-next-line: member-ordering
+    protected async ensureNotebook(serverConnection: INotebookProviderConnection): Promise<void> {
+        if (!this.notebookPromise) {
+            this.notebookPromise = this.ensureNotebookImpl(serverConnection);
+        }
+        try {
+            await this.notebookPromise;
+        } catch (e) {
+            // Reset the load promise. Don't want to keep hitting the same error
+            this.notebookPromise = undefined;
+
             throw e;
         }
     }
@@ -869,12 +900,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async shouldAskForRestart(): Promise<boolean> {
-        const settings = this.configuration.getSettings(await this.getOwningResource());
+        const settings = this.configuration.getSettings(this.owningResource);
         return settings && settings.datascience && settings.datascience.askForKernelRestart === true;
     }
 
     private async disableAskForRestart(): Promise<void> {
-        const settings = this.configuration.getSettings(await this.getOwningResource());
+        const settings = this.configuration.getSettings(this.owningResource);
         if (settings && settings.datascience) {
             settings.datascience.askForKernelRestart = false;
             this.configuration
@@ -884,12 +915,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async shouldAskForLargeData(): Promise<boolean> {
-        const settings = this.configuration.getSettings(await this.getOwningResource());
+        const settings = this.configuration.getSettings(this.owningResource);
         return settings && settings.datascience && settings.datascience.askForLargeDataFrames === true;
     }
 
     private async disableAskForLargeData(): Promise<void> {
-        const settings = this.configuration.getSettings(await this.getOwningResource());
+        const settings = this.configuration.getSettings(this.owningResource);
         if (settings && settings.datascience) {
             settings.datascience.askForLargeDataFrames = false;
             this.configuration
@@ -993,7 +1024,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private finishOutstandingCells() {
         this.unfinishedCells.forEach((c) => {
             c.state = CellState.error;
-            this.postMessage(InteractiveWindowMessages.FinishCell, c).ignoreErrors();
+            this.postMessage(InteractiveWindowMessages.FinishCell, {
+                cell: c,
+                notebookIdentity: this.notebookIdentity.resource
+            }).ignoreErrors();
         });
         this.unfinishedCells = [];
         this.potentiallyUnfinishedStatus.forEach((s) => s.dispose());
@@ -1049,41 +1083,30 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         sendTelemetryEvent(event);
     };
 
-    // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
-    // the same protection to not be called twice
-    // tslint:disable-next-line: member-ordering
-    protected async ensureNotebook(serverConnection: INotebookProviderConnection): Promise<void> {
-        if (!this.notebookPromise) {
-            this.notebookPromise = this.ensureNotebookImpl(serverConnection);
-        }
-        try {
-            await this.notebookPromise;
-        } catch (e) {
-            // Reset the load promise. Don't want to keep hitting the same error
-            this.notebookPromise = undefined;
-
-            throw e;
-        }
+    private selectNewKernel() {
+        // This is handled by a command.
+        this.commandManager.executeCommand(Commands.SwitchJupyterKernel, {
+            identity: this.notebookIdentity.resource,
+            resource: this.owningResource,
+            currentKernelDisplayName:
+                this.notebookMetadata?.kernelspec?.display_name ||
+                this.notebookMetadata?.kernelspec?.name ||
+                this._notebook?.getKernelSpec()?.display_name ||
+                this._notebook?.getKernelSpec()?.name
+        });
     }
 
     private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook> {
         let notebook: INotebook | undefined;
         while (!notebook) {
-            const [resource, identity, metadata] = await Promise.all([
-                this.getOwningResource(),
-                this.getNotebookIdentity(),
-                this.getNotebookMetadata()
-            ]);
             try {
-                notebook = identity
-                    ? await this.notebookProvider.getOrCreateNotebook({
-                          identity: identity.resource,
-                          resource,
-                          metadata
-                      })
-                    : undefined;
+                notebook = await this.notebookProvider.getOrCreateNotebook({
+                    identity: this.notebookIdentity.resource,
+                    resource: this.owningResource,
+                    metadata: this.notebookMetadata
+                });
                 if (notebook) {
-                    const executionActivation = { ...identity, owningResource: resource };
+                    const executionActivation = { ...this.notebookIdentity, owningResource: this.owningResource };
                     this.postMessageToListeners(
                         InteractiveWindowMessages.NotebookExecutionActivated,
                         executionActivation
@@ -1093,14 +1116,18 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 // If we get an invalid kernel error, make sure to ask the user to switch
                 if (e instanceof JupyterInvalidKernelError && serverConnection && serverConnection.localLaunch) {
                     // Ask the user for a new local kernel
-                    const newKernel = await this.switcher.askForLocalKernel(
-                        resource,
+                    const newKernel = await this.selector.askForLocalKernel(
+                        this.owningResource,
                         serverConnection.type,
                         e.kernelSpec
                     );
                     if (newKernel?.kernelSpec) {
-                        // Update the notebook metadata
-                        await this.updateNotebookOptions(newKernel.kernelSpec, newKernel.interpreter);
+                        this.commandManager.executeCommand(
+                            Commands.SetJupyterKernel,
+                            newKernel,
+                            this.notebookIdentity.resource,
+                            this.owningResource
+                        );
                     }
                 } else {
                     throw e;
@@ -1187,6 +1214,22 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
+    private async potentialKernelChanged(data: { identity: Uri; kernel: KernelSpecInterpreter }): Promise<void> {
+        const specOrModel = data.kernel.kernelModel || data.kernel.kernelSpec;
+        if (!this._notebook && specOrModel && this.notebookIdentity.resource.toString() === data.identity.toString()) {
+            // No notebook, send update to UI anyway
+            this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                jupyterServerStatus: ServerStatus.NotStarted,
+                localizedUri: '',
+                displayName: specOrModel?.display_name || specOrModel?.name || '',
+                language: translateKernelLanguageToMonaco(data.kernel.kernelSpec?.language ?? PYTHON_LANGUAGE)
+            }).ignoreErrors();
+
+            // Update our model
+            this.updateNotebookOptions(specOrModel, data.kernel.interpreter).ignoreErrors();
+        }
+    }
+
     @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
     private gotoCode(args: IGotoCode) {
         this.gotoCodeInternal(args.file, args.line).catch((err) => {
@@ -1236,7 +1279,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const line = editor.selection.start.line;
             const revealLine = line + 1;
             const defaultCellMarker =
-                this.configService.getSettings(await this.getOwningResource()).datascience.defaultCellMarker ||
+                this.configService.getSettings(this.owningResource).datascience.defaultCellMarker ||
                 Identifiers.DefaultCodeCellMarker;
             let newCode = `${source}${os.EOL}`;
             if (hasCellsAlready) {
@@ -1376,7 +1419,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Store variable explorer height based on file name in workspace storage
         if (payload !== undefined) {
             const updatedHeights = payload as { containerHeight: number; gridHeight: number };
-            const uri = await this.getOwningResource(); // Get file name
+            const uri = this.owningResource; // Get file name
 
             if (!uri) {
                 return;
@@ -1395,7 +1438,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async variableExplorerHeightRequest(): Promise<
         { containerHeight: number; gridHeight: number } | undefined
     > {
-        const uri = await this.getOwningResource(); // Get file name
+        const uri = this.owningResource; // Get file name
 
         if (!uri || isUntitledFile(uri)) {
             return; // don't resotre height of untitled notebooks
@@ -1456,34 +1499,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private async selectServer() {
         await this.commandManager.executeCommand(Commands.SelectJupyterURI);
-    }
-
-    private async selectKernel() {
-        try {
-            this.startProgress();
-            const kernel = (await this.commandManager.executeCommand(
-                Commands.SwitchJupyterKernel,
-                this._notebook,
-                this._notebook?.connection?.type || this.notebookProvider.type
-            )) as KernelSpecInterpreter;
-            if (!this._notebook && kernel?.kernelSpec) {
-                // No notebook, send update to UI anyway
-                this.postMessage(InteractiveWindowMessages.UpdateKernel, {
-                    jupyterServerStatus: ServerStatus.NotStarted,
-                    localizedUri: '',
-                    displayName: kernel.kernelSpec.display_name || kernel.kernelSpec.name || '',
-                    language: translateKernelLanguageToMonaco(kernel.kernelSpec.language ?? PYTHON_LANGUAGE)
-                }).ignoreErrors();
-
-                // Update our model
-                this.updateNotebookOptions(kernel.kernelSpec, kernel.interpreter).ignoreErrors();
-
-                // Try creating a notebook again with this new kernel.
-                this.ensureConnectionAndNotebook().ignoreErrors();
-            }
-        } finally {
-            this.stopProgress();
-        }
     }
     private async kernelChangeHandler(kernel: IJupyterKernelSpec | LiveKernelModel) {
         // Check if we are changing to LiveKernelModel

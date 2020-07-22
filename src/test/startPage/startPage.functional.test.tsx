@@ -35,7 +35,7 @@ suite('StartPage tests', () => {
         // Make sure the plot viewer provider and execution factory in the container is created (the extension does this on startup in the extension)
         start = ioc.get<IStartPage>(IStartPage);
 
-        return wrapper;
+        return wrapper.wrapper;
     }
 
     // tslint:disable:no-any

@@ -14,7 +14,7 @@ import { IFileSystem, IPlatformService } from '../../../client/common/platform/t
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
 import { ITerminalActivationCommandProvider } from '../../../client/common/terminal/types';
 import { ICurrentProcess, IPathUtils } from '../../../client/common/types';
-import { IInterpreterLocatorService, IPipEnvService, PIPENV_SERVICE } from '../../../client/interpreter/contracts';
+import { IPipEnvService } from '../../../client/interpreter/contracts';
 import { VirtualEnvironmentManager } from '../../../client/interpreter/virtualEnvs';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -51,9 +51,7 @@ suite('Virtual Environment Manager', () => {
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fs.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspace.object);
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(PIPENV_SERVICE)))
-            .returns(() => pipEnvService.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IPipEnvService))).returns(() => pipEnvService.object);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ITerminalActivationCommandProvider), TypeMoq.It.isAny()))
             .returns(() => terminalActivation.object);

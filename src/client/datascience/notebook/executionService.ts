@@ -144,7 +144,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
     private async getNotebookAndModel(
         document: NotebookDocument
     ): Promise<{ model: VSCodeNotebookModel; nb: INotebook }> {
-        const model = await this.notebookStorage.load(document.uri, undefined, undefined, true);
+        const model = await this.notebookStorage.get(document.uri, undefined, undefined, true);
         const nb = await this.notebookProvider.getOrCreateNotebook({
             identity: document.uri,
             resource: document.uri,
@@ -241,6 +241,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         try {
             nb.clear(cell.uri.toString()); // NOSONAR
             editor.notifyExecution(cell.document.getText());
+            await nb.setLaunchingFile(model.file.path);
             const observable = nb.executeObservable(
                 cell.document.getText(),
                 document.fileName,

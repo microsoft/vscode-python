@@ -12,7 +12,6 @@ import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, LaunchRequestArguments } from '../../../types';
-import { ILaunchDebugConfigurationResolverExperiment } from '../types';
 import { BaseConfigurationResolver } from './base';
 import { IDebugEnvironmentVariablesService } from './helper';
 
@@ -26,9 +25,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         private readonly invalidPythonPathInDebuggerService: IInvalidPythonPathInDebuggerService,
         @inject(IPlatformService) platformService: IPlatformService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
-        @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService,
-        @inject(ILaunchDebugConfigurationResolverExperiment)
-        private readonly configExperiment: ILaunchDebugConfigurationResolverExperiment
+        @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService
     ) {
         super(workspaceService, documentManager, platformService, configurationService);
     }
@@ -53,8 +50,6 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         }
 
         await this.provideLaunchDefaults(workspaceFolder, config);
-
-        this.configExperiment.modifyConfigurationBasedOnExperiment(config);
 
         const isValid = await this.validateLaunchConfiguration(folder, config);
         if (!isValid) {

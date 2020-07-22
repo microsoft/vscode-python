@@ -101,6 +101,13 @@ export namespace AttachProcess {
 }
 
 export namespace LanguageService {
+    export const proposePylanceMessage = localize(
+        'LanguageService.proposePylanceMessage',
+        'Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.'
+    );
+    export const tryItNow = localize('LanguageService.tryItNow', 'Try it now');
+    export const remindMeLater = localize('LanguageService.remindMeLater', 'Remind me later');
+
     export const bannerLabelYes = localize('LanguageService.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('LanguageService.bannerLabelNo', 'No, thanks');
     export const lsFailedToStart = localize(
@@ -317,7 +324,30 @@ export namespace DataScience {
         '{0} (From {1} extension)'
     );
     export const unknownPackage = localize('DataScience.unknownPackage', 'unknown');
-    export const historyTitle = localize('DataScience.historyTitle', 'Python Interactive');
+    export const interactiveWindowTitle = localize('DataScience.interactiveWindowTitleFormat', 'Python Interactive');
+    export const interactiveWindowTitleFormat = localize(
+        'DataScience.interactiveWindowTitleFormat',
+        'Python Interactive - {0}'
+    );
+
+    export const interactiveWindowModeBannerTitle = localize(
+        'DataScience.interactiveWindowModeBannerTitle',
+        'Do you want to open a new Python Interactive window for this file? [More Information](command:workbench.action.openSettings?%5B%22python.dataScience.interactiveWindowMode%22%5D).'
+    );
+
+    export const interactiveWindowModeBannerSwitchYes = localize(
+        'DataScience.interactiveWindowModeBannerSwitchYes',
+        'Yes'
+    );
+    export const interactiveWindowModeBannerSwitchAlways = localize(
+        'DataScience.interactiveWindowModeBannerSwitchAlways',
+        'Always'
+    );
+    export const interactiveWindowModeBannerSwitchNo = localize(
+        'DataScience.interactiveWindowModeBannerSwitchNo',
+        'No'
+    );
+
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');
     export const badWebPanelFormatString = localize(
         'DataScience.badWebPanelFormatString',
@@ -331,7 +361,7 @@ export namespace DataScience {
         'DataScience.installingMissingDependencies',
         'Installing missing dependencies'
     );
-    export const performingExport = localize('DataScience.performingExport', 'Performing export');
+    export const performingExport = localize('DataScience.performingExport', 'Performing Export');
     export const convertingToPDF = localize('DataScience.convertingToPDF', 'Converting to PDF');
     export const exportNotebookToPython = localize(
         'DataScience.exportNotebookToPython',
@@ -1020,14 +1050,26 @@ export namespace DataScience {
     );
     export const usingPreviewNotebookWithOtherNotebookWarning = localize(
         'DataScience.usingPreviewNotebookWithOtherNotebookWarning',
-        'Using the Preview Notebook Editor along with the stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
+        'Opening the same file in the Preview Notebook Editor and stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
     );
     export const launchNotebookTrustPrompt = localize(
         'DataScience.launchNotebookTrustPrompt',
-        'A notebook could execute harmful code when opened. Some cells & outputs have been hidden. Do you trust this notebook? (To trust all notebooks by default, click [here](command:workbench.action.openSettings?%5B%22python.dataScience.alwaysTrustNotebooks%22%5D).) [Learn more.](https://aka.ms/trusted-notebooks)'
+        'A notebook could execute harmful code when opened. Some outputs have been hidden. Do you trust this notebook? [Learn more.](https://aka.ms/trusted-notebooks)'
     );
     export const trustNotebook = localize('DataScience.launchNotebookTrustPrompt.yes', 'Trust');
     export const doNotTrustNotebook = localize('DataScience.launchNotebookTrustPrompt.no', 'Do not trust');
+    export const trustAllNotebooks = localize(
+        'DataScience.launchNotebookTrustPrompt.trustAllNotebooks',
+        'Trust all notebooks'
+    );
+    export const insecureSessionMessage = localize(
+        'DataScience.insecureSessionMessage',
+        'Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?'
+    );
+    export const insecureSessionDenied = localize(
+        'DataScience.insecureSessionDenied',
+        'Denied connection to insecure server.'
+    );
     export const previewNotebookOnlySupportedInVSCInsiders = localize(
         'DataScience.previewNotebookOnlySupportedInVSCInsiders',
         'The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code.'
@@ -1058,7 +1100,7 @@ export namespace StartPage {
 
     export const releaseNotes = localize(
         'StartPage.releaseNotes',
-        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features'
+        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features.'
     );
     export const tutorialAndDoc = localize(
         'StartPage.tutorialAndDoc',

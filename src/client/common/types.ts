@@ -388,7 +388,7 @@ export interface IDataScienceSettings {
     addGotoCodeLenses?: boolean;
     useNotebookEditor?: boolean;
     runMagicCommands?: string;
-    runStartupCommands: string;
+    runStartupCommands: string | string[];
     debugJustMyCode: boolean;
     defaultCellMarker?: string;
     verboseLogging?: boolean;
@@ -400,7 +400,10 @@ export interface IDataScienceSettings {
     widgetScriptSources: WidgetCDNs[];
     alwaysScrollOnNewCell?: boolean;
     showKernelSelectionOnInteractiveWindow?: boolean;
+    interactiveWindowMode: InteractiveWindowMode;
 }
+
+export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
 
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
 
@@ -525,7 +528,7 @@ export interface IPythonExtensionBanner {
     readonly enabled: boolean;
     showBanner(): Promise<void>;
 }
-export const BANNER_NAME_PROPOSE_LS: string = 'ProposeLS';
+export const BANNER_NAME_PROPOSE_LS: string = 'ProposePylance';
 export const BANNER_NAME_DS_SURVEY: string = 'DSSurveyBanner';
 export const BANNER_NAME_INTERACTIVE_SHIFTENTER: string = 'InteractiveShiftEnterBanner';
 

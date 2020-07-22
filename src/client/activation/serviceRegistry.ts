@@ -12,7 +12,7 @@ import {
 import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner';
 import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
-import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguageServerBanner';
+import { ProposePylanceBanner } from '../languageServices/proposeLanguageServerBanner';
 import { AATesting } from './aaTesting';
 import { ExtensionActivationManager } from './activationManager';
 import { LanguageServerExtensionActivationService } from './activationService';
@@ -86,7 +86,7 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
 
     serviceManager.addSingleton<IPythonExtensionBanner>(
         IPythonExtensionBanner,
-        ProposeLanguageServerBanner,
+        ProposePylanceBanner,
         BANNER_NAME_PROPOSE_LS
     );
     serviceManager.addSingleton<IPythonExtensionBanner>(
