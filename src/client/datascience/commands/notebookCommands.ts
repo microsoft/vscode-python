@@ -37,6 +37,10 @@ export class NotebookCommands implements IDisposable {
         resource: Uri | undefined,
         currentKernelSpecName: string | undefined
     ) {
+        // If no identity, spec, or resource, look at the active editor or interactive window.
+        // Only one is possible to be active at any point in time, so we shouldn't get into a case
+        // where the interactive window calls this with an unknown resource and we use the
+        // file for a notebook.
         if (!identity) {
             identity = this.notebookEditorProvider.activeEditor
                 ? this.notebookEditorProvider.activeEditor.file
