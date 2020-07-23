@@ -172,7 +172,7 @@ suite('Interactive window command listener', async () => {
                 })
             )
         ).thenResolve();
-        when(fileSystem.arePathsSame(anything(), anything())).thenReturn(true);
+        when(fileSystem.areLocalPathsSame(anything(), anything())).thenReturn(true);
 
         when(interactiveWindowProvider.getOrCreate(anything())).thenResolve(interactiveWindow.object);
         when(notebookImporter.importFromFile(anything())).thenResolve('imported');

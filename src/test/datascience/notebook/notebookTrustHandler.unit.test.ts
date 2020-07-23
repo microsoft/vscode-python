@@ -40,7 +40,7 @@ suite('Data Science - NativeNotebook TrustHandler', () => {
         fs = mock<IDataScienceFileSystem>();
         onDidTrustNotebook = new EventEmitter<void>();
         when(trustService.onDidSetNotebookTrust).thenReturn(onDidTrustNotebook.event);
-        when(fs.arePathsSame(anything(), anything())).thenCall((a, b) => a === b); // Dirty simple file compare.
+        when(fs.areLocalPathsSame(anything(), anything())).thenCall((a, b) => a === b); // Dirty simple file compare.
         trustHandler = new NotebookTrustHandler(
             instance(trustService),
             instance(vscNotebook),

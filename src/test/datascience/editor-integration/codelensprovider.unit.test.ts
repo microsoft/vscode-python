@@ -57,7 +57,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .returns(() => Promise.resolve());
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
         fileSystem
-            .setup((f) => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((f) => f.areLocalPathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((a, b) => {
                 return a.toLowerCase() === b.toLowerCase();
             });

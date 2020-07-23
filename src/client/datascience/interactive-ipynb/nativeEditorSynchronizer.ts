@@ -26,7 +26,7 @@ export class NativeEditorSynchronizer {
             return;
         }
         this.registeredNotebooks.forEach((cb, item) => {
-            if (item !== editor && this.fs.arePathsSame(item.file.fsPath, editor.file.fsPath)) {
+            if (item !== editor && this.fs.areLocalPathsSame(item.file.fsPath, editor.file.fsPath)) {
                 cb(InteractiveWindowMessages.Sync, message as any);
             }
         });

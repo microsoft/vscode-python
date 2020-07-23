@@ -108,7 +108,7 @@ export class LinkProvider implements IInteractiveWindowListener {
 
         // Show the matching editor if there is one
         let editor = this.documentManager.visibleTextEditors.find((e) =>
-            this.fs.arePathsSame(e.document.fileName, uri.fsPath)
+            this.fs.areLocalPathsSame(e.document.fileName, uri.fsPath)
         );
         if (editor) {
             this.documentManager
@@ -121,7 +121,7 @@ export class LinkProvider implements IInteractiveWindowListener {
             this.commandManager.executeCommand('vscode.open', uri).then(() => {
                 // See if that opened a text document
                 editor = this.documentManager.visibleTextEditors.find((e) =>
-                    this.fs.arePathsSame(e.document.fileName, uri.fsPath)
+                    this.fs.areLocalPathsSame(e.document.fileName, uri.fsPath)
                 );
                 if (editor) {
                     // Force the selection to change

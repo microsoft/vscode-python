@@ -378,7 +378,7 @@ suite('DataScience LiveShare tests', () => {
 
                 return Promise.resolve();
             });
-        fileSystem.setup((f) => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
+        fileSystem.setup((f) => f.areLocalPathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
         // fileSystem.setup((f) => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
         fileSystem.setup((f) => f.localDirectoryExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
 

@@ -155,7 +155,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
 
             // Find all notebooks associated with this editor (ipynb file).
             const otherEditors = this.editors.filter(
-                (e) => this.fs.arePathsSame(e.file.fsPath, editor.file.fsPath) && e !== editor
+                (e) => this.fs.areLocalPathsSame(e.file.fsPath, editor.file.fsPath) && e !== editor
             );
 
             // If we have no editors for this file, then dispose the notebook.

@@ -72,7 +72,7 @@ suite('DataScience Intellisense Unit Tests', () => {
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
         workspaceService.setup((w) => w.rootPath).returns(() => '/foo/bar');
         fileSystem
-            .setup((f) => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((f) => f.areLocalPathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((f1: string, f2: string) => f1.toLowerCase() === f2.toLowerCase());
 
         intellisenseProvider = new IntellisenseProvider(

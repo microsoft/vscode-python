@@ -273,7 +273,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             if (!owner && !w.owner) {
                 return true;
             }
-            if (owner && w.owner && this.fs.arePathsSame(owner.fsPath, w.owner.fsPath)) {
+            if (owner && w.owner && this.fs.areLocalPathsSame(owner.fsPath, w.owner.fsPath)) {
                 return true;
             }
             return false;

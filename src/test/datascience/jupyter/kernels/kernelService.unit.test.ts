@@ -225,7 +225,7 @@ suite('Data Science - KernelService', () => {
             }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
-        when(fs.arePathsSame('myPath2', 'myPath2')).thenReturn(true);
+        when(fs.areLocalPathsSame('myPath2', 'myPath2')).thenReturn(true);
         const interpreter: PythonInterpreter = {
             displayName: 'Disp2',
             path: 'myPath2',
@@ -309,7 +309,7 @@ suite('Data Science - KernelService', () => {
             )
         ];
         when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve(kernelSpecs);
-        when(fs.arePathsSame('Some Path2', 'Some Path2')).thenReturn(true);
+        when(fs.areLocalPathsSame('Some Path2', 'Some Path2')).thenReturn(true);
         when(fs.localFileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
         const interpreter: PythonInterpreter = {
             displayName: 'disp2',

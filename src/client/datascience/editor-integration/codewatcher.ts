@@ -227,7 +227,7 @@ export class CodeWatcher implements ICodeWatcher {
         if (
             this.document &&
             activeEditor &&
-            this.fs.arePathsSame(activeEditor.document.fileName, this.document.fileName)
+            this.fs.areLocalPathsSame(activeEditor.document.fileName, this.document.fileName)
         ) {
             // Get just the text of the selection or the current line if none
             const codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
@@ -379,7 +379,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     private onDocumentClosed(doc: TextDocument): void {
-        if (this.document && this.fs.arePathsSame(doc.fileName, this.document.fileName)) {
+        if (this.document && this.fs.areLocalPathsSame(doc.fileName, this.document.fileName)) {
             this.codeLensUpdatedEvent.dispose();
             this.closeDocumentDisposable?.dispose(); // NOSONAR
             this.updateRequiredDisposable?.dispose(); // NOSONAR

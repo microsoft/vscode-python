@@ -448,7 +448,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
 
     private createExecutionLens(document: TextDocument, range: Range, hashes: IFileHashes[]) {
         const list = hashes
-            .filter((h) => this.fs.arePathsSame(h.file, document.fileName))
+            .filter((h) => this.fs.areLocalPathsSame(h.file, document.fileName))
             .map((f) => f.hashes)
             .flat();
         if (list) {

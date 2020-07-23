@@ -30,7 +30,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
         return fs.appendFile(path, text);
     }
 
-    public arePathsSame(path1: string, path2: string): boolean {
+    public areLocalPathsSame(path1: string, path2: string): boolean {
         return this.fsPathUtils.arePathsSame(path1, path2);
     }
 
@@ -124,6 +124,14 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
     }
 
     // URI-based filesystem functions for interacting with files provided by VS Code
+    public arePathsSame(path1: Uri, path2: Uri): boolean {
+        if (path1.scheme === 'file' && path1.scheme === path2.scheme) {
+            return this.areLocalPathsSame(path1.fsPath, path2.fsPath);
+        } else {
+            return path1.toString() === path2.toString();
+        }
+    }
+
     public async copy(source: Uri, destination: Uri): Promise<void> {
         await workspace.fs.copy(source, destination);
     }

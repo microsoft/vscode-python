@@ -38,7 +38,7 @@ export class NotebookEditorCompatibilitySupport implements IExtensionSingleActiv
         // If user has a normal notebook opened for the same document, let them know things can go wonky.
         if (
             this.ourCustomNotebookEditorProvider.editors.some((editor) =>
-                this.fs.arePathsSame(editor.file.fsPath, uri.fsPath)
+                this.fs.areLocalPathsSame(editor.file.fsPath, uri.fsPath)
             )
         ) {
             this.showWarning(false);
@@ -51,7 +51,7 @@ export class NotebookEditorCompatibilitySupport implements IExtensionSingleActiv
         // If user has a VS Code notebook opened for the same document, let them know things can go wonky.
         if (
             this.vscodeNotebookEditorProvider.editors.some((editor) =>
-                this.fs.arePathsSame(editor.file.fsPath, uri.fsPath)
+                this.fs.areLocalPathsSame(editor.file.fsPath, uri.fsPath)
             )
         ) {
             this.showWarning(throwException);

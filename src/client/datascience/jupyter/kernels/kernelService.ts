@@ -115,8 +115,8 @@ export class KernelService {
                     return false;
                 }
                 return (
-                    this.fs.arePathsSame(item.argv[0], option.path) ||
-                    this.fs.arePathsSame(item.metadata?.interpreter?.path || '', option.path)
+                    this.fs.areLocalPathsSame(item.argv[0], option.path) ||
+                    this.fs.areLocalPathsSame(item.metadata?.interpreter?.path || '', option.path)
                 );
             });
         } else {

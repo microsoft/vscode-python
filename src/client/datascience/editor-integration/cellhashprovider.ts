@@ -164,7 +164,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
     public async addCellHash(cell: ICell, expectedCount: number): Promise<void> {
         // Find the text document that matches. We need more information than
         // the add code gives us
-        const doc = this.documentManager.textDocuments.find((d) => this.fs.arePathsSame(d.fileName, cell.file));
+        const doc = this.documentManager.textDocuments.find((d) => this.fs.areLocalPathsSame(d.fileName, cell.file));
         if (doc) {
             // Compute the code that will really be sent to jupyter
             const { stripped, trueStartLine } = this.extractStrippedLines(cell);

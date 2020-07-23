@@ -1303,7 +1303,7 @@ export const IDataScienceFileSystem = Symbol('IDataScienceFileSystem');
 export interface IDataScienceFileSystem {
     // Local-only filesystem utilities
     appendLocalFile(path: string, text: string): Promise<void>;
-    arePathsSame(path1: string, path2: string): boolean;
+    areLocalPathsSame(path1: string, path2: string): boolean;
     createLocalDirectory(path: string): Promise<void>;
     createLocalWriteStream(path: string): WriteStream;
     copyLocal(source: string, destination: string): Promise<void>;
@@ -1319,6 +1319,7 @@ export interface IDataScienceFileSystem {
     writeLocalFile(path: string, text: string | Buffer): Promise<void>;
 
     // URI-based filesystem utilities wrapping the VS Code filesystem API
+    arePathsSame(path1: Uri, path2: Uri): boolean;
     copy(source: Uri, destination: Uri): Promise<void>;
     createDirectory(uri: Uri): Promise<void>;
     delete(uri: Uri): Promise<void>;

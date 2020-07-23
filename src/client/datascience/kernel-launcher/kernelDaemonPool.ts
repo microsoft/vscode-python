@@ -171,7 +171,7 @@ export class KernelDaemonPool implements IDisposable {
         // then kill that daemon, as its no longer valid.
         this.daemonPool = this.daemonPool.filter((item) => {
             const interpreterForWorkspace = currentInterpreterInEachWorksapce.get(item.key);
-            if (!interpreterForWorkspace || !this.fs.arePathsSame(interpreterForWorkspace, item.interpreterPath)) {
+            if (!interpreterForWorkspace || !this.fs.areLocalPathsSame(interpreterForWorkspace, item.interpreterPath)) {
                 item.daemon.then((d) => d.dispose()).catch(noop);
                 return false;
             }

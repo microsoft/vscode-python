@@ -110,7 +110,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
         if (!uri) {
             return;
         }
-        return this.notebookEditorProvider.editors.find((item) => this.fs.arePathsSame(item.file.fsPath, uri.fsPath));
+        return this.notebookEditorProvider.editors.find((item) => this.fs.areLocalPathsSame(item.file.fsPath, uri.fsPath));
     }
     private getAutoSaveSettings(): FileSettings {
         const filesConfig = this.workspace.getConfiguration('files', this.notebookUri);

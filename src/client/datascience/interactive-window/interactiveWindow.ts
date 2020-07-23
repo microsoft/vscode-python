@@ -275,7 +275,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public async debugCode(code: string, file: Uri, line: number): Promise<boolean> {
         let saved = true;
         // Make sure the file is saved before debugging
-        const doc = this.documentManager.textDocuments.find((d) => this.fs.arePathsSame(d.fileName, file.fsPath));
+        const doc = this.documentManager.textDocuments.find((d) => this.fs.areLocalPathsSame(d.fileName, file.fsPath));
         if (doc && doc.isUntitled) {
             // Before we start, get the list of documents
             const beforeSave = [...this.documentManager.textDocuments];
@@ -439,7 +439,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     private async addOrDebugCode(code: string, file: Uri, line: number, debug: boolean): Promise<boolean> {
-        if (this.owner && !this.fs.arePathsSame(file.fsPath, this.owner.fsPath)) {
+        if (this.owner && !this.fs.areLocalPathsSame(file.fsPath, this.owner.fsPath)) {
             sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
         }
         // Update the owner for this window if not already set
@@ -453,7 +453,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
 
         // Add to the list of 'submitters' for this window.
-        if (!this._submitters.find((s) => this.fs.arePathsSame(s.fsPath, file.fsPath))) {
+        if (!this._submitters.find((s) => this.fs.areLocalPathsSame(s.fsPath, file.fsPath))) {
             this._submitters.push(file);
         }
 

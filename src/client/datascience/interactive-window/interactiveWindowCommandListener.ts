@@ -182,7 +182,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         if (file && file.fsPath && file.fsPath.length > 0) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
-            if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.fileName, file.fsPath)) {
+            if (activeEditor && this.fileSystem.areLocalPathsSame(activeEditor.document.fileName, file.fsPath)) {
                 const cells = generateCellsFromDocument(
                     activeEditor.document,
                     this.configuration.getSettings(activeEditor.document.uri).datascience
@@ -248,7 +248,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             if (
                 activeEditor &&
                 activeEditor.document &&
-                this.fileSystem.arePathsSame(activeEditor.document.fileName, file.fsPath)
+                this.fileSystem.areLocalPathsSame(activeEditor.document.fileName, file.fsPath)
             ) {
                 const ranges = generateCellRangesFromDocument(activeEditor.document);
                 if (ranges.length > 0) {
@@ -482,7 +482,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         if (id && file) {
             // Find the interactive windows that have this file as a submitter
             const possibles = this.interactiveWindowProvider.windows.filter(
-                (w) => w.submitters.findIndex((s) => this.fileSystem.arePathsSame(s.fsPath, file.fsPath)) >= 0
+                (w) => w.submitters.findIndex((s) => this.fileSystem.areLocalPathsSame(s.fsPath, file.fsPath)) >= 0
             );
 
             // Scroll to cell in the one that has the cell. We need this so

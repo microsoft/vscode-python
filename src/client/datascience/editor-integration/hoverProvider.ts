@@ -126,13 +126,13 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
     private getMatchingNotebooks(document: vscode.TextDocument): INotebook[] {
         // First see if we have an interactive window who's owner is this document
         let result = this.interactiveProvider.windows
-            .filter((w) => w.notebook && w.owner && this.fs.arePathsSame(w.owner.fsPath, document.uri.fsPath))
+            .filter((w) => w.notebook && w.owner && this.fs.areLocalPathsSame(w.owner.fsPath, document.uri.fsPath))
             .map((w) => w.notebook!);
         if (!result || result.length === 0) {
             // Not a match on the owner, find all that were submitters? Might be a bit risky
             result = this.interactiveProvider.windows
                 .filter(
-                    (w) => w.notebook && w.submitters.find((s) => this.fs.arePathsSame(s.fsPath, document.uri.fsPath))
+                    (w) => w.notebook && w.submitters.find((s) => this.fs.areLocalPathsSame(s.fsPath, document.uri.fsPath))
                 )
                 .map((w) => w.notebook!);
         }

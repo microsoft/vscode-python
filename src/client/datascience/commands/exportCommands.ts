@@ -64,7 +64,7 @@ export class ExportCommands implements IDisposable {
         if (modelOrUri && isUri(modelOrUri)) {
             const uri = modelOrUri;
             const editor = this.notebookProvider.editors.find((item) =>
-                this.fs.arePathsSame(item.file.fsPath, uri.fsPath)
+                this.fs.areLocalPathsSame(item.file.fsPath, uri.fsPath)
             );
             if (editor && editor.model) {
                 model = editor.model;

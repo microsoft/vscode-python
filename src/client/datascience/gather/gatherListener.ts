@@ -228,7 +228,7 @@ export class GatherListener implements IInteractiveWindowListener {
         // Don't want to open the gathered code on top of the interactive window
         let viewColumn: ViewColumn | undefined;
         const fileNameMatch = this.documentManager.visibleTextEditors.filter((textEditor) =>
-            this.fs.arePathsSame(textEditor.document.fileName, filename)
+            this.fs.areLocalPathsSame(textEditor.document.fileName, filename)
         );
         const definedVisibleEditors = this.documentManager.visibleTextEditors.filter(
             (textEditor) => textEditor.viewColumn !== undefined

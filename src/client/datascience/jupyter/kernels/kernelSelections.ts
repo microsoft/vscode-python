@@ -275,11 +275,11 @@ export class KernelSelectionProvider {
                             (installedKernel) =>
                                 installedKernel.selection.kernelSpec?.display_name ===
                                     item.selection.interpreter?.displayName &&
-                                (this.fs.arePathsSame(
+                                (this.fs.areLocalPathsSame(
                                     (installedKernel.selection.kernelSpec?.argv || [])[0],
                                     item.selection.interpreter?.path || ''
                                 ) ||
-                                    this.fs.arePathsSame(
+                                    this.fs.areLocalPathsSame(
                                         installedKernel.selection.kernelSpec?.metadata?.interpreter?.path || '',
                                         item.selection.interpreter?.path || ''
                                     ))

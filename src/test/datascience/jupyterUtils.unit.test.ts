@@ -27,7 +27,7 @@ suite('Data Science JupyterUtils', () => {
     const dummySettings = new MockPythonSettings(undefined, new MockAutoSelectionService());
     when(configService.getSettings(anything())).thenReturn(dummySettings);
     when(fileSystem.getDisplayName(anything())).thenCall((a) => `${a}tastic`);
-    when(fileSystem.arePathsSame(anything(), anything())).thenCall((a, b) =>
+    when(fileSystem.areLocalPathsSame(anything(), anything())).thenCall((a, b) =>
         a.replace(/\\/g, '/').includes(b.replace(/\\/g, '/'))
     );
     const hashProvider = new CellHashProvider(

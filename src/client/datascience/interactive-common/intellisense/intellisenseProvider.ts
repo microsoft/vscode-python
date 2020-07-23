@@ -196,7 +196,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         // See if the resource or the interpreter are different
         if (
             (newPath && !oldPath) ||
-            (newPath && oldPath && !this.fs.arePathsSame(newPath, oldPath)) ||
+            (newPath && oldPath && !this.fs.areLocalPathsSame(newPath, oldPath)) ||
             interpreter?.path !== this.interpreter?.path ||
             this.languageServer === undefined
         ) {
