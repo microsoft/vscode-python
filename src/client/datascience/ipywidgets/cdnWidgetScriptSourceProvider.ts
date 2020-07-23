@@ -89,7 +89,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
         // Might be on disk, try there first.
         if (!cached) {
-            if (diskPath && (await this.fs.localPathExists(diskPath))) {
+            if (diskPath && (await this.fs.localFileExists(diskPath))) {
                 const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
                 cached = { moduleName, scriptUri, source: 'cdn' };
                 this.cache.set(key, cached);

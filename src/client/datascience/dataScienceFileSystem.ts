@@ -4,9 +4,11 @@ import { injectable } from 'inversify';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
 import { FileStat, Uri, workspace } from 'vscode';
+import { traceError } from '../common/logger';
+import { isFileNotFoundError } from '../common/platform/errors';
 import { convertFileType, convertStat, getHashString } from '../common/platform/fileSystem';
 import { FileSystemPathUtils } from '../common/platform/fs-paths';
-import { IFileSystemPathUtils, TemporaryFile } from '../common/platform/types';
+import { FileType, IFileSystemPathUtils, TemporaryFile } from '../common/platform/types';
 import { IDataScienceFileSystem } from './types';
 
 const ENCODING = 'utf8';
@@ -80,8 +82,12 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
         return getHashString(data);
     }
 
-    public async localPathExists(path: string): Promise<boolean> {
-        return fs.pathExists(path);
+    public async localDirectoryExists(dirname: string): Promise<boolean> {
+        return this.localPathExists(dirname, FileType.Directory);
+    }
+
+    public async localFileExists(filename: string): Promise<boolean> {
+        return this.localPathExists(filename, FileType.File);
     }
 
     public async readLocalData(filename: string): Promise<Buffer> {
@@ -154,5 +160,36 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
         // of the symlink's target.
         const fileType = convertFileType(stat);
         return convertStat(stat, fileType);
+    }
+
+    private async localPathExists(
+        // the "file" to look for
+        filename: string,
+        // the file type to expect; if not provided then any file type
+        // matches; otherwise a mismatch results in a "false" value
+        fileType?: FileType
+    ): Promise<boolean> {
+        let stat: FileStat;
+        try {
+            // Note that we are using stat() rather than lstat().  This
+            // means that any symlinks are getting resolved.
+            const uri = Uri.file(filename);
+            stat = await this.stat(uri);
+        } catch (err) {
+            if (isFileNotFoundError(err)) {
+                return false;
+            }
+            traceError(`stat() failed for "${filename}"`, err);
+            return false;
+        }
+
+        if (fileType === undefined) {
+            return true;
+        }
+        if (fileType === FileType.Unknown) {
+            // FileType.Unknown == 0, hence do not use bitwise operations.
+            return stat.type === FileType.Unknown;
+        }
+        return (stat.type & fileType) === fileType;
     }
 }

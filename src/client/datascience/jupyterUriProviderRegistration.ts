@@ -87,7 +87,7 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
                     let last = frame;
                     while (dirName && dirName.length < last.length) {
                         const possiblePackageJson = path.join(dirName, 'package.json');
-                        if (await this.fs.localPathExists(possiblePackageJson)) {
+                        if (await this.fs.localFileExists(possiblePackageJson)) {
                             const text = await this.fs.readLocalFile(possiblePackageJson);
                             try {
                                 const json = JSON.parse(text);

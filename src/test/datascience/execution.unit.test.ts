@@ -926,7 +926,7 @@ suite('Jupyter Execution', async () => {
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve(tempFile);
         when(fileSystem.createLocalDirectory(anything())).thenResolve();
         when(fileSystem.deleteLocal(anything())).thenResolve();
-        when(fileSystem.localPathExists(workingKernelSpec)).thenResolve(true);
+        when(fileSystem.localFileExists(workingKernelSpec)).thenResolve(true);
         when(fileSystem.readLocalFile(workingKernelSpec)).thenResolve(
             '{"display_name":"Python 3","language":"python","argv":["/foo/bar/python.exe","-m","ipykernel_launcher","-f","{connection_file}"]}'
         );

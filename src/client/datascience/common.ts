@@ -157,10 +157,10 @@ export async function getRealPath(
     pythonPath: string,
     expectedPath: string
 ): Promise<string | undefined> {
-    if (await fs.localPathExists(expectedPath)) {
+    if (await fs.localDirectoryExists(expectedPath)) {
         return expectedPath;
     }
-    if (await fs.localPathExists(expectedPath)) {
+    if (await fs.localFileExists(expectedPath)) {
         return expectedPath;
     }
 
@@ -175,10 +175,10 @@ export async function getRealPath(
     );
     if (result && result.stdout) {
         const trimmed = result.stdout.trim();
-        if (await fs.localPathExists(trimmed)) {
+        if (await fs.localDirectoryExists(trimmed)) {
             return trimmed;
         }
-        if (await fs.localPathExists(trimmed)) {
+        if (await fs.localFileExists(trimmed)) {
             return trimmed;
         }
     }

@@ -380,7 +380,7 @@ suite('DataScience LiveShare tests', () => {
             });
         fileSystem.setup((f) => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
         // fileSystem.setup((f) => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
-        fileSystem.setup((f) => f.localPathExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
+        fileSystem.setup((f) => f.localDirectoryExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
 
         // Need to register commands as our extension isn't actually loading.
         const listeners = guestContainer!.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);

@@ -24,7 +24,7 @@ export async function calculateWorkingDirectory(
     if (fileRoot && workspace.hasWorkspaceFolders) {
         const workspaceFolderPath = workspace.workspaceFolders![0].uri.fsPath;
         if (path.isAbsolute(fileRoot)) {
-            if (await fs.localPathExists(fileRoot)) {
+            if (await fs.localDirectoryExists(fileRoot)) {
                 // User setting is absolute and exists, use it
                 workingDir = fileRoot;
             } else {
@@ -34,7 +34,7 @@ export async function calculateWorkingDirectory(
         } else if (!fileRoot.includes('${')) {
             // fileRoot is a relative path, combine it with the workspace folder
             const combinedPath = path.join(workspaceFolderPath, fileRoot);
-            if (await fs.localPathExists(combinedPath)) {
+            if (await fs.localDirectoryExists(combinedPath)) {
                 // combined path exists, use it
                 workingDir = combinedPath;
             } else {

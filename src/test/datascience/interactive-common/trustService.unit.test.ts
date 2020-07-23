@@ -32,7 +32,7 @@ suite('DataScience - TrustService', () => {
         when(fileSystem.appendLocalFile(anything(), anything())).thenCall((f, c) => fs.appendFile(f, c));
         when(fileSystem.readLocalFile(anything())).thenCall((f) => fs.readFile(f));
         when(fileSystem.createLocalDirectory(anything())).thenCall((d) => fs.mkdir(d));
-        when(fileSystem.localPathExists(anything())).thenCall((d) => fs.pathExists(d));
+        when(fileSystem.localDirectoryExists(anything())).thenCall((d) => fs.pathExists(d));
         when(experimentService.inExperiment(anything())).thenResolve(true); // Pretend we're in an experiment so that trust checks proceed
 
         const digestStorage = new DigestStorage(instance(fileSystem), context.object);

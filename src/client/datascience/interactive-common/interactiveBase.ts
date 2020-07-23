@@ -1207,7 +1207,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async gotoCodeInternal(file: string, line: number) {
         let editor: TextEditor | undefined;
 
-        if (await this.fs.localPathExists(file)) {
+        if (await this.fs.localFileExists(file)) {
             editor = await this.documentManager.showTextDocument(Uri.file(file), { viewColumn: ViewColumn.One });
         } else {
             // File URI isn't going to work. Look through the active text documents
@@ -1442,14 +1442,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         let filePath = path.join(__dirname, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
         traceInfo(`Request for onigasm file at ${filePath}`);
         if (this.fs) {
-            if (await this.fs.localPathExists(filePath)) {
+            if (await this.fs.localFileExists(filePath)) {
                 const contents = await this.fs.readLocalData(filePath);
                 this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
             } else {
                 // During development it's actually in the node_modules folder
                 filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
                 traceInfo(`Backup request for onigasm file at ${filePath}`);
-                if (await this.fs.localPathExists(filePath)) {
+                if (await this.fs.localFileExists(filePath)) {
                     const contents = await this.fs.readLocalData(filePath);
                     this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
                 } else {

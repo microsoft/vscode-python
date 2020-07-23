@@ -920,11 +920,11 @@ export class JupyterNotebookBase implements INotebook {
         if (this._executionInfo && this._executionInfo.connectionInfo.localLaunch && !this._workingDirectory) {
             // See what our working dir is supposed to be
             const suggested = this._executionInfo.workingDir;
-            if (suggested && (await this.fs.localPathExists(suggested))) {
+            if (suggested && (await this.fs.localDirectoryExists(suggested))) {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggested;
                 return this.changeDirectoryIfPossible(this._workingDirectory);
-            } else if (launchingFile && (await this.fs.localPathExists(launchingFile))) {
+            } else if (launchingFile && (await this.fs.localFileExists(launchingFile))) {
                 // Combine the working directory with this file if possible.
                 this._workingDirectory = expandWorkingDir(
                     this._executionInfo.workingDir,
@@ -944,7 +944,7 @@ export class JupyterNotebookBase implements INotebook {
             this._executionInfo &&
             this._executionInfo.connectionInfo.localLaunch &&
             this._executionInfo.kernelSpec?.language === PYTHON_LANGUAGE &&
-            (await this.fs.localPathExists(directory))
+            (await this.fs.localDirectoryExists(directory))
         ) {
             await this.executeSilently(CodeSnippits.UpdateCWDAndPath.format(directory));
         }

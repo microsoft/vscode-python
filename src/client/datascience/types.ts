@@ -1311,7 +1311,8 @@ export interface IDataScienceFileSystem {
     deleteLocal(path: string, options?: { recursive: boolean; useTrash: boolean }): Promise<void>;
     getDisplayName(path: string): string;
     getFileHash(path: string): Promise<string>;
-    localPathExists(path: string): Promise<boolean>;
+    localDirectoryExists(dirname: string): Promise<boolean>;
+    localFileExists(filename: string): Promise<boolean>;
     readLocalData(path: string): Promise<Buffer>;
     readLocalFile(path: string): Promise<string>;
     searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]>;

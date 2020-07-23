@@ -310,7 +310,7 @@ suite('Data Science - KernelService', () => {
         ];
         when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve(kernelSpecs);
         when(fs.arePathsSame('Some Path2', 'Some Path2')).thenReturn(true);
-        when(fs.localPathExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
+        when(fs.localFileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
         const interpreter: PythonInterpreter = {
             displayName: 'disp2',
             path: 'Some Path2',

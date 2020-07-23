@@ -71,7 +71,7 @@ export class DigestStorage implements IDigestStorage {
 
     private async initDir(): Promise<string> {
         const defaultDigestDirLocation = this.getDefaultLocation('nbsignatures');
-        if (!(await this.fs.localPathExists(defaultDigestDirLocation))) {
+        if (!(await this.fs.localDirectoryExists(defaultDigestDirLocation))) {
             await this.fs.createLocalDirectory(defaultDigestDirLocation);
         }
         return defaultDigestDirLocation;
@@ -84,7 +84,7 @@ export class DigestStorage implements IDigestStorage {
     private async initKey(): Promise<string> {
         const defaultKeyFileLocation = this.getDefaultLocation('nbsecret');
 
-        if (await this.fs.localPathExists(defaultKeyFileLocation)) {
+        if (await this.fs.localFileExists(defaultKeyFileLocation)) {
             // if the keyfile already exists, bail out
             return this.fs.readLocalFile(defaultKeyFileLocation);
         } else {

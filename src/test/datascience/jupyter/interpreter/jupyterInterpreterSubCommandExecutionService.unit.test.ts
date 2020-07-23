@@ -376,7 +376,7 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
                     }
                 }
             };
-            when(fs.localPathExists(anything())).thenResolve(true);
+            when(fs.localFileExists(anything())).thenResolve(true);
             when(
                 execService.execModule('jupyter', deepEqual(['kernelspec', 'list', '--json']), anything())
             ).thenResolve({ stdout: JSON.stringify({ kernelspecs: kernelSpecs }) });
@@ -411,7 +411,7 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
                     }
                 }
             };
-            when(fs.localPathExists(anything())).thenResolve(true);
+            when(fs.localFileExists(anything())).thenResolve(true);
             when(execService.execModule('jupyter', deepEqual(['kernelspec', 'list', '--json']), anything())).thenReject(
                 new Error('kaboom')
             );

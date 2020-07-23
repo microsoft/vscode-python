@@ -120,7 +120,7 @@ export class ThemeFinder implements IThemeFinder {
 
         // Should be somewhere under currentPath/resources/app/extensions inside of a json file
         let extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');
-        if (!(await this.fs.localPathExists(extensionsPath))) {
+        if (!(await this.fs.localDirectoryExists(extensionsPath))) {
             // Might be on mac or linux. try a different path
             currentPath = path.resolve(currentPath, '../../../..');
             extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');
@@ -146,7 +146,7 @@ export class ThemeFinder implements IThemeFinder {
 
             // Should be somewhere under currentPath/resources/app/extensions inside of a json file
             let extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions', language);
-            if (!(await this.fs.localPathExists(extensionsPath))) {
+            if (!(await this.fs.localDirectoryExists(extensionsPath))) {
                 // Might be on mac or linux. try a different path
                 currentPath = path.resolve(currentPath, '../../../..');
                 extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions', language);
@@ -154,7 +154,7 @@ export class ThemeFinder implements IThemeFinder {
 
             // See if the 'language-configuration.json' file exists
             const filePath = path.join(extensionsPath, 'language-configuration.json');
-            if (await this.fs.localPathExists(filePath)) {
+            if (await this.fs.localFileExists(filePath)) {
                 const contents = await this.fs.readLocalFile(filePath);
                 return JSON.parse(contents) as LanguageConfiguration;
             }
@@ -209,7 +209,7 @@ export class ThemeFinder implements IThemeFinder {
 
         // Should be somewhere under currentPath/resources/app/extensions inside of a json file
         let extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');
-        if (!(await this.fs.localPathExists(extensionsPath))) {
+        if (!(await this.fs.localDirectoryExists(extensionsPath))) {
             // Might be on mac or linux. try a different path
             currentPath = path.resolve(currentPath, '../../../..');
             extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');

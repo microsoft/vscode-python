@@ -6,10 +6,10 @@ import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
+import { DataScienceFileSystem } from '../../client/datascience/dataScienceFileSystem';
 import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../client/datascience/types';
 import { MockExtensions } from './mockExtensions';
-import { DataScienceFileSystem } from '../../client/datascience/dataScienceFileSystem';
 
 class MockProvider implements IJupyterUriProvider {
     public get id() {
@@ -49,7 +49,7 @@ suite('DataScience URI Picker', () => {
         const extensions = mock(MockExtensions);
         const extensionList: vscode.Extension<any>[] = [];
         const fileSystem = mock(DataScienceFileSystem);
-        when(fileSystem.localPathExists(anything())).thenResolve(false);
+        when(fileSystem.localFileExists(anything())).thenResolve(false);
         providerIds.forEach((id) => {
             const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
             const packageJson = TypeMoq.Mock.ofType<any>();

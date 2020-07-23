@@ -59,7 +59,7 @@ suite('DataScience - ipywidget - CDN', () => {
         settings = { datascience: { widgetScriptSources: [] } } as any;
         when(configService.getSettings(anything())).thenReturn(settings as any);
         when(httpClient.downloadFile(anything())).thenCall(request);
-        when(fileSystem.localPathExists(anything())).thenCall((f) => fs.pathExists(f));
+        when(fileSystem.localFileExists(anything())).thenCall((f) => fs.pathExists(f));
 
         when(fileSystem.createTemporaryLocalFile(anything())).thenCall(createTemporaryFile);
         when(fileSystem.createLocalWriteStream(anything())).thenCall((p) => fs.createWriteStream(p));

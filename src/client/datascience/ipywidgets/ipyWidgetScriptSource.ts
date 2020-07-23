@@ -91,7 +91,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
         this._rootScriptFolder = path.join(extensionContext.extensionPath, 'tmp', 'scripts');
         this.targetWidgetScriptsFolder = path.join(this._rootScriptFolder, 'nbextensions');
         this.createTargetWidgetScriptsFolder = this.fs
-            .localPathExists(this.targetWidgetScriptsFolder)
+            .localDirectoryExists(this.targetWidgetScriptsFolder)
             .then(async (exists) => {
                 if (!exists) {
                     await this.fs.createLocalDirectory(this.targetWidgetScriptsFolder);
@@ -134,7 +134,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
                     const mappedResource = Uri.file(
                         path.join(targetFolder, `${uniqueFileName}${path.basename(localResource.fsPath)}`)
                     );
-                    if (!(await this.fs.localPathExists(mappedResource.fsPath))) {
+                    if (!(await this.fs.localFileExists(mappedResource.fsPath))) {
                         await this.fs.copyLocal(localResource.fsPath, mappedResource.fsPath);
                     }
                     traceInfo(`Widget Script file ${localResource.fsPath} mapped to ${mappedResource.fsPath}`);

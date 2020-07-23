@@ -172,7 +172,7 @@ export class JupyterExporter implements INotebookExporter {
             const filename = cell.file;
 
             // First check that this is an absolute file that exists (we add in temp files to run system cell)
-            if (path.isAbsolute(filename) && (await this.fileSystem.localPathExists(filename))) {
+            if (path.isAbsolute(filename) && (await this.fileSystem.localFileExists(filename))) {
                 // We've already check that workspace folders above
                 for (const folder of this.workspaceService.workspaceFolders!) {
                     if (filename.toLowerCase().startsWith(folder.uri.fsPath.toLowerCase())) {
