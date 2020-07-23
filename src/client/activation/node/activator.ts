@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { CancellationToken, CompletionItem, ProviderResult } from 'vscode';
+import { CancellationToken, commands, CompletionItem, ProviderResult } from 'vscode';
 // tslint:disable-next-line: import-name
 import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
 import { CompletionResolveRequest } from 'vscode-languageclient/node';
@@ -55,6 +55,13 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
         if (response === Common.bannerLabelYes()) {
             this.appShell.openUrl(getPylanceExtensionUri(this.appEnv));
         }
+
+        this.extensions.onDidChange(() => {
+            if (this.extensions.getExtension(PYLANCE_EXTENSION_ID)) {
+                commands.executeCommand('workbench.action.reloadWindow');
+            }
+        });
+
         // At this time there is no Pylance installed yet.
         // throwing will cause activator to use Jedi temporarily.
         throw new Error(Pylance.pylanceNotInstalledMessage());
