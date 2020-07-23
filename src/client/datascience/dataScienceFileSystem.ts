@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
 import { FileStat, Uri, workspace } from 'vscode';
-import { convertStat, getHashString } from '../common/platform/fileSystem';
+import { convertFileType, convertStat, getHashString } from '../common/platform/fileSystem';
 import { FileType, IFileSystemPathUtils, TemporaryFile } from '../common/platform/types';
 import { IDataScienceFileSystem } from './types';
 
@@ -151,22 +151,5 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
         // of the symlink's target.
         const fileType = convertFileType(stat);
         return convertStat(stat, fileType);
-    }
-}
-
-// This helper function determines the file type of the given stats
-// object.  The type follows the convention of node's fs module, where
-// a file has exactly one type.  Symlinks are not resolved.
-function convertFileType(stat: fs.Stats): FileType {
-    if (stat.isFile()) {
-        return FileType.File;
-    } else if (stat.isDirectory()) {
-        return FileType.Directory;
-    } else if (stat.isSymbolicLink()) {
-        // The caller is responsible for combining this ("logical or")
-        // with File or Directory as necessary.
-        return FileType.SymbolicLink;
-    } else {
-        return FileType.Unknown;
     }
 }

@@ -34,7 +34,7 @@ const ENCODING: string = 'utf8';
 // This helper function determines the file type of the given stats
 // object.  The type follows the convention of node's fs module, where
 // a file has exactly one type.  Symlinks are not resolved.
-function convertFileType(stat: fs.Stats): FileType {
+export function convertFileType(stat: fs.Stats): FileType {
     if (stat.isFile()) {
         return FileType.File;
     } else if (stat.isDirectory()) {
