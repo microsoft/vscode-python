@@ -14,7 +14,7 @@ import { ICell, IJupyterKernelSpec, INotebookMetadataLive, INotebookModel } from
 export const ActiveKernelIdList = `Active_Kernel_Id_List`;
 // This is the number of kernel ids that will be remembered between opening and closing VS code
 export const MaximumKernelIdListSize = 40;
-type KerneIdListEntry = {
+type KernelIdListEntry = {
     fileHash: string;
     kernelId: string | undefined;
 };
@@ -228,7 +228,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
 
     private getStoredKernelId(): string | undefined {
         // Stored as a list so we don't take up too much space
-        const list: KerneIdListEntry[] = this.globalMemento.get<KerneIdListEntry[]>(ActiveKernelIdList, []);
+        const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
         if (list) {
             // Not using a map as we're only going to store the last 40 items.
             const fileHash = this.crypto.createHash(this._file.toString(), 'string');
@@ -237,10 +237,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
         }
     }
     private setStoredKernelId(id: string | undefined) {
-        let list: KerneIdListEntry[] = this.globalMemento.get<KerneIdListEntry[]>(ActiveKernelIdList, []);
-        if (!list) {
-            list = [];
-        }
+        const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
         const fileHash = this.crypto.createHash(this._file.toString(), 'string');
         const index = list.findIndex((l) => l.fileHash === fileHash);
         // Always remove old spot (we'll push on the back for new ones)
