@@ -243,7 +243,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
         }
         const fileHash = this.crypto.createHash(this._file.toString(), 'string');
         const index = list.findIndex((l) => l.fileHash === fileHash);
-        // Always remove old spot (need to push on the front)
+        // Always remove old spot (we'll push on the back for new ones)
         if (index >= 0) {
             list.splice(index, 1);
         }
