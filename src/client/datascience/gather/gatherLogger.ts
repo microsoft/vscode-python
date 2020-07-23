@@ -42,11 +42,7 @@ export class GatherLogger implements IGatherLogger {
                 const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
                 cloneCell.data.source = cellMatcher.stripFirstMarker(concatMultilineStringInput(vscCell.data.source));
 
-                try {
-                    this.gather.logExecution(cloneCell);
-                } catch (e) {
-                    traceError('Gather: Error logging Execution', e);
-                }
+                this.gather.logExecution(cloneCell);
             }
         }
     }
