@@ -514,10 +514,13 @@ suite('DataScience notebook tests', () => {
                             `--config=${configFile}`
                         ]);
 
+                        // To make sure we get an 'insecure' message, replace localhost with 127.0.0.1
+                        const replaced = uri.replace('localhost', '127.0.0.1');
+
                         // Try to create, we expect a failure here as we will deny the insecure connection
                         let madeItPast = false;
                         try {
-                            await createNotebook(uri, undefined);
+                            await createNotebook(replaced, undefined);
                             madeItPast = true;
                         } catch (exc) {
                             assert.ok(exc.toString().includes('insecure'), `Invalid exception thrown: ${exc}`);
