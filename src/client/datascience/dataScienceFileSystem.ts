@@ -1,14 +1,15 @@
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
 import { FileStat, Uri, workspace } from 'vscode';
 import { convertFileType, convertStat, getHashString } from '../common/platform/fileSystem';
-import { FileType, IFileSystemPathUtils, TemporaryFile } from '../common/platform/types';
+import { FileSystemPathUtils } from '../common/platform/fs-paths';
+import { IFileSystemPathUtils, TemporaryFile } from '../common/platform/types';
 import { IDataScienceFileSystem } from './types';
 
-export const ENCODING = 'utf8';
+const ENCODING = 'utf8';
 
 /**
  * File system abstraction which wraps the VS Code API.
@@ -16,9 +17,11 @@ export const ENCODING = 'utf8';
 @injectable()
 export class DataScienceFileSystem implements IDataScienceFileSystem {
     private globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>;
+    private fsPathUtils: IFileSystemPathUtils;
 
-    constructor(@inject(IFileSystemPathUtils) private fsPathUtils: IFileSystemPathUtils) {
+    constructor() {
         this.globFiles = promisify(glob);
+        this.fsPathUtils = FileSystemPathUtils.withDefaults();
     }
 
     public async appendLocalFile(path: string, text: string): Promise<void> {
