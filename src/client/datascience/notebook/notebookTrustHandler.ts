@@ -29,7 +29,9 @@ export class NotebookTrustHandler implements IExtensionSingleActivationService {
             if (!isJupyterNotebook(doc)) {
                 return;
             }
-            const editor = this.editorProvider.editors.find((e) => this.fs.areLocalPathsSame(e.file.fsPath, doc.uri.fsPath));
+            const editor = this.editorProvider.editors.find((e) =>
+                this.fs.areLocalPathsSame(e.file.fsPath, doc.uri.fsPath)
+            );
             if (editor && editor.model?.isTrusted) {
                 updateVSCNotebookAfterTrustingNotebook(doc, editor.model);
             }

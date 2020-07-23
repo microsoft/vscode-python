@@ -45,7 +45,9 @@ suite('CellHashProvider Unit Tests', () => {
         pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
-        fileSystem.setup((d) => d.areLocalPathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
+        fileSystem
+            .setup((d) => d.areLocalPathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
+            .returns(() => true);
         documentManager = new MockDocumentManager();
         hashProvider = new CellHashProvider(
             documentManager,

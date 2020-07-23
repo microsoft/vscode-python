@@ -28,11 +28,11 @@ import { NativeEditor as NativeEditorWebView } from '../../client/datascience/in
 import {
     ICell,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IJupyterExecution,
     INotebookEditorProvider,
     INotebookExporter,
-    ITrustService,
-    IDataScienceFileSystem
+    ITrustService
 } from '../../client/datascience/types';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
