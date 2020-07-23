@@ -13,7 +13,7 @@ import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
 import { createPythonInterpreter } from '../../utils/interpreters';
 
 // tslint:disable: max-func-body-length no-any
-suite('Data Science - Kernel Launcher Daemon', () => {
+suite('DataScience - Kernel Launcher Daemon', () => {
     let launcher: PythonKernelLauncherDaemon;
     let daemonPool: KernelDaemonPool;
     let interpreter: PythonInterpreter;

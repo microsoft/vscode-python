@@ -240,7 +240,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                         new StopWatch(),
                                         sessionManager,
                                         cancelToken,
-                                        launchInfo.kernelSpec
+                                        launchInfo.kernelSpec?.display_name || launchInfo.kernelSpec?.name
                                     );
                                     if (Object.keys(kernelInterpreter).length > 0) {
                                         launchInfo.interpreter = kernelInterpreter.interpreter;

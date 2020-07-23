@@ -25,7 +25,7 @@ import { PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { FakeClock } from '../common';
 import { createPythonInterpreter } from '../utils/interpreters';
 
-suite('Data Science - Activation', () => {
+suite('DataScience - Activation', () => {
     let activator: IExtensionSingleActivationService;
     let notebookEditorProvider: INotebookEditorProvider;
     let jupyterInterpreterService: JupyterInterpreterService;

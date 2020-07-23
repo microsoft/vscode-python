@@ -6,114 +6,25 @@
 import { inject, injectable } from 'inversify';
 import { ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { IConfigurationService, Resource } from '../../../common/types';
-import { Common, DataScience } from '../../../common/utils/localize';
-import { StopWatch } from '../../../common/utils/stopWatch';
+import { IConfigurationService } from '../../../common/types';
+import { DataScience } from '../../../common/utils/localize';
 import { JupyterSessionStartError } from '../../baseJupyterSession';
-import { Commands, Settings } from '../../constants';
+import { Settings } from '../../constants';
 import { RawKernelSessionStartError } from '../../raw-kernel/rawJupyterSession';
-import {
-    IJupyterConnection,
-    IJupyterKernelSpec,
-    IJupyterSessionManagerFactory,
-    IKernelDependencyService,
-    INotebook,
-    KernelInterpreterDependencyResponse
-} from '../../types';
+import { IKernelDependencyService, INotebook, KernelInterpreterDependencyResponse } from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
 import { KernelSelector, KernelSpecInterpreter } from './kernelSelector';
-import { LiveKernelModel } from './types';
 
 @injectable()
 export class KernelSwitcher {
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        @inject(KernelSelector) private kernelSelector: KernelSelector,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService
+        @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
+        @inject(KernelSelector) private readonly selector: KernelSelector
     ) {}
 
-    public async switchKernel(
-        notebook: INotebook | undefined,
-        type: 'raw' | 'jupyter'
-    ): Promise<KernelSpecInterpreter | undefined> {
-        const kernel: KernelSpecInterpreter | undefined = await this.selectJupyterKernel(notebook, type);
-        if (kernel && (kernel.kernelSpec || kernel.kernelModel)) {
-            if (notebook) {
-                await this.switchKernelWithRetry(notebook, kernel);
-            }
-            return kernel;
-        }
-    }
-
-    public async askForLocalKernel(
-        resource: Resource,
-        type: 'raw' | 'jupyter' | 'noConnection',
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
-    ): Promise<KernelSpecInterpreter | undefined> {
-        const displayName = kernelSpec?.display_name || kernelSpec?.name || '';
-        const message = DataScience.sessionStartFailedWithKernel().format(displayName, Commands.ViewJupyterOutput);
-        const selectKernel = DataScience.selectDifferentKernel();
-        const cancel = Common.cancel();
-        const selection = await this.appShell.showErrorMessage(message, selectKernel, cancel);
-        if (selection === selectKernel) {
-            return this.selectLocalJupyterKernel(resource, type, kernelSpec);
-        }
-    }
-
-    private async selectJupyterKernel(
-        notebook: INotebook | undefined,
-        type: 'raw' | 'jupyter'
-    ): Promise<KernelSpecInterpreter | undefined> {
-        let kernel: KernelSpecInterpreter | undefined;
-
-        const settings = this.configService.getSettings(notebook?.resource);
-        const isLocalConnection =
-            notebook?.connection?.localLaunch ??
-            settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
-
-        if (isLocalConnection) {
-            kernel = await this.selectLocalJupyterKernel(
-                notebook?.resource,
-                notebook?.connection?.type || type,
-                notebook?.getKernelSpec()
-            );
-        } else if (notebook) {
-            const connInfo = notebook.connection;
-            const currentKernel = notebook.getKernelSpec();
-            if (connInfo && connInfo.type === 'jupyter') {
-                kernel = await this.selectRemoteJupyterKernel(notebook.resource, connInfo, currentKernel);
-            }
-        }
-        return kernel;
-    }
-
-    private async selectLocalJupyterKernel(
-        resource: Resource,
-        type: 'raw' | 'jupyter' | 'noConnection',
-        currentKernel?: IJupyterKernelSpec | LiveKernelModel
-    ): Promise<KernelSpecInterpreter> {
-        return this.kernelSelector.selectLocalKernel(
-            resource,
-            type,
-            new StopWatch(),
-            undefined,
-            undefined,
-            currentKernel
-        );
-    }
-
-    private async selectRemoteJupyterKernel(
-        resource: Resource,
-        connInfo: IJupyterConnection,
-        currentKernel?: IJupyterKernelSpec | LiveKernelModel
-    ): Promise<KernelSpecInterpreter> {
-        const stopWatch = new StopWatch();
-        const session = await this.jupyterSessionManagerFactory.create(connInfo);
-        return this.kernelSelector.selectRemoteKernel(resource, stopWatch, session, undefined, currentKernel);
-    }
-    private async switchKernelWithRetry(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
+    public async switchKernelWithRetry(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
         const settings = this.configService.getSettings(notebook.resource);
         const isLocalConnection =
             notebook.connection?.localLaunch ??
@@ -141,7 +52,7 @@ export class KernelSwitcher {
                     // Looks like we were unable to start a session for the local connection.
                     // Possibly something wrong with the kernel.
                     // At this point we have a valid jupyter server.
-                    const potential = await this.askForLocalKernel(
+                    const potential = await this.selector.askForLocalKernel(
                         notebook.resource,
                         notebook.connection?.type || 'noConnection',
                         kernel.kernelSpec || kernel.kernelModel

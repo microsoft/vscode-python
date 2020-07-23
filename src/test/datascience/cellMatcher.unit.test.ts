@@ -6,7 +6,7 @@ import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { defaultDataScienceSettings } from './helpers';
 
-suite('Data Science CellMatcher', () => {
+suite('DataScience CellMatcher', () => {
     test('CellMatcher', () => {
         const settings: IDataScienceSettings = defaultDataScienceSettings();
         const matcher1 = new CellMatcher(settings);

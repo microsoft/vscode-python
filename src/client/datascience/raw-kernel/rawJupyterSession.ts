@@ -14,7 +14,6 @@ import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
-import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
@@ -41,11 +40,12 @@ export class RawJupyterSession extends BaseJupyterSession {
     private _disposables: IDisposable[] = [];
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
-        kernelSelector: KernelSelector,
         private readonly resource: Resource,
-        private readonly outputChannel: IOutputChannel
+        private readonly outputChannel: IOutputChannel,
+        private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
+        restartSessionUsed: (id: Kernel.IKernelConnection) => void
     ) {
-        super(kernelSelector);
+        super(restartSessionUsed);
     }
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
@@ -202,7 +202,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
         const startPromise = this.startRawSession(kernelSpec, interpreter, cancelToken);
         return startPromise.then((session) => {
-            this.kernelSelector.addKernelToIgnoreList(session.kernel);
+            this.restartSessionCreated(session.kernel);
             return session;
         });
     }

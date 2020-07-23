@@ -12,7 +12,7 @@ import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/const
 import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
 import { CellState, INotebookModel } from '../../../client/datascience/types';
 
-suite('Data Science - NativeNotebook helpers', () => {
+suite('DataScience - NativeNotebook helpers', () => {
     test('Convert NotebookModel to VSCode NotebookData', async () => {
         const model: Partial<INotebookModel> = {
             cells: [

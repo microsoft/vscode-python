@@ -11,7 +11,6 @@ import * as path from 'path';
 import { SemVer } from 'semver';
 import { Readable, Writable } from 'stream';
 import { anything, instance, mock, when } from 'ts-mockito';
-import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
@@ -275,14 +274,9 @@ suite('DataScience notebook tests', () => {
             function runTest(
                 name: string,
                 func: (_this: Mocha.Context) => Promise<void>,
-                _notebookProc?: ChildProcess,
-                rebindFunc?: () => void
+                _notebookProc?: ChildProcess
             ) {
                 test(name, async function () {
-                    // Give tests a chance to rebind IOC services before we fetch jupyterExecution and processFactory
-                    if (rebindFunc) {
-                        rebindFunc();
-                    }
                     console.log(`Starting test ${name} ...`);
                     // tslint:disable-next-line: no-invalid-this
                     return func(this);
@@ -489,57 +483,19 @@ suite('DataScience notebook tests', () => {
                         }
                     }
                 },
-                undefined,
-                () => {
-                    const dummyDisposable = {
-                        dispose: () => {
-                            return;
-                        }
-                    };
-                    const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-                    appShell
-                        .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
-                        .returns((e) => {
-                            throw e;
-                        });
-                    appShell
-                        .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                        .returns(() => Promise.resolve(''));
-                    appShell
-                        .setup((a) =>
-                            a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
-                        )
-                        .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
-                    appShell
-                        .setup((a) =>
-                            a.showInformationMessage(
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny()
-                            )
-                        )
-                        .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
-                    appShell
-                        .setup((a) =>
-                            a.showWarningMessage(
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny()
-                            )
-                        )
-                        .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
-                    appShell.setup((a) => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
-                    appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
-                    ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
-                }
+                undefined
             );
 
             // For a connection to a remote machine that is not secure deny the connection and we should not connect
             runTest(
                 'Remote Deny Insecure',
                 async () => {
+                    when(
+                        ioc.applicationShell.showWarningMessage(anything(), anything(), anything(), anything())
+                    ).thenCall((_a1, _a2, a3, _a4) => {
+                        return Promise.resolve(a3);
+                    });
+
                     const pythonService = await createPythonService();
 
                     if (pythonService) {
@@ -559,55 +515,17 @@ suite('DataScience notebook tests', () => {
                         ]);
 
                         // Try to create, we expect a failure here as we will deny the insecure connection
-                        await createNotebook(uri, undefined, true);
+                        let madeItPast = false;
+                        try {
+                            await createNotebook(uri, undefined);
+                            madeItPast = true;
+                        } catch (exc) {
+                            assert.ok(exc.toString().includes('insecure'), `Invalid exception thrown: ${exc}`);
+                        }
+                        assert.notOk(madeItPast, 'Should have thrown an exception');
                     }
                 },
-                undefined,
-                () => {
-                    const dummyDisposable = {
-                        dispose: () => {
-                            return;
-                        }
-                    };
-                    const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-                    appShell
-                        .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
-                        .returns((e) => {
-                            throw e;
-                        });
-                    appShell
-                        .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                        .returns(() => Promise.resolve(''));
-                    appShell
-                        .setup((a) =>
-                            a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
-                        )
-                        .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
-                    appShell
-                        .setup((a) =>
-                            a.showInformationMessage(
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny()
-                            )
-                        )
-                        .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
-                    // This is the call to app shell that we are changing from the above test
-                    appShell
-                        .setup((a) =>
-                            a.showWarningMessage(
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny()
-                            )
-                        )
-                        .returns((_a1: string, _a2: string, a3: string, _a4: string) => Promise.resolve(a3));
-                    appShell.setup((a) => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
-                    appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
-                    ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
-                }
+                undefined
             );
             runTest('Remote Password', async () => {
                 const pythonService = await createPythonService();

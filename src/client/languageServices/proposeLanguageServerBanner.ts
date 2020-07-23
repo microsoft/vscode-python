@@ -4,22 +4,27 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget } from 'vscode';
 import { LanguageServerType } from '../activation/types';
-import { IApplicationShell } from '../common/application/types';
+import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { PYLANCE_EXTENSION_ID } from '../common/constants';
+import { TryPylance } from '../common/experiments/groups';
 import '../common/extensions';
-import { IConfigurationService, IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
-import { getRandomBetween } from '../common/utils/random';
+import {
+    IConfigurationService,
+    IExperimentService,
+    IExtensions,
+    IPersistentStateFactory,
+    IPythonExtensionBanner
+} from '../common/types';
+import { LanguageService } from '../common/utils/localize';
+
+export function getPylanceExtensionUri(appEnv: IApplicationEnvironment): string {
+    return `${appEnv.uriScheme}:extension/${PYLANCE_EXTENSION_ID}`;
+}
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
-    ShowBanner = 'ProposeLSBanner'
-}
-
-enum ProposeLSLabelIndex {
-    Yes,
-    No,
-    Later
+    ShowBanner = 'TryPylanceBanner'
 }
 
 /*
@@ -30,46 +35,24 @@ and will show as soon as it is instructed to do so, if a random sample
 function enables the popup for this user.
 */
 @injectable()
-export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
-    private initialized?: boolean;
+export class ProposePylanceBanner implements IPythonExtensionBanner {
     private disabledInCurrentSession: boolean = false;
-    private sampleSizePerHundred: number;
-    private bannerMessage: string =
-        'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.';
-    private bannerLabels: string[] = ['Try it now', 'No thanks', 'Remind me Later'];
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
+        @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        sampleSizePerOneHundredUsers: number = 10
-    ) {
-        this.sampleSizePerHundred = sampleSizePerOneHundredUsers;
-        this.initialize();
-    }
+        @inject(IExperimentService) private experiments: IExperimentService,
+        @inject(IExtensions) readonly extensions: IExtensions
+    ) {}
 
-    public initialize() {
-        if (this.initialized) {
-            return;
-        }
-        this.initialized = true;
-
-        // Don't even bother adding handlers if banner has been turned off.
-        if (!this.enabled) {
-            return;
-        }
-
-        // we only want 10% of folks that use Jedi to see this survey.
-        const randomSample: number = getRandomBetween(0, 100);
-        if (randomSample >= this.sampleSizePerHundred) {
-            this.disable().ignoreErrors();
-            return;
-        }
-    }
     public get enabled(): boolean {
-        // Banner is deactivated.
-        return false;
-        // return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
+        const lsType = this.configuration.getSettings().languageServer ?? LanguageServerType.Jedi;
+        if (lsType === LanguageServerType.Jedi || lsType === LanguageServerType.Node) {
+            return false;
+        }
+        return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
     }
 
     public async showBanner(): Promise<void> {
@@ -82,44 +65,36 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
             return;
         }
 
-        const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
-        switch (response) {
-            case this.bannerLabels[ProposeLSLabelIndex.Yes]: {
-                await this.enableLanguageServer();
-                await this.disable();
-                break;
-            }
-            case this.bannerLabels[ProposeLSLabelIndex.No]: {
-                await this.disable();
-                break;
-            }
-            case this.bannerLabels[ProposeLSLabelIndex.Later]: {
-                this.disabledInCurrentSession = true;
-                break;
-            }
-            default: {
-                // Disable for the current session.
-                this.disabledInCurrentSession = true;
-            }
+        const response = await this.appShell.showInformationMessage(
+            LanguageService.proposePylanceMessage(),
+            LanguageService.tryItNow(),
+            LanguageService.bannerLabelNo(),
+            LanguageService.remindMeLater()
+        );
+
+        if (response === LanguageService.tryItNow()) {
+            this.appShell.openUrl(getPylanceExtensionUri(this.appEnv));
+            await this.disable();
+        } else if (response === LanguageService.bannerLabelNo()) {
+            await this.disable();
+        } else {
+            this.disabledInCurrentSession = true;
         }
     }
 
     public async shouldShowBanner(): Promise<boolean> {
-        return Promise.resolve(this.enabled && !this.disabledInCurrentSession);
+        // Do not prompt if Pylance is already installed.
+        if (this.extensions.getExtension(PYLANCE_EXTENSION_ID)) {
+            return false;
+        }
+        // Only prompt for users in experiment.
+        const inExperiment = await this.experiments.inExperiment(TryPylance.experiment);
+        return inExperiment && this.enabled && !this.disabledInCurrentSession;
     }
 
     public async disable(): Promise<void> {
         await this.persistentState
             .createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, false)
             .updateValue(false);
-    }
-
-    public async enableLanguageServer(): Promise<void> {
-        await this.configuration.updateSetting(
-            'languageServer',
-            LanguageServerType.Microsoft,
-            undefined,
-            ConfigurationTarget.Global
-        );
     }
 }

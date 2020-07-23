@@ -11,6 +11,7 @@ import { IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
+import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
 import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,
@@ -27,12 +28,16 @@ export class NotebookProvider implements INotebookProvider {
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
     private readonly _onSessionStatusChanged = new EventEmitter<{ status: ServerStatus; notebook: INotebook }>();
     private _connectionMade = new EventEmitter<void>();
+    private _potentialKernelChanged = new EventEmitter<{ identity: Uri; kernel: KernelSpecInterpreter }>();
     private _type: 'jupyter' | 'raw' = 'jupyter';
     public get activeNotebooks() {
         return [...this.notebooks.values()];
     }
     public get onSessionStatusChanged() {
         return this._onSessionStatusChanged.event;
+    }
+    public get onPotentialKernelChanged() {
+        return this._potentialKernelChanged.event;
     }
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -138,6 +143,12 @@ export class NotebookProvider implements INotebookProvider {
         this.cacheNotebookPromise(options.identity, promise);
 
         return promise;
+    }
+
+    // This method is here so that the kernel selector can pick a kernel and not have
+    // to know about any of the UI that's active.
+    public firePotentialKernelChanged(identity: Uri, kernel: KernelSpecInterpreter) {
+        this._potentialKernelChanged.fire({ identity, kernel });
     }
 
     private fireConnectionMade() {

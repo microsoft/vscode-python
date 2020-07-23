@@ -6,7 +6,7 @@ import { generateCells } from '../../client/datascience/cellFactory';
 import { removeLinesFromFrontAndBack, stripComments } from '../../datascience-ui/common';
 
 // tslint:disable: max-func-body-length
-suite('Data Science CellFactory', () => {
+suite('DataScience CellFactory', () => {
     test('parsing cells', () => {
         let cells = generateCells(undefined, '#%%\na=1\na', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Simple cell, not right number found');

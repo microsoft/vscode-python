@@ -9,7 +9,7 @@ import { interfaces } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
-import { anything, instance, mock, reset, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, reset, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import {
     CancellationTokenSource,
@@ -20,6 +20,7 @@ import {
     FileSystemWatcher,
     Memento,
     Uri,
+    WindowState,
     WorkspaceFolder,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
@@ -68,6 +69,7 @@ import {
     IDiagnosticsService
 } from '../../client/application/diagnostics/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
+import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { ClipboardService } from '../../client/common/application/clipboard';
 import { VSCodeNotebook } from '../../client/common/application/notebook';
 import { TerminalManager } from '../../client/common/application/terminalManager';
@@ -150,6 +152,7 @@ import {
     TerminalActivationProviders
 } from '../../client/common/terminal/types';
 import {
+    BANNER_NAME_PROPOSE_LS,
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
     IBrowserService,
@@ -157,6 +160,7 @@ import {
     ICryptoUtils,
     ICurrentProcess,
     IDataScienceSettings,
+    IDisposable,
     IExperimentService,
     IExperimentsManager,
     IExtensionContext,
@@ -168,6 +172,7 @@ import {
     IOutputChannel,
     IPathUtils,
     IPersistentStateFactory,
+    IPythonExtensionBanner,
     IPythonSettings,
     IsWindows,
     ProductType,
@@ -185,7 +190,7 @@ import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { JupyterCommandLineSelectorCommand } from '../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../client/datascience/commands/commandRegistry';
 import { ExportCommands } from '../../client/datascience/commands/exportCommands';
-import { KernelSwitcherCommand } from '../../client/datascience/commands/kernelSwitcher';
+import { NotebookCommands } from '../../client/datascience/commands/notebookCommands';
 import { JupyterServerSelectorCommand } from '../../client/datascience/commands/serverSelector';
 import { DataScienceStartupTime, Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
 import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
@@ -366,6 +371,7 @@ import { InterpreterVersionService } from '../../client/interpreter/interpreterV
 import { registerInterpreterTypes } from '../../client/interpreter/serviceRegistry';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
+import { ProposePylanceBanner } from '../../client/languageServices/proposeLanguageServerBanner';
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
@@ -422,7 +428,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
     private static jupyterInterpreters: PythonInterpreter[] = [];
     private static foundPythonPath: string | undefined;
-    public applicationShell!: TypeMoq.IMock<IApplicationShell>;
+    public applicationShell!: ApplicationShell;
     // tslint:disable-next-line:no-any
     public datascience!: TypeMoq.IMock<IDataScience>;
     public shouldMockJupyter: boolean;
@@ -767,6 +773,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 LanguageServerType.Microsoft
             );
             this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager);
+            this.serviceManager.add<IPythonExtensionBanner>(
+                IPythonExtensionBanner,
+                ProposePylanceBanner,
+                BANNER_NAME_PROPOSE_LS
+            );
         } else if (languageServerType === LanguageServerType.Node) {
             this.serviceManager.add<ILanguageServerActivator>(
                 ILanguageServerActivator,
@@ -931,7 +942,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, this.commandManager);
 
         // Mock the app shell
-        const appShell = (this.applicationShell = TypeMoq.Mock.ofType<IApplicationShell>());
+        this.applicationShell = mock(ApplicationShell);
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
 
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(this.getSettings.bind(this));
@@ -941,7 +952,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             EnvironmentVariablesProvider
         );
 
-        this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
+        this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, instance(this.applicationShell));
         this.serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
         this.serviceManager.addSingletonInstance<IConfigurationService>(
@@ -964,7 +975,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             JupyterServerSelectorCommand,
             JupyterServerSelectorCommand
         );
-        this.serviceManager.addSingleton<KernelSwitcherCommand>(KernelSwitcherCommand, KernelSwitcherCommand);
+        this.serviceManager.addSingleton<NotebookCommands>(NotebookCommands, NotebookCommands);
 
         this.serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
@@ -1124,35 +1135,52 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             }
         };
 
-        appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(''));
-        appShell
-            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), anything()))
-            .returns(() => Promise.resolve(''));
-        appShell
-            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), anything(), anything()))
-            .returns(() => Promise.resolve(''));
-        appShell
-            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(''));
-        appShell
-            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
-        appShell
-            .setup((a) =>
-                a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
-            )
-            .returns((_a1: string, a2: any, _a3: string, a4: string) => {
+        when(this.applicationShell.showErrorMessage(anyString())).thenReturn(Promise.resolve(''));
+        when(this.applicationShell.showErrorMessage(anyString(), anything())).thenReturn(Promise.resolve(''));
+        when(this.applicationShell.showErrorMessage(anyString(), anything(), anything())).thenReturn(
+            Promise.resolve('')
+        );
+        when(this.applicationShell.showInformationMessage(anyString())).thenReturn(Promise.resolve(''));
+        when(this.applicationShell.showInformationMessage(anyString(), anything())).thenReturn(Promise.resolve(''));
+        when(
+            this.applicationShell.showInformationMessage(anyString(), anything(), anything())
+        ).thenCall((_a1, a2, _a3) => Promise.resolve(a2));
+        when(this.applicationShell.showInformationMessage(anyString(), anything(), anything(), anything())).thenCall(
+            (_a1, a2, _a3, a4) => {
                 if (typeof a2 === 'string') {
                     return Promise.resolve(a2);
                 } else {
                     return Promise.resolve(a4);
                 }
-            });
-        appShell
-            .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(Uri.file('test.ipynb')));
-        appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
-        appShell.setup((a) => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve('Python'));
+            }
+        );
+        when(this.applicationShell.showWarningMessage(anyString())).thenReturn(Promise.resolve(''));
+        when(this.applicationShell.showWarningMessage(anyString(), anything())).thenReturn(Promise.resolve(''));
+        when(this.applicationShell.showWarningMessage(anyString(), anything(), anything())).thenCall((_a1, a2, _a3) =>
+            Promise.resolve(a2)
+        );
+        when(this.applicationShell.showWarningMessage(anyString(), anything(), anything(), anything())).thenCall(
+            (_a1, a2, _a3, a4) => {
+                if (typeof a2 === 'string') {
+                    return Promise.resolve(a2);
+                } else {
+                    return Promise.resolve(a4);
+                }
+            }
+        );
+        when(this.applicationShell.showSaveDialog(anything())).thenReturn(Promise.resolve(Uri.file('test.ipynb')));
+        when(this.applicationShell.setStatusBarMessage(anything())).thenReturn(dummyDisposable);
+        when(this.applicationShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
+        const eventCallback = (
+            _listener: (e: WindowState) => any,
+            _thisArgs?: any,
+            _disposables?: IDisposable[] | Disposable
+        ) => {
+            return {
+                dispose: noop
+            };
+        };
+        when(this.applicationShell.onDidChangeWindowState).thenReturn(eventCallback);
 
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();

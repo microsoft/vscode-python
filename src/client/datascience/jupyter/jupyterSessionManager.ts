@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { ContentsManager, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import type { ContentsManager, Kernel, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
 import { Agent as HttpsAgent } from 'https';
 import * as nodeFetch from 'node-fetch';
+import { EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../common/application/types';
 
@@ -25,7 +26,6 @@ import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
 import { createDefaultKernelSpec } from './kernels/helpers';
 import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
-import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
 
 // Key for our insecure connection global state
@@ -41,6 +41,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private serverSettings: ServerConnection.ISettings | undefined;
     private _jupyterlab?: typeof import('@jupyterlab/services');
     private readonly userAllowsInsecureConnections: IPersistentState<boolean>;
+    private restartSessionCreatedEvent = new EventEmitter<Kernel.IKernelConnection>();
+    private restartSessionUsedEvent = new EventEmitter<Kernel.IKernelConnection>();
     private get jupyterlab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterlab) {
             // tslint:disable-next-line: no-require-imports
@@ -52,7 +54,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private jupyterPasswordConnect: IJupyterPasswordConnect,
         _config: IConfigurationService,
         private failOnPassword: boolean | undefined,
-        private kernelSelector: KernelSelector,
         private outputChannel: IOutputChannel,
         private configService: IConfigurationService,
         private readonly appShell: IApplicationShell,
@@ -64,6 +65,13 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         );
     }
 
+    public get onRestartSessionCreated() {
+        return this.restartSessionCreatedEvent.event;
+    }
+
+    public get onRestartSessionUsed() {
+        return this.restartSessionUsedEvent.event;
+    }
     public async dispose() {
         traceInfo(`Disposing session manager`);
         try {
@@ -170,8 +178,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             kernelSpec,
             this.sessionManager,
             this.contentsManager,
-            this.kernelSelector,
-            this.outputChannel
+            this.outputChannel,
+            this.restartSessionCreatedEvent.fire.bind(this.restartSessionCreatedEvent),
+            this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent)
         );
         try {
             await session.connect(cancelToken);

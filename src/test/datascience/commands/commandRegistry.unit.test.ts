@@ -11,7 +11,7 @@ import { StartPage } from '../../../client/common/startPage/startPage';
 import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../../client/datascience/commands/commandRegistry';
 import { ExportCommands } from '../../../client/datascience/commands/exportCommands';
-import { KernelSwitcherCommand } from '../../../client/datascience/commands/kernelSwitcher';
+import { NotebookCommands } from '../../../client/datascience/commands/notebookCommands';
 import { JupyterServerSelectorCommand } from '../../../client/datascience/commands/serverSelector';
 import { Commands } from '../../../client/datascience/constants';
 import { DataScienceFileSystem } from '../../../client/datascience/dataScienceFileSystem';
@@ -20,14 +20,14 @@ import { NativeEditorProvider } from '../../../client/datascience/interactive-ip
 import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - Commands', () => {
-    let kernelSwitcherCommand: KernelSwitcherCommand;
+suite('DataScience - Commands', () => {
+    let kernelSwitcherCommand: NotebookCommands;
     let serverSelectorCommand: JupyterServerSelectorCommand;
     let commandLineCommand: JupyterCommandLineSelectorCommand;
     let commandRegistry: CommandRegistry;
     let commandManager: ICommandManager;
     setup(() => {
-        kernelSwitcherCommand = mock(KernelSwitcherCommand);
+        kernelSwitcherCommand = mock(NotebookCommands);
         serverSelectorCommand = mock(JupyterServerSelectorCommand);
         commandLineCommand = mock(JupyterCommandLineSelectorCommand);
 

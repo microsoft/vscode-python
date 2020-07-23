@@ -36,7 +36,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { ExportUtil } from '../export/exportUtil';
-import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { PostOffice } from '../liveshare/postOffice';
 import {
     ICodeCssGenerator,
@@ -190,14 +190,14 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO),
             this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO),
             this.serviceContainer.get<IExperimentsManager>(IExperimentsManager),
-            this.serviceContainer.get<KernelSwitcher>(KernelSwitcher),
             this.serviceContainer.get<INotebookProvider>(INotebookProvider),
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
             this.serviceContainer.get<IExperimentService>(IExperimentService),
             this.serviceContainer.get<ExportUtil>(ExportUtil),
             resource,
             mode,
-            title
+            title,
+            this.serviceContainer.get<KernelSelector>(KernelSelector)
         );
         this._windows.push(result);
 

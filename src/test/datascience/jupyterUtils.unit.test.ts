@@ -18,7 +18,7 @@ import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockPythonSettings } from './mockPythonSettings';
 
-suite('Data Science JupyterUtils', () => {
+suite('DataScience JupyterUtils', () => {
     const workspaceService = mock(WorkspaceService);
     const configService = mock(ConfigurationService);
     const debugService = mock(DebugService);

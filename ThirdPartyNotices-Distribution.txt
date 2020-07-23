@@ -9806,7 +9806,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------
 
-jedi 0.17.1 - MIT
+jedi 0.17.2 - MIT
 
 
 Copyright (c) <2013>
@@ -15660,4 +15660,3 @@ TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
    0. You just DO WHAT THE FUCK YOU WANT TO.
 
 ---------------------------------------------------------
-

@@ -87,7 +87,7 @@ import { EnableTrustedNotebooks } from '../../common/experiments/groups';
 import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
-import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
@@ -176,13 +176,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         workspaceStorage: Memento,
         experimentsManager: IExperimentsManager,
         asyncRegistry: IAsyncDisposableRegistry,
-        switcher: KernelSwitcher,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private trustService: ITrustService,
         private expService: IExperimentService,
         private _model: INotebookModel,
-        webviewPanel: WebviewPanel | undefined
+        webviewPanel: WebviewPanel | undefined,
+        selector: KernelSelector
     ) {
         super(
             listeners,
@@ -217,10 +217,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             path.basename(_model.file.fsPath),
             ViewColumn.Active,
             experimentsManager,
-            switcher,
             notebookProvider,
             useCustomEditorApi,
-            expService
+            expService,
+            selector
         );
         asyncRegistry.push(this);
 

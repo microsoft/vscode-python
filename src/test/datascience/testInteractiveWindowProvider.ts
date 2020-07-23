@@ -17,6 +17,7 @@ import {
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { resetIdentity } from '../../client/datascience/interactive-window/identity';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { IDataScienceFileSystem, IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
@@ -51,10 +52,13 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
         @inject(IApplicationShell) appShell: IApplicationShell
     ) {
         super(liveShare, container, asyncRegistry, disposables, fileSystem, configService, globalMemento, appShell);
+
+        // Reset our identity IDs when we create a new TestInteractiveWindowProvider
+        resetIdentity();
     }
 
     public getMountedWebView(window: IInteractiveWindow | undefined): IMountedWebView {
-        const key = window ? window.identity.toString() : this.windows[0].identity.toString();
+        const key = window ? window.identity.toString() : this.windows[0]?.identity.toString();
         if (!this.windowToMountMap.has(key)) {
             throw new Error('Test Failure: Window not mounted yet.');
         }

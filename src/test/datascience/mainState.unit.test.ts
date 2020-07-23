@@ -13,7 +13,7 @@ import {
 import { defaultDataScienceSettings } from './helpers';
 
 // tslint:disable: max-func-body-length
-suite('Data Science MainState', () => {
+suite('DataScience MainState', () => {
     function cloneVM(cvm: ICellViewModel, newCode: string, debugging?: boolean): ICellViewModel {
         const result = {
             ...cvm,

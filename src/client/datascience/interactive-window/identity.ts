@@ -6,7 +6,7 @@ import { Uri } from 'vscode';
 import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
 
-const identities: string[] = [];
+let identities: string[] = [];
 let createCount = 0;
 
 export function getDefaultInteractiveIdentity(): Uri {
@@ -15,6 +15,12 @@ export function getDefaultInteractiveIdentity(): Uri {
         identities.push(uuid());
     }
     return Uri.parse(`history://${identities[0]}`);
+}
+
+// Between test runs reset our identity
+export function resetIdentity() {
+    createCount = 0;
+    identities = [];
 }
 
 export function createInteractiveIdentity(): Uri {

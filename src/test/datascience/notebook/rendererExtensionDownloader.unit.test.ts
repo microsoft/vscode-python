@@ -12,7 +12,7 @@ import { IDataScienceFileSystem } from '../../../client/datascience/types';
 import { noop } from '../../core';
 
 // tslint:disable: no-any
-suite('Data Science - NativeNotebook Download Renderer Extension', () => {
+suite('DataScience - NativeNotebook Download Renderer Extension', () => {
     let downloader: RendererExtensionDownloader;
     let appShell: IApplicationShell;
     let output: IOutputChannel;

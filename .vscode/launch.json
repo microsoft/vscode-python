@@ -285,7 +285,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                //"--grep", "<suite name>",
+                // "--grep", "<suite>",
                 "--timeout=300000",
                 "--exit"
             ],

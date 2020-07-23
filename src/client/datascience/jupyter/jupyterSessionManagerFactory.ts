@@ -4,7 +4,14 @@
 import { inject, injectable, named } from 'inversify';
 import { IApplicationShell } from '../../common/application/types';
 
-import { IConfigurationService, IOutputChannel, IPersistentStateFactory } from '../../common/types';
+import type { Kernel } from '@jupyterlab/services';
+import { EventEmitter } from 'vscode';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel,
+    IPersistentStateFactory
+} from '../../common/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import {
     IJupyterConnection,
@@ -13,17 +20,18 @@ import {
     IJupyterSessionManagerFactory
 } from '../types';
 import { JupyterSessionManager } from './jupyterSessionManager';
-import { KernelSelector } from './kernels/kernelSelector';
 
 @injectable()
 export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
+    private restartSessionCreatedEvent = new EventEmitter<Kernel.IKernelConnection>();
+    private restartSessionUsedEvent = new EventEmitter<Kernel.IKernelConnection>();
     constructor(
         @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect,
         @inject(IConfigurationService) private config: IConfigurationService,
-        @inject(KernelSelector) private kernelSelector: KernelSelector,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory
+        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
     ) {}
 
     /**
@@ -36,13 +44,26 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
             this.jupyterPasswordConnect,
             this.config,
             failOnPassword,
-            this.kernelSelector,
             this.jupyterOutput,
             this.config,
             this.appShell,
             this.stateFactory
         );
         await result.initialize(connInfo);
+        this.disposableRegistry.push(
+            result.onRestartSessionCreated(this.restartSessionCreatedEvent.fire.bind(this.restartSessionCreatedEvent))
+        );
+        this.disposableRegistry.push(
+            result.onRestartSessionUsed(this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent))
+        );
         return result;
+    }
+
+    public get onRestartSessionCreated() {
+        return this.restartSessionCreatedEvent.event;
+    }
+
+    public get onRestartSessionUsed() {
+        return this.restartSessionUsedEvent.event;
     }
 }

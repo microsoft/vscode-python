@@ -41,7 +41,7 @@ import { generateNewNotebookUri } from '../common';
 import { Identifiers, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
-import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { NotebookModelEditEvent } from '../notebookStorage/notebookModelEditEvent';
 import {
     ICodeCssGenerator,
@@ -256,13 +256,13 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO),
             this.serviceContainer.get<IExperimentsManager>(IExperimentsManager),
             this.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry),
-            this.serviceContainer.get<KernelSwitcher>(KernelSwitcher),
             this.serviceContainer.get<INotebookProvider>(INotebookProvider),
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
             this.serviceContainer.get<ITrustService>(ITrustService),
             this.serviceContainer.get<IExperimentService>(IExperimentService),
             model,
-            panel
+            panel,
+            this.serviceContainer.get<KernelSelector>(KernelSelector)
         );
         this.openedEditor(editor);
         return editor;

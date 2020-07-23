@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import {
     CancellationToken,
     CodeLens,
@@ -20,7 +20,8 @@ import {
     TextDocument,
     WorkspaceEdit
 } from 'vscode';
-import { Resource } from '../../common/types';
+import { isTestExecution } from '../../common/constants';
+import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner, Resource } from '../../common/types';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { ILanguageServerActivator } from '../types';
 
@@ -33,8 +34,16 @@ import { ILanguageServerActivator } from '../types';
  */
 @injectable()
 export class NoLanguageServerExtensionActivator implements ILanguageServerActivator {
-    // tslint:disable-next-line: no-empty
-    public async start(_resource: Resource, _interpreter?: PythonInterpreter): Promise<void> {}
+    constructor(
+        @inject(IPythonExtensionBanner)
+        @named(BANNER_NAME_PROPOSE_LS)
+        private proposePylancePopup: IPythonExtensionBanner
+    ) {}
+    public async start(_resource: Resource, _interpreter?: PythonInterpreter): Promise<void> {
+        if (!isTestExecution()) {
+            this.proposePylancePopup.showBanner().ignoreErrors();
+        }
+    }
     // tslint:disable-next-line: no-empty
     public dispose(): void {}
     // tslint:disable-next-line: no-empty

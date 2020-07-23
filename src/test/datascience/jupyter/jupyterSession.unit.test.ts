@@ -21,13 +21,12 @@ import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { JupyterSession } from '../../../client/datascience/jupyter/jupyterSession';
-import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
 import { IJupyterConnection, IJupyterKernelSpec } from '../../../client/datascience/types';
 import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - JupyterSession', () => {
+suite('DataScience - JupyterSession', () => {
     type ISession = Session.ISession & {
         /**
          * Whether this is a remote session that we attached to.
@@ -48,7 +47,8 @@ suite('Data Science - JupyterSession', () => {
     }
 
     let jupyterSession: JupyterSession;
-    let kernelSelector: KernelSelector;
+    let restartSessionCreatedEvent: Deferred<void>;
+    let restartSessionUsedEvent: Deferred<void>;
     let connection: typemoq.IMock<IJupyterConnection>;
     let serverSettings: typemoq.IMock<ServerConnection.ISettings>;
     let kernelSpec: typemoq.IMock<IJupyterKernelSpec | LiveKernelModel>;
@@ -60,7 +60,8 @@ suite('Data Science - JupyterSession', () => {
     let kernelChangedSignal: ISignal<Session.ISession, IKernelChangedArgs>;
 
     setup(() => {
-        kernelSelector = mock(KernelSelector);
+        restartSessionCreatedEvent = createDeferred();
+        restartSessionUsedEvent = createDeferred();
         connection = typemoq.Mock.ofType<IJupyterConnection>();
         serverSettings = typemoq.Mock.ofType<ServerConnection.ISettings>();
         kernelSpec = typemoq.Mock.ofType<IJupyterKernelSpec | LiveKernelModel>();
@@ -82,8 +83,13 @@ suite('Data Science - JupyterSession', () => {
             kernelSpec.object,
             instance(sessionManager),
             instance(contentsManager),
-            instance(kernelSelector),
-            channel
+            channel,
+            () => {
+                restartSessionCreatedEvent.resolve();
+            },
+            () => {
+                restartSessionUsedEvent.resolve();
+            }
         );
     });
 
@@ -274,24 +280,16 @@ suite('Data Science - JupyterSession', () => {
             let newKernelConnection: Kernel.IKernelConnection;
             let newStatusChangedSignal: ISignal<Session.ISession, Kernel.Status>;
             let newKernelChangedSignal: ISignal<Session.ISession, IKernelChangedArgs>;
-            let kernelAddedToIgnoreList: Deferred<void>;
-            let kernelRemovedFromIgnoreList: Deferred<void>;
             let newSessionCreated: Deferred<void>;
             setup(async () => {
                 newSession = mock(DefaultSession);
                 newKernelConnection = mock(DefaultKernel);
                 newStatusChangedSignal = mock(Signal);
                 newKernelChangedSignal = mock(Signal);
-                kernelAddedToIgnoreList = createDeferred<void>();
-                kernelRemovedFromIgnoreList = createDeferred<void>();
+                restartSessionCreatedEvent = createDeferred();
+                restartSessionUsedEvent = createDeferred();
                 when(newSession.statusChanged).thenReturn(instance(newStatusChangedSignal));
                 when(newSession.kernelChanged).thenReturn(instance(newKernelChangedSignal));
-                when(kernelSelector.addKernelToIgnoreList(anything())).thenCall(() =>
-                    kernelAddedToIgnoreList.resolve()
-                );
-                when(kernelSelector.removeKernelFromIgnoreList(anything())).thenCall(() =>
-                    kernelRemovedFromIgnoreList.resolve()
-                );
                 // tslint:disable-next-line: no-any
                 (instance(newSession) as any).then = undefined;
                 newSessionCreated = createDeferred();
@@ -365,9 +363,8 @@ suite('Data Science - JupyterSession', () => {
                     await jupyterSession.restart(0);
 
                     // We should kill session and switch to new session, startig a new restart session.
-                    await kernelRemovedFromIgnoreList.promise;
+                    await restartSessionCreatedEvent.promise;
                     await oldSessionShutDown.promise;
-                    verify(kernelSelector.removeKernelFromIgnoreList(anything())).once();
                     verify(session.shutdown()).once();
                     verify(session.dispose()).once();
                     // Confirm kernel isn't restarted.

@@ -770,6 +770,11 @@
                 "command": "python.datascience.gatherquality",
                 "title": "DataScience.gatherQuality",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.latestExtension",
+                "title": "DataScience.latestExtension",
+                "category": "Python"
             }
         ],
         "menus": {
@@ -1278,6 +1283,12 @@
                 {
                     "command": "python.datascience.gatherquality",
                     "title": "%DataScience.gatherQuality%",
+                    "category": "Python",
+                    "when": "false"
+                },
+                {
+                    "command": "python.datascience.latestExtension",
+                    "title": "%DataScience.latestExtension%",
                     "category": "Python",
                     "when": "false"
                 },
@@ -1827,7 +1838,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "LS - enabled",
                             "AlwaysDisplayTestExplorer - experiment",
                             "ShowExtensionSurveyPrompt - enabled",
                             "Reload - experiment",
@@ -1841,6 +1851,7 @@
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
                             "EnableTrustedNotebooks",
+                            "tryPylance",
                             "All"
                         ]
                     },
@@ -1852,7 +1863,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "LS - enabled",
                             "AlwaysDisplayTestExplorer - experiment",
                             "ShowExtensionSurveyPrompt - enabled",
                             "Reload - experiment",
@@ -1866,6 +1876,7 @@
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
                             "EnableTrustedNotebooks",
+                            "tryPylance",
                             "All"
                         ]
                     },
@@ -3368,7 +3379,7 @@
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
-        "@types/vscode": "^1.46.0",
+        "@types/vscode": "^1.47.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",

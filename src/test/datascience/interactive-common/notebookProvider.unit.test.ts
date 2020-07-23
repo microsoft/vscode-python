@@ -25,7 +25,7 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
 }
 
 // tslint:disable: max-func-body-length
-suite('Data Science - NotebookProvider', () => {
+suite('DataScience - NotebookProvider', () => {
     let notebookProvider: NotebookProvider;
     let disposableRegistry: IDisposableRegistry;
     let jupyterNotebookProvider: IJupyterNotebookProvider;

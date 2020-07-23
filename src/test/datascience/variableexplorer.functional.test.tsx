@@ -105,7 +105,7 @@ import pandas as pd
 value = 'hello world'`;
                 const basicCode2: string = `value2 = 'hello world 2'`;
 
-                const mount = ioc.getInteractiveWebPanel(undefined);
+                const { mount } = await getOrCreateInteractiveWindow(ioc);
                 const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
@@ -172,7 +172,7 @@ value = 'hello world'`;
                 const basicCode: string = `value = 'hello world'`;
                 const basicCode2: string = `value2 = 'hello world 2'`;
 
-                const mount = ioc.getInteractiveWebPanel(undefined);
+                const { mount } = await getOrCreateInteractiveWindow(ioc);
                 const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
@@ -270,15 +270,16 @@ value = 'hello world'`;
             async () => {
                 const basicCode: string = `myList = [1, 2, 3]
 mySet = set([42])
-myDict = {'a': 1}`;
+myDict = {'a': 1}
+myTuple = 1,2,3,4,5,6,7,8,9`;
 
-                const mount = ioc.getInteractiveWebPanel(undefined);
+                const { mount } = await getOrCreateInteractiveWindow(ioc);
                 const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
 
                 await addCodeImpartial(wrapper, 'a=1\na');
-                await addCodeImpartial(wrapper, basicCode, true);
+                await addCodeImpartial(wrapper, basicCode, true, 2);
 
                 const targetVariables: IJupyterVariable[] = [
                     {
@@ -321,6 +322,16 @@ myDict = {'a': 1}`;
                         size: 54,
                         shape: '',
                         count: 1,
+                        truncated: false
+                    },
+                    {
+                        name: 'myTuple',
+                        value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
+                        supportsDataExplorer: false,
+                        type: 'tuple',
+                        size: 54,
+                        shape: '9',
+                        count: 0,
                         truncated: false
                     }
                 ];
@@ -371,9 +382,8 @@ myFloat = 9999.9999
 mynpArray = np.array([1.0, 2.0, 3.0])
 myDataframe = pd.DataFrame(mynpArray)
 mySeries = myDataframe[0]
-myTuple = 1,2,3,4,5,6,7,8,9
 `;
-                const mount = ioc.getInteractiveWebPanel(undefined);
+                const { mount } = await getOrCreateInteractiveWindow(ioc);
                 const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
@@ -450,16 +460,6 @@ Name: 0, dtype: float64`,
                         truncated: false
                     },
                     {
-                        name: 'myTuple',
-                        value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
-                        supportsDataExplorer: false,
-                        type: 'tuple',
-                        size: 54,
-                        shape: '9',
-                        count: 0,
-                        truncated: false
-                    },
-                    {
                         name: 'mynpArray',
                         value: '[1. 2. 3.]',
                         supportsDataExplorer: true,
@@ -474,7 +474,7 @@ Name: 0, dtype: float64`,
 
                 // Step into the first cell over again. Should have the same variables
                 if (runByLine) {
-                    targetVariables[7].value = 'array([1., 2., 3.])'; // Debugger shows np array differently
+                    targetVariables[6].value = 'array([1., 2., 3.])'; // Debugger shows np array differently
                     await verifyAfterStep(ioc, wrapper, () => {
                         verifyVariables(wrapper, targetVariables);
                         return Promise.resolve();
@@ -512,7 +512,7 @@ Name: 0, dtype: float64`,
                 const basicCode: string = `for _i in range(1050):
     exec("var{}=[{} ** 2 % 17 for _l in range(100000)]".format(_i, _i))`;
 
-                const mount = t === 'native' ? ioc.getNativeWebPanel(undefined) : ioc.getInteractiveWebPanel(undefined);
+                const { mount } = t === 'native' ? await createNewEditor(ioc) : await getOrCreateInteractiveWindow(ioc);
                 const wrapper = mount.wrapper;
                 openVariableExplorer(wrapper);
 
@@ -523,13 +523,11 @@ Name: 0, dtype: float64`,
                     .map(generateVar)
                     .sort((a: IJupyterVariable, b: IJupyterVariable) => a.name.localeCompare(b.name));
 
-                const targetVariables = allVariables.slice(0, 16);
+                const targetVariables = allVariables.slice(0, 14);
                 verifyVariables(wrapper, targetVariables);
 
                 // Force a scroll to the bottom
-                const complete = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete, {
-                    numberOfTimes: 2
-                });
+                const complete = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete);
                 const grid = wrapper.find(AdazzleReactDataGrid);
                 const viewPort = grid.find('Viewport').instance();
                 const rowHeight = (viewPort.props as any).rowHeight as number;
@@ -540,7 +538,7 @@ Name: 0, dtype: float64`,
                 await complete;
 
                 // Now we should have the bottom. For some reason only 10 come back here.
-                const bottomVariables = allVariables.slice(1041, 1051);
+                const bottomVariables = allVariables.slice(1041, 1050);
                 verifyVariables(wrapper, bottomVariables);
 
                 // Step into the first cell over again. Should have the same variables
@@ -550,7 +548,7 @@ Name: 0, dtype: float64`,
                         .map((v) => {
                             return { ...v, value: undefined };
                         })
-                        .slice(0, 10);
+                        .slice(0, 9);
                     await verifyAfterStep(
                         ioc,
                         wrapper,
@@ -558,7 +556,7 @@ Name: 0, dtype: float64`,
                             verifyVariables(wrapper, nonValued);
                             return Promise.resolve();
                         },
-                        3 // 3 refreshes because the variable explorer is scrolled to the bottom.
+                        2 // 2 refreshes because the variable explorer is scrolled to the bottom.
                     );
                 }
             },
@@ -576,7 +574,8 @@ mynpArray = np.array([1.0, 2.0, 3.0])
 myDataframe = pd.DataFrame(mynpArray)
 mySeries = myDataframe[0]
 `;
-                const wrapper = ioc.getInteractiveWebPanel(undefined).wrapper;
+                const { mount } = await getOrCreateInteractiveWindow(ioc);
+                const wrapper = mount.wrapper;
 
                 openVariableExplorer(wrapper);
 

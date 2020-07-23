@@ -20,7 +20,7 @@ import {
 import { INotebookEditor, INotebookEditorProvider } from '../../../client/datascience/types';
 
 // tslint:disable: no-any
-suite('Data Science - NativeNotebook Survey', () => {
+suite('DataScience - NativeNotebook Survey', () => {
     let stateFactory: IPersistentStateFactory;
     let stateService: IPersistentState<NotebookSurveyUsageData>;
     let state: NotebookSurveyUsageData = {};

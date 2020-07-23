@@ -9,12 +9,10 @@ import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/ch
 import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { LSControl, LSEnabled } from '../common/experiments/groups';
 import { traceError } from '../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentsManager,
     IOutputChannel,
     IPersistentStateFactory,
     IPythonSettings,
@@ -58,8 +56,7 @@ export class LanguageServerExtensionActivationService
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
-        @inject(IExperimentsManager) private readonly abExperiments: IExperimentsManager
+        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory
     ) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -175,17 +172,6 @@ export class LanguageServerExtensionActivationService
      * @returns `true` if user is using jedi, `false` if user is using language server
      */
     public useJedi(): boolean {
-        // Check if `languageServer` setting is missing (default configuration).
-        if (this.isJediUsingDefaultConfiguration(this.resource)) {
-            // If user is assigned to an experiment (i.e. use LS), return false.
-            if (this.abExperiments.inExperiment(LSEnabled)) {
-                return false;
-            }
-            // Send telemetry if user is in control group
-            this.abExperiments.sendTelemetryIfInExperiment(LSControl);
-            return true; // Do use Jedi as it is default.
-        }
-        // Configuration is non-default, so `languageServer` should be present.
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const lstType = configurationService.getSettings(this.resource).languageServer;
         return lstType === LanguageServerType.Jedi;

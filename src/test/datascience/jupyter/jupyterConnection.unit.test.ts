@@ -19,7 +19,7 @@ import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - JupyterConnection', () => {
+suite('DataScience - JupyterConnection', () => {
     let observableOutput: Subject<Output<string>>;
     let launchResult: ObservableExecutionResult<string>;
     let getServerInfoStub: sinon.SinonStub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>;

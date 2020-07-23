@@ -9,18 +9,25 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
-import { Resource } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
-import { KnownNotebookLanguages, Telemetry } from '../../constants';
+import { Commands, KnownNotebookLanguages, Settings, Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
-import { IJupyterKernelSpec, IJupyterSessionManager, IKernelDependencyService } from '../../types';
+import {
+    IJupyterConnection,
+    IJupyterKernelSpec,
+    IJupyterSessionManager,
+    IJupyterSessionManagerFactory,
+    IKernelDependencyService,
+    INotebookProviderConnection
+} from '../../types';
 import { createDefaultKernelSpec } from './helpers';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
@@ -61,8 +68,18 @@ export class KernelSelector {
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IKernelDependencyService) private readonly kernelDepdencyService: IKernelDependencyService,
-        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
-    ) {}
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
+        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+    ) {
+        disposableRegistry.push(
+            this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
+        );
+        disposableRegistry.push(
+            this.jupyterSessionManagerFactory.onRestartSessionUsed(this.removeKernelFromIgnoreList.bind(this))
+        );
+    }
 
     /**
      * Ensure kernels such as those associated with the restart session are not displayed in the kernel picker.
@@ -101,7 +118,7 @@ export class KernelSelector {
         stopWatch: StopWatch,
         session: IJupyterSessionManager,
         cancelToken?: CancellationToken,
-        currentKernel?: IJupyterKernelSpec | LiveKernelModel
+        currentKernelDisplayName?: string
     ): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(
             resource,
@@ -117,7 +134,7 @@ export class KernelSelector {
             suggestions,
             session,
             cancelToken,
-            currentKernel
+            currentKernelDisplayName
         );
     }
     /**
@@ -138,7 +155,7 @@ export class KernelSelector {
         stopWatch: StopWatch,
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken,
-        currentKernel?: IJupyterKernelSpec | LiveKernelModel
+        currentKernelDisplayName?: string
     ): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(
             resource,
@@ -155,7 +172,7 @@ export class KernelSelector {
             suggestions,
             session,
             cancelToken,
-            currentKernel
+            currentKernelDisplayName
         );
     }
     /**
@@ -252,7 +269,7 @@ export class KernelSelector {
                 // See if the path matches.
                 if (spec && spec.path && spec.path.length > 0 && interpreter && spec.path === interpreter.path) {
                     // Path match
-                    score += 10;
+                    score += 8;
                 }
 
                 // See if the version is the same
@@ -270,7 +287,7 @@ export class KernelSelector {
 
                 // See if the display name already matches.
                 if (spec.display_name && spec.display_name === notebookMetadata?.kernelspec?.display_name) {
-                    score += 2;
+                    score += 16;
                 }
             }
 
@@ -284,6 +301,62 @@ export class KernelSelector {
             kernelSpec: bestMatch,
             interpreter: interpreter
         };
+    }
+
+    public async askForLocalKernel(
+        resource: Resource,
+        type: 'raw' | 'jupyter' | 'noConnection',
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
+    ): Promise<KernelSpecInterpreter | undefined> {
+        const displayName = kernelSpec?.display_name || kernelSpec?.name || '';
+        const message = localize.DataScience.sessionStartFailedWithKernel().format(
+            displayName,
+            Commands.ViewJupyterOutput
+        );
+        const selectKernel = localize.DataScience.selectDifferentKernel();
+        const cancel = localize.Common.cancel();
+        const selection = await this.applicationShell.showErrorMessage(message, selectKernel, cancel);
+        if (selection === selectKernel) {
+            return this.selectLocalJupyterKernel(resource, type, kernelSpec?.display_name || kernelSpec?.name);
+        }
+    }
+
+    public async selectJupyterKernel(
+        resource: Resource,
+        connection: INotebookProviderConnection | undefined,
+        type: 'raw' | 'jupyter',
+        currentKernelDisplayName: string | undefined
+    ): Promise<KernelSpecInterpreter | undefined> {
+        let kernel: KernelSpecInterpreter | undefined;
+        const settings = this.configService.getSettings(resource);
+        const isLocalConnection =
+            connection?.localLaunch ??
+            settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
+
+        if (isLocalConnection) {
+            kernel = await this.selectLocalJupyterKernel(resource, connection?.type || type, currentKernelDisplayName);
+        } else if (connection && connection.type === 'jupyter') {
+            kernel = await this.selectRemoteJupyterKernel(resource, connection, currentKernelDisplayName);
+        }
+        return kernel;
+    }
+
+    private async selectLocalJupyterKernel(
+        resource: Resource,
+        type: 'raw' | 'jupyter' | 'noConnection',
+        currentKernelDisplayName: string | undefined
+    ): Promise<KernelSpecInterpreter> {
+        return this.selectLocalKernel(resource, type, new StopWatch(), undefined, undefined, currentKernelDisplayName);
+    }
+
+    private async selectRemoteJupyterKernel(
+        resource: Resource,
+        connInfo: IJupyterConnection,
+        currentKernelDisplayName?: string
+    ): Promise<KernelSpecInterpreter> {
+        const stopWatch = new StopWatch();
+        const session = await this.jupyterSessionManagerFactory.create(connInfo);
+        return this.selectRemoteKernel(resource, stopWatch, session, undefined, currentKernelDisplayName);
     }
 
     // Get our kernelspec and matching interpreter for a connection to a local jupyter server
@@ -386,11 +459,11 @@ export class KernelSelector {
         suggestions: IKernelSpecQuickPickItem[],
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken,
-        currentKernel?: IJupyterKernelSpec | LiveKernelModel
+        currentKernelDisplayName?: string
     ) {
         const placeHolder =
             localize.DataScience.selectKernel() +
-            (currentKernel ? ` (current: ${currentKernel.display_name || currentKernel.name})` : '');
+            (currentKernelDisplayName ? ` (current: ${currentKernelDisplayName})` : '');
         sendTelemetryEvent(telemetryEvent, stopWatch.elapsedTime);
         const selection = await this.applicationShell.showQuickPick(suggestions, { placeHolder }, cancelToken);
         if (!selection?.selection) {

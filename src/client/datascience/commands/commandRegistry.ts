@@ -24,7 +24,7 @@ import {
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { ExportCommands } from './exportCommands';
-import { KernelSwitcherCommand } from './kernelSwitcher';
+import { NotebookCommands } from './notebookCommands';
 import { JupyterServerSelectorCommand } from './serverSelector';
 
 @injectable()
@@ -38,7 +38,7 @@ export class CommandRegistry implements IDisposable {
         private commandListeners: IDataScienceCommandListener[] | undefined,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterServerSelectorCommand) private readonly serverSelectedCommand: JupyterServerSelectorCommand,
-        @inject(KernelSwitcherCommand) private readonly kernelSwitcherCommand: KernelSwitcherCommand,
+        @inject(NotebookCommands) private readonly notebookCommands: NotebookCommands,
         @inject(JupyterCommandLineSelectorCommand)
         private readonly commandLineCommand: JupyterCommandLineSelectorCommand,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
@@ -51,12 +51,12 @@ export class CommandRegistry implements IDisposable {
         @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {
         this.disposables.push(this.serverSelectedCommand);
-        this.disposables.push(this.kernelSwitcherCommand);
+        this.disposables.push(this.notebookCommands);
     }
     public register() {
         this.commandLineCommand.register();
         this.serverSelectedCommand.register();
-        this.kernelSwitcherCommand.register();
+        this.notebookCommands.register();
         this.exportCommand.register();
         this.registerCommand(Commands.RunAllCells, this.runAllCells);
         this.registerCommand(Commands.RunCell, this.runCell);
@@ -81,6 +81,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
         this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
         this.registerCommand(Commands.GatherQuality, this.reportGatherQuality);
+        this.registerCommand(Commands.LatestExtension, this.openPythonExtensionPage);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
@@ -395,7 +396,11 @@ export class CommandRegistry implements IDisposable {
     }
 
     private reportGatherQuality(val: string) {
-        sendTelemetryEvent(Telemetry.GatherQualityReport, undefined, { result: val === 'no' ? 'no' : 'yes' });
-        env.openExternal(Uri.parse(`https://aka.ms/gathersurvey?succeed=${val}`));
+        sendTelemetryEvent(Telemetry.GatherQualityReport, undefined, { result: val[0] === 'no' ? 'no' : 'yes' });
+        env.openExternal(Uri.parse(`https://aka.ms/gathersurvey?succeed=${val[0]}`));
+    }
+
+    private openPythonExtensionPage() {
+        env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-python.python`));
     }
 }
