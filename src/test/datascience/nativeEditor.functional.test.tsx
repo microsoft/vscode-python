@@ -27,6 +27,7 @@ import { noop } from '../../client/common/utils/misc';
 import { Commands, Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor as NativeEditorWebView } from '../../client/datascience/interactive-ipynb/nativeEditor';
+import { IKernelSpecQuickPickItem } from '../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
     IDataScienceErrorHandler,
@@ -319,20 +320,51 @@ suite('DataScience Native Editor', () => {
                     const pythonService = await createPythonService(ioc, 2);
 
                     // Skip test for older python and raw kernel and mac
-                    if (pythonService && os.platform() !== 'darwin') {
-                        const uri = await startRemoteServer(ioc, pythonService, ['-m', 'jupyter', 'notebook']);
+                    if (pythonService && os.platform() !== 'darwin' && !ioc.mockJupyter) {
+                        const uri = await startRemoteServer(ioc, pythonService, [
+                            '-m',
+                            'jupyter',
+                            'notebook',
+                            '--NotebookApp.open_browser=False',
+                            '--NotebookApp.ip=*',
+                            '--NotebookApp.port=9999'
+                        ]);
 
                         // Set this as the URI to use when connecting
                         ioc.forceDataScienceSettingsChanged({ jupyterServerURI: uri });
 
                         // Create a notebook and run a cell.
                         const notebook = await createNewEditor(ioc);
-                        await addCell(notebook.mount, 'a=1\na', true);
+                        await addCell(notebook.mount, 'a=12\na', true);
+                        verifyHtmlOnCell(notebook.mount.wrapper, 'NativeCell', '12', CellPosition.Last);
 
                         // Create another notebook and connect it to the already running kernel of the other one
-                        when(ioc.applicationShell);
-                        const n2 = await createNewEditor(ioc);
-                        n2.editor.se;
+                        when(ioc.applicationShell.showQuickPick(anything(), anything(), anything())).thenCall(
+                            async (o: IKernelSpecQuickPickItem[]) => {
+                                const existing = o.find((s) => s.selection.kernelModel?.numberOfConnections);
+                                if (existing) {
+                                    return existing;
+                                }
+                            }
+                        );
+                        const n2 = await openEditor(ioc, '', 'kernel_share.ipynb');
+
+                        // Have to do this by sending the switch kernel command
+                        await ioc.get<ICommandManager>(ICommandManager).executeCommand(Commands.SwitchJupyterKernel, {
+                            identity: n2.editor.file,
+                            resource: n2.editor.file,
+                            currentKernelDisplayName: undefined
+                        });
+
+                        // Execute a cell that should indicate using the same kernel as the first notebook
+                        await addCell(n2.mount, 'a', true);
+                        verifyHtmlOnCell(n2.mount.wrapper, 'NativeCell', '12', CellPosition.Last);
+
+                        // Now close the notebook and reopen. Should still be using the same kernel
+                        await closeNotebook(ioc, n2.editor);
+                        const n3 = await openEditor(ioc, '', 'kernel_share.ipynb');
+                        await addCell(n3.mount, 'a', true);
+                        verifyHtmlOnCell(n3.mount.wrapper, 'NativeCell', '12', CellPosition.Last);
                     }
                 });
 

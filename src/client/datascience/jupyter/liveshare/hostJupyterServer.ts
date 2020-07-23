@@ -287,7 +287,11 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         // Find a kernel that can be used.
         // Do this only if kernel information has been provided in the metadata, or the resource's interpreter is different.
         let changedKernel = false;
-        if (notebookMetadata?.kernelspec || resourceInterpreter?.displayName !== launchInfo.interpreter?.displayName) {
+        if (
+            notebookMetadata?.kernelspec ||
+            notebookMetadata?.id ||
+            resourceInterpreter?.displayName !== launchInfo.interpreter?.displayName
+        ) {
             const kernelInfo = await (launchInfo.connectionInfo.localLaunch
                 ? this.kernelSelector.getKernelForLocalConnection(
                       resource,

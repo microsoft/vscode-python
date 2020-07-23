@@ -100,7 +100,7 @@ suite('DataScience - JupyterSession', () => {
         when(sessionManager.startNew(anything())).thenResolve(instance(session));
         kernelSpec.setup((k) => k.name).returns(() => 'some name');
 
-        await jupyterSession.connect();
+        await jupyterSession.connect(60_000);
 
         verify(statusChangedSignal.connect(anything())).once();
     }

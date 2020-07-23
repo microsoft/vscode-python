@@ -11,7 +11,13 @@ import { isUntitled } from '../interactive-ipynb/nativeEditorStorage';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { ICell, IJupyterKernelSpec, INotebookMetadataLive, INotebookModel } from '../types';
 
-const ActiveKernelIdKeyPrefix = `Active_Kernel_Id_For_`;
+export const ActiveKernelIdList = `Active_Kernel_Id_List`;
+// This is the number of kernel ids that will be remembered between opening and closing VS code
+export const MaximumKernelIdListSize = 40;
+type KerneIdListEntry = {
+    fileHash: string;
+    kernelId: string | undefined;
+};
 
 export abstract class BaseNotebookModel implements INotebookModel {
     public get onDidDispose() {
@@ -221,11 +227,36 @@ export abstract class BaseNotebookModel implements INotebookModel {
     }
 
     private getStoredKernelId(): string | undefined {
-        const key = `${ActiveKernelIdKeyPrefix}${this.crypto.createHash(this._file.toString(), 'string')}`;
-        return this.globalMemento.get(key);
+        // Stored as a list so we don't take up too much space
+        const list: KerneIdListEntry[] = this.globalMemento.get<KerneIdListEntry[]>(ActiveKernelIdList, []);
+        if (list) {
+            // Not using a map as we're only going to store the last 40 items.
+            const fileHash = this.crypto.createHash(this._file.toString(), 'string');
+            const entry = list.find((l) => l.fileHash === fileHash);
+            return entry?.kernelId;
+        }
     }
     private setStoredKernelId(id: string | undefined) {
-        const key = `${ActiveKernelIdKeyPrefix}${this.crypto.createHash(this._file.toString(), 'string')}`;
-        return this.globalMemento.update(key, id);
+        let list: KerneIdListEntry[] = this.globalMemento.get<KerneIdListEntry[]>(ActiveKernelIdList, []);
+        if (!list) {
+            list = [];
+        }
+        const fileHash = this.crypto.createHash(this._file.toString(), 'string');
+        const index = list.findIndex((l) => l.fileHash === fileHash);
+        // Always remove old spot (need to push on the front)
+        if (index >= 0) {
+            list.splice(index, 1);
+        }
+
+        // If adding a new one, push
+        if (id) {
+            list.push({ fileHash, kernelId: id });
+        }
+
+        // Prune list if too big
+        while (list.length > MaximumKernelIdListSize) {
+            list.shift();
+        }
+        return this.globalMemento.update(ActiveKernelIdList, list);
     }
 }

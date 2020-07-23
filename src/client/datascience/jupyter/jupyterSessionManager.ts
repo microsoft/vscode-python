@@ -183,7 +183,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent)
         );
         try {
-            await session.connect(cancelToken);
+            await session.connect(this.configService.getSettings().datascience.jupyterLaunchTimeout, cancelToken);
         } finally {
             if (!session.isConnected) {
                 await session.dispose();

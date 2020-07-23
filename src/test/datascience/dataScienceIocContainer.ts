@@ -1180,6 +1180,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             };
         };
         when(this.applicationShell.onDidChangeWindowState).thenReturn(eventCallback);
+        when(this.applicationShell.withProgress(anything(), anything())).thenCall((_o, c) => c());
 
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
