@@ -63,9 +63,7 @@ export class ExportCommands implements IDisposable {
         let model: INotebookModel | undefined;
         if (modelOrUri && isUri(modelOrUri)) {
             const uri = modelOrUri;
-            const editor = this.notebookProvider.editors.find((item) =>
-                this.fs.areLocalPathsSame(item.file.fsPath, uri.fsPath)
-            );
+            const editor = this.notebookProvider.editors.find((item) => this.fs.arePathsSame(item.file, uri));
             if (editor && editor.model) {
                 model = editor.model;
             }

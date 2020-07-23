@@ -182,7 +182,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         if (file && file.fsPath && file.fsPath.length > 0) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
-            if (activeEditor && this.fileSystem.areLocalPathsSame(activeEditor.document.fileName, file.fsPath)) {
+            if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.uri, file)) {
                 const cells = generateCellsFromDocument(
                     activeEditor.document,
                     this.configuration.getSettings(activeEditor.document.uri).datascience
@@ -248,7 +248,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             if (
                 activeEditor &&
                 activeEditor.document &&
-                this.fileSystem.areLocalPathsSame(activeEditor.document.fileName, file.fsPath)
+                this.fileSystem.arePathsSame(activeEditor.document.uri, file)
             ) {
                 const ranges = generateCellRangesFromDocument(activeEditor.document);
                 if (ranges.length > 0) {

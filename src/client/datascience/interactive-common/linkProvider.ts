@@ -107,9 +107,7 @@ export class LinkProvider implements IInteractiveWindowListener {
         }
 
         // Show the matching editor if there is one
-        let editor = this.documentManager.visibleTextEditors.find((e) =>
-            this.fs.areLocalPathsSame(e.document.fileName, uri.fsPath)
-        );
+        let editor = this.documentManager.visibleTextEditors.find((e) => this.fs.arePathsSame(e.document.uri, uri));
         if (editor) {
             this.documentManager
                 .showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn })
@@ -120,9 +118,7 @@ export class LinkProvider implements IInteractiveWindowListener {
             // Not a visible editor, try opening otherwise
             this.commandManager.executeCommand('vscode.open', uri).then(() => {
                 // See if that opened a text document
-                editor = this.documentManager.visibleTextEditors.find((e) =>
-                    this.fs.areLocalPathsSame(e.document.fileName, uri.fsPath)
-                );
+                editor = this.documentManager.visibleTextEditors.find((e) => this.fs.arePathsSame(e.document.uri, uri));
                 if (editor) {
                     // Force the selection to change
                     editor.revealRange(selection);

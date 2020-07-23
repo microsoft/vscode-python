@@ -366,7 +366,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             (editorUri) =>
                 editorUri.document &&
                 editorUri.document.uri.scheme === 'git' &&
-                this.fs.areLocalPathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath)
+                this.fs.arePathsSame(editorUri.document.uri, editor.document.uri)
         );
 
         if (!gitSchemeEditor) {
@@ -377,7 +377,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         const fileSchemeEditor = this.documentManager.visibleTextEditors.find(
             (editorUri) =>
                 editorUri !== gitSchemeEditor &&
-                this.fs.areLocalPathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath) &&
+                this.fs.arePathsSame(editorUri.document.uri, editor.document.uri) &&
                 editorUri.viewColumn === gitSchemeEditor.viewColumn
         );
         if (!fileSchemeEditor) {

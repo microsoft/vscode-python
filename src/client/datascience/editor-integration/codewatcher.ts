@@ -224,11 +224,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
     public async runSelectionOrLine(activeEditor: TextEditor | undefined) {
-        if (
-            this.document &&
-            activeEditor &&
-            this.fs.areLocalPathsSame(activeEditor.document.fileName, this.document.fileName)
-        ) {
+        if (this.document && activeEditor && this.fs.arePathsSame(activeEditor.document.uri, this.document.uri)) {
             // Get just the text of the selection or the current line if none
             const codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
             if (!codeToExecute) {
@@ -379,7 +375,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     private onDocumentClosed(doc: TextDocument): void {
-        if (this.document && this.fs.areLocalPathsSame(doc.fileName, this.document.fileName)) {
+        if (this.document && this.fs.arePathsSame(doc.uri, this.document.uri)) {
             this.codeLensUpdatedEvent.dispose();
             this.closeDocumentDisposable?.dispose(); // NOSONAR
             this.updateRequiredDisposable?.dispose(); // NOSONAR
