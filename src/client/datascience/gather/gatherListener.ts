@@ -83,7 +83,12 @@ export class GatherListener implements IInteractiveWindowListener {
                 this.linesSubmitted = 0;
                 this.cellsSubmitted = 0;
                 if (this.gatherProvider) {
-                    this.gatherProvider.resetLog();
+                    try {
+                        this.gatherProvider.resetLog();
+                    } catch (e) {
+                        traceError('Gather: Exception at Reset Log', e);
+                        sendTelemetryEvent(Telemetry.GatherException, undefined, { exceptionType: 'reset' });
+                    }
                 }
                 break;
 
@@ -158,6 +163,8 @@ export class GatherListener implements IInteractiveWindowListener {
                 ? this.gatherProvider.gatherCode(cell)
                 : localize.DataScience.gatherError();
         } catch (e) {
+            traceError('Gather: Exception at gatherCode', e);
+            sendTelemetryEvent(Telemetry.GatherException, undefined, { exceptionType: 'gather' });
             const newline = '\n';
             slicedProgram = localize.DataScience.gatherError() + newline + (e as string);
         }

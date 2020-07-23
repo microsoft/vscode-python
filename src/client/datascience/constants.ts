@@ -323,6 +323,7 @@ export enum Telemetry {
     GatherIsInstalled = 'DS_INTERNAL.GATHER_IS_INSTALLED',
     GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED',
     GatherStats = 'DS_INTERNAL.GATHER_STATS',
+    GatherException = 'DS_INTERNAL.GATHER_EXCEPTION',
     GatheredNotebookSaved = 'DATASCIENCE.GATHERED_NOTEBOOK_SAVED',
     GatherQualityReport = 'DS_INTERNAL.GATHER_QUALITY_REPORT',
     ZMQSupported = 'DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING',

@@ -2047,6 +2047,9 @@ export interface IEventNamePropertyMapping {
         linesGathered: number;
         cellsGathered: number;
     };
+    [Telemetry.GatherException]: {
+        exceptionType: 'activate' | 'gather' | 'log' | 'reset';
+    };
     /**
      * Telemetry event sent when a gathered notebook has been saved by the user.
      */
