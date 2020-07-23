@@ -4,8 +4,7 @@
 import '../../extensions';
 
 import * as path from 'path';
-import { Uri, Webview, WebviewOptions, WebviewPanel, window } from 'vscode';
-import { Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter, Uri, Webview, WebviewOptions, WebviewPanel, window } from 'vscode';
 import { Identifiers } from '../../../datascience/constants';
 import { traceError } from '../../logger';
 import { IFileSystem } from '../../platform/types';

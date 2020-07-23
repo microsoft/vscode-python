@@ -58,6 +58,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
     private active = true;
     private visible = true;
     private disposedEvent = new EventEmitter<void>();
+    private loadFailedEmitter = new EventEmitter<void>();
 
     constructor(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, public readonly id: string) {
         // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.
@@ -96,6 +97,9 @@ export class MountedWebView implements IMountedWebView, IDisposable {
 
     public get onDisposed() {
         return this.disposedEvent.event;
+    }
+    public get loadFailed(): Event<void> {
+        return this.loadFailedEmitter.event;
     }
     public attach(options: IWebPanelOptions) {
         this.webPanelListener = options.listener;

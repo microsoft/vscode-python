@@ -31,7 +31,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
     private messageListener: IWebPanelMessageListener;
     private themeIsDarkPromise: Deferred<boolean> | undefined = createDeferred<boolean>();
     private startupStopwatch = new StopWatch();
-    private readonly disposables: IDisposable[] = [];
+    private readonly _disposables: IDisposable[] = [];
 
     constructor(
         @unmanaged() protected configService: IConfigurationService,
@@ -61,10 +61,10 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         );
 
         // Listen for settings changes from vscode.
-        this.disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
+        this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
 
         // Listen for settings changes
-        this.disposables.push(
+        this._disposables.push(
             this.configService.getSettings(undefined).onDidChange(this.onDataScienceSettingsChanged.bind(this))
         );
     }
@@ -91,7 +91,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 this.webPanel = undefined;
             }
 
-            this.disposables.forEach((item) => item.dispose());
+            this._disposables.forEach((item) => item.dispose());
 
             this.webPanelInit = undefined;
             this.themeIsDarkPromise = undefined;
@@ -267,7 +267,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             });
 
             // Track to seee if our web panel fails to load
-            this.disposables.push(this.webPanel.loadFailed(this.onWebPanelLoadFailed, this));
+            this._disposables.push(this.webPanel.loadFailed(this.onWebPanelLoadFailed, this));
 
             traceInfo('Web view created.');
         }
