@@ -29,8 +29,6 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
     private webPanel: IWebPanel | undefined;
     private webPanelInit: Deferred<void> | undefined = createDeferred<void>();
     private messageListener: IWebPanelMessageListener;
-    //private themeChangeHandler: IDisposable | undefined;
-    //private settingsChangeHandler: IDisposable | undefined;
     private themeIsDarkPromise: Deferred<boolean> | undefined = createDeferred<boolean>();
     private startupStopwatch = new StopWatch();
     private readonly disposables: IDisposable[] = [];
