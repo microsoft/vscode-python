@@ -67,6 +67,7 @@ suite('Microsoft Language Server - Activator', () => {
         verify(manager.dispose()).once();
     });
     test('Server should be disconnected but be started', async () => {
+        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         await activator.start(undefined);
 
         verify(manager.start(undefined, undefined)).once();
