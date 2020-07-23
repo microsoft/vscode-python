@@ -29,10 +29,11 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
     private webPanel: IWebPanel | undefined;
     private webPanelInit: Deferred<void> | undefined = createDeferred<void>();
     private messageListener: IWebPanelMessageListener;
-    private themeChangeHandler: IDisposable | undefined;
-    private settingsChangeHandler: IDisposable | undefined;
+    //private themeChangeHandler: IDisposable | undefined;
+    //private settingsChangeHandler: IDisposable | undefined;
     private themeIsDarkPromise: Deferred<boolean> | undefined = createDeferred<boolean>();
     private startupStopwatch = new StopWatch();
+    private readonly disposables: IDisposable[] = [];
 
     constructor(
         @unmanaged() protected configService: IConfigurationService,
@@ -62,12 +63,12 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         );
 
         // Listen for settings changes from vscode.
-        this.themeChangeHandler = this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this);
+        this.disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
 
         // Listen for settings changes
-        this.settingsChangeHandler = this.configService
-            .getSettings(undefined)
-            .onDidChange(this.onDataScienceSettingsChanged.bind(this));
+        this.disposables.push(
+            this.configService.getSettings(undefined).onDidChange(this.onDataScienceSettingsChanged.bind(this))
+        );
     }
 
     public async show(preserveFocus: boolean): Promise<void> {
@@ -91,14 +92,9 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 this.webPanel.close();
                 this.webPanel = undefined;
             }
-            if (this.themeChangeHandler) {
-                this.themeChangeHandler.dispose();
-                this.themeChangeHandler = undefined;
-            }
-            if (this.settingsChangeHandler) {
-                this.settingsChangeHandler.dispose();
-                this.settingsChangeHandler = undefined;
-            }
+
+            this.disposables.forEach((item) => item.dispose());
+
             this.webPanelInit = undefined;
             this.themeIsDarkPromise = undefined;
         }
@@ -272,6 +268,9 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []
             });
 
+            // Track to seee if our web panel fails to load
+            this.disposables.push(this.webPanel.loadFailed(this.onWebPanelLoadFailed, this));
+
             traceInfo('Web view created.');
         }
 
@@ -292,6 +291,11 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         // Stringify our settings to send over to the panel
         const dsSettings = JSON.stringify(await this.generateDataScienceExtraSettings());
         this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
+    };
+
+    // If our webpanel fails to load then just dispose ourselves
+    private onWebPanelLoadFailed = async () => {
+        this.dispose();
     };
 
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
