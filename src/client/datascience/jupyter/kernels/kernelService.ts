@@ -14,7 +14,6 @@ import { PYTHON_LANGUAGE, PYTHON_WARNINGS } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../../common/logger';
 
-import { writeFile } from 'fs-extra';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { ReadWrite } from '../../../common/types';
 import { sleep } from '../../../common/utils/async';
