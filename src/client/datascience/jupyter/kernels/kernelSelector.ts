@@ -256,20 +256,26 @@ export class KernelSelector {
         notebookMetadata?: INotebookMetadataLive,
         cancelToken?: CancellationToken
     ): Promise<KernelSpecInterpreter> {
-        const [interpreter, specs, runningKernels, sessions] = await Promise.all([
+        const [interpreter, specs, sessions] = await Promise.all([
             this.interpreterService.getActiveInterpreter(resource),
             this.kernelService.getKernelSpecs(sessionManager, cancelToken),
-            sessionManager?.getRunningKernels(),
             sessionManager?.getRunningSessions()
         ]);
 
         // First check for a live active session.
         if (notebookMetadata && notebookMetadata.id) {
-            const liveMatch = runningKernels?.find((k) => k.id === notebookMetadata.id);
-            const session = sessions?.find((s) => s.kernel.id === liveMatch?.id);
-            if (liveMatch && session) {
+            const session = sessions?.find((s) => s.kernel.id === notebookMetadata?.id);
+            if (session) {
+                // tslint:disable-next-line: no-any
+                const liveKernel = session.kernel as any;
+                const lastActivityTime = liveKernel.last_activity
+                    ? new Date(Date.parse(liveKernel.last_activity.toString()))
+                    : new Date();
+                const numberOfConnections = liveKernel.connections
+                    ? parseInt(liveKernel.connections.toString(), 10)
+                    : 0;
                 return {
-                    kernelModel: { ...liveMatch, session },
+                    kernelModel: { ...session.kernel, lastActivityTime, numberOfConnections, session },
                     interpreter: interpreter
                 };
             }
