@@ -15,7 +15,6 @@ import {
     ILiveShareApi,
     ILiveShareTestingApi
 } from '../../client/common/application/types';
-import { IFileSystem } from '../../client/common/platform/types';
 import { Resource } from '../../client/common/types';
 import { Commands } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -23,6 +22,7 @@ import { InteractiveWindow } from '../../client/datascience/interactive-window/i
 import {
     ICodeWatcher,
     IDataScienceCommandListener,
+    IDataScienceFileSystem,
     IInteractiveWindowProvider,
     IJupyterExecution
 } from '../../client/datascience/types';
@@ -355,7 +355,7 @@ suite('DataScience LiveShare tests', () => {
     });
 
     test('Export from guest', async () => {
-        const originalFileSystem = guestContainer.get<IFileSystem>(IFileSystem) as MockFileSystem;
+        const originalFileSystem = guestContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem) as MockFileSystem;
 
         // Should only need mock data in host
         addMockData(hostContainer!, '#%%\na=1\na', 1);
@@ -363,8 +363,11 @@ suite('DataScience LiveShare tests', () => {
         // Remap the fileSystem so we control the write for the notebook. Have to do this
         // before the listener is created so that it uses this file system.
         let outputContents: string | undefined;
-        const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        guestContainer!.serviceManager.rebindInstance<IFileSystem>(IFileSystem, fileSystem.object);
+        const fileSystem = TypeMoq.Mock.ofType<IDataScienceFileSystem>();
+        guestContainer!.serviceManager.rebindInstance<IDataScienceFileSystem>(
+            IDataScienceFileSystem,
+            fileSystem.object
+        );
         fileSystem
             .setup((f) => f.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((_f, c) => {
@@ -376,8 +379,8 @@ suite('DataScience LiveShare tests', () => {
                 return Promise.resolve();
             });
         fileSystem.setup((f) => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
-        fileSystem.setup((f) => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
-        fileSystem.setup((f) => f.directoryExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
+        // fileSystem.setup((f) => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
+        fileSystem.setup((f) => f.localPathExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
 
         // Need to register commands as our extension isn't actually loading.
         const listeners = guestContainer!.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);

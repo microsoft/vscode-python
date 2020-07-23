@@ -23,7 +23,6 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../client/common/crypto';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ICryptoUtils, IDisposable, IExtensionContext } from '../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import {
@@ -37,6 +36,7 @@ import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jup
 import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 import {
     ICell,
+    IDataScienceFileSystem,
     IJupyterExecution,
     INotebookModel,
     INotebookServerOptions,
@@ -55,7 +55,7 @@ import { MockWorkspaceConfiguration } from '../mockWorkspaceConfig';
 suite('DataScience - Native Editor Storage', () => {
     let workspace: IWorkspaceService;
     let configService: IConfigurationService;
-    let fileSystem: typemoq.IMock<IFileSystem>;
+    let fileSystem: typemoq.IMock<IDataScienceFileSystem>;
     let docManager: IDocumentManager;
     let interpreterService: IInterpreterService;
     let webPanelProvider: IWebPanelProvider;
@@ -251,7 +251,7 @@ suite('DataScience - Native Editor Storage', () => {
         globalMemento = new MockMemento();
         localMemento = new MockMemento();
         configService = mock(ConfigurationService);
-        fileSystem = typemoq.Mock.ofType<IFileSystem>();
+        fileSystem = typemoq.Mock.ofType<IDataScienceFileSystem>();
         docManager = mock(DocumentManager);
         workspace = mock(WorkspaceService);
         interpreterService = mock(InterpreterService);

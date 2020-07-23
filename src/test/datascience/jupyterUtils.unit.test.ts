@@ -9,7 +9,7 @@ import { DebugService } from '../../client/common/application/debugService';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
-import { FileSystem } from '../../client/common/platform/fileSystem';
+import { DataScienceFileSystem } from '../../client/datascience/dataScienceFileSystem';
 import { CellHashProvider } from '../../client/datascience/editor-integration/cellhashprovider';
 import { expandWorkingDir } from '../../client/datascience/jupyter/jupyterUtils';
 import { createEmptyCell } from '../../datascience-ui/interactive-common/mainState';
@@ -22,7 +22,7 @@ suite('Data Science JupyterUtils', () => {
     const workspaceService = mock(WorkspaceService);
     const configService = mock(ConfigurationService);
     const debugService = mock(DebugService);
-    const fileSystem = mock(FileSystem);
+    const fileSystem = mock(DataScienceFileSystem);
     const docManager = new MockDocumentManager();
     const dummySettings = new MockPythonSettings(undefined, new MockAutoSelectionService());
     when(configService.getSettings(anything())).thenReturn(dummySettings);
@@ -142,8 +142,8 @@ suite('Data Science JupyterUtils', () => {
         when(fileSystem.getDisplayName(anything())).thenReturn('~/Test/manualTestFile.py');
         await addCell(
             `
-            
-import numpy as np 
+
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt`,
             '/home/rich/Test/manualTestFile.py',
@@ -169,7 +169,7 @@ import matplotlib.pyplot as plt`,
 
 def cause_error():
     print('start')
-    print('error') 
+    print('error')
     print('now')
 
     print( 1 / 0)
@@ -180,7 +180,7 @@ def cause_error():
         await addCell(
             `# %%
 print('some more')
-            
+
 cause_error()`,
             'd:\\Training\\SnakePython\\foo.py',
             142

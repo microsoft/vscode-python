@@ -437,7 +437,7 @@ export interface INotebookImporter extends Disposable {
 export const INotebookExporter = Symbol('INotebookExporter');
 export interface INotebookExporter extends Disposable {
     translateToNotebook(cells: ICell[], directoryChange?: string): Promise<nbformat.INotebookContent | undefined>;
-    exportToFile(cells: ICell[], file: Uri, showOpenPrompt?: boolean): Promise<void>;
+    exportToFile(cells: ICell[], file: string, showOpenPrompt?: boolean): Promise<void>;
 }
 
 export const IInteractiveWindowProvider = Symbol('IInteractiveWindowProvider');

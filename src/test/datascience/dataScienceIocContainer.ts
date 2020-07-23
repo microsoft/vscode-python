@@ -122,7 +122,7 @@ import { HttpClient } from '../../client/common/net/httpClient';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { RegistryImplementation } from '../../client/common/platform/registry';
-import { IFileSystem, IRegistry } from '../../client/common/platform/types';
+import { IRegistry } from '../../client/common/platform/types';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessLogger } from '../../client/common/process/logger';
@@ -288,6 +288,7 @@ import {
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IDebugLocationTracker,
     IDigestStorage,
     IGatherLogger,
@@ -590,7 +591,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
         this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
         this.registerFileSystemTypes();
-        this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());
+        this.serviceManager.rebindInstance<IDataScienceFileSystem>(IDataScienceFileSystem, new MockFileSystem());
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
         this.serviceManager.addSingleton<IInteractiveWindowProvider>(
             IInteractiveWindowProvider,
@@ -1166,7 +1167,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
     }
     public setFileContents(uri: Uri, contents: string) {
-        const fileSystem = this.serviceManager.get<IFileSystem>(IFileSystem) as MockFileSystem;
+        const fileSystem = this.serviceManager.get<IDataScienceFileSystem>(IDataScienceFileSystem) as MockFileSystem;
         fileSystem.addFileContents(uri.fsPath, contents);
     }
 

@@ -63,7 +63,7 @@ export class ExportBase implements IExport {
         }
 
         try {
-            await this.fs.copyLocalFile(tempTarget.filePath, target.fsPath);
+            await this.fs.copyLocal(tempTarget.filePath, target.fsPath);
         } catch {
             throw new Error(result.stderr);
         } finally {

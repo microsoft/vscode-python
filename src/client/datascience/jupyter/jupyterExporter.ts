@@ -47,20 +47,20 @@ export class JupyterExporter implements INotebookExporter {
         noop();
     }
 
-    public async exportToFile(cells: ICell[], file: Uri, showOpenPrompt: boolean = true): Promise<void> {
+    public async exportToFile(cells: ICell[], file: string, showOpenPrompt: boolean = true): Promise<void> {
         let directoryChange;
         const settings = this.configService.getSettings();
         if (settings.datascience.changeDirOnImportExport) {
             directoryChange = file;
         }
 
-        const notebook = await this.translateToNotebook(cells, directoryChange?.fsPath);
+        const notebook = await this.translateToNotebook(cells, directoryChange);
 
         try {
             // tslint:disable-next-line: no-any
             const contents = JSON.stringify(notebook);
-            await this.trustService.trustNotebook(file, contents);
-            await this.fileSystem.writeFile(file, contents);
+            await this.trustService.trustNotebook(Uri.file(file), contents);
+            await this.fileSystem.writeFile(Uri.file(file), contents);
             if (!showOpenPrompt) {
                 return;
             }
@@ -69,16 +69,16 @@ export class JupyterExporter implements INotebookExporter {
                 ? localize.DataScience.exportOpenQuestion()
                 : undefined;
             this.showInformationMessage(
-                localize.DataScience.exportDialogComplete().format(file.fsPath),
+                localize.DataScience.exportDialogComplete().format(file),
                 openQuestion1,
                 openQuestion2
             ).then(async (str: string | undefined) => {
                 try {
                     if (str === openQuestion2 && openQuestion2) {
                         // If the user wants to, open the notebook they just generated.
-                        await this.jupyterExecution.spawnNotebook(file.fsPath);
+                        await this.jupyterExecution.spawnNotebook(file);
                     } else if (str === openQuestion1) {
-                        await this.ipynbProvider.open(file);
+                        await this.ipynbProvider.open(Uri.file(file));
                     }
                 } catch (e) {
                     await this.errorHandler.handleError(e);

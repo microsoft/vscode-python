@@ -10,10 +10,14 @@ import {
     IDocumentManager,
     IVSCodeNotebook
 } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
-import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../../../client/datascience/types';
+import {
+    ICodeWatcher,
+    IDataScienceCodeLensProvider,
+    IDataScienceFileSystem,
+    IDebugLocationTracker
+} from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line: max-func-body-length
@@ -27,7 +31,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let debugService: TypeMoq.IMock<IDebugService>;
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let fileSystem: TypeMoq.IMock<IDataScienceFileSystem>;
     let tokenSource: CancellationTokenSource;
     let vscodeNotebook: TypeMoq.IMock<IVSCodeNotebook>;
     const disposables: Disposable[] = [];
@@ -42,7 +46,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         debugLocationTracker = TypeMoq.Mock.ofType<IDebugLocationTracker>();
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        fileSystem = TypeMoq.Mock.ofType<IDataScienceFileSystem>();
         vscodeNotebook = TypeMoq.Mock.ofType<IVSCodeNotebook>();
         dataScienceSettings.setup((d) => d.enabled).returns(() => true);
         pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);

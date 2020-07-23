@@ -19,7 +19,6 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../client/common/application/types';
-import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Commands, Identifiers } from '../../client/datascience/constants';
@@ -31,7 +30,8 @@ import {
     IJupyterExecution,
     INotebookEditorProvider,
     INotebookExporter,
-    ITrustService
+    ITrustService,
+    IDataScienceFileSystem
 } from '../../client/datascience/types';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
@@ -663,7 +663,7 @@ df.head()`;
                     // Stub the `stat` method to return a dummy value.
                     try {
                         sinon
-                            .stub(ioc.serviceContainer.get<IFileSystem>(IFileSystem), 'stat')
+                            .stub(ioc.serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem), 'stat')
                             .resolves({ mtime: 0 } as any);
                     } catch (e) {
                         // tslint:disable-next-line: no-console
