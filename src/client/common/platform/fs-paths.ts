@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { injectable } from 'inversify';
 import * as nodepath from 'path';
 import { getOSType, OSType } from '../utils/platform';
 import { IExecutables, IFileSystemPaths, IFileSystemPathUtils } from './types';
@@ -95,6 +96,7 @@ interface IRawPaths {
     relative(relpath: string, rootpath: string): string;
 }
 
+@injectable()
 export class FileSystemPathUtils implements IFileSystemPathUtils {
     constructor(
         // the user home directory to use (and expose)

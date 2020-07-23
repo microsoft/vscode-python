@@ -485,7 +485,7 @@ export class FileSystemUtils implements IFileSystemUtils {
 
 // We *could* use ICryptoUtils, but it's a bit overkill, issue tracked
 // in https://github.com/microsoft/vscode-python/issues/8438.
-function getHashString(data: string): string {
+export function getHashString(data: string): string {
     const hash = createHash('sha512');
     hash.update(data);
     return hash.digest('hex');

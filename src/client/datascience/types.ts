@@ -5,6 +5,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import type { Session } from '@jupyterlab/services';
 import type { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import type { JSONObject } from '@phosphor/coreutils';
+import { WriteStream } from 'fs-extra';
 import { Observable } from 'rxjs/Observable';
 import {
     CancellationToken,
@@ -25,6 +26,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import type { Data as WebSocketData } from 'ws';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
+import { FileStat, TemporaryFile } from '../common/platform/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable, InteractiveWindowMode, Resource } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -288,7 +290,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined>;
     spawnNotebook(file: string): Promise<void>;
-    importNotebook(file: string, template: string | undefined): Promise<string>;
+    importNotebook(file: Uri, template: string | undefined): Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined>;
     getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
@@ -429,15 +431,13 @@ export interface IJupyterKernelSpec {
 
 export const INotebookImporter = Symbol('INotebookImporter');
 export interface INotebookImporter extends Disposable {
-    importFromFile(contentsFile: string, originalFile?: string): Promise<string>; // originalFile is the base file if file is a temp file / location
-    importCellsFromFile(file: string): Promise<ICell[]>;
-    importCells(json: string): Promise<ICell[]>;
+    importFromFile(contentsFile: Uri): Promise<string>;
 }
 
 export const INotebookExporter = Symbol('INotebookExporter');
 export interface INotebookExporter extends Disposable {
     translateToNotebook(cells: ICell[], directoryChange?: string): Promise<nbformat.INotebookContent | undefined>;
-    exportToFile(cells: ICell[], file: string, showOpenPrompt?: boolean): Promise<void>;
+    exportToFile(cells: ICell[], file: Uri, showOpenPrompt?: boolean): Promise<void>;
 }
 
 export const IInteractiveWindowProvider = Symbol('IInteractiveWindowProvider');
@@ -1000,7 +1000,7 @@ export interface IJupyterSubCommandExecutionService {
      * @returns {Promise<string>}
      * @memberof IJupyterSubCommandExecutionService
      */
-    exportNotebookToPython(file: string, template?: string, token?: CancellationToken): Promise<string>;
+    exportNotebookToPython(file: Uri, template?: string, token?: CancellationToken): Promise<string>;
     /**
      * Opens an ipynb file in a new instance of a jupyter notebook server.
      *
@@ -1297,4 +1297,31 @@ export interface ITrustService {
     readonly onDidSetNotebookTrust: Event<void>;
     isNotebookTrusted(uri: Uri, notebookContents: string): Promise<boolean>;
     trustNotebook(uri: Uri, notebookContents: string): Promise<void>;
+}
+
+export const IDataScienceFileSystem = Symbol('IDataScienceFileSystem');
+export interface IDataScienceFileSystem {
+    // Local-only filesystem utilities
+    appendLocalFile(path: string, text: string): Promise<void>;
+    arePathsSame(path1: string, path2: string): boolean;
+    createLocalDirectory(path: string): Promise<void>;
+    createLocalWriteStream(path: string): WriteStream;
+    copyLocal(source: string, destination: string): Promise<void>;
+    createTemporaryLocalFile(fileExtension: string, mode?: number): Promise<TemporaryFile>;
+    deleteLocal(path: string, options?: { recursive: boolean; useTrash: boolean }): Promise<void>;
+    getDisplayName(path: string): string;
+    getFileHash(path: string): Promise<string>;
+    localPathExists(path: string): Promise<boolean>;
+    readLocalData(path: string): Promise<Buffer>;
+    readLocalFile(path: string): Promise<string>;
+    searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]>;
+    writeLocalFile(path: string, text: string | Buffer): Promise<void>;
+
+    // URI-based filesystem utilities wrapping the VS Code filesystem API
+    copy(source: Uri, destination: Uri): Promise<void>;
+    createDirectory(uri: Uri): Promise<void>;
+    delete(uri: Uri): Promise<void>;
+    readFile(uri: Uri): Promise<string>;
+    stat(uri: Uri): Promise<FileStat>;
+    writeFile(uri: Uri, text: string | Buffer): Promise<void>;
 }

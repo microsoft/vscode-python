@@ -4,6 +4,8 @@
 import { IExtensionSingleActivationService } from '../activation/types';
 import { UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
 import { NotebookEditorSupport } from '../common/experiments/groups';
+import { FileSystemPathUtils } from '../common/platform/fs-paths';
+import { IFileSystemPathUtils } from '../common/platform/types';
 import { StartPage } from '../common/startPage/startPage';
 import { IStartPage } from '../common/startPage/types';
 import { IExperimentsManager } from '../common/types';
@@ -310,6 +312,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
     serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
     serviceManager.addSingleton<IDataScienceFileSystem>(IDataScienceFileSystem, DataScienceFileSystem);
+    serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
 
     registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);

@@ -417,7 +417,7 @@ export class NativeEditorStorage implements INotebookStorage {
             const data = JSON.parse(contents);
             // Check whether the file has been modified since the last time the contents were saved.
             if (data && data.lastModifiedTimeMs && file.scheme === 'file') {
-                const stat = await this.fs.statLocal(file.fsPath);
+                const stat = await this.fs.stat(file);
                 if (stat.mtime > data.lastModifiedTimeMs) {
                     return;
                 }
@@ -444,7 +444,7 @@ export class NativeEditorStorage implements INotebookStorage {
 
             // Check whether the file has been modified since the last time the contents were saved.
             if (data && data.lastModifiedTimeMs && file.scheme === 'file') {
-                const stat = await this.fs.statLocal(file.fsPath);
+                const stat = await this.fs.stat(file);
                 if (stat.mtime > data.lastModifiedTimeMs) {
                     return;
                 }

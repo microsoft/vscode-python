@@ -459,7 +459,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     protected async setLaunchingFile(_file: string): Promise<void> {
         // For the native editor, use our own file as the path
         const notebook = this.getNotebook();
-        if ((await this.fs.pathExists(this.file)) && notebook) {
+        if ((await this.fs.localPathExists(this.file.fsPath)) && notebook) {
             await notebook.setLaunchingFile(this.file.fsPath);
         }
     }
