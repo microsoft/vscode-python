@@ -107,7 +107,7 @@ export class CommandRegistry implements IDisposable {
     private getCodeWatcher(file: Uri | undefined): ICodeWatcher | undefined {
         if (file) {
             const possibleDocuments = this.documentManager.textDocuments.filter((d) =>
-                this.fs.areLocalPathsSame(d.uri.fsPath, file.fsPath)
+                this.fs.arePathsSame(d.uri, file)
             );
             if (possibleDocuments && possibleDocuments.length === 1) {
                 return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);

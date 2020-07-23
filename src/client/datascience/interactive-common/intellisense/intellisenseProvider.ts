@@ -190,13 +190,13 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             ? activeNotebook.getMatchingInterpreter()
             : await this.interpreterService.getActiveInterpreter(resource);
 
-        const newPath = resource?.fsPath;
-        const oldPath = this.resource?.fsPath;
+        const newPath = resource;
+        const oldPath = this.resource;
 
         // See if the resource or the interpreter are different
         if (
             (newPath && !oldPath) ||
-            (newPath && oldPath && !this.fs.areLocalPathsSame(newPath, oldPath)) ||
+            (newPath && oldPath && !this.fs.arePathsSame(newPath, oldPath)) ||
             interpreter?.path !== this.interpreter?.path ||
             this.languageServer === undefined
         ) {
