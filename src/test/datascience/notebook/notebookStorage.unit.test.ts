@@ -5,9 +5,10 @@
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 import { assert } from 'chai';
-import { instance, mock } from 'ts-mockito';
+import { anyString, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { CryptoUtils } from '../../../client/common/crypto';
+import { sleep } from '../../../client/common/utils/async';
 import { NotebookModelChange } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import {
     ActiveKernelIdList,
@@ -23,6 +24,7 @@ suite('DataScience - Notebook Storage', () => {
     setup(() => {
         globalMemento = new MockMemento();
         crypto = mock(CryptoUtils);
+        when(crypto.createHash(anyString(), 'string')).thenCall((a1, _a2) => a1);
     });
 
     function createModel(index: number): BaseNotebookModel {
@@ -60,6 +62,7 @@ suite('DataScience - Notebook Storage', () => {
             const model = createModel(i);
             updateModelKernel(model, `${i}`);
         }
+        await sleep(100); // Give it time to update.
         const kernelIds = globalMemento.get(ActiveKernelIdList, []);
         assert.equal(kernelIds.length, MaximumKernelIdListSize, 'Kernel length is too many');
     });
