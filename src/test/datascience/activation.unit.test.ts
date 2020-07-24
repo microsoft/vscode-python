@@ -13,7 +13,7 @@ import { Activation } from '../../client/datascience/activation';
 import { JupyterDaemonModule } from '../../client/datascience/constants';
 import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
-import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import {

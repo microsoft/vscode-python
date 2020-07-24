@@ -226,12 +226,12 @@ import { AutoSaveService } from '../../client/datascience/interactive-ipynb/auto
 import { DigestStorage } from '../../client/datascience/interactive-ipynb/digestStorage';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorRunByLineListener } from '../../client/datascience/interactive-ipynb/nativeEditorRunByLineListener';
-import { NativeEditorStorage } from '../../client/datascience/interactive-ipynb/nativeEditorStorage';
+import { NativeEditorStorage } from '../../client/datascience/notebookStorage/nativeEditorStorage';
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
 import {
     INotebookStorageProvider,
     NotebookStorageProvider
-} from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
+} from '../../client/datascience/notebookStorage/notebookStorageProvider';
 import { TrustService } from '../../client/datascience/interactive-ipynb/trustService';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';

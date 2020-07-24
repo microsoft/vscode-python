@@ -7,7 +7,7 @@ import { ICryptoUtils } from '../../common/types';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { pruneCell } from '../common';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
-import { isUntitled } from '../interactive-ipynb/nativeEditorStorage';
+import { isUntitled } from './nativeEditorStorage';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { ICell, IJupyterKernelSpec, INotebookMetadataLive, INotebookModel } from '../types';
 

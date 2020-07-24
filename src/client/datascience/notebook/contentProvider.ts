@@ -19,7 +19,7 @@ import { MARKDOWN_LANGUAGE } from '../../common/constants';
 import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { notebookModelToVSCNotebookData } from './helpers/helpers';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
 import { INotebookContentProvider } from './types';

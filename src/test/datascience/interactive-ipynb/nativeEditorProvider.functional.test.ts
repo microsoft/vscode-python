@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-languageclient/node';
-import { INotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
+import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { INotebookEditorProvider, INotebookModel } from '../../../client/datascience/types';
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';

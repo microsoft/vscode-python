@@ -54,9 +54,9 @@ import {
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorOldWebView } from './nativeEditorOldWebView';
-import { NativeEditorProvider } from './nativeEditorProvider';
+import { NativeEditorProvider } from '../notebookStorage/nativeEditorProvider';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
-import { INotebookStorageProvider } from './notebookStorageProvider';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');

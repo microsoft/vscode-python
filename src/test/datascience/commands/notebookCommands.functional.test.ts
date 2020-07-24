@@ -12,7 +12,7 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { NotebookCommands } from '../../../client/datascience/commands/notebookCommands';
 import { Commands } from '../../../client/datascience/constants';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
-import { NativeEditorProvider } from '../../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { InteractiveWindowProvider } from '../../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
 import { JupyterSessionManagerFactory } from '../../../client/datascience/jupyter/jupyterSessionManagerFactory';

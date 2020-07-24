@@ -15,9 +15,9 @@ import { EnableTrustedNotebooks } from '../../../client/common/experiments/group
 import { IDisposable, IExperimentService } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { Commands } from '../../../client/datascience/constants';
-import { INotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { TrustCommandHandler } from '../../../client/datascience/interactive-ipynb/trustCommandHandler';
 import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
+import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { INotebookEditorProvider, INotebookModel, ITrustService } from '../../../client/datascience/types';
 import { noop } from '../../core';
 import { MockMemento } from '../../mocks/mementos';

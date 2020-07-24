@@ -4,7 +4,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { UseCustomEditorApi } from '../../common/constants';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { INotebookEditor, INotebookEditorProvider } from '../types';
-import { isUntitled } from './nativeEditorStorage';
+import { isUntitled } from '../notebookStorage/nativeEditorStorage';
 
 const MEMENTO_KEY = 'nativeEditorViewTracking';
 /**
