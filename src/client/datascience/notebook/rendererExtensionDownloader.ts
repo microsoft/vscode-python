@@ -38,7 +38,7 @@ export class RendererExtensionDownloader {
             });
             this.output.appendLine(DataScienceRendererExtension.installationCompleteMessage());
         } finally {
-            await this.fs.deleteLocal(vsixFilePath);
+            await this.fs.deleteLocalFile(vsixFilePath);
         }
     }
 

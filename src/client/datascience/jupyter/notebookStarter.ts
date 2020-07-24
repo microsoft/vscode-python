@@ -279,7 +279,7 @@ export class NotebookStarter implements Disposable {
                 let count = 0;
                 while (count < 10) {
                     try {
-                        await this.fs.deleteLocal(resultDir);
+                        await this.fs.deleteLocalDirectory(resultDir);
                         count = 10;
                     } catch {
                         count += 1;

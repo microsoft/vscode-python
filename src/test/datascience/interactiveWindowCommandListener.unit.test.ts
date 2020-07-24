@@ -162,7 +162,7 @@ suite('Interactive window command listener', async () => {
             filePath: '/foo/bar/baz.py'
         };
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve(tempFile);
-        when(fileSystem.deleteLocal(anything())).thenResolve();
+        when(fileSystem.deleteLocalDirectory(anything())).thenResolve();
         when(
             fileSystem.writeFile(
                 anything(),

@@ -5,7 +5,7 @@ import * as tmp from 'tmp';
 import { promisify } from 'util';
 import { FileStat, Uri, workspace } from 'vscode';
 import { traceError } from '../common/logger';
-import { isFileNotFoundError } from '../common/platform/errors';
+import { createDirNotEmptyError, isFileNotFoundError } from '../common/platform/errors';
 import { convertFileType, convertStat, getHashString } from '../common/platform/fileSystem';
 import { FileSystemPathUtils } from '../common/platform/fs-paths';
 import { FileType, IFileSystemPathUtils, TemporaryFile } from '../common/platform/types';
@@ -66,9 +66,26 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
         });
     }
 
-    public async deleteLocal(path: string, options?: { recursive: boolean; useTrash: boolean }): Promise<void> {
+    public async deleteLocalDirectory(dirname: string) {
+        const uri = Uri.file(dirname);
+        // The "recursive" option disallows directories, even if they
+        // are empty.  So we have to deal with this ourselves.
+        const files = await workspace.fs.readDirectory(uri);
+        if (files && files.length > 0) {
+            throw createDirNotEmptyError(dirname);
+        }
+        return workspace.fs.delete(uri, {
+            recursive: true,
+            useTrash: false
+        });
+    }
+
+    public async deleteLocalFile(path: string): Promise<void> {
         const uri = Uri.file(path);
-        return workspace.fs.delete(uri, options);
+        return workspace.fs.delete(uri, {
+            recursive: false,
+            useTrash: false
+        });
     }
 
     public getDisplayName(filename: string, cwd?: string): string {

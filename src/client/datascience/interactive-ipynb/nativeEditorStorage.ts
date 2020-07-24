@@ -201,7 +201,7 @@ export class NativeEditorStorage implements INotebookStorage {
                         await this.fs.writeLocalFile(filePath, contents);
                     }
                 } else {
-                    await this.fs.deleteLocal(filePath).catch((ex) => {
+                    await this.fs.deleteLocalFile(filePath).catch((ex) => {
                         // No need to log error if file doesn't exist.
                         if (!isFileNotFoundError(ex)) {
                             traceError('Failed to delete hotExit file. Possible it does not exist', ex);

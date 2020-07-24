@@ -38,7 +38,7 @@ suite('DataScience - NativeNotebook Download Renderer Extension', () => {
         when(appShell.withProgressCustomIcon(anything(), anything())).thenCall((_, cb) => cb({ report: noop }));
         when(cmdManager.executeCommand(anything(), anything())).thenResolve();
     });
-    teardown(() => verify(fs.deleteLocal(downloadedFile.fsPath)).once());
+    teardown(() => verify(fs.deleteLocalFile(downloadedFile.fsPath)).once());
     test('Should download & install extension', async () => {
         await downloader.downloadAndInstall();
 

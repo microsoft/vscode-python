@@ -126,7 +126,7 @@ export class KernelProcess implements IKernelProcess {
             this.exitEvent.fire({});
         });
         swallowExceptions(() => this.pythonKernelLauncher?.dispose());
-        swallowExceptions(async () => (this.connectionFile ? this.fs.deleteLocal(this.connectionFile) : noop()));
+        swallowExceptions(async () => (this.connectionFile ? this.fs.deleteLocalFile(this.connectionFile) : noop()));
     }
 
     // Make sure that the heartbeat channel is open for connections

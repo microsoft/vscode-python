@@ -29,7 +29,7 @@ export class ExportUtil {
                 let count = 0;
                 while (count < 10) {
                     try {
-                        await this.fs.deleteLocal(resultDir);
+                        await this.fs.deleteLocalDirectory(resultDir);
                         count = 10;
                     } catch {
                         await sleep(3000);
