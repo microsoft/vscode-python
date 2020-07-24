@@ -3,7 +3,7 @@ import * as glob from 'glob';
 import { injectable } from 'inversify';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
-import { FileStat, Uri, workspace } from 'vscode';
+import { FileStat, FileSystem, Uri, workspace } from 'vscode';
 import { traceError } from '../common/logger';
 import { createDirNotEmptyError, isFileNotFoundError } from '../common/platform/errors';
 import { convertFileType, convertStat, getHashString } from '../common/platform/fileSystem';
@@ -18,12 +18,14 @@ const ENCODING = 'utf8';
  */
 @injectable()
 export class DataScienceFileSystem implements IDataScienceFileSystem {
+    protected vscfs: FileSystem;
     private globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>;
     private fsPathUtils: IFileSystemPathUtils;
 
     constructor() {
         this.globFiles = promisify(glob);
         this.fsPathUtils = FileSystemPathUtils.withDefaults();
+        this.vscfs = workspace.fs;
     }
 
     public async appendLocalFile(path: string, text: string): Promise<void> {
@@ -45,7 +47,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
     public async copyLocal(source: string, destination: string): Promise<void> {
         const srcUri = Uri.file(source);
         const dstUri = Uri.file(destination);
-        await workspace.fs.copy(srcUri, dstUri, { overwrite: true });
+        await this.vscfs.copy(srcUri, dstUri, { overwrite: true });
     }
 
     public async createTemporaryLocalFile(suffix: string, mode?: number): Promise<TemporaryFile> {
@@ -70,11 +72,11 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
         const uri = Uri.file(dirname);
         // The "recursive" option disallows directories, even if they
         // are empty.  So we have to deal with this ourselves.
-        const files = await workspace.fs.readDirectory(uri);
+        const files = await this.vscfs.readDirectory(uri);
         if (files && files.length > 0) {
             throw createDirNotEmptyError(dirname);
         }
-        return workspace.fs.delete(uri, {
+        return this.vscfs.delete(uri, {
             recursive: true,
             useTrash: false
         });
@@ -82,7 +84,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
 
     public async deleteLocalFile(path: string): Promise<void> {
         const uri = Uri.file(path);
-        return workspace.fs.delete(uri, {
+        return this.vscfs.delete(uri, {
             recursive: false,
             useTrash: false
         });
@@ -109,13 +111,13 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
 
     public async readLocalData(filename: string): Promise<Buffer> {
         const uri = Uri.file(filename);
-        const data = await workspace.fs.readFile(uri);
+        const data = await this.vscfs.readFile(uri);
         return Buffer.from(data);
     }
 
     public async readLocalFile(filename: string): Promise<string> {
         const uri = Uri.file(filename);
-        const result = await workspace.fs.readFile(uri);
+        const result = await this.vscfs.readFile(uri);
         const data = Buffer.from(result);
         return data.toString(ENCODING);
     }
@@ -137,7 +139,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
     public async writeLocalFile(filename: string, text: string | Buffer): Promise<void> {
         const uri = Uri.file(filename);
         const data = typeof text === 'string' ? Buffer.from(text) : text;
-        await workspace.fs.writeFile(uri, data);
+        await this.vscfs.writeFile(uri, data);
     }
 
     // URI-based filesystem functions for interacting with files provided by VS Code
@@ -150,30 +152,30 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
     }
 
     public async copy(source: Uri, destination: Uri): Promise<void> {
-        await workspace.fs.copy(source, destination);
+        await this.vscfs.copy(source, destination);
     }
 
     public async createDirectory(uri: Uri): Promise<void> {
-        await workspace.fs.createDirectory(uri);
+        await this.vscfs.createDirectory(uri);
     }
 
     public async delete(uri: Uri): Promise<void> {
-        await workspace.fs.delete(uri);
+        await this.vscfs.delete(uri);
     }
 
     public async readFile(uri: Uri): Promise<string> {
-        const result = await workspace.fs.readFile(uri);
+        const result = await this.vscfs.readFile(uri);
         const data = Buffer.from(result);
         return data.toString(ENCODING);
     }
 
     public async stat(uri: Uri): Promise<FileStat> {
-        return workspace.fs.stat(uri);
+        return this.vscfs.stat(uri);
     }
 
     public async writeFile(uri: Uri, text: string | Buffer): Promise<void> {
         const data = typeof text === 'string' ? Buffer.from(text) : text;
-        await workspace.fs.writeFile(uri, data);
+        await this.vscfs.writeFile(uri, data);
     }
 
     private async lstat(filename: string): Promise<FileStat> {

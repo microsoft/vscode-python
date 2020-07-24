@@ -65,7 +65,7 @@ import { MockProcess } from './mocks/process';
 // This is necessary for unit tests and functional tests, since they
 // do not run under VS Code so they do not have access to the actual
 // "vscode" namespace.
-class FakeVSCodeFileSystemAPI {
+export class FakeVSCodeFileSystemAPI {
     public async readFile(uri: Uri): Promise<Uint8Array> {
         return fsextra.readFile(uri.fsPath);
     }

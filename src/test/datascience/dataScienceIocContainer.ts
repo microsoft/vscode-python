@@ -597,7 +597,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
         this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
         this.registerFileSystemTypes();
-        this.serviceManager.rebindInstance<IDataScienceFileSystem>(IDataScienceFileSystem, new MockFileSystem());
+        this.serviceManager.addSingletonInstance<IDataScienceFileSystem>(IDataScienceFileSystem, new MockFileSystem());
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
         this.serviceManager.addSingleton<IInteractiveWindowProvider>(
             IInteractiveWindowProvider,
