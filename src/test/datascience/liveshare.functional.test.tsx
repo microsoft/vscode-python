@@ -378,7 +378,7 @@ suite('DataScience LiveShare tests', () => {
 
                 return Promise.resolve();
             });
-        fileSystem.setup((f) => f.areLocalPathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
+        fileSystem.setup((f) => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
         // fileSystem.setup((f) => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
         fileSystem.setup((f) => f.localDirectoryExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
 
@@ -392,13 +392,14 @@ suite('DataScience LiveShare tests', () => {
         await startSession(vsls.Role.Guest);
 
         // Create a document on the guest
-        guestContainer!.addDocument('#%%\na=1\na', Uri.file('foo.py').fsPath);
-        guestContainer!.get<IDocumentManager>(IDocumentManager).showTextDocument(Uri.file('foo.py'));
+        const file = Uri.file('foo.py');
+        guestContainer!.addDocument('#%%\na=1\na', file.fsPath);
+        guestContainer!.get<IDocumentManager>(IDocumentManager).showTextDocument(file);
 
         // Attempt to export a file from the guest by running an ExportFileAndOutputAsNotebook
         const executePromise = guestCommandManager.executeCommand(
             Commands.ExportFileAndOutputAsNotebook,
-            Uri.file('foo.py')
+            file
         ) as Promise<Uri>;
         assert.ok(executePromise, 'Export file did not return a promise');
         const savedUri = await executePromise;

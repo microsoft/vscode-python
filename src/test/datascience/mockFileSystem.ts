@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { Uri } from 'vscode';
 import { DataScienceFileSystem } from '../../client/datascience/dataScienceFileSystem';
 import { FakeVSCodeFileSystemAPI } from '../serviceRegistry';
 
@@ -18,6 +19,9 @@ export class MockFileSystem extends DataScienceFileSystem {
             return contents;
         }
         return super.readLocalFile(filePath);
+    }
+    public async readFile(filePath: Uri): Promise<string> {
+        return this.readLocalFile(filePath.fsPath);
     }
     public addFileContents(filePath: string, contents: string): void {
         this.contentOverloads.set(filePath, contents);
