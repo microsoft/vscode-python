@@ -307,17 +307,18 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
         });
         test('Export notebook to python', async () => {
             const file = 'somefile.ipynb';
+            const uri = Uri.file(file);
             const convertOutput = 'converted';
             when(jupyterDependencyService.isExportSupported(selectedJupyterInterpreter, anything())).thenResolve(true);
             when(
                 execService.execModule(
                     'jupyter',
-                    deepEqual(['nbconvert', file, '--to', 'python', '--stdout']),
+                    deepEqual(['nbconvert', uri.fsPath, '--to', 'python', '--stdout']),
                     anything()
                 )
             ).thenResolve({ stdout: convertOutput });
 
-            const output = await jupyterInterpreterExecutionService.exportNotebookToPython(Uri.file(file));
+            const output = await jupyterInterpreterExecutionService.exportNotebookToPython(uri);
 
             assert.equal(output, convertOutput);
         });

@@ -317,7 +317,21 @@ suite('DataScience - Native Editor Storage', () => {
                 return Promise.resolve();
             });
         fileSystem
+            .setup((f) => f.writeLocalFile(typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns((a1, a2) => {
+                if (a1 && a1.includes(`${testIndex}.ipynb`)) {
+                    lastWriteFileValue = a2;
+                    wroteToFileEvent.fire(a2);
+                }
+                return Promise.resolve();
+            });
+        fileSystem
             .setup((f) => f.readFile(typemoq.It.isAny()))
+            .returns((_a1) => {
+                return Promise.resolve(lastWriteFileValue);
+            });
+        fileSystem
+            .setup((f) => f.readLocalFile(typemoq.It.isAny()))
             .returns((_a1) => {
                 return Promise.resolve(lastWriteFileValue);
             });

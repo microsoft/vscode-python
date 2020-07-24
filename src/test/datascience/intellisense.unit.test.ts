@@ -73,7 +73,9 @@ suite('DataScience Intellisense Unit Tests', () => {
         workspaceService.setup((w) => w.rootPath).returns(() => '/foo/bar');
         fileSystem
             .setup((f) => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((f1: string, f2: string) => f1.toLowerCase() === f2.toLowerCase());
+            .returns((f1: Uri, f2: Uri) => {
+                return f1?.fsPath?.toLowerCase() === f2.fsPath?.toLowerCase();
+            });
 
         intellisenseProvider = new IntellisenseProvider(
             workspaceService.object,

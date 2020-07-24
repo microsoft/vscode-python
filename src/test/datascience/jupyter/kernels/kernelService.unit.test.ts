@@ -522,7 +522,7 @@ suite('DataScience - KernelService', () => {
             assert.deepEqual(kernel, installedKernel as any);
             verify(fs.writeLocalFile(kernelJsonFile, anything())).once();
             // Verify the contents of JSON written to the file match as expected.
-            assert.deepEqual(JSON.parse(capture(fs.writeFile).first()[1] as string), expectedKernelJsonContent);
+            assert.deepEqual(JSON.parse(capture(fs.writeLocalFile).first()[1] as string), expectedKernelJsonContent);
         });
         test('Kernel is installed and spec file is updated with interpreter information in metadata along with environment variables', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
@@ -549,7 +549,7 @@ suite('DataScience - KernelService', () => {
             assert.deepEqual(kernel, installedKernel as any);
             verify(fs.writeLocalFile(kernelJsonFile, anything())).once();
             // Verify the contents of JSON written to the file match as expected.
-            assert.deepEqual(JSON.parse(capture(fs.writeFile).first()[1] as string), expectedKernelJsonContent);
+            assert.deepEqual(JSON.parse(capture(fs.writeLocalFile).first()[1] as string), expectedKernelJsonContent);
         });
         test('Kernel is found and spec file is updated with interpreter information in metadata along with environment variables', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
@@ -577,7 +577,7 @@ suite('DataScience - KernelService', () => {
             assert.deepEqual(kernel, installedKernel as any);
             verify(fs.writeLocalFile(kernelJsonFile, anything())).once();
             // Verify the contents of JSON written to the file match as expected.
-            assert.deepEqual(JSON.parse(capture(fs.writeFile).first()[1] as string), expectedKernelJsonContent);
+            assert.deepEqual(JSON.parse(capture(fs.writeLocalFile).first()[1] as string), expectedKernelJsonContent);
         });
         test('Kernel is found and spec file is not updated with interpreter information when user spec file', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
