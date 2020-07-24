@@ -89,7 +89,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
     public async executeAllCells(document: NotebookDocument, token: CancellationToken): Promise<void> {
         const stopWatch = new StopWatch();
         const notebookAndModel = this.getNotebookAndModel(document);
-
+        document.metadata.runState = vscodeNotebookEnums.NotebookRunState.Running;
         // Mark all cells as busy (this way there's immediate feedback to users).
         // If it does not complete, then restore old state.
         const oldCellStates = new WeakMap<NotebookCell, NotebookCellRunState | undefined>();
@@ -113,7 +113,10 @@ export class NotebookExecutionService implements INotebookExecutionService {
             }
         };
         // If we cancel running cells, then restore the state to previous values unless cell has completed.
-        token.onCancellationRequested(() => document.cells.forEach(restoreOldCellState));
+        token.onCancellationRequested(() => {
+            document.metadata.runState = vscodeNotebookEnums.NotebookRunState.Idle;
+            document.cells.forEach(restoreOldCellState);
+        });
 
         let executingAPreviousCellHasFailed = false;
         await document.cells.reduce((previousPromise, cellToExecute) => {
@@ -137,6 +140,8 @@ export class NotebookExecutionService implements INotebookExecutionService {
                 return this.executeIndividualCell(notebookAndModel, document, cellToExecute, token, stopWatch);
             });
         }, Promise.resolve<NotebookCellRunState | undefined>(undefined));
+
+        document.metadata.runState = vscodeNotebookEnums.NotebookRunState.Idle;
     }
     public cancelPendingExecutions(document: NotebookDocument): void {
         this.pendingExecutionCancellations.get(document.uri.fsPath)?.forEach((cancellation) => cancellation.cancel()); // NOSONAR

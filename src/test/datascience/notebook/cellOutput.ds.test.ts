@@ -142,7 +142,6 @@ suite('DataScience - VSCode Notebook - (fake execution) (Clearing Output)', func
 
             // Once we execute the cell, the execution count & output should be cleared.
             await commands.executeCommand('notebook.cell.execute');
-
             await waitForExecutionOrderInVSCCell(vscCell, undefined);
             await waitForVSCCellHasEmptyOutput(vscCell);
             await waitForVSCCellIsRunning(vscCell);

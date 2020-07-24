@@ -22,7 +22,7 @@ import {
     IStatusProvider
 } from '../types';
 import { getDefaultCodeLanguage } from './helpers/helpers';
-import { INotebookContentProvider, INotebookExecutionService } from './types';
+import { INotebookExecutionService } from './types';
 
 export class NotebookEditor implements INotebookEditor {
     public readonly type = 'native';
@@ -76,7 +76,6 @@ export class NotebookEditor implements INotebookEditor {
         private readonly executionService: INotebookExecutionService,
         private readonly commandManager: ICommandManager,
         private readonly notebookProvider: INotebookProvider,
-        private readonly contentProvider: INotebookContentProvider,
         private readonly statusProvider: IStatusProvider,
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
@@ -153,8 +152,6 @@ export class NotebookEditor implements INotebookEditor {
         if (!notebook || this.restartingKernel) {
             return;
         }
-        this.restartingKernel = true;
-
         const status = this.statusProvider.set(DataScience.interruptKernelStatus(), true, undefined, undefined);
 
         try {
@@ -178,8 +175,6 @@ export class NotebookEditor implements INotebookEditor {
             status.dispose();
             traceError(err);
             this.applicationShell.showErrorMessage(err);
-        } finally {
-            this.restartingKernel = false;
         }
     }
 
@@ -230,7 +225,6 @@ export class NotebookEditor implements INotebookEditor {
         try {
             this.document.metadata.cellRunnable = false;
             this.document.metadata.runnable = false;
-            this.contentProvider.notifyChangesToDocument(this.document);
             await notebook.restartKernel(
                 this.configurationService.getSettings(this.file).datascience.jupyterInterruptTimeout
             );
@@ -255,7 +249,6 @@ export class NotebookEditor implements INotebookEditor {
             this.restartingKernel = false;
             // Restore previous state.
             [this.document.metadata.cellRunnable, this.document.metadata.runnable] = [cellRunnable, runnable];
-            this.contentProvider.notifyChangesToDocument(this.document);
         }
     }
     private async shouldAskForRestart(): Promise<boolean> {

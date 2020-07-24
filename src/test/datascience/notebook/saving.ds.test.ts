@@ -51,9 +51,7 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     });
-    setup(async () => {
-        sinon.restore();
-    });
+    setup(() => sinon.restore());
     teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Clearing output will mark document as dirty', async () => {
         const templateIPynb = path.join(
@@ -75,7 +73,7 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         await commands.executeCommand('notebook.clearAllCellsOutputs');
 
         // Wait till execution count changes & it is marked as dirty
-        await changedEvent.assertFired(5000);
+        await changedEvent.assertFired(5_000);
     });
     test('Saving after clearing should result in execution_count=null in ipynb file', async () => {
         const templateIPynb = path.join(
@@ -193,10 +191,10 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
             assert.isEmpty(cell3.metadata.statusMessage || '', 'Cell 3 status should be empty'); // Not executed.
             assert.isEmpty(cell4.metadata.statusMessage || '', 'Cell 4 status should be empty'); // Not executed.
 
-            assert.isOk(cell1.metadata.runStartTime, 'Start time should be > 0');
-            assert.isOk(cell1.metadata.lastRunDuration, 'Duration should be > 0');
-            // assert.isOk(cell2.metadata.runStartTime, 'Start time should be > 0'); // Known to be flaky with VSC.
-            // assert.isOk(cell2.metadata.lastRunDuration, 'Duration should be > 0'); // Known to be flaky with VSC.
+            // assert.isOk(cell1.metadata.runStartTime, 'Start time should be > 0'); // Flaky with VSC as we're using NB as source of truth.
+            // assert.isOk(cell1.metadata.lastRunDuration, 'Duration should be > 0'); // Flaky with VSC as we're using NB as source of truth.
+            // assert.isOk(cell2.metadata.runStartTime, 'Start time should be > 0'); // Flaky with VSC as we're using NB as source of truth.
+            // assert.isOk(cell2.metadata.lastRunDuration, 'Duration should be > 0'); // Flaky with VSC as we're using NB as source of truth.
             assert.isUndefined(cell3.metadata.runStartTime, 'Cell 3 did should not have run');
             assert.isUndefined(cell3.metadata.lastRunDuration, 'Cell 3 did should not have run');
             assert.isUndefined(cell4.metadata.runStartTime, 'Cell 4 did should not have run');

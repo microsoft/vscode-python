@@ -298,10 +298,16 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     }
     return true;
 }
-export async function waitForTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
+export async function waitForTextOutputInVSCode(
+    cell: NotebookCell,
+    text: string,
+    index: number,
+    isExactMatch = true,
+    timeout = 1_000
+) {
     await waitForCondition(
         async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),
-        1_000,
+        timeout,
         `Output does not contain provided text '${text}' for Cell ${cell.notebook.cells.indexOf(cell) + 1}`
     );
 }

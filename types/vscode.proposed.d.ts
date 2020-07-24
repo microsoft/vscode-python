@@ -1,17 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    Event,
-    GlobPattern,
-    Uri,
-    TextDocument,
-    ViewColumn,
-    CancellationToken,
-    Disposable,
-    DocumentSelector
-} from 'vscode';
-
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
 declare module 'vscode' {
     export enum CellKind {
@@ -84,6 +73,11 @@ declare module 'vscode' {
         Idle = 2,
         Success = 3,
         Error = 4
+    }
+
+    export enum NotebookRunState {
+        Running = 1,
+        Idle = 2
     }
 
     export interface NotebookCellMetadata {
@@ -188,6 +182,11 @@ declare module 'vscode' {
          * Additional attributes of the document metadata.
          */
         custom?: { [key: string]: any };
+
+        /**
+         * The document's current run state
+         */
+        runState?: NotebookRunState;
     }
 
     export interface NotebookDocument {
@@ -202,6 +201,7 @@ declare module 'vscode' {
     }
 
     export interface NotebookConcatTextDocument {
+        uri: Uri;
         isClosed: boolean;
         dispose(): void;
         onDidChange: Event<void>;
@@ -261,6 +261,11 @@ declare module 'vscode' {
          * Fired when the panel is disposed.
          */
         readonly onDidDispose: Event<void>;
+
+        /**
+         * Active kernel used in the editor
+         */
+        readonly kernel?: NotebookKernel;
 
         /**
          * Fired when the output hosting webview posts a message.
@@ -416,7 +421,7 @@ declare module 'vscode' {
         /**
          * Unique identifier for the backup.
          *
-         * This id is passed back to your extension in `openCustomDocument` when opening a custom editor from a backup.
+         * This id is passed back to your extension in `openCustomDocument` when opening a notebook editor from a backup.
          */
         readonly id: string;
 
@@ -470,6 +475,10 @@ declare module 'vscode' {
     }
 
     export interface NotebookContentProvider {
+        /**
+         * Content providers should always use [file system providers](#FileSystemProvider) to
+         * resolve the raw content for `uri` as the resouce is not necessarily a file on disk.
+         */
         openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): NotebookData | Promise<NotebookData>;
         resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Promise<void>;
         saveNotebook(document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
@@ -485,16 +494,43 @@ declare module 'vscode' {
     }
 
     export interface NotebookKernel {
+        readonly id?: string;
         label: string;
+        description?: string;
+        isPreferred?: boolean;
         preloads?: Uri[];
-        executeCell(document: NotebookDocument, cell: NotebookCell, token: CancellationToken): Promise<void>;
-        executeAllCells(document: NotebookDocument, token: CancellationToken): Promise<void>;
+        executeCell(document: NotebookDocument, cell: NotebookCell): void;
+        cancelCellExecution(document: NotebookDocument, cell: NotebookCell): void;
+        executeAllCells(document: NotebookDocument): void;
+        cancelAllCellsExecution(document: NotebookDocument): void;
+    }
+
+    export interface NotebookDocumentFilter {
+        viewType?: string;
+        filenamePattern?: GlobPattern;
+        excludeFileNamePattern?: GlobPattern;
+    }
+
+    export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKernel> {
+        onDidChangeKernels?: Event<void>;
+        provideKernels(document: NotebookDocument, token: CancellationToken): ProviderResult<T[]>;
+        resolveKernel?(
+            kernel: T,
+            document: NotebookDocument,
+            webview: NotebookCommunication,
+            token: CancellationToken
+        ): ProviderResult<void>;
     }
 
     export namespace notebook {
         export function registerNotebookContentProvider(
             notebookType: string,
             provider: NotebookContentProvider
+        ): Disposable;
+
+        export function registerNotebookKernelProvider(
+            selector: NotebookDocumentFilter,
+            provider: NotebookKernelProvider
         ): Disposable;
 
         export function registerNotebookKernel(
@@ -536,5 +572,10 @@ declare module 'vscode' {
             notebook: NotebookDocument,
             selector?: DocumentSelector
         ): NotebookConcatTextDocument;
+
+        export const onDidChangeActiveNotebookKernel: Event<{
+            document: NotebookDocument;
+            kernel: NotebookKernel | undefined;
+        }>;
     }
 }
