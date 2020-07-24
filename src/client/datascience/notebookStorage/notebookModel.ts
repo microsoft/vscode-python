@@ -4,9 +4,10 @@
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as uuid from 'uuid/v4';
-import { Uri } from 'vscode';
+import { Memento, Uri } from 'vscode';
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
+import { ICryptoUtils } from '../../common/types';
 import { Identifiers } from '../constants';
 import { IEditorContentChange, NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { CellState, ICell } from '../types';
@@ -26,12 +27,14 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
         isTrusted: boolean,
         file: Uri,
         cells: ICell[],
+        globalMemento: Memento,
+        crypto: ICryptoUtils,
         json: Partial<nbformat.INotebookContent> = {},
         indentAmount: string = ' ',
         pythonNumber: number = 3,
         isInitiallyDirty: boolean = false
     ) {
-        super(isTrusted, file, cells, json, indentAmount, pythonNumber);
+        super(isTrusted, file, cells, globalMemento, crypto, json, indentAmount, pythonNumber);
         if (isInitiallyDirty) {
             // This means we're dirty. Indicate dirty and load from this content
             this.saveChangeCount = -1;

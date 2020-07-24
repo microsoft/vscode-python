@@ -92,6 +92,7 @@ import {
     IMessageCell,
     INotebook,
     INotebookExporter,
+    INotebookMetadataLive,
     INotebookProvider,
     INotebookProviderConnection,
     InterruptResult,
@@ -119,7 +120,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         return this.readyEvent.event;
     }
 
-    protected abstract get notebookMetadata(): nbformat.INotebookMetadata | undefined;
+    protected abstract get notebookMetadata(): INotebookMetadataLive | undefined;
 
     protected abstract get notebookIdentity(): INotebookIdentity;
 
@@ -1508,17 +1509,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         } else {
             await this.addSysInfo(SysInfoReason.New);
         }
-
-        // Force an update of the kernel metadata
-        const kernelSpec: IJupyterKernelSpec = {
-            path: kernel.path ?? '',
-            name: kernel.name,
-            language: kernel.language ?? 'python',
-            display_name: kernel.display_name ?? kernel.name,
-            argv: kernel.argv ?? [],
-            env: kernel.env
-        };
-        return this.updateNotebookOptions(kernelSpec, this._notebook?.getMatchingInterpreter());
+        return this.updateNotebookOptions(kernel, this._notebook?.getMatchingInterpreter());
     }
 
     private openSettings(setting: string | undefined) {

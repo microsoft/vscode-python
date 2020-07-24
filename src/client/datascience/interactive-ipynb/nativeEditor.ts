@@ -68,6 +68,7 @@ import {
     INotebookEditorProvider,
     INotebookExporter,
     INotebookImporter,
+    INotebookMetadataLive,
     INotebookModel,
     INotebookProvider,
     IStatusProvider,
@@ -88,6 +89,7 @@ import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { LiveKernelModel } from '../jupyter/kernels/types';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
@@ -317,12 +319,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    public get notebookMetadata(): nbformat.INotebookMetadata | undefined {
+    public get notebookMetadata(): INotebookMetadataLive | undefined {
         return this.model.metadata;
     }
 
     public async updateNotebookOptions(
-        kernelSpec: IJupyterKernelSpec,
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel,
         interpreter: PythonInterpreter | undefined
     ): Promise<void> {
         if (this.model) {

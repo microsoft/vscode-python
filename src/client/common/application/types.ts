@@ -1061,6 +1061,10 @@ export type WebPanelMessage = {
 export const IWebPanel = Symbol('IWebPanel');
 export interface IWebPanel {
     /**
+     * Event is fired when the load for a web panel fails
+     */
+    readonly loadFailed: Event<void>;
+    /**
      * Convert a uri for the local file system to one that can be used inside webviews.
      *
      * Webviews cannot directly load resources from the workspace or local file system using `file:` uris. The

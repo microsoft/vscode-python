@@ -72,6 +72,8 @@ suite('DataScience - JupyterSession', () => {
         kernelChangedSignal = mock(Signal);
         when(session.statusChanged).thenReturn(instance(statusChangedSignal));
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
+        when(session.kernel).thenReturn(instance(kernel));
+        when(kernel.status).thenReturn('idle');
         const channel = new MockOutputChannel('JUPYTER');
         // tslint:disable-next-line: no-any
         (instance(session) as any).then = undefined;
@@ -99,10 +101,9 @@ suite('DataScience - JupyterSession', () => {
         when(contentsManager.newUntitled(deepEqual({ type: 'notebook' }))).thenResolve({ path: nbFile } as any);
         when(sessionManager.startNew(anything())).thenResolve(instance(session));
         kernelSpec.setup((k) => k.name).returns(() => 'some name');
+        kernelSpec.setup((k) => k.id).returns(() => undefined);
 
-        await jupyterSession.connect();
-
-        verify(statusChangedSignal.connect(anything())).once();
+        await jupyterSession.connect(100);
     }
 
     test('Start a session when connecting', async () => {
@@ -160,8 +161,6 @@ suite('DataScience - JupyterSession', () => {
                 verify(session.dispose()).once();
             });
             test('Local', async () => {
-                verify(statusChangedSignal.connect(anything())).once();
-
                 connection.setup((c) => c.localLaunch).returns(() => true);
                 when(session.isRemoteSession).thenReturn(false);
                 when(session.isDisposed).thenReturn(false);
@@ -171,7 +170,6 @@ suite('DataScience - JupyterSession', () => {
 
                 verify(sessionManager.refreshRunning()).never();
                 verify(contentsManager.delete(anything())).never();
-                verify(statusChangedSignal.disconnect(anything())).once();
                 // always kill the sessions.
                 verify(session.shutdown()).once();
                 verify(session.dispose()).once();

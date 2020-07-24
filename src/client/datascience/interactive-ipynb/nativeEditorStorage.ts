@@ -295,7 +295,10 @@ export class NativeEditorStorage implements INotebookStorage {
         } catch (ex) {
             // May not exist at this time. Should always have a single cell though
             traceError(`Failed to load notebook file ${file.toString()}`, ex);
-            return this.factory.createModel({ trusted: true, file, cells: [] }, forVSCodeNotebook);
+            return this.factory.createModel(
+                { trusted: true, file, cells: [], crypto: this.crypto, globalMemento: this.globalStorage },
+                forVSCodeNotebook
+            );
         }
     }
 
@@ -360,7 +363,9 @@ export class NativeEditorStorage implements INotebookStorage {
                 notebookJson: json,
                 indentAmount,
                 pythonNumber,
-                initiallyDirty: isInitiallyDirty
+                initiallyDirty: isInitiallyDirty,
+                crypto: this.crypto,
+                globalMemento: this.globalStorage
             },
             forVSCodeNotebook
         );

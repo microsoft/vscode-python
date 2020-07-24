@@ -10,6 +10,7 @@ import { Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { ContextKey } from '../../../client/common/contextKey';
+import { CryptoUtils } from '../../../client/common/crypto';
 import { EnableTrustedNotebooks } from '../../../client/common/experiments/groups';
 import { IDisposable, IExperimentService } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
@@ -19,6 +20,7 @@ import { TrustCommandHandler } from '../../../client/datascience/interactive-ipy
 import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 import { INotebookEditorProvider, INotebookModel, ITrustService } from '../../../client/datascience/types';
 import { noop } from '../../core';
+import { MockMemento } from '../../mocks/mementos';
 import { createNotebookModel, disposeAllDisposables } from '../notebook/helper';
 
 // tslint:disable: no-any
@@ -36,13 +38,17 @@ suite('DataScience - Trust Command Handler', () => {
     let experiments: IExperimentService;
     let model: INotebookModel;
     let trustNotebookCommandCallback: (uri: Uri) => Promise<void>;
+    let testIndex = 0;
     setup(() => {
         trustService = mock<TrustService>();
         editorProvider = mock<INotebookEditorProvider>();
         storageProvider = mock<INotebookStorageProvider>();
         commandManager = mock<ICommandManager>();
         applicationShell = mock<IApplicationShell>();
-        model = createNotebookModel(false, Uri.file('a'));
+        const crypto = mock(CryptoUtils);
+        testIndex += 1;
+        when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
+        model = createNotebookModel(false, Uri.file('a'), new MockMemento(), instance(crypto));
         when(storageProvider.get(anything())).thenResolve(model);
         disposables = [];
 

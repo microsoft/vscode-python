@@ -10,12 +10,12 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { instance, mock } from 'ts-mockito';
-import { commands, TextDocument, Uri } from 'vscode';
+import { commands, Memento, TextDocument, Uri } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { CellDisplayOutput } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { IDisposable } from '../../../client/common/types';
+import { ICryptoUtils, IDisposable } from '../../../client/common/types';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
 import { Identifiers } from '../../../client/datascience/constants';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
@@ -380,7 +380,13 @@ export async function saveActiveNotebook(disposables: IDisposable[]) {
     await waitForCondition(async () => savedEvent.all.some((e) => e.kind === 'save'), 5_000, 'Not saved');
 }
 
-export function createNotebookModel(trusted: boolean, uri: Uri, nb?: Partial<nbformat.INotebookContent>) {
+export function createNotebookModel(
+    trusted: boolean,
+    uri: Uri,
+    globalMemento: Memento,
+    crypto: ICryptoUtils,
+    nb?: Partial<nbformat.INotebookContent>
+) {
     const nbJson: nbformat.INotebookContent = {
         cells: [],
         metadata: {
@@ -400,7 +406,7 @@ export function createNotebookModel(trusted: boolean, uri: Uri, nb?: Partial<nbf
             data: c
         };
     });
-    return new VSCodeNotebookModel(trusted, uri, JSON.parse(JSON.stringify(cells)));
+    return new VSCodeNotebookModel(trusted, uri, JSON.parse(JSON.stringify(cells)), globalMemento, crypto);
 }
 
 export function createNotebookDocument(

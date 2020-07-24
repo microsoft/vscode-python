@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
-import { Uri } from 'vscode';
+import { Memento, Uri } from 'vscode';
+import { ICryptoUtils } from '../../common/types';
 import { ICell, INotebookModel } from '../types';
 
 export const INotebookModelFactory = Symbol('INotebookModelFactory');
@@ -16,6 +17,8 @@ export interface INotebookModelFactory {
             indentAmount?: string;
             pythonNumber?: number;
             initiallyDirty?: boolean;
+            crypto: ICryptoUtils;
+            globalMemento: Memento;
         },
         forVSCodeNotebook?: boolean
     ): INotebookModel;

@@ -39,6 +39,7 @@ suite('DataScience - Notebook Commands', () => {
         lastActivityTime: new Date(),
         name: 'CurrentKernel',
         numberOfConnections: 0,
+        id: '2232',
         // tslint:disable-next-line: no-any
         session: {} as any
     };
