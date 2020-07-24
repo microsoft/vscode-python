@@ -310,7 +310,7 @@ suite('DataScience - Native Editor Storage', () => {
         fileSystem
             .setup((f) => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny()))
             .returns((a1, a2) => {
-                if (a1.includes(`${testIndex}.ipynb`)) {
+                if (a1.fsPath && a1.fsPath.includes(`${testIndex}.ipynb`)) {
                     lastWriteFileValue = a2;
                     wroteToFileEvent.fire(a2);
                 }

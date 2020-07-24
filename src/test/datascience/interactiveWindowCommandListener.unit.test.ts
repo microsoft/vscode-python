@@ -164,7 +164,7 @@ suite('Interactive window command listener', async () => {
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve(tempFile);
         when(fileSystem.deleteLocal(anything())).thenResolve();
         when(
-            fileSystem.writeLocalFile(
+            fileSystem.writeFile(
                 anything(),
                 argThat((o) => {
                     lastFileContents = o;
@@ -172,7 +172,7 @@ suite('Interactive window command listener', async () => {
                 })
             )
         ).thenResolve();
-        when(fileSystem.areLocalPathsSame(anything(), anything())).thenReturn(true);
+        when(fileSystem.arePathsSame(anything(), anything())).thenReturn(true);
 
         when(interactiveWindowProvider.getOrCreate(anything())).thenResolve(interactiveWindow.object);
         when(notebookImporter.importFromFile(anything())).thenResolve('imported');

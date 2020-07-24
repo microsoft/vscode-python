@@ -110,9 +110,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
 
         // Setup the file system
-        fileSystem
-            .setup((f) => f.areLocalPathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
-            .returns(() => true);
+        fileSystem.setup((f) => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
 
         // Setup config service
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
