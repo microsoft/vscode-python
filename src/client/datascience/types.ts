@@ -586,8 +586,6 @@ export interface INotebookEditor extends Disposable {
     runAllCells(): void;
     runSelectedCell(): void;
     addCellBelow(): void;
-    // onExecutedCode: Event<string>;
-    // notebook?: INotebook;
     undoCells(): void;
     redoCells(): void;
     removeAllCells(): void;
