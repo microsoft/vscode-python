@@ -1,7 +1,8 @@
 {
 	"env": {
 		"node": true,
-		"es6": true
+		"es6": true,
+		"mocha": true
 	},
 	"parser": "@typescript-eslint/parser",
 	"plugins": [
@@ -9,25 +10,64 @@
 	],
 	"extends": [
 		"airbnb",
+		"plugin:@typescript-eslint/recommended",
 		"plugin:import/errors",
 		"plugin:import/warnings",
 		"plugin:import/typescript"
 	],
 	"rules": {
+		// Overriding ESLint rules with Typescript-specific ones
+		"no-bitwise": "off",
+		"no-dupe-class-members": "off",
+		"@typescript-eslint/no-dupe-class-members": "error",
+		"no-empty-function": "off",
+		"@typescript-eslint/no-empty-function": [
+			"error"
+		],
 		"no-unused-vars": "off",
 		"@typescript-eslint/no-unused-vars": "error",
 		"no-useless-constructor": "off",
 		"@typescript-eslint/no-useless-constructor": "error",
+		// Other rules
+		"comma-dangle": "off",
+		"func-names": "off",
+		"import/extensions": "off",
+		"import/no-extraneous-dependencies": [
+			"error",
+			{
+				"peerDependencies": true,
+				"devDependencies": true
+			}
+		],
+		"import/no-unresolved": [
+			"error",
+			{
+				"ignore": [
+					"vscode"
+				]
+			}
+		],
+		"import/prefer-default-export": "off",
 		"indent": [
 			"error",
-			4
+			4,
+			{
+				"SwitchCase": 1
+			}
 		],
-		"import/extensions": "off",
-		"import/prefer-default-export": "off",
 		"max-len": [
 			"error",
 			{
 				"code": 120
+			}
+		],
+		"no-param-reassign": "off",
+		"no-prototype-builtins": "off",
+		"no-underscore-dangle": "off",
+		"no-use-before-define": [
+			"error",
+			{
+				"functions": false
 			}
 		]
 	}
