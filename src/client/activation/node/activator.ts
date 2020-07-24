@@ -24,6 +24,8 @@ import { ILanguageServerManager } from '../types';
  */
 @injectable()
 export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
+    private pylanceInstalled = false;
+
     constructor(
         @inject(ILanguageServerManager) manager: ILanguageServerManager,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
@@ -57,8 +59,9 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
         }
 
         this.extensions.onDidChange(() => {
-            if (this.extensions.getExtension(PYLANCE_EXTENSION_ID)) {
+            if (this.extensions.getExtension(PYLANCE_EXTENSION_ID) && !this.pylanceInstalled) {
                 commands.executeCommand('workbench.action.reloadWindow');
+                this.pylanceInstalled = true;
             }
         });
 
