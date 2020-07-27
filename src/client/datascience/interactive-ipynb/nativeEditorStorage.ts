@@ -189,7 +189,7 @@ export class NativeEditorStorage implements INotebookStorage {
     private async clearHotExit(file: Uri, backupId?: string): Promise<void> {
         const key = backupId || this.getStaticStorageKey(file);
         const filePath = this.getHashedFileName(key);
-        await this.writeToStorage(filePath, undefined);
+        await this.writeToStorage(filePath);
     }
 
     private async writeToStorage(filePath: string, contents?: string, cancelToken?: CancellationToken): Promise<void> {
