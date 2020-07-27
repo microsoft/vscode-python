@@ -116,6 +116,10 @@ export namespace Pylance {
         'Pylance.pylanceNotInstalledMessage',
         'Pylance extension is not installed.'
     );
+    export const pylanceInstalledReloadPromptMessage = localize(
+        'Pylance.pylanceInstalledReloadPromptMessage',
+        'Pylance extension is now installed. Reload window to activate?'
+    );
 }
 
 export namespace LanguageService {

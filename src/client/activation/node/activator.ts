@@ -14,6 +14,7 @@ import {
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IExtensions, Resource } from '../../common/types';
+import { createDeferred } from '../../common/utils/async';
 import { Common, Pylance } from '../../common/utils/localize';
 import { getPylanceExtensionUri } from '../../languageServices/proposeLanguageServerBanner';
 import { LanguageServerActivatorBase } from '../common/activatorBase';
@@ -29,6 +30,7 @@ import { ILanguageServerManager } from '../types';
  */
 @injectable()
 export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
+    private readonly pylanceInstallCompletedDeferred = createDeferred<void>(); // For tests to track Pylance install completion.
     private pylanceInstalled = false;
 
     constructor(
@@ -44,6 +46,10 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
         super(manager, workspace, fs, configurationService);
     }
 
+    get pylanceInstallCompleted(): Promise<void> {
+        return this.pylanceInstallCompletedDeferred.promise;
+    }
+
     public async ensureLanguageServerIsAvailable(resource: Resource): Promise<void> {
         const settings = this.configurationService.getSettings(resource);
         if (settings.downloadLanguageServer === false) {
@@ -55,7 +61,7 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
             return;
         }
         // Point user to Pylance at the store.
-        const response = await this.appShell.showErrorMessage(
+        let response = await this.appShell.showErrorMessage(
             Pylance.installPylanceMessage(),
             Common.bannerLabelYes(),
             Common.bannerLabelNo()
@@ -64,10 +70,18 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
             this.appShell.openUrl(getPylanceExtensionUri(this.appEnv));
         }
 
-        this.extensions.onDidChange(() => {
+        this.extensions.onDidChange(async () => {
             if (this.extensions.getExtension(PYLANCE_EXTENSION_ID) && !this.pylanceInstalled) {
-                this.commands.executeCommand('workbench.action.reloadWindow');
                 this.pylanceInstalled = true;
+                response = await this.appShell.showWarningMessage(
+                    Pylance.pylanceInstalledReloadPromptMessage(),
+                    Common.bannerLabelYes(),
+                    Common.bannerLabelNo()
+                );
+                this.pylanceInstallCompletedDeferred.resolve();
+                if (response === Common.bannerLabelYes()) {
+                    this.commands.executeCommand('workbench.action.reloadWindow');
+                }
             }
         });
 

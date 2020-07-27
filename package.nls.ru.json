@@ -35,5 +35,6 @@
     "Pylance.tryItNow": "Да, хочу",
     "Pylance.remindMeLater": "Напомните позже",
     "Pylance.installPylanceMessage": "Расширение Pylance не установлено. Нажмите Да чтобы открыть страницу установки Pylance.",
-    "Pylance.pylanceNotInstalledMessage": "Расширение Pylance не установлено."
+    "Pylance.pylanceNotInstalledMessage": "Расширение Pylance не установлено.",
+    "Pylance.pylanceInstalledReloadPromptMessage": "Расширение Pylance установлено. Перезагрузить окно для его активации?"
 }

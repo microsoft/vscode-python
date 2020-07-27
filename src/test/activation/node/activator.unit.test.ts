@@ -145,7 +145,7 @@ suite('Pylance Language Server - Activator', () => {
         verify(manager.connect()).never();
     });
 
-    test('If Pylance is not installed and user responded Yes, reload should be called after installation', async () => {
+    test('If Pylance is not installed and user responded Yes, reload should be called if user agreed to it', async () => {
         when(
             appShell.showErrorMessage(Pylance.installPylanceMessage(), Common.bannerLabelYes(), Common.bannerLabelNo())
         ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
@@ -154,9 +154,43 @@ suite('Pylance Language Server - Activator', () => {
             await activator.start(undefined);
             // tslint:disable-next-line: no-empty
         } catch {}
+
         when(extensions.getExtension(PYLANCE_EXTENSION_ID)).thenReturn(pylanceExtension);
+        when(
+            appShell.showWarningMessage(
+                Pylance.pylanceInstalledReloadPromptMessage(),
+                Common.bannerLabelYes(),
+                Common.bannerLabelNo()
+            )
+        ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
+
         extensionsChangedEvent.fire();
+        await activator.pylanceInstallCompleted;
         verify(commands.executeCommand('workbench.action.reloadWindow')).once();
+    });
+
+    test('If Pylance is not installed and user responded Yes, reload should not be called if user refused it', async () => {
+        when(
+            appShell.showErrorMessage(Pylance.installPylanceMessage(), Common.bannerLabelYes(), Common.bannerLabelNo())
+        ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
+
+        try {
+            await activator.start(undefined);
+            // tslint:disable-next-line: no-empty
+        } catch {}
+
+        when(extensions.getExtension(PYLANCE_EXTENSION_ID)).thenReturn(pylanceExtension);
+        when(
+            appShell.showWarningMessage(
+                Pylance.pylanceInstalledReloadPromptMessage(),
+                Common.bannerLabelYes(),
+                Common.bannerLabelNo()
+            )
+        ).thenReturn(Promise.resolve(Common.bannerLabelNo()));
+
+        extensionsChangedEvent.fire();
+        await activator.pylanceInstallCompleted;
+        verify(commands.executeCommand('workbench.action.reloadWindow')).never();
     });
 
     test('If Pylance is not installed and user responded No, Pylance install page should not be opened', async () => {
