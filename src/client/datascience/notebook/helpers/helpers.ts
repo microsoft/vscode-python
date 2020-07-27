@@ -318,7 +318,7 @@ export function updateCellExecutionTimes(cell: NotebookCell, times?: { startTime
 }
 
 function createCodeCellFromVSCNotebookCell(cell: NotebookCell): nbformat.ICodeCell {
-    const metadata = cell.metadata.custom || {};
+    const metadata = cell.metadata.custom?.metadata || {};
     return {
         cell_type: 'code',
         execution_count: cell.metadata.executionOrder ?? null,

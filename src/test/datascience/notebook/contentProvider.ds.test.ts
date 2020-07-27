@@ -141,14 +141,13 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
 
         const originalJsonStr = (await fs.readFile(templateIPynb, { encoding: 'utf8' })).trim();
         const originalJson: nbformat.INotebookContent = JSON.parse(originalJsonStr);
-
         assert.deepEqual(JSON.parse(model.getContent()), originalJson, 'Untrusted notebook json content is invalid');
-        // Commented for now.
+        // https://github.com/microsoft/vscode-python/issues/13155
         // assert.equal(model.getContent(), originalJsonStr, 'Untrusted notebook json not identical');
 
         model.trust();
         assert.deepEqual(JSON.parse(model.getContent()), originalJson, 'Trusted notebook json content is invalid');
-        // Commented for now.
+        // https://github.com/microsoft/vscode-python/issues/13155
         // assert.equal(model.getContent(), originalJsonStr, 'Trusted notebook json not identical');
     });
 });
