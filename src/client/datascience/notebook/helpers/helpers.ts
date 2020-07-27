@@ -300,11 +300,11 @@ export function clearCellForExecution(cell: NotebookCell) {
  */
 export function updateCellExecutionTimes(cell: NotebookCell, times?: { startTime?: number; duration?: number }) {
     if (!times || !times.duration || !times.startTime) {
-        if (cell.metadata.custom?.vscode.start_execution_time) {
-            delete cell.metadata.custom.vscode.start_execution_time;
+        if (cell.metadata.custom?.metadata?.vscode?.start_execution_time) {
+            delete cell.metadata.custom.metadata.vscode.start_execution_time;
         }
-        if (cell.metadata.custom?.vscode.end_execution_time) {
-            delete cell.metadata.custom.vscode.end_execution_time;
+        if (cell.metadata.custom?.metadata?.vscode?.end_execution_time) {
+            delete cell.metadata.custom.metadata.vscode.end_execution_time;
         }
         return;
     }
@@ -312,9 +312,10 @@ export function updateCellExecutionTimes(cell: NotebookCell, times?: { startTime
     const startTimeISO = new Date(times.startTime).toISOString();
     const endTimeISO = new Date(times.startTime + times.duration).toISOString();
     cell.metadata.custom = cell.metadata.custom || {};
-    cell.metadata.custom.vscode = cell.metadata.custom.vscode || {};
-    cell.metadata.custom.vscode.end_execution_time = endTimeISO;
-    cell.metadata.custom.vscode.start_execution_time = startTimeISO;
+    cell.metadata.custom.metadata = cell.metadata.custom.metadata || {};
+    cell.metadata.custom.metadata.vscode = cell.metadata.custom.metadata.vscode || {};
+    cell.metadata.custom.metadata.vscode.end_execution_time = endTimeISO;
+    cell.metadata.custom.metadata.vscode.start_execution_time = startTimeISO;
 }
 
 function createCodeCellFromVSCNotebookCell(cell: NotebookCell): nbformat.ICodeCell {
