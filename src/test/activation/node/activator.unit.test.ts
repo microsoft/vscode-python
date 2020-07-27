@@ -5,13 +5,14 @@
 
 import { expect } from 'chai';
 import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
-import { Extension, Uri } from 'vscode';
+import { EventEmitter, Extension, Uri } from 'vscode';
 import { NodeLanguageServerActivator } from '../../../client/activation/node/activator';
 import { NodeLanguageServerManager } from '../../../client/activation/node/manager';
 import { ILanguageServerManager } from '../../../client/activation/types';
 import {
     IApplicationEnvironment,
     IApplicationShell,
+    ICommandManager,
     IWorkspaceService
 } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
@@ -35,6 +36,9 @@ suite('Pylance Language Server - Activator', () => {
     let extensions: IExtensions;
     let appShell: IApplicationShell;
     let appEnv: IApplicationEnvironment;
+    let commands: ICommandManager;
+    let extensionsChangedEvent: EventEmitter<void>;
+
     // tslint:disable-next-line: no-any
     let pylanceExtension: Extension<any>;
     setup(() => {
@@ -46,10 +50,16 @@ suite('Pylance Language Server - Activator', () => {
         extensions = mock<IExtensions>();
         appShell = mock<IApplicationShell>();
         appEnv = mock<IApplicationEnvironment>();
+        commands = mock<ICommandManager>();
+
         // tslint:disable-next-line: no-any
         pylanceExtension = mock<Extension<any>>();
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
         when(appEnv.uriScheme).thenReturn('scheme');
+
+        extensionsChangedEvent = new EventEmitter<void>();
+        when(extensions.onDidChange).thenReturn(extensionsChangedEvent.event);
+
         activator = new NodeLanguageServerActivator(
             instance(manager),
             instance(workspaceService),
@@ -57,8 +67,12 @@ suite('Pylance Language Server - Activator', () => {
             instance(configuration),
             instance(extensions),
             instance(appShell),
-            instance(appEnv)
+            instance(appEnv),
+            instance(commands)
         );
+    });
+    teardown(() => {
+        extensionsChangedEvent.dispose();
     });
 
     test('Manager must be started without any workspace', async () => {
@@ -127,7 +141,22 @@ suite('Pylance Language Server - Activator', () => {
             .to.eventually.be.rejectedWith(Pylance.pylanceNotInstalledMessage())
             .and.be.an.instanceOf(Error);
 
+        extensionsChangedEvent.fire();
         verify(manager.connect()).never();
+    });
+
+    test('If Pylance is not installed and user responded Yes, reload should be called after installation', async () => {
+        when(
+            appShell.showErrorMessage(Pylance.installPylanceMessage(), Common.bannerLabelYes(), Common.bannerLabelNo())
+        ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
+
+        try {
+            await activator.start(undefined);
+            // tslint:disable-next-line: no-empty
+        } catch {}
+        when(extensions.getExtension(PYLANCE_EXTENSION_ID)).thenReturn(pylanceExtension);
+        extensionsChangedEvent.fire();
+        verify(commands.executeCommand('workbench.action.reloadWindow')).once();
     });
 
     test('If Pylance is not installed and user responded No, Pylance install page should not be opened', async () => {

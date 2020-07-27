@@ -1,11 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { CancellationToken, commands, CompletionItem, ProviderResult } from 'vscode';
+import { CancellationToken, CompletionItem, ProviderResult } from 'vscode';
 // tslint:disable-next-line: import-name
 import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
 import { CompletionResolveRequest } from 'vscode-languageclient/node';
-import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationEnvironment,
+    IApplicationShell,
+    ICommandManager,
+    IWorkspaceService
+} from '../../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IExtensions, Resource } from '../../common/types';
@@ -33,7 +38,8 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
+        @inject(ICommandManager) private readonly commands: ICommandManager
     ) {
         super(manager, workspace, fs, configurationService);
     }
@@ -60,7 +66,7 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
 
         this.extensions.onDidChange(() => {
             if (this.extensions.getExtension(PYLANCE_EXTENSION_ID) && !this.pylanceInstalled) {
-                commands.executeCommand('workbench.action.reloadWindow');
+                this.commands.executeCommand('workbench.action.reloadWindow');
                 this.pylanceInstalled = true;
             }
         });
