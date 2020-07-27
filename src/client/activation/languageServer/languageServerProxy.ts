@@ -111,7 +111,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
         }
         this.startupCompleted.resolve();
     }
-    @swallowExceptions('Activating Unit Tests Manager for Microssoft Python Language Server')
+    @swallowExceptions('Activating Unit Tests Manager for Microsoft Python Language Server')
     protected async registerTestServices() {
         if (!this.languageClient) {
             throw new Error('languageClient not initialized');
