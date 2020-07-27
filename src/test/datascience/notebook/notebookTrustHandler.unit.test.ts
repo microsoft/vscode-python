@@ -97,6 +97,8 @@ suite('DataScience - NativeNotebook TrustHandler', () => {
     }
     test('When a notebook is trusted, the Notebook document is updated accordingly', async () => {
         const [model1, model2] = createModels();
+        model1.getContent = () => 'a';
+        model2.getContent = () => 'a';
         const [nb1, nb2, nbAnotherExtension] = [
             createNotebookDocument(model1),
             createNotebookDocument(model2),

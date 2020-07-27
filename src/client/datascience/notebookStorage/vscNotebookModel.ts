@@ -72,14 +72,12 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         this.document = document;
     }
     public trust() {
-        if (!this.document) {
-            throw new Error('Unable to trust documents if Notebook Editor is not open');
-        }
-
         super.trust();
-        updateVSCNotebookAfterTrustingNotebook(this.document, this._cells);
-        // We don't need old cells.
-        this._cells = [];
+        if (this.document) {
+            updateVSCNotebookAfterTrustingNotebook(this.document, this._cells);
+            // We don't need old cells.
+            this._cells = [];
+        }
     }
     public updateCellSource(cellId: string, source: string): void {
         const cell = this.getCell(cellId);
