@@ -79,7 +79,9 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         // Wait till execution count changes & it is marked as dirty
         await changedEvent.assertFired(5_000);
     });
-    test('Saving after clearing should result in execution_count=null in ipynb file', async () => {
+    test('Saving after clearing should result in execution_count=null in ipynb file', async function () {
+        // https://github.com/microsoft/vscode-python/issues/13159
+        return this.skip();
         const templateIPynb = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',

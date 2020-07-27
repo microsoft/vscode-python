@@ -30,14 +30,14 @@ import {
     createTemporaryNotebook,
     deleteAllCellsAndWait,
     insertPythonCellAndWait,
+    trustAllNotebooks,
     waitForCellHasEmptyOutput,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionOrderInCell,
     waitForExecutionOrderInVSCCell,
     waitForTextOutputInVSCode,
     waitForVSCCellHasEmptyOutput,
-    waitForVSCCellIsRunning,
-    trustAllNotebooks
+    waitForVSCCellIsRunning
 } from './helper';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -83,30 +83,24 @@ suite('DataScience - VSCode Notebook - (fake execution) (Clearing Output)', func
             await editorProvider.open(testIPynb);
         });
         test('Clearing output when not executing', async () => {
-            const vscCells = vscodeNotebook.activeNotebookEditor?.document.cells!;
-            const model = editorProvider.activeEditor?.model!;
-            const cellModels = model.cells!;
+            const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
 
             // Verify we have execution counts and output.
-            assertHasExecutionCompletedSuccessfully(vscCells[0]);
-            assertHasExecutionCompletedWithErrors(vscCells[1]);
-            assertHasExecutionCompletedSuccessfully(vscCells[2]);
-            assertHasOutputInVSCell(vscCells[0]);
-            assertHasOutputInVSCell(vscCells[1]);
-            assertHasOutputInVSCell(vscCells[2]);
-            assertHasOutputInICell(cellModels[0], model);
-            assertHasOutputInICell(cellModels[1], model);
-            assertHasOutputInICell(cellModels[2], model);
+            assertHasExecutionCompletedSuccessfully(cells[0]);
+            assertHasExecutionCompletedWithErrors(cells[1]);
+            assertHasExecutionCompletedSuccessfully(cells[2]);
+            assertHasOutputInVSCell(cells[0]);
+            assertHasOutputInVSCell(cells[1]);
+            assertHasOutputInVSCell(cells[2]);
 
             // Clear the cells
             await commands.executeCommand('notebook.clearAllCellsOutputs');
 
             for (let cellIndex = 0; cellIndex < 3; cellIndex += 1) {
-                await waitForExecutionOrderInVSCCell(vscCells[cellIndex], undefined);
-                await waitForExecutionOrderInCell(cellModels[cellIndex], undefined, model);
+                // https://github.com/microsoft/vscode-python/issues/13159
+                // await waitForExecutionOrderInVSCCell(cells[cellIndex], undefined);
 
-                await waitForVSCCellHasEmptyOutput(vscCells[cellIndex]);
-                await waitForCellHasEmptyOutput(cellModels[cellIndex], model);
+                await waitForVSCCellHasEmptyOutput(cells[cellIndex]);
             }
         });
     });
