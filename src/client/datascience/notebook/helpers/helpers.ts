@@ -9,7 +9,6 @@ import type {
     CellDisplayOutput,
     CellErrorOutput,
     CellOutput,
-    CellStreamOutput,
     NotebookCell,
     NotebookCellData,
     NotebookCellMetadata,
@@ -22,12 +21,12 @@ import {
     concatMultilineStringOutput,
     splitMultilineString
 } from '../../../../datascience-ui/common';
-import { createCodeCell, createMarkdownCell } from '../../../../datascience-ui/common/cellFactory';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError, traceWarning } from '../../../common/logger';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { Telemetry } from '../../constants';
 import { CellState, ICell, INotebookModel } from '../../types';
 import { JupyterNotebookView } from '../constants';
-import { mapVSCNotebookCellToCellModel } from './cellMappers';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
@@ -86,38 +85,34 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
     };
 }
 export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INotebookModel): ICell {
-    const cell = (() => {
-        if (vscCell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
-            return {
-                data: createMarkdownCell(splitMultilineString(vscCell.document.getText()), true),
-                file: model.file.toString(),
-                id: uuid(),
-                line: 0,
-                state: CellState.init
-            };
-        }
+    if (vscCell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
+        const data = createMarkdownCellFromVSCNotebookCell(vscCell);
         return {
-            data: createCodeCell([vscCell.document.getText()], []),
+            data,
             file: model.file.toString(),
             id: uuid(),
             line: 0,
             state: CellState.init
         };
-    })();
-
-    // Add the metadata back to the cell if we have any.
-    // Refer to `addCellMetadata` to see how metadata is stored in VSC Cells.
-    // This metadata would exist if the user copied and pasted an existing cell.
-    if (vscCell.metadata.custom?.vscodeMetadata) {
-        cell.data = {
-            ...cell.data,
-            ...vscCell.metadata.custom?.vscodeMetadata
+    } else if (vscCell.language === 'raw') {
+        const data = createRawCellFromVSCNotebookCell(vscCell);
+        return {
+            data,
+            file: model.file.toString(),
+            id: uuid(),
+            line: 0,
+            state: CellState.init
+        };
+    } else {
+        const data = createCodeCellFromVSCNotebookCell(vscCell);
+        return {
+            data,
+            file: model.file.toString(),
+            id: uuid(),
+            line: 0,
+            state: CellState.init
         };
     }
-    // Ensure we add the cell id of the new cell to the VSC cell to map into ours.
-    mapVSCNotebookCellToCellModel(vscCell, cell);
-
-    return cell;
 }
 
 /**
@@ -128,15 +123,12 @@ export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INot
  */
 export function updateVSCNotebookCellMetadata(cellMetadata: NotebookCellMetadata, cell: ICell) {
     cellMetadata.custom = cellMetadata.custom ?? {};
-    // tslint:disable-next-line: no-any
-    const metadata: Record<string, any> = {};
-    cellMetadata.custom.vscodeMetadata = metadata;
     // We put this only for VSC to display in diff view.
     // Else we don't use this.
     const propertiesToClone = ['metadata', 'attachments'];
     propertiesToClone.forEach((propertyToClone) => {
         if (cell.data[propertyToClone]) {
-            metadata[propertyToClone] = cloneDeep(cell.data[propertyToClone]);
+            cellMetadata.custom![propertyToClone] = cloneDeep(cell.data[propertyToClone]);
         }
     });
 }
@@ -147,28 +139,62 @@ export function getDefaultCodeLanguage(model: INotebookModel) {
         ? model.metadata?.language_info?.name
         : PYTHON_LANGUAGE;
 }
-
-export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: ICell): NotebookCellData | undefined {
-    if (cell.data.cell_type === 'raw') {
-        const rawCell = cell.data;
-        return {
-            cellKind: vscodeNotebookEnums.CellKind.Code,
-            language: 'raw',
-            metadata: {
-                custom: {
-                    metadata: rawCell.metadata,
-                    attachments: rawCell.attachments
-                }
-            },
-            outputs: [],
-            source: concatMultilineStringInput(cell.data.source)
-        };
+function createRawCellFromVSCNotebookCell(cell: NotebookCell): nbformat.IRawCell {
+    const rawCell: nbformat.IRawCell = {
+        cell_type: 'raw',
+        source: splitMultilineString(cell.document.getText()),
+        metadata: cell.metadata.custom?.metadata || {}
+    };
+    if (cell.metadata.custom?.attachments) {
+        rawCell.attachments = cell.metadata.custom?.attachments;
     }
-    if (cell.data.cell_type !== 'code' && cell.data.cell_type !== 'markdown') {
-        traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.data.cell_type}`);
-        return;
-    }
+    return rawCell;
+}
 
+function createVSCNotebookCellDataFromRawCell(model: INotebookModel, cell: ICell): NotebookCellData {
+    const notebookCellMetadata: NotebookCellMetadata = {
+        editable: model.isTrusted,
+        executionOrder: undefined,
+        hasExecutionOrder: false,
+        runnable: false
+    };
+    updateVSCNotebookCellMetadata(notebookCellMetadata, cell);
+    return {
+        cellKind: vscodeNotebookEnums.CellKind.Code,
+        language: 'raw',
+        metadata: notebookCellMetadata,
+        outputs: [],
+        source: concatMultilineStringInput(cell.data.source)
+    };
+}
+function createMarkdownCellFromVSCNotebookCell(cell: NotebookCell): nbformat.IMarkdownCell {
+    const markdownCell: nbformat.IMarkdownCell = {
+        cell_type: 'markdown',
+        source: splitMultilineString(cell.document.getText()),
+        metadata: cell.metadata.custom?.metadata || {}
+    };
+    if (cell.metadata.custom?.attachments) {
+        markdownCell.attachments = cell.metadata.custom?.attachments;
+    }
+    return markdownCell;
+}
+function createVSCNotebookCellDataFromMarkdownCell(model: INotebookModel, cell: ICell): NotebookCellData {
+    const notebookCellMetadata: NotebookCellMetadata = {
+        editable: model.isTrusted,
+        executionOrder: undefined,
+        hasExecutionOrder: false,
+        runnable: false
+    };
+    updateVSCNotebookCellMetadata(notebookCellMetadata, cell);
+    return {
+        cellKind: vscodeNotebookEnums.CellKind.Markdown,
+        language: MARKDOWN_LANGUAGE,
+        metadata: notebookCellMetadata,
+        source: concatMultilineStringInput(cell.data.source),
+        outputs: []
+    };
+}
+function createVSCNotebookCellDataFromCodeCell(model: INotebookModel, cell: ICell): NotebookCellData {
     // tslint:disable-next-line: no-any
     const outputs = createVSCCellOutputsFromOutputs(cell.data.outputs as any);
     const defaultCodeLanguage = getDefaultCodeLanguage(model);
@@ -193,9 +219,9 @@ export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: I
     const notebookCellMetadata: NotebookCellMetadata = {
         editable: model.isTrusted,
         executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
-        hasExecutionOrder: cell.data.cell_type === 'code',
+        hasExecutionOrder: true,
         runState,
-        runnable: cell.data.cell_type === 'code' && model.isTrusted
+        runnable: model.isTrusted
     };
 
     if (statusMessage) {
@@ -224,23 +250,66 @@ export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: I
         }
     }
     return {
-        cellKind:
-            cell.data.cell_type === 'code' ? vscodeNotebookEnums.CellKind.Code : vscodeNotebookEnums.CellKind.Markdown,
-        language: cell.data.cell_type === 'code' ? defaultCodeLanguage : MARKDOWN_LANGUAGE,
+        cellKind: vscodeNotebookEnums.CellKind.Code,
+        language: defaultCodeLanguage,
         metadata: notebookCellMetadata,
         source: concatMultilineStringInput(cell.data.source),
         outputs
     };
 }
 
+function createIOutputFromCellOutputs(cellOutputs: CellOutput[]): nbformat.IOutput[] {
+    return cellOutputs
+        .map((output) => {
+            switch (output.outputKind) {
+                case vscodeNotebookEnums.CellOutputKind.Error:
+                    return translateCellErrorOutput(output);
+                case vscodeNotebookEnums.CellOutputKind.Rich:
+                    return translateCellDisplayOutput(output);
+                case vscodeNotebookEnums.CellOutputKind.Text:
+                    // We do not generate text output.
+                    return;
+                default:
+                    return;
+            }
+        })
+        .filter((output) => !!output)
+        .map((output) => output!!);
+}
+function createCodeCellFromVSCNotebookCell(cell: NotebookCell): nbformat.ICodeCell {
+    return {
+        cell_type: 'code',
+        execution_count: cell.metadata.executionOrder ?? null,
+        source: splitMultilineString(cell.document.getText()),
+        outputs: createIOutputFromCellOutputs(cell.outputs),
+        metadata: cell.metadata.custom?.metadata || {}
+    };
+}
+export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: ICell): NotebookCellData | undefined {
+    switch (cell.data.cell_type) {
+        case 'raw': {
+            return createVSCNotebookCellDataFromRawCell(model, cell);
+        }
+        case 'markdown': {
+            return createVSCNotebookCellDataFromMarkdownCell(model, cell);
+        }
+        case 'code': {
+            return createVSCNotebookCellDataFromCodeCell(model, cell);
+        }
+        default: {
+            traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.data.cell_type}`);
+        }
+    }
+}
+
 export function createVSCCellOutputsFromOutputs(outputs?: nbformat.IOutput[]): CellOutput[] {
     const cellOutputs: nbformat.IOutput[] = Array.isArray(outputs) ? (outputs as []) : [];
-    return cellOutputs
-        .map(cellOutputToVSCCellOutput)
-        .filter((item) => !!item)
-        .map((item) => item!);
+    return cellOutputs.map(cellOutputToVSCCellOutput);
 }
-const cellOutputMappers = new Map<nbformat.OutputType, (output: nbformat.IOutput) => CellOutput | undefined>();
+const cellOutputMappers = new Map<
+    nbformat.OutputType,
+    (output: nbformat.IOutput, outputType: nbformat.OutputType) => CellOutput
+>();
 // tslint:disable-next-line: no-any
 cellOutputMappers.set('display_data', translateDisplayDataOutput as any);
 // tslint:disable-next-line: no-any
@@ -251,12 +320,37 @@ cellOutputMappers.set('execute_result', translateDisplayDataOutput as any);
 cellOutputMappers.set('stream', translateStreamOutput as any);
 // tslint:disable-next-line: no-any
 cellOutputMappers.set('update_display_data', translateDisplayDataOutput as any);
-export function cellOutputToVSCCellOutput(output: nbformat.IOutput): CellOutput | undefined {
+export function cellOutputToVSCCellOutput(output: nbformat.IOutput): CellOutput {
     const fn = cellOutputMappers.get(output.output_type as nbformat.OutputType);
     if (fn) {
-        return fn(output);
+        return fn(output, (output.output_type as unknown) as nbformat.OutputType);
+    } else {
+        traceWarning(`Unable to translate cell from ${output.output_type} to NotebookCellData for VS Code.`);
+        return {
+            outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
+            // tslint:disable-next-line: no-any
+            data: output.data as any,
+            metadata: { custom: { vscode: { outputType: output.output_type } } }
+        };
     }
-    traceWarning(`Unable to translate cell from ${output.output_type} to NotebookCellData for VS Code.`);
+}
+
+export function vscCellOutputToCellOutput(output: CellOutput): nbformat.IOutput | undefined {
+    switch (output.outputKind) {
+        case vscodeNotebookEnums.CellOutputKind.Error: {
+            return translateCellErrorOutput(output);
+        }
+        case vscodeNotebookEnums.CellOutputKind.Rich: {
+            return translateCellDisplayOutput(output);
+        }
+        case vscodeNotebookEnums.CellOutputKind.Text: {
+            // We do not return such output.
+            return;
+        }
+        default: {
+            return;
+        }
+    }
 }
 
 /**
@@ -269,15 +363,16 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): CellOutput 
  * @returns {(CellDisplayOutput | undefined)}
  */
 function translateDisplayDataOutput(
-    output: nbformat.IDisplayData | nbformat.IDisplayUpdate | nbformat.IExecuteResult
+    output: nbformat.IDisplayData | nbformat.IDisplayUpdate | nbformat.IExecuteResult,
+    outputType: nbformat.OutputType
 ): CellDisplayOutput | undefined {
-    // If no mimeType data, then there's nothing to display.
-    if (!Object.keys(output.data || {}).length) {
-        return;
-    }
     const data = { ...output.data };
     // tslint:disable-next-line: no-any
-    const metadata = output.metadata ? ({ custom: output.metadata } as any) : undefined;
+    const metadata = output.metadata ? ({ custom: output.metadata } as any) : { custom: {} };
+    metadata.custom.vscode = { outputType };
+    if (outputType === 'execute_result') {
+        metadata.custom.vscode.execution_count = (output as nbformat.IExecuteResult).execution_count;
+    }
     return {
         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
         data,
@@ -285,15 +380,85 @@ function translateDisplayDataOutput(
     };
 }
 
-function translateStreamOutput(output: nbformat.IStream): CellStreamOutput | CellDisplayOutput {
+function translateStreamOutput(output: nbformat.IStream, outputType: nbformat.OutputType): CellDisplayOutput {
     // Do not return as `CellOutputKind.Text`. VSC will not translate ascii output correctly.
     // Instead format the output as rich.
     return {
         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
         data: {
             ['text/plain']: concatMultilineStringOutput(output.text)
+        },
+        metadata: {
+            custom: { vscode: { outputType, name: output.name } }
         }
     };
+}
+
+// tslint:disable-next-line: no-any
+function getSanitizedCellMetadata(metadata?: { [key: string]: any }) {
+    const cloned = { ...metadata };
+    if ('vscode' in cloned) {
+        delete cloned.vscode;
+    }
+    return cloned;
+}
+function translateCellDisplayOutput(
+    output: CellDisplayOutput
+):
+    | nbformat.IStream
+    | nbformat.IDisplayData
+    | nbformat.IDisplayUpdate
+    | nbformat.IExecuteResult
+    | nbformat.IUnrecognizedOutput {
+    const outputType: nbformat.OutputType = output.metadata?.custom?.vscode?.outputType;
+    switch (outputType) {
+        case 'stream': {
+            return {
+                output_type: 'stream',
+                name: output.metadata?.custom?.vscode?.name,
+                text: splitMultilineString(output.data['text/plain'])
+            };
+        }
+        case 'display_data': {
+            const metadata = getSanitizedCellMetadata(output.metadata?.custom);
+            return {
+                output_type: 'display_data',
+                data: output.data,
+                metadata
+            };
+        }
+        case 'execute_result': {
+            const metadata = getSanitizedCellMetadata(output.metadata?.custom);
+            return {
+                output_type: 'execute_result',
+                data: output.data,
+                metadata,
+                execution_count: output.metadata?.custom?.vscode?.execution_count
+            };
+        }
+        case 'update_display_data': {
+            const metadata = getSanitizedCellMetadata(output.metadata?.custom);
+            return {
+                output_type: 'update_display_data',
+                data: output.data,
+                metadata
+            };
+        }
+        default: {
+            sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
+                isErrorOutput: outputType === 'error'
+            });
+            const metadata = getSanitizedCellMetadata(output.metadata?.custom);
+            const unknownOutput: nbformat.IUnrecognizedOutput = { output_type: outputType };
+            if (Object.keys(metadata).length > 0) {
+                unknownOutput.metadata = metadata;
+            }
+            if (Object.keys(output.data).length > 0) {
+                unknownOutput.data = output.data;
+            }
+            return unknownOutput;
+        }
+    }
 }
 
 /**
@@ -304,9 +469,17 @@ function translateStreamOutput(output: nbformat.IStream): CellStreamOutput | Cel
  */
 export function translateErrorOutput(output: nbformat.IError): CellErrorOutput {
     return {
-        ename: '',
-        evalue: '',
+        ename: output.ename,
+        evalue: output.evalue,
         outputKind: vscodeNotebookEnums.CellOutputKind.Error,
+        traceback: output.traceback
+    };
+}
+export function translateCellErrorOutput(output: CellErrorOutput): nbformat.IError {
+    return {
+        output_type: 'error',
+        ename: output.ename,
+        evalue: output.evalue,
         traceback: output.traceback
     };
 }
