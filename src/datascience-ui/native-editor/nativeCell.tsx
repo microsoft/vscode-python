@@ -822,6 +822,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         enableScroll={this.props.enableScroll}
                         themeMatplotlibPlots={themeMatplotlibPlots}
                         widgetFailed={this.props.widgetFailed}
+                        openSettings={this.props.openSettings}
                     />
                 </div>
             );

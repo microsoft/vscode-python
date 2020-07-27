@@ -160,6 +160,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                                         enableScroll={this.props.enableScroll}
                                         themeMatplotlibPlots={themeMatplotlibPlots}
                                         widgetFailed={this.props.widgetFailed}
+                                        openSettings={this.props.openSettings}
                                     />
                                 </div>
                             </div>
