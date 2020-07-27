@@ -104,6 +104,15 @@ export abstract class BaseNotebookModel implements INotebookModel {
 
         return changed;
     }
+    protected generateNotebookJson(){
+        // Make sure we have some
+        this.ensureNotebookJson();
+
+        // Reuse our original json except for the cells.
+        const json = { ...this.notebookJson };
+        json.cells = this.cells.map((c) => pruneCell(c.data));
+        return json;
+    }
 
     private handleModelChange(change: NotebookModelChange) {
         const oldDirty = this.isDirty;
@@ -211,15 +220,9 @@ export abstract class BaseNotebookModel implements INotebookModel {
     }
 
     private generateNotebookContent(): string {
-        // Make sure we have some
-        this.ensureNotebookJson();
-
-        // Reuse our original json except for the cells.
-        const json = { ...this.notebookJson };
-        json.cells = this.cells.map((c) => pruneCell(c.data));
+        const json = this.generateNotebookJson();
         return JSON.stringify(json, null, this.indentAmount);
     }
-
     private getStoredKernelId(): string | undefined {
         // Stored as a list so we don't take up too much space
         const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
@@ -250,4 +253,4 @@ export abstract class BaseNotebookModel implements INotebookModel {
         }
         return this.globalMemento.update(ActiveKernelIdList, list);
     }
-}
+

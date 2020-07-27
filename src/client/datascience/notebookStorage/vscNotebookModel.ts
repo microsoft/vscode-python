@@ -20,10 +20,35 @@ interface IBaseCellVSCodeMetadata {
     start_execution_time?: string;
 }
 
+// // tslint:disable-next-line: no-any
+// function sortObjectPropertiesRecursively(obj: any): any {
+//     if (Array.isArray(obj)) {
+//         return obj.map(sortObjectPropertiesRecursively);
+//     }
+//     if (obj !== undefined && obj !== null && typeof obj === 'object' && Object.keys(obj).length > 0) {
+//         return (
+//             Object.keys(obj)
+//                 .sort()
+//                 // tslint:disable-next-line: no-any
+//                 .reduce<Record<string, any>>((sortedObj, prop) => {
+//                     sortedObj[prop] = sortObjectPropertiesRecursively(obj[prop]);
+//                     return sortedObj;
+//                     // tslint:disable-next-line: no-any
+//                 }, {}) as any
+//         );
+//     }
+//     return obj;
+// }
+
 // Exported for test mocks
 export class VSCodeNotebookModel extends BaseNotebookModel {
     public get isDirty(): boolean {
         return this.document?.isDirty === true;
+    }
+    public get cells(): ICell[] {
+        return this.document
+            ? this.document.cells.map((cell) => createCellFromVSCNotebookCell(cell, this))
+            : this._cells;
     }
     private document?: NotebookDocument;
 
@@ -38,11 +63,6 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         pythonNumber: number = 3
     ) {
         super(isTrusted, file, cells, globalMemento, crypto, json, indentAmount, pythonNumber);
-    }
-    public get cells(): ICell[] {
-        return this.document
-            ? this.document.cells.map((cell) => createCellFromVSCNotebookCell(cell, this))
-            : this._cells;
     }
     /**
      * Unfortunately Notebook models are created early, well before a VSC Notebook Document is created.
@@ -149,6 +169,17 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             // This line is required because ts-node sucks on GHA.
             // tslint:disable-next-line: no-any
         } as any;
+    }
+    protected generateNotebookJson() {
+        // tslint:disable-next-line: no-unnecessary-local-variable
+        const json = super.generateNotebookJson();
+        // Object keys in metadata, cells and the like need to be sorted alphabetically.
+        // Jupyter (Python) seems to sort them alphabetically.
+        // We should do the same to minimize changes to content when saving ipynb.
+        // return sortObjectPropertiesRecursively(json);
+        // Disabled for now, to determine how we should better handle this.
+        // Should we always sort or only sort documents created by jupyter, or what?
+        return json;
     }
 
     protected handleRedo(change: NotebookModelChange): boolean {
