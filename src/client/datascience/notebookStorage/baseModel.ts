@@ -7,9 +7,9 @@ import { ICryptoUtils } from '../../common/types';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { pruneCell } from '../common';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
-import { isUntitled } from '../interactive-ipynb/nativeEditorStorage';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { ICell, IJupyterKernelSpec, INotebookMetadataLive, INotebookModel } from '../types';
+import { isUntitled } from './nativeEditorStorage';
 
 export const ActiveKernelIdList = `Active_Kernel_Id_List`;
 // This is the number of kernel ids that will be remembered between opening and closing VS code

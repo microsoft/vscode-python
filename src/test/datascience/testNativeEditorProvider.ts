@@ -16,9 +16,9 @@ import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
-import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { NativeEditorProviderOld } from '../../client/datascience/interactive-ipynb/nativeEditorProviderOld';
-import { INotebookStorageProvider } from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
+import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
+import { INotebookStorageProvider } from '../../client/datascience/notebookStorage/notebookStorageProvider';
 import {
     IDataScienceErrorHandler,
     IDataScienceFileSystem,

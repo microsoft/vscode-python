@@ -29,11 +29,11 @@ import {
     IEditorContentChange,
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { NativeEditorStorage } from '../../../client/datascience/interactive-ipynb/nativeEditorStorage';
-import { NotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
 import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
+import { NativeEditorStorage } from '../../../client/datascience/notebookStorage/nativeEditorStorage';
+import { NotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import {
     ICell,
     IDataScienceFileSystem,

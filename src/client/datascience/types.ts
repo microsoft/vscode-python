@@ -557,7 +557,7 @@ export interface INotebookEditorProvider {
 
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
-export interface INotebookEditor extends IInteractiveBase {
+export interface INotebookEditor extends Disposable {
     /**
      * Type of editor, whether it is the old, custom or native notebook editor.
      * Once VSC Notebook is stable, this property can be removed.
@@ -580,10 +580,17 @@ export interface INotebookEditor extends IInteractiveBase {
     readonly visible: boolean;
     readonly active: boolean;
     readonly model: INotebookModel;
+    onExecutedCode: Event<string>;
+    notebook?: INotebook;
     show(): Promise<void>;
     runAllCells(): void;
     runSelectedCell(): void;
     addCellBelow(): void;
+    undoCells(): void;
+    redoCells(): void;
+    removeAllCells(): void;
+    interruptKernel(): Promise<void>;
+    restartKernel(): Promise<void>;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');

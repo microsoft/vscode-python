@@ -33,6 +33,8 @@ import { Commands, Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { NativeEditorProvider } from '../notebookStorage/nativeEditorProvider';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import {
     ICodeCssGenerator,
@@ -54,9 +56,7 @@ import {
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorOldWebView } from './nativeEditorOldWebView';
-import { NativeEditorProvider } from './nativeEditorProvider';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
-import { INotebookStorageProvider } from './notebookStorageProvider';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');

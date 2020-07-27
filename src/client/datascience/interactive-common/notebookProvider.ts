@@ -10,8 +10,8 @@ import { IWorkspaceService } from '../../common/application/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
-import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,

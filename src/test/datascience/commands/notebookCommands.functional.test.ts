@@ -12,7 +12,6 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { NotebookCommands } from '../../../client/datascience/commands/notebookCommands';
 import { Commands } from '../../../client/datascience/constants';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
-import { NativeEditorProvider } from '../../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { InteractiveWindowProvider } from '../../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
 import { JupyterSessionManagerFactory } from '../../../client/datascience/jupyter/jupyterSessionManagerFactory';
@@ -23,6 +22,7 @@ import { KernelService } from '../../../client/datascience/jupyter/kernels/kerne
 import { KernelSwitcher } from '../../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { IKernelSpecQuickPickItem } from '../../../client/datascience/jupyter/kernels/types';
 import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types';
+import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { IInteractiveWindowProvider, INotebookEditorProvider } from '../../../client/datascience/types';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { InterpreterType } from '../../../client/pythonEnvironments/info';

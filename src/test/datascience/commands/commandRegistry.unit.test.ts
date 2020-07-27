@@ -16,7 +16,7 @@ import { JupyterServerSelectorCommand } from '../../../client/datascience/comman
 import { Commands } from '../../../client/datascience/constants';
 import { DataScienceFileSystem } from '../../../client/datascience/dataScienceFileSystem';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
-import { NativeEditorProvider } from '../../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable: max-func-body-length

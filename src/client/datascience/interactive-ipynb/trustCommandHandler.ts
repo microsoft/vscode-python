@@ -15,7 +15,7 @@ import { swallowExceptions } from '../../common/utils/decorators';
 import { DataScience } from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
-import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebookEditorProvider, ITrustService } from '../types';
 
 @injectable()

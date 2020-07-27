@@ -226,12 +226,7 @@ import { AutoSaveService } from '../../client/datascience/interactive-ipynb/auto
 import { DigestStorage } from '../../client/datascience/interactive-ipynb/digestStorage';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorRunByLineListener } from '../../client/datascience/interactive-ipynb/nativeEditorRunByLineListener';
-import { NativeEditorStorage } from '../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
-import {
-    INotebookStorageProvider,
-    NotebookStorageProvider
-} from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { TrustService } from '../../client/datascience/interactive-ipynb/trustService';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
@@ -275,6 +270,11 @@ import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelL
 import { IKernelFinder, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
 import { NotebookAndInteractiveWindowUsageTracker } from '../../client/datascience/notebookAndInteractiveTracker';
 import { NotebookModelFactory } from '../../client/datascience/notebookStorage/factory';
+import { NativeEditorStorage } from '../../client/datascience/notebookStorage/nativeEditorStorage';
+import {
+    INotebookStorageProvider,
+    NotebookStorageProvider
+} from '../../client/datascience/notebookStorage/notebookStorageProvider';
 import { INotebookModelFactory } from '../../client/datascience/notebookStorage/types';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';

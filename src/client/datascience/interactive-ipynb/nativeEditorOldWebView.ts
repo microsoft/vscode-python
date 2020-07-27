@@ -30,6 +30,7 @@ import { Commands, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
@@ -49,7 +50,6 @@ import {
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
-import { INotebookStorageProvider } from './notebookStorageProvider';
 
 enum AskForSaveResult {
     Yes,

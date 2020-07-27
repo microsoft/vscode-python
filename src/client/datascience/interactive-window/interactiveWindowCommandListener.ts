@@ -18,8 +18,8 @@ import { CommandSource } from '../../testing/common/constants';
 import { generateCellRangesFromDocument, generateCellsFromDocument } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
 import { ExportFormat, IExportManager } from '../export/types';
-import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,

@@ -41,8 +41,9 @@ import { generateNewNotebookUri } from '../common';
 import { Identifiers, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
+import { NativeEditor } from '../interactive-ipynb/nativeEditor';
+import { NativeEditorSynchronizer } from '../interactive-ipynb/nativeEditorSynchronizer';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
-import { NotebookModelEditEvent } from '../notebookStorage/notebookModelEditEvent';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
@@ -61,9 +62,8 @@ import {
     IThemeFinder,
     ITrustService
 } from '../types';
-import { NativeEditor } from './nativeEditor';
 import { getNextUntitledCounter } from './nativeEditorStorage';
-import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
+import { NotebookModelEditEvent } from './notebookModelEditEvent';
 import { INotebookStorageProvider } from './notebookStorageProvider';
 
 // Class that is registered as the custom editor provider for notebooks. VS code will call into this class when
