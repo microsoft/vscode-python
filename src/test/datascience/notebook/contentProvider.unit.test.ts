@@ -17,7 +17,7 @@ import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { CellState, INotebookModel } from '../../../client/datascience/types';
 // tslint:disable: no-any
-suite('DataScience - NativeNotebook ContentProvider', () => {
+suite('DataScience - NativeNotebook ContentProviderxxx', () => {
     let storageProvider: INotebookStorageProvider;
     let contentProvider: VSCodeNotebookContentProvider;
     const fileUri = Uri.file('a.ipynb');
@@ -106,7 +106,6 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
-                            runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
                             runnable: false
                         }
                     }
@@ -191,7 +190,6 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
-                            runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
                             runnable: false
                         }
                     }

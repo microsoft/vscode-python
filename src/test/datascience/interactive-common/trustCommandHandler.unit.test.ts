@@ -118,7 +118,7 @@ suite('DataScience - Trust Command Handler', () => {
         verify(trustService.trustNotebook(anything(), anything())).never();
         assert.isFalse(model.isTrusted);
     });
-    test('Executing command will update trustxxx', async () => {
+    test('Executing command will update trust', async () => {
         when(applicationShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
             DataScience.trustNotebook() as any
         );
