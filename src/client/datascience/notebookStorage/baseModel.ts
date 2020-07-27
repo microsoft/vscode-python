@@ -104,7 +104,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
 
         return changed;
     }
-    protected generateNotebookJson(){
+    protected generateNotebookJson() {
         // Make sure we have some
         this.ensureNotebookJson();
 
@@ -253,4 +253,4 @@ export abstract class BaseNotebookModel implements INotebookModel {
         }
         return this.globalMemento.update(ActiveKernelIdList, list);
     }
-
+}
