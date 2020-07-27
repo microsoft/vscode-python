@@ -25,7 +25,7 @@ class MultiCancellationTokenSource {
         };
     }
     public cancel(): void {
-        this.token.isCancellationRequested = false;
+        this.token.isCancellationRequested = true;
         this.eventEmitter.fire();
     }
 
