@@ -8,7 +8,6 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
-import { ICell } from '../../types';
 import { createVSCCellOutputsFromOutputs, translateErrorOutput } from './helpers';
 
 export interface IBaseCellVSCodeMetadata {
@@ -117,22 +116,4 @@ export function updateCellOutput(vscCell: NotebookCell, outputs: nbformat.IOutpu
     }
     vscCell.outputs = newOutput;
     return true;
-}
-
-/**
- * Store execution start and end times.
- * Stored as ISO for portability.
- */
-export function updateCellExecutionTimes(
-    model: VSCodeNotebookModel,
-    cell: ICell,
-    startTime?: number,
-    duration?: number
-) {
-    const startTimeISO = startTime ? new Date(startTime).toISOString() : undefined;
-    const endTimeISO = duration && startTime ? new Date(startTime + duration).toISOString() : undefined;
-    model.updateCellMetadata(cell, {
-        end_execution_time: endTimeISO,
-        start_execution_time: startTimeISO
-    });
 }

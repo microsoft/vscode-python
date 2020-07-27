@@ -9,8 +9,7 @@ import { splitMultilineString } from '../../../datascience-ui/common';
 import { traceError } from '../../common/logger';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
-import { updateVSCNotebookAfterTrustingNotebook } from '../notebook/helpers/cellUpdateHelpers';
-import { createCellFromVSCNotebookCell } from '../notebook/helpers/helpers';
+import { createCellFromVSCNotebookCell, updateVSCNotebookAfterTrustingNotebook } from '../notebook/helpers/helpers';
 import { ICell } from '../types';
 import { BaseNotebookModel } from './baseModel';
 

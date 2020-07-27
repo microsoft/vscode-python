@@ -36,7 +36,8 @@ import {
     waitForExecutionOrderInVSCCell,
     waitForTextOutputInVSCode,
     waitForVSCCellHasEmptyOutput,
-    waitForVSCCellIsRunning
+    waitForVSCCellIsRunning,
+    trustAllNotebooks
 } from './helper';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -59,6 +60,7 @@ suite('DataScience - VSCode Notebook - (fake execution) (Clearing Output)', func
         if (!(await canRunTests())) {
             return this.skip();
         }
+        await trustAllNotebooks();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -76,6 +78,7 @@ suite('DataScience - VSCode Notebook - (fake execution) (Clearing Output)', func
         );
         suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables2));
         setup(async () => {
+            await trustAllNotebooks();
             const testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables2));
             await editorProvider.open(testIPynb);
         });
@@ -109,6 +112,7 @@ suite('DataScience - VSCode Notebook - (fake execution) (Clearing Output)', func
     });
     suite('Use same notebook for tests', () => {
         suiteSetup(async () => {
+            await trustAllNotebooks();
             // Open a notebook and use this for all tests in this test suite.
             await editorProvider.createNew();
         });

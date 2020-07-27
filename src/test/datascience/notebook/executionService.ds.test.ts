@@ -26,7 +26,8 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
     insertPythonCellAndWait,
-    startJupyter
+    startJupyter,
+    trustAllNotebooks
 } from './helper';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -46,7 +47,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         if (!(await canRunTests())) {
             return this.skip();
         }
+        await trustAllNotebooks();
         await startJupyter();
+        await trustAllNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);

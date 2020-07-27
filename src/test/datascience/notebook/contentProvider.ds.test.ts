@@ -16,7 +16,7 @@ import { IDisposable } from '../../../client/common/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
-import { canRunTests, closeNotebooksAndCleanUpAfterTests, createTemporaryNotebook } from './helper';
+import { canRunTests, closeNotebooksAndCleanUpAfterTests, createTemporaryNotebook, trustAllNotebooks } from './helper';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -40,6 +40,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         if (!(await canRunTests())) {
             return this.skip();
         }
+        await trustAllNotebooks();
     });
     setup(async () => {
         sinon.restore();
@@ -142,12 +143,12 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         const originalJson: nbformat.INotebookContent = JSON.parse(originalJsonStr);
 
         assert.deepEqual(JSON.parse(model.getContent()), originalJson, 'Untrusted notebook json content is invalid');
-        // Commneted for now.
+        // Commented for now.
         // assert.equal(model.getContent(), originalJsonStr, 'Untrusted notebook json not identical');
 
         model.trust();
         assert.deepEqual(JSON.parse(model.getContent()), originalJson, 'Trusted notebook json content is invalid');
-        // Commneted for now.
+        // Commented for now.
         // assert.equal(model.getContent(), originalJsonStr, 'Trusted notebook json not identical');
     });
 });

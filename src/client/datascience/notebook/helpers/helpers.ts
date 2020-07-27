@@ -283,13 +283,48 @@ function createIOutputFromCellOutputs(cellOutputs: CellOutput[]): nbformat.IOutp
         .filter((output) => !!output)
         .map((output) => output!!);
 }
+
+export function clearCellForExecution(cell: NotebookCell) {
+    cell.metadata.statusMessage = undefined;
+    cell.metadata.executionOrder = undefined;
+    cell.metadata.lastRunDuration = undefined;
+    cell.metadata.runStartTime = undefined;
+    cell.outputs = [];
+
+    updateCellExecutionTimes(cell);
+}
+
+/**
+ * Store execution start and end times.
+ * Stored as ISO for portability.
+ */
+export function updateCellExecutionTimes(cell: NotebookCell, times?: { startTime?: number; duration?: number }) {
+    if (!times || !times.duration || !times.startTime) {
+        if (cell.metadata.custom?.vscode.start_execution_time) {
+            delete cell.metadata.custom.vscode.start_execution_time;
+        }
+        if (cell.metadata.custom?.vscode.end_execution_time) {
+            delete cell.metadata.custom.vscode.end_execution_time;
+        }
+        return;
+    }
+
+    const startTimeISO = new Date(times.startTime).toISOString();
+    const endTimeISO = new Date(times.startTime + times.duration).toISOString();
+    cell.metadata.custom = cell.metadata.custom || {};
+    cell.metadata.custom.vscode = cell.metadata.custom.vscode || {};
+    cell.metadata.custom.vscode.end_execution_time = endTimeISO;
+    cell.metadata.custom.vscode.start_execution_time = startTimeISO;
+}
+
 function createCodeCellFromVSCNotebookCell(cell: NotebookCell): nbformat.ICodeCell {
+    const metadata = cell.metadata.custom || {};
     return {
         cell_type: 'code',
         execution_count: cell.metadata.executionOrder ?? null,
         source: splitMultilineString(cell.document.getText()),
         outputs: createIOutputFromCellOutputs(cell.outputs),
-        metadata: cell.metadata.custom?.metadata || {}
+        metadata
     };
 }
 export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: ICell): NotebookCellData | undefined {
@@ -514,4 +549,42 @@ export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: CellOu
         return '';
     }
     return `${errorOutput.ename}${errorOutput.evalue ? ': ' : ''}${errorOutput.evalue}`;
+}
+
+/**
+ * Updates a notebook document as a result of trusting it.
+ */
+export function updateVSCNotebookAfterTrustingNotebook(document: NotebookDocument, originalCells: ICell[]) {
+    const areAllCellsEditableAndRunnable = document.cells.every((cell) => {
+        if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
+            return cell.metadata.editable;
+        } else {
+            return cell.metadata.editable && cell.metadata.runnable;
+        }
+    });
+    const isDocumentEditableAndRunnable =
+        document.metadata.cellEditable &&
+        document.metadata.cellRunnable &&
+        document.metadata.editable &&
+        document.metadata.runnable;
+
+    // If already trusted, then nothing to do.
+    if (isDocumentEditableAndRunnable && areAllCellsEditableAndRunnable) {
+        return;
+    }
+
+    document.metadata.cellEditable = true;
+    document.metadata.cellRunnable = true;
+    document.metadata.editable = true;
+    document.metadata.runnable = true;
+
+    document.cells.forEach((cell, index) => {
+        cell.metadata.editable = true;
+        if (cell.cellKind !== vscodeNotebookEnums.CellKind.Markdown) {
+            cell.metadata.runnable = true;
+            // Restore the output once we trust the notebook.
+            // tslint:disable-next-line: no-any
+            cell.outputs = createVSCCellOutputsFromOutputs(originalCells[index].data.outputs as any);
+        }
+    });
 }

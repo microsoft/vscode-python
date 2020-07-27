@@ -17,7 +17,7 @@ import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { CellState, INotebookModel } from '../../../client/datascience/types';
 // tslint:disable: no-any
-suite('DataScience - NativeNotebook ContentProviderxxx', () => {
+suite('DataScience - NativeNotebook ContentProvider', () => {
     let storageProvider: INotebookStorageProvider;
     let contentProvider: VSCodeNotebookContentProvider;
     const fileUri = Uri.file('a.ipynb');

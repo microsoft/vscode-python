@@ -21,7 +21,6 @@ import { Commands, Telemetry, VSCodeNativeTelemetry } from '../constants';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { IDataScienceErrorHandler, INotebook, INotebookEditorProvider, INotebookProvider } from '../types';
-import { clearCellForExecution } from './helpers/cellUpdateHelpers';
 import {
     handleUpdateDisplayDataMessage,
     hasTransientOutputForAnotherCell,
@@ -29,7 +28,11 @@ import {
     updateCellOutput,
     updateCellWithErrorStatus
 } from './helpers/executionHelpers';
-import { getCellStatusMessageBasedOnFirstCellErrorOutput } from './helpers/helpers';
+import {
+    clearCellForExecution,
+    getCellStatusMessageBasedOnFirstCellErrorOutput,
+    updateCellExecutionTimes
+} from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -220,7 +223,6 @@ export class NotebookExecutionService implements INotebookExecutionService {
         this.handleDisplayDataMessages(model, document, nb);
 
         const deferred = createDeferred<NotebookCellRunState>();
-        const executionStopWatch = new StopWatch();
         wrappedToken.onCancellationRequested(() => {
             if (deferred.completed) {
                 return;
@@ -236,6 +238,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
 
         // Ensure we clear the cell state and trigger a change.
         clearCellForExecution(cell);
+        const executionStopWatch = new StopWatch();
         cell.metadata.runStartTime = new Date().getTime();
         this.contentProvider.notifyChangesToDocument(document);
 
@@ -296,6 +299,10 @@ export class NotebookExecutionService implements INotebookExecutionService {
                         ? vscodeNotebookEnums.NotebookCellRunState.Idle
                         : vscodeNotebookEnums.NotebookCellRunState.Success;
                     cell.metadata.statusMessage = '';
+                    updateCellExecutionTimes(cell, {
+                        startTime: cell.metadata.runStartTime,
+                        duration: cell.metadata.lastRunDuration
+                    });
 
                     // If there are any errors in the cell, then change status to error.
                     if (cell.outputs.some((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error)) {

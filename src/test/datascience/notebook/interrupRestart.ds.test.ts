@@ -23,6 +23,7 @@ import {
     deleteAllCellsAndWait,
     insertPythonCellAndWait,
     startJupyter,
+    trustAllNotebooks,
     waitForTextOutputInVSCode
 } from './helper';
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -58,7 +59,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     });
     setup(async () => {
         sinon.restore();
-
+        await trustAllNotebooks();
         // Open a notebook and use this for all tests in this test suite.
         await editorProvider.createNew();
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');

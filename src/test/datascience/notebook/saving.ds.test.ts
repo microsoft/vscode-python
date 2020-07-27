@@ -29,7 +29,8 @@ import {
     createTemporaryNotebook,
     insertPythonCellAndWait,
     saveActiveNotebook,
-    startJupyter
+    startJupyter,
+    trustAllNotebooks
 } from './helper';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -51,7 +52,10 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     });
-    setup(() => sinon.restore());
+    setup(async () => {
+        sinon.restore();
+        await trustAllNotebooks();
+    });
     teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Clearing output will mark document as dirty', async () => {
         const templateIPynb = path.join(

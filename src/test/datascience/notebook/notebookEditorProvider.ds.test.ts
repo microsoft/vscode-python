@@ -21,7 +21,8 @@ import {
     createTemporaryNotebook,
     deleteAllCellsAndWait,
     insertMarkdownCellAndWait,
-    insertPythonCellAndWait
+    insertPythonCellAndWait,
+    trustAllNotebooks
 } from './helper';
 
 suite('DataScience - VSCode Notebook (Editor Provider)', function () {
@@ -54,6 +55,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
     });
     setup(async () => {
         sinon.restore();
+        await trustAllNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
