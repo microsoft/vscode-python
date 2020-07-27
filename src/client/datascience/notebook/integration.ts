@@ -16,6 +16,7 @@ import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
+import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookKernel } from './notebookKernel';
 import { NotebookOutputRenderer } from './renderer';
 import { INotebookContentProvider } from './types';
@@ -119,7 +120,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             enable &&
             (!Array.isArray(editorAssociations) ||
                 editorAssociations.length === 0 ||
-                !editorAssociations.find((item) => item.viewType === JupyterNotebookView))
+                !editorAssociations.find((item) => isJupyterNotebook(item.viewType)))
         ) {
             editorAssociations.push({
                 viewType: 'jupyter-notebook',
@@ -136,9 +137,9 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             !enable &&
             this.extensionContext.globalState.get<boolean>(EditorAssociationUpdatedKey, false) &&
             Array.isArray(editorAssociations) &&
-            editorAssociations.find((item) => item.viewType === JupyterNotebookView)
+            editorAssociations.find((item) => isJupyterNotebook(item.viewType))
         ) {
-            const updatedSettings = editorAssociations.filter((item) => item.viewType !== JupyterNotebookView);
+            const updatedSettings = editorAssociations.filter((item) => !isJupyterNotebook(item.viewType));
             await Promise.all([
                 this.extensionContext.globalState.update(EditorAssociationUpdatedKey, false),
                 settings.update('editorAssociations', updatedSettings, ConfigurationTarget.Global)

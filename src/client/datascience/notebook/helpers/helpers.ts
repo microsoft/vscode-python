@@ -42,8 +42,15 @@ interface IBaseCellVSCodeMetadata {
  * Whether this is a Notebook we created/manage/use.
  * Remember, there could be other notebooks such as GitHub Issues nb by VS Code.
  */
-export function isJupyterNotebook(notebook: NotebookDocument) {
-    return notebook.viewType === JupyterNotebookView;
+export function isJupyterNotebook(document: NotebookDocument): boolean;
+// tslint:disable-next-line: unified-signatures
+export function isJupyterNotebook(viewType: string): boolean;
+export function isJupyterNotebook(option: NotebookDocument | string) {
+    if (typeof option === 'string') {
+        return option === JupyterNotebookView;
+    } else {
+        return option.viewType === JupyterNotebookView;
+    }
 }
 
 /**
