@@ -3,8 +3,8 @@ import { Memento, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { UseCustomEditorApi } from '../../common/constants';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
-import { INotebookEditor, INotebookEditorProvider } from '../types';
 import { isUntitled } from '../notebookStorage/nativeEditorStorage';
+import { INotebookEditor, INotebookEditorProvider } from '../types';
 
 const MEMENTO_KEY = 'nativeEditorViewTracking';
 /**
