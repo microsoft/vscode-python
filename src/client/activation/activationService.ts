@@ -127,7 +127,7 @@ export class LanguageServerExtensionActivationService
             this.activatedServer.server.dispose();
         }
     }
-    @swallowExceptions('Send telemetry for Language Server current selection')
+    @swallowExceptions('Send telemetry for language server current selection')
     public async sendTelemetryForChosenLanguageServer(languageServer: LanguageServerType): Promise<void> {
         const state = this.stateFactory.createGlobalPersistentState<LanguageServerType | undefined>(
             'SWITCH_LS',

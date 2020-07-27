@@ -413,7 +413,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
             return this.combineCompletions(
                 await Promise.all([
-                    // Ensure we wait for a result from Language Server (assumption is LS is faster).
+                    // Ensure we wait for a result from language server (assumption is LS is faster).
                     // Telemetry will prove/disprove this assumption and we'll change this code accordingly.
                     lsCompletions,
                     // Wait for a max of n ms before ignoring results from jupyter (jupyter completion is generally slower).

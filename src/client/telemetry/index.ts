@@ -1291,11 +1291,11 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_NONE]: never | undefined;
     /**
-     * Telemetry sent from Language Server (details of telemetry sent can be provided by LS team)
+     * Telemetry sent from language server (details of telemetry sent can be provided by LS team)
      */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
     /**
-     * Telemetry sent when the client makes a request to the Language Server
+     * Telemetry sent when the client makes a request to the language server
      */
     [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: any;
     /**

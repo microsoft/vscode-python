@@ -96,7 +96,7 @@ suite('Language Server - Manager', () => {
             await startLanguageServer();
 
             await expect(manager.start(resource, undefined)).to.eventually.be.rejectedWith(
-                'Language Server already started'
+                'Language server already started'
             );
         });
         test('Changes in analysis options must restart LS', async () => {

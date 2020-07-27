@@ -132,15 +132,15 @@ export namespace LanguageService {
 
     export const lsFailedToStart = localize(
         'LanguageService.lsFailedToStart',
-        'We encountered an issue starting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.'
+        'We encountered an issue starting the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
     );
     export const lsFailedToDownload = localize(
         'LanguageService.lsFailedToDownload',
-        'We encountered an issue downloading the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.'
+        'We encountered an issue downloading the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
     );
     export const lsFailedToExtract = localize(
         'LanguageService.lsFailedToExtract',
-        'We encountered an issue extracting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.'
+        'We encountered an issue extracting the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
     );
     export const downloadFailedOutputMessage = localize(
         'LanguageService.downloadFailedOutputMessage',
