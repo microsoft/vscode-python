@@ -852,6 +852,19 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
+    protected async checkForNotebookProviderConnection(): Promise<void> {
+        // Check to see if we are already connected to our provider
+        const providerConnection = await this.notebookProvider.connect({ getOnly: true });
+
+        if (providerConnection) {
+            try {
+                await this.ensureNotebook(providerConnection);
+            } catch (e) {
+                this.errorHandler.handleError(e).ignoreErrors();
+            }
+        }
+    }
+
     private combineData(
         oldData: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | undefined,
         cell: ICell
@@ -1201,19 +1214,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private refreshVariables() {
         this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
-    }
-
-    private async checkForNotebookProviderConnection(): Promise<void> {
-        // Check to see if we are already connected to our provider
-        const providerConnection = await this.notebookProvider.connect({ getOnly: true });
-
-        if (providerConnection) {
-            try {
-                await this.ensureNotebook(providerConnection);
-            } catch (e) {
-                this.errorHandler.handleError(e).ignoreErrors();
-            }
-        }
     }
 
     private async potentialKernelChanged(data: { identity: Uri; kernel: KernelSpecInterpreter }): Promise<void> {

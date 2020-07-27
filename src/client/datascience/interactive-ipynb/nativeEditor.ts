@@ -374,6 +374,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return Promise.resolve();
     }
 
+    protected async checkForNotebookProviderConnection() {
+        if (this._model.isTrusted) {
+            await super.checkForNotebookProviderConnection();
+        }
+    }
+
     protected submitCode(
         code: string,
         file: string,
