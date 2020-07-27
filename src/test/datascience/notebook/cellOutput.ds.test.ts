@@ -23,7 +23,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     assertHasExecutionCompletedSuccessfully,
     assertHasExecutionCompletedWithErrors,
-    assertHasOutputInICell,
     assertHasOutputInVSCell,
     canRunTests,
     closeNotebooksAndCleanUpAfterTests,
@@ -31,9 +30,7 @@ import {
     deleteAllCellsAndWait,
     insertPythonCellAndWait,
     trustAllNotebooks,
-    waitForCellHasEmptyOutput,
     waitForExecutionCompletedSuccessfully,
-    waitForExecutionOrderInCell,
     waitForExecutionOrderInVSCCell,
     waitForTextOutputInVSCode,
     waitForVSCCellHasEmptyOutput,
