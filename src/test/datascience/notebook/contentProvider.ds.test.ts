@@ -48,6 +48,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         const model = (await editorProvider.open(testIPynb))!.model!;
+        model.trust(); // We want to test the output as well.
 
         const notebook = vscodeNotebook.activeNotebookEditor?.document!;
 
