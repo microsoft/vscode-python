@@ -9,6 +9,8 @@ import { splitMultilineString } from '../../../datascience-ui/common';
 import { traceError } from '../../common/logger';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
+import { updateVSCNotebookAfterTrustingNotebook } from '../notebook/helpers/cellUpdateHelpers';
+import { createCellFromVSCNotebookCell } from '../notebook/helpers/helpers';
 import { ICell } from '../types';
 import { BaseNotebookModel } from './baseModel';
 
@@ -37,12 +39,27 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     ) {
         super(isTrusted, file, cells, globalMemento, crypto, json, indentAmount, pythonNumber);
     }
+    public get cells(): ICell[] {
+        return this.document
+            ? this.document.cells.map((cell) => createCellFromVSCNotebookCell(cell, this))
+            : this._cells;
+    }
     /**
      * Unfortunately Notebook models are created early, well before a VSC Notebook Document is created.
      * We can associate an INotebookModel with a VSC Notebook, only after the Notebook has been opened.
      */
     public associateNotebookDocument(document: NotebookDocument) {
         this.document = document;
+    }
+    public trust() {
+        if (!this.document) {
+            throw new Error('Unable to trust documents if Notebook Editor is not open');
+        }
+
+        super.trust();
+        updateVSCNotebookAfterTrustingNotebook(this.document, this._cells);
+        // We don't need old cells.
+        this._cells = [];
     }
     public updateCellSource(cellId: string, source: string): void {
         const cell = this.getCell(cellId);

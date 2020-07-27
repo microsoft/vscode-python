@@ -503,3 +503,15 @@ export function getCellStatusMessageBasedOnFirstErrorOutput(outputs?: nbformat.I
     }
     return `${errorOutput.ename}${errorOutput.evalue ? ': ' : ''}${errorOutput.evalue}`;
 }
+export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: CellOutput[]): string {
+    if (!Array.isArray(outputs)) {
+        return '';
+    }
+    const errorOutput = outputs.find((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error) as
+        | CellErrorOutput
+        | undefined;
+    if (!errorOutput) {
+        return '';
+    }
+    return `${errorOutput.ename}${errorOutput.evalue ? ': ' : ''}${errorOutput.evalue}`;
+}

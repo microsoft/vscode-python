@@ -375,13 +375,7 @@ export class NativeEditorStorage implements INotebookStorage {
         if (contents !== undefined && !isUntitledFile(file) && !isInitiallyDirty) {
             const isNotebookTrusted = await this.trustService.isNotebookTrusted(file, model.getContent());
             if (isNotebookTrusted !== model.isTrusted) {
-                model.update({
-                    source: 'user',
-                    kind: 'updateTrust',
-                    oldDirty: model.isDirty,
-                    newDirty: model.isDirty,
-                    isNotebookTrusted
-                });
+                model.trust();
             }
         }
 

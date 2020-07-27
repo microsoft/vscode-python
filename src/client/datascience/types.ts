@@ -1066,6 +1066,10 @@ export interface INotebookModel {
      * all editors associated with the document have been closed.)
      */
     dispose(): void;
+    /**
+     * Trusts a notebook document.
+     */
+    trust(): void;
 }
 
 export const INotebookStorage = Symbol('INotebookStorage');

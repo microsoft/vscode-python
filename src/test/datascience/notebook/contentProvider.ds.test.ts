@@ -10,10 +10,6 @@ import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
-import {
-    findMappedNotebookCell,
-    findMappedNotebookCellModel
-} from '../../../client/datascience/notebook/helpers/cellMappers';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
@@ -56,14 +52,5 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         const notebook = vscodeNotebook.activeNotebookEditor?.document!;
 
         assert.equal(notebook.cells.length, model?.cells.length, 'Incorrect number of cells');
-        for (let index = 0; index < notebook?.cells.length; index += 1) {
-            const vscCell = notebook.cells[index];
-            const cell = model.cells[index];
-            // Given a VS Code Cell, we should be able to find the corresponding ICell.
-            assert.equal(cell, findMappedNotebookCellModel(vscCell, model.cells), 'Could not find mapped ICell');
-
-            // Given an ICell, we should be able to find the corresponding VS Code Cell.
-            assert.equal(vscCell, findMappedNotebookCell(cell, notebook.cells), 'Could not find mapped NotebookCell');
-        }
     });
 });

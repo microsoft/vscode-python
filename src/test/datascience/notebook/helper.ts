@@ -19,10 +19,6 @@ import { ICryptoUtils, IDisposable } from '../../../client/common/types';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
 import { Identifiers } from '../../../client/datascience/constants';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
-import {
-    findMappedNotebookCellModel,
-    mapVSCNotebookCellsToNotebookCellModels
-} from '../../../client/datascience/notebook/helpers/cellMappers';
 import { createVSCNotebookCellDataFromCell } from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
@@ -65,45 +61,20 @@ export async function insertMarkdownCell(source: string, index: number = 0) {
     };
 }
 export async function insertPythonCell(source: string, index: number = 0) {
-    const { vscodeNotebook, editorProvider } = await getServices();
+    const { vscodeNotebook } = await getServices();
     const vscEditor = vscodeNotebook.activeNotebookEditor;
-    const nbEditor = editorProvider.activeEditor;
-    const oldCellCount = vscEditor?.document.cells.length ?? 0;
     await new Promise((resolve) =>
         vscEditor?.edit((builder) => {
             builder.insert(index, source, PYTHON_LANGUAGE, vscodeNotebookEnums.CellKind.Code, [], undefined);
             resolve();
         })
     );
-
-    // When a cell is added we need to wait for it to get added in our INotebookModel.
-    // We also need to wait for it to get assigned a cell id.
-    return {
-        waitForCellToGetAdded: async () => {
-            await waitForCondition(
-                async () =>
-                    nbEditor?.model?.cells.length === oldCellCount + 1 &&
-                    nbEditor?.model?.cells.length === vscEditor?.document.cells.length,
-                1_000,
-                'Cell not inserted'
-            );
-            // All cells must have a corresponding cell in INotebookModel.
-            await waitForCondition(
-                async () =>
-                    vscEditor!.document.cells.every((cell) =>
-                        findMappedNotebookCellModel(cell, nbEditor!.model!.cells)
-                    ),
-                1_000,
-                'Cell not assigned a cell Id'
-            );
-        }
-    };
 }
 export async function insertPythonCellAndWait(source: string, index: number = 0) {
-    await (await insertPythonCell(source, index)).waitForCellToGetAdded();
+    await insertPythonCell(source, index);
 }
 export async function insertMarkdownCellAndWait(source: string, index: number = 0) {
-    await (await insertMarkdownCell(source, index)).waitForCellToGetAdded();
+    await insertMarkdownCell(source, index);
 }
 export async function deleteCell(index: number = 0) {
     const { vscodeNotebook } = await getServices();
@@ -218,7 +189,7 @@ export async function startJupyter() {
         );
         const tempIPynb = await createTemporaryNotebook(templateIPynb, disposables);
         await editorProvider.open(Uri.file(tempIPynb));
-        await (await insertPythonCell('print("Hello World")', 0)).waitForCellToGetAdded();
+        await insertPythonCell('print("Hello World")', 0);
         const model = editorProvider.activeEditor?.model;
         editorProvider.activeEditor?.runAllCells();
         // Wait for 15s for Jupyter to start.
@@ -416,7 +387,7 @@ export function createNotebookModel(
 }
 
 export function createNotebookDocument(
-    model: INotebookModel,
+    model: VSCodeNotebookModel,
     viewType: string = JupyterNotebookView
 ): NotebookDocument {
     const doc: NotebookDocument = {
@@ -444,8 +415,6 @@ export function createNotebookDocument(
         };
         doc.cells.push(vscDocumentCell);
     });
-    if (viewType === JupyterNotebookView) {
-        mapVSCNotebookCellsToNotebookCellModels(doc, model);
-    }
+    model.associateNotebookDocument(doc);
     return doc;
 }

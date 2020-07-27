@@ -9,11 +9,9 @@ import { teardown } from 'mocha';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
-import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { CryptoUtils } from '../../../client/common/crypto';
 import { IDisposable } from '../../../client/common/types';
-import { NotebookTrustHandler } from '../../../client/datascience/notebook/notebookTrustHandler';
 import {
     IDataScienceFileSystem,
     INotebookEditor,
@@ -27,7 +25,6 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 
 // tslint:disable: no-any
 suite('DataScience - NativeNotebook TrustHandler', () => {
-    let trustHandler: IExtensionSingleActivationService;
     let trustService: ITrustService;
     let vscNotebook: IVSCodeNotebook;
     let editorProvider: INotebookEditorProvider;
@@ -44,15 +41,6 @@ suite('DataScience - NativeNotebook TrustHandler', () => {
         onDidTrustNotebook = new EventEmitter<void>();
         when(trustService.onDidSetNotebookTrust).thenReturn(onDidTrustNotebook.event);
         when(fs.areLocalPathsSame(anything(), anything())).thenCall((a, b) => a === b); // Dirty simple file compare.
-        trustHandler = new NotebookTrustHandler(
-            instance(trustService),
-            instance(vscNotebook),
-            instance(editorProvider),
-            instance(fs),
-            disposables
-        );
-
-        await trustHandler.activate();
     });
     teardown(() => disposeAllDisposables(disposables));
     function assertDocumentTrust(document: NotebookDocument, trusted: boolean) {
@@ -138,13 +126,7 @@ suite('DataScience - NativeNotebook TrustHandler', () => {
         assertDocumentTrust(nbAnotherExtension, false);
 
         // Trigger a change, after trusting second nb/model.
-        model2.update({
-            source: 'user',
-            kind: 'updateTrust',
-            oldDirty: model2.isDirty,
-            newDirty: model2.isDirty,
-            isNotebookTrusted: true
-        });
+        model2.trust();
 
         onDidTrustNotebook.fire();
 
