@@ -19,6 +19,7 @@ interface IBaseCellVSCodeMetadata {
     start_execution_time?: string;
 }
 
+// https://github.com/microsoft/vscode-python/issues/13155
 // // tslint:disable-next-line: no-any
 // function sortObjectPropertiesRecursively(obj: any): any {
 //     if (Array.isArray(obj)) {
@@ -170,6 +171,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     protected generateNotebookJson() {
         // tslint:disable-next-line: no-unnecessary-local-variable
         const json = super.generateNotebookJson();
+        // https://github.com/microsoft/vscode-python/issues/13155
         // Object keys in metadata, cells and the like need to be sorted alphabetically.
         // Jupyter (Python) seems to sort them alphabetically.
         // We should do the same to minimize changes to content when saving ipynb.
