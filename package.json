@@ -148,7 +148,7 @@
                 "win": "F",
                 "linux": "F",
                 "key": "F",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.find"
             },
             {
@@ -156,7 +156,7 @@
                 "win": "K",
                 "linux": "K",
                 "key": "K",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "list.focusUp"
             },
             {
@@ -164,7 +164,7 @@
                 "win": "J",
                 "linux": "J",
                 "key": "J",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "list.focusDown"
             },
             {
@@ -172,7 +172,7 @@
                 "win": "A",
                 "linux": "A",
                 "key": "A",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.insertCodeCellAbove"
             },
             {
@@ -180,7 +180,7 @@
                 "win": "B",
                 "linux": "B",
                 "key": "B",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.insertCodeCellBelow"
             },
             {
@@ -188,7 +188,7 @@
                 "win": "D D",
                 "linux": "D D",
                 "key": "D D",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.delete"
             },
             {
@@ -196,7 +196,7 @@
                 "win": "Z",
                 "linux": "Z",
                 "key": "Z",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.undo"
             },
             {
@@ -204,7 +204,7 @@
                 "win": "C",
                 "linux": "C",
                 "key": "C",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.copy"
             },
             {
@@ -212,7 +212,7 @@
                 "win": "X",
                 "linux": "X",
                 "key": "X",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.cut"
             },
             {
@@ -220,14 +220,14 @@
                 "win": "V",
                 "linux": "V",
                 "key": "V",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.paste"
             },
             {
                 "mac": "ctrl+shift+-",
                 "win": "ctrl+shift+-",
                 "linux": "ctrl+shift+-",
-                "when": "editorTextFocus && inputFocus && notebookEditorFocused",
+                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.split"
             }
         ],
