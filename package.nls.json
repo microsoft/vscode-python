@@ -114,7 +114,7 @@
     "Pylance.remindMeLater": "Remind me later",
     "Pylance.installPylanceMessage": "Pylance extension is not installed. Click Yes to open Pylance installation page.",
     "Pylance.pylanceNotInstalledMessage": "Pylance extension is not installed.",
-    "Pylance.pylanceInstalledReloadPromptMessage": "Pylance extension is now installed. Reload window to activate?.",
+    "Pylance.pylanceInstalledReloadPromptMessage": "Pylance extension is now installed. Reload window to activate?",
     "DataScience.unknownMimeTypeFormat": "Mime type {0} is not currently supported.",
     "DataScience.historyTitle": "Python Interactive",
     "DataScience.dataExplorerTitle": "Data Viewer",
