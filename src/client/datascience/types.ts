@@ -1284,6 +1284,7 @@ export interface IJupyterServerUri {
     token: string;
     // tslint:disable-next-line: no-any
     authorizationHeader: any; // JSON object for authorization header.
+    displayName: string;
 }
 
 export type JupyterServerUriHandle = string;

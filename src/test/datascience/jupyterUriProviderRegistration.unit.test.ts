@@ -34,7 +34,8 @@ class MockProvider implements IJupyterUriProvider {
                 // tslint:disable-next-line: no-http-string
                 baseUrl: 'http://foobar:3000',
                 token: '',
-                authorizationHeader: { Bearer: '1' }
+                authorizationHeader: { Bearer: '1' },
+                displayName: 'dummy'
             };
         }
 
