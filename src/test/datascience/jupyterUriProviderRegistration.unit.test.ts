@@ -83,6 +83,7 @@ suite('DataScience URI Picker', () => {
         const uri = await registration.getJupyterServerUri('1', handle!);
         // tslint:disable-next-line: no-http-string
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
+        assert.equal(uri.displayName, 'dummy', 'Display name not found');
     });
     test('Back', async () => {
         const registration = createRegistration(['1']);
