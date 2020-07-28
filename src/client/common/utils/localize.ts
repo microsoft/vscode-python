@@ -134,6 +134,11 @@ export namespace LanguageService {
         'Editor support is inactive since language server is set to None.'
     );
 
+    export const reloadAfterLanguageServerChange = localize(
+        'LanguageService.reloadAfterLanguageServerChange',
+        'Please reload the window switching between language servers.'
+    );
+
     export const lsFailedToStart = localize(
         'LanguageService.lsFailedToStart',
         'We encountered an issue starting the language server. Reverting to Jedi language engine. Check the Python output panel for details.'

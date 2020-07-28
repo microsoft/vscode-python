@@ -4,7 +4,7 @@
 'use strict';
 
 import { expect } from 'chai';
-import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Extension, Uri } from 'vscode';
 import { NodeLanguageServerActivator } from '../../../client/activation/node/activator';
 import { NodeLanguageServerManager } from '../../../client/activation/node/manager';
@@ -48,9 +48,10 @@ suite('Pylance Language Server - Activator', () => {
         configuration = mock(ConfigurationService);
         settings = mock(PythonSettings);
         extensions = mock<IExtensions>();
+        commands = mock<ICommandManager>();
         appShell = mock<IApplicationShell>();
         appEnv = mock<IApplicationEnvironment>();
-        commands = mock<ICommandManager>();
+        when(appEnv.uriScheme).thenReturn('scheme');
 
         // tslint:disable-next-line: no-any
         pylanceExtension = mock<Extension<any>>();
@@ -67,8 +68,7 @@ suite('Pylance Language Server - Activator', () => {
             instance(configuration),
             instance(extensions),
             instance(appShell),
-            instance(appEnv),
-            instance(commands)
+            instance(appEnv)
         );
     });
     teardown(() => {
@@ -102,26 +102,36 @@ suite('Pylance Language Server - Activator', () => {
         verify(extensions.getExtension(PYLANCE_EXTENSION_ID)).never();
     });
 
-    test('If Pylance is not installed, user should get prompt to install it', async () => {
-        expect(activator.start(undefined))
-            .to.eventually.be.rejectedWith(Pylance.pylanceNotInstalledMessage())
-            .and.be.an.instanceOf(Error);
-        verify(
-            appShell.showErrorMessage(Pylance.installPylanceMessage(), Common.bannerLabelYes(), Common.bannerLabelNo())
-        ).once();
-    });
-
-    test('If Pylance is installed, user should not get prompt to install it', async () => {
-        when(extensions.getExtension(PYLANCE_EXTENSION_ID)).thenReturn(instance(pylanceExtension));
-        await activator.start(undefined);
-        verify(
-            appShell.showErrorMessage(Pylance.installPylanceMessage(), Common.bannerLabelYes(), Common.bannerLabelNo())
-        ).never();
-    });
-
-    test('If Pylance is not installed and user responded Yes, Pylance install page should be opened', async () => {
+    test('When Pylance is not installed activator should show install prompt ', async () => {
         when(
-            appShell.showErrorMessage(Pylance.installPylanceMessage(), Common.bannerLabelYes(), Common.bannerLabelNo())
+            appShell.showWarningMessage(
+                Pylance.installPylanceMessage(),
+                Common.bannerLabelYes(),
+                Common.bannerLabelNo()
+            )
+        ).thenReturn(Promise.resolve(Common.bannerLabelNo()));
+
+        try {
+            await activator.start(undefined);
+            // tslint:disable-next-line: no-empty
+        } catch {}
+        verify(
+            appShell.showWarningMessage(
+                Pylance.installPylanceMessage(),
+                Common.bannerLabelYes(),
+                Common.bannerLabelNo()
+            )
+        ).once();
+        verify(appShell.openUrl(`scheme:extension/${PYLANCE_EXTENSION_ID}`)).never();
+    });
+
+    test('When Pylance is not installed activator should open Pylance install page if users clicks Yes', async () => {
+        when(
+            appShell.showWarningMessage(
+                Pylance.installPylanceMessage(),
+                Common.bannerLabelYes(),
+                Common.bannerLabelNo()
+            )
         ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
 
         try {
@@ -129,100 +139,12 @@ suite('Pylance Language Server - Activator', () => {
             // tslint:disable-next-line: no-empty
         } catch {}
         verify(appShell.openUrl(`scheme:extension/${PYLANCE_EXTENSION_ID}`)).once();
-        verify(manager.connect()).never();
     });
 
-    test('If Pylance is not installed and user responded Yes, Pylance activator should throw', async () => {
-        when(
-            appShell.showErrorMessage(Pylance.installPylanceMessage(), Common.bannerLabelYes(), Common.bannerLabelNo())
-        ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
-
+    test('Activator should throw if Pylance is not installed', async () => {
         expect(activator.start(undefined))
             .to.eventually.be.rejectedWith(Pylance.pylanceNotInstalledMessage())
             .and.be.an.instanceOf(Error);
-
-        extensionsChangedEvent.fire();
-        verify(manager.connect()).never();
-    });
-
-    test('If Pylance is not installed and user responded Yes, reload should be called if user agreed to it', async () => {
-        when(
-            appShell.showErrorMessage(Pylance.installPylanceMessage(), Common.bannerLabelYes(), Common.bannerLabelNo())
-        ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
-
-        try {
-            await activator.start(undefined);
-            // tslint:disable-next-line: no-empty
-        } catch {}
-
-        when(extensions.getExtension(PYLANCE_EXTENSION_ID)).thenReturn(pylanceExtension);
-        when(
-            appShell.showWarningMessage(
-                Pylance.pylanceInstalledReloadPromptMessage(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo()
-            )
-        ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
-
-        extensionsChangedEvent.fire();
-        await activator.pylanceInstallCompleted;
-        verify(commands.executeCommand('workbench.action.reloadWindow')).once();
-    });
-
-    test('If Pylance is not installed and user responded Yes, reload should not be called if user refused it', async () => {
-        when(
-            appShell.showErrorMessage(Pylance.installPylanceMessage(), Common.bannerLabelYes(), Common.bannerLabelNo())
-        ).thenReturn(Promise.resolve(Common.bannerLabelYes()));
-
-        try {
-            await activator.start(undefined);
-            // tslint:disable-next-line: no-empty
-        } catch {}
-
-        when(extensions.getExtension(PYLANCE_EXTENSION_ID)).thenReturn(pylanceExtension);
-        when(
-            appShell.showWarningMessage(
-                Pylance.pylanceInstalledReloadPromptMessage(),
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo()
-            )
-        ).thenReturn(Promise.resolve(Common.bannerLabelNo()));
-
-        extensionsChangedEvent.fire();
-        await activator.pylanceInstallCompleted;
-        verify(commands.executeCommand('workbench.action.reloadWindow')).never();
-    });
-
-    test('If Pylance is not installed and user responded No, Pylance install page should not be opened', async () => {
-        when(
-            appShell.showErrorMessage(Pylance.installPylanceMessage(), Common.bannerLabelYes(), Common.bannerLabelNo())
-        ).thenReturn(Promise.resolve(Common.bannerLabelNo()));
-
-        try {
-            await activator.start(undefined);
-            // tslint:disable-next-line: no-empty
-        } catch {}
-        verify(appShell.openUrl(anyString())).never();
-        verify(manager.connect()).never();
-    });
-
-    test('If Pylance is not installed and user responded No, Pylance activator should throw', async () => {
-        when(
-            appShell.showErrorMessage(Pylance.installPylanceMessage(), Common.bannerLabelYes(), Common.bannerLabelNo())
-        ).thenReturn(Promise.resolve(Common.bannerLabelNo()));
-
-        expect(activator.start(undefined))
-            .to.eventually.be.rejectedWith(Pylance.pylanceNotInstalledMessage())
-            .and.be.an.instanceOf(Error);
-        verify(manager.connect()).never();
-    });
-
-    test('Server should be disconnected but be started', async () => {
-        when(extensions.getExtension(PYLANCE_EXTENSION_ID)).thenReturn(instance(pylanceExtension));
-        await activator.start(undefined);
-
-        verify(manager.start(undefined, undefined)).once();
-        verify(manager.connect()).never();
     });
 
     test('Manager must be started with resource for first available workspace', async () => {

@@ -1,27 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CompletionItem, ProviderResult } from 'vscode';
 // tslint:disable-next-line: import-name
 import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
 import { CompletionResolveRequest } from 'vscode-languageclient/node';
-import {
-    IApplicationEnvironment,
-    IApplicationShell,
-    ICommandManager,
-    IWorkspaceService
-} from '../../common/application/types';
+import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IExtensions, Resource } from '../../common/types';
-import { createDeferred } from '../../common/utils/async';
-import { Common, Pylance } from '../../common/utils/localize';
-import { getPylanceExtensionUri } from '../../languageServices/proposeLanguageServerBanner';
+import { Pylance } from '../../common/utils/localize';
 import { LanguageServerActivatorBase } from '../common/activatorBase';
+import { promptForPylanceInstall } from '../common/languageServerChangeHandler';
 import { ILanguageServerManager } from '../types';
 
 /**
- * Starts the Node.js-based language server managers per workspaces (currently one for first workspace).
+ * Starts Pylance language server manager.
  *
  * @export
  * @class NodeLanguageServerActivator
@@ -30,9 +25,6 @@ import { ILanguageServerManager } from '../types';
  */
 @injectable()
 export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
-    private readonly pylanceInstallCompletedDeferred = createDeferred<void>(); // For tests to track Pylance install completion.
-    private pylanceInstalled = false;
-
     constructor(
         @inject(ILanguageServerManager) manager: ILanguageServerManager,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
@@ -40,14 +32,9 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
-        @inject(ICommandManager) private readonly commands: ICommandManager
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment
     ) {
         super(manager, workspace, fs, configurationService);
-    }
-
-    get pylanceInstallCompleted(): Promise<void> {
-        return this.pylanceInstallCompletedDeferred.promise;
     }
 
     public async ensureLanguageServerIsAvailable(resource: Resource): Promise<void> {
@@ -56,38 +43,13 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
             // Development mode.
             return;
         }
-        // Check if Pylance extension is installed.
-        if (this.extensions.getExtension(PYLANCE_EXTENSION_ID)) {
-            return;
+        if (!this.extensions.getExtension(PYLANCE_EXTENSION_ID)) {
+            // Pylance is not yet installed. Throw will cause activator to use Jedi
+            // temporarily. Language server installation tracker will prompt for window
+            // reload when Pylance becomes available.
+            await promptForPylanceInstall(this.appShell, this.appEnv);
+            throw new Error(Pylance.pylanceNotInstalledMessage());
         }
-        // Point user to Pylance at the store.
-        let response = await this.appShell.showErrorMessage(
-            Pylance.installPylanceMessage(),
-            Common.bannerLabelYes(),
-            Common.bannerLabelNo()
-        );
-        if (response === Common.bannerLabelYes()) {
-            this.appShell.openUrl(getPylanceExtensionUri(this.appEnv));
-        }
-
-        this.extensions.onDidChange(async () => {
-            if (this.extensions.getExtension(PYLANCE_EXTENSION_ID) && !this.pylanceInstalled) {
-                this.pylanceInstalled = true;
-                response = await this.appShell.showWarningMessage(
-                    Pylance.pylanceInstalledReloadPromptMessage(),
-                    Common.bannerLabelYes(),
-                    Common.bannerLabelNo()
-                );
-                this.pylanceInstallCompletedDeferred.resolve();
-                if (response === Common.bannerLabelYes()) {
-                    this.commands.executeCommand('workbench.action.reloadWindow');
-                }
-            }
-        });
-
-        // At this time there is no Pylance installed yet.
-        // throwing will cause activator to use Jedi temporarily.
-        throw new Error(Pylance.pylanceNotInstalledMessage());
     }
 
     public resolveCompletionItem(item: CompletionItem, token: CancellationToken): ProviderResult<CompletionItem> {

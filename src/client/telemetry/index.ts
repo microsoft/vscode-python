@@ -1291,6 +1291,10 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_NONE]: never | undefined;
     /**
+     * Telemetry event sent when user specified Pylance to the language server.
+     */
+    [EventName.PYTHON_LANGUAGE_SERVER_PYLANCE]: never | undefined;
+    /**
      * Telemetry sent from language server (details of telemetry sent can be provided by LS team)
      */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
