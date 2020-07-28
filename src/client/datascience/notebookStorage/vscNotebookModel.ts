@@ -20,25 +20,25 @@ interface IBaseCellVSCodeMetadata {
 }
 
 // https://github.com/microsoft/vscode-python/issues/13155
-// // tslint:disable-next-line: no-any
-// function sortObjectPropertiesRecursively(obj: any): any {
-//     if (Array.isArray(obj)) {
-//         return obj.map(sortObjectPropertiesRecursively);
-//     }
-//     if (obj !== undefined && obj !== null && typeof obj === 'object' && Object.keys(obj).length > 0) {
-//         return (
-//             Object.keys(obj)
-//                 .sort()
-//                 // tslint:disable-next-line: no-any
-//                 .reduce<Record<string, any>>((sortedObj, prop) => {
-//                     sortedObj[prop] = sortObjectPropertiesRecursively(obj[prop]);
-//                     return sortedObj;
-//                     // tslint:disable-next-line: no-any
-//                 }, {}) as any
-//         );
-//     }
-//     return obj;
-// }
+// tslint:disable-next-line: no-any
+function sortObjectPropertiesRecursively(obj: any): any {
+    if (Array.isArray(obj)) {
+        return obj.map(sortObjectPropertiesRecursively);
+    }
+    if (obj !== undefined && obj !== null && typeof obj === 'object' && Object.keys(obj).length > 0) {
+        return (
+            Object.keys(obj)
+                .sort()
+                // tslint:disable-next-line: no-any
+                .reduce<Record<string, any>>((sortedObj, prop) => {
+                    sortedObj[prop] = sortObjectPropertiesRecursively(obj[prop]);
+                    return sortedObj;
+                    // tslint:disable-next-line: no-any
+                }, {}) as any
+        );
+    }
+    return obj;
+}
 
 // Exported for test mocks
 export class VSCodeNotebookModel extends BaseNotebookModel {
@@ -169,16 +169,12 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         } as any;
     }
     protected generateNotebookJson() {
-        // tslint:disable-next-line: no-unnecessary-local-variable
         const json = super.generateNotebookJson();
         // https://github.com/microsoft/vscode-python/issues/13155
         // Object keys in metadata, cells and the like need to be sorted alphabetically.
         // Jupyter (Python) seems to sort them alphabetically.
         // We should do the same to minimize changes to content when saving ipynb.
-        // return sortObjectPropertiesRecursively(json);
-        // Disabled for now, to determine how we should better handle this.
-        // Should we always sort or only sort documents created by jupyter, or what?
-        return json;
+        return sortObjectPropertiesRecursively(json);
     }
 
     protected handleRedo(change: NotebookModelChange): boolean {
