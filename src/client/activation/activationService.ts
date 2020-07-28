@@ -217,24 +217,19 @@ export class LanguageServerExtensionActivationService
         key: string
     ): Promise<RefCountedLanguageServer> {
         let serverType = this.getCurrentLanguageServerType();
-        switch (serverType) {
-            case LanguageServerType.Microsoft:
-                const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
-                    IDiagnosticsService,
-                    LSNotSupportedDiagnosticServiceId
-                );
-                const diagnostic = await lsNotSupportedDiagnosticService.diagnose(undefined);
-                lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
-                if (diagnostic.length) {
-                    sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, {
-                        supported: false
-                    });
-                    serverType = LanguageServerType.Jedi;
-                }
-                break;
-            default:
+        if (serverType === LanguageServerType.Microsoft) {
+            const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
+                IDiagnosticsService,
+                LSNotSupportedDiagnosticServiceId
+            );
+            const diagnostic = await lsNotSupportedDiagnosticService.diagnose(undefined);
+            lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
+            if (diagnostic.length) {
+                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, {
+                    supported: false
+                });
                 serverType = LanguageServerType.Jedi;
-                break;
+            }
         }
 
         this.sendTelemetryForChosenLanguageServer(serverType).ignoreErrors();
