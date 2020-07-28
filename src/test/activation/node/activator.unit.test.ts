@@ -12,7 +12,6 @@ import { ILanguageServerManager } from '../../../client/activation/types';
 import {
     IApplicationEnvironment,
     IApplicationShell,
-    ICommandManager,
     IWorkspaceService
 } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
@@ -36,7 +35,6 @@ suite('Pylance Language Server - Activator', () => {
     let extensions: IExtensions;
     let appShell: IApplicationShell;
     let appEnv: IApplicationEnvironment;
-    let commands: ICommandManager;
     let extensionsChangedEvent: EventEmitter<void>;
 
     // tslint:disable-next-line: no-any
@@ -48,7 +46,6 @@ suite('Pylance Language Server - Activator', () => {
         configuration = mock(ConfigurationService);
         settings = mock(PythonSettings);
         extensions = mock<IExtensions>();
-        commands = mock<ICommandManager>();
         appShell = mock<IApplicationShell>();
         appEnv = mock<IApplicationEnvironment>();
         when(appEnv.uriScheme).thenReturn('scheme');
