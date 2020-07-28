@@ -49,8 +49,8 @@ export class LanguageServerChangeHandler implements Disposable {
     }
 
     public dispose(): void {
-        for (const d of this.disposables) {
-            d.dispose();
+        while (this.disposables.length) {
+            this.disposables.pop()?.dispose();
         }
     }
 
