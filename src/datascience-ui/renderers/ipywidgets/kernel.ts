@@ -131,7 +131,8 @@ class ProxyKernel implements Kernel.IKernel {
         const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
         this._ioPubMessageSignal = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this.realKernel.iopubMessage.connect(this.onIOPubMessage, this);
-
+        // tslint:disable-next-line: no-console
+        console.error('Hook up Receive Kernel Message');
         postOffice.onDidReceiveKernelMessage(this.handleMessage, this, this.disposables);
         this.websocket = (ProxyWebSocket.instance as unknown) as WebSocketWS & { sendEnabled: boolean };
         this.messageHook = this.messageHookInterceptor.bind(this);
@@ -250,7 +251,9 @@ class ProxyKernel implements Kernel.IKernel {
         this.disposables.forEach((d) => d.dispose());
         return this.realKernel.dispose();
     }
-    public handleMessage(type: string, payload?: any): boolean {
+    public handleMessage({ type, payload }: { type: string; payload?: any }): boolean {
+        // tslint:disable-next-line: no-console
+        console.error(`handleMessage inside kernel ${type}`, payload);
         // Handle messages as they come in. Note: Do not await anything here. THey have to be in order.
         // If not, we could switch to message chaining or an observable instead.
         switch (type) {
@@ -499,6 +502,6 @@ export function create(
 ): Kernel.IKernel {
     const result = new ProxyKernel(options, postOffice);
     // Make sure to handle all the missed messages
-    pendingMessages.forEach((m) => result.handleMessage(m.message, m.payload));
+    pendingMessages.forEach((m) => result.handleMessage({ type: m.message, payload: m.payload }));
     return result;
 }

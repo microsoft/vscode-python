@@ -14,8 +14,17 @@ __webpack_public_path__ = getPublicPath();
 // This must be on top, do not change. Required by webpack.
 
 import type { nbformat } from '@jupyterlab/coreutils';
-import '../../../client/common/extensions';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import { createDeferred } from '../../../client/common/utils/async';
+import { noop } from '../../../client/common/utils/misc';
+import { IPyWidgetMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { WidgetScriptSource } from '../../../client/datascience/ipywidgets/types';
 import { JupyterIPyWidgetNotebookRenderer } from '../constants';
+import { WidgetManagerComponent } from './container';
+import { createEmitter } from './events';
+import { WidgetManager } from './manager';
+import { Event, IPyWidgetsPostOffice, IPyWidgetsSettings } from './types';
 
 const notebookApi = acquireNotebookRendererApi(JupyterIPyWidgetNotebookRenderer);
 const vscApi = acquireVsCodeApi();
@@ -27,11 +36,12 @@ notebookApi.onDidReceiveMessage((msg) => {
 });
 window.addEventListener('message', (e) => {
     // tslint:disable-next-line: no-console
-    console.error(`Message from kernel`, e.data);
+    console.error(`Message from backend`, e.data);
     if (e.data && e.data.type === 'fromKernel') {
         postToKernel('HelloKernel', 'WorldKernel');
     }
 });
+const renderedWidgets = new Set<string>();
 /**
  * Called from renderer to render output.
  * This will be exposed as a public method on window for renderer to render output.
@@ -54,6 +64,18 @@ function renderOutput(tag: HTMLScriptElement) {
             container = document.createElement('div');
             tag.parentNode?.insertBefore(container, tag.nextSibling);
         }
+        const model = output['application/vnd.jupyter.widget-view+json'] as any;
+        if (!model) {
+            // tslint:disable-next-line: no-console
+            return console.error('Nothing to render');
+        }
+        // tslint:disable: no-console
+        console.error('Got Something to render');
+        if (renderedWidgets.has(model.model_id)) {
+            return console.error('already rendering');
+        }
+        renderedWidgets.add(model.model_id);
+        createWidgetView(model, container).catch((ex) => console.error('Failed to render', ex));
     } catch (ex) {
         // tslint:disable-next-line: no-console
         console.error(`Failed to render ipywidget type ${mimeType}`, ex);
@@ -78,7 +100,7 @@ function postToRendererExtension(type: string, payload: any) {
     notebookApi.postMessage({ type, payload });
 }
 // tslint:disable-next-line: no-any
-function postToKernel(type: string, payload: any) {
+function postToKernel(type: string, payload?: any) {
     vscApi.postMessage({ type, payload });
 }
 
@@ -86,7 +108,108 @@ function postToKernel(type: string, payload: any) {
 function initialize() {
     // Possible this (pre-render script loaded after notebook attempted to render something).
     // At this point we need to go and render the existing output.
+    initWidgets();
     renderOnLoad();
+}
+
+class MyPostOffice implements IPyWidgetsPostOffice {
+    public get settings(): IPyWidgetsSettings | undefined {
+        return { timeoutWaitingForWidgetsToLoad: 5_000 };
+    }
+    // tslint:disable-next-line: no-any
+    public get onDidReceiveKernelMessage(): Event<any> {
+        return this._gotMessage.event;
+    }
+    private readonly _gotMessage = createEmitter();
+    private readonly backendReady = createDeferred();
+    constructor() {
+        window.addEventListener('message', (e) => {
+            // tslint:disable-next-line: no-console
+            console.error('processing messages');
+            // tslint:disable-next-line: no-console
+            if (e.data && e.data.type === '__IPYWIDGET_KERNEL_MESSAGE') {
+                // tslint:disable-next-line: no-console
+                const payload = e.data.payload;
+                if ('message' in payload && !('type' in payload)) {
+                    payload.type = payload.message; // Inconsistency in messages sent, we send using `message` but use `type` at receiving end.
+                }
+                // tslint:disable-next-line: no-console
+                console.error(`Message from real backend kernel`, payload);
+                this._gotMessage.fire(e.data.payload);
+            }
+            if (e.data && e.data.type === '__IPYWIDGET_BACKEND_READY') {
+                this.backendReady.resolve();
+            }
+        });
+        // postToKernel('__IPYWIDGET_KERNEL_MESSAGE', { message: IPyWidgetMessages.IPyWidgets_Ready });
+    }
+    // tslint:disable-next-line: no-any
+    public postKernelMessage(message: any, payload: any): void {
+        this.backendReady.promise
+            .then(() => postToKernel('__IPYWIDGET_KERNEL_MESSAGE', { message, payload }))
+            .catch(noop);
+    }
+    public async getWidgetScriptSource(_options: {
+        moduleName: string;
+        moduleVersion: string;
+    }): Promise<WidgetScriptSource> {
+        throw new Error('Method not implemented.');
+    }
+    public onReady(): void {
+        postToKernel('__IPYWIDGET_KERNEL_MESSAGE', { message: IPyWidgetMessages.IPyWidgets_Ready });
+        postToKernel('READY');
+    }
+}
+
+let widgetManagerPromise: Promise<WidgetManager> | undefined;
+async function getWidgetManager(): Promise<WidgetManager> {
+    if (!widgetManagerPromise) {
+        widgetManagerPromise = new Promise((resolve) => WidgetManager.instance.subscribe(resolve));
+        widgetManagerPromise!
+            .then((wm) => {
+                if (wm) {
+                    const oldDispose = wm.dispose.bind(wm);
+                    wm.dispose = () => {
+                        // this.renderedViews.clear();
+                        // this.widgetManager = undefined;
+                        widgetManagerPromise = undefined;
+                        return oldDispose();
+                    };
+                }
+            })
+            .catch(noop);
+    }
+    return widgetManagerPromise;
+}
+
+async function createWidgetView(
+    widgetData: nbformat.IMimeBundle & { model_id: string; version_major: number },
+    element: HTMLElement
+) {
+    const wm = await getWidgetManager();
+    try {
+        return await wm?.renderWidget(widgetData, element);
+    } catch (ex) {
+        // tslint:disable-next-line: no-console
+        console.error('Failed to render widget', ex);
+    }
+}
+
+function initWidgets() {
+    // tslint:disable-next-line: no-console
+    console.error('Rendering widget container');
+    try {
+        const postOffice: IPyWidgetsPostOffice = new MyPostOffice();
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+        ReactDOM.render(
+            React.createElement(WidgetManagerComponent, { postOffice, widgetContainerElement: container }, null),
+            container
+        );
+    } catch (ex) {
+        // tslint:disable-next-line: no-console
+        console.error('Ooops', ex);
+    }
 }
 
 // tslint:disable-next-line: no-console

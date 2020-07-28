@@ -102,6 +102,7 @@ export type KernelSocketOptions = {
 };
 
 export interface IPostOfficeKernelMessagePayloadMapping {
+    [IPyWidgetMessages.IPyWidgets_Ready]: never | undefined;
     [IPyWidgetMessages.IPyWidgets_msg]: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView;
     [IPyWidgetMessages.IPyWidgets_binary_msg]: any[] | undefined;
     [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;

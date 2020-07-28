@@ -52,7 +52,7 @@ export class NotebookKernel implements VSCNotebookKernel {
         ];
     }
     private cellExecutions = new WeakMap<NotebookCell, MultiCancellationTokenSource>();
-    private documentExecutions = new WeakMap<NotebookDocument, MultiCancellationTokenSource>();
+    private documentExecutions = new WeakMap<NotebookDocument, MultiCancellationTokenSource>();;
     constructor(
         public readonly label: string,
         public readonly description: string,
@@ -60,6 +60,7 @@ export class NotebookKernel implements VSCNotebookKernel {
         public readonly kernelInfo: Readonly<KernelSelection>,
         @inject(INotebookExecutionService) private readonly execution: INotebookExecutionService
     ) {}
+
     public executeCell(document: NotebookDocument, cell: NotebookCell) {
         if (this.cellExecutions.has(cell)) {
             return;

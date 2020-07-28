@@ -58,11 +58,14 @@ export class WidgetManager implements IIPyWidgetManager {
             successHandler(className: string, moduleName: string, moduleVersion: string): void;
         }
     ) {
+        // tslint:disable-next-line: no-console
+        console.error('Bound');
         // tslint:disable-next-line: no-any
         this.postOffice.onDidReceiveKernelMessage(this.handleMessage, this, this.disposables);
 
         // Handshake.
         this.postOffice.onReady();
+        this.postOffice.postKernelMessage(IPyWidgetMessages.IPyWidgets_Ready, undefined);
     }
     public dispose(): void {
         this.proxyKernel?.dispose(); // NOSONAR
@@ -72,7 +75,11 @@ export class WidgetManager implements IIPyWidgetManager {
     public async clear(): Promise<void> {
         await this.manager?.clear_state();
     }
-    public handleMessage({ type, payload }: { type: string; payload?: any }) {
+    public handleMessage(msg: { type: string; payload?: any }) {
+        // tslint:disable-next-line: no-console
+        console.error('handleMessage in manager.ts', msg);
+        const { type, payload } = msg;
+        // console.error('handleMessage in manager.ts', msg);
         if (type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
             this.initializeKernelAndWidgetManager(payload);
         } else if (type === IPyWidgetMessages.IPyWidgets_onRestartKernel) {

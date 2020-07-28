@@ -137,14 +137,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 break;
         }
     }
-    public sendRawPayloadToKernelSocket(payload?: any) {
-        this.pendingMessages.push(payload);
-        this.sendPendingMessages();
-    }
-    public async registerCommTarget(targetName: string) {
-        this.pendingTargetNames.add(targetName);
-        await this.initialize();
-    }
 
     public async initialize() {
         if (!this.jupyterLab) {
@@ -165,6 +157,14 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         payload: M[T]
     ) {
         this._postMessageEmitter.fire({ message, payload });
+    }
+    private sendRawPayloadToKernelSocket(payload?: any) {
+        this.pendingMessages.push(payload);
+        this.sendPendingMessages();
+    }
+    private async registerCommTarget(targetName: string) {
+        this.pendingTargetNames.add(targetName);
+        await this.initialize();
     }
     private subscribeToKernelSocket(notebook: INotebook) {
         if (this.subscribedToKernelSocket) {

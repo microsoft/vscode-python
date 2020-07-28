@@ -165,7 +165,7 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
     if (configNameForProductionBuilds) {
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
     } else {
-        await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'production'], webpackEnv);
+        await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);
     }
 }
 gulp.task('webpack', async () => {

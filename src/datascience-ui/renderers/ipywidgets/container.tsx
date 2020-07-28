@@ -10,7 +10,7 @@ import { IPyWidgetMessages } from '../../../client/datascience/interactive-commo
 import { WidgetScriptSource } from '../../../client/datascience/ipywidgets/types';
 import { SharedMessages } from '../../../client/datascience/messages';
 import { IDataScienceExtraSettings } from '../../../client/datascience/types';
-import '../../client/common/extensions';
+// import '../../client/common/extensions';
 import { warnAboutWidgetVersionsThatAreNotSupported } from './incompatibleWidgetHandler';
 import { WidgetManager } from './manager';
 import { registerScripts } from './requirejsRegistry';
@@ -47,6 +47,8 @@ export class WidgetManagerComponent extends React.Component<Props> {
     };
     constructor(props: Props) {
         super(props);
+        // tslint:disable-next-line: no-console
+        console.error('init widgetmanager comopnent');
         const ele =
             typeof this.props.widgetContainerElement === 'string'
                 ? document.getElementById(this.props.widgetContainerElement)!
@@ -58,16 +60,22 @@ export class WidgetManagerComponent extends React.Component<Props> {
             const type = msg.type;
             const payload = msg.payload;
             if (type === SharedMessages.UpdateSettings) {
+                // tslint:disable-next-line: no-console
+                console.error('Got Message 1');
                 const settings = JSON.parse(payload) as IDataScienceExtraSettings;
                 this.widgetsCanLoadFromCDN = settings.widgetScriptSources.length > 0;
             } else if (
                 type === IPyWidgetMessages.IPyWidgets_kernelOptions ||
                 type === IPyWidgetMessages.IPyWidgets_onKernelChanged
             ) {
+                // tslint:disable-next-line: no-console
+                console.error('Got Message 2');
                 // This happens when we have restarted a kernel.
                 // If user changed the kernel, then some widgets might exist now and some might now.
                 this.widgetSourceRequests.clear();
                 this.registeredWidgetSources.clear();
+            } else {
+                console.error('Got unknown Message 2');
             }
         });
     }
@@ -76,6 +84,28 @@ export class WidgetManagerComponent extends React.Component<Props> {
     }
     public componentWillUnmount() {
         this.widgetManager.dispose();
+    }
+    private async handleLoadError(
+        className: string,
+        moduleName: string,
+        moduleVersion: string,
+        // tslint:disable-next-line: no-any
+        error: any,
+        timedout: boolean = false
+    ) {
+        if (!this.props.postOffice.onWidgetLoadFailure) {
+            return;
+        }
+        const isOnline = await isonline.default({ timeout: 1000 });
+        this.props.postOffice.onWidgetLoadFailure({
+            className,
+            moduleName,
+            moduleVersion,
+            isOnline,
+            timedout,
+            error,
+            cdnsUsed: this.widgetsCanLoadFromCDN
+        });
     }
     /**
      * Given a list of the widgets along with the sources, we will need to register them with requirejs.
@@ -119,28 +149,6 @@ export class WidgetManagerComponent extends React.Component<Props> {
             return;
         }
         this.registerScriptSourcesInRequirejs([source]);
-    }
-    private async handleLoadError(
-        className: string,
-        moduleName: string,
-        moduleVersion: string,
-        // tslint:disable-next-line: no-any
-        error: any,
-        timedout: boolean = false
-    ) {
-        if (!this.props.postOffice.onWidgetLoadFailure) {
-            return;
-        }
-        const isOnline = await isonline.default({ timeout: 1000 });
-        this.props.postOffice.onWidgetLoadFailure({
-            className,
-            moduleName,
-            moduleVersion,
-            isOnline,
-            timedout,
-            error,
-            cdnsUsed: this.widgetsCanLoadFromCDN
-        });
     }
 
     /**
@@ -229,7 +237,6 @@ export class WidgetManagerComponent extends React.Component<Props> {
                 )
         );
     }
-
     private handleLoadSuccess(className: string, moduleName: string, moduleVersion: string) {
         if (!this.props.postOffice.onWidgetLoadSuccess) {
             return;

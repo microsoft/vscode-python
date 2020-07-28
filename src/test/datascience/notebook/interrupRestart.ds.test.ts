@@ -5,7 +5,8 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { CancellationTokenSource, commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
+import { CancellationTokenSource, commands } from 'vscode';
+import { NotebookEditor as VSCNotebookEditor } from '../../../../typings/vscode-proposed';
 import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { createDeferredFromPromise } from '../../../client/common/utils/async';

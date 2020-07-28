@@ -29,7 +29,7 @@ function getEntry(bundle) {
             };
         case 'renderers':
             return {
-                renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`],
+                // renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`],
                 ipywidgets: ['babel-polyfill', `./src/datascience-ui/renderers/ipywidgets/index.tsx`]
             };
         case 'viewers':

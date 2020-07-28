@@ -28,7 +28,7 @@ export class IPyWidgetNotebookOutputRenderer implements VSCNotebookOutputRendere
     }
     // @ts-ignore
     public render(document: NotebookDocument, request: NotebookRenderRequest) {
-        const outputToSend = { helloWorld: request.output.data };
+        const outputToSend = request.output.data;
         return `
             <script data-renderer="${JupyterIPyWidgetNotebookRenderer}" data-mime-type="${
             request.mimeType
