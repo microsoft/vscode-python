@@ -109,6 +109,6 @@ export class LanguageServerChangeHandler implements Disposable {
     }
 
     private isPylanceInstalled(): boolean {
-        return this.extensions.getExtension(PYLANCE_EXTENSION_ID) ? true : false;
+        return !!this.extensions.getExtension(PYLANCE_EXTENSION_ID);
     }
 }

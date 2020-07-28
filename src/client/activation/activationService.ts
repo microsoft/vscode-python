@@ -218,12 +218,6 @@ export class LanguageServerExtensionActivationService
     ): Promise<RefCountedLanguageServer> {
         let serverType = this.getCurrentLanguageServerType();
         switch (serverType) {
-            case LanguageServerType.None:
-                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_NONE, undefined, undefined);
-                break;
-            case LanguageServerType.Node:
-                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PYLANCE, undefined, undefined);
-                break;
             case LanguageServerType.Microsoft:
                 const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
                     IDiagnosticsService,
