@@ -30,7 +30,6 @@ import { IKernelSpecQuickPickItem } from '../../client/datascience/jupyter/kerne
 import {
     ICell,
     IDataScienceErrorHandler,
-    IDataScienceFileSystem,
     IJupyterExecution,
     INotebookEditorProvider,
     INotebookExporter,
@@ -716,16 +715,6 @@ df.head()`;
                 });
 
                 runMountedTest('Startup and shutdown', async () => {
-                    // Stub the `stat` method to return a dummy value.
-                    try {
-                        sinon
-                            .stub(ioc.serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem), 'stat')
-                            .resolves({ mtime: 0 } as any);
-                    } catch (e) {
-                        // tslint:disable-next-line: no-console
-                        console.log(`Stub failure ${e}`);
-                    }
-
                     addMockData(ioc, 'b=2\nb', 2);
                     addMockData(ioc, 'c=3\nc', 3);
 
