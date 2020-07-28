@@ -3,10 +3,13 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
+import { join } from 'path';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import type { NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel } from 'vscode-proposed';
 import { noop } from '../../common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../constants';
+import { KernelSelection } from '../jupyter/kernels/types';
 import { INotebookExecutionService } from './types';
 
 /**
@@ -41,17 +44,22 @@ class MultiCancellationTokenSource {
  * VSC will use this class to execute cells in a notebook.
  * This is where we hookup Jupyter with a Notebook in VSCode.
  */
-@injectable()
 export class NotebookKernel implements VSCNotebookKernel {
     get preloads(): Uri[] {
-        return [];
-    }
-    public get label(): string {
-        return 'Jupyter';
+        return [
+            Uri.file(join(EXTENSION_ROOT_DIR, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')),
+            Uri.file(join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'renderers', 'ipywidgets.js'))
+        ];
     }
     private cellExecutions = new WeakMap<NotebookCell, MultiCancellationTokenSource>();
     private documentExecutions = new WeakMap<NotebookDocument, MultiCancellationTokenSource>();
-    constructor(@inject(INotebookExecutionService) private readonly execution: INotebookExecutionService) {}
+    constructor(
+        public readonly label: string,
+        public readonly description: string,
+        public readonly preferred: boolean,
+        public readonly kernelInfo: Readonly<KernelSelection>,
+        @inject(INotebookExecutionService) private readonly execution: INotebookExecutionService
+    ) {}
     public executeCell(document: NotebookDocument, cell: NotebookCell) {
         if (this.cellExecutions.has(cell)) {
             return;

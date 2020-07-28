@@ -3186,6 +3186,13 @@
                     "text/latex",
                     "text/vnd.plotly.v1+html"
                 ]
+            },
+            {
+                "viewType": "jupyter-ipywidget-renderer",
+                "displayName": "Jupyter IPyWidget Renderer",
+                "mimeTypes": [
+                    "application/vnd.jupyter.widget-view+json"
+                ]
             }
         ],
         "notebookProvider": [

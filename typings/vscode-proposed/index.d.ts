@@ -533,6 +533,23 @@ export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKerne
     ): ProviderResult<void>;
 }
 
+export interface NotebookDocumentFilter {
+    viewType?: string;
+    filenamePattern?: GlobPattern;
+    excludeFileNamePattern?: GlobPattern;
+}
+
+export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKernel> {
+    onDidChangeKernels?: Event<void>;
+    provideKernels(document: NotebookDocument, token: CancellationToken): ProviderResult<T[]>;
+    resolveKernel?(
+        kernel: T,
+        document: NotebookDocument,
+        webview: NotebookCommunication,
+        token: CancellationToken
+    ): ProviderResult<void>;
+}
+
 export namespace notebook {
     export function registerNotebookContentProvider(
         notebookType: string,

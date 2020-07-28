@@ -236,6 +236,7 @@ declare module 'vscode' {
          * The document associated with this notebook editor.
          */
         readonly document: NotebookDocument;
+        readonly kernel: NotebookKernel;
 
         /**
          * The primary selected cell on this notebook editor.
@@ -573,9 +574,13 @@ declare module 'vscode' {
             selector?: DocumentSelector
         ): NotebookConcatTextDocument;
 
+<<<<<<< Updated upstream
         export const onDidChangeActiveNotebookKernel: Event<{
             document: NotebookDocument;
             kernel: NotebookKernel | undefined;
         }>;
+=======
+        export const onDidChangeActiveNotebookKernel: Event<{notebook, kernel}>;
+>>>>>>> Stashed changes
     }
 }

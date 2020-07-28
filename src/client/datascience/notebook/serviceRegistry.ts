@@ -8,7 +8,8 @@ import { IServiceManager } from '../../ioc/types';
 import { NotebookContentProvider } from './contentProvider';
 import { NotebookExecutionService } from './executionService';
 import { NotebookIntegration } from './integration';
-import { NotebookKernel } from './notebookKernel';
+import { IPyWidgetNotebookOutputRenderer } from './ipyWidgetRenderer';
+import { KernelProvider } from './kernelProvider';
 import { NotebookOutputRenderer } from './renderer';
 import { NotebookSurveyBanner, NotebookSurveyDataLogger } from './survey';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
@@ -21,9 +22,13 @@ export function registerTypes(serviceManager: IServiceManager) {
         NotebookIntegration
     );
     serviceManager.addSingleton<NotebookIntegration>(NotebookIntegration, NotebookIntegration);
-    serviceManager.addSingleton<NotebookKernel>(NotebookKernel, NotebookKernel);
     serviceManager.addSingleton<NotebookOutputRenderer>(NotebookOutputRenderer, NotebookOutputRenderer);
+    serviceManager.addSingleton<IPyWidgetNotebookOutputRenderer>(
+        IPyWidgetNotebookOutputRenderer,
+        IPyWidgetNotebookOutputRenderer
+    );
     serviceManager.addSingleton<NotebookSurveyBanner>(NotebookSurveyBanner, NotebookSurveyBanner);
+    serviceManager.addSingleton<KernelProvider>(KernelProvider, KernelProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookSurveyDataLogger

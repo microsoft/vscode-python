@@ -71,6 +71,7 @@ import type {
 } from 'vscode-proposed';
 import * as vsls from 'vsls/vscode';
 
+import { NotebookDocumentFilter, NotebookKernelProvider } from '../../../../typings/vscode-proposed';
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
 
@@ -1530,6 +1531,10 @@ export type NotebookCellChangedEvent =
     | NotebookCellLanguageChangeEvent;
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
+    readonly onDidChangeActiveNotebookKernel: Event<{
+        document: NotebookDocument;
+        kernel: NotebookKernel | undefined;
+    }>;
     readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
@@ -1538,8 +1543,9 @@ export interface IVSCodeNotebook {
     readonly notebookEditors: Readonly<NotebookEditor[]>;
     readonly activeNotebookEditor: NotebookEditor | undefined;
     registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable;
-
     registerNotebookKernel(id: string, selectors: GlobPattern[], kernel: NotebookKernel): Disposable;
+
+    registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
 
     registerNotebookOutputRenderer(
         id: string,

@@ -224,7 +224,7 @@ async function buildWebPack(webpackConfigName, args, env) {
     const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName).map((item) => item.toLowerCase());
     const stdOut = await spawnAsync(
         'npm',
-        ['run', 'webpack', '--', ...args, ...['--mode', 'production', '--devtool', 'source-map']],
+        ['run', 'webpack', '--', ...args, ...['--mode', 'development', '--devtool', 'source-map']],
         env
     );
     const stdOutLines = stdOut

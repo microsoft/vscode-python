@@ -11,23 +11,19 @@ import { IJupyterKernel, IJupyterKernelSpec } from '../../types';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
+/**
+ * Whether a selected kernel is:
+ * - Kernel spec (IJupyterKernelSpec)
+ * - Active kernel (IJupyterKernel) or
+ * - An Interpreter
+ */
+export type KernelSelection =
+    | { kernelModel: LiveKernelModel; kernelSpec: undefined; interpreter: undefined }
+    | { kernelModel: undefined; kernelSpec: IJupyterKernelSpec; interpreter: undefined }
+    | { kernelModel: undefined; kernelSpec: undefined; interpreter: PythonInterpreter };
+
 export interface IKernelSpecQuickPickItem extends QuickPickItem {
-    /**
-     * Whether a
-     * - Kernel spec (IJupyterKernelSpec)
-     * - Active kernel (IJupyterKernel) or
-     * - Interpreter has been selected.
-     * If interpreter is selected, then we might need to install this as a kernel to get the kernel spec.
-     *
-     * @type {({ kernelModel: IJupyterKernel; kernelSpec: IJupyterKernelSpec; interpreter: undefined }
-     *         | { kernelModel: undefined; kernelSpec: IJupyterKernelSpec; interpreter: undefined }
-     *         | { kernelModel: undefined; kernelSpec: undefined; interpreter: PythonInterpreter })}
-     * @memberof IKernelSpecQuickPickItem
-     */
-    selection:
-        | { kernelModel: LiveKernelModel; kernelSpec: undefined; interpreter: undefined }
-        | { kernelModel: undefined; kernelSpec: IJupyterKernelSpec; interpreter: undefined }
-        | { kernelModel: undefined; kernelSpec: undefined; interpreter: PythonInterpreter };
+    selection: KernelSelection;
 }
 
 export interface IKernelSelectionListProvider {
