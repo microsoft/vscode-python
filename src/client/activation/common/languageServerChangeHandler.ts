@@ -1,7 +1,7 @@
-import { Disposable } from 'vscode';
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Disposable } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../../common/application/types';
 import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { IExtensions } from '../../common/types';
