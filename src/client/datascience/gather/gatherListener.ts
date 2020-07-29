@@ -167,7 +167,9 @@ export class GatherListener implements IInteractiveWindowListener {
             traceError('Gather: Exception at gatherCode', e);
             sendTelemetryEvent(Telemetry.GatherException, undefined, { exceptionType: 'gather' });
             const newline = '\n';
-            slicedProgram = localize.DataScience.gatherError() + newline + (e as string);
+            const defaultCellMarker =
+                this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
+            slicedProgram = defaultCellMarker + newline + localize.DataScience.gatherError() + newline + (e as string);
         }
 
         if (!slicedProgram) {
@@ -188,7 +190,7 @@ export class GatherListener implements IInteractiveWindowListener {
             sendTelemetryEvent(Telemetry.GatherStats, undefined, {
                 linesSubmitted: this.linesSubmitted,
                 cellsSubmitted: this.cellsSubmitted,
-                linesGathered: slicedProgram.splitLines().length,
+                linesGathered: slicedProgram.trim().splitLines().length,
                 cellsGathered: generateCellsFromString(slicedProgram).length
             });
         }
