@@ -62,8 +62,13 @@ function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
         // Register the script source into requirejs so it gets loaded via requirejs.
         config.paths[script.moduleName] = scriptUri;
     });
-
+    // tslint:disable-next-line: no-console
+    console.error(`requirejs.config`, typeof requirejs.config);
+    // tslint:disable-next-line: no-console
+    console.error(`requirejs.config`, JSON.stringify(config));
     requirejs.config(config);
+    // tslint:disable-next-line: no-console
+    console.error(`requirejs.config registered`);
 }
 
 export function registerScripts(scripts: WidgetScriptSource[]) {

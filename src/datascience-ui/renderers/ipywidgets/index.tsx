@@ -16,7 +16,7 @@ __webpack_public_path__ = getPublicPath();
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { createDeferred } from '../../../client/common/utils/async';
+import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 import { IPyWidgetMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { WidgetScriptSource } from '../../../client/datascience/ipywidgets/types';
@@ -138,16 +138,28 @@ class MyPostOffice implements IPyWidgetsPostOffice {
     }
     private readonly _gotMessage = createEmitter();
     private readonly backendReady = createDeferred();
+    private readonly scripts = new Map<string, Deferred<WidgetScriptSource>>();
     constructor() {
         window.addEventListener('message', (e) => {
             // tslint:disable-next-line: no-console
             console.error('processing messages');
-            // tslint:disable-next-line: no-console
+            // tslint:disable: no-console
             if (e.data && e.data.type === '__IPYWIDGET_KERNEL_MESSAGE') {
                 // tslint:disable-next-line: no-console
                 const payload = e.data.payload;
                 if ('message' in payload && !('type' in payload)) {
                     payload.type = payload.message; // Inconsistency in messages sent, we send using `message` but use `type` at receiving end.
+                }
+                if (payload.type === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse) {
+                    console.error('Got Script source', payload.payload);
+                    const source: WidgetScriptSource | undefined = payload.payload;
+                    if (source && this.scripts.has(source.moduleName)) {
+                        console.error('Got Script source and module', payload.payload);
+                        this.scripts.get(source.moduleName)?.resolve(source); // NOSONAR
+                    } else {
+                        console.error('Got Script source and module not found', source?.moduleName);
+                    }
+                    return;
                 }
                 // tslint:disable-next-line: no-console
                 console.error(`Message from real backend kernel`, payload);
@@ -165,11 +177,17 @@ class MyPostOffice implements IPyWidgetsPostOffice {
             .then(() => postToKernel('__IPYWIDGET_KERNEL_MESSAGE', { message, payload }))
             .catch(noop);
     }
-    public async getWidgetScriptSource(_options: {
+    public async getWidgetScriptSource(options: {
         moduleName: string;
         moduleVersion: string;
     }): Promise<WidgetScriptSource> {
-        throw new Error('Method not implemented.');
+        const deferred = createDeferred<WidgetScriptSource>();
+        this.scripts.set(options.moduleName, deferred);
+        // Whether we have the scripts or not, send message to extension.
+        // Useful telemetry and also we know it was explicity requested by ipywidgets.
+        this.postKernelMessage(IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest, options);
+
+        return deferred.promise;
     }
     public onReady(): void {
         postToKernel('__IPYWIDGET_KERNEL_MESSAGE', { message: IPyWidgetMessages.IPyWidgets_Ready });

@@ -188,7 +188,8 @@ export class WidgetManagerComponent extends React.Component<Props> {
                         moduleVersion,
                         new Error(`Timeout getting source for ${moduleName}:${moduleVersion}`),
                         true
-                    ).ignoreErrors();
+                        // tslint:disable-next-line: no-console
+                    ).catch((ex) => console.error('Failed to load in container.tsx', ex));
                     request.deferred.resolve();
                     this.timedOutWaitingForWidgetsToGetLoaded = true;
                 }
@@ -210,6 +211,8 @@ export class WidgetManagerComponent extends React.Component<Props> {
         return (
             request.deferred.promise
                 .then(() => {
+                    // tslint:disable-next-line: no-console
+                    console.error('Attempting to load module');
                     const widgetSource = this.registeredWidgetSources.get(moduleName);
                     if (widgetSource) {
                         warnAboutWidgetVersionsThatAreNotSupported(
