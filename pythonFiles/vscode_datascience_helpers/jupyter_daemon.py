@@ -53,7 +53,8 @@ class PythonDaemon(BasePythonDaemon):
                     from notebook import notebookapp as app
 
                     return {"stdout": ".".join(list(str(v) for v in app.version_info))}
-                except Exception:
+                    """ We specifically don't want to bubble up an error from --version so pass exception here """
+                except Exception:  # nosec
                     pass
             # kernelspec, nbconvert are subcommands of jupyter.
             # python -m jupyter kernelspec, python -m jupyter nbconvert,

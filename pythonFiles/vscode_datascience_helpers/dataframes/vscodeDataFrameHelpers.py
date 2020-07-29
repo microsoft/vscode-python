@@ -13,10 +13,12 @@ def _VSCODE_convertToDataFrame(df):
     elif hasattr(df, "toPandas"):
         df = df.toPandas()
     else:
+        """ Disabling bandit warning for try, except, pass. We want to swallow all exceptions here to not crash on
+        variable fetching """
         try:
             temp = _VSCODE_pd.DataFrame(df)
             df = temp
-        except:
+        except:  # nosec
             pass
     return df
 

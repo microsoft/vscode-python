@@ -7,7 +7,10 @@ import os
 import os.path
 import signal
 import sys
-import subprocess
+
+# Only subprocess.PIPE is used in this file so we can ignore the subprocess warning for this file
+# The actual POpen is in kernel_launcher.py
+import subprocess  # nosec
 import threading
 import time
 from vscode_datascience_helpers.daemon.daemon_python import (
@@ -30,7 +33,8 @@ class PythonDaemon(JupyterDaemon):
         """
         try:
             self.m_kill_kernel()
-        except:
+            """ We don't care about exceptions coming back from killing the kernel, so pass here """
+        except:  # nosec
             pass
         super().close()
 
