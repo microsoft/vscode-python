@@ -22,7 +22,7 @@ Array.prototype.forEach.call(scripts, (script: HTMLScriptElement) => {
 // tslint:disable-next-line: no-function-expression
 const requirePromise = function (pkg: string | string[]): Promise<any> {
     return new Promise((resolve, reject) => {
-        const require = (window as any).requirejs;
+        const require = (window as any).require;
         if (require === undefined) {
             reject('Requirejs is needed, please ensure it is loaded on the page.');
         } else {

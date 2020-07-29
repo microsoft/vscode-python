@@ -28,8 +28,15 @@ import { Event, IPyWidgetsPostOffice, IPyWidgetsSettings } from './types';
 
 const notebookApi = acquireNotebookRendererApi(JupyterIPyWidgetNotebookRenderer);
 const vscApi = acquireVsCodeApi();
+const outputDisposables = new Map<string, { dispose(): void }>();
+notebookApi.onWillDestroyOutput((e) => {
+    if (e?.outputId && outputDisposables.has(e.outputId)) {
+        outputDisposables.get(e.outputId)?.dispose(); // NOSONAR
+        outputDisposables.delete(e.outputId);
+    }
+});
 
-notebookApi.onDidCreateOutput(({ element }) => renderOutput(element.querySelector('script')!));
+notebookApi.onDidCreateOutput(({ element, outputId }) => renderOutput(outputId, element.querySelector('script')!));
 notebookApi.onDidReceiveMessage((msg) => {
     // tslint:disable-next-line: no-console
     console.error(`Message from renderer`, msg);
@@ -46,7 +53,7 @@ const renderedWidgets = new Set<string>();
  * Called from renderer to render output.
  * This will be exposed as a public method on window for renderer to render output.
  */
-function renderOutput(tag: HTMLScriptElement) {
+function renderOutput(outputId: string, tag: HTMLScriptElement) {
     let container: HTMLElement;
     const mimeType = tag.dataset.mimeType as string;
     try {
@@ -75,7 +82,16 @@ function renderOutput(tag: HTMLScriptElement) {
             return console.error('already rendering');
         }
         renderedWidgets.add(model.model_id);
-        createWidgetView(model, container).catch((ex) => console.error('Failed to render', ex));
+        createWidgetView(model, container)
+            .then((w) => {
+                outputDisposables.set(outputId, {
+                    dispose: () => {
+                        renderedWidgets.delete(model.model_id);
+                        w?.dispose();
+                    }
+                });
+            })
+            .catch((ex) => console.error('Failed to render', ex));
     } catch (ex) {
         // tslint:disable-next-line: no-console
         console.error(`Failed to render ipywidget type ${mimeType}`, ex);
@@ -85,15 +101,15 @@ function renderOutput(tag: HTMLScriptElement) {
     postToKernel('HelloKernel', 'WorldKernel');
 }
 
-/**
- * Possible the pre-render scripts load late, after we have attempted to render output from notebook.
- * At this point look through all such scripts and render the output.
- */
-function renderOnLoad() {
-    document
-        .querySelectorAll<HTMLScriptElement>('script[type="application/vscode-jupyter-ipywidget+json"]')
-        .forEach(renderOutput);
-}
+// /**
+//  * Possible the pre-render scripts load late, after we have attempted to render output from notebook.
+//  * At this point look through all such scripts and render the output.
+//  */
+// function renderOnLoad() {
+//     document
+//         .querySelectorAll<HTMLScriptElement>('script[type="application/vscode-jupyter-ipywidget+json"]')
+//         .forEach(renderOutput);
+// }
 
 // tslint:disable-next-line: no-any
 function postToRendererExtension(type: string, payload: any) {
@@ -109,7 +125,7 @@ function initialize() {
     // Possible this (pre-render script loaded after notebook attempted to render something).
     // At this point we need to go and render the existing output.
     initWidgets();
-    renderOnLoad();
+    // renderOnLoad();
 }
 
 class MyPostOffice implements IPyWidgetsPostOffice {

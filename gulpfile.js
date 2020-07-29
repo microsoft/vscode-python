@@ -121,9 +121,9 @@ const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 async function buildIPyWidgets() {
     // if the output ipywidgest file exists, then no need to re-build.
     // Barely changes. If making changes, then re-build manually.
-    if (!isCI && fs.existsSync(path.join(__dirname, 'out/ipywidgets/dist/ipywidgets.js'))) {
-        return;
-    }
+    // if (!isCI && fs.existsSync(path.join(__dirname, 'out/ipywidgets/dist/ipywidgets.js'))) {
+    //     return;
+    // }
     await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
 }
 gulp.task('compile-notebooks', async () => {

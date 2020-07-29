@@ -9,7 +9,10 @@ import * as widgets from '@jupyter-widgets/controls';
 import * as outputWidgets from '@jupyter-widgets/jupyterlab-manager/lib/output';
 import * as embed from './embed';
 import './widgets.css';
-
+// tslint:disable-next-line: no-console
+console.error('Define jupyter widgets');
+// tslint:disable-next-line: no-console
+// console.error(base);
 // Export the following for `requirejs`.
 // tslint:disable-next-line: no-any no-function-expression no-empty
 const define = (window as any).define || function () {};

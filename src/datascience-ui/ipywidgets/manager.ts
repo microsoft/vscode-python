@@ -108,7 +108,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         }
 
         if (!data || data.version_major !== 2) {
-            console.warn('Widget data not avaialble to render an ipywidget');
+            console.warn('Widget data not available to render an ipywidget');
             return undefined;
         }
 
@@ -119,15 +119,15 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             this.modelIdsToBeDisplayed.set(modelId, createDeferred());
         }
         // Wait until it is flagged as ready to be processed.
-        // This widget manager must have recieved this message and performed all operations before this.
-        // Once all messages prior to this have been processed in sequence and this message is receievd,
+        // This widget manager must have received this message and performed all operations before this.
+        // Once all messages prior to this have been processed in sequence and this message is received,
         // then, and only then are we ready to render the widget.
-        // I.e. this is a way of synchronzing the render with the processing of the messages.
+        // I.e. this is a way of synchronizing the render with the processing of the messages.
         await this.modelIdsToBeDisplayed.get(modelId)!.promise;
 
         const modelPromise = this.manager.get_model(data.model_id);
         if (!modelPromise) {
-            console.warn('Widget model not avaialble to render an ipywidget');
+            console.warn('Widget model not available to render an ipywidget');
             return undefined;
         }
 
@@ -135,10 +135,17 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         // ipywidgets have a promise, as the model may get created by a 3rd party library.
         // That 3rd party library may not be available and may have to be downloaded.
         // Hence the promise to wait until it has been created.
-        const model = await modelPromise;
-        const view = await this.manager.create_view(model, { el: ele });
-        // tslint:disable-next-line: no-any
-        return this.manager.display_view(data, view, { node: ele });
+        try {
+            // tslint:disable-next-line: no-debugger
+            debugger;
+            const model = await modelPromise;
+            const view = await this.manager.create_view(model, { el: ele });
+            // tslint:disable-next-line: no-any
+            return this.manager.display_view(data, view, { node: ele });
+        } catch (ex) {
+            // tslint:disable-next-line: no-console
+            console.error('Kaboom2', ex);
+        }
     }
     private initializeKernelAndWidgetManager(options: KernelSocketOptions) {
         if (this.proxyKernel && fastDeepEqual(options, this.options)) {
@@ -155,7 +162,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             // tslint:disable-next-line: no-any
             const JupyterLabWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IJupyterLabWidgetManagerCtor;
             if (!JupyterLabWidgetManager) {
-                throw new Error('JupyterLabWidgetManadger not defined. Please include/check ipywidgets.js file');
+                throw new Error('JupyterLabWidgetManager not defined. Please include/check ipywidgets.js file');
             }
             // Create the real manager and point it at our proxy kernel.
             this.manager = new JupyterLabWidgetManager(this.proxyKernel, this.widgetContainer, this.scriptLoader);

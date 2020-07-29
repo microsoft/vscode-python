@@ -47,12 +47,13 @@ class MultiCancellationTokenSource {
 export class NotebookKernel implements VSCNotebookKernel {
     get preloads(): Uri[] {
         return [
+            // Uri.file(join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook', 'require.js')),
             Uri.file(join(EXTENSION_ROOT_DIR, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')),
             Uri.file(join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'renderers', 'ipywidgets.js'))
         ];
     }
     private cellExecutions = new WeakMap<NotebookCell, MultiCancellationTokenSource>();
-    private documentExecutions = new WeakMap<NotebookDocument, MultiCancellationTokenSource>();;
+    private documentExecutions = new WeakMap<NotebookDocument, MultiCancellationTokenSource>();
     constructor(
         public readonly label: string,
         public readonly description: string,

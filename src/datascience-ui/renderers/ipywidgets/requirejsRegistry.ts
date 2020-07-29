@@ -45,7 +45,7 @@ function getScriptsWithAValidScriptUriToBeRegistered(scripts: WidgetScriptSource
 
 function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
     // tslint:disable-next-line: no-any
-    const requirejs = (window as any).requirejs as { config: Function };
+    const requirejs = (window as any).require as { config: Function };
     if (!requirejs) {
         window.console.error('Requirejs not found');
         throw new Error('Requirejs not found');

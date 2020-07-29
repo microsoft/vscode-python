@@ -144,10 +144,17 @@ export class WidgetManager implements IIPyWidgetManager {
         // ipywidgets have a promise, as the model may get created by a 3rd party library.
         // That 3rd party library may not be available and may have to be downloaded.
         // Hence the promise to wait until it has been created.
-        const model = await modelPromise;
-        const view = await this.manager.create_view(model, { el: ele });
-        // tslint:disable-next-line: no-any
-        return this.manager.display_view(data, view, { node: ele });
+        try {
+            debugger;
+            const model = await modelPromise;
+            const view = await this.manager.create_view(model, { el: ele });
+            // tslint:disable-next-line: no-any
+            return this.manager.display_view(data, view, { node: ele });
+        } catch (ex) {
+            // tslint:disable-next-line: no-console
+            console.error('Kaboom', ex);
+            throw ex;
+        }
     }
     private initializeKernelAndWidgetManager(options: KernelSocketOptions) {
         if (this.proxyKernel && fastDeepEqual(options, this.options)) {
