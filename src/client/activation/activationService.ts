@@ -207,8 +207,7 @@ export class LanguageServerExtensionActivationService
 
     private getCurrentLanguageServerType(): LanguageServerType {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const serverType = configurationService.getSettings(this.resource).languageServer;
-        return serverType ?? LanguageServerType.Jedi;
+        return configurationService.getSettings(this.resource).languageServer;
     }
 
     private async createRefCountedServer(
