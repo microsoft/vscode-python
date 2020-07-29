@@ -2319,8 +2319,8 @@
                     "type": "string",
                     "enum": [
                         "Jedi",
-                        "Microsoft",
                         "Pylance",
+                        "Microsoft",
                         "None"
                     ],
                     "default": "Jedi",
