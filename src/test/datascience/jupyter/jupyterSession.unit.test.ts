@@ -133,16 +133,6 @@ suite('DataScience - JupyterSession', () => {
             verify(kernel.interrupt()).once();
         });
         suite('Shutdown', () => {
-            test('Remote', async () => {
-                connection.setup((c) => c.localLaunch).returns(() => false);
-                when(sessionManager.refreshRunning()).thenResolve();
-                when(contentsManager.delete(anything())).thenResolve();
-
-                await jupyterSession.shutdown();
-
-                verify(sessionManager.refreshRunning()).once();
-                verify(contentsManager.delete(anything())).once();
-            });
             test('Remote sessions', async () => {
                 connection.setup((c) => c.localLaunch).returns(() => true);
                 when(sessionManager.refreshRunning()).thenResolve();
