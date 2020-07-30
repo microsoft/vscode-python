@@ -172,7 +172,8 @@ export class JupyterSession extends BaseJupyterSession {
 
                         return session;
                     })
-                    .catch((ex) => Promise.reject(new JupyterSessionStartError(ex))),
+                    .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
+                    .finally(() => this.contentsManager.delete(backingFile.path).ignoreErrors()),
             cancelToken
         );
     }
