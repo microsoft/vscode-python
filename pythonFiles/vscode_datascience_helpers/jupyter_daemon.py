@@ -4,7 +4,9 @@
 import json
 import logging
 import os
-import subprocess
+
+# See comment at our point of usage of subprocess on why this usage is ok
+import subprocess  # nosec
 import sys
 from vscode_datascience_helpers.daemon.daemon_python import (
     error_decorator,
@@ -72,9 +74,9 @@ class PythonDaemon(BasePythonDaemon):
             return super().m_exec_module(module_name, args, cwd, env)
 
     def _exec_with_subprocess(self, module_name, args=[], cwd=None, env=None):
-        # # result = subprocess.run([sys.executable, "-m"] + args, stdout=sys.stdout, stderr=sys.stderr)
-        # return self._execute_and_capture_output(lambda: subprocess.run([sys.executable, "-m", module_name] + args, stdout=sys.stdout, stderr=sys.stderr))
-        result = subprocess.run(
+        # The usage here traced up to our execModule function on the daemon and only goes down this path for jupyter subcommands
+        # in m_exec_module in this class if module_name == jupyter and we are in control of the args we know that we are safe here
+        result = subprocess.run(  # nosec
             [sys.executable, "-m", module_name] + args, capture_output=True
         )
         encoding = os.getenv("PYTHONIOENCODING", "utf-8")
