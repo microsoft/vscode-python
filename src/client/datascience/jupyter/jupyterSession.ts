@@ -152,7 +152,7 @@ export class JupyterSession extends BaseJupyterSession {
                 this.sessionManager!.startNew(options)
                     .then(async (session) => {
                         if (this.connInfo && !this.connInfo.localLaunch) {
-                            await this.contentsManager.delete(backingFile.path);
+                            this.contentsManager.delete(backingFile.path).ignoreErrors();
                         }
                         this.logRemoteOutput(
                             localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, session.kernel.id)
