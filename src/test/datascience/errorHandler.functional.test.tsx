@@ -43,8 +43,8 @@ suite('DataScience Error Handler Functional Tests', () => {
         return ioc;
     }
 
-    test('IANHU Jupyter not installed', async () => {
-        // Turn off raw kernel for this test
+    test('Jupyter not installed', async () => {
+        // Turn off raw kernel for this test as it's testing jupyter install state
         ioc.setExperimentState(LocalZMQKernel.experiment, false);
         ioc.addDocument('#%%\ntesting', 'test.py');
 
