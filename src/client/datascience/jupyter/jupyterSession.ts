@@ -151,9 +151,6 @@ export class JupyterSession extends BaseJupyterSession {
             () =>
                 this.sessionManager!.startNew(options)
                     .then(async (session) => {
-                        if (this.connInfo && !this.connInfo.localLaunch) {
-                            this.contentsManager.delete(backingFile.path).ignoreErrors();
-                        }
                         this.logRemoteOutput(
                             localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, session.kernel.id)
                         );
@@ -173,7 +170,11 @@ export class JupyterSession extends BaseJupyterSession {
                         return session;
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
-                    .finally(() => this.contentsManager.delete(backingFile.path).ignoreErrors()),
+                    .finally(() => {
+                        if (this.connInfo && !this.connInfo.localLaunch) {
+                            this.contentsManager.delete(backingFile.path).ignoreErrors();
+                        }
+                    }),
             cancelToken
         );
     }
