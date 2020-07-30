@@ -17,9 +17,9 @@ import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook } from './helpers/helpers';
-import { IPyWidgetNotebookOutputRenderer } from './ipyWidgetRenderer';
+// import { IPyWidgetNotebookOutputRenderer } from './ipyWidgetRenderer';
 import { KernelProvider } from './kernelProvider';
-import { NotebookOutputRenderer } from './renderer';
+// import { NotebookOutputRenderer } from './renderer';
 import { INotebookContentProvider } from './types';
 
 const EditorAssociationUpdatedKey = 'EditorAssociationUpdatedToUseNotebooks';
@@ -37,9 +37,9 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
         @inject(KernelProvider) private readonly kernelProvider: KernelProvider,
-        @inject(NotebookOutputRenderer) private readonly renderer: NotebookOutputRenderer,
-        // @inject(INotebookExecutionService) private readonly _execution: INotebookExecutionService,
-        @inject(IPyWidgetNotebookOutputRenderer) private readonly ipyWidgetRenderer: IPyWidgetNotebookOutputRenderer,
+        // @inject(NotebookOutputRenderer) private readonly renderer: NotebookOutputRenderer,
+        // // @inject(INotebookExecutionService) private readonly _execution: INotebookExecutionService,
+        // @inject(IPyWidgetNotebookOutputRenderer) private readonly ipyWidgetRenderer: IPyWidgetNotebookOutputRenderer,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -66,46 +66,46 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             this.disposables.push(
                 this.vscNotebook.registerNotebookKernelProvider({ viewType: JupyterNotebookView }, this.kernelProvider)
             );
-            // tslint:disable-next-line: no-any
-            // const kernel = new NotebookKernel('Jupyter', 'Jupyter', true, {} as any, this.execution);
-            // this.disposables.push(this.vscNotebook.registerNotebookKernel(JupyterNotebookView, ['**/*.ipynb'], kernel));
-            this.disposables.push(
-                this.vscNotebook.registerNotebookOutputRenderer(
-                    'jupyter-notebook-renderer',
-                    {
-                        mimeTypes: [
-                            'application/geo+json',
-                            'application/vdom.v1+json',
-                            'application/vnd.dataresource+json',
-                            'application/vnd.plotly.v1+json',
-                            'application/vnd.vega.v2+json',
-                            'application/vnd.vega.v3+json',
-                            'application/vnd.vega.v4+json',
-                            'application/vnd.vega.v5+json',
-                            'application/vnd.vegalite.v1+json',
-                            'application/vnd.vegalite.v2+json',
-                            'application/vnd.vegalite.v3+json',
-                            'application/vnd.vegalite.v4+json',
-                            'application/x-nteract-model-debug+json',
-                            'image/gif',
-                            'image/png',
-                            'image/jpeg',
-                            'text/latex',
-                            'text/vnd.plotly.v1+html'
-                        ]
-                    },
-                    this.renderer
-                )
-            );
-            this.disposables.push(
-                this.vscNotebook.registerNotebookOutputRenderer(
-                    'jupyter-ipywidget-renderer',
-                    {
-                        mimeTypes: ['application/vnd.jupyter.widget-view+json']
-                    },
-                    this.ipyWidgetRenderer
-                )
-            );
+            // // tslint:disable-next-line: no-any
+            // // const kernel = new NotebookKernel('Jupyter', 'Jupyter', true, {} as any, this.execution);
+            // // this.disposables.push(this.vscNotebook.registerNotebookKernel(JupyterNotebookView, ['**/*.ipynb'], kernel));
+            // this.disposables.push(
+            //     this.vscNotebook.registerNotebookOutputRenderer(
+            //         'jupyter-notebook-renderer',
+            //         {
+            //             mimeTypes: [
+            //                 'application/geo+json',
+            //                 'application/vdom.v1+json',
+            //                 'application/vnd.dataresource+json',
+            //                 'application/vnd.plotly.v1+json',
+            //                 'application/vnd.vega.v2+json',
+            //                 'application/vnd.vega.v3+json',
+            //                 'application/vnd.vega.v4+json',
+            //                 'application/vnd.vega.v5+json',
+            //                 'application/vnd.vegalite.v1+json',
+            //                 'application/vnd.vegalite.v2+json',
+            //                 'application/vnd.vegalite.v3+json',
+            //                 'application/vnd.vegalite.v4+json',
+            //                 'application/x-nteract-model-debug+json',
+            //                 'image/gif',
+            //                 'image/png',
+            //                 'image/jpeg',
+            //                 'text/latex',
+            //                 'text/vnd.plotly.v1+html'
+            //             ]
+            //         },
+            //         this.renderer
+            //     )
+            // );
+            // this.disposables.push(
+            //     this.vscNotebook.registerNotebookOutputRenderer(
+            //         'jupyter-ipywidget-renderer',
+            //         {
+            //             mimeTypes: ['application/vnd.jupyter.widget-view+json']
+            //         },
+            //         this.ipyWidgetRenderer
+            //     )
+            // );
         } catch (ex) {
             // If something goes wrong, and we're not in Insiders & not using the NativeEditor experiment, then swallow errors.
             traceError('Failed to register VS Code Notebook API', ex);
