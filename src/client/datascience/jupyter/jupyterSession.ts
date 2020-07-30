@@ -19,7 +19,7 @@ import { noop } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
-import { Telemetry } from '../constants';
+import { backingNotebookDir, Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IJupyterConnection, IJupyterKernelSpec, ISessionWithSocket } from '../types';
@@ -161,8 +161,26 @@ export class JupyterSession extends BaseJupyterSession {
         contentsManager: ContentsManager,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
-        // Create a temporary notebook for this session.
-        this.notebookFiles.push(await contentsManager.newUntitled({ type: 'notebook' }));
+        // Jupyter's API doesn't let us create directories with a specified name, so
+        // we need to create an untitled directory and then rename
+        const tempDir = await contentsManager.newUntitled({ type: 'directory' });
+        try {
+            await contentsManager.rename(tempDir.path, backingNotebookDir);
+            this.notebookFiles.push(await contentsManager.newUntitled({ path: backingNotebookDir, type: 'notebook' }));
+        } catch (e) {
+            // If the vscode-temp folder already exists, we can proceed with initializing a backing ipynb
+            if (e.response && e.response.status === 409 && e.response.statusText === 'Conflict') {
+                this.notebookFiles.push(
+                    await contentsManager.newUntitled({ path: backingNotebookDir, type: 'notebook' })
+                );
+            } else {
+                traceError(e);
+                // We must have a backing notebook for each session, so fallback on creating an untitled notebook in the pwd like we currently do
+                this.notebookFiles.push(await contentsManager.newUntitled({ type: 'notebook' }));
+            }
+            // Cleanup after ourselves if the rename failed for any reason
+            await contentsManager.delete(tempDir.path);
+        }
 
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {

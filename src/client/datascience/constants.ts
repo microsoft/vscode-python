@@ -559,3 +559,4 @@ export namespace LiveShareCommands {
 export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
 export const OurNotebookProvider = 'OurNotebookProvider';
 export const DataScienceStartupTime = Symbol('DataScienceStartupTime');
+export const backingNotebookDir = 'vscode-temp';

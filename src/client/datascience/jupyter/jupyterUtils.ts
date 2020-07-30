@@ -45,7 +45,7 @@ export async function createRemoteConnectionInfo(
     const baseUrl = serverUri ? serverUri.baseUrl : `${url.protocol}//${url.host}${url.pathname}`;
     const token = serverUri ? serverUri.token : `${url.searchParams.get('token')}`;
     const hostName = serverUri ? new URL(serverUri.baseUrl).hostname : url.hostname;
-    const displayName = serverUri ? serverUri.displayName : getJupyterConnectionDisplayName(token, baseUrl);
+    const displayName = serverUri && serverUri.displayName ? serverUri.displayName : getJupyterConnectionDisplayName(token, baseUrl);
 
     return {
         type: 'jupyter',
