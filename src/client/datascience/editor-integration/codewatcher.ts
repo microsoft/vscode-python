@@ -16,7 +16,7 @@ import {
 } from 'vscode';
 
 import { IDocumentManager } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IConfigurationService, IDataScienceSettings, IDisposable, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -24,7 +24,13 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { ICodeLensFactory, ICodeWatcher, IDataScienceErrorHandler, IInteractiveWindowProvider } from '../types';
+import {
+    ICodeLensFactory,
+    ICodeWatcher,
+    IDataScienceErrorHandler,
+    IDataScienceFileSystem,
+    IInteractiveWindowProvider
+} from '../types';
 
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
@@ -39,7 +45,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     constructor(
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper,
@@ -218,11 +224,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
     public async runSelectionOrLine(activeEditor: TextEditor | undefined) {
-        if (
-            this.document &&
-            activeEditor &&
-            this.fileSystem.arePathsSame(activeEditor.document.fileName, this.document.fileName)
-        ) {
+        if (this.document && activeEditor && this.fs.arePathsSame(activeEditor.document.uri, this.document.uri)) {
             // Get just the text of the selection or the current line if none
             const codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
             if (!codeToExecute) {
@@ -373,7 +375,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     private onDocumentClosed(doc: TextDocument): void {
-        if (this.document && this.fileSystem.arePathsSame(doc.fileName, this.document.fileName)) {
+        if (this.document && this.fs.arePathsSame(doc.uri, this.document.uri)) {
             this.codeLensUpdatedEvent.dispose();
             this.closeDocumentDisposable?.dispose(); // NOSONAR
             this.updateRequiredDisposable?.dispose(); // NOSONAR

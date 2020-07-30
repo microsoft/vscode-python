@@ -16,7 +16,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { JUPYTER_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
@@ -33,10 +33,13 @@ import { Commands, Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { NativeEditorProvider } from '../notebookStorage/nativeEditorProvider';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IInteractiveWindowListener,
     IJupyterDebugger,
     IJupyterVariableDataProviderFactory,
@@ -53,9 +56,7 @@ import {
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorOldWebView } from './nativeEditorOldWebView';
-import { NativeEditorProvider } from './nativeEditorProvider';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
-import { INotebookStorageProvider } from './notebookStorageProvider';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -81,7 +82,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(ICustomEditorService) customEditorService: ICustomEditorService,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
@@ -204,7 +205,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.serviceContainer.get<ICodeCssGenerator>(ICodeCssGenerator),
             this.serviceContainer.get<IThemeFinder>(IThemeFinder),
             this.serviceContainer.get<IStatusProvider>(IStatusProvider),
-            this.serviceContainer.get<IFileSystem>(IFileSystem),
+            this.serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem),
             this.serviceContainer.get<IConfigurationService>(IConfigurationService),
             this.serviceContainer.get<ICommandManager>(ICommandManager),
             this.serviceContainer.get<INotebookExporter>(INotebookExporter),
@@ -365,7 +366,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             (editorUri) =>
                 editorUri.document &&
                 editorUri.document.uri.scheme === 'git' &&
-                this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath)
+                this.fs.arePathsSame(editorUri.document.uri, editor.document.uri)
         );
 
         if (!gitSchemeEditor) {
@@ -376,7 +377,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         const fileSchemeEditor = this.documentManager.visibleTextEditors.find(
             (editorUri) =>
                 editorUri !== gitSchemeEditor &&
-                this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath) &&
+                this.fs.arePathsSame(editorUri.document.uri, editor.document.uri) &&
                 editorUri.viewColumn === gitSchemeEditor.viewColumn
         );
         if (!fileSchemeEditor) {

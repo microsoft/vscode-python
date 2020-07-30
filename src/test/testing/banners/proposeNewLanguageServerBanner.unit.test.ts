@@ -18,7 +18,7 @@ import {
     IPersistentStateFactory,
     IPythonSettings
 } from '../../../client/common/types';
-import { LanguageService } from '../../../client/common/utils/localize';
+import { Common, Pylance } from '../../../client/common/utils/localize';
 import {
     getPylanceExtensionUri,
     ProposeLSStateKeys,
@@ -47,10 +47,10 @@ suite('Propose Pylance Banner', () => {
     let appEnv: typemoq.IMock<IApplicationEnvironment>;
     let settings: typemoq.IMock<IPythonSettings>;
 
-    const message = LanguageService.proposePylanceMessage();
-    const yes = LanguageService.tryItNow();
-    const no = LanguageService.bannerLabelNo();
-    const later = LanguageService.remindMeLater();
+    const message = Pylance.proposePylanceMessage();
+    const yes = Pylance.tryItNow();
+    const no = Common.bannerLabelNo();
+    const later = Pylance.remindMeLater();
 
     setup(() => {
         config = typemoq.Mock.ofType<IConfigurationService>();

@@ -27,5 +27,5 @@
     "python.snippet.launch.flask.label": "Python: Flask",
     "python.snippet.launch.pyramid.label": "Python: Applicazione Pyramid",
     "python.snippet.launch.attach.label": "Python: Allega",
-    "LanguageService.bannerLabelYes": "Sì, prenderò il sondaggio ora"
+    "ExtensionSurveyBanner.bannerLabelYes": "Sì, prenderò il sondaggio ora"
 }

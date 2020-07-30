@@ -8,9 +8,7 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
-import { ICell } from '../../types';
-import { findMappedNotebookCell } from './cellMappers';
-import { createVSCCellOutputsFromOutputs, translateErrorOutput, updateVSCNotebookCellMetadata } from './helpers';
+import { createVSCCellOutputsFromOutputs, translateErrorOutput } from './helpers';
 
 export interface IBaseCellVSCodeMetadata {
     end_execution_time?: string;
@@ -42,7 +40,7 @@ export function handleUpdateDisplayDataMessage(
 ): boolean {
     // Find any cells that have this same display_id
     return (
-        model.cells.filter((cellToCheck) => {
+        model.cells.filter((cellToCheck, index) => {
             if (cellToCheck.data.cell_type !== 'code') {
                 return false;
             }
@@ -73,8 +71,8 @@ export function handleUpdateDisplayDataMessage(
                 return false;
             }
 
-            const vscCell = findMappedNotebookCell(cellToCheck, document.cells);
-            updateCellOutput(model, vscCell, cellToCheck, changedOutputs);
+            const vscCell = document.cells[index];
+            updateCellOutput(vscCell, changedOutputs);
             return true;
         }).length > 0
     );
@@ -91,14 +89,8 @@ export function updateCellWithErrorStatus(cell: NotebookCell, ex: Partial<Error>
 /**
  * @returns {boolean} Returns `true` if execution count has changed.
  */
-export function updateCellExecutionCount(
-    model: VSCodeNotebookModel,
-    vscCell: NotebookCell,
-    cell: ICell,
-    executionCount: number
-): boolean {
-    if (cell.data.execution_count !== executionCount && vscCell.metadata.executionOrder !== executionCount) {
-        model.updateCellExecutionCount(cell, executionCount);
+export function updateCellExecutionCount(vscCell: NotebookCell, executionCount: number): boolean {
+    if (vscCell.metadata.executionOrder !== executionCount) {
         vscCell.metadata.executionOrder = executionCount;
         return true;
     }
@@ -111,51 +103,17 @@ export function updateCellExecutionCount(
  * Here we update both the VSCode Cell as well as our ICell (cell in our INotebookModel).
  * @returns {(boolean | undefined)} Returns `true` if output has changed.
  */
-export function updateCellOutput(
-    model: VSCodeNotebookModel,
-    vscCell: NotebookCell,
-    cell: ICell,
-    outputs: nbformat.IOutput[]
-): boolean | undefined {
-    model.updateCellOutput(cell, outputs);
+export function updateCellOutput(vscCell: NotebookCell, outputs: nbformat.IOutput[]): boolean | undefined {
     const newOutput = createVSCCellOutputsFromOutputs(outputs);
     // If there was no output and still no output, then nothing to do.
-    if (
-        Array.isArray(cell.data.outputs) &&
-        cell.data.outputs.length === 0 &&
-        newOutput.length === 0 &&
-        vscCell.outputs.length === 0
-    ) {
+    if (vscCell.outputs.length === 0 && newOutput.length === 0) {
         return;
     }
     // Compare outputs (at the end of the day everything is serializable).
     // Hence this is a safe comparison.
-    if (
-        Array.isArray(vscCell.outputs) &&
-        vscCell.outputs.length === newOutput.length &&
-        JSON.stringify(vscCell.outputs) === JSON.stringify(newOutput)
-    ) {
+    if (vscCell.outputs.length === newOutput.length && JSON.stringify(vscCell.outputs) === JSON.stringify(newOutput)) {
         return;
     }
-    updateVSCNotebookCellMetadata(vscCell.metadata, cell);
     vscCell.outputs = newOutput;
     return true;
-}
-
-/**
- * Store execution start and end times.
- * Stored as ISO for portability.
- */
-export function updateCellExecutionTimes(
-    model: VSCodeNotebookModel,
-    cell: ICell,
-    startTime?: number,
-    duration?: number
-) {
-    const startTimeISO = startTime ? new Date(startTime).toISOString() : undefined;
-    const endTimeISO = duration && startTime ? new Date(startTime + duration).toISOString() : undefined;
-    model.updateCellMetadata(cell, {
-        end_execution_time: endTimeISO,
-        start_execution_time: startTimeISO
-    });
 }

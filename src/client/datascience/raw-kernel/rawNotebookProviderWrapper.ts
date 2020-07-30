@@ -8,7 +8,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -25,6 +25,7 @@ import { IKernelLauncher } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     ConnectNotebookProviderOptions,
+    IDataScienceFileSystem,
     INotebook,
     IRawConnection,
     IRawNotebookProvider,
@@ -45,7 +46,7 @@ type RawNotebookProviderClassType = {
         configService: IConfigurationService,
         workspaceService: IWorkspaceService,
         appShell: IApplicationShell,
-        fs: IFileSystem,
+        fs: IDataScienceFileSystem,
         serviceContainer: IServiceContainer,
         kernelLauncher: IKernelLauncher,
         kernelSelector: KernelSelector,
@@ -70,7 +71,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(IFileSystem) fs: IFileSystem,
+        @inject(IDataScienceFileSystem) fs: IDataScienceFileSystem,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IKernelLauncher) kernelLauncher: IKernelLauncher,
         @inject(KernelSelector) kernelSelector: KernelSelector,

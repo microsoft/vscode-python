@@ -10,7 +10,7 @@ import * as path from 'path';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -29,7 +29,13 @@ import {
     InteractiveWindowMessages,
     IPyWidgetMessages
 } from '../interactive-common/interactiveWindowTypes';
-import { IInteractiveWindowListener, ILocalResourceUriConverter, INotebook, INotebookProvider } from '../types';
+import {
+    IDataScienceFileSystem,
+    IInteractiveWindowListener,
+    ILocalResourceUriConverter,
+    INotebook,
+    INotebookProvider
+} from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { WidgetScriptSource } from './types';
 // tslint:disable: no-var-requires no-require-imports
@@ -73,7 +79,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
     constructor(
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService,
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
@@ -85,10 +91,10 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
         this._rootScriptFolder = path.join(extensionContext.extensionPath, 'tmp', 'scripts');
         this.targetWidgetScriptsFolder = path.join(this._rootScriptFolder, 'nbextensions');
         this.createTargetWidgetScriptsFolder = this.fs
-            .directoryExists(this.targetWidgetScriptsFolder)
+            .localDirectoryExists(this.targetWidgetScriptsFolder)
             .then(async (exists) => {
                 if (!exists) {
-                    await this.fs.createDirectory(this.targetWidgetScriptsFolder);
+                    await this.fs.createLocalDirectory(this.targetWidgetScriptsFolder);
                 }
                 return this.targetWidgetScriptsFolder;
             });
@@ -128,8 +134,8 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
                     const mappedResource = Uri.file(
                         path.join(targetFolder, `${uniqueFileName}${path.basename(localResource.fsPath)}`)
                     );
-                    if (!(await this.fs.fileExists(mappedResource.fsPath))) {
-                        await this.fs.copyFile(localResource.fsPath, mappedResource.fsPath);
+                    if (!(await this.fs.localFileExists(mappedResource.fsPath))) {
+                        await this.fs.copyLocal(localResource.fsPath, mappedResource.fsPath);
                     }
                     traceInfo(`Widget Script file ${localResource.fsPath} mapped to ${mappedResource.fsPath}`);
                     deferred.resolve(mappedResource);

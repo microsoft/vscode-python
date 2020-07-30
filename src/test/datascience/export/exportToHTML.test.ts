@@ -5,8 +5,8 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { CancellationTokenSource, Uri } from 'vscode';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { ExportFormat, IExport } from '../../../client/datascience/export/types';
+import { IDataScienceFileSystem } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
@@ -29,9 +29,9 @@ suite('DataScience - Export HTML', () => {
     teardown(closeActiveWindows);
     suiteTeardown(closeActiveWindows);
     test('Export To HTML', async () => {
-        const fileSystem = api.serviceContainer.get<IFileSystem>(IFileSystem);
+        const fileSystem = api.serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem);
         const exportToHTML = api.serviceContainer.get<IExport>(IExport, ExportFormat.html);
-        const file = await fileSystem.createTemporaryFile('.html');
+        const file = await fileSystem.createTemporaryLocalFile('.html');
         const target = Uri.file(file.filePath);
         await file.dispose();
         const token = new CancellationTokenSource();
@@ -41,8 +41,8 @@ suite('DataScience - Export HTML', () => {
             token.token
         );
 
-        assert.equal(await fileSystem.fileExists(target.fsPath), true);
-        const fileContents = await fileSystem.readFile(target.fsPath);
+        assert.equal(await fileSystem.localFileExists(target.fsPath), true);
+        const fileContents = await fileSystem.readLocalFile(target.fsPath);
         assert.include(fileContents, '<!DOCTYPE html>');
         // this is the content of a cell
         assert.include(fileContents, 'f6886df81f3d4023a2122cc3f55fdbec');

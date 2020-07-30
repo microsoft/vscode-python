@@ -26,7 +26,7 @@ suite('Language Server Package Service', () => {
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
     });
-    test('Ensure new Major versions of Language Server is accounted for (azure blob)', async () => {
+    test('Ensure new Major versions of language server is accounted for (azure blob)', async () => {
         const nugetService = new NugetService();
         serviceContainer.setup((c) => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService);
         const platformService = new PlatformService();

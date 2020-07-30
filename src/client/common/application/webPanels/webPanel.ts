@@ -4,8 +4,9 @@
 import '../../extensions';
 
 import * as path from 'path';
-import { Uri, Webview, WebviewOptions, WebviewPanel, window } from 'vscode';
+import { Event, EventEmitter, Uri, Webview, WebviewOptions, WebviewPanel, window } from 'vscode';
 import { Identifiers } from '../../../datascience/constants';
+import { traceError } from '../../logger';
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
@@ -14,6 +15,7 @@ import { IWebPanel, IWebPanelOptions, WebPanelMessage } from '../types';
 export class WebPanel implements IWebPanel {
     private panel: WebviewPanel | undefined;
     private loadPromise: Promise<void>;
+    private loadFailedEmitter = new EventEmitter<void>();
 
     constructor(
         private fs: IFileSystem,
@@ -43,6 +45,9 @@ export class WebPanel implements IWebPanel {
         this.loadPromise = this.load();
     }
 
+    public get loadFailed(): Event<void> {
+        return this.loadFailedEmitter.event;
+    }
     public async show(preserveFocus: boolean) {
         await this.loadPromise;
         if (this.panel) {
@@ -89,42 +94,49 @@ export class WebPanel implements IWebPanel {
 
     // tslint:disable-next-line:no-any
     private async load() {
-        if (this.panel) {
-            const localFilesExist = await Promise.all(this.options.scripts.map((s) => this.fs.fileExists(s)));
-            if (localFilesExist.every((exists) => exists === true)) {
-                // Call our special function that sticks this script inside of an html page
-                // and translates all of the paths to vscode-resource URIs
-                this.panel.webview.html = await this.generateLocalReactHtml(this.panel.webview);
+        try {
+            if (this.panel) {
+                const localFilesExist = await Promise.all(this.options.scripts.map((s) => this.fs.fileExists(s)));
+                if (localFilesExist.every((exists) => exists === true)) {
+                    // Call our special function that sticks this script inside of an html page
+                    // and translates all of the paths to vscode-resource URIs
+                    this.panel.webview.html = await this.generateLocalReactHtml(this.panel.webview);
 
-                // Reset when the current panel is closed
-                this.disposableRegistry.push(
-                    this.panel.onDidDispose(() => {
-                        this.panel = undefined;
-                        this.options.listener.dispose().ignoreErrors();
-                    })
-                );
+                    // Reset when the current panel is closed
+                    this.disposableRegistry.push(
+                        this.panel.onDidDispose(() => {
+                            this.panel = undefined;
+                            this.options.listener.dispose().ignoreErrors();
+                        })
+                    );
 
-                this.disposableRegistry.push(
-                    this.panel.webview.onDidReceiveMessage((message) => {
-                        // Pass the message onto our listener
-                        this.options.listener.onMessage(message.type, message.payload);
-                    })
-                );
+                    this.disposableRegistry.push(
+                        this.panel.webview.onDidReceiveMessage((message) => {
+                            // Pass the message onto our listener
+                            this.options.listener.onMessage(message.type, message.payload);
+                        })
+                    );
 
-                this.disposableRegistry.push(
-                    this.panel.onDidChangeViewState((_e) => {
-                        // Pass the state change onto our listener
-                        this.options.listener.onChangeViewState(this);
-                    })
-                );
+                    this.disposableRegistry.push(
+                        this.panel.onDidChangeViewState((_e) => {
+                            // Pass the state change onto our listener
+                            this.options.listener.onChangeViewState(this);
+                        })
+                    );
 
-                // Set initial state
-                this.options.listener.onChangeViewState(this);
-            } else {
-                // Indicate that we can't load the file path
-                const badPanelString = localize.DataScience.badWebPanelFormatString();
-                this.panel.webview.html = badPanelString.format(this.options.scripts.join(', '));
+                    // Set initial state
+                    this.options.listener.onChangeViewState(this);
+                } else {
+                    // Indicate that we can't load the file path
+                    const badPanelString = localize.DataScience.badWebPanelFormatString();
+                    this.panel.webview.html = badPanelString.format(this.options.scripts.join(', '));
+                }
             }
+        } catch (error) {
+            // If our web panel failes to load, report that out so whatever
+            // is hosting the panel can clean up
+            traceError(`Error Loading WebPanel: ${error}`);
+            this.loadFailedEmitter.fire();
         }
     }
 

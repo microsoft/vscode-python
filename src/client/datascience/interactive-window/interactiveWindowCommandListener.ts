@@ -11,7 +11,6 @@ import { IApplicationShell, ICommandManager, IDocumentManager } from '../../comm
 import { CancellationError } from '../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
@@ -19,11 +18,12 @@ import { CommandSource } from '../../testing/common/constants';
 import { generateCellRangesFromDocument, generateCellsFromDocument } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
 import { ExportFormat, IExportManager } from '../export/types';
-import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IInteractiveBase,
     IInteractiveWindowProvider,
     IJupyterExecution,
@@ -45,7 +45,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fileSystem: IDataScienceFileSystem,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
@@ -63,8 +63,8 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             Commands.ImportNotebook,
             (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
                 return this.listenForErrors(() => {
-                    if (file && file.fsPath) {
-                        return this.importNotebookOnFile(file.fsPath);
+                    if (file) {
+                        return this.importNotebookOnFile(file);
                     } else {
                         return this.importNotebook();
                     }
@@ -76,8 +76,8 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             Commands.ImportNotebookFile,
             (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
                 return this.listenForErrors(() => {
-                    if (file && file.fsPath) {
-                        return this.importNotebookOnFile(file.fsPath);
+                    if (file) {
+                        return this.importNotebookOnFile(file);
                     } else {
                         return this.importNotebook();
                     }
@@ -89,12 +89,12 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             Commands.ExportFileAsNotebook,
             (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
                 return this.listenForErrors(() => {
-                    if (file && file.fsPath) {
-                        return this.exportFile(file.fsPath);
+                    if (file) {
+                        return this.exportFile(file);
                     } else {
                         const activeEditor = this.documentManager.activeTextEditor;
                         if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
-                            return this.exportFile(activeEditor.document.fileName);
+                            return this.exportFile(activeEditor.document.uri);
                         }
                     }
 
@@ -107,12 +107,12 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             Commands.ExportFileAndOutputAsNotebook,
             (file: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
                 return this.listenForErrors(() => {
-                    if (file && file.fsPath) {
-                        return this.exportFileAndOutput(file.fsPath);
+                    if (file) {
+                        return this.exportFileAndOutput(file);
                     } else {
                         const activeEditor = this.documentManager.activeTextEditor;
                         if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
-                            return this.exportFileAndOutput(activeEditor.document.fileName);
+                            return this.exportFileAndOutput(activeEditor.document.uri);
                         }
                     }
                     return Promise.resolve();
@@ -178,11 +178,11 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     }
 
     @captureTelemetry(Telemetry.ExportPythonFileInteractive, undefined, false)
-    private async exportFile(file: string): Promise<void> {
-        if (file && file.length > 0) {
+    private async exportFile(file: Uri): Promise<void> {
+        if (file && file.fsPath && file.fsPath.length > 0) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
-            if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.fileName, file)) {
+            if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.uri, file)) {
                 const cells = generateCellsFromDocument(
                     activeEditor.document,
                     this.configuration.getSettings(activeEditor.document.uri).datascience
@@ -203,15 +203,18 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                                 let directoryChange;
                                 const settings = this.configuration.getSettings(activeEditor.document.uri);
                                 if (settings.datascience.changeDirOnImportExport) {
-                                    directoryChange = uri.fsPath;
+                                    directoryChange = uri;
                                 }
 
-                                const notebook = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
-                                await this.fileSystem.writeFile(uri.fsPath, JSON.stringify(notebook));
+                                const notebook = await this.jupyterExporter.translateToNotebook(
+                                    cells,
+                                    directoryChange?.fsPath
+                                );
+                                await this.fileSystem.writeFile(uri, JSON.stringify(notebook));
                             }
                         },
                         localize.DataScience.exportingFormat(),
-                        file
+                        file.fsPath
                     );
                     // When all done, show a notice that it completed.
                     if (uri && uri.fsPath) {
@@ -238,14 +241,14 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     }
 
     @captureTelemetry(Telemetry.ExportPythonFileAndOutputInteractive, undefined, false)
-    private async exportFileAndOutput(file: string): Promise<Uri | undefined> {
-        if (file && file.length > 0 && (await this.jupyterExecution.isNotebookSupported())) {
+    private async exportFileAndOutput(file: Uri): Promise<Uri | undefined> {
+        if (file && file.fsPath && file.fsPath.length > 0 && (await this.jupyterExecution.isNotebookSupported())) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
             if (
                 activeEditor &&
                 activeEditor.document &&
-                this.fileSystem.arePathsSame(activeEditor.document.fileName, file)
+                this.fileSystem.arePathsSame(activeEditor.document.uri, file)
             ) {
                 const ranges = generateCellRangesFromDocument(activeEditor.document);
                 if (ranges.length > 0) {
@@ -278,7 +281,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                                 return Promise.resolve();
                             },
                             localize.DataScience.exportingFormat(),
-                            file,
+                            file.fsPath,
                             () => {
                                 cancelSource.cancel();
                             }
@@ -291,17 +294,17 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                             : undefined;
                         const questions = [openQuestion1, ...(openQuestion2 ? [openQuestion2] : [])];
                         const selection = await this.applicationShell.showInformationMessage(
-                            localize.DataScience.exportDialogComplete().format(output),
+                            localize.DataScience.exportDialogComplete().format(output.fsPath),
                             ...questions
                         );
                         if (selection === openQuestion1) {
-                            await this.ipynbProvider.open(Uri.file(output));
+                            await this.ipynbProvider.open(output);
                         }
                         if (selection === openQuestion2) {
                             // If the user wants to, open the notebook they just generated.
-                            this.jupyterExecution.spawnNotebook(output).ignoreErrors();
+                            this.jupyterExecution.spawnNotebook(output.fsPath).ignoreErrors();
                         }
-                        return Uri.file(output);
+                        return output;
                     }
                 }
             }
@@ -318,7 +321,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     private async exportCellsWithOutput(
         ranges: { range: Range; title: string }[],
         document: TextDocument,
-        file: string,
+        file: Uri,
         cancelToken: CancellationToken
     ): Promise<void> {
         let notebook: INotebook | undefined;
@@ -342,7 +345,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             if (settings.datascience.changeDirOnImportExport) {
                 directoryChange = file;
             }
-            const notebookJson = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
+            const notebookJson = await this.jupyterExporter.translateToNotebook(cells, directoryChange?.fsPath);
             await this.fileSystem.writeFile(file, JSON.stringify(notebookJson));
         } finally {
             if (notebook) {
@@ -351,18 +354,16 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         }
     }
 
-    private async showExportDialog(): Promise<string | undefined> {
+    private async showExportDialog(): Promise<Uri | undefined> {
         const filtersKey = localize.DataScience.exportDialogFilter();
         const filtersObject: { [name: string]: string[] } = {};
         filtersObject[filtersKey] = ['ipynb'];
 
         // Bring up the save file dialog box
-        const uri = await this.applicationShell.showSaveDialog({
+        return this.applicationShell.showSaveDialog({
             saveLabel: localize.DataScience.exportDialogTitle(),
             filters: filtersObject
         });
-
-        return uri ? uri.fsPath : undefined;
     }
 
     private undoCells() {
@@ -452,7 +453,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             // Don't call the other overload as we'll end up with double telemetry.
             await this.waitForStatus(
                 async () => {
-                    const contents = await this.fileSystem.readFile(uris[0].fsPath);
+                    const contents = await this.fileSystem.readFile(uris[0]);
                     const model = await this.notebookStorageProvider.createNew(contents);
                     await this.exportManager.export(ExportFormat.python, model);
                 },
@@ -463,8 +464,8 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'file' }, false)
-    private async importNotebookOnFile(file: string): Promise<void> {
-        if (file && file.length > 0) {
+    private async importNotebookOnFile(file: Uri): Promise<void> {
+        if (file.fsPath && file.fsPath.length > 0) {
             await this.waitForStatus(
                 async () => {
                     const contents = await this.fileSystem.readFile(file);
@@ -472,7 +473,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     await this.exportManager.export(ExportFormat.python, model);
                 },
                 localize.DataScience.importingFormat(),
-                file
+                file.fsPath
             );
         }
     }
@@ -481,7 +482,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         if (id && file) {
             // Find the interactive windows that have this file as a submitter
             const possibles = this.interactiveWindowProvider.windows.filter(
-                (w) => w.submitters.findIndex((s) => this.fileSystem.arePathsSame(s.fsPath, file.fsPath)) >= 0
+                (w) => w.submitters.findIndex((s) => this.fileSystem.areLocalPathsSame(s.fsPath, file.fsPath)) >= 0
             );
 
             // Scroll to cell in the one that has the cell. We need this so

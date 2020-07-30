@@ -73,6 +73,7 @@ export interface IExecutables {
     envVar: string;
 }
 
+export const IFileSystemPathUtils = Symbol('IFileSystemPathUtils');
 // A collection of high-level utilities related to filesystem paths.
 export interface IFileSystemPathUtils {
     readonly paths: IFileSystemPaths;

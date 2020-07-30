@@ -13,7 +13,7 @@ import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../commo
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import '../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -27,6 +27,7 @@ import { CodeSnippits, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
     ICell,
+    IDataScienceFileSystem,
     IJupyterKernelSpec,
     IJupyterSession,
     INotebook,
@@ -193,7 +194,7 @@ export class JupyterNotebookBase implements INotebook {
         private getDisposedError: () => Error,
         private workspace: IWorkspaceService,
         private applicationService: IApplicationShell,
-        private fs: IFileSystem
+        private fs: IDataScienceFileSystem
     ) {
         this.sessionStartTime = Date.now();
 
@@ -225,13 +226,19 @@ export class JupyterNotebookBase implements INotebook {
                 this.sessionStatusChanged.dispose();
                 this.onStatusChangedEvent = undefined;
             }
-
-            traceInfo(`Shutting down session ${this.identity.toString()}`);
-            if (this.session) {
-                await this.session.dispose().catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
-            }
             this.loggers.forEach((d) => d.dispose());
             this.disposed.fire();
+
+            try {
+                traceInfo(`Shutting down session ${this.identity.toString()}`);
+                if (this.session) {
+                    await this.session
+                        .dispose()
+                        .catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
+                }
+            } catch (exc) {
+                traceError(`Exception shutting down session `, exc);
+            }
         }
     }
 
@@ -919,11 +926,11 @@ export class JupyterNotebookBase implements INotebook {
         if (this._executionInfo && this._executionInfo.connectionInfo.localLaunch && !this._workingDirectory) {
             // See what our working dir is supposed to be
             const suggested = this._executionInfo.workingDir;
-            if (suggested && (await this.fs.directoryExists(suggested))) {
+            if (suggested && (await this.fs.localDirectoryExists(suggested))) {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggested;
                 return this.changeDirectoryIfPossible(this._workingDirectory);
-            } else if (launchingFile && (await this.fs.fileExists(launchingFile))) {
+            } else if (launchingFile && (await this.fs.localFileExists(launchingFile))) {
                 // Combine the working directory with this file if possible.
                 this._workingDirectory = expandWorkingDir(
                     this._executionInfo.workingDir,
@@ -943,7 +950,7 @@ export class JupyterNotebookBase implements INotebook {
             this._executionInfo &&
             this._executionInfo.connectionInfo.localLaunch &&
             this._executionInfo.kernelSpec?.language === PYTHON_LANGUAGE &&
-            (await this.fs.directoryExists(directory))
+            (await this.fs.localDirectoryExists(directory))
         ) {
             await this.executeSilently(CodeSnippits.UpdateCWDAndPath.format(directory));
         }

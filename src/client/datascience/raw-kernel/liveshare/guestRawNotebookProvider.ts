@@ -6,7 +6,7 @@ import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
-import { IFileSystem } from '../../../common/platform/types';
+
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
@@ -18,7 +18,7 @@ import {
     LiveShareParticipantGuest
 } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { ILiveShareParticipant } from '../../jupyter/liveshare/types';
-import { INotebook, IRawConnection, IRawNotebookProvider } from '../../types';
+import { IDataScienceFileSystem, INotebook, IRawConnection, IRawNotebookProvider } from '../../types';
 import { RawConnection } from '../rawNotebookProvider';
 
 export class GuestRawNotebookProvider
@@ -36,7 +36,7 @@ export class GuestRawNotebookProvider
         private readonly configService: IConfigurationService,
         _workspaceService: IWorkspaceService,
         _appShell: IApplicationShell,
-        _fs: IFileSystem,
+        _fs: IDataScienceFileSystem,
         _serviceContainer: IServiceContainer
     ) {
         super(liveShare);

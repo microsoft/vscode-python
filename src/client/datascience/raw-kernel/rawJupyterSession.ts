@@ -135,7 +135,8 @@ export class RawJupyterSession extends BaseJupyterSession {
     public async createNewKernelSession(
         kernel: IJupyterKernelSpec | LiveKernelModel,
         timeoutMS: number,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonInterpreter,
+        _cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         if (!kernel || 'session' in kernel) {
             // Don't allow for connecting to a LiveKernelModel

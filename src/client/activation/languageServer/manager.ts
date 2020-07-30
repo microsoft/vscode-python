@@ -58,10 +58,10 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
     public get languageProxy() {
         return this.languageServerProxy;
     }
-    @traceDecorators.error('Failed to start Language Server')
+    @traceDecorators.error('Failed to start language server')
     public async start(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void> {
         if (this.languageProxy) {
-            throw new Error('Language Server already started');
+            throw new Error('Language server already started');
         }
         this.registerCommandHandler();
         this.resource = resource;
@@ -94,8 +94,8 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
     protected restartLanguageServerDebounced(): void {
         this.restartLanguageServer().ignoreErrors();
     }
-    @traceDecorators.error('Failed to restart Language Server')
-    @traceDecorators.verbose('Restarting Language Server')
+    @traceDecorators.error('Failed to restart language server')
+    @traceDecorators.verbose('Restarting language server')
     protected async restartLanguageServer(): Promise<void> {
         if (this.languageProxy) {
             this.languageProxy.dispose();
@@ -109,7 +109,7 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
         undefined,
         DotNetLanguageServerManager.versionTelemetryProps
     )
-    @traceDecorators.verbose('Starting Language Server')
+    @traceDecorators.verbose('Starting language server')
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
 

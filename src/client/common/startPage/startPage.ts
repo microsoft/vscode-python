@@ -19,9 +19,8 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../application/types';
-import { EnableStartPage } from '../experiments/groups';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IExperimentService, IExtensionContext, Resource } from '../types';
+import { IConfigurationService, IExtensionContext, Resource } from '../types';
 import * as localize from '../utils/localize';
 import { StopWatch } from '../utils/stopWatch';
 import { StartPageMessageListener } from './startPageMessageListener';
@@ -51,8 +50,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment,
-        @inject(IExperimentService) private readonly expService: IExperimentService
+        @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment
     ) {
         super(
             configuration,
@@ -244,10 +242,9 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     private async activateBackground(): Promise<void> {
-        const enabled = await this.expService.inExperiment(EnableStartPage.experiment);
         const settings = this.configuration.getSettings();
 
-        if (enabled && settings.showStartPage && this.appEnvironment.extensionChannel === 'stable') {
+        if (settings.showStartPage && this.appEnvironment.extensionChannel === 'stable') {
             // extesionVersionChanged() reads CHANGELOG.md
             // So we use separate if's to try and avoid reading a file every time
             const firstTimeOrUpdate = await this.extensionVersionChanged();

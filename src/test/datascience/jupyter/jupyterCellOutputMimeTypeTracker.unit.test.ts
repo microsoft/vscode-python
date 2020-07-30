@@ -12,8 +12,8 @@ import { EventEmitter, Uri } from 'vscode';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Telemetry } from '../../../client/datascience/constants';
 import { NativeEditor } from '../../../client/datascience/interactive-ipynb/nativeEditor';
-import { NativeEditorProvider } from '../../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { CellOutputMimeTypeTracker } from '../../../client/datascience/jupyter/jupyterCellOutputMimeTypeTracker';
+import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { CellState, ICell, INotebookEditor, INotebookModel } from '../../../client/datascience/types';
 
 suite('DataScience - Cell Output Mimetype Tracker', () => {

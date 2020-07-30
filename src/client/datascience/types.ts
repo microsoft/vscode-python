@@ -5,6 +5,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import type { Session } from '@jupyterlab/services';
 import type { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import type { JSONObject } from '@phosphor/coreutils';
+import { WriteStream } from 'fs-extra';
 import { Observable } from 'rxjs/Observable';
 import {
     CancellationToken,
@@ -25,6 +26,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import type { Data as WebSocketData } from 'ws';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
+import { FileStat, TemporaryFile } from '../common/platform/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable, InteractiveWindowMode, Resource } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -126,6 +128,8 @@ export interface INotebookCompletion {
     metadata: {};
 }
 
+export type INotebookMetadataLive = nbformat.INotebookMetadata & { id?: string };
+
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
@@ -133,7 +137,7 @@ export interface INotebookServer extends IAsyncDisposable {
     createNotebook(
         resource: Resource,
         identity: Uri,
-        notebookMetadata?: nbformat.INotebookMetadata,
+        notebookMetadata?: INotebookMetadataLive,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
     getNotebook(identity: Uri, cancelToken?: CancellationToken): Promise<INotebook | undefined>;
@@ -253,7 +257,7 @@ export interface INotebookServerOptions {
     skipUsingDefaultConfig?: boolean;
     workingDir?: string;
     purpose: string;
-    metadata?: nbformat.INotebookMetadata;
+    metadata?: INotebookMetadataLive;
     disableUI?: boolean;
     skipSearchingForKernel?: boolean;
     allowUI(): boolean;
@@ -289,7 +293,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined>;
     spawnNotebook(file: string): Promise<void>;
-    importNotebook(file: string, template: string | undefined): Promise<string>;
+    importNotebook(file: Uri, template: string | undefined): Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined>;
     getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
@@ -434,14 +438,16 @@ export interface IJupyterKernelSpec {
 
 export const INotebookImporter = Symbol('INotebookImporter');
 export interface INotebookImporter extends Disposable {
-    importFromFile(contentsFile: string, originalFile?: string): Promise<string>; // originalFile is the base file if file is a temp file / location
-    importCellsFromFile(file: string): Promise<ICell[]>;
-    importCells(json: string): Promise<ICell[]>;
+    importFromFile(contentsFile: Uri): Promise<string>;
 }
 
 export const INotebookExporter = Symbol('INotebookExporter');
 export interface INotebookExporter extends Disposable {
-    translateToNotebook(cells: ICell[], directoryChange?: string): Promise<nbformat.INotebookContent | undefined>;
+    translateToNotebook(
+        cells: ICell[],
+        directoryChange?: string,
+        kernelSpec?: nbformat.IKernelspecMetadata
+    ): Promise<nbformat.INotebookContent | undefined>;
     exportToFile(cells: ICell[], file: string, showOpenPrompt?: boolean): Promise<void>;
 }
 
@@ -555,7 +561,7 @@ export interface INotebookEditorProvider {
 
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
-export interface INotebookEditor extends IInteractiveBase {
+export interface INotebookEditor extends Disposable {
     /**
      * Type of editor, whether it is the old, custom or native notebook editor.
      * Once VSC Notebook is stable, this property can be removed.
@@ -578,10 +584,17 @@ export interface INotebookEditor extends IInteractiveBase {
     readonly visible: boolean;
     readonly active: boolean;
     readonly model: INotebookModel;
+    onExecutedCode: Event<string>;
+    notebook?: INotebook;
     show(): Promise<void>;
     runAllCells(): void;
     runSelectedCell(): void;
     addCellBelow(): void;
+    undoCells(): void;
+    redoCells(): void;
+    removeAllCells(): void;
+    interruptKernel(): Promise<void>;
+    restartKernel(): Promise<void>;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
@@ -1005,7 +1018,7 @@ export interface IJupyterSubCommandExecutionService {
      * @returns {Promise<string>}
      * @memberof IJupyterSubCommandExecutionService
      */
-    exportNotebookToPython(file: string, template?: string, token?: CancellationToken): Promise<string>;
+    exportNotebookToPython(file: Uri, template?: string, token?: CancellationToken): Promise<string>;
     /**
      * Opens an ipynb file in a new instance of a jupyter notebook server.
      *
@@ -1046,7 +1059,7 @@ export interface INotebookModel {
     readonly cells: readonly Readonly<ICell>[];
     readonly onDidEdit: Event<NotebookModelChange>;
     readonly isDisposed: boolean;
-    readonly metadata: nbformat.INotebookMetadata | undefined;
+    readonly metadata: INotebookMetadataLive | undefined;
     readonly isTrusted: boolean;
     getContent(): string;
     update(change: NotebookModelChange): void;
@@ -1057,6 +1070,10 @@ export interface INotebookModel {
      * all editors associated with the document have been closed.)
      */
     dispose(): void;
+    /**
+     * Trusts a notebook document.
+     */
+    trust(): void;
 }
 
 export const INotebookStorage = Symbol('INotebookStorage');
@@ -1100,7 +1117,7 @@ export type GetNotebookOptions = {
     identity: Uri;
     getOnly?: boolean;
     disableUI?: boolean;
-    metadata?: nbformat.INotebookMetadata;
+    metadata?: nbformat.INotebookMetadata & { id?: string };
     token?: CancellationToken;
 };
 
@@ -1282,6 +1299,7 @@ export interface IJupyterServerUri {
     token: string;
     // tslint:disable-next-line: no-any
     authorizationHeader: any; // JSON object for authorization header.
+    displayName: string;
 }
 
 export type JupyterServerUriHandle = string;
@@ -1314,6 +1332,35 @@ export interface ITrustService {
     trustNotebook(uri: Uri, notebookContents: string): Promise<void>;
 }
 
+export const IDataScienceFileSystem = Symbol('IDataScienceFileSystem');
+export interface IDataScienceFileSystem {
+    // Local-only filesystem utilities
+    appendLocalFile(path: string, text: string): Promise<void>;
+    areLocalPathsSame(path1: string, path2: string): boolean;
+    createLocalDirectory(path: string): Promise<void>;
+    createLocalWriteStream(path: string): WriteStream;
+    copyLocal(source: string, destination: string): Promise<void>;
+    createTemporaryLocalFile(fileExtension: string, mode?: number): Promise<TemporaryFile>;
+    deleteLocalDirectory(dirname: string): Promise<void>;
+    deleteLocalFile(path: string): Promise<void>;
+    getDisplayName(path: string): string;
+    getFileHash(path: string): Promise<string>;
+    localDirectoryExists(dirname: string): Promise<boolean>;
+    localFileExists(filename: string): Promise<boolean>;
+    readLocalData(path: string): Promise<Buffer>;
+    readLocalFile(path: string): Promise<string>;
+    searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]>;
+    writeLocalFile(path: string, text: string | Buffer): Promise<void>;
+
+    // URI-based filesystem utilities wrapping the VS Code filesystem API
+    arePathsSame(path1: Uri, path2: Uri): boolean;
+    copy(source: Uri, destination: Uri): Promise<void>;
+    createDirectory(uri: Uri): Promise<void>;
+    delete(uri: Uri): Promise<void>;
+    readFile(uri: Uri): Promise<string>;
+    stat(uri: Uri): Promise<FileStat>;
+    writeFile(uri: Uri, text: string | Buffer): Promise<void>;
+}
 export interface ISwitchKernelOptions {
     identity: Resource;
     resource: Resource;

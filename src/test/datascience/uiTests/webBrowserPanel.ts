@@ -134,6 +134,7 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
     private panel?: WebviewPanel;
     private server?: IWebServer;
     private serverUrl: string | undefined;
+    private loadFailedEmitter = new EventEmitter<void>();
     constructor(private readonly disposableRegistry: IDisposableRegistry, private readonly options: IWebPanelOptions) {
         this.disposableRegistry.push(this);
         const webViewOptions: WebviewOptions = {
@@ -174,6 +175,11 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
                 console.error('Failed to start Web Browser Panel', ex)
             );
     }
+
+    public get loadFailed(): Event<void> {
+        return this.loadFailedEmitter.event;
+    }
+
     public asWebviewUri(localResource: Uri): Uri {
         const filePath = localResource.fsPath;
         const name = path.basename(path.dirname(filePath));

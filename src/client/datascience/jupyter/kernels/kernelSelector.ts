@@ -26,6 +26,7 @@ import {
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     IKernelDependencyService,
+    INotebookMetadataLive,
     INotebookProviderConnection
 } from '../../types';
 import { createDefaultKernelSpec } from './helpers';
@@ -252,13 +253,35 @@ export class KernelSelector {
     public async getKernelForRemoteConnection(
         resource: Resource,
         sessionManager?: IJupyterSessionManager,
-        notebookMetadata?: nbformat.INotebookMetadata,
+        notebookMetadata?: INotebookMetadataLive,
         cancelToken?: CancellationToken
     ): Promise<KernelSpecInterpreter> {
-        const [interpreter, specs] = await Promise.all([
+        const [interpreter, specs, sessions] = await Promise.all([
             this.interpreterService.getActiveInterpreter(resource),
-            this.kernelService.getKernelSpecs(sessionManager, cancelToken)
+            this.kernelService.getKernelSpecs(sessionManager, cancelToken),
+            sessionManager?.getRunningSessions()
         ]);
+
+        // First check for a live active session.
+        if (notebookMetadata && notebookMetadata.id) {
+            const session = sessions?.find((s) => s.kernel.id === notebookMetadata?.id);
+            if (session) {
+                // tslint:disable-next-line: no-any
+                const liveKernel = session.kernel as any;
+                const lastActivityTime = liveKernel.last_activity
+                    ? new Date(Date.parse(liveKernel.last_activity.toString()))
+                    : new Date();
+                const numberOfConnections = liveKernel.connections
+                    ? parseInt(liveKernel.connections.toString(), 10)
+                    : 0;
+                return {
+                    kernelModel: { ...session.kernel, lastActivityTime, numberOfConnections, session },
+                    interpreter: interpreter
+                };
+            }
+        }
+
+        // No running session, try matching based on interpreter
         let bestMatch: IJupyterKernelSpec | undefined;
         let bestScore = -1;
         for (let i = 0; specs && i < specs?.length; i = i + 1) {

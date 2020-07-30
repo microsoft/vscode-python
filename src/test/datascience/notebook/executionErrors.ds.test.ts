@@ -15,9 +15,9 @@ import {
     INotebookEditorProvider,
     INotebookProvider
 } from '../../../client/datascience/types';
-import { IExtensionTestApi } from '../../common';
+import { IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize, initializeTest } from '../../initialize';
-import { canRunTests, closeNotebooksAndCleanUpAfterTests, insertPythonCellAndWait } from './helper';
+import { canRunTests, closeNotebooksAndCleanUpAfterTests, insertPythonCellAndWait, trustAllNotebooks } from './helper';
 
 // tslint:disable: no-any no-invalid-this
 suite('DataScience - VSCode Notebook - Errors in Execution', function () {
@@ -38,6 +38,7 @@ suite('DataScience - VSCode Notebook - Errors in Execution', function () {
     setup(async () => {
         sinon.restore();
         await initializeTest();
+        await trustAllNotebooks();
         const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
         notebook = mock<INotebook>();
         (instance(notebook) as any).then = undefined;
@@ -61,7 +62,7 @@ suite('DataScience - VSCode Notebook - Errors in Execution', function () {
         when(notebook.executeObservable(anything(), anything(), anything(), anything(), anything())).thenThrow(error);
         await commands.executeCommand('notebook.execute');
 
-        assert.isTrue(handleErrorStub.calledOnce);
+        await waitForCondition(async () => handleErrorStub.calledOnce, 5_000, 'handleError not called');
         assert.isTrue(handleErrorStub.calledOnceWithExactly(error));
     });
     test('Errors thrown in cell execution (jupyter results) are handled by error handler', async () => {
@@ -80,7 +81,7 @@ suite('DataScience - VSCode Notebook - Errors in Execution', function () {
         // Execute cells (it should throw an error).
         await commands.executeCommand('notebook.execute');
 
-        assert.isTrue(handleErrorStub.calledOnce);
+        await waitForCondition(async () => handleErrorStub.calledOnce, 5_000, 'handleError not called');
         assert.isTrue(handleErrorStub.calledOnceWithExactly(error));
     });
 });

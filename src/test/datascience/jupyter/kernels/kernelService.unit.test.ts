@@ -11,17 +11,17 @@ import * as sinon from 'sinon';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
-import { FileSystem } from '../../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../client/common/process/types';
 import { ReadWrite } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
+import { DataScienceFileSystem } from '../../../../client/datascience/dataScienceFileSystem';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterKernelSpec } from '../../../../client/datascience/jupyter/kernels/jupyterKernelSpec';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import {
+    IDataScienceFileSystem,
     IJupyterKernelSpec,
     IJupyterSessionManager,
     IJupyterSubCommandExecutionService,
@@ -38,7 +38,7 @@ import { FakeClock } from '../../../common';
 suite('DataScience - KernelService', () => {
     let kernelService: KernelService;
     let interperterService: IInterpreterService;
-    let fs: IFileSystem;
+    let fs: IDataScienceFileSystem;
     let sessionManager: IJupyterSessionManager;
     let execFactory: IPythonExecutionFactory;
     let execService: IPythonExecutionService;
@@ -48,7 +48,7 @@ suite('DataScience - KernelService', () => {
 
     function initialize() {
         interperterService = mock(InterpreterService);
-        fs = mock(FileSystem);
+        fs = mock(DataScienceFileSystem);
         sessionManager = mock(JupyterSessionManager);
         activationHelper = mock(EnvironmentActivationService);
         execFactory = mock(PythonExecutionFactory);
@@ -225,7 +225,7 @@ suite('DataScience - KernelService', () => {
             }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
-        when(fs.arePathsSame('myPath2', 'myPath2')).thenReturn(true);
+        when(fs.areLocalPathsSame('myPath2', 'myPath2')).thenReturn(true);
         const interpreter: PythonInterpreter = {
             displayName: 'Disp2',
             path: 'myPath2',
@@ -309,8 +309,8 @@ suite('DataScience - KernelService', () => {
             )
         ];
         when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve(kernelSpecs);
-        when(fs.arePathsSame('Some Path2', 'Some Path2')).thenReturn(true);
-        when(fs.fileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
+        when(fs.areLocalPathsSame('Some Path2', 'Some Path2')).thenReturn(true);
+        when(fs.localFileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
         const interpreter: PythonInterpreter = {
             displayName: 'disp2',
             path: 'Some Path2',
@@ -504,8 +504,8 @@ suite('DataScience - KernelService', () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);
-            when(fs.readFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
-            when(fs.writeFile(kernelJsonFile, anything())).thenResolve();
+            when(fs.readLocalFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
+            when(fs.writeLocalFile(kernelJsonFile, anything())).thenResolve();
             when(activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)).thenResolve(
                 undefined
             );
@@ -520,16 +520,16 @@ suite('DataScience - KernelService', () => {
 
             // tslint:disable-next-line: no-any
             assert.deepEqual(kernel, installedKernel as any);
-            verify(fs.writeFile(kernelJsonFile, anything(), anything())).once();
+            verify(fs.writeLocalFile(kernelJsonFile, anything())).once();
             // Verify the contents of JSON written to the file match as expected.
-            assert.deepEqual(JSON.parse(capture(fs.writeFile).first()[1] as string), expectedKernelJsonContent);
+            assert.deepEqual(JSON.parse(capture(fs.writeLocalFile).first()[1] as string), expectedKernelJsonContent);
         });
         test('Kernel is installed and spec file is updated with interpreter information in metadata along with environment variables', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);
-            when(fs.readFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
-            when(fs.writeFile(kernelJsonFile, anything())).thenResolve();
+            when(fs.readLocalFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
+            when(fs.writeLocalFile(kernelJsonFile, anything())).thenResolve();
             const envVariables = { MYVAR: '1' };
             when(activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)).thenResolve(
                 envVariables
@@ -547,17 +547,17 @@ suite('DataScience - KernelService', () => {
 
             // tslint:disable-next-line: no-any
             assert.deepEqual(kernel, installedKernel as any);
-            verify(fs.writeFile(kernelJsonFile, anything(), anything())).once();
+            verify(fs.writeLocalFile(kernelJsonFile, anything())).once();
             // Verify the contents of JSON written to the file match as expected.
-            assert.deepEqual(JSON.parse(capture(fs.writeFile).first()[1] as string), expectedKernelJsonContent);
+            assert.deepEqual(JSON.parse(capture(fs.writeLocalFile).first()[1] as string), expectedKernelJsonContent);
         });
         test('Kernel is found and spec file is updated with interpreter information in metadata along with environment variables', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);
             when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve([kernel]);
-            when(fs.readFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
-            when(fs.writeFile(kernelJsonFile, anything())).thenResolve();
+            when(fs.readLocalFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
+            when(fs.writeLocalFile(kernelJsonFile, anything())).thenResolve();
             const envVariables = { MYVAR: '1' };
             when(activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)).thenResolve(
                 envVariables
@@ -575,18 +575,18 @@ suite('DataScience - KernelService', () => {
 
             // tslint:disable-next-line: no-any
             assert.deepEqual(kernel, installedKernel as any);
-            verify(fs.writeFile(kernelJsonFile, anything(), anything())).once();
+            verify(fs.writeLocalFile(kernelJsonFile, anything())).once();
             // Verify the contents of JSON written to the file match as expected.
-            assert.deepEqual(JSON.parse(capture(fs.writeFile).first()[1] as string), expectedKernelJsonContent);
+            assert.deepEqual(JSON.parse(capture(fs.writeLocalFile).first()[1] as string), expectedKernelJsonContent);
         });
         test('Kernel is found and spec file is not updated with interpreter information when user spec file', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             const kernel = new JupyterKernelSpec(userKernelSpecModel, kernelJsonFile);
             when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve([kernel]);
-            when(fs.readFile(kernelJsonFile)).thenResolve(JSON.stringify(userKernelSpecModel));
+            when(fs.readLocalFile(kernelJsonFile)).thenResolve(JSON.stringify(userKernelSpecModel));
             let contents: string | undefined;
-            when(fs.writeFile(kernelJsonFile, anything(), anything())).thenCall((_f, c) => {
+            when(fs.writeLocalFile(kernelJsonFile, anything())).thenCall((_f, c) => {
                 contents = c;
                 return Promise.resolve();
             });

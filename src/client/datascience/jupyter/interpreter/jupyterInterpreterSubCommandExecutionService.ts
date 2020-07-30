@@ -5,10 +5,10 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
+
 import {
     IPythonDaemonExecutionService,
     IPythonExecutionFactory,
@@ -25,7 +25,11 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, JupyterDaemonModule, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
-import { IJupyterInterpreterDependencyManager, IJupyterSubCommandExecutionService } from '../../types';
+import {
+    IDataScienceFileSystem,
+    IJupyterInterpreterDependencyManager,
+    IJupyterSubCommandExecutionService
+} from '../../types';
 import { JupyterServerInfo } from '../jupyterConnection';
 import { JupyterInstallError } from '../jupyterInstallError';
 import { JupyterKernelSpec, parseKernelSpecs } from '../kernels/jupyterKernelSpec';
@@ -50,7 +54,7 @@ export class JupyterInterpreterSubCommandExecutionService
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(JupyterInterpreterDependencyService)
         private readonly jupyterDependencyService: JupyterInterpreterDependencyService,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils
@@ -149,7 +153,7 @@ export class JupyterInterpreterSubCommandExecutionService
     }
 
     @reportAction(ReportableAction.ExportNotebookToPython)
-    public async exportNotebookToPython(file: string, template?: string, token?: CancellationToken): Promise<string> {
+    public async exportNotebookToPython(file: Uri, template?: string, token?: CancellationToken): Promise<string> {
         // Before we export check if our selected interpreter is available and supports export
         let interpreter = await this.getSelectedInterpreter(token);
         if (!interpreter || !(await this.jupyterDependencyService.isExportSupported(interpreter, token))) {
@@ -170,8 +174,8 @@ export class JupyterInterpreterSubCommandExecutionService
         });
         // Wait for the nbconvert to finish
         const args = template
-            ? [file, '--to', 'python', '--stdout', '--template', template]
-            : [file, '--to', 'python', '--stdout'];
+            ? [file.fsPath, '--to', 'python', '--stdout', '--template', template]
+            : [file.fsPath, '--to', 'python', '--stdout'];
         // Ignore stderr, as nbconvert writes conversion result to stderr.
         // stdout contains the generated python code.
         return daemon

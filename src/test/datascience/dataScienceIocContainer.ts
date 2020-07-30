@@ -9,7 +9,7 @@ import { interfaces } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
-import { anything, instance, mock, reset, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, reset, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import {
     CancellationTokenSource,
@@ -20,6 +20,7 @@ import {
     FileSystemWatcher,
     Memento,
     Uri,
+    WindowState,
     WorkspaceFolder,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
@@ -68,6 +69,7 @@ import {
     IDiagnosticsService
 } from '../../client/application/diagnostics/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
+import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { ClipboardService } from '../../client/common/application/clipboard';
 import { VSCodeNotebook } from '../../client/common/application/notebook';
 import { TerminalManager } from '../../client/common/application/terminalManager';
@@ -122,7 +124,7 @@ import { HttpClient } from '../../client/common/net/httpClient';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { RegistryImplementation } from '../../client/common/platform/registry';
-import { IFileSystem, IRegistry } from '../../client/common/platform/types';
+import { IRegistry } from '../../client/common/platform/types';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessLogger } from '../../client/common/process/logger';
@@ -158,6 +160,7 @@ import {
     ICryptoUtils,
     ICurrentProcess,
     IDataScienceSettings,
+    IDisposable,
     IExperimentService,
     IExperimentsManager,
     IExtensionContext,
@@ -223,12 +226,7 @@ import { AutoSaveService } from '../../client/datascience/interactive-ipynb/auto
 import { DigestStorage } from '../../client/datascience/interactive-ipynb/digestStorage';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorRunByLineListener } from '../../client/datascience/interactive-ipynb/nativeEditorRunByLineListener';
-import { NativeEditorStorage } from '../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
-import {
-    INotebookStorageProvider,
-    NotebookStorageProvider
-} from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { TrustService } from '../../client/datascience/interactive-ipynb/trustService';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
@@ -272,6 +270,11 @@ import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelL
 import { IKernelFinder, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
 import { NotebookAndInteractiveWindowUsageTracker } from '../../client/datascience/notebookAndInteractiveTracker';
 import { NotebookModelFactory } from '../../client/datascience/notebookStorage/factory';
+import { NativeEditorStorage } from '../../client/datascience/notebookStorage/nativeEditorStorage';
+import {
+    INotebookStorageProvider,
+    NotebookStorageProvider
+} from '../../client/datascience/notebookStorage/notebookStorageProvider';
 import { INotebookModelFactory } from '../../client/datascience/notebookStorage/types';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
@@ -290,6 +293,7 @@ import {
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IDebugLocationTracker,
     IDigestStorage,
     IGatherLogger,
@@ -424,7 +428,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
     private static jupyterInterpreters: PythonInterpreter[] = [];
     private static foundPythonPath: string | undefined;
-    public applicationShell!: TypeMoq.IMock<IApplicationShell>;
+    public applicationShell!: ApplicationShell;
     // tslint:disable-next-line:no-any
     public datascience!: TypeMoq.IMock<IDataScience>;
     public shouldMockJupyter: boolean;
@@ -593,7 +597,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
         this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
         this.registerFileSystemTypes();
-        this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());
+        this.serviceManager.addSingletonInstance<IDataScienceFileSystem>(IDataScienceFileSystem, new MockFileSystem());
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
         this.serviceManager.addSingleton<IInteractiveWindowProvider>(
             IInteractiveWindowProvider,
@@ -938,7 +942,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, this.commandManager);
 
         // Mock the app shell
-        const appShell = (this.applicationShell = TypeMoq.Mock.ofType<IApplicationShell>());
+        this.applicationShell = mock(ApplicationShell);
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
 
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(this.getSettings.bind(this));
@@ -948,7 +952,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             EnvironmentVariablesProvider
         );
 
-        this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
+        this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, instance(this.applicationShell));
         this.serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
         this.serviceManager.addSingletonInstance<IConfigurationService>(
@@ -1131,35 +1135,53 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             }
         };
 
-        appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(''));
-        appShell
-            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), anything()))
-            .returns(() => Promise.resolve(''));
-        appShell
-            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), anything(), anything()))
-            .returns(() => Promise.resolve(''));
-        appShell
-            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(''));
-        appShell
-            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
-        appShell
-            .setup((a) =>
-                a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
-            )
-            .returns((_a1: string, a2: any, _a3: string, a4: string) => {
+        when(this.applicationShell.showErrorMessage(anyString())).thenReturn(Promise.resolve(''));
+        when(this.applicationShell.showErrorMessage(anyString(), anything())).thenReturn(Promise.resolve(''));
+        when(this.applicationShell.showErrorMessage(anyString(), anything(), anything())).thenReturn(
+            Promise.resolve('')
+        );
+        when(this.applicationShell.showInformationMessage(anyString())).thenReturn(Promise.resolve(''));
+        when(this.applicationShell.showInformationMessage(anyString(), anything())).thenReturn(Promise.resolve(''));
+        when(
+            this.applicationShell.showInformationMessage(anyString(), anything(), anything())
+        ).thenCall((_a1, a2, _a3) => Promise.resolve(a2));
+        when(this.applicationShell.showInformationMessage(anyString(), anything(), anything(), anything())).thenCall(
+            (_a1, a2, _a3, a4) => {
                 if (typeof a2 === 'string') {
                     return Promise.resolve(a2);
                 } else {
                     return Promise.resolve(a4);
                 }
-            });
-        appShell
-            .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(Uri.file('test.ipynb')));
-        appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
-        appShell.setup((a) => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve('Python'));
+            }
+        );
+        when(this.applicationShell.showWarningMessage(anyString())).thenReturn(Promise.resolve(''));
+        when(this.applicationShell.showWarningMessage(anyString(), anything())).thenReturn(Promise.resolve(''));
+        when(this.applicationShell.showWarningMessage(anyString(), anything(), anything())).thenCall((_a1, a2, _a3) =>
+            Promise.resolve(a2)
+        );
+        when(this.applicationShell.showWarningMessage(anyString(), anything(), anything(), anything())).thenCall(
+            (_a1, a2, _a3, a4) => {
+                if (typeof a2 === 'string') {
+                    return Promise.resolve(a2);
+                } else {
+                    return Promise.resolve(a4);
+                }
+            }
+        );
+        when(this.applicationShell.showSaveDialog(anything())).thenReturn(Promise.resolve(Uri.file('test.ipynb')));
+        when(this.applicationShell.setStatusBarMessage(anything())).thenReturn(dummyDisposable);
+        when(this.applicationShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
+        const eventCallback = (
+            _listener: (e: WindowState) => any,
+            _thisArgs?: any,
+            _disposables?: IDisposable[] | Disposable
+        ) => {
+            return {
+                dispose: noop
+            };
+        };
+        when(this.applicationShell.onDidChangeWindowState).thenReturn(eventCallback);
+        when(this.applicationShell.withProgress(anything(), anything())).thenCall((_o, c) => c());
 
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
@@ -1174,7 +1196,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
     }
     public setFileContents(uri: Uri, contents: string) {
-        const fileSystem = this.serviceManager.get<IFileSystem>(IFileSystem) as MockFileSystem;
+        const fileSystem = this.serviceManager.get<IDataScienceFileSystem>(IDataScienceFileSystem) as MockFileSystem;
         fileSystem.addFileContents(uri.fsPath, contents);
     }
 

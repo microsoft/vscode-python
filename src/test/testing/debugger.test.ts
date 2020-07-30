@@ -66,7 +66,10 @@ suite('Unit Tests - debugging', () => {
         await initializeTest();
         initializeDI();
     });
-    teardown(async () => {
+    teardown(async function () {
+        // It's been observed that each call to `updateSetting` can take upto 20 seconds on Windows, hence increasing timeout.
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(TEST_TIMEOUT * 3);
         await ioc.dispose();
         await Promise.all([
             updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget),

@@ -10,19 +10,15 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { instance, mock } from 'ts-mockito';
-import { commands, TextDocument, Uri } from 'vscode';
+import { commands, Memento, TextDocument, Uri } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { CellDisplayOutput } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { IDisposable } from '../../../client/common/types';
+import { IConfigurationService, ICryptoUtils, IDisposable } from '../../../client/common/types';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
 import { Identifiers } from '../../../client/datascience/constants';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
-import {
-    findMappedNotebookCellModel,
-    mapVSCNotebookCellsToNotebookCellModels
-} from '../../../client/datascience/notebook/helpers/cellMappers';
 import { createVSCNotebookCellDataFromCell } from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
@@ -48,10 +44,8 @@ async function getServices() {
 }
 
 export async function insertMarkdownCell(source: string, index: number = 0) {
-    const { vscodeNotebook, editorProvider } = await getServices();
+    const { vscodeNotebook } = await getServices();
     const vscEditor = vscodeNotebook.activeNotebookEditor;
-    const nbEditor = editorProvider.activeEditor;
-    const cellCount = nbEditor?.model?.cells.length ?? 0;
     await new Promise((resolve) =>
         vscEditor?.edit((builder) => {
             builder.insert(index, source, MARKDOWN_LANGUAGE, vscodeNotebookEnums.CellKind.Markdown, [], undefined);
@@ -59,16 +53,15 @@ export async function insertMarkdownCell(source: string, index: number = 0) {
         })
     );
 
-    return {
-        waitForCellToGetAdded: () =>
-            waitForCondition(async () => nbEditor?.model?.cells.length === cellCount + 1, 1_000, 'Cell not inserted')
-    };
+    await waitForCondition(
+        async () => vscEditor?.document.cells[index].document.getText().trim() === source.trim(),
+        5_000,
+        'Cell not inserted'
+    );
 }
 export async function insertPythonCell(source: string, index: number = 0) {
-    const { vscodeNotebook, editorProvider } = await getServices();
+    const { vscodeNotebook } = await getServices();
     const vscEditor = vscodeNotebook.activeNotebookEditor;
-    const nbEditor = editorProvider.activeEditor;
-    const oldCellCount = vscEditor?.document.cells.length ?? 0;
     await new Promise((resolve) =>
         vscEditor?.edit((builder) => {
             builder.insert(index, source, PYTHON_LANGUAGE, vscodeNotebookEnums.CellKind.Code, [], undefined);
@@ -76,34 +69,17 @@ export async function insertPythonCell(source: string, index: number = 0) {
         })
     );
 
-    // When a cell is added we need to wait for it to get added in our INotebookModel.
-    // We also need to wait for it to get assigned a cell id.
-    return {
-        waitForCellToGetAdded: async () => {
-            await waitForCondition(
-                async () =>
-                    nbEditor?.model?.cells.length === oldCellCount + 1 &&
-                    nbEditor?.model?.cells.length === vscEditor?.document.cells.length,
-                1_000,
-                'Cell not inserted'
-            );
-            // All cells must have a corresponding cell in INotebookModel.
-            await waitForCondition(
-                async () =>
-                    vscEditor!.document.cells.every((cell) =>
-                        findMappedNotebookCellModel(cell, nbEditor!.model!.cells)
-                    ),
-                1_000,
-                'Cell not assigned a cell Id'
-            );
-        }
-    };
+    await waitForCondition(
+        async () => vscEditor?.document.cells[index].document.getText().trim() === source.trim(),
+        5_000,
+        'Cell not inserted'
+    );
 }
 export async function insertPythonCellAndWait(source: string, index: number = 0) {
-    await (await insertPythonCell(source, index)).waitForCellToGetAdded();
+    await insertPythonCell(source, index);
 }
 export async function insertMarkdownCellAndWait(source: string, index: number = 0) {
-    await (await insertMarkdownCell(source, index)).waitForCellToGetAdded();
+    await insertMarkdownCell(source, index);
 }
 export async function deleteCell(index: number = 0) {
     const { vscodeNotebook } = await getServices();
@@ -116,12 +92,11 @@ export async function deleteCell(index: number = 0) {
     );
 }
 export async function deleteAllCellsAndWait(index: number = 0) {
-    const { vscodeNotebook, editorProvider } = await getServices();
+    const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
-    if (!activeEditor || !editorProvider.activeEditor) {
+    if (!activeEditor) {
         return;
     }
-    const modelCells = editorProvider.activeEditor?.model?.cells!;
     const vscCells = activeEditor.document.cells!;
     let previousCellOut = vscCells.length;
     while (previousCellOut) {
@@ -135,11 +110,6 @@ export async function deleteAllCellsAndWait(index: number = 0) {
         await waitForCondition(async () => vscCells.length === previousCellOut - 1, 1_000, 'Cell not deleted');
         previousCellOut = vscCells.length;
     }
-    await waitForCondition(
-        async () => vscCells.length === modelCells.length && vscCells.length === 0,
-        5_000,
-        'All cells were not deleted'
-    );
 }
 
 export async function createTemporaryFile(options: {
@@ -191,10 +161,20 @@ export async function shutdownAllNotebooks() {
     const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
     await Promise.all(notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()));
 }
+
+let oldValueFor_alwaysTrustNotebooks: undefined | boolean;
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
     await closeActiveWindows();
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
+    if (typeof oldValueFor_alwaysTrustNotebooks === 'boolean') {
+        const api = await initialize();
+        const dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings()
+            .datascience;
+        dsSettings.alwaysTrustNotebooks = oldValueFor_alwaysTrustNotebooks;
+        oldValueFor_alwaysTrustNotebooks = undefined;
+    }
+
     sinon.restore();
 }
 export async function closeNotebooks(disposables: IDisposable[] = []) {
@@ -202,6 +182,14 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     disposeAllDisposables(disposables);
 }
 
+export async function trustAllNotebooks() {
+    const api = await initialize();
+    const dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().datascience;
+    if (oldValueFor_alwaysTrustNotebooks !== undefined) {
+        oldValueFor_alwaysTrustNotebooks = dsSettings.alwaysTrustNotebooks;
+    }
+    dsSettings.alwaysTrustNotebooks = true;
+}
 export async function startJupyter() {
     const { editorProvider } = await getServices();
     await closeActiveWindows();
@@ -218,7 +206,7 @@ export async function startJupyter() {
         );
         const tempIPynb = await createTemporaryNotebook(templateIPynb, disposables);
         await editorProvider.open(Uri.file(tempIPynb));
-        await (await insertPythonCell('print("Hello World")', 0)).waitForCellToGetAdded();
+        await insertPythonCell('print("Hello World")', 0);
         const model = editorProvider.activeEditor?.model;
         editorProvider.activeEditor?.runAllCells();
         // Wait for 15s for Jupyter to start.
@@ -298,10 +286,16 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     }
     return true;
 }
-export async function waitForTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
+export async function waitForTextOutputInVSCode(
+    cell: NotebookCell,
+    text: string,
+    index: number,
+    isExactMatch = true,
+    timeout = 1_000
+) {
     await waitForCondition(
         async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),
-        1_000,
+        timeout,
         `Output does not contain provided text '${text}' for Cell ${cell.notebook.cells.indexOf(cell) + 1}`
     );
 }
@@ -380,7 +374,13 @@ export async function saveActiveNotebook(disposables: IDisposable[]) {
     await waitForCondition(async () => savedEvent.all.some((e) => e.kind === 'save'), 5_000, 'Not saved');
 }
 
-export function createNotebookModel(trusted: boolean, uri: Uri, nb?: Partial<nbformat.INotebookContent>) {
+export function createNotebookModel(
+    trusted: boolean,
+    uri: Uri,
+    globalMemento: Memento,
+    crypto: ICryptoUtils,
+    nb?: Partial<nbformat.INotebookContent>
+) {
     const nbJson: nbformat.INotebookContent = {
         cells: [],
         metadata: {
@@ -400,11 +400,11 @@ export function createNotebookModel(trusted: boolean, uri: Uri, nb?: Partial<nbf
             data: c
         };
     });
-    return new VSCodeNotebookModel(trusted, uri, JSON.parse(JSON.stringify(cells)));
+    return new VSCodeNotebookModel(trusted, uri, JSON.parse(JSON.stringify(cells)), globalMemento, crypto);
 }
 
 export function createNotebookDocument(
-    model: INotebookModel,
+    model: VSCodeNotebookModel,
     viewType: string = JupyterNotebookView
 ): NotebookDocument {
     const doc: NotebookDocument = {
@@ -432,8 +432,6 @@ export function createNotebookDocument(
         };
         doc.cells.push(vscDocumentCell);
     });
-    if (viewType === JupyterNotebookView) {
-        mapVSCNotebookCellsToNotebookCellModels(doc, model);
-    }
+    model.associateNotebookDocument(doc);
     return doc;
 }

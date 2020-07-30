@@ -43,6 +43,7 @@
     -   new features
     -   settings changes
     -   etc. (ask the team)
+-   [ ] Schedule a bug bash
 -   [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post
 -   [ ] Ask CTI to test the release candidate
 

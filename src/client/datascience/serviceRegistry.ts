@@ -4,6 +4,8 @@
 import { IExtensionSingleActivationService } from '../activation/types';
 import { UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
 import { NotebookEditorSupport } from '../common/experiments/groups';
+import { FileSystemPathUtils } from '../common/platform/fs-paths';
+import { IFileSystemPathUtils } from '../common/platform/types';
 import { StartPage } from '../common/startPage/startPage';
 import { IStartPage } from '../common/startPage/types';
 import { IExperimentsManager } from '../common/types';
@@ -26,6 +28,7 @@ import { JupyterVariableDataProvider } from './data-viewing/jupyterVariableDataP
 import { JupyterVariableDataProviderFactory } from './data-viewing/jupyterVariableDataProviderFactory';
 import { IDataViewer, IDataViewerFactory } from './data-viewing/types';
 import { DataScience } from './datascience';
+import { DataScienceFileSystem } from './dataScienceFileSystem';
 import { DataScienceSurveyBannerLogger } from './dataScienceSurveyBanner';
 import { DebugLocationTrackerFactory } from './debugLocationTrackerFactory';
 import { CellHashProvider } from './editor-integration/cellhashprovider';
@@ -59,13 +62,10 @@ import { DigestStorage } from './interactive-ipynb/digestStorage';
 import { NativeEditor } from './interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorOldWebView } from './interactive-ipynb/nativeEditorOldWebView';
-import { NativeEditorProvider } from './interactive-ipynb/nativeEditorProvider';
 import { NativeEditorProviderOld } from './interactive-ipynb/nativeEditorProviderOld';
 import { NativeEditorRunByLineListener } from './interactive-ipynb/nativeEditorRunByLineListener';
-import { NativeEditorStorage } from './interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
 import { NativeEditorViewTracker } from './interactive-ipynb/nativeEditorViewTracker';
-import { INotebookStorageProvider, NotebookStorageProvider } from './interactive-ipynb/notebookStorageProvider';
 import { TrustCommandHandler } from './interactive-ipynb/trustCommandHandler';
 import { TrustService } from './interactive-ipynb/trustService';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
@@ -119,6 +119,9 @@ import { NotebookEditorProviderWrapper } from './notebook/notebookEditorProvider
 import { registerTypes as registerNotebookTypes } from './notebook/serviceRegistry';
 import { NotebookAndInteractiveWindowUsageTracker } from './notebookAndInteractiveTracker';
 import { NotebookModelFactory } from './notebookStorage/factory';
+import { NativeEditorProvider } from './notebookStorage/nativeEditorProvider';
+import { NativeEditorStorage } from './notebookStorage/nativeEditorStorage';
+import { INotebookStorageProvider, NotebookStorageProvider } from './notebookStorage/notebookStorageProvider';
 import { INotebookModelFactory } from './notebookStorage/types';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
@@ -138,6 +141,7 @@ import {
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IDebugLocationTracker,
     IDigestStorage,
     IGatherLogger,
@@ -307,6 +311,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration, JupyterUriProviderRegistration);
     serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
     serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
+    serviceManager.addSingleton<IDataScienceFileSystem>(IDataScienceFileSystem, DataScienceFileSystem);
+    serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
 
     registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);

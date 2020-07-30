@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Uri } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
@@ -334,7 +334,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return this.jupyterInterpreterService.openNotebook(file);
     }
 
-    public async importNotebook(file: string, template: string | undefined): Promise<string> {
+    public async importNotebook(file: Uri, template: string | undefined): Promise<string> {
         return this.jupyterInterpreterService.exportNotebookToPython(file, template);
     }
 

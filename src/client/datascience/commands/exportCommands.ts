@@ -8,7 +8,7 @@ import { QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IDisposable } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { isUri } from '../../common/utils/misc';
@@ -16,7 +16,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { ExportManager } from '../export/exportManager';
 import { ExportFormat, IExportManager } from '../export/types';
-import { INotebookEditorProvider, INotebookModel } from '../types';
+import { IDataScienceFileSystem, INotebookEditorProvider, INotebookModel } from '../types';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;
@@ -30,7 +30,7 @@ export class ExportCommands implements IDisposable {
         @inject(IExportManager) private exportManager: ExportManager,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {}
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (model) => this.export(model, ExportFormat.python));
@@ -63,9 +63,7 @@ export class ExportCommands implements IDisposable {
         let model: INotebookModel | undefined;
         if (modelOrUri && isUri(modelOrUri)) {
             const uri = modelOrUri;
-            const editor = this.notebookProvider.editors.find((item) =>
-                this.fs.arePathsSame(item.file.fsPath, uri.fsPath)
-            );
+            const editor = this.notebookProvider.editors.find((item) => this.fs.arePathsSame(item.file, uri));
             if (editor && editor.model) {
                 model = editor.model;
             }

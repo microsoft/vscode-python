@@ -2,18 +2,19 @@ import { inject, injectable } from 'inversify';
 import { Position, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IBrowserService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
+import { IDataScienceFileSystem } from '../types';
 import { ExportFormat } from './types';
 
 @injectable()
 export class ExportFileOpener {
     constructor(
         @inject(IDocumentManager) protected readonly documentManager: IDocumentManager,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IBrowserService) private readonly browserService: IBrowserService
     ) {}
@@ -37,8 +38,8 @@ export class ExportFileOpener {
     }
 
     private async openPythonFile(uri: Uri): Promise<void> {
-        const contents = await this.fileSystem.readFile(uri.fsPath);
-        await this.fileSystem.deleteFile(uri.fsPath);
+        const contents = await this.fs.readFile(uri);
+        await this.fs.delete(uri);
         const doc = await this.documentManager.openTextDocument({ language: PYTHON_LANGUAGE, content: contents });
         const editor = await this.documentManager.showTextDocument(doc);
         // Edit the document so that it is dirty (add a space at the end)

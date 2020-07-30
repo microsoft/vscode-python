@@ -19,9 +19,8 @@ import {
     canRunTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    deleteAllCellsAndWait,
     insertMarkdownCellAndWait,
-    insertPythonCellAndWait
+    trustAllNotebooks
 } from './helper';
 
 suite('DataScience - VSCode Notebook (Editor Provider)', function () {
@@ -54,6 +53,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
     });
     setup(async () => {
         sinon.restore();
+        await trustAllNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
@@ -355,37 +355,6 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         assert.isOk(vscodeNotebook.activeNotebookEditor);
         assert.isOk(editorProvider.activeEditor);
         assert.equal(editorProvider.activeEditor?.file.fsPath.toLowerCase(), testIPynb.fsPath.toLowerCase());
-    });
-    test('Adding/deleting cells will trigger events', async function () {
-        this.timeout(10_000);
-        assert.isUndefined(editorProvider.activeEditor);
-        assert.equal(editorProvider.editors.length, 0);
-
-        await commandManager.executeCommand('vscode.openWith', testIPynb, JupyterNotebookView);
-
-        assert.isOk(editorProvider.activeEditor);
-
-        const editedEvent = createEventHandler(editorProvider.activeEditor!, 'modified', disposables);
-        const changedEvent = createEventHandler(editorProvider.activeEditor!.model!, 'changed', disposables);
-
-        await insertPythonCellAndWait('HELLO');
-
-        await editedEvent.assertFired(1_000);
-        await changedEvent.assertFired(1_000);
-
-        editedEvent.reset();
-        changedEvent.reset();
-        await insertMarkdownCellAndWait('HELLO');
-
-        await editedEvent.assertFired(1_000);
-        await changedEvent.assertFired(1_000);
-
-        editedEvent.reset();
-        changedEvent.reset();
-        await deleteAllCellsAndWait();
-
-        await editedEvent.assertFired(1_000);
-        await changedEvent.assertFired(1_000);
     });
     test('Open a notebook using VSC API then ours yields the same editor', async () => {
         assert.isUndefined(editorProvider.activeEditor);

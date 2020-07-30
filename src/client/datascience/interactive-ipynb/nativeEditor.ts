@@ -26,7 +26,7 @@ import {
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { traceError, traceInfo } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -57,6 +57,7 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
@@ -67,6 +68,7 @@ import {
     INotebookEditorProvider,
     INotebookExporter,
     INotebookImporter,
+    INotebookMetadataLive,
     INotebookModel,
     INotebookProvider,
     IStatusProvider,
@@ -87,6 +89,7 @@ import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { LiveKernelModel } from '../jupyter/kernels/types';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
@@ -158,7 +161,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
         statusProvider: IStatusProvider,
-        fileSystem: IFileSystem,
+        fs: IDataScienceFileSystem,
         configuration: IConfigurationService,
         commandManager: ICommandManager,
         jupyterExporter: INotebookExporter,
@@ -193,7 +196,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             cssGenerator,
             themeFinder,
             statusProvider,
-            fileSystem,
+            fs,
             configuration,
             jupyterExporter,
             workspaceService,
@@ -316,12 +319,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    public get notebookMetadata(): nbformat.INotebookMetadata | undefined {
+    public get notebookMetadata(): INotebookMetadataLive | undefined {
         return this.model.metadata;
     }
 
     public async updateNotebookOptions(
-        kernelSpec: IJupyterKernelSpec,
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel,
         interpreter: PythonInterpreter | undefined
     ): Promise<void> {
         if (this.model) {
@@ -369,6 +372,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // These are not supported.
         return Promise.resolve();
+    }
+
+    protected async createNotebookIfProviderConnectionExists() {
+        if (this._model.isTrusted) {
+            await super.createNotebookIfProviderConnectionExists();
+        }
     }
 
     protected submitCode(
@@ -458,7 +467,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     protected async setLaunchingFile(_file: string): Promise<void> {
         // For the native editor, use our own file as the path
         const notebook = this.getNotebook();
-        if (this.fileSystem.fileExists(this.file.fsPath) && notebook) {
+        if (notebook) {
             await notebook.setLaunchingFile(this.file.fsPath);
         }
     }

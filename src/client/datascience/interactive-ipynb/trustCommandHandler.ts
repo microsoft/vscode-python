@@ -15,7 +15,7 @@ import { swallowExceptions } from '../../common/utils/decorators';
 import { DataScience } from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
-import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebookEditorProvider, ITrustService } from '../types';
 
 @injectable()
@@ -67,13 +67,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
                 break;
             case DataScience.trustNotebook():
                 // Update model trust
-                model.update({
-                    source: 'user',
-                    kind: 'updateTrust',
-                    oldDirty: model.isDirty,
-                    newDirty: model.isDirty,
-                    isNotebookTrusted: true
-                });
+                model.trust();
                 const contents = model.getContent();
                 await this.trustService.trustNotebook(model.file, contents);
                 sendTelemetryEvent(Telemetry.TrustNotebook);

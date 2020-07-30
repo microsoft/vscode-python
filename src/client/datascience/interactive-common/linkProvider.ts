@@ -7,10 +7,10 @@ import { inject, injectable } from 'inversify';
 import { commands, Event, EventEmitter, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
 
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
+
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IInteractiveWindowListener } from '../types';
+import { IDataScienceFileSystem, IInteractiveWindowListener } from '../types';
 import { InteractiveWindowMessages } from './interactiveWindowTypes';
 
 const LineQueryRegex = /line=(\d+)/;
@@ -19,6 +19,7 @@ const LineQueryRegex = /line=(\d+)/;
 // in a markdown cell using the syntax: https://command:[my.vscode.command].
 const linkCommandWhitelist = [
     'python.datascience.gatherquality',
+    'python.datascience.latestExtension',
     'python.datascience.enableLoadingWidgetScriptsFromThirdPartySource'
 ];
 
@@ -31,7 +32,7 @@ export class LinkProvider implements IInteractiveWindowListener {
     }>();
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICommandManager) private commandManager: ICommandManager
     ) {
@@ -52,8 +53,7 @@ export class LinkProvider implements IInteractiveWindowListener {
                         this.openFile(href);
                     } else if (href.startsWith('https://command:')) {
                         const temp: string = href.split(':')[2];
-                        const params: string[] =
-                            temp.includes('/?') && temp.includes(',') ? temp.split('/?')[1].split(',') : [];
+                        const params: string[] = temp.includes('/?') ? temp.split('/?')[1].split(',') : [];
                         let command = temp.split('/?')[0];
                         if (command.endsWith('/')) {
                             command = command.substring(0, command.length - 1);
@@ -81,7 +81,7 @@ export class LinkProvider implements IInteractiveWindowListener {
                         .then((f) => {
                             if (f) {
                                 const buffer = new Buffer(payload.replace('data:image/png;base64', ''), 'base64');
-                                this.fileSystem.writeFile(f.fsPath, buffer).ignoreErrors();
+                                this.fs.writeFile(f, buffer).ignoreErrors();
                             }
                         });
                 }
@@ -107,9 +107,7 @@ export class LinkProvider implements IInteractiveWindowListener {
         }
 
         // Show the matching editor if there is one
-        let editor = this.documentManager.visibleTextEditors.find((e) =>
-            this.fileSystem.arePathsSame(e.document.fileName, uri.fsPath)
-        );
+        let editor = this.documentManager.visibleTextEditors.find((e) => this.fs.arePathsSame(e.document.uri, uri));
         if (editor) {
             this.documentManager
                 .showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn })
@@ -120,9 +118,7 @@ export class LinkProvider implements IInteractiveWindowListener {
             // Not a visible editor, try opening otherwise
             this.commandManager.executeCommand('vscode.open', uri).then(() => {
                 // See if that opened a text document
-                editor = this.documentManager.visibleTextEditors.find((e) =>
-                    this.fileSystem.arePathsSame(e.document.fileName, uri.fsPath)
-                );
+                editor = this.documentManager.visibleTextEditors.find((e) => this.fs.arePathsSame(e.document.uri, uri));
                 if (editor) {
                     // Force the selection to change
                     editor.revealRange(selection);

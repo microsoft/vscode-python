@@ -6,12 +6,12 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
-import { IFileSystem } from '../../../common/platform/types';
+
 import { IPathUtils, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
 import { IKernelFinder } from '../../kernel-launcher/types';
-import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
+import { IDataScienceFileSystem, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { detectDefaultKernelName } from './helpers';
 import { KernelService } from './kernelService';
 import { IKernelSelectionListProvider, IKernelSpecQuickPickItem, LiveKernelModel } from './types';
@@ -180,7 +180,7 @@ export class KernelSelectionProvider {
     constructor(
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
     ) {}
@@ -275,11 +275,11 @@ export class KernelSelectionProvider {
                             (installedKernel) =>
                                 installedKernel.selection.kernelSpec?.display_name ===
                                     item.selection.interpreter?.displayName &&
-                                (this.fileSystem.arePathsSame(
+                                (this.fs.areLocalPathsSame(
                                     (installedKernel.selection.kernelSpec?.argv || [])[0],
                                     item.selection.interpreter?.path || ''
                                 ) ||
-                                    this.fileSystem.arePathsSame(
+                                    this.fs.areLocalPathsSame(
                                         installedKernel.selection.kernelSpec?.metadata?.interpreter?.path || '',
                                         item.selection.interpreter?.path || ''
                                     ))

@@ -12,7 +12,7 @@ import { EventEmitter } from 'vscode';
 import { IApplicationShell } from '../../client/common/application/types';
 import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { DataScienceSurveyBanner, DSSurveyStateKeys } from '../../client/datascience/dataScienceSurveyBanner';
-import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
 import { INotebookEditor } from '../../client/datascience/types';
 
 suite('DataScience Survey Banner', () => {

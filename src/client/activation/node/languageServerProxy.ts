@@ -51,7 +51,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         };
     }
 
-    @traceDecorators.verbose('Stopping Language Server')
+    @traceDecorators.verbose('Stopping language server')
     public dispose() {
         if (this.languageClient) {
             // Do not await on this.
@@ -67,7 +67,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
             d.dispose();
         }
         if (this.startupCompleted.completed) {
-            this.startupCompleted.reject(new Error('Disposed Language Server'));
+            this.startupCompleted.reject(new Error('Disposed language server'));
             this.startupCompleted = createDeferred<void>();
         }
         this.disposed = true;
@@ -155,7 +155,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         this.startupCompleted.resolve();
     }
 
-    @swallowExceptions('Activating Unit Tests Manager for Language Server')
+    @swallowExceptions('Activating Unit Tests Manager for Pylance language server')
     protected async registerTestServices() {
         if (!this.languageClient) {
             throw new Error('languageClient not initialized');

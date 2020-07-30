@@ -20,7 +20,7 @@ import {
     IRandom
 } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
-import { Common, ExtensionSurveyBanner, LanguageService } from '../../client/common/utils/localize';
+import { Common, ExtensionSurveyBanner } from '../../client/common/utils/localize';
 import { OSType } from '../../client/common/utils/platform';
 import { sleep } from '../core';
 
@@ -226,7 +226,11 @@ suite('Extension survey prompt - showSurvey()', () => {
         const packageJson = {
             version: 'extensionVersion'
         };
-        const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
+        const prompts = [
+            ExtensionSurveyBanner.bannerLabelYes(),
+            ExtensionSurveyBanner.maybeLater(),
+            Common.doNotShowAgain()
+        ];
         const expectedUrl = `https://aka.ms/AA5rjx5?o=Windows&v=vscodeVersion&e=extensionVersion&m=sessionId`;
         appEnvironment
             .setup((a) => a.packageJson)
@@ -246,7 +250,7 @@ suite('Extension survey prompt - showSurvey()', () => {
             .verifiable(TypeMoq.Times.once());
         appShell
             .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
-            .returns(() => Promise.resolve(LanguageService.bannerLabelYes()))
+            .returns(() => Promise.resolve(ExtensionSurveyBanner.bannerLabelYes()))
             .verifiable(TypeMoq.Times.once());
         browserService
             .setup((s) => s.launch(expectedUrl))
@@ -282,7 +286,11 @@ suite('Extension survey prompt - showSurvey()', () => {
     });
 
     test("Do nothing if 'Maybe later' option is clicked", async () => {
-        const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
+        const prompts = [
+            ExtensionSurveyBanner.bannerLabelYes(),
+            ExtensionSurveyBanner.maybeLater(),
+            Common.doNotShowAgain()
+        ];
         platformService.setup((p) => p.osType).verifiable(TypeMoq.Times.never());
         appShell
             .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
@@ -321,7 +329,11 @@ suite('Extension survey prompt - showSurvey()', () => {
     });
 
     test('Do nothing if no option is clicked', async () => {
-        const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
+        const prompts = [
+            ExtensionSurveyBanner.bannerLabelYes(),
+            ExtensionSurveyBanner.maybeLater(),
+            Common.doNotShowAgain()
+        ];
         platformService.setup((p) => p.osType).verifiable(TypeMoq.Times.never());
         appShell
             .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
@@ -360,7 +372,11 @@ suite('Extension survey prompt - showSurvey()', () => {
     });
 
     test("Disable prompt if 'Do not show again' option is clicked", async () => {
-        const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
+        const prompts = [
+            ExtensionSurveyBanner.bannerLabelYes(),
+            ExtensionSurveyBanner.maybeLater(),
+            Common.doNotShowAgain()
+        ];
         platformService.setup((p) => p.osType).verifiable(TypeMoq.Times.never());
         appShell
             .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))

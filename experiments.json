@@ -150,16 +150,16 @@
         "max": 100
     },
     {
-        "name": "RunByLine - control",
-        "salt": "RunByLine",
-        "min": 20,
-        "max": 100
-    },
-    {
         "name": "RunByLine - experiment",
         "salt": "RunByLine",
-        "max": 20,
-        "min": 0
+        "min": 0,
+        "max": 40
+    },
+    {
+        "name": "RunByLine - control",
+        "salt": "RunByLine",
+        "min": 40,
+        "max": 100
     },
     {
         "name": "CustomEditorSupport - control",

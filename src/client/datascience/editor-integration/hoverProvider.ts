@@ -8,12 +8,19 @@ import { Cancellation } from '../../common/cancellation';
 import { PYTHON } from '../../common/constants';
 import { RunByLine } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IExperimentsManager } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
-import { ICell, IInteractiveWindowProvider, IJupyterVariables, INotebook, INotebookExecutionLogger } from '../types';
+import {
+    ICell,
+    IDataScienceFileSystem,
+    IInteractiveWindowProvider,
+    IJupyterVariables,
+    INotebook,
+    INotebookExecutionLogger
+} from '../types';
 
 // This class provides hashes for debugging jupyter cells. Call getHashes just before starting debugging to compute all of the
 // hashes for cells.
@@ -27,7 +34,7 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {
         this.enabled = experimentsManager.inExperiment(RunByLine.experiment);
     }
@@ -119,16 +126,12 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
     private getMatchingNotebooks(document: vscode.TextDocument): INotebook[] {
         // First see if we have an interactive window who's owner is this document
         let result = this.interactiveProvider.windows
-            .filter((w) => w.notebook && w.owner && this.fileSystem.arePathsSame(w.owner.fsPath, document.uri.fsPath))
+            .filter((w) => w.notebook && w.owner && this.fs.arePathsSame(w.owner, document.uri))
             .map((w) => w.notebook!);
         if (!result || result.length === 0) {
             // Not a match on the owner, find all that were submitters? Might be a bit risky
             result = this.interactiveProvider.windows
-                .filter(
-                    (w) =>
-                        w.notebook &&
-                        w.submitters.find((s) => this.fileSystem.arePathsSame(s.fsPath, document.uri.fsPath))
-                )
+                .filter((w) => w.notebook && w.submitters.find((s) => this.fs.arePathsSame(s, document.uri)))
                 .map((w) => w.notebook!);
         }
         return result;

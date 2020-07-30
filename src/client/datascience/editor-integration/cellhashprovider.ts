@@ -10,7 +10,7 @@ import { Event, EventEmitter, Position, Range, TextDocumentChangeEvent, TextDocu
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { IDebugService, IDocumentManager } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { getCellResource } from '../cellFactory';
@@ -21,6 +21,7 @@ import {
     ICellHash,
     ICellHashListener,
     ICellHashProvider,
+    IDataScienceFileSystem,
     IFileHashes,
     INotebook,
     INotebookExecutionLogger
@@ -60,7 +61,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDebugService) private debugService: IDebugService,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @multiInject(ICellHashListener) @optional() private listeners: ICellHashListener[] | undefined
     ) {
         // Watch document changes so we can update our hashes
@@ -163,7 +164,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
     public async addCellHash(cell: ICell, expectedCount: number): Promise<void> {
         // Find the text document that matches. We need more information than
         // the add code gives us
-        const doc = this.documentManager.textDocuments.find((d) => this.fileSystem.arePathsSame(d.fileName, cell.file));
+        const doc = this.documentManager.textDocuments.find((d) => this.fs.areLocalPathsSame(d.fileName, cell.file));
         if (doc) {
             // Compute the code that will really be sent to jupyter
             const { stripped, trueStartLine } = this.extractStrippedLines(cell);
@@ -234,7 +235,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
             // Save a regex to find this file later when looking for
             // exceptions in output
             if (!this.traceBackRegexes.has(cell.file)) {
-                const fileDisplayName = this.fileSystem.getDisplayName(cell.file);
+                const fileDisplayName = this.fs.getDisplayName(cell.file);
                 const escaped = _escapeRegExp(fileDisplayName);
                 const fileMatchRegex = new RegExp(`\\[.*?;32m${escaped}`);
                 this.traceBackRegexes.set(cell.file, fileMatchRegex);

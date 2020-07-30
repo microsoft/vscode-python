@@ -6,13 +6,13 @@ import * as vscode from 'vscode';
 
 import { ICommandManager, IDebugService, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IConfigurationService, IDataScienceSettings, IDisposable, IDisposableRegistry } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { CodeLensCommands, EditorContexts, Telemetry } from '../constants';
-import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../types';
+import { ICodeWatcher, IDataScienceCodeLensProvider, IDataScienceFileSystem, IDebugLocationTracker } from '../types';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {
@@ -28,7 +28,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IDebugService) private debugService: IDebugService,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IVSCodeNotebook) private readonly vsCodeNotebook: IVSCodeNotebook
     ) {
         disposableRegistry.push(this);
@@ -80,7 +80,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     private onDidCloseTextDocument(e: vscode.TextDocument) {
         const index = this.activeCodeWatchers.findIndex(
-            (item) => item.uri && this.fileSystem.arePathsSame(item.uri.fsPath, e.fileName)
+            (item) => item.uri && this.fs.areLocalPathsSame(item.uri.fsPath, e.fileName)
         );
         if (index >= 0) {
             this.activeCodeWatchers.splice(index, 1);
@@ -120,7 +120,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         if (this.debugService.activeDebugSession) {
             const debugLocation = this.debugLocationTracker.getLocation(this.debugService.activeDebugSession);
 
-            if (debugLocation && this.fileSystem.arePathsSame(debugLocation.fileName, document.uri.fsPath)) {
+            if (debugLocation && this.fs.areLocalPathsSame(debugLocation.fileName, document.uri.fsPath)) {
                 // We are in the given debug file, so only return the code lens that contains the given line
                 const activeLenses = lenses.filter((lens) => {
                     // -1 for difference between file system one based and debugger zero based
@@ -166,7 +166,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     private matchWatcher(fileName: string, version: number, settings: IDataScienceSettings): ICodeWatcher | undefined {
         const index = this.activeCodeWatchers.findIndex(
-            (item) => item.uri && this.fileSystem.arePathsSame(item.uri.fsPath, fileName)
+            (item) => item.uri && this.fs.areLocalPathsSame(item.uri.fsPath, fileName)
         );
         if (index >= 0) {
             const item = this.activeCodeWatchers[index];

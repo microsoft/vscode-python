@@ -148,7 +148,7 @@
                 "win": "F",
                 "linux": "F",
                 "key": "F",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.find"
             },
             {
@@ -156,7 +156,7 @@
                 "win": "K",
                 "linux": "K",
                 "key": "K",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "list.focusUp"
             },
             {
@@ -164,7 +164,7 @@
                 "win": "J",
                 "linux": "J",
                 "key": "J",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "list.focusDown"
             },
             {
@@ -172,7 +172,7 @@
                 "win": "A",
                 "linux": "A",
                 "key": "A",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.insertCodeCellAbove"
             },
             {
@@ -180,7 +180,7 @@
                 "win": "B",
                 "linux": "B",
                 "key": "B",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.insertCodeCellBelow"
             },
             {
@@ -188,7 +188,7 @@
                 "win": "D D",
                 "linux": "D D",
                 "key": "D D",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.delete"
             },
             {
@@ -196,7 +196,7 @@
                 "win": "Z",
                 "linux": "Z",
                 "key": "Z",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.undo"
             },
             {
@@ -204,7 +204,7 @@
                 "win": "C",
                 "linux": "C",
                 "key": "C",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.copy"
             },
             {
@@ -212,7 +212,7 @@
                 "win": "X",
                 "linux": "X",
                 "key": "X",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.cut"
             },
             {
@@ -220,14 +220,14 @@
                 "win": "V",
                 "linux": "V",
                 "key": "V",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.paste"
             },
             {
                 "mac": "ctrl+shift+-",
                 "win": "ctrl+shift+-",
                 "linux": "ctrl+shift+-",
-                "when": "editorTextFocus && inputFocus && notebookEditorFocused",
+                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.split"
             }
         ],
@@ -770,6 +770,11 @@
                 "command": "python.datascience.gatherquality",
                 "title": "DataScience.gatherQuality",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.latestExtension",
+                "title": "DataScience.latestExtension",
+                "category": "Python"
             }
         ],
         "menus": {
@@ -1278,6 +1283,12 @@
                 {
                     "command": "python.datascience.gatherquality",
                     "title": "%DataScience.gatherQuality%",
+                    "category": "Python",
+                    "when": "false"
+                },
+                {
+                    "command": "python.datascience.latestExtension",
+                    "title": "%DataScience.latestExtension%",
                     "category": "Python",
                     "when": "false"
                 },
@@ -2319,6 +2330,7 @@
                     "type": "string",
                     "enum": [
                         "Jedi",
+                        "Pylance",
                         "Microsoft",
                         "None"
                     ],
@@ -3368,7 +3380,7 @@
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
-        "@types/vscode": "^1.46.0",
+        "@types/vscode": "^1.47.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",

@@ -6,7 +6,6 @@
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
 import { ExportDependencyChecker } from '../../../client/datascience/export/exportDependencyChecker';
 import { ExportFileOpener } from '../../../client/datascience/export/exportFileOpener';
@@ -14,14 +13,14 @@ import { ExportManager } from '../../../client/datascience/export/exportManager'
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
 import { ExportFormat, IExport, IExportManagerFilePicker } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
-import { INotebookModel } from '../../../client/datascience/types';
+import { IDataScienceFileSystem, INotebookModel } from '../../../client/datascience/types';
 
 suite('DataScience - Export Manager', () => {
     let exporter: ExportManager;
     let exportPython: IExport;
     let exportHtml: IExport;
     let exportPdf: IExport;
-    let fileSystem: IFileSystem;
+    let fileSystem: IDataScienceFileSystem;
     let exportUtil: ExportUtil;
     let filePicker: IExportManagerFilePicker;
     let appShell: IApplicationShell;
@@ -32,7 +31,7 @@ suite('DataScience - Export Manager', () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
         filePicker = mock<IExportManagerFilePicker>();
-        fileSystem = mock<IFileSystem>();
+        fileSystem = mock<IDataScienceFileSystem>();
         exportPython = mock<IExport>();
         exportHtml = mock<IExport>();
         exportPdf = mock<IExport>();
@@ -49,7 +48,7 @@ suite('DataScience - Export Manager', () => {
         when(exportUtil.generateTempDir()).thenResolve({ path: 'test', dispose: () => {} });
         when(exportUtil.makeFileInDirectory(anything(), anything(), anything())).thenResolve('foo');
         // tslint:disable-next-line: no-empty
-        when(fileSystem.createTemporaryFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
+        when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
         when(exportPdf.export(anything(), anything(), anything())).thenResolve();
         when(filePicker.getExportFileLocation(anything(), anything())).thenResolve(Uri.file('foo'));
         when(exportDependencyChecker.checkDependencies(anything())).thenResolve();

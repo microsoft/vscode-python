@@ -354,7 +354,7 @@ export class JediProxy implements Disposable {
     // tslint:disable-next-line:max-func-body-length
     private async spawnProcess() {
         if (this.languageServerStarted && !this.languageServerStarted.completed) {
-            this.languageServerStarted.reject(new Error('Language Server not started.'));
+            this.languageServerStarted.reject(new Error('Language server not started.'));
         }
         this.languageServerStarted = createDeferred<void>();
         const pythonProcess = await this.serviceContainer

@@ -5,13 +5,14 @@
 import * as path from 'path';
 
 import { IWorkspaceService } from '../common/application/types';
-import { IFileSystem } from '../common/platform/types';
+
 import { IConfigurationService } from '../common/types';
+import { IDataScienceFileSystem } from './types';
 
 export async function calculateWorkingDirectory(
     configService: IConfigurationService,
     workspace: IWorkspaceService,
-    fileSystem: IFileSystem
+    fs: IDataScienceFileSystem
 ): Promise<string | undefined> {
     let workingDir: string | undefined;
     // For a local launch calculate the working directory that we should switch into
@@ -23,7 +24,7 @@ export async function calculateWorkingDirectory(
     if (fileRoot && workspace.hasWorkspaceFolders) {
         const workspaceFolderPath = workspace.workspaceFolders![0].uri.fsPath;
         if (path.isAbsolute(fileRoot)) {
-            if (await fileSystem.directoryExists(fileRoot)) {
+            if (await fs.localDirectoryExists(fileRoot)) {
                 // User setting is absolute and exists, use it
                 workingDir = fileRoot;
             } else {
@@ -33,7 +34,7 @@ export async function calculateWorkingDirectory(
         } else if (!fileRoot.includes('${')) {
             // fileRoot is a relative path, combine it with the workspace folder
             const combinedPath = path.join(workspaceFolderPath, fileRoot);
-            if (await fileSystem.directoryExists(combinedPath)) {
+            if (await fs.localDirectoryExists(combinedPath)) {
                 // combined path exists, use it
                 workingDir = combinedPath;
             } else {

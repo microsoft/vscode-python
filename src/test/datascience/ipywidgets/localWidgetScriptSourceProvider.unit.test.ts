@@ -4,12 +4,11 @@ import { assert } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../client/common/platform/types';
+import { DataScienceFileSystem } from '../../../client/datascience/dataScienceFileSystem';
 import { LocalWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/localWidgetScriptSourceProvider';
 import { IWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/types';
 import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
-import { ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
+import { IDataScienceFileSystem, ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 
@@ -18,7 +17,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let notebook: INotebook;
     let resourceConverter: ILocalResourceUriConverter;
-    let fs: IFileSystem;
+    let fs: IDataScienceFileSystem;
     let interpreterService: IInterpreterService;
     const filesToLookSerachFor = `*${path.sep}index.js`;
     function asVSCodeUri(uri: Uri) {
@@ -27,7 +26,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
     setup(() => {
         notebook = mock(JupyterNotebookBase);
         resourceConverter = mock<ILocalResourceUriConverter>();
-        fs = mock(FileSystem);
+        fs = mock(DataScienceFileSystem);
         interpreterService = mock(InterpreterService);
         when(resourceConverter.asWebviewUri(anything())).thenCall((uri) => Promise.resolve(asVSCodeUri(uri)));
         scriptSourceProvider = new LocalWidgetScriptSourceProvider(
@@ -48,14 +47,14 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(notebook.getKernelSpec()).thenReturn({
             metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
         } as any);
-        when(fs.search(anything(), anything())).thenResolve([]);
+        when(fs.searchLocal(anything(), anything())).thenResolve([]);
 
         const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
 
         assert.deepEqual(value, { moduleName: 'ModuleName' });
 
         // Ensure we searched the directories.
-        verify(fs.search(anything(), anything())).once();
+        verify(fs.searchLocal(anything(), anything())).once();
     });
     test('Look for widgets in sysPath of interpreter defined in kernel metadata', async () => {
         const sysPrefix = 'sysPrefix Of Python in Metadata';
@@ -64,14 +63,14 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(notebook.getKernelSpec()).thenReturn({
             metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
         } as any);
-        when(fs.search(anything(), anything())).thenResolve([]);
+        when(fs.searchLocal(anything(), anything())).thenResolve([]);
 
         const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
 
         assert.deepEqual(value, { moduleName: 'ModuleName' });
 
         // Ensure we look for the right things in the right place.
-        verify(fs.search(filesToLookSerachFor, searchDirectory)).once();
+        verify(fs.searchLocal(filesToLookSerachFor, searchDirectory)).once();
     });
     test('Look for widgets in sysPath of kernel', async () => {
         const sysPrefix = 'sysPrefix Of Kernel';
@@ -80,20 +79,20 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
 
         when(notebook.getKernelSpec()).thenReturn({ path: kernelPath } as any);
-        when(fs.search(anything(), anything())).thenResolve([]);
+        when(fs.searchLocal(anything(), anything())).thenResolve([]);
 
         const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
 
         assert.deepEqual(value, { moduleName: 'ModuleName' });
 
         // Ensure we look for the right things in the right place.
-        verify(fs.search(filesToLookSerachFor, searchDirectory)).once();
+        verify(fs.searchLocal(filesToLookSerachFor, searchDirectory)).once();
     });
     test('Ensure we cache the list of widgets source (when nothing is found)', async () => {
         when(notebook.getKernelSpec()).thenReturn({
             metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
         } as any);
-        when(fs.search(anything(), anything())).thenResolve([]);
+        when(fs.searchLocal(anything(), anything())).thenResolve([]);
 
         const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
         assert.deepEqual(value, { moduleName: 'ModuleName' });
@@ -103,7 +102,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         assert.deepEqual(value2, { moduleName: 'ModuleName' });
 
         // Ensure we search directories once.
-        verify(fs.search(anything(), anything())).once();
+        verify(fs.searchLocal(anything(), anything())).once();
     });
     test('Ensure we search directory only once (cache results)', async () => {
         const sysPrefix = 'sysPrefix Of Python in Metadata';
@@ -111,7 +110,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(notebook.getKernelSpec()).thenReturn({
             metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
         } as any);
-        when(fs.search(anything(), anything())).thenResolve([
+        when(fs.searchLocal(anything(), anything())).thenResolve([
             // In order to match the real behavior, don't use join here
             'widget1/index.js',
             'widget2/index.js',
@@ -130,7 +129,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         assert.deepEqual(value2, value);
 
         // Ensure we look for the right things in the right place.
-        verify(fs.search(filesToLookSerachFor, searchDirectory)).once();
+        verify(fs.searchLocal(filesToLookSerachFor, searchDirectory)).once();
     });
     test('Get source for a specific widget & search in the right place', async () => {
         const sysPrefix = 'sysPrefix Of Python in Metadata';
@@ -138,7 +137,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(notebook.getKernelSpec()).thenReturn({
             metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
         } as any);
-        when(fs.search(anything(), anything())).thenResolve([
+        when(fs.searchLocal(anything(), anything())).thenResolve([
             // In order to match the real behavior, don't use join here
             'widget1/index.js',
             'widget2/index.js',
@@ -155,7 +154,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         });
 
         // Ensure we look for the right things in the right place.
-        verify(fs.search(filesToLookSerachFor, searchDirectory)).once();
+        verify(fs.searchLocal(filesToLookSerachFor, searchDirectory)).once();
     });
     test('Return empty source for widgets that cannot be found', async () => {
         const sysPrefix = 'sysPrefix Of Python in Metadata';
@@ -163,7 +162,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(notebook.getKernelSpec()).thenReturn({
             metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
         } as any);
-        when(fs.search(anything(), anything())).thenResolve([
+        when(fs.searchLocal(anything(), anything())).thenResolve([
             // In order to match the real behavior, don't use join here
             'widget1/index.js',
             'widget2/index.js',
@@ -184,6 +183,6 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
 
         // Ensure we look for the right things in the right place.
         // Also ensure we call once (& cache for subsequent searches).
-        verify(fs.search(filesToLookSerachFor, searchDirectory)).once();
+        verify(fs.searchLocal(filesToLookSerachFor, searchDirectory)).once();
     });
 });

@@ -8,11 +8,10 @@ import * as chaiPromise from 'chai-as-promised';
 import * as path from 'path';
 import { Subject } from 'rxjs/Subject';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { ProductNames } from '../../../../client/common/installer/productNames';
-import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
-import { IFileSystem } from '../../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import {
     IPythonDaemonExecutionService,
@@ -24,10 +23,12 @@ import { DataScience } from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { JupyterDaemonModule } from '../../../../client/datascience/constants';
+import { DataScienceFileSystem } from '../../../../client/datascience/dataScienceFileSystem';
 import { JupyterInterpreterDependencyService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterInterpreterSubCommandExecutionService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
 import { JupyterServerInfo } from '../../../../client/datascience/jupyter/jupyterConnection';
+import { IDataScienceFileSystem } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 import { MockOutputChannel } from '../../../mockClasses';
@@ -40,7 +41,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
     let jupyterInterpreter: JupyterInterpreterService;
     let interperterService: IInterpreterService;
     let jupyterDependencyService: JupyterInterpreterDependencyService;
-    let fs: IFileSystem;
+    let fs: IDataScienceFileSystem;
     let execService: IPythonDaemonExecutionService;
     let jupyterInterpreterExecutionService: JupyterInterpreterSubCommandExecutionService;
     const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
@@ -50,7 +51,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
         interperterService = mock(InterpreterService);
         jupyterInterpreter = mock(JupyterInterpreterService);
         jupyterDependencyService = mock(JupyterInterpreterDependencyService);
-        fs = mock(FileSystem);
+        fs = mock(DataScienceFileSystem);
         const execFactory = mock(PythonExecutionFactory);
         execService = mock<IPythonDaemonExecutionService>();
         when(
@@ -163,7 +164,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             );
         });
         test('Cannot export notebook to python', async () => {
-            const promise = jupyterInterpreterExecutionService.exportNotebookToPython('somefile.ipynb');
+            const promise = jupyterInterpreterExecutionService.exportNotebookToPython(Uri.file('somefile.ipynb'));
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([
                 Product.notebook
             ]);
@@ -300,23 +301,24 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             const file = 'somefile.ipynb';
             when(jupyterDependencyService.isExportSupported(selectedJupyterInterpreter, anything())).thenResolve(false);
 
-            const promise = jupyterInterpreterExecutionService.exportNotebookToPython(file);
+            const promise = jupyterInterpreterExecutionService.exportNotebookToPython(Uri.file(file));
 
             await expect(promise).to.eventually.be.rejectedWith(DataScience.jupyterNbConvertNotSupported());
         });
         test('Export notebook to python', async () => {
             const file = 'somefile.ipynb';
+            const uri = Uri.file(file);
             const convertOutput = 'converted';
             when(jupyterDependencyService.isExportSupported(selectedJupyterInterpreter, anything())).thenResolve(true);
             when(
                 execService.execModule(
                     'jupyter',
-                    deepEqual(['nbconvert', file, '--to', 'python', '--stdout']),
+                    deepEqual(['nbconvert', uri.fsPath, '--to', 'python', '--stdout']),
                     anything()
                 )
             ).thenResolve({ stdout: convertOutput });
 
-            const output = await jupyterInterpreterExecutionService.exportNotebookToPython(file);
+            const output = await jupyterInterpreterExecutionService.exportNotebookToPython(uri);
 
             assert.equal(output, convertOutput);
         });
@@ -375,7 +377,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
                     }
                 }
             };
-            when(fs.fileExists(anything())).thenResolve(true);
+            when(fs.localFileExists(anything())).thenResolve(true);
             when(
                 execService.execModule('jupyter', deepEqual(['kernelspec', 'list', '--json']), anything())
             ).thenResolve({ stdout: JSON.stringify({ kernelspecs: kernelSpecs }) });
@@ -410,7 +412,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
                     }
                 }
             };
-            when(fs.fileExists(anything())).thenResolve(true);
+            when(fs.localFileExists(anything())).thenResolve(true);
             when(execService.execModule('jupyter', deepEqual(['kernelspec', 'list', '--json']), anything())).thenReject(
                 new Error('kaboom')
             );

@@ -6,7 +6,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
-import { IFileSystem } from '../../../common/platform/types';
+
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -18,7 +18,7 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { IJupyterConnection, INotebookServer, INotebookServerOptions } from '../../types';
+import { IDataScienceFileSystem, IJupyterConnection, INotebookServer, INotebookServerOptions } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
@@ -39,7 +39,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
         interpreterService: IInterpreterService,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
-        fileSystem: IFileSystem,
+        fs: IDataScienceFileSystem,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
         kernelSelector: KernelSelector,
@@ -61,7 +61,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
             serviceContainer
         );
         asyncRegistry.push(this);
-        this.serverCache = new ServerCache(configuration, workspace, fileSystem);
+        this.serverCache = new ServerCache(configuration, workspace, fs);
     }
 
     public async dispose(): Promise<void> {

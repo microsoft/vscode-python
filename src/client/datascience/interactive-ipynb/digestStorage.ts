@@ -5,9 +5,8 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError, traceInfo } from '../../common/logger';
 import { isFileNotFoundError } from '../../common/platform/errors';
-import { IFileSystem } from '../../common/platform/types';
 import { IExtensionContext } from '../../common/types';
-import { IDigestStorage } from '../types';
+import { IDataScienceFileSystem, IDigestStorage } from '../types';
 
 @injectable()
 export class DigestStorage implements IDigestStorage {
@@ -16,7 +15,7 @@ export class DigestStorage implements IDigestStorage {
     private loggedFileLocations = new Set();
 
     constructor(
-        @inject(IFileSystem) private fs: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IExtensionContext) private extensionContext: IExtensionContext
     ) {
         this.key = this.initKey();
@@ -46,7 +45,7 @@ export class DigestStorage implements IDigestStorage {
     public async containsDigest(uri: Uri, signature: string) {
         const fileLocation = await this.getFileLocation(uri);
         try {
-            const digests = await this.fs.readFile(fileLocation);
+            const digests = await this.fs.readLocalFile(fileLocation);
             return digests.indexOf(`z${signature}z`) >= 0;
         } catch (err) {
             if (!isFileNotFoundError(err)) {
@@ -57,7 +56,7 @@ export class DigestStorage implements IDigestStorage {
     }
 
     private async saveDigestInner(uri: Uri, fileLocation: string, signature: string) {
-        await this.fs.appendFile(fileLocation, `z${signature}z\n`);
+        await this.fs.appendLocalFile(fileLocation, `z${signature}z\n`);
         if (!this.loggedFileLocations.has(fileLocation)) {
             traceInfo(`Wrote trust for ${uri.toString()} to ${fileLocation}`);
             this.loggedFileLocations.add(fileLocation);
@@ -72,8 +71,8 @@ export class DigestStorage implements IDigestStorage {
 
     private async initDir(): Promise<string> {
         const defaultDigestDirLocation = this.getDefaultLocation('nbsignatures');
-        if (!(await this.fs.directoryExists(defaultDigestDirLocation))) {
-            await this.fs.createDirectory(defaultDigestDirLocation);
+        if (!(await this.fs.localDirectoryExists(defaultDigestDirLocation))) {
+            await this.fs.createLocalDirectory(defaultDigestDirLocation);
         }
         return defaultDigestDirLocation;
     }
@@ -85,16 +84,16 @@ export class DigestStorage implements IDigestStorage {
     private async initKey(): Promise<string> {
         const defaultKeyFileLocation = this.getDefaultLocation('nbsecret');
 
-        if (await this.fs.fileExists(defaultKeyFileLocation)) {
+        if (await this.fs.localFileExists(defaultKeyFileLocation)) {
             // if the keyfile already exists, bail out
-            return this.fs.readFile(defaultKeyFileLocation);
+            return this.fs.readLocalFile(defaultKeyFileLocation);
         } else {
             // If it doesn't exist, create one
             // Key must be generated from a cryptographically secure pseudorandom function:
             // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
             // No callback is provided so random bytes will be generated synchronously
             const key = randomBytes(1024).toString('hex');
-            await this.fs.writeFile(defaultKeyFileLocation, key);
+            await this.fs.writeLocalFile(defaultKeyFileLocation, key);
             return key;
         }
     }

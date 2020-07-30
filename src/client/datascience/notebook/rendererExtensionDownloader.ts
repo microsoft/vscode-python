@@ -6,10 +6,11 @@ import { Uri } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { Octicons, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { vsixFileExtension } from '../../common/installer/extensionBuildInstaller';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IFileDownloader, IOutputChannel } from '../../common/types';
 import { DataScienceRendererExtension } from '../../common/utils/localize';
 import { traceDecorators } from '../../logging';
+import { IDataScienceFileSystem } from '../types';
 import { RendererExtensionDownloadUri } from './constants';
 
 @injectable()
@@ -20,7 +21,7 @@ export class RendererExtensionDownloader {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IFileDownloader) private readonly fileDownloader: IFileDownloader,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {}
     @traceDecorators.error('Installing Notebook Renderer extension failed')
     public async downloadAndInstall(): Promise<void> {
@@ -37,7 +38,7 @@ export class RendererExtensionDownloader {
             });
             this.output.appendLine(DataScienceRendererExtension.installationCompleteMessage());
         } finally {
-            await this.fs.deleteFile(vsixFilePath);
+            await this.fs.deleteLocalFile(vsixFilePath);
         }
     }
 

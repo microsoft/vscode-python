@@ -15,7 +15,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -30,9 +30,11 @@ import { Commands, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IInteractiveWindowListener,
     IJupyterDebugger,
     IJupyterVariableDataProviderFactory,
@@ -48,7 +50,6 @@ import {
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
-import { INotebookStorageProvider } from './notebookStorageProvider';
 
 enum AskForSaveResult {
     Yes,
@@ -77,7 +78,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
         statusProvider: IStatusProvider,
-        fileSystem: IFileSystem,
+        fs: IDataScienceFileSystem,
         configuration: IConfigurationService,
         commandManager: ICommandManager,
         jupyterExporter: INotebookExporter,
@@ -114,7 +115,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             cssGenerator,
             themeFinder,
             statusProvider,
-            fileSystem,
+            fs,
             configuration,
             commandManager,
             jupyterExporter,

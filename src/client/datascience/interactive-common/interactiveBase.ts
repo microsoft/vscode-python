@@ -36,7 +36,7 @@ import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { RemoveKernelToolbarInInteractiveWindow, RunByLine } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -79,6 +79,7 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IInteractiveBase,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -91,6 +92,7 @@ import {
     IMessageCell,
     INotebook,
     INotebookExporter,
+    INotebookMetadataLive,
     INotebookProvider,
     INotebookProviderConnection,
     InterruptResult,
@@ -118,7 +120,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         return this.readyEvent.event;
     }
 
-    protected abstract get notebookMetadata(): nbformat.INotebookMetadata | undefined;
+    protected abstract get notebookMetadata(): INotebookMetadataLive | undefined;
 
     protected abstract get notebookIdentity(): INotebookIdentity;
 
@@ -145,7 +147,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
         private statusProvider: IStatusProvider,
-        protected fileSystem: IFileSystem,
+        protected fs: IDataScienceFileSystem,
         protected configuration: IConfigurationService,
         protected jupyterExporter: INotebookExporter,
         workspaceService: IWorkspaceService,
@@ -207,7 +209,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }, 0);
 
         // When a notebook provider first makes its connection check it to see if we should create a notebook
-        this.disposables.push(notebookProvider.onConnectionMade(this.checkForNotebookProviderConnection.bind(this)));
+        this.disposables.push(
+            notebookProvider.onConnectionMade(this.createNotebookIfProviderConnectionExists.bind(this))
+        );
 
         // When a notebook provider indicates a kernel change, change our UI
         this.disposables.push(notebookProvider.onPotentialKernelChanged(this.potentialKernelChanged.bind(this)));
@@ -218,7 +222,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     public async show(preserveFocus: boolean = true): Promise<void> {
         // Verify a server that matches us hasn't started already
-        this.checkForNotebookProviderConnection().ignoreErrors();
+        this.createNotebookIfProviderConnectionExists().ignoreErrors();
 
         // Show our web panel.
         return super.show(preserveFocus);
@@ -850,6 +854,19 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
+    protected async createNotebookIfProviderConnectionExists(): Promise<void> {
+        // Check to see if we are already connected to our provider
+        const providerConnection = await this.notebookProvider.connect({ getOnly: true });
+
+        if (providerConnection) {
+            try {
+                await this.ensureNotebook(providerConnection);
+            } catch (e) {
+                this.errorHandler.handleError(e).ignoreErrors();
+            }
+        }
+    }
+
     private combineData(
         oldData: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | undefined,
         cell: ICell
@@ -1201,19 +1218,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 
-    private async checkForNotebookProviderConnection(): Promise<void> {
-        // Check to see if we are already connected to our provider
-        const providerConnection = await this.notebookProvider.connect({ getOnly: true });
-
-        if (providerConnection) {
-            try {
-                await this.ensureNotebook(providerConnection);
-            } catch (e) {
-                this.errorHandler.handleError(e).ignoreErrors();
-            }
-        }
-    }
-
     private async potentialKernelChanged(data: { identity: Uri; kernel: KernelSpecInterpreter }): Promise<void> {
         const specOrModel = data.kernel.kernelModel || data.kernel.kernelSpec;
         if (!this._notebook && specOrModel && this.notebookIdentity.resource.toString() === data.identity.toString()) {
@@ -1240,7 +1244,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async gotoCodeInternal(file: string, line: number) {
         let editor: TextEditor | undefined;
 
-        if (await this.fileSystem.fileExists(file)) {
+        if (await this.fs.localFileExists(file)) {
             editor = await this.documentManager.showTextDocument(Uri.file(file), { viewColumn: ViewColumn.One });
         } else {
             // File URI isn't going to work. Look through the active text documents
@@ -1474,16 +1478,16 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Look for the file next or our current file (this is where it's installed in the vsix)
         let filePath = path.join(__dirname, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
         traceInfo(`Request for onigasm file at ${filePath}`);
-        if (this.fileSystem) {
-            if (await this.fileSystem.fileExists(filePath)) {
-                const contents = await this.fileSystem.readData(filePath);
+        if (this.fs) {
+            if (await this.fs.localFileExists(filePath)) {
+                const contents = await this.fs.readLocalData(filePath);
                 this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
             } else {
                 // During development it's actually in the node_modules folder
                 filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
                 traceInfo(`Backup request for onigasm file at ${filePath}`);
-                if (await this.fileSystem.fileExists(filePath)) {
-                    const contents = await this.fileSystem.readData(filePath);
+                if (await this.fs.localFileExists(filePath)) {
+                    const contents = await this.fs.readLocalData(filePath);
                     this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
                 } else {
                     traceWarning('Onigasm file not found. Colorization will not be available.');
@@ -1507,17 +1511,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         } else {
             await this.addSysInfo(SysInfoReason.New);
         }
-
-        // Force an update of the kernel metadata
-        const kernelSpec: IJupyterKernelSpec = {
-            path: kernel.path ?? '',
-            name: kernel.name,
-            language: kernel.language ?? 'python',
-            display_name: kernel.display_name ?? kernel.name,
-            argv: kernel.argv ?? [],
-            env: kernel.env
-        };
-        return this.updateNotebookOptions(kernelSpec, this._notebook?.getMatchingInterpreter());
+        return this.updateNotebookOptions(kernel, this._notebook?.getMatchingInterpreter());
     }
 
     private openSettings(setting: string | undefined) {

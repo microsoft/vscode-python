@@ -5,8 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 
 import { IWorkspaceService } from '../../common/application/types';
-import { isTestExecution } from '../../common/constants';
-import { traceDecorators } from '../../common/logger';
+import { EXTENSION_ROOT_DIR, isTestExecution } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { BANNER_NAME_PROPOSE_LS, IConfigurationService, IPythonExtensionBanner, Resource } from '../../common/types';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
@@ -27,14 +26,15 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(ILanguageServerManager) manager: ILanguageServerManager,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IFileSystem) fs: IFileSystem,
-        @inject(ILanguageServerDownloader) lsDownloader: ILanguageServerDownloader,
-        @inject(ILanguageServerFolderService) languageServerFolderService: ILanguageServerFolderService,
+        @inject(ILanguageServerDownloader) private readonly lsDownloader: ILanguageServerDownloader,
+        @inject(ILanguageServerFolderService)
+        private readonly languageServerFolderService: ILanguageServerFolderService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IPythonExtensionBanner)
         @named(BANNER_NAME_PROPOSE_LS)
         private proposePylancePopup: IPythonExtensionBanner
     ) {
-        super(manager, workspace, fs, lsDownloader, languageServerFolderService, configurationService);
+        super(manager, workspace, fs, configurationService);
     }
 
     public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {
@@ -44,7 +44,6 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
         return super.start(resource, interpreter);
     }
 
-    @traceDecorators.error('Failed to ensure language server is available')
     public async ensureLanguageServerIsAvailable(resource: Resource): Promise<void> {
         const languageServerFolderPath = await this.ensureLanguageServerFileIsAvailable(resource, 'mscorlib.dll');
         if (languageServerFolderPath) {
@@ -77,5 +76,25 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
         content.runtimeOptions.configProperties = content.runtimeOptions.configProperties || {};
         content.runtimeOptions.configProperties['System.Globalization.Invariant'] = true;
         await this.fs.writeFile(targetJsonFile, JSON.stringify(content));
+    }
+
+    private async ensureLanguageServerFileIsAvailable(
+        resource: Resource,
+        fileName: string
+    ): Promise<string | undefined> {
+        const settings = this.configurationService.getSettings(resource);
+        if (settings.downloadLanguageServer === false) {
+            // Development mode
+            return;
+        }
+        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
+        if (languageServerFolder) {
+            const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
+            const mscorlib = path.join(languageServerFolderPath, fileName);
+            if (!(await this.fs.fileExists(mscorlib))) {
+                await this.lsDownloader.downloadLanguageServer(languageServerFolderPath, resource);
+            }
+            return languageServerFolderPath;
+        }
     }
 }

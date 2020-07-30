@@ -1,13 +1,18 @@
 {
     "folders": [
         {
-            "path": "."
+            "path": ".",
+            "name": "vscode-python"
         },
         {
             "path": "pythonFiles"
         },
         {
             "path": "src/ipywidgets"
+        },
+        {
+            "path": "../vscode-notebook-renderers",
+            "name": "vscode-notebook-renderers"
         }
     ],
     "settings": {
@@ -20,5 +25,29 @@
             "**/.vscode-test/stable/**": true,
             "**/out/**": true
         }
+    },
+    "launch": {
+        "configurations": [
+            // This configuration allows one to debug multiple extensions at a time.
+            // The assumption here is that vscode-notebook-renderers is in the same folder as the python extension.
+            // User is expected to start the compile tasks for both extensions before using this launch config.
+            {
+                "type": "extensionHost",
+                "request": "launch",
+                "name": "Python + Renderer Extension",
+                "args": [
+                    "--enable-proposed-api",
+                    "--extensionDevelopmentPath=${workspaceFolder:vscode-python}",
+                    "--extensionDevelopmentPath=${workspaceFolder:vscode-notebook-renderers}"
+                ],
+                "outFiles": [
+                    "${workspaceFolder:vscode-python}/out/**/*.js",
+                    "!${workspaceFolder:vscode-python}/**/node_modules**/*",
+                    "${workspaceFolder:vscode-notebook-renderers}/out/**/*.js",
+                    "!${workspaceFolder:vscode-notebook-renderers}/**/node_modules**/*"
+                ]
+            }
+        ],
+        "compounds": []
     }
 }

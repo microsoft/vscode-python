@@ -15,10 +15,10 @@ import {
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-suite('Language Server Download Channel Rules', () => {
+suite('Microsoft Language Server Download Channel Rules', () => {
     [undefined, path.join('a', 'b')].forEach((currentFolderPath) => {
         const currentFolder = currentFolderPath ? { path: currentFolderPath, version: new SemVer('0.0.0') } : undefined;
-        const testSuffix = ` (${currentFolderPath ? 'with' : 'without'} an existing Language Server Folder`;
+        const testSuffix = ` (${currentFolderPath ? 'with' : 'without'} an existing language server Folder`;
 
         test(`Daily channel should always download ${testSuffix}`, async () => {
             const rule = new DownloadDailyChannelRule();

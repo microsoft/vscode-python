@@ -6,12 +6,12 @@
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { ILocalResourceUriConverter, INotebook } from '../types';
+import { IDataScienceFileSystem, ILocalResourceUriConverter, INotebook } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 /**
@@ -26,7 +26,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
     constructor(
         private readonly notebook: INotebook,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
-        private readonly fs: IFileSystem,
+        private readonly fs: IDataScienceFileSystem,
         private readonly interpreterService: IInterpreterService
     ) {}
     public async getWidgetScriptSource(moduleName: string): Promise<Readonly<WidgetScriptSource>> {
@@ -52,7 +52,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
 
         const nbextensionsPath = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
         // Search only one level deep, hence `*/index.js`.
-        const files = await this.fs.search(`*${path.sep}index.js`, nbextensionsPath);
+        const files = await this.fs.searchLocal(`*${path.sep}index.js`, nbextensionsPath);
 
         const validFiles = files.filter((file) => {
             // Should be of the form `<widget module>/index.js`

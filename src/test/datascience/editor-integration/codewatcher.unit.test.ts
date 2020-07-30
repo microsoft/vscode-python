@@ -14,7 +14,6 @@ import {
     IDocumentManager,
     IVSCodeNotebook
 } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { Commands, EditorContexts } from '../../../client/datascience/constants';
 import { CodeLensFactory } from '../../../client/datascience/editor-integration/codeLensFactory';
@@ -24,6 +23,7 @@ import { NotebookProvider } from '../../../client/datascience/interactive-common
 import {
     ICodeWatcher,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IDebugLocationTracker,
     IInteractiveWindow,
     IInteractiveWindowProvider,
@@ -44,7 +44,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let textEditor: TypeMoq.IMock<TextEditor>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let fileSystem: TypeMoq.IMock<IDataScienceFileSystem>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let dataScienceErrorHandler: TypeMoq.IMock<IDataScienceErrorHandler>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -63,7 +63,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         activeInteractiveWindow = createTypeMoq<IInteractiveWindow>('history');
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         textEditor = TypeMoq.Mock.ofType<TextEditor>();
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        fileSystem = TypeMoq.Mock.ofType<IDataScienceFileSystem>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         debugLocationTracker = TypeMoq.Mock.ofType<IDebugLocationTracker>();
         helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
@@ -110,7 +110,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
 
         // Setup the file system
-        fileSystem.setup((f) => f.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
+        fileSystem.setup((f) => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
 
         // Setup config service
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);

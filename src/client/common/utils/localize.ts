@@ -100,27 +100,56 @@ export namespace AttachProcess {
     export const refreshList = localize('AttachProcess.refreshList', 'Refresh process list');
 }
 
-export namespace LanguageService {
+export namespace Pylance {
     export const proposePylanceMessage = localize(
-        'LanguageService.proposePylanceMessage',
+        'Pylance.proposePylanceMessage',
         'Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.'
     );
-    export const tryItNow = localize('LanguageService.tryItNow', 'Try it now');
-    export const remindMeLater = localize('LanguageService.remindMeLater', 'Remind me later');
+    export const tryItNow = localize('Pylance.tryItNow', 'Try it now');
+    export const remindMeLater = localize('Pylance.remindMeLater', 'Remind me later');
 
-    export const bannerLabelYes = localize('LanguageService.bannerLabelYes', 'Yes, take survey now');
-    export const bannerLabelNo = localize('LanguageService.bannerLabelNo', 'No, thanks');
+    export const installPylanceMessage = localize(
+        'Pylance.installPylanceMessage',
+        'Pylance extension is not installed. Click Yes to open Pylance installation page.'
+    );
+    export const pylanceNotInstalledMessage = localize(
+        'Pylance.pylanceNotInstalledMessage',
+        'Pylance extension is not installed.'
+    );
+    export const pylanceInstalledReloadPromptMessage = localize(
+        'Pylance.pylanceInstalledReloadPromptMessage',
+        'Pylance extension is now installed. Reload window to activate?'
+    );
+}
+
+export namespace LanguageService {
+    export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi Python language engine.');
+    export const startingMicrosoft = localize(
+        'LanguageService.startingMicrosoft',
+        'Starting Microsoft Python language server.'
+    );
+    export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');
+    export const startingNone = localize(
+        'LanguageService.startingNone',
+        'Editor support is inactive since language server is set to None.'
+    );
+
+    export const reloadAfterLanguageServerChange = localize(
+        'LanguageService.reloadAfterLanguageServerChange',
+        'Please reload the window switching between language servers.'
+    );
+
     export const lsFailedToStart = localize(
         'LanguageService.lsFailedToStart',
-        'We encountered an issue starting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.'
+        'We encountered an issue starting the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
     );
     export const lsFailedToDownload = localize(
         'LanguageService.lsFailedToDownload',
-        'We encountered an issue downloading the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.'
+        'We encountered an issue downloading the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
     );
     export const lsFailedToExtract = localize(
         'LanguageService.lsFailedToExtract',
-        'We encountered an issue extracting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.'
+        'We encountered an issue extracting the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
     );
     export const downloadFailedOutputMessage = localize(
         'LanguageService.downloadFailedOutputMessage',
@@ -187,7 +216,8 @@ export namespace InterpreterQuickPickList {
             'InterpreterQuickPickList.browsePath.detail',
             'Browse your file system to find a Python interpreter.'
         ),
-        openButtonLabel: localize('python.command.python.setInterpreter.title', 'Select Interpreter')
+        openButtonLabel: localize('python.command.python.setInterpreter.title', 'Select Interpreter'),
+        title: localize('InterpreterQuickPickList.browsePath.title', 'Select Python interpreter')
     };
 }
 export namespace ExtensionChannels {
@@ -307,6 +337,8 @@ export namespace ExtensionSurveyBanner {
         'ExtensionSurveyBanner.bannerMessage',
         'Can you please take 2 minutes to tell us how the Python extension is working for you?'
     );
+    export const bannerLabelYes = localize('ExtensionSurveyBanner.bannerLabelYes', 'Yes, take survey now');
+    export const bannerLabelNo = localize('ExtensionSurveyBanner.bannerLabelNo', 'No, thanks');
     export const maybeLater = localize('ExtensionSurveyBanner.maybeLater', 'Maybe later');
 }
 
@@ -324,7 +356,7 @@ export namespace DataScience {
         '{0} (From {1} extension)'
     );
     export const unknownPackage = localize('DataScience.unknownPackage', 'unknown');
-    export const interactiveWindowTitle = localize('DataScience.interactiveWindowTitleFormat', 'Python Interactive');
+    export const interactiveWindowTitle = localize('DataScience.interactiveWindowTitle', 'Python Interactive');
     export const interactiveWindowTitleFormat = localize(
         'DataScience.interactiveWindowTitleFormat',
         'Python Interactive - {0}'
@@ -893,11 +925,11 @@ export namespace DataScience {
     export const gatherError = localize('DataScience.gatherError', 'Gather internal error');
     export const gatheredScriptDescription = localize(
         'DataScience.gatheredScriptDescription',
-        '# This file was generated by the Gather Extension.\n#\n#     The intent is that it contains only the code required to produce\n#     the same results as the cell originally selected for gathering.\n#     Please note that the Python analysis is quite conservative, so if\n#     it is unsure whether a line of code is necessary for execution, it\n#     will err on the side of including it.\n#\n# Please let us know if you are satisfied with what was gathered here:\n# https://aka.ms/gathersurvey\n\n'
+        '# This file was generated by the Gather Extension.\n# It requires version 2020.7.94776 (or newer) of the Python Extension.\n#\n#     The intent is that it contains only the code required to produce\n#     the same results as the cell originally selected for gathering.\n#     Please note that the Python analysis is quite conservative, so if\n#     it is unsure whether a line of code is necessary for execution, it\n#     will err on the side of including it.\n#\n# Please let us know if you are satisfied with what was gathered here:\n# https://aka.ms/gathersurvey\n\n'
     );
     export const gatheredNotebookDescriptionInMarkdown = localize(
         'DataScience.gatheredNotebookDescriptionInMarkdown',
-        '# Gathered Notebook\nGathered from ```{0}```\n\n|   |   |\n|---|---|\n|&nbsp;&nbsp;&nbsp|This notebook was generated by the Gather Extension. The intent is that it contains only the code and cells required to produce the same results as the cell originally selected for gathering. Please note that the Python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.|\n\n**Are you satisfied with the code that was gathered?**\n\n[Yes](https://command:python.datascience.gatherquality?yes) [No](https://command:python.datascience.gatherquality?no)'
+        '# Gathered Notebook\nGathered from ```{0}```\n\n|   |   |\n|---|---|\n|&nbsp;&nbsp;&nbsp|This notebook was generated by the Gather Extension. It requires version 2020.7.94776 (or newer) of the Python Extension, please update [here](https://command:python.datascience.latestExtension). The intent is that it contains only the code and cells required to produce the same results as the cell originally selected for gathering. Please note that the Python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.|\n\n**Are you satisfied with the code that was gathered?**\n\n[Yes](https://command:python.datascience.gatherquality?yes) [No](https://command:python.datascience.gatherquality?no)'
     );
     export const savePngTitle = localize('DataScience.savePngTitle', 'Save Image');
     export const fallbackToUseActiveInterpeterAsKernel = localize(

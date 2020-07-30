@@ -6,11 +6,11 @@ import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceInfo } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
+
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { getRealPath } from '../../common';
-import { IJupyterKernelSpec } from '../../types';
+import { IDataScienceFileSystem, IJupyterKernelSpec } from '../../types';
 
 export class JupyterKernelSpec implements IJupyterKernelSpec {
     public name: string;
@@ -41,13 +41,13 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
  *
  * @export
  * @param {string} stdout
- * @param {IFileSystem} fs
+ * @param {IDataScienceFileSystem} fs
  * @param {CancellationToken} [token]
  * @returns
  */
 export async function parseKernelSpecs(
     stdout: string,
-    fs: IFileSystem,
+    fs: IDataScienceFileSystem,
     execFactory: IPythonExecutionFactory,
     token?: CancellationToken
 ) {

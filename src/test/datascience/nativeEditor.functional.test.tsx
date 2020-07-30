@@ -7,6 +7,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as dedent from 'dedent';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
+import { IDisposable } from 'monaco-editor';
+import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { anything, objectContaining, when } from 'ts-mockito';
@@ -19,12 +21,12 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../client/common/application/types';
-import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Commands, Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor as NativeEditorWebView } from '../../client/datascience/interactive-ipynb/nativeEditor';
+import { IKernelSpecQuickPickItem } from '../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
     IDataScienceErrorHandler,
@@ -57,6 +59,7 @@ import {
     openEditor,
     runMountedTest
 } from './nativeEditorTestHelpers';
+import { createPythonService, startRemoteServer } from './remoteTestHelpers';
 import {
     addContinuousMockData,
     addMockData,
@@ -309,6 +312,58 @@ suite('DataScience Native Editor', () => {
                         verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', '<span>1</span>', 2);
                     } else {
                         context.skip();
+                    }
+                });
+
+                runMountedTest('Remote kernel can be switched and remembered', async () => {
+                    const pythonService = await createPythonService(ioc, 2);
+
+                    // Skip test for older python and raw kernel and mac
+                    if (pythonService && os.platform() !== 'darwin' && !ioc.mockJupyter) {
+                        const uri = await startRemoteServer(ioc, pythonService, [
+                            '-m',
+                            'jupyter',
+                            'notebook',
+                            '--NotebookApp.open_browser=False',
+                            '--NotebookApp.ip=*',
+                            '--NotebookApp.port=9999'
+                        ]);
+
+                        // Set this as the URI to use when connecting
+                        ioc.forceDataScienceSettingsChanged({ jupyterServerURI: uri });
+
+                        // Create a notebook and run a cell.
+                        const notebook = await createNewEditor(ioc);
+                        await addCell(notebook.mount, 'a=12\na', true);
+                        verifyHtmlOnCell(notebook.mount.wrapper, 'NativeCell', '12', CellPosition.Last);
+
+                        // Create another notebook and connect it to the already running kernel of the other one
+                        when(ioc.applicationShell.showQuickPick(anything(), anything(), anything())).thenCall(
+                            async (o: IKernelSpecQuickPickItem[]) => {
+                                const existing = o.find((s) => s.selection.kernelModel?.numberOfConnections);
+                                if (existing) {
+                                    return existing;
+                                }
+                            }
+                        );
+                        const n2 = await openEditor(ioc, '', 'kernel_share.ipynb');
+
+                        // Have to do this by sending the switch kernel command
+                        await ioc.get<ICommandManager>(ICommandManager).executeCommand(Commands.SwitchJupyterKernel, {
+                            identity: n2.editor.file,
+                            resource: n2.editor.file,
+                            currentKernelDisplayName: undefined
+                        });
+
+                        // Execute a cell that should indicate using the same kernel as the first notebook
+                        await addCell(n2.mount, 'a', true);
+                        verifyHtmlOnCell(n2.mount.wrapper, 'NativeCell', '12', CellPosition.Last);
+
+                        // Now close the notebook and reopen. Should still be using the same kernel
+                        await closeNotebook(ioc, n2.editor);
+                        const n3 = await openEditor(ioc, '', 'kernel_share.ipynb');
+                        await addCell(n3.mount, 'a', true);
+                        verifyHtmlOnCell(n3.mount.wrapper, 'NativeCell', '12', CellPosition.Last);
                     }
                 });
 
@@ -660,16 +715,6 @@ df.head()`;
                 });
 
                 runMountedTest('Startup and shutdown', async () => {
-                    // Stub the `stat` method to return a dummy value.
-                    try {
-                        sinon
-                            .stub(ioc.serviceContainer.get<IFileSystem>(IFileSystem), 'stat')
-                            .resolves({ mtime: 0 } as any);
-                    } catch (e) {
-                        // tslint:disable-next-line: no-console
-                        console.log(`Stub failure ${e}`);
-                    }
-
                     addMockData(ioc, 'b=2\nb', 2);
                     addMockData(ioc, 'c=3\nc', 3);
 
@@ -903,7 +948,9 @@ df.head()`;
                             await promise;
                         }
                     }
-                    await ioc.dispose();
+                    if (ioc) {
+                        await ioc.dispose();
+                    }
                     try {
                         notebookFile.cleanupCallback();
                     } catch {
@@ -1864,7 +1911,7 @@ df.head()`;
                         // Add, then undo, keep doing at least 3 times and confirm it works as expected.
                         for (let i = 0; i < 3; i += 1) {
                             // Add a new cell
-                            let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                            let update = waitForMessage(ioc, InteractiveWindowMessages.SelectedCell);
                             simulateKeyPressOnCell(0, { code: 'a' });
                             await update;
 
@@ -1872,18 +1919,12 @@ df.head()`;
                             // fixed when we switch to redux)
                             await sleep(100);
 
-                            // There should be 4 cells and first cell is focused.
-                            assert.equal(isCellSelected(wrapper, 'NativeCell', 0), false);
+                            // There should be 4 cells and first cell is selected.
+                            assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
                             assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
-                            assert.equal(isCellFocused(wrapper, 'NativeCell', 0), true);
+                            assert.equal(isCellFocused(wrapper, 'NativeCell', 0), false);
                             assert.equal(isCellFocused(wrapper, 'NativeCell', 1), false);
                             assert.equal(wrapper.find('NativeCell').length, 4);
-
-                            // Unfocus the cell
-                            update = waitForMessage(ioc, InteractiveWindowMessages.UnfocusedCellEditor);
-                            simulateKeyPressOnCell(0, { code: 'Escape' });
-                            await update;
-                            assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
 
                             // Press 'ctrl+z'. This should do nothing
                             simulateKeyPressOnCell(0, { code: 'z', ctrlKey: true });
@@ -2074,11 +2115,19 @@ df.head()`;
                         }
                         await initIoc();
 
+                        const eventCallback = (
+                            listener: (e: WindowState) => any,
+                            _thisArgs?: any,
+                            _disposables?: IDisposable[] | Disposable
+                        ) => {
+                            windowStateChangeHandlers.push(listener);
+                            return {
+                                dispose: noop
+                            };
+                        };
                         windowStateChangeHandlers = [];
                         // Keep track of all handlers for the onDidChangeWindowState event.
-                        ioc.applicationShell
-                            .setup((app) => app.onDidChangeWindowState(TypeMoq.It.isAny()))
-                            .callback((cb) => windowStateChangeHandlers.push(cb));
+                        when(ioc.applicationShell.onDidChangeWindowState).thenReturn(eventCallback);
 
                         // tslint:disable-next-line: no-invalid-this
                         await setupFunction.call(this);

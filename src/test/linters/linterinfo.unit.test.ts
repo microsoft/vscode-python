@@ -47,7 +47,7 @@ suite('Linter Info - Pylint', () => {
 
         expect(linterInfo.isEnabled()).to.be.true;
     });
-    test('Test disabled when using Language Server and Pylint is not configured', async () => {
+    test('Test disabled when using language server and Pylint is not configured', async () => {
         const linterInfo = new PylintLinterInfo(instance(config), instance(workspace), []);
 
         when(config.getSettings(anything())).thenReturn({
@@ -63,7 +63,7 @@ suite('Linter Info - Pylint', () => {
 
         expect(linterInfo.isEnabled()).to.be.false;
     });
-    test('Should inspect the value of linting.pylintEnabled when using Language Server', async () => {
+    test('Should inspect the value of linting.pylintEnabled when using language server', async () => {
         const linterInfo = new PylintLinterInfo(instance(config), instance(workspace), []);
         const inspectStub = sinon.stub();
         const pythonConfig = {

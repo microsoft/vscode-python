@@ -66,15 +66,13 @@ export class JupyterSession extends BaseJupyterSession {
         return this.waitForIdleOnSession(this.session, timeout);
     }
 
-    public async connect(cancelToken?: CancellationToken): Promise<void> {
+    public async connect(timeoutMs: number, cancelToken?: CancellationToken): Promise<void> {
         if (!this.connInfo) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
         // Start a new session
-        this.setSession(
-            await this.createSession(this.serverSettings, this.kernelSpec, this.contentsManager, cancelToken)
-        );
+        this.setSession(await this.createNewKernelSession(this.kernelSpec, timeoutMs, undefined, cancelToken));
 
         // Listen for session status changes
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
@@ -84,19 +82,21 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     public async createNewKernelSession(
-        kernel: IJupyterKernelSpec | LiveKernelModel,
-        timeoutMS: number
+        kernel: IJupyterKernelSpec | LiveKernelModel | undefined,
+        timeoutMS: number,
+        _pythonInterpreter?: PythonInterpreter,
+        cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         let newSession: ISessionWithSocket | undefined;
 
         try {
             // Don't immediately assume this kernel is valid. Try creating a session with it first.
-            if (kernel.id && this.session && 'session' in kernel) {
+            if (kernel && kernel.id && 'session' in kernel) {
                 // Remote case.
                 newSession = this.sessionManager.connectTo(kernel.session);
                 newSession.isRemoteSession = true;
             } else {
-                newSession = await this.createSession(this.serverSettings, kernel, this.contentsManager);
+                newSession = await this.createSession(this.serverSettings, kernel, this.contentsManager, cancelToken);
             }
 
             // Make sure it is idle before we return

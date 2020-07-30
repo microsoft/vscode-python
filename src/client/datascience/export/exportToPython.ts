@@ -8,7 +8,7 @@ export class ExportToPython extends ExportBase {
         if (token.isCancellationRequested) {
             return;
         }
-        const contents = await this.importer.importFromFile(source.fsPath);
-        await this.fileSystem.writeFile(target.fsPath, contents);
+        const contents = await this.importer.importFromFile(source);
+        await this.fs.writeFile(target, contents);
     }
 }

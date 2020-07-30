@@ -3,6 +3,7 @@ import { inject, injectable } from 'inversify';
 import cloneDeep = require('lodash/cloneDeep');
 import { extensions } from 'vscode';
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
+import { traceError } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -41,7 +42,12 @@ export class GatherLogger implements IGatherLogger {
                 const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
                 cloneCell.data.source = cellMatcher.stripFirstMarker(concatMultilineStringInput(vscCell.data.source));
 
-                this.gather.logExecution(cloneCell);
+                try {
+                    this.gather.logExecution(cloneCell);
+                } catch (e) {
+                    traceError('Gather: Exception at Log Execution', e);
+                    sendTelemetryEvent(Telemetry.GatherException, undefined, { exceptionType: 'log' });
+                }
             }
         }
     }
@@ -55,10 +61,14 @@ export class GatherLogger implements IGatherLogger {
         if (ext) {
             sendTelemetryEvent(Telemetry.GatherIsInstalled);
             if (!ext.isActive) {
-                await ext.activate();
+                try {
+                    await ext.activate();
+                } catch (e) {
+                    traceError('Gather: Exception at Activate', e);
+                    sendTelemetryEvent(Telemetry.GatherException, undefined, { exceptionType: 'activate' });
+                }
             }
             const api = ext.exports;
-
             this.gather = api.getGatherProvider();
         }
     }

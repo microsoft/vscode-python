@@ -12,23 +12,23 @@ import { ApplicationShell } from '../../client/common/application/applicationShe
 import { IApplicationShell } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { FileSystem } from '../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposable } from '../../client/common/types';
 import * as localize from '../../client/common/utils/localize';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
+import { DataScienceFileSystem } from '../../client/datascience/dataScienceFileSystem';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { ExportFormat, IExportManager } from '../../client/datascience/export/types';
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
-import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
-import { NotebookStorageProvider } from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
+import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
+import { NotebookStorageProvider } from '../../client/datascience/notebookStorage/notebookStorageProvider';
 import {
+    IDataScienceFileSystem,
     IInteractiveWindow,
     IJupyterExecution,
     INotebook,
@@ -59,7 +59,7 @@ suite('Interactive window command listener', async () => {
     const interpreterService = mock(InterpreterService);
     const configService = mock(ConfigurationService);
     const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
-    const fileSystem = mock(FileSystem);
+    const fileSystem = mock(DataScienceFileSystem);
     const serviceContainer = mock(ServiceContainer);
     const dummyEvent = new EventEmitter<void>();
     const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
@@ -116,7 +116,7 @@ suite('Interactive window command listener', async () => {
 
         // Service container needs logger, file system, and config service
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
-        when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
+        when(serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem)).thenReturn(instance(fileSystem));
         when(configService.getSettings(anything())).thenReturn(pythonSettings);
 
         // Setup default settings
@@ -161,8 +161,8 @@ suite('Interactive window command listener', async () => {
             },
             filePath: '/foo/bar/baz.py'
         };
-        when(fileSystem.createTemporaryFile(anything())).thenResolve(tempFile);
-        when(fileSystem.deleteDirectory(anything())).thenResolve();
+        when(fileSystem.createTemporaryLocalFile(anything())).thenResolve(tempFile);
+        when(fileSystem.deleteLocalDirectory(anything())).thenResolve();
         when(
             fileSystem.writeFile(
                 anything(),

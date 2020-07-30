@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
-import { FileSystem } from '../../client/common/platform/fileSystem';
+import { DataScienceFileSystem } from '../../client/datascience/dataScienceFileSystem';
 import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../client/datascience/types';
 import { MockExtensions } from './mockExtensions';
@@ -34,7 +34,8 @@ class MockProvider implements IJupyterUriProvider {
                 // tslint:disable-next-line: no-http-string
                 baseUrl: 'http://foobar:3000',
                 token: '',
-                authorizationHeader: { Bearer: '1' }
+                authorizationHeader: { Bearer: '1' },
+                displayName: 'dummy'
             };
         }
 
@@ -48,8 +49,8 @@ suite('DataScience URI Picker', () => {
         let registration: JupyterUriProviderRegistration | undefined;
         const extensions = mock(MockExtensions);
         const extensionList: vscode.Extension<any>[] = [];
-        const fileSystem = mock(FileSystem);
-        when(fileSystem.fileExists(anything())).thenResolve(false);
+        const fileSystem = mock(DataScienceFileSystem);
+        when(fileSystem.localFileExists(anything())).thenResolve(false);
         providerIds.forEach((id) => {
             const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
             const packageJson = TypeMoq.Mock.ofType<any>();
@@ -82,6 +83,7 @@ suite('DataScience URI Picker', () => {
         const uri = await registration.getJupyterServerUri('1', handle!);
         // tslint:disable-next-line: no-http-string
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
+        assert.equal(uri.displayName, 'dummy', 'Display name not found');
     });
     test('Back', async () => {
         const registration = createRegistration(['1']);

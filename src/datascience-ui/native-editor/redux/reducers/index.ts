@@ -67,6 +67,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CommonActionType.CONTINUE]: Execution.continueExec,
     [CommonActionType.STEP]: Execution.step,
     [CommonActionType.RUN_BY_LINE]: Execution.runByLine,
+    [CommonActionType.OPEN_SETTINGS]: CommonEffects.openSettings,
 
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.StartCell]: Creation.startCell,

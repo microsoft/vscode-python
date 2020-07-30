@@ -23,16 +23,14 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     assertHasExecutionCompletedSuccessfully,
     assertHasExecutionCompletedWithErrors,
-    assertHasOutputInICell,
     assertHasOutputInVSCell,
     canRunTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
     deleteAllCellsAndWait,
     insertPythonCellAndWait,
-    waitForCellHasEmptyOutput,
+    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
-    waitForExecutionOrderInCell,
     waitForExecutionOrderInVSCCell,
     waitForTextOutputInVSCode,
     waitForVSCCellHasEmptyOutput,
@@ -59,6 +57,7 @@ suite('DataScience - VSCode Notebook - (fake execution) (Clearing Output)', func
         if (!(await canRunTests())) {
             return this.skip();
         }
+        await trustAllNotebooks();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -76,39 +75,35 @@ suite('DataScience - VSCode Notebook - (fake execution) (Clearing Output)', func
         );
         suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables2));
         setup(async () => {
+            await trustAllNotebooks();
             const testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables2));
             await editorProvider.open(testIPynb);
         });
         test('Clearing output when not executing', async () => {
-            const vscCells = vscodeNotebook.activeNotebookEditor?.document.cells!;
-            const model = editorProvider.activeEditor?.model!;
-            const cellModels = model.cells!;
+            const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
 
             // Verify we have execution counts and output.
-            assertHasExecutionCompletedSuccessfully(vscCells[0]);
-            assertHasExecutionCompletedWithErrors(vscCells[1]);
-            assertHasExecutionCompletedSuccessfully(vscCells[2]);
-            assertHasOutputInVSCell(vscCells[0]);
-            assertHasOutputInVSCell(vscCells[1]);
-            assertHasOutputInVSCell(vscCells[2]);
-            assertHasOutputInICell(cellModels[0], model);
-            assertHasOutputInICell(cellModels[1], model);
-            assertHasOutputInICell(cellModels[2], model);
+            assertHasExecutionCompletedSuccessfully(cells[0]);
+            assertHasExecutionCompletedWithErrors(cells[1]);
+            assertHasExecutionCompletedSuccessfully(cells[2]);
+            assertHasOutputInVSCell(cells[0]);
+            assertHasOutputInVSCell(cells[1]);
+            assertHasOutputInVSCell(cells[2]);
 
             // Clear the cells
             await commands.executeCommand('notebook.clearAllCellsOutputs');
 
             for (let cellIndex = 0; cellIndex < 3; cellIndex += 1) {
-                await waitForExecutionOrderInVSCCell(vscCells[cellIndex], undefined);
-                await waitForExecutionOrderInCell(cellModels[cellIndex], undefined, model);
+                // https://github.com/microsoft/vscode-python/issues/13159
+                // await waitForExecutionOrderInVSCCell(cells[cellIndex], undefined);
 
-                await waitForVSCCellHasEmptyOutput(vscCells[cellIndex]);
-                await waitForCellHasEmptyOutput(cellModels[cellIndex], model);
+                await waitForVSCCellHasEmptyOutput(cells[cellIndex]);
             }
         });
     });
     suite('Use same notebook for tests', () => {
         suiteSetup(async () => {
+            await trustAllNotebooks();
             // Open a notebook and use this for all tests in this test suite.
             await editorProvider.createNew();
         });
@@ -142,7 +137,6 @@ suite('DataScience - VSCode Notebook - (fake execution) (Clearing Output)', func
 
             // Once we execute the cell, the execution count & output should be cleared.
             await commands.executeCommand('notebook.cell.execute');
-
             await waitForExecutionOrderInVSCCell(vscCell, undefined);
             await waitForVSCCellHasEmptyOutput(vscCell);
             await waitForVSCCellIsRunning(vscCell);

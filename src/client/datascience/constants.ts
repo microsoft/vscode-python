@@ -91,6 +91,7 @@ export namespace Commands {
     export const SaveAsNotebookNonCustomEditor = 'python.datascience.notebookeditor.saveAs';
     export const OpenNotebookNonCustomEditor = 'python.datascience.notebookeditor.open';
     export const GatherQuality = 'python.datascience.gatherquality';
+    export const LatestExtension = 'python.datascience.latestExtension';
     export const TrustNotebook = 'python.datascience.notebookeditor.trust';
     export const EnableLoadingWidgetsFrom3rdPartySource =
         'python.datascience.enableLoadingWidgetScriptsFromThirdPartySource';
@@ -321,6 +322,8 @@ export enum Telemetry {
     KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',
     GatherIsInstalled = 'DS_INTERNAL.GATHER_IS_INSTALLED',
     GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED',
+    GatherStats = 'DS_INTERNAL.GATHER_STATS',
+    GatherException = 'DS_INTERNAL.GATHER_EXCEPTION',
     GatheredNotebookSaved = 'DATASCIENCE.GATHERED_NOTEBOOK_SAVED',
     GatherQualityReport = 'DS_INTERNAL.GATHER_QUALITY_REPORT',
     ZMQSupported = 'DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING',
@@ -330,6 +333,7 @@ export enum Telemetry {
     IPyWidgetWidgetVersionNotSupportedLoadFailure = 'DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE',
     IPyWidgetLoadDisabled = 'DS_INTERNAL.IPYWIDGET_LOAD_DISABLED',
     HashedIPyWidgetNameUsed = 'DS_INTERNAL.IPYWIDGET_USED_BY_USER',
+    VSCNotebookCellTranslationFailed = 'DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED',
     HashedIPyWidgetNameDiscovered = 'DS_INTERNAL.IPYWIDGET_DISCOVERED',
     HashedIPyWidgetScriptDiscoveryError = 'DS_INTERNAL.IPYWIDGET_DISCOVERY_ERRORED',
     DiscoverIPyWidgetNamesLocalPerf = 'DS_INTERNAL.IPYWIDGET_TEST_AVAILABILITY_ON_LOCAL',
