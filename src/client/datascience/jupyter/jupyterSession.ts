@@ -174,7 +174,7 @@ export class JupyterSession extends BaseJupyterSession {
                     await contentsManager.newUntitled({ path: backingNotebookDir, type: 'notebook' })
                 );
             } else {
-                traceError(e);
+                traceError('Encountered error while initializing backing notebook for Jupyter session', e);
                 // We must have a backing notebook for each session, so fallback on creating an untitled notebook in the pwd like we currently do
                 this.notebookFiles.push(await contentsManager.newUntitled({ type: 'notebook' }));
             }
