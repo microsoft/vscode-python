@@ -7,6 +7,7 @@ import { IApplicationShell, IDocumentManager } from '../../common/application/ty
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 
+import type { nbformat } from '@jupyterlab/coreutils';
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -198,26 +199,33 @@ export class GatherListener implements IInteractiveWindowListener {
 
     private async showNotebook(slicedProgram: string, cell: ICell) {
         if (slicedProgram) {
+            const file =
+                cell.file === Identifiers.EmptyFileName && this.notebookUri ? this.notebookUri.fsPath : cell.file;
+
             let cells: ICell[] = [
                 {
                     id: uuid(),
                     file: '',
                     line: 0,
                     state: 0,
-                    data: createMarkdownCell(
-                        localize.DataScience.gatheredNotebookDescriptionInMarkdown().format(
-                            cell.file === Identifiers.EmptyFileName && this.notebookUri
-                                ? this.notebookUri.fsPath
-                                : cell.file
-                        )
-                    )
+                    data: createMarkdownCell(localize.DataScience.gatheredNotebookDescriptionInMarkdown().format(file))
                 }
             ];
 
             // Create new notebook with the returned program and open it.
             cells = cells.concat(generateCellsFromString(slicedProgram));
 
-            const notebook = await this.jupyterExporter.translateToNotebook(cells);
+            // Try to get a kernelspec
+            let kernelspec: nbformat.IKernelspecMetadata | undefined;
+            try {
+                const text = await this.fs.readLocalFile(file);
+                const json = JSON.parse(text);
+                kernelspec = json.metadata.kernelspec;
+            } catch (e) {
+                traceError('Gather: No kernelspec found', e);
+            }
+
+            const notebook = await this.jupyterExporter.translateToNotebook(cells, undefined, kernelspec);
             if (notebook) {
                 const contents = JSON.stringify(notebook);
                 const editor = await this.ipynbProvider.createNew(contents);

@@ -91,7 +91,8 @@ export class JupyterExporter implements INotebookExporter {
     }
     public async translateToNotebook(
         cells: ICell[],
-        changeDirectory?: string
+        changeDirectory?: string,
+        kernelSpec?: nbformat.IKernelspecMetadata
     ): Promise<nbformat.INotebookContent | undefined> {
         // If requested, add in a change directory cell to fix relative paths
         if (changeDirectory && this.configService.getSettings().datascience.changeDirOnImportExport) {
@@ -114,7 +115,8 @@ export class JupyterExporter implements INotebookExporter {
                 pygments_lexer: `ipython${pythonNumber}`,
                 version: pythonNumber
             },
-            orig_nbformat: 2
+            orig_nbformat: 2,
+            kernelspec: kernelSpec
         };
 
         // Create an object for matching cell definitions
