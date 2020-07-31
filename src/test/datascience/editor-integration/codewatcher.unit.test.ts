@@ -1062,7 +1062,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(0, 4, 0, 4);
 
-        await codeWatcher.insertCellBelowPosition();
+        codeWatcher.insertCellBelowPosition();
 
         expect(mockTextEditor.document.getText()).to.equal(`testing0
 # %%
@@ -1091,7 +1091,7 @@ testing2`
         // end selection at bottom of document
         mockTextEditor.selection = new Selection(1, 4, 5, 8);
 
-        await codeWatcher.insertCellBelowPosition();
+        codeWatcher.insertCellBelowPosition();
 
         expect(mockTextEditor.document.getText()).to.equal(`testing0
 #%%
@@ -1120,7 +1120,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(2, 4, 2, 4);
 
-        await codeWatcher.insertCellBelow();
+        codeWatcher.insertCellBelow();
 
         expect(mockTextEditor.document.getText()).to.equal(
             `testing0
@@ -1151,7 +1151,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(0, 4, 0, 4);
 
-        await codeWatcher.insertCellBelow();
+        codeWatcher.insertCellBelow();
 
         expect(mockTextEditor.document.getText()).to.equal(`testing0
 # %%
@@ -1181,7 +1181,7 @@ testing2`
         // range crossing multiple cells.Insert below bottom of range.
         mockTextEditor.selection = new Selection(0, 4, 2, 4);
 
-        await codeWatcher.insertCellBelow();
+        codeWatcher.insertCellBelow();
 
         expect(mockTextEditor.document.getText()).to.equal(
             `testing0
@@ -1214,7 +1214,7 @@ testing2`
         // above the first cell of the range
         mockTextEditor.selection = new Selection(3, 4, 5, 4);
 
-        await codeWatcher.insertCellAbove();
+        codeWatcher.insertCellAbove();
 
         expect(mockTextEditor.document.getText()).to.equal(
             `testing0
@@ -1246,7 +1246,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(0, 3, 0, 4);
 
-        await codeWatcher.insertCellAbove();
+        codeWatcher.insertCellAbove();
 
         expect(mockTextEditor.document.getText()).to.equal(
             `# %%
@@ -1278,7 +1278,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(3, 4, 3, 4);
 
-        await codeWatcher.deleteCells();
+        codeWatcher.deleteCells();
 
         expect(mockTextEditor.document.getText()).to.equal(
             `testing0
@@ -1301,7 +1301,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(3, 4, 5, 4);
 
-        await codeWatcher.deleteCells();
+        codeWatcher.deleteCells();
 
         expect(mockTextEditor.document.getText()).to.equal(`testing0`);
     });
@@ -1320,7 +1320,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(0, 1, 0, 4);
 
-        await codeWatcher.deleteCells();
+        codeWatcher.deleteCells();
 
         expect(mockTextEditor.document.getText()).to.equal(`testing0
 #%%
@@ -1344,7 +1344,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(2, 1, 2, 1);
 
-        await codeWatcher.selectCell();
+        codeWatcher.selectCell();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(1);
         expect(mockTextEditor.selection.anchor.character).to.equal(0);
@@ -1366,7 +1366,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(2, 1, 4, 1);
 
-        await codeWatcher.selectCell();
+        codeWatcher.selectCell();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(1);
         expect(mockTextEditor.selection.anchor.character).to.equal(0);
@@ -1388,7 +1388,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(4, 1, 2, 1);
 
-        await codeWatcher.selectCell();
+        codeWatcher.selectCell();
 
         expect(mockTextEditor.selection.active.line).to.equal(1);
         expect(mockTextEditor.selection.active.character).to.equal(0);
@@ -1410,7 +1410,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(0, 1, 0, 4);
 
-        await codeWatcher.selectCell();
+        codeWatcher.selectCell();
 
         expect(mockTextEditor.selection.start.line).to.equal(0);
         expect(mockTextEditor.selection.start.character).to.equal(1);
@@ -1432,7 +1432,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(3, 4, 3, 4);
 
-        await codeWatcher.selectCellContents();
+        codeWatcher.selectCellContents();
 
         expect(mockTextEditor.selections.length).to.equal(1);
 
@@ -1457,7 +1457,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(3, 4, 5, 4);
 
-        await codeWatcher.selectCellContents();
+        codeWatcher.selectCellContents();
 
         expect(mockTextEditor.selections.length).to.equal(2);
 
@@ -1489,7 +1489,7 @@ testing2`
 
         mockTextEditor.selection = new Selection(5, 4, 3, 4);
 
-        await codeWatcher.selectCellContents();
+        codeWatcher.selectCellContents();
 
         expect(mockTextEditor.selections.length).to.equal(2);
 
@@ -1524,7 +1524,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(5, 2, 5, 2);
 
-        await codeWatcher.extendSelectionByCellAbove();
+        codeWatcher.extendSelectionByCellAbove();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(6);
         expect(mockTextEditor.selection.anchor.character).to.equal(10);
@@ -1549,7 +1549,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(5, 2, 6, 4);
 
-        await codeWatcher.extendSelectionByCellAbove();
+        codeWatcher.extendSelectionByCellAbove();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(6);
         expect(mockTextEditor.selection.anchor.character).to.equal(10);
@@ -1574,7 +1574,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(6, 4, 5, 2);
 
-        await codeWatcher.extendSelectionByCellAbove();
+        codeWatcher.extendSelectionByCellAbove();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(6);
         expect(mockTextEditor.selection.anchor.character).to.equal(10);
@@ -1599,7 +1599,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(5, 2, 8, 2);
 
-        await codeWatcher.extendSelectionByCellAbove();
+        codeWatcher.extendSelectionByCellAbove();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(4);
         expect(mockTextEditor.selection.anchor.character).to.equal(0);
@@ -1624,7 +1624,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(8, 2, 5, 2);
 
-        await codeWatcher.extendSelectionByCellAbove();
+        codeWatcher.extendSelectionByCellAbove();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(8);
         expect(mockTextEditor.selection.anchor.character).to.equal(10);
@@ -1649,7 +1649,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(6, 10, 4, 0);
 
-        await codeWatcher.extendSelectionByCellAbove();
+        codeWatcher.extendSelectionByCellAbove();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(6);
         expect(mockTextEditor.selection.anchor.character).to.equal(10);
@@ -1674,7 +1674,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(1, 0, 6, 10);
 
-        await codeWatcher.extendSelectionByCellAbove();
+        codeWatcher.extendSelectionByCellAbove();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(1);
         expect(mockTextEditor.selection.anchor.character).to.equal(0);
@@ -1699,7 +1699,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(5, 2, 5, 2);
 
-        await codeWatcher.extendSelectionByCellBelow();
+        codeWatcher.extendSelectionByCellBelow();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(4);
         expect(mockTextEditor.selection.anchor.character).to.equal(0);
@@ -1724,7 +1724,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(5, 2, 6, 4);
 
-        await codeWatcher.extendSelectionByCellBelow();
+        codeWatcher.extendSelectionByCellBelow();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(4);
         expect(mockTextEditor.selection.anchor.character).to.equal(0);
@@ -1749,7 +1749,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(6, 4, 5, 2);
 
-        await codeWatcher.extendSelectionByCellBelow();
+        codeWatcher.extendSelectionByCellBelow();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(4);
         expect(mockTextEditor.selection.anchor.character).to.equal(0);
@@ -1774,7 +1774,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(3, 2, 6, 2);
 
-        await codeWatcher.extendSelectionByCellBelow();
+        codeWatcher.extendSelectionByCellBelow();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(1);
         expect(mockTextEditor.selection.anchor.character).to.equal(0);
@@ -1799,7 +1799,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(6, 2, 3, 2);
 
-        await codeWatcher.extendSelectionByCellBelow();
+        codeWatcher.extendSelectionByCellBelow();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(4);
         expect(mockTextEditor.selection.anchor.character).to.equal(0);
@@ -1824,7 +1824,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(6, 10, 4, 0);
 
-        await codeWatcher.extendSelectionByCellBelow();
+        codeWatcher.extendSelectionByCellBelow();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(4);
         expect(mockTextEditor.selection.anchor.character).to.equal(0);
@@ -1849,7 +1849,7 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(6, 10, 1, 0);
 
-        await codeWatcher.extendSelectionByCellBelow();
+        codeWatcher.extendSelectionByCellBelow();
 
         expect(mockTextEditor.selection.anchor.line).to.equal(6);
         expect(mockTextEditor.selection.anchor.character).to.equal(10);
@@ -1874,14 +1874,14 @@ testing_L8`
 
         mockTextEditor.selection = new Selection(5, 2, 6, 2);
 
-        await codeWatcher.extendSelectionByCellAbove(); // select full cell
-        await codeWatcher.extendSelectionByCellAbove(); // select cell above
-        await codeWatcher.extendSelectionByCellAbove(); // top cell no change
-        await codeWatcher.extendSelectionByCellAbove(); // top cell no change
-        await codeWatcher.extendSelectionByCellBelow(); // contract by cell
-        await codeWatcher.extendSelectionByCellBelow(); // expand by cell below
-        await codeWatcher.extendSelectionByCellBelow(); // last cell no change
-        await codeWatcher.extendSelectionByCellAbove(); // Original cell
+        codeWatcher.extendSelectionByCellAbove(); // select full cell
+        codeWatcher.extendSelectionByCellAbove(); // select cell above
+        codeWatcher.extendSelectionByCellAbove(); // top cell no change
+        codeWatcher.extendSelectionByCellAbove(); // top cell no change
+        codeWatcher.extendSelectionByCellBelow(); // contract by cell
+        codeWatcher.extendSelectionByCellBelow(); // expand by cell below
+        codeWatcher.extendSelectionByCellBelow(); // last cell no change
+        codeWatcher.extendSelectionByCellAbove(); // Original cell
 
         expect(mockTextEditor.selection.anchor.line).to.equal(4);
         expect(mockTextEditor.selection.anchor.character).to.equal(0);
@@ -2014,7 +2014,7 @@ testing_L6
 
         mockTextEditor.selection = new Selection(1, 2, 5, 5);
 
-        await codeWatcher.changeCellToMarkdown();
+        codeWatcher.changeCellToMarkdown();
 
         // NOTE: When running the function in real environment there
         // are comment lines added in addition to the [markdown] definition.
@@ -2065,7 +2065,7 @@ testing_L6
 
         mockTextEditor.selection = new Selection(1, 2, 5, 5);
 
-        await codeWatcher.changeCellToMarkdown();
+        codeWatcher.changeCellToMarkdown();
 
         expect(mockTextEditor.document.getText()).to.equal(text);
 
@@ -2092,7 +2092,7 @@ testing_L6
 
         mockTextEditor.selection = new Selection(1, 2, 5, 5);
 
-        await codeWatcher.changeCellToCode();
+        codeWatcher.changeCellToCode();
 
         // NOTE: When running the function in real environment there
         // are comment lines added in addition to the [markdown] definition.
@@ -2143,7 +2143,7 @@ testing_L3
 
         mockTextEditor.selection = new Selection(1, 2, 5, 5);
 
-        await codeWatcher.changeCellToCode();
+        codeWatcher.changeCellToCode();
 
         expect(mockTextEditor.document.getText()).to.equal(text);
 

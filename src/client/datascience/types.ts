@@ -627,18 +627,18 @@ export interface ICodeWatcher {
     debugFileInteractive(): Promise<void>;
     addEmptyCellToBottom(): Promise<void>;
     runCurrentCellAndAddBelow(): Promise<void>;
-    insertCellBelowPosition(): Promise<void>;
-    insertCellBelow(): Promise<void>;
-    insertCellAbove(): Promise<void>;
-    deleteCells(): Promise<void>;
-    selectCell(): Promise<void>;
-    selectCellContents(): Promise<void>;
-    extendSelectionByCellAbove(): Promise<void>;
-    extendSelectionByCellBelow(): Promise<void>;
+    insertCellBelowPosition(): void;
+    insertCellBelow(): void;
+    insertCellAbove(): void;
+    deleteCells(): void;
+    selectCell(): void;
+    selectCellContents(): void;
+    extendSelectionByCellAbove(): void;
+    extendSelectionByCellBelow(): void;
     moveCellsUp(): Promise<void>;
     moveCellsDown(): Promise<void>;
-    changeCellToMarkdown(): Promise<void>;
-    changeCellToCode(): Promise<void>;
+    changeCellToMarkdown(): void;
+    changeCellToCode(): void;
     debugCurrentCell(): Promise<void>;
 }
 

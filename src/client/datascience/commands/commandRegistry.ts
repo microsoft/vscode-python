@@ -300,129 +300,62 @@ export class CommandRegistry implements IDisposable {
             this.commandManager.executeCommand('workbench.action.debug.continue');
         }
     }
+
     @captureTelemetry(Telemetry.AddCellBelow)
     private async addCellBelow(): Promise<void> {
-        const activeEditor = this.documentManager.activeTextEditor;
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeEditor && activeCodeWatcher) {
-            return activeCodeWatcher.addEmptyCellToBottom();
-        }
+        await this.getCurrentCodeWatcher()?.addEmptyCellToBottom();
     }
+
     private async runCurrentCellAndAddBelow(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.runCurrentCellAndAddBelow();
-        } else {
-            return;
-        }
+        this.getCurrentCodeWatcher()?.runCurrentCellAndAddBelow();
     }
 
     private async insertCellBelowPosition(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.insertCellBelowPosition();
-        } else {
-            return;
-        }
+        this.getCurrentCodeWatcher()?.insertCellBelowPosition();
     }
 
     private async insertCellBelow(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.insertCellBelow();
-        } else {
-            return;
-        }
+        this.getCurrentCodeWatcher()?.insertCellBelow();
     }
 
     private async insertCellAbove(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.insertCellAbove();
-        } else {
-            return;
-        }
+        this.getCurrentCodeWatcher()?.insertCellAbove();
     }
 
     private async deleteCells(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.deleteCells();
-        } else {
-            return;
-        }
+        this.getCurrentCodeWatcher()?.deleteCells();
     }
 
     private async selectCell(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.selectCell();
-        } else {
-            return;
-        }
+        this.getCurrentCodeWatcher()?.selectCell();
     }
 
     private async selectCellContents(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.selectCellContents();
-        } else {
-            return;
-        }
+        this.getCurrentCodeWatcher()?.selectCellContents();
     }
 
     private async extendSelectionByCellAbove(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.extendSelectionByCellAbove();
-        } else {
-            return;
-        }
+        this.getCurrentCodeWatcher()?.extendSelectionByCellAbove();
     }
 
     private async extendSelectionByCellBelow(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.extendSelectionByCellBelow();
-        } else {
-            return;
-        }
+        this.getCurrentCodeWatcher()?.extendSelectionByCellBelow();
     }
 
     private async moveCellsUp(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.moveCellsUp();
-        } else {
-            return;
-        }
+        this.getCurrentCodeWatcher()?.moveCellsUp();
     }
 
     private async moveCellsDown(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.moveCellsDown();
-        } else {
-            return;
-        }
+        this.getCurrentCodeWatcher()?.moveCellsDown();
     }
 
     private async changeCellToMarkdown(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.changeCellToMarkdown();
-        } else {
-            return;
-        }
+        this.getCurrentCodeWatcher()?.changeCellToMarkdown();
     }
 
     private async changeCellToCode(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.changeCellToCode();
-        } else {
-            return;
-        }
+        this.getCurrentCodeWatcher()?.changeCellToCode();
     }
 
     private async runAllCellsAboveFromCursor(): Promise<void> {
