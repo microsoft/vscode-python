@@ -1439,6 +1439,14 @@
                                 "description": "Path (fully qualified) to python executable. Defaults to the value in settings",
                                 "default": "${command:python.interpreterPath}"
                             },
+                            "pythonArgs": {
+                                "type": "array",
+                                "description": "Command-line arguments passed to the Python interpreter. To pass arguments to the debug target, use \"args\".",
+                                "default": [],
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
                             "args": {
                                 "type": "array",
                                 "description": "Command line arguments passed to the program",
