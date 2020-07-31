@@ -1,21 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type {
-    Contents,
-    ContentsManager,
-    Kernel,
-    ServerConnection,
-    Session,
-    SessionManager
-} from '@jupyterlab/services';
+import type { ContentsManager, Kernel, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
@@ -28,7 +20,6 @@ import { JupyterWebSockets } from './jupyterWebSocket';
 import { LiveKernelModel } from './kernels/types';
 
 export class JupyterSession extends BaseJupyterSession {
-    private notebookFiles: Contents.IModel[] = [];
     constructor(
         private connInfo: IJupyterConnection,
         private serverSettings: ServerConnection.ISettings,
@@ -41,22 +32,6 @@ export class JupyterSession extends BaseJupyterSession {
     ) {
         super(restartSessionUsed);
         this.kernelSpec = kernelSpec;
-    }
-
-    public async shutdown(): Promise<void> {
-        // Destroy the notebook file if not local. Local is cleaned up when we destroy the kernel spec.
-        if (this.notebookFiles.length && this.contentsManager && this.connInfo && !this.connInfo.localLaunch) {
-            try {
-                // Make sure we have a session first and it returns something
-                await this.sessionManager.refreshRunning();
-                await Promise.all(this.notebookFiles.map((f) => this.contentsManager!.delete(f.path)));
-                this.notebookFiles = [];
-            } catch {
-                noop();
-            }
-        }
-
-        return super.shutdown();
     }
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
@@ -162,11 +137,11 @@ export class JupyterSession extends BaseJupyterSession {
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         // Create a temporary notebook for this session.
-        this.notebookFiles.push(await contentsManager.newUntitled({ type: 'notebook' }));
+        const backingFile = await contentsManager.newUntitled({ type: 'notebook' });
 
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
-            path: this.notebookFiles[this.notebookFiles.length - 1].path,
+            path: backingFile.path,
             kernelName: kernelSpec ? kernelSpec.name : '',
             name: uuid(), // This is crucial to distinguish this session from any other.
             serverSettings: serverSettings
@@ -194,7 +169,12 @@ export class JupyterSession extends BaseJupyterSession {
 
                         return session;
                     })
-                    .catch((ex) => Promise.reject(new JupyterSessionStartError(ex))),
+                    .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
+                    .finally(() => {
+                        if (this.connInfo && !this.connInfo.localLaunch) {
+                            this.contentsManager.delete(backingFile.path).ignoreErrors();
+                        }
+                    }),
             cancelToken
         );
     }
