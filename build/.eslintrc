@@ -1,0 +1,41 @@
+{
+    "root": true,
+    "env": {
+        "node": true,
+        "es6": true,
+        "mocha": true
+    },
+    "extends": [
+        "airbnb"
+    ],
+    "rules": {
+        "comma-dangle": "off",
+        "func-names": "off",
+        "import/no-extraneous-dependencies": [
+            "error",
+            {
+                "peerDependencies": true,
+                "devDependencies": true
+            }
+        ],
+        "import/prefer-default-export": "off",
+        "indent": [
+            "error",
+            4,
+            {
+                "SwitchCase": 1
+            }
+        ],
+        "max-len": [
+            "error",
+            {
+                "code": 120
+            }
+        ],
+        "no-console": "off",
+        "no-param-reassign": "off",
+        "no-underscore-dangle": "off",
+        "no-useless-escape": "off",
+        "strict": "off"
+    }
+}
