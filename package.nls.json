@@ -375,7 +375,7 @@
     "AttachProcess.refreshList": "Refresh process list",
     "DataScience.variableExplorerNameColumn": "Name",
     "DataScience.variableExplorerTypeColumn": "Type",
-    "DataScience.variableExplorerSizeColumn": "Count",
+    "DataScience.variableExplorerSizeColumn": "Size",
     "DataScience.variableExplorerValueColumn": "Value",
     "DataScience.showDataExplorerTooltip": "Show variable in data viewer.",
     "DataScience.dataExplorerInvalidVariableFormat": "'{0}' is not an active variable.",
