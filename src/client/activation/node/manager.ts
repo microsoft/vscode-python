@@ -5,14 +5,7 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 
 import { traceDecorators } from '../../common/logger';
-import {
-    BANNER_NAME_LS_SURVEY,
-    IConfigurationService,
-    IDisposable,
-    IExperimentsManager,
-    IPythonExtensionBanner,
-    Resource
-} from '../../common/types';
+import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
@@ -42,10 +35,8 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         @inject(ILanguageServerAnalysisOptions)
         @named(LanguageServerType.Node)
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
-        @inject(IPythonExtensionBanner)
-        @named(BANNER_NAME_LS_SURVEY)
-        private readonly surveyBanner: IPythonExtensionBanner,
-        @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
+        @inject(ILanguageServerFolderService)
+        private readonly folderService: ILanguageServerFolderService,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
@@ -67,10 +58,10 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         return this.languageServerProxy;
     }
 
-    @traceDecorators.error('Failed to start Language Server')
+    @traceDecorators.error('Failed to start language server')
     public async start(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void> {
         if (this.languageProxy) {
-            throw new Error('Language Server already started');
+            throw new Error('Language server already started');
         }
         this.resource = resource;
         this.interpreter = interpreter;
@@ -98,8 +89,8 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         this.restartLanguageServer().ignoreErrors();
     }
 
-    @traceDecorators.error('Failed to restart Language Server')
-    @traceDecorators.verbose('Restarting Language Server')
+    @traceDecorators.error('Failed to restart language server')
+    @traceDecorators.verbose('Restarting language server')
     protected async restartLanguageServer(): Promise<void> {
         if (this.languageProxy) {
             this.languageProxy.dispose();
@@ -114,13 +105,12 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         undefined,
         NodeLanguageServerManager.versionTelemetryProps
     )
-    @traceDecorators.verbose('Starting Language Server')
+    @traceDecorators.verbose('Starting language server')
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
 
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
-            this.surveyBanner,
             this.experimentsManager,
             this.configService,
             LanguageServerType.Node,

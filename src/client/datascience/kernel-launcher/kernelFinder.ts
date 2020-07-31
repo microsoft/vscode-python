@@ -9,14 +9,17 @@ import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IPlatformService } from '../../common/platform/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 import { IExtensionContext, IInstaller, InstallerResponse, IPathUtils, Product, Resource } from '../../common/types';
+import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterLocatorService, IInterpreterService, KNOWN_PATH_SERVICE } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
+import { getRealPath } from '../common';
 import { Telemetry } from '../constants';
 import { createDefaultKernelSpec, defaultKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
-import { IJupyterKernelSpec } from '../types';
+import { IDataScienceFileSystem, IJupyterKernelSpec } from '../types';
 import { getKernelInterpreter } from './helpers';
 import { IKernelFinder } from './types';
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -51,11 +54,13 @@ export class KernelFinder implements IKernelFinder {
         @named(KNOWN_PATH_SERVICE)
         private readonly interpreterLocator: IInterpreterLocatorService,
         @inject(IPlatformService) private platformService: IPlatformService,
-        @inject(IFileSystem) private file: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IInstaller) private installer: IInstaller,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IPythonExecutionFactory) private readonly exeFactory: IPythonExecutionFactory,
+        @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider
     ) {}
 
     @captureTelemetry(Telemetry.KernelFinderPerf)
@@ -185,7 +190,7 @@ export class KernelFinder implements IKernelFinder {
     private async loadKernelSpec(specPath: string): Promise<IJupyterKernelSpec | undefined> {
         let kernelJson;
         try {
-            kernelJson = JSON.parse(await this.file.readFile(specPath));
+            kernelJson = JSON.parse(await this.fs.readLocalFile(specPath));
         } catch {
             traceError(`Failed to parse kernelspec ${specPath}`);
             return undefined;
@@ -229,11 +234,65 @@ export class KernelFinder implements IKernelFinder {
         return uniqueInterpreterPrefixPaths.map((prefixPath) => path.join(prefixPath, baseKernelPath));
     }
 
+    // Find any paths associated with the JUPYTER_PATH env var. Can be a list of dirs.
+    // We need to look at the 'kernels' sub-directory and these paths are supposed to come first in the searching
+    // https://jupyter.readthedocs.io/en/latest/projects/jupyter-directories.html#envvar-JUPYTER_PATH
+    private async getJupyterPathPaths(): Promise<string[]> {
+        const paths: string[] = [];
+        const vars = await this.envVarsProvider.getEnvironmentVariables();
+        const jupyterPathVars = vars.JUPYTER_PATH
+            ? vars.JUPYTER_PATH.split(path.delimiter).map((jupyterPath) => {
+                  return path.join(jupyterPath, 'kernels');
+              })
+            : [];
+
+        if (jupyterPathVars.length > 0) {
+            if (this.platformService.isWindows) {
+                const activeInterpreter = await this.interpreterService.getActiveInterpreter();
+                if (activeInterpreter) {
+                    jupyterPathVars.forEach(async (jupyterPath) => {
+                        const jupyterWinPath = await getRealPath(
+                            this.fs,
+                            this.exeFactory,
+                            activeInterpreter.path,
+                            jupyterPath
+                        );
+
+                        if (jupyterWinPath) {
+                            paths.push(jupyterWinPath);
+                        }
+                    });
+                } else {
+                    paths.push(...jupyterPathVars);
+                }
+            } else {
+                // Unix based
+                paths.push(...jupyterPathVars);
+            }
+        }
+
+        return paths;
+    }
+
     private async getDiskPaths(): Promise<string[]> {
-        let paths = [];
+        // Paths specified in JUPYTER_PATH are supposed to come first in searching
+        const paths: string[] = await this.getJupyterPathPaths();
 
         if (this.platformService.isWindows) {
-            paths = [path.join(this.pathUtils.home, winJupyterPath)];
+            const activeInterpreter = await this.interpreterService.getActiveInterpreter();
+            if (activeInterpreter) {
+                const winPath = await getRealPath(
+                    this.fs,
+                    this.exeFactory,
+                    activeInterpreter.path,
+                    path.join(this.pathUtils.home, winJupyterPath)
+                );
+                if (winPath) {
+                    paths.push(winPath);
+                }
+            } else {
+                paths.push(path.join(this.pathUtils.home, winJupyterPath));
+            }
 
             if (process.env.ALLUSERSPROFILE) {
                 paths.push(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels'));
@@ -242,11 +301,11 @@ export class KernelFinder implements IKernelFinder {
             // Unix based
             const secondPart = this.platformService.isMac ? macJupyterPath : linuxJupyterPath;
 
-            paths = [
+            paths.push(
                 path.join('usr', 'share', 'jupyter', 'kernels'),
                 path.join('usr', 'local', 'share', 'jupyter', 'kernels'),
                 path.join(this.pathUtils.home, secondPart)
-            ];
+            );
         }
 
         return paths;
@@ -254,7 +313,7 @@ export class KernelFinder implements IKernelFinder {
 
     // Given a set of paths, search for kernel.json files and return back the full paths of all of them that we find
     private async kernelGlobSearch(paths: string[]): Promise<string[]> {
-        const promises = paths.map((kernelPath) => this.file.search(`**/kernel.json`, kernelPath, true));
+        const promises = paths.map((kernelPath) => this.fs.searchLocal(`**/kernel.json`, kernelPath, true));
         const searchResults = await Promise.all(promises);
 
         // Append back on the start of each path so we have the full path in the results
@@ -337,7 +396,7 @@ export class KernelFinder implements IKernelFinder {
     private async readCache(): Promise<string[]> {
         try {
             return JSON.parse(
-                await this.file.readFile(path.join(this.context.globalStoragePath, cacheFile))
+                await this.fs.readLocalFile(path.join(this.context.globalStoragePath, cacheFile))
             ) as string[];
         } catch {
             traceInfo('No kernelSpec cache found.');
@@ -354,7 +413,7 @@ export class KernelFinder implements IKernelFinder {
 
     private async writeCache(cache: string[]) {
         if (this.cacheDirty) {
-            await this.file.writeFile(path.join(this.context.globalStoragePath, cacheFile), JSON.stringify(cache));
+            await this.fs.writeLocalFile(path.join(this.context.globalStoragePath, cacheFile), JSON.stringify(cache));
             this.cacheDirty = false;
         }
     }

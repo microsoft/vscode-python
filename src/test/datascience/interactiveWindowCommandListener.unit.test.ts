@@ -8,25 +8,27 @@ import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { EventEmitter, Uri } from 'vscode';
-
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { FileSystem } from '../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposable } from '../../client/common/types';
 import * as localize from '../../client/common/utils/localize';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
+import { DataScienceFileSystem } from '../../client/datascience/dataScienceFileSystem';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
-import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { ExportFormat, IExportManager } from '../../client/datascience/export/types';
+import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
+import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
+import { NotebookStorageProvider } from '../../client/datascience/notebookStorage/notebookStorageProvider';
 import {
+    IDataScienceFileSystem,
     IInteractiveWindow,
     IJupyterExecution,
     INotebook,
@@ -57,7 +59,7 @@ suite('Interactive window command listener', async () => {
     const interpreterService = mock(InterpreterService);
     const configService = mock(ConfigurationService);
     const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
-    const fileSystem = mock(FileSystem);
+    const fileSystem = mock(DataScienceFileSystem);
     const serviceContainer = mock(ServiceContainer);
     const dummyEvent = new EventEmitter<void>();
     const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
@@ -72,6 +74,8 @@ suite('Interactive window command listener', async () => {
     const documentManager = new MockDocumentManager();
     const statusProvider = new MockStatusProvider();
     const commandManager = new MockCommandManager();
+    const exportManager = mock<IExportManager>();
+    const notebookStorageProvider = mock(NotebookStorageProvider);
     let notebookEditorProvider: INotebookEditorProvider;
     const server = createTypeMoq<INotebookServer>('jupyter server');
     let lastFileContents: any;
@@ -112,12 +116,13 @@ suite('Interactive window command listener', async () => {
 
         // Service container needs logger, file system, and config service
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
-        when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
+        when(serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem)).thenReturn(instance(fileSystem));
         when(configService.getSettings(anything())).thenReturn(pythonSettings);
 
         // Setup default settings
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
+            alwaysTrustNotebooks: true,
             jupyterLaunchTimeout: 10,
             jupyterLaunchRetries: 3,
             enabled: true,
@@ -143,7 +148,8 @@ suite('Interactive window command listener', async () => {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            widgetScriptSources: []
+            widgetScriptSources: [],
+            interactiveWindowMode: 'single'
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
@@ -155,8 +161,8 @@ suite('Interactive window command listener', async () => {
             },
             filePath: '/foo/bar/baz.py'
         };
-        when(fileSystem.createTemporaryFile(anything())).thenResolve(tempFile);
-        when(fileSystem.deleteDirectory(anything())).thenResolve();
+        when(fileSystem.createTemporaryLocalFile(anything())).thenResolve(tempFile);
+        when(fileSystem.deleteLocalDirectory(anything())).thenResolve();
         when(
             fileSystem.writeFile(
                 anything(),
@@ -168,8 +174,7 @@ suite('Interactive window command listener', async () => {
         ).thenResolve();
         when(fileSystem.arePathsSame(anything(), anything())).thenReturn(true);
 
-        when(interactiveWindowProvider.getActive()).thenReturn(interactiveWindow.object);
-        when(interactiveWindowProvider.getOrCreateActive()).thenResolve(interactiveWindow.object);
+        when(interactiveWindowProvider.getOrCreate(anything())).thenResolve(interactiveWindow.object);
         when(notebookImporter.importFromFile(anything())).thenResolve('imported');
         const metadata: nbformat.INotebookMetadata = {
             language_info: {
@@ -201,19 +206,23 @@ suite('Interactive window command listener', async () => {
         when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));
         when(applicationShell.showInformationMessage(anything())).thenReturn(Promise.resolve('moo'));
 
+        const notebookProvider = mock(NotebookProvider);
+
         const result = new InteractiveWindowCommandListener(
             disposableRegistry,
             instance(interactiveWindowProvider),
             instance(notebookExporter),
             instance(jupyterExecution),
+            instance(notebookProvider),
             documentManager,
             instance(applicationShell),
             instance(fileSystem),
             instance(configService),
             statusProvider,
-            instance(notebookImporter),
             instance(dataScienceErrorHandler),
-            instance(notebookEditorProvider)
+            instance(notebookEditorProvider),
+            instance(exportManager),
+            instance(notebookStorageProvider)
         );
         result.register(commandManager);
 
@@ -226,12 +235,12 @@ suite('Interactive window command listener', async () => {
             Promise.resolve([Uri.file('foo')])
         );
         await commandManager.executeCommand(Commands.ImportNotebook, undefined, undefined);
-        assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
+        verify(exportManager.export(ExportFormat.python, anything())).once();
     });
     test('Import File', async () => {
         createCommandListener();
         await commandManager.executeCommand(Commands.ImportNotebook, Uri.file('bar.ipynb'), undefined);
-        assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
+        verify(exportManager.export(ExportFormat.python, anything())).twice();
     });
     test('Export File', async () => {
         createCommandListener();

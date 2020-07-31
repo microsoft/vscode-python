@@ -1,9 +1,11 @@
 import { injectable } from 'inversify';
-import { Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { ExportBase } from './exportBase';
+import { ExportFormat } from './types';
 
 @injectable()
 export class ExportToPDF extends ExportBase {
-    // tslint:disable-next-line: no-empty
-    public async export(_source: Uri, _target: Uri): Promise<void> {}
+    public async export(source: Uri, target: Uri, token: CancellationToken): Promise<void> {
+        await this.executeCommand(source, target, ExportFormat.pdf, token);
+    }
 }

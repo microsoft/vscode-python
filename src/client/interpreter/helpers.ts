@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import { compare } from 'semver';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { traceError } from '../common/logger';
@@ -7,8 +6,14 @@ import { FileSystemPaths } from '../common/platform/fs-paths';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterInformation, InterpreterType, PythonInterpreter } from '../pythonEnvironments/info';
+import { isMacDefaultPythonPath } from '../pythonEnvironments/discovery';
+import {
+    getInterpreterTypeName,
+    InterpreterInformation,
+    InterpreterType,
+    PythonInterpreter,
+    sortInterpreters
+} from '../pythonEnvironments/info';
 import { IInterpreterHelper } from './contracts';
 import { IInterpreterHashProviderFactory } from './locators/types';
 
@@ -43,7 +48,7 @@ export class InterpreterHelper implements IInterpreterHelper {
     private readonly persistentFactory: IPersistentStateFactory;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory
+        @inject(IInterpreterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory
     ) {
         this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
@@ -110,39 +115,16 @@ export class InterpreterHelper implements IInterpreterHelper {
         }
     }
     public isMacDefaultPythonPath(pythonPath: string) {
-        return pythonPath === 'python' || pythonPath === '/usr/bin/python';
+        return isMacDefaultPythonPath(pythonPath);
     }
     public getInterpreterTypeDisplayName(interpreterType: InterpreterType) {
-        switch (interpreterType) {
-            case InterpreterType.Conda: {
-                return 'conda';
-            }
-            case InterpreterType.Pipenv: {
-                return 'pipenv';
-            }
-            case InterpreterType.Pyenv: {
-                return 'pyenv';
-            }
-            case InterpreterType.Venv: {
-                return 'venv';
-            }
-            case InterpreterType.VirtualEnv: {
-                return 'virtualenv';
-            }
-            default: {
-                return '';
-            }
-        }
+        return getInterpreterTypeName(interpreterType);
     }
     public getBestInterpreter(interpreters?: PythonInterpreter[]): PythonInterpreter | undefined {
         if (!Array.isArray(interpreters) || interpreters.length === 0) {
             return;
         }
-        if (interpreters.length === 1) {
-            return interpreters[0];
-        }
-        const sorted = interpreters.slice();
-        sorted.sort((a, b) => (a.version && b.version ? compare(a.version.raw, b.version.raw) : 0));
+        const sorted = sortInterpreters(interpreters);
         return sorted[sorted.length - 1];
     }
 }

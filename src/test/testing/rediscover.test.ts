@@ -34,7 +34,10 @@ suite('Unit Tests re-discovery', () => {
         await initializeTest();
         initializeDI();
     });
-    teardown(async () => {
+    teardown(async function () {
+        // This is doing a lot more than what a teardown does normally, so increasing the timeout.
+        // tslint:disable-next-line: no-invalid-this
+        this.timeout(TEST_TIMEOUT * 2);
         await ioc.dispose();
         await resetSettings();
         await fs.copy(testFileWithFewTests, testFile, { overwrite: true });
@@ -54,11 +57,9 @@ suite('Unit Tests re-discovery', () => {
         ioc.registerVariableTypes();
         ioc.registerUnitTestTypes();
         ioc.registerInterpreterStorageTypes();
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
-        ioc.serviceManager.addSingletonInstance<IInterpreterService>(
-            IInterpreterService,
-            instance(mock(InterpreterService))
-        );
+        ioc.registerMockInterpreterTypes();
+        ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
     }
 
     async function discoverUnitTests(testProvider: TestProvider) {

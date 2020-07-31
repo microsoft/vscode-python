@@ -19,7 +19,7 @@ jobs:
         inputs:
           targets: 'prePublishNonBundle'
       - powershell: |
-          mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
+          mocha --require source-map-support/register --config ./build/.mocha.performance.json
           node ./build/ci/performance/savePerformanceResults.js
 
   - job: Testing_Round_2
@@ -33,7 +33,7 @@ jobs:
     pool: DSPerf
     steps:
       - powershell: |
-          mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
+          mocha --require source-map-support/register --config ./build/.mocha.performance.json
           node ./build/ci/performance/savePerformanceResults.js
 
   - job: Testing_Round_3
@@ -47,7 +47,7 @@ jobs:
     pool: DSPerf
     steps:
       - powershell: |
-          mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
+          mocha --require source-map-support/register --config ./build/.mocha.performance.json
           node ./build/ci/performance/savePerformanceResults.js
 
   - job: Testing_Round_4
@@ -61,7 +61,7 @@ jobs:
     pool: DSPerf
     steps:
       - powershell: |
-          mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
+          mocha --require source-map-support/register --config ./build/.mocha.performance.json
           node ./build/ci/performance/savePerformanceResults.js
 
   - job: Testing_Round_5
@@ -75,5 +75,5 @@ jobs:
     pool: DSPerf
     steps:
       - powershell: |
-          mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
+          mocha --require source-map-support/register --config ./build/.mocha.performance.json
           node ./build/ci/performance/savePerformanceResults.js

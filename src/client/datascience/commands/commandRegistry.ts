@@ -8,6 +8,7 @@ import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { Commands as coreCommands } from '../../common/constants';
+
 import { IStartPage } from '../../common/startPage/types';
 import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
@@ -18,11 +19,12 @@ import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
+    IDataScienceFileSystem,
     INotebookEditorProvider
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { ExportCommands } from './exportCommands';
-import { KernelSwitcherCommand } from './kernelSwitcher';
+import { NotebookCommands } from './notebookCommands';
 import { JupyterServerSelectorCommand } from './serverSelector';
 
 @injectable()
@@ -36,7 +38,7 @@ export class CommandRegistry implements IDisposable {
         private commandListeners: IDataScienceCommandListener[] | undefined,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterServerSelectorCommand) private readonly serverSelectedCommand: JupyterServerSelectorCommand,
-        @inject(KernelSwitcherCommand) private readonly kernelSwitcherCommand: KernelSwitcherCommand,
+        @inject(NotebookCommands) private readonly notebookCommands: NotebookCommands,
         @inject(JupyterCommandLineSelectorCommand)
         private readonly commandLineCommand: JupyterCommandLineSelectorCommand,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
@@ -45,15 +47,16 @@ export class CommandRegistry implements IDisposable {
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
         @inject(IStartPage) private startPage: IStartPage,
-        @inject(ExportCommands) private readonly exportCommand: ExportCommands
+        @inject(ExportCommands) private readonly exportCommand: ExportCommands,
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {
         this.disposables.push(this.serverSelectedCommand);
-        this.disposables.push(this.kernelSwitcherCommand);
+        this.disposables.push(this.notebookCommands);
     }
     public register() {
         this.commandLineCommand.register();
         this.serverSelectedCommand.register();
-        this.kernelSwitcherCommand.register();
+        this.notebookCommands.register();
         this.exportCommand.register();
         this.registerCommand(Commands.RunAllCells, this.runAllCells);
         this.registerCommand(Commands.RunCell, this.runCell);
@@ -90,6 +93,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
         this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
         this.registerCommand(Commands.GatherQuality, this.reportGatherQuality);
+        this.registerCommand(Commands.LatestExtension, this.openPythonExtensionPage);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
@@ -113,12 +117,16 @@ export class CommandRegistry implements IDisposable {
         this.disposables.push(disposable);
     }
 
-    private getCodeWatcher(file: string): ICodeWatcher | undefined {
-        const possibleDocuments = this.documentManager.textDocuments.filter((d) => d.fileName === file);
-        if (possibleDocuments && possibleDocuments.length === 1) {
-            return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
-        } else if (possibleDocuments && possibleDocuments.length > 1) {
-            throw new Error(DataScience.documentMismatch().format(file));
+    private getCodeWatcher(file: Uri | undefined): ICodeWatcher | undefined {
+        if (file) {
+            const possibleDocuments = this.documentManager.textDocuments.filter((d) =>
+                this.fs.arePathsSame(d.uri, file)
+            );
+            if (possibleDocuments && possibleDocuments.length === 1) {
+                return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
+            } else if (possibleDocuments && possibleDocuments.length > 1) {
+                throw new Error(DataScience.documentMismatch().format(file.fsPath));
+            }
         }
 
         return undefined;
@@ -145,7 +153,7 @@ export class CommandRegistry implements IDisposable {
             .catch(noop);
     }
 
-    private async runAllCells(file: string): Promise<void> {
+    private async runAllCells(file: Uri | undefined): Promise<void> {
         let codeWatcher = this.getCodeWatcher(file);
         if (!codeWatcher) {
             codeWatcher = this.getCurrentCodeWatcher();
@@ -157,7 +165,7 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async runFileInteractive(file: string): Promise<void> {
+    private async runFileInteractive(file: Uri): Promise<void> {
         let codeWatcher = this.getCodeWatcher(file);
         if (!codeWatcher) {
             codeWatcher = this.getCurrentCodeWatcher();
@@ -169,7 +177,7 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async debugFileInteractive(file: string): Promise<void> {
+    private async debugFileInteractive(file: Uri): Promise<void> {
         let codeWatcher = this.getCodeWatcher(file);
         if (!codeWatcher) {
             codeWatcher = this.getCurrentCodeWatcher();
@@ -184,7 +192,7 @@ export class CommandRegistry implements IDisposable {
     // Note: see codewatcher.ts where the runcell command args are attached. The reason we don't have any
     // objects for parameters is because they can't be recreated when passing them through the LiveShare API
     private async runCell(
-        file: string,
+        file: Uri,
         startLine: number,
         startChar: number,
         endLine: number,
@@ -196,7 +204,7 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async runAllCellsAbove(file: string, stopLine: number, stopCharacter: number): Promise<void> {
+    private async runAllCellsAbove(file: Uri, stopLine: number, stopCharacter: number): Promise<void> {
         if (file) {
             const codeWatcher = this.getCodeWatcher(file);
 
@@ -206,7 +214,7 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async runCellAndAllBelow(file: string, startLine: number, startCharacter: number): Promise<void> {
+    private async runCellAndAllBelow(file: Uri | undefined, startLine: number, startCharacter: number): Promise<void> {
         if (file) {
             const codeWatcher = this.getCodeWatcher(file);
 
@@ -262,7 +270,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async debugCell(
-        file: string,
+        file: Uri,
         startLine: number,
         startChar: number,
         endLine: number,
@@ -405,6 +413,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async openStartPage(): Promise<void> {
+        sendTelemetryEvent(Telemetry.StartPageOpenedFromCommandPalette);
         return this.startPage.open();
     }
 
@@ -440,7 +449,11 @@ export class CommandRegistry implements IDisposable {
     }
 
     private reportGatherQuality(val: string) {
-        sendTelemetryEvent(Telemetry.GatherQualityReport, undefined, { result: val === 'no' ? 'no' : 'yes' });
-        env.openExternal(Uri.parse(`https://aka.ms/gathersurvey?succeed=${val}`));
+        sendTelemetryEvent(Telemetry.GatherQualityReport, undefined, { result: val[0] === 'no' ? 'no' : 'yes' });
+        env.openExternal(Uri.parse(`https://aka.ms/gathersurvey?succeed=${val[0]}`));
+    }
+
+    private openPythonExtensionPage() {
+        env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-python.python`));
     }
 }

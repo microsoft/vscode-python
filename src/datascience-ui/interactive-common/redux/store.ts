@@ -73,7 +73,9 @@ function generateDefaultState(
                 language: PYTHON_LANGUAGE
             },
             settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.
-            editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined
+            editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined,
+            isNotebookTrusted: true,
+            shouldShowTrustMessage: false
         };
     }
 }
@@ -194,7 +196,8 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         // Indicate variables complete
         if (
             (!fastDeepEqual(prevState.variables.variables, afterState.variables.variables) ||
-                prevState.variables.currentExecutionCount !== afterState.variables.currentExecutionCount) &&
+                prevState.variables.currentExecutionCount !== afterState.variables.currentExecutionCount ||
+                prevState.variables.refreshCount !== afterState.variables.refreshCount) &&
             action.type === InteractiveWindowMessages.GetVariablesResponse
         ) {
             sendMessage(InteractiveWindowMessages.VariablesComplete);
@@ -210,7 +213,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             action.type &&
             action.type === InteractiveWindowMessages.FinishCell &&
             action.payload.data &&
-            action.payload.data.data?.cell_type === 'code'
+            action.payload.data.cell.data?.cell_type === 'code'
         ) {
             // Send async so happens after the render is actually finished.
             sendMessage(InteractiveWindowMessages.ExecutionRendered);
@@ -385,6 +388,7 @@ export function createStore<M>(
     baseTheme: string,
     testMode: boolean,
     editable: boolean,
+    showVariablesOnDebug: boolean,
     reducerMap: M,
     postOffice: PostOffice
 ) {
@@ -398,7 +402,7 @@ export function createStore<M>(
     const monacoReducer = generateMonacoReducer(testMode, postOffice);
 
     // Create another reducer for handling variable state
-    const variableReducer = generateVariableReducer();
+    const variableReducer = generateVariableReducer(showVariablesOnDebug);
 
     // Combine these together
     const rootReducer = Redux.combineReducers<IStore>({

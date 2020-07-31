@@ -1,19 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CompletionItem, ProviderResult } from 'vscode';
 // tslint:disable-next-line: import-name
 import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
 import { CompletionResolveRequest } from 'vscode-languageclient/node';
-import { IWorkspaceService } from '../../common/application/types';
-import { traceDecorators } from '../../common/logger';
+import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, Resource } from '../../common/types';
+import { IConfigurationService, IExtensions, Resource } from '../../common/types';
+import { Pylance } from '../../common/utils/localize';
 import { LanguageServerActivatorBase } from '../common/activatorBase';
-import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../types';
+import { promptForPylanceInstall } from '../common/languageServerChangeHandler';
+import { ILanguageServerManager } from '../types';
 
 /**
- * Starts the Node.js-based language server managers per workspaces (currently one for first workspace).
+ * Starts Pylance language server manager.
  *
  * @export
  * @class NodeLanguageServerActivator
@@ -26,16 +29,27 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(ILanguageServerManager) manager: ILanguageServerManager,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IFileSystem) fs: IFileSystem,
-        @inject(ILanguageServerDownloader) lsDownloader: ILanguageServerDownloader,
-        @inject(ILanguageServerFolderService) languageServerFolderService: ILanguageServerFolderService,
-        @inject(IConfigurationService) configurationService: IConfigurationService
+        @inject(IConfigurationService) configurationService: IConfigurationService,
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment
     ) {
-        super(manager, workspace, fs, lsDownloader, languageServerFolderService, configurationService);
+        super(manager, workspace, fs, configurationService);
     }
 
-    @traceDecorators.error('Failed to ensure language server is available')
     public async ensureLanguageServerIsAvailable(resource: Resource): Promise<void> {
-        await this.ensureLanguageServerFileIsAvailable(resource, 'server.bundle.js');
+        const settings = this.configurationService.getSettings(resource);
+        if (settings.downloadLanguageServer === false) {
+            // Development mode.
+            return;
+        }
+        if (!this.extensions.getExtension(PYLANCE_EXTENSION_ID)) {
+            // Pylance is not yet installed. Throw will cause activator to use Jedi
+            // temporarily. Language server installation tracker will prompt for window
+            // reload when Pylance becomes available.
+            await promptForPylanceInstall(this.appShell, this.appEnv);
+            throw new Error(Pylance.pylanceNotInstalledMessage());
+        }
     }
 
     public resolveCompletionItem(item: CompletionItem, token: CancellationToken): ProviderResult<CompletionItem> {

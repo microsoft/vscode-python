@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Uri } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
@@ -25,6 +25,7 @@ import {
     IJupyterExecution,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
+    IJupyterUriProviderRegistration,
     INotebookServer,
     INotebookServerLaunchInfo,
     INotebookServerOptions
@@ -42,6 +43,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private startedEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
     private disposed: boolean = false;
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
+    private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration;
 
     constructor(
         _liveShare: ILiveShareApi,
@@ -57,6 +59,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
     ) {
         this.jupyterInterpreterService = serviceContainer.get<IJupyterSubCommandExecutionService>(
             IJupyterSubCommandExecutionService
+        );
+        this.jupyterPickerRegistration = serviceContainer.get<IJupyterUriProviderRegistration>(
+            IJupyterUriProviderRegistration
         );
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
@@ -235,7 +240,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                         new StopWatch(),
                                         sessionManager,
                                         cancelToken,
-                                        launchInfo.kernelSpec
+                                        launchInfo.kernelSpec?.display_name || launchInfo.kernelSpec?.name
                                     );
                                     if (Object.keys(kernelInterpreter).length > 0) {
                                         launchInfo.interpreter = kernelInterpreter.interpreter;
@@ -329,7 +334,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return this.jupyterInterpreterService.openNotebook(file);
     }
 
-    public async importNotebook(file: string, template: string | undefined): Promise<string> {
+    public async importNotebook(file: Uri, template: string | undefined): Promise<string> {
         return this.jupyterInterpreterService.exportNotebookToPython(file, template);
     }
 
@@ -363,7 +368,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
         } else {
             // If we have a URI spec up a connection info for it
-            return createRemoteConnectionInfo(options.uri, this.configuration.getSettings(undefined).datascience);
+            return createRemoteConnectionInfo(options.uri, this.jupyterPickerRegistration);
         }
     }
 

@@ -24,7 +24,7 @@ import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { PostOffice } from '../../datascience-ui/react-common/postOffice';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { WaitForMessageOptions } from './mountedWebView';
+import { IMountedWebView } from './mountedWebView';
 import { createInputEvent, createKeyboardEvent } from './reactHelpers';
 export * from './testHelpersCore';
 
@@ -41,40 +41,17 @@ export enum CellPosition {
     Last = 'last'
 }
 
-/**
- *
- *
- * @export
- * @param {DataScienceIocContainer} ioc
- * @param {string} message
- * @param {number} [timeoutMs=65000] defaults to 65_000ms.
- * @returns {Promise<void>}
- */
-// tslint:disable-next-line: unified-signatures
-export function waitForMessage(
-    ioc: DataScienceIocContainer,
-    message: string,
-    options?: WaitForMessageOptions
-): Promise<void> {
-    return ioc.getDefaultWebPanel().waitForMessage(message, options);
-}
-
 async function testInnerLoop(
     name: string,
     type: 'native' | 'interactive',
-    mountFunc: (ioc: DataScienceIocContainer) => ReactWrapper<any, Readonly<{}>, React.Component>,
-    testFunc: (
-        type: 'native' | 'interactive',
-        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
-    ) => Promise<void>,
+    testFunc: (type: 'native' | 'interactive') => Promise<void>,
     getIOC: () => Promise<DataScienceIocContainer>
 ) {
     const ioc = await getIOC();
     const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
     if (await jupyterExecution.isNotebookSupported()) {
         addMockData(ioc, 'a=1\na', 1);
-        const wrapper = mountFunc(ioc);
-        await testFunc(type, wrapper);
+        await testFunc(type);
     } else {
         // tslint:disable-next-line:no-console
         console.log(`${name} skipped, no Jupyter installed.`);
@@ -83,56 +60,29 @@ async function testInnerLoop(
 
 export function runDoubleTest(
     name: string,
-    testFunc: (
-        type: 'native' | 'interactive',
-        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
-    ) => Promise<void>,
+    testFunc: (type: 'native' | 'interactive') => Promise<void>,
     getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
-    test(`${name} (interactive)`, async () =>
-        testInnerLoop(name, 'interactive', (ioc) => mountWebView(ioc, 'interactive'), testFunc, getIOC));
-    test(`${name} (native)`, async () =>
-        testInnerLoop(name, 'native', (ioc) => mountWebView(ioc, 'native'), testFunc, getIOC));
+    test(`${name} (interactive)`, async () => testInnerLoop(name, 'interactive', testFunc, getIOC));
+    test(`${name} (native)`, async () => testInnerLoop(name, 'native', testFunc, getIOC));
 }
 
 export function runInteractiveTest(
     name: string,
-    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
+    testFunc: () => Promise<void>,
     getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Run the test with just the interactive window
-    test(`${name} (interactive)`, async () =>
-        testInnerLoop(
-            name,
-            'interactive',
-            (ioc) => mountWebView(ioc, 'interactive'),
-            (_t, w) => testFunc(w),
-            getIOC
-        ));
+    test(`${name} (interactive)`, async () => testInnerLoop(name, 'interactive', (_t) => testFunc(), getIOC));
 }
 export function runNativeTest(
     name: string,
-    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
+    testFunc: () => Promise<void>,
     getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Run the test with just the native window
-    test(`${name} (native)`, async () =>
-        testInnerLoop(
-            name,
-            'native',
-            (ioc) => mountWebView(ioc, 'native'),
-            (_t, w) => testFunc(w),
-            getIOC
-        ));
-}
-
-export function mountWebView(
-    ioc: DataScienceIocContainer,
-    type: 'native' | 'interactive'
-): ReactWrapper<any, Readonly<{}>, React.Component> {
-    // Setup our webview panel
-    return ioc.createWebView(() => mountConnectedMainPanel(type), type === 'native' ? 'notebook' : 'default');
+    test(`${name} (native)`, async () => testInnerLoop(name, 'native', (_t) => testFunc(), getIOC));
 }
 
 export function addMockData(
@@ -457,9 +407,7 @@ export function verifyLastCellInputState(
 }
 
 export async function getCellResults(
-    ioc: DataScienceIocContainer,
-    type: 'notebook' | 'default',
-    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    mountedWebView: IMountedWebView,
     cellType: string,
     updater: () => Promise<void>,
     renderPromiseGenerator?: () => Promise<void>
@@ -467,7 +415,7 @@ export async function getCellResults(
     // Get a render promise with the expected number of renders
     const renderPromise = renderPromiseGenerator
         ? renderPromiseGenerator()
-        : ioc.getWebPanel(type).waitForMessage(InteractiveWindowMessages.ExecutionRendered);
+        : mountedWebView.waitForMessage(InteractiveWindowMessages.ExecutionRendered);
 
     // Call our function to update the react control
     await updater();
@@ -476,10 +424,10 @@ export async function getCellResults(
     await renderPromise;
 
     // Update wrapper so that it gets the latest values.
-    wrapper.update();
+    mountedWebView.wrapper.update();
 
     // Return the result
-    return wrapper.find(cellType);
+    return mountedWebView.wrapper.find(cellType);
 }
 
 export function simulateKey(
@@ -531,10 +479,10 @@ export function simulateKey(
     }
 }
 
-export async function submitInput(ioc: DataScienceIocContainer, textArea: HTMLTextAreaElement): Promise<void> {
+export async function submitInput(mountedWebView: IMountedWebView, textArea: HTMLTextAreaElement): Promise<void> {
     // Get a render promise with the expected number of renders (how many updates a the shift + enter will cause)
     // Should be 6 - 1 for the shift+enter and 5 for the new cell.
-    const renderPromise = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
+    const renderPromise = mountedWebView.waitForMessage(InteractiveWindowMessages.ExecutionRendered);
 
     // Submit a keypress into the textarea
     simulateKey(textArea, 'Enter', true);
@@ -664,21 +612,23 @@ function getTextArea(
 }
 
 export async function enterInput(
-    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    ioc: DataScienceIocContainer,
+    mountedWebView: IMountedWebView,
     code: string,
     resultClass: string
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-    const editor = resultClass === 'InteractiveCell' ? getInteractiveEditor(wrapper) : getNativeFocusedEditor(wrapper);
+    const editor =
+        resultClass === 'InteractiveCell'
+            ? getInteractiveEditor(mountedWebView.wrapper)
+            : getNativeFocusedEditor(mountedWebView.wrapper);
 
     // First we have to type the code into the input box
     const textArea = typeCode(editor, code);
 
     // Now simulate a shift enter. This should cause a new cell to be added
-    await submitInput(ioc, textArea!);
+    await submitInput(mountedWebView, textArea!);
 
     // Return the result
-    return wrapper.find(resultClass);
+    return mountedWebView.wrapper.find(resultClass);
 }
 
 export function findButton(
@@ -760,10 +710,6 @@ export function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, Re
     }
 }
 
-export async function waitForVariablesUpdated(
-    ioc: DataScienceIocContainer,
-    type: 'default' | 'notebook',
-    numberOfTimes?: number
-): Promise<void> {
-    return ioc.getWebPanel(type).waitForMessage(InteractiveWindowMessages.VariablesComplete, { numberOfTimes });
+export async function waitForVariablesUpdated(mountedWebView: IMountedWebView, numberOfTimes?: number): Promise<void> {
+    return mountedWebView.waitForMessage(InteractiveWindowMessages.VariablesComplete, { numberOfTimes });
 }

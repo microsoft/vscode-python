@@ -18,7 +18,7 @@ type Task<R> = (
 ) => Promise<R>;
 
 // tslint:disable-next-line: max-func-body-length
-suite('Data Science - Progress Reporter', () => {
+suite('DataScience - Progress Reporter', () => {
     let reporter: ProgressReporter;
     let vscodeProgressReporter: VSCProgress<{ message?: string | undefined; increment?: number | undefined }>;
     let appShell: IApplicationShell;

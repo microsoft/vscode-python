@@ -3,7 +3,15 @@ import * as path from 'path';
 import { SemVer } from 'semver';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationTarget, Disposable, StatusBarAlignment, StatusBarItem, Uri, WorkspaceFolder } from 'vscode';
+import {
+    ConfigurationTarget,
+    Disposable,
+    EventEmitter,
+    StatusBarAlignment,
+    StatusBarItem,
+    Uri,
+    WorkspaceFolder
+} from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -12,13 +20,19 @@ import {
     IDisposableRegistry,
     IOutputChannel,
     IPathUtils,
-    IPythonSettings
+    IPythonSettings,
+    ReadWrite
 } from '../../client/common/types';
 import { Interpreters } from '../../client/common/utils/localize';
 import { Architecture } from '../../client/common/utils/platform';
 import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
-import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService } from '../../client/interpreter/contracts';
+import {
+    IInterpreterDisplay,
+    IInterpreterHelper,
+    IInterpreterService,
+    IInterpreterStatusbarVisibilityFilter
+} from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -102,9 +116,11 @@ suite('Interpreters Display', () => {
             .setup((a) => a.createStatusBarItem(TypeMoq.It.isValue(StatusBarAlignment.Left), TypeMoq.It.isValue(100)))
             .returns(() => statusBar.object);
         pathUtils.setup((p) => p.getDisplayName(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p) => p);
-
-        interpreterDisplay = new InterpreterDisplay(serviceContainer.object);
+        createInterpreterDisplay();
     });
+    function createInterpreterDisplay(filters: IInterpreterStatusbarVisibilityFilter[] = []) {
+        interpreterDisplay = new InterpreterDisplay(serviceContainer.object, filters);
+    }
     function setupWorkspaceFolder(resource: Uri, workspaceFolder?: Uri) {
         if (workspaceFolder) {
             const mockFolder = TypeMoq.Mock.ofType<WorkspaceFolder>();
@@ -256,5 +272,98 @@ suite('Interpreters Display', () => {
         interpreterService.verifyAll();
         statusBar.verify((s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!), TypeMoq.Times.once());
         statusBar.verify((s) => (s.tooltip = TypeMoq.It.isValue(pythonPath)!), TypeMoq.Times.atLeastOnce());
+    });
+    suite('Visibility', () => {
+        const resource = Uri.file('x');
+        setup(() => {
+            const workspaceFolder = Uri.file('workspace');
+            const activeInterpreter: PythonInterpreter = {
+                ...info,
+                displayName: 'Dummy_Display_Name',
+                type: InterpreterType.Unknown,
+                path: path.join('user', 'development', 'env', 'bin', 'python')
+            };
+            setupWorkspaceFolder(resource, workspaceFolder);
+            when(autoSelection.autoSelectInterpreter(anything())).thenResolve();
+            interpreterService
+                .setup((i) => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder)))
+                .returns(() => Promise.resolve([]));
+            interpreterService
+                .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
+                .returns(() => Promise.resolve(activeInterpreter));
+        });
+        test('Status bar must be displayed', async () => {
+            await interpreterDisplay.refresh(resource);
+
+            statusBar.verify((s) => s.show(), TypeMoq.Times.once());
+            statusBar.verify((s) => s.hide(), TypeMoq.Times.never());
+        });
+        test('Status bar must not be displayed if a filter is registered that needs it to be hidden', async () => {
+            const filter1: IInterpreterStatusbarVisibilityFilter = { visible: false };
+            const filter2: IInterpreterStatusbarVisibilityFilter = { visible: true };
+            createInterpreterDisplay([filter1, filter2]);
+
+            await interpreterDisplay.refresh(resource);
+
+            statusBar.verify((s) => s.show(), TypeMoq.Times.never());
+            statusBar.verify((s) => s.hide(), TypeMoq.Times.once());
+        });
+        test('Status bar must not be displayed if both filters need it to be hidden', async () => {
+            const filter1: IInterpreterStatusbarVisibilityFilter = { visible: false };
+            const filter2: IInterpreterStatusbarVisibilityFilter = { visible: false };
+            createInterpreterDisplay([filter1, filter2]);
+
+            await interpreterDisplay.refresh(resource);
+
+            statusBar.verify((s) => s.show(), TypeMoq.Times.never());
+            statusBar.verify((s) => s.hide(), TypeMoq.Times.once());
+        });
+        test('Status bar must be displayed if both filter needs it to be displayed', async () => {
+            const filter1: IInterpreterStatusbarVisibilityFilter = { visible: true };
+            const filter2: IInterpreterStatusbarVisibilityFilter = { visible: true };
+            createInterpreterDisplay([filter1, filter2]);
+
+            await interpreterDisplay.refresh(resource);
+
+            statusBar.verify((s) => s.show(), TypeMoq.Times.once());
+            statusBar.verify((s) => s.hide(), TypeMoq.Times.never());
+        });
+        test('Status bar must hidden if a filter triggers need for status bar to be hidden', async () => {
+            const event1 = new EventEmitter<void>();
+            const filter1: ReadWrite<IInterpreterStatusbarVisibilityFilter> = { visible: true, changed: event1.event };
+            const event2 = new EventEmitter<void>();
+            const filter2: ReadWrite<IInterpreterStatusbarVisibilityFilter> = { visible: true, changed: event2.event };
+            createInterpreterDisplay([filter1, filter2]);
+
+            await interpreterDisplay.refresh(resource);
+
+            statusBar.verify((s) => s.show(), TypeMoq.Times.once());
+            statusBar.verify((s) => s.hide(), TypeMoq.Times.never());
+
+            // Filter one will now want the status bar to get hidden.
+            statusBar.reset();
+            filter1.visible = false;
+            event1.fire();
+
+            statusBar.verify((s) => s.show(), TypeMoq.Times.never());
+            statusBar.verify((s) => s.hide(), TypeMoq.Times.once());
+
+            // Filter two now needs it to be displayed.
+            statusBar.reset();
+            event2.fire();
+
+            // No changes.
+            statusBar.verify((s) => s.show(), TypeMoq.Times.never());
+            statusBar.verify((s) => s.hide(), TypeMoq.Times.once());
+
+            // Filter two now needs it to be displayed & filter 1 will allow it to be displayed.
+            filter1.visible = true;
+            statusBar.reset();
+            event2.fire();
+
+            // No changes.
+            statusBar.verify((s) => s.show(), TypeMoq.Times.once());
+            statusBar.verify((s) => s.hide(), TypeMoq.Times.never());
+        });
     });
 });

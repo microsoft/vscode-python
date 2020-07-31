@@ -8,5 +8,5 @@ import { reducerMap } from './reducers';
 
 // This special version uses the reducer map from the INativeEditorMapping
 export function createStore(skipDefault: boolean, baseTheme: string, testMode: boolean, postOffice: PostOffice) {
-    return ReduxCommon.createStore(skipDefault, baseTheme, testMode, true, reducerMap, postOffice);
+    return ReduxCommon.createStore(skipDefault, baseTheme, testMode, true, true, reducerMap, postOffice);
 }

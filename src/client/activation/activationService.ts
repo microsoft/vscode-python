@@ -7,26 +7,32 @@ import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode
 
 import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/lsNotSupported';
 import { IDiagnosticsService } from '../application/diagnostics/types';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
+import {
+    IApplicationEnvironment,
+    IApplicationShell,
+    ICommandManager,
+    IWorkspaceService
+} from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { LSControl, LSEnabled } from '../common/experiments/groups';
 import { traceError } from '../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentsManager,
+    IExtensions,
     IOutputChannel,
     IPersistentStateFactory,
     IPythonSettings,
     Resource
 } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
+import { LanguageService } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { PythonInterpreter } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
+import { LanguageServerChangeHandler } from './common/languageServerChangeHandler';
 import { Commands } from './languageServer/constants';
 import { RefCountedLanguageServer } from './refCountedLanguageServer';
 import {
@@ -52,19 +58,18 @@ export class LanguageServerExtensionActivationService
     private activatedServer?: IActivatedServer;
     private readonly workspaceService: IWorkspaceService;
     private readonly output: OutputChannel;
-    private readonly appShell: IApplicationShell;
     private readonly interpreterService: IInterpreterService;
+    private readonly languageServerChangeHandler: LanguageServerChangeHandler;
     private resource!: Resource;
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
-        @inject(IExperimentsManager) private readonly abExperiments: IExperimentsManager
+        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory
     ) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(this);
@@ -74,6 +79,15 @@ export class LanguageServerExtensionActivationService
         disposables.push(
             commandManager.registerCommand(Commands.ClearAnalyisCache, this.onClearAnalysisCaches.bind(this))
         );
+
+        this.languageServerChangeHandler = new LanguageServerChangeHandler(
+            this.getCurrentLanguageServerType(),
+            this.serviceContainer.get<IExtensions>(IExtensions),
+            this.serviceContainer.get<IApplicationShell>(IApplicationShell),
+            this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment),
+            this.serviceContainer.get<ICommandManager>(ICommandManager)
+        );
+        disposables.push(this.languageServerChangeHandler);
     }
 
     public async activate(resource: Resource): Promise<void> {
@@ -129,7 +143,8 @@ export class LanguageServerExtensionActivationService
             this.activatedServer.server.dispose();
         }
     }
-    @swallowExceptions('Send telemetry for Language Server current selection')
+
+    @swallowExceptions('Send telemetry for language server current selection')
     public async sendTelemetryForChosenLanguageServer(languageServer: LanguageServerType): Promise<void> {
         const state = this.stateFactory.createGlobalPersistentState<LanguageServerType | undefined>(
             'SWITCH_LS',
@@ -170,28 +185,6 @@ export class LanguageServerExtensionActivationService
         );
     }
 
-    /**
-     * Checks if user is using Jedi as intellisense
-     * @returns `true` if user is using jedi, `false` if user is using language server
-     */
-    public useJedi(): boolean {
-        // Check if `languageServer` setting is missing (default configuration).
-        if (this.isJediUsingDefaultConfiguration(this.resource)) {
-            // If user is assigned to an experiment (i.e. use LS), return false.
-            if (this.abExperiments.inExperiment(LSEnabled)) {
-                return false;
-            }
-            // Send telemetry if user is in control group
-            this.abExperiments.sendTelemetryIfInExperiment(LSControl);
-            return true; // Do use Jedi as it is default.
-        }
-        // Configuration is non-default, so `languageServer` should be present.
-        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const lstType = configurationService.getSettings(this.resource).languageServer;
-        this.sendTelemetryForChosenLanguageServer(lstType).ignoreErrors();
-        return lstType === LanguageServerType.Jedi;
-    }
-
     protected async onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, dispose its activator
         const workspaceKeys = await Promise.all(
@@ -212,46 +205,33 @@ export class LanguageServerExtensionActivationService
         return this.activate(this.resource);
     }
 
+    private getCurrentLanguageServerType(): LanguageServerType {
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        return configurationService.getSettings(this.resource).languageServer;
+    }
+
     private async createRefCountedServer(
         resource: Resource,
         interpreter: PythonInterpreter | undefined,
         key: string
     ): Promise<RefCountedLanguageServer> {
-        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        let serverType = configurationService.getSettings(this.resource).languageServer;
-        if (!serverType) {
-            serverType = LanguageServerType.Jedi;
+        let serverType = this.getCurrentLanguageServerType();
+        if (serverType === LanguageServerType.Microsoft) {
+            const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
+                IDiagnosticsService,
+                LSNotSupportedDiagnosticServiceId
+            );
+            const diagnostic = await lsNotSupportedDiagnosticService.diagnose(undefined);
+            lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
+            if (diagnostic.length) {
+                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, {
+                    supported: false
+                });
+                serverType = LanguageServerType.Jedi;
+            }
         }
 
-        switch (serverType) {
-            case LanguageServerType.None:
-                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_NONE, undefined, undefined);
-                break;
-            case LanguageServerType.Node:
-                // No telemetry in development phase.
-                break;
-            case LanguageServerType.Microsoft:
-                if (this.useJedi()) {
-                    serverType = LanguageServerType.Jedi;
-                    break;
-                }
-                const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
-                    IDiagnosticsService,
-                    LSNotSupportedDiagnosticServiceId
-                );
-                const diagnostic = await lsNotSupportedDiagnosticService.diagnose(undefined);
-                lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
-                if (diagnostic.length) {
-                    sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, {
-                        supported: false
-                    });
-                    serverType = LanguageServerType.Jedi;
-                }
-                break;
-            default:
-                serverType = LanguageServerType.Jedi;
-                break;
-        }
+        this.sendTelemetryForChosenLanguageServer(serverType).ignoreErrors();
 
         await this.logStartup(serverType);
         let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
@@ -261,7 +241,7 @@ export class LanguageServerExtensionActivationService
             if (serverType === LanguageServerType.Jedi) {
                 throw ex;
             }
-            await this.logStartup(serverType);
+            this.output.appendLine(LanguageService.lsFailedToStart());
             serverType = LanguageServerType.Jedi;
             server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
             await server.start(resource, interpreter);
@@ -281,16 +261,16 @@ export class LanguageServerExtensionActivationService
         let outputLine;
         switch (serverType) {
             case LanguageServerType.Jedi:
-                outputLine = 'Starting Jedi Python language engine.';
+                outputLine = LanguageService.startingJedi();
                 break;
             case LanguageServerType.Microsoft:
-                outputLine = 'Starting Microsoft Python language server.';
+                outputLine = LanguageService.startingMicrosoft();
                 break;
             case LanguageServerType.Node:
-                outputLine = 'Starting Node.js language server.';
+                outputLine = LanguageService.startingPylance();
                 break;
             case LanguageServerType.None:
-                outputLine = 'Editor support is inactive since language server is set to None.';
+                outputLine = LanguageService.startingNone();
                 break;
             default:
                 throw new Error('Unknown langauge server type in activator.');
@@ -298,7 +278,7 @@ export class LanguageServerExtensionActivationService
         this.output.appendLine(outputLine);
     }
 
-    private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
+    private async onDidChangeConfiguration(event: ConfigurationChangeEvent): Promise<void> {
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
             ? this.workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
             : [undefined];
@@ -307,26 +287,12 @@ export class LanguageServerExtensionActivationService
         ) {
             return;
         }
-        const jedi = this.useJedi();
-        if (this.activatedServer) {
-            if (this.activatedServer.jedi === jedi) {
-                return;
-            }
-            const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-            const lsType = configurationService.getSettings(this.resource).languageServer;
-            if (this.activatedServer.key === lsType) {
-                return;
-            }
-        }
-
-        const item = await this.appShell.showInformationMessage(
-            'Please reload the window switching between language engines.',
-            'Reload'
-        );
-        if (item === 'Reload') {
-            this.serviceContainer.get<ICommandManager>(ICommandManager).executeCommand('workbench.action.reloadWindow');
+        const lsType = this.getCurrentLanguageServerType();
+        if (this.activatedServer?.key !== lsType) {
+            await this.languageServerChangeHandler.handleLanguageServerChange(lsType);
         }
     }
+
     private async getKey(resource: Resource, interpreter?: PythonInterpreter): Promise<string> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const serverType = configurationService.getSettings(this.resource).languageServer;

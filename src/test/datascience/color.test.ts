@@ -8,10 +8,10 @@ import { WorkspaceConfiguration } from 'vscode';
 import { Extensions } from '../../client/common/application/extensions';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
-import { FileSystem } from '../../client/common/platform/fileSystem';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IConfigurationService } from '../../client/common/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
+import { DataScienceFileSystem } from '../../client/datascience/dataScienceFileSystem';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import { IThemeFinder } from '../../client/datascience/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
@@ -30,7 +30,7 @@ suite('Theme colors', () => {
     setup(() => {
         extensions = new Extensions();
         currentProcess = new CurrentProcess();
-        const fs = new FileSystem();
+        const fs = new DataScienceFileSystem();
         themeFinder = new ThemeFinder(extensions, currentProcess, fs);
 
         workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
@@ -52,6 +52,7 @@ suite('Theme colors', () => {
 
         settings.datascience = {
             allowImportFromNotebook: true,
+            alwaysTrustNotebooks: true,
             jupyterLaunchTimeout: 20000,
             jupyterLaunchRetries: 3,
             enabled: true,
@@ -76,7 +77,8 @@ suite('Theme colors', () => {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            widgetScriptSources: []
+            widgetScriptSources: [],
+            interactiveWindowMode: 'single'
         };
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         configService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => settings);
@@ -163,7 +165,7 @@ suite('Theme colors', () => {
             .setup((m) => m.findThemeRootJson(TypeMoq.It.isAnyString()))
             .returns(() => Promise.resolve(undefined));
 
-        const fs = new FileSystem();
+        const fs = new DataScienceFileSystem();
         cssGenerator = new CodeCssGenerator(workspaceService.object, mockThemeFinder.object, configService.object, fs);
 
         const colors = await cssGenerator.generateThemeCss(undefined, false, 'Kimbie Dark');

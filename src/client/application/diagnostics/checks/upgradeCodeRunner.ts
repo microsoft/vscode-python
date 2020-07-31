@@ -58,7 +58,8 @@ export class UpgradeCodeRunnerDiagnosticService extends BaseDiagnosticsService {
         if (!extension) {
             return [];
         }
-        const flagValue: boolean | undefined = extension.packageJSON?.featureFlags?.usingNewPythonInterpreterPathApi;
+        // Available feature flags: https://github.com/formulahendry/vscode-code-runner/blob/master/package.json#L6
+        const flagValue: boolean | undefined = extension.packageJSON?.featureFlags?.usingNewPythonInterpreterPathApiV2;
         if (flagValue) {
             // Using new version of Code runner already, no need to upgrade
             return [];

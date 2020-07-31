@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import '../../client/common/extensions';
-import { IReleaseNotesPackage, IStartPageMapping, StartPageMessages } from '../../client/common/startPage/types';
+import { ISettingPackage, IStartPageMapping, StartPageMessages } from '../../client/common/startPage/types';
 import { Image, ImageName } from '../react-common/image';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
@@ -19,8 +19,7 @@ export interface IStartPageProps {
 // Front end of the Python extension start page.
 // In general it consists of its render method and methods that send and receive messages.
 export class StartPage extends React.Component<IStartPageProps> implements IMessageHandler {
-    private releaseNotes: IReleaseNotesPackage = {
-        notes: [],
+    private releaseNotes: ISettingPackage = {
         showAgainSetting: false
     };
     private postOffice: PostOffice = new PostOffice();
@@ -30,7 +29,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     public componentDidMount() {
-        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.RequestReleaseNotesAndShowAgainSetting);
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.RequestShowAgainSetting);
     }
 
     // tslint:disable: no-any
@@ -129,9 +128,8 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                         {this.renderInteractiveWindowDescription()}
                     </div>
                 </div>
-                <div className="row">
+                <div className="releaseNotesRow">
                     {this.renderReleaseNotesLink()}
-                    {this.renderReleaseNotes()}
                     {this.renderTutorialAndDoc()}
                 </div>
                 <div className="block">
@@ -151,8 +149,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
 
     // tslint:disable-next-line: no-any
     public handleMessage = (msg: string, payload?: any) => {
-        if (msg === StartPageMessages.SendReleaseNotes) {
-            this.releaseNotes.notes = payload.notes;
+        if (msg === StartPageMessages.SendSetting) {
             this.releaseNotes.showAgainSetting = payload.showAgainSetting;
             this.setState({});
         }
@@ -240,19 +237,11 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.releaseNotes',
-                        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features'
+                        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features.'
                     ).format('https://aka.ms/AA8dxtb')
                 }}
             />
         );
-    }
-
-    private renderReleaseNotes(): JSX.Element {
-        const notes: JSX.Element[] = [];
-        this.releaseNotes.notes.forEach((rel, index) => {
-            notes.push(<li key={index}>{rel}</li>);
-        });
-        return <ul className="list">{notes}</ul>;
     }
 
     private renderTutorialAndDoc(): JSX.Element {

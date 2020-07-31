@@ -15,6 +15,8 @@ export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 export const JupyterDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
 export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_launcher_daemon';
 
+export const GatherExtension = 'ms-python.gather';
+
 // List of 'language' names that we know about. All should be lower case as that's how we compare.
 export const KnownNotebookLanguages: string[] = [
     'python',
@@ -34,6 +36,7 @@ export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
     export const RunAllCellsAbove = 'python.datascience.runallcellsabove';
     export const RunCellAndAllBelow = 'python.datascience.runcellandallbelow';
+    export const SetJupyterKernel = 'python.datascience.setKernel';
     export const SwitchJupyterKernel = 'python.datascience.switchKernel';
     export const RunAllCellsAbovePalette = 'python.datascience.runallcellsabove.palette';
     export const RunCellAndAllBelowPalette = 'python.datascience.runcurrentcellandallbelow.palette';
@@ -42,7 +45,7 @@ export namespace Commands {
     export const RunCell = 'python.datascience.runcell';
     export const RunCurrentCell = 'python.datascience.runcurrentcell';
     export const RunCurrentCellAdvance = 'python.datascience.runcurrentcelladvance';
-    export const ShowHistoryPane = 'python.datascience.showhistorypane';
+    export const CreateNewInteractive = 'python.datascience.createnewinteractive';
     export const ImportNotebook = 'python.datascience.importnotebook';
     export const ImportNotebookFile = 'python.datascience.importnotebookfile';
     export const OpenNotebook = 'python.datascience.opennotebook';
@@ -100,6 +103,8 @@ export namespace Commands {
     export const SaveAsNotebookNonCustomEditor = 'python.datascience.notebookeditor.saveAs';
     export const OpenNotebookNonCustomEditor = 'python.datascience.notebookeditor.open';
     export const GatherQuality = 'python.datascience.gatherquality';
+    export const LatestExtension = 'python.datascience.latestExtension';
+    export const TrustNotebook = 'python.datascience.notebookeditor.trust';
     export const EnableLoadingWidgetsFrom3rdPartySource =
         'python.datascience.enableLoadingWidgetScriptsFromThirdPartySource';
 }
@@ -130,6 +135,8 @@ export namespace EditorContexts {
     export const IsPythonOrInteractiveActive = 'python.datascience.ispythonorinteractiveeactive';
     export const IsPythonOrInteractiveOrNativeActive = 'python.datascience.ispythonorinteractiveornativeeactive';
     export const HaveCellSelected = 'python.datascience.havecellselected';
+    export const IsNotebookTrusted = 'python.datascience.isnotebooktrusted';
+    export const CanRestartNotebookKernel = 'python.datascience.notebookeditor.canrestartNotebookkernel';
 }
 
 export namespace RegExpValues {
@@ -202,7 +209,7 @@ export enum Telemetry {
     /**
      * Whether auto save feature in VS Code is enabled or not.
      */
-    ShowHistoryPane = 'DATASCIENCE.SHOW_HISTORY_PANE',
+    CreateNewInteractive = 'DATASCIENCE.CREATE_NEW_INTERACTIVE',
     ExpandAll = 'DATASCIENCE.EXPAND_ALL',
     CollapseAll = 'DATASCIENCE.COLLAPSE_ALL',
     SelectJupyterURI = 'DATASCIENCE.SELECT_JUPYTER_URI',
@@ -339,7 +346,10 @@ export enum Telemetry {
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
     KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',
+    GatherIsInstalled = 'DS_INTERNAL.GATHER_IS_INSTALLED',
     GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED',
+    GatherStats = 'DS_INTERNAL.GATHER_STATS',
+    GatherException = 'DS_INTERNAL.GATHER_EXCEPTION',
     GatheredNotebookSaved = 'DATASCIENCE.GATHERED_NOTEBOOK_SAVED',
     GatherQualityReport = 'DS_INTERNAL.GATHER_QUALITY_REPORT',
     ZMQSupported = 'DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING',
@@ -349,6 +359,7 @@ export enum Telemetry {
     IPyWidgetWidgetVersionNotSupportedLoadFailure = 'DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE',
     IPyWidgetLoadDisabled = 'DS_INTERNAL.IPYWIDGET_LOAD_DISABLED',
     HashedIPyWidgetNameUsed = 'DS_INTERNAL.IPYWIDGET_USED_BY_USER',
+    VSCNotebookCellTranslationFailed = 'DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED',
     HashedIPyWidgetNameDiscovered = 'DS_INTERNAL.IPYWIDGET_DISCOVERED',
     HashedIPyWidgetScriptDiscoveryError = 'DS_INTERNAL.IPYWIDGET_DISCOVERY_ERRORED',
     DiscoverIPyWidgetNamesLocalPerf = 'DS_INTERNAL.IPYWIDGET_TEST_AVAILABILITY_ON_LOCAL',
@@ -368,6 +379,9 @@ export enum Telemetry {
     RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
     RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH',
     StartPageViewed = 'DS_INTERNAL.STARTPAGE_VIEWED',
+    StartPageOpenedFromCommandPalette = 'DS_INTERNAL.STARTPAGE_OPENED_FROM_COMMAND_PALETTE',
+    StartPageOpenedFromNewInstall = 'DS_INTERNAL.STARTPAGE_OPENED_FROM_NEW_INSTALL',
+    StartPageOpenedFromNewUpdate = 'DS_INTERNAL.STARTPAGE_OPENED_FROM_NEW_UPDATE',
     StartPageWebViewError = 'DS_INTERNAL.STARTPAGE_WEBVIEWERROR',
     StartPageTime = 'DS_INTERNAL.STARTPAGE_TIME',
     StartPageClickedDontShowAgain = 'DATASCIENCE.STARTPAGE_DONT_SHOW_AGAIN',
@@ -381,7 +395,15 @@ export enum Telemetry {
     StartPageOpenSampleNotebook = 'DATASCIENCE.STARTPAGE_OPEN_SAMPLE_NOTEBOOK',
     StartPageOpenFileBrowser = 'DATASCIENCE.STARTPAGE_OPEN_FILE_BROWSER',
     StartPageOpenFolder = 'DATASCIENCE.STARTPAGE_OPEN_FOLDER',
-    StartPageOpenWorkspace = 'DATASCIENCE.STARTPAGE_OPEN_WORKSPACE'
+    StartPageOpenWorkspace = 'DATASCIENCE.STARTPAGE_OPEN_WORKSPACE',
+    RunByLineStart = 'DATASCIENCE.RUN_BY_LINE',
+    RunByLineStep = 'DATASCIENCE.RUN_BY_LINE_STEP',
+    RunByLineStop = 'DATASCIENCE.RUN_BY_LINE_STOP',
+    RunByLineVariableHover = 'DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER',
+    TrustAllNotebooks = 'DATASCIENCE.TRUST_ALL_NOTEBOOKS',
+    TrustNotebook = 'DATASCIENCE.TRUST_NOTEBOOK',
+    DoNotTrustNotebook = 'DATASCIENCE.DO_NOT_TRUST_NOTEBOOK',
+    NotebookTrustPromptShown = 'DATASCIENCE.NOTEBOOK_TRUST_PROMPT_SHOWN'
 }
 
 export enum NativeKeyboardCommandTelemetry {
@@ -419,6 +441,21 @@ export enum NativeMouseCommandTelemetry {
     SelectServer = 'DATASCIENCE.NATIVE.MOUSE.SELECT_SERVER',
     Save = 'DATASCIENCE.NATIVE.MOUSE.SAVE',
     ToggleVariableExplorer = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_VARIABLE_EXPLORER'
+}
+
+/**
+ * Notebook editing in VS Code Notebooks is handled by VSC.
+ * There's no way for us to know whether user added a cell using keyboard or not.
+ * Similarly a cell could have been added as part of an undo operation.
+ * All we know is previously user had n # of cells and now they have m # of cells.
+ */
+export enum VSCodeNativeTelemetry {
+    AddCell = 'DATASCIENCE.VSCODE_NATIVE.INSERT_CELL',
+    RunAllCells = 'DATASCIENCE.VSCODE_NATIVE.RUN_ALL',
+    DeleteCell = 'DATASCIENCE.VSCODE_NATIVE.DELETE_CELL',
+    MoveCell = 'DATASCIENCE.VSCODE_NATIVE.MOVE_CELL',
+    ChangeToCode = 'DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_CODE', // Not guaranteed to work see, https://github.com/microsoft/vscode/issues/100042
+    ChangeToMarkdown = 'DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_MARKDOWN' // Not guaranteed to work see, https://github.com/microsoft/vscode/issues/100042
 }
 
 export namespace HelpLinks {
@@ -466,7 +503,6 @@ export namespace Identifiers {
     export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
     export const EditCellId = '3D3AB152-ADC1-4501-B813-4B83B49B0C10';
     export const SvgSizeTag = 'sizeTag={{0}, {1}}';
-    export const InteractiveWindowIdentity = 'history://EC155B3B-DC18-49DC-9E99-9A948AA2F27B';
     export const InteractiveWindowIdentityScheme = 'history';
     export const DefaultCodeCellMarker = '# %%';
     export const DefaultCommTarget = 'jupyter.widget';
@@ -476,6 +512,9 @@ export namespace Identifiers {
     export const DEBUGGER_VARIABLES = 'DEBUGGER_VARIABLES';
     export const MULTIPLEXING_DEBUGSERVICE = 'MULTIPLEXING_DEBUGSERVICE';
     export const RUN_BY_LINE_DEBUGSERVICE = 'RUN_BY_LINE_DEBUGSERVICE';
+    export const REMOTE_URI = 'https://remote/';
+    export const REMOTE_URI_ID_PARAM = 'id';
+    export const REMOTE_URI_HANDLE_PARAM = 'uriHandle';
 }
 
 export namespace CodeSnippits {
@@ -545,3 +584,4 @@ export namespace LiveShareCommands {
 
 export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
 export const OurNotebookProvider = 'OurNotebookProvider';
+export const DataScienceStartupTime = Symbol('DataScienceStartupTime');

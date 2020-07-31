@@ -13,7 +13,7 @@ process.env.TEST_FILES_SUFFIX = 'ls.test';
 
 function start() {
     console.log('*'.repeat(100));
-    console.log('Start Language Server tests');
+    console.log('Start language server tests');
     require('../../node_modules/vscode/bin/test');
 }
 start();

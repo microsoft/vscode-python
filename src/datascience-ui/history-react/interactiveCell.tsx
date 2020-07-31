@@ -160,6 +160,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                                         enableScroll={this.props.enableScroll}
                                         themeMatplotlibPlots={themeMatplotlibPlots}
                                         widgetFailed={this.props.widgetFailed}
+                                        openSettings={this.props.openSettings}
                                     />
                                 </div>
                             </div>
@@ -189,8 +190,9 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     onClick={gatherCode}
                     hidden={
                         this.props.cellVM.cell.state === CellState.error ||
+                        this.props.cellVM.cell.state === CellState.executing ||
                         this.props.cellVM.cell.data.cell_type === 'markdown' ||
-                        !this.props.settings.enableGather
+                        !this.props.settings.gatherIsInstalled
                     }
                     tooltip={getLocString('DataScience.gatherCodeTooltip', 'Gather code')}
                 >
@@ -296,6 +298,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     codeVersion={this.props.cellVM.codeVersion ? this.props.cellVM.codeVersion : 0}
                     focusPending={this.props.focusPending}
                     language={this.props.language}
+                    isNotebookTrusted={true}
                 />
             );
         }

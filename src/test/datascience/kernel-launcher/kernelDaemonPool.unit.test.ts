@@ -5,20 +5,23 @@ import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { DaemonExecutionFactoryCreationOptions, IPythonExecutionFactory } from '../../../client/common/process/types';
 import { ReadWrite, Resource } from '../../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { IPythonKernelDaemon } from '../../../client/datascience/kernel-launcher/types';
-import { IJupyterKernelSpec, IKernelDependencyService } from '../../../client/datascience/types';
+import {
+    IDataScienceFileSystem,
+    IJupyterKernelSpec,
+    IKernelDependencyService
+} from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
 import { sleep } from '../../core';
 import { createPythonInterpreter } from '../../utils/interpreters';
 
 // tslint:disable: max-func-body-length no-any
-suite('Data Science - Kernel Daemon Pool', () => {
+suite('DataScience - Kernel Daemon Pool', () => {
     const interpreter1 = createPythonInterpreter({ path: 'interpreter1' });
     const interpreter2 = createPythonInterpreter({ path: 'interpreter2' });
     const interpreter3 = createPythonInterpreter({ path: 'interpreter3' });
@@ -35,7 +38,7 @@ suite('Data Science - Kernel Daemon Pool', () => {
     let kernelDependencyService: IKernelDependencyService;
     let pythonExecutionFactory: IPythonExecutionFactory;
     let envVars: IEnvironmentVariablesProvider;
-    let fs: IFileSystem;
+    let fs: IDataScienceFileSystem;
     let interpeterService: IInterpreterService;
     let kernelSpec: ReadWrite<IJupyterKernelSpec>;
     let interpretersPerWorkspace: Map<string | undefined, PythonInterpreter>;
@@ -50,7 +53,7 @@ suite('Data Science - Kernel Daemon Pool', () => {
         daemon3 = mock<IPythonKernelDaemon>();
         pythonExecutionFactory = mock<IPythonExecutionFactory>();
         envVars = mock<IEnvironmentVariablesProvider>();
-        fs = mock<IFileSystem>();
+        fs = mock<IDataScienceFileSystem>();
         interpeterService = mock<IInterpreterService>();
         interpretersPerWorkspace = new Map<string | undefined, PythonInterpreter>();
         interpretersPerWorkspace.set(workspace1.fsPath, interpreter1);

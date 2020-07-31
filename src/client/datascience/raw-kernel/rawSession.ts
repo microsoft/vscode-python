@@ -26,13 +26,15 @@ export class RawSession implements ISessionWithSocket {
     private _clientID: string;
     private _kernel: RawKernel;
     private readonly _statusChanged: Signal<this, Kernel.Status>;
+    private readonly _kernelChanged: Signal<this, Session.IKernelChangedArgs>;
     private readonly exitHandler: IDisposable;
 
     // RawSession owns the lifetime of the kernel process and will dispose it
     constructor(public kernelProcess: IKernelProcess) {
         // tslint:disable-next-line: no-require-imports
-        const singaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
-        this._statusChanged = new singaling.Signal<this, Kernel.Status>(this);
+        const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
+        this._statusChanged = new signaling.Signal<this, Kernel.Status>(this);
+        this._kernelChanged = new signaling.Signal<this, Session.IKernelChangedArgs>(this);
         // Unique ID for this session instance
         this._id = uuid();
 
@@ -93,7 +95,7 @@ export class RawSession implements ISessionWithSocket {
         throw new Error('Not yet implemented');
     }
     get kernelChanged(): ISignal<this, Session.IKernelChangedArgs> {
-        throw new Error('Not yet implemented');
+        return this._kernelChanged;
     }
     get propertyChanged(): ISignal<this, 'path' | 'name' | 'type'> {
         throw new Error('Not yet implemented');

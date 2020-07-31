@@ -8,7 +8,7 @@ import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
-import { IFileSystem } from '../../../client/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { createPythonEnv } from '../../../client/common/process/pythonEnvironment';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
@@ -23,12 +23,10 @@ import { IConfigurationService } from '../../../client/common/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { InterpreterHashProvider } from '../../../client/pythonEnvironments/discovery/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
-import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
+import { registerForIOC } from '../../../client/pythonEnvironments/legacyIOC';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { UnitTestDiagnosticService } from '../../../client/testing/common/services/unitTestDiagnosticService';
 import {
@@ -40,6 +38,7 @@ import {
     TestsToRun
 } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
+import { TEST_TIMEOUT } from '../../constants';
 import { MockProcessService } from '../../mocks/proc';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
@@ -395,8 +394,9 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
             @inject(IConfigurationService) private readonly _configService: IConfigurationService,
             @inject(ICondaService) condaService: ICondaService,
-            @inject(WindowsStoreInterpreter) windowsStoreInterpreter: WindowsStoreInterpreter,
-            @inject(IBufferDecoder) decoder: IBufferDecoder
+            @inject(IWindowsStoreInterpreter) windowsStoreInterpreter: IWindowsStoreInterpreter,
+            @inject(IBufferDecoder) decoder: IBufferDecoder,
+            @inject(IPlatformService) platformService: IPlatformService
         ) {
             super(
                 _serviceContainer,
@@ -405,7 +405,8 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                 _configService,
                 condaService,
                 decoder,
-                windowsStoreInterpreter
+                windowsStoreInterpreter,
+                platformService
             );
         }
         public async createActivatedEnvironment(
@@ -432,9 +433,17 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             };
         }
     }
-    suiteSetup(async () => {
+    // tslint:disable-next-line: no-function-expression
+    suiteSetup(async function () {
+        // tslint:disable-next-line: no-invalid-this
+        this.timeout(TEST_TIMEOUT * 2);
+        // tslint:disable: no-console
+        console.time('Pytest before all hook');
         await initialize();
+        console.timeLog('Pytest before all hook');
         await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
+        console.timeEnd('Pytest before all hook');
+        // tslint:enable: no-console
     });
     function initializeDI() {
         ioc = new UnitTestIocContainer();
@@ -444,19 +453,15 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         // Mocks.
         ioc.registerMockProcessTypes();
         ioc.registerInterpreterStorageTypes();
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(
             IInterpreterService,
             instance(mock(InterpreterService))
         );
         ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
-        ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-        ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(
-            InterpeterHashProviderFactory,
-            InterpeterHashProviderFactory
-        );
-        ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+
+        registerForIOC(ioc.serviceManager);
+        ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 
     async function injectTestDiscoveryOutput(outputFileName: string) {
@@ -508,7 +513,10 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             let testManager: ITestManager;
             let results: Tests;
             let diagnostics: readonly vscode.Diagnostic[];
-            suiteSetup(async () => {
+            suiteSetup(async function () {
+                // This "before all" hook is doing way more than normal
+                // tslint:disable-next-line: no-invalid-this
+                this.timeout(TEST_TIMEOUT * 2);
                 await initializeTest();
                 initializeDI();
                 await injectTestDiscoveryOutput(scenario.discoveryOutput);

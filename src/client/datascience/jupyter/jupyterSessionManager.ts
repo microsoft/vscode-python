@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { ContentsManager, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import type { ContentsManager, Kernel, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
 import { Agent as HttpsAgent } from 'https';
 import * as nodeFetch from 'node-fetch';
+import { EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
+import { IApplicationShell } from '../../common/application/types';
 
 import { traceError, traceInfo } from '../../common/logger';
-import { IConfigurationService, IOutputChannel } from '../../common/types';
+import { IConfigurationService, IOutputChannel, IPersistentState, IPersistentStateFactory } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -16,23 +18,31 @@ import {
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterPasswordConnect,
-    IJupyterPasswordConnectInfo,
     IJupyterSession,
     IJupyterSessionManager
 } from '../types';
+import { createAuthorizingRequest } from './jupyterRequest';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
 import { createDefaultKernelSpec } from './kernels/helpers';
 import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
-import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
 
+// Key for our insecure connection global state
+const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
+
+// tslint:disable: no-any
+
 export class JupyterSessionManager implements IJupyterSessionManager {
+    private static secureServers = new Map<string, Promise<boolean>>();
     private sessionManager: SessionManager | undefined;
     private contentsManager: ContentsManager | undefined;
     private connInfo: IJupyterConnection | undefined;
     private serverSettings: ServerConnection.ISettings | undefined;
     private _jupyterlab?: typeof import('@jupyterlab/services');
+    private readonly userAllowsInsecureConnections: IPersistentState<boolean>;
+    private restartSessionCreatedEvent = new EventEmitter<Kernel.IKernelConnection>();
+    private restartSessionUsedEvent = new EventEmitter<Kernel.IKernelConnection>();
     private get jupyterlab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterlab) {
             // tslint:disable-next-line: no-require-imports
@@ -44,10 +54,24 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private jupyterPasswordConnect: IJupyterPasswordConnect,
         _config: IConfigurationService,
         private failOnPassword: boolean | undefined,
-        private kernelSelector: KernelSelector,
-        private outputChannel: IOutputChannel
-    ) {}
+        private outputChannel: IOutputChannel,
+        private configService: IConfigurationService,
+        private readonly appShell: IApplicationShell,
+        private readonly stateFactory: IPersistentStateFactory
+    ) {
+        this.userAllowsInsecureConnections = this.stateFactory.createGlobalPersistentState<boolean>(
+            GlobalStateUserAllowsInsecureConnections,
+            false
+        );
+    }
 
+    public get onRestartSessionCreated() {
+        return this.restartSessionCreatedEvent.event;
+    }
+
+    public get onRestartSessionUsed() {
+        return this.restartSessionUsedEvent.event;
+    }
     public async dispose() {
         traceInfo(`Disposing session manager`);
         try {
@@ -154,11 +178,12 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             kernelSpec,
             this.sessionManager,
             this.contentsManager,
-            this.kernelSelector,
-            this.outputChannel
+            this.outputChannel,
+            this.restartSessionCreatedEvent.fire.bind(this.restartSessionCreatedEvent),
+            this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent)
         );
         try {
-            await session.connect(cancelToken);
+            await session.connect(this.configService.getSettings().datascience.jupyterLaunchTimeout, cancelToken);
         } finally {
             if (!session.isConnected) {
                 await session.dispose();
@@ -218,10 +243,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
     }
 
-    private getSessionCookieString(pwSettings: IJupyterPasswordConnectInfo): string {
-        return `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
-    }
-
     private async getServerConnectSettings(connInfo: IJupyterConnection): Promise<ServerConnection.ISettings> {
         let serverSettings: Partial<ServerConnection.ISettings> = {
             baseUrl: connInfo.baseUrl,
@@ -230,27 +251,42 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             wsUrl: connInfo.baseUrl.replace('http', 'ws')
         };
 
+        // Before we connect, see if we are trying to make an insecure connection, if we are, warn the user
+        await this.secureConnectionCheck(connInfo);
+
         // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
         // tslint:disable-next-line:no-any
         let requestInit: any = { cache: 'no-store', credentials: 'same-origin' };
         let cookieString;
-        let allowUnauthorized;
+        // tslint:disable-next-line: no-any
+        let requestCtor: any = nodeFetch.Request;
+
+        // If authorization header is provided, then we need to prevent jupyterlab services from
+        // writing the authorization header.
+        if (connInfo.authorizationHeader) {
+            requestCtor = createAuthorizingRequest(connInfo.authorizationHeader);
+        }
 
         // If no token is specified prompt for a password
-        if (connInfo.token === '' || connInfo.token === 'null') {
+        if ((connInfo.token === '' || connInfo.token === 'null') && !connInfo.authorizationHeader) {
             if (this.failOnPassword) {
                 throw new Error('Password request not allowed.');
             }
             serverSettings = { ...serverSettings, token: '' };
-            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(
-                connInfo.baseUrl,
-                connInfo.allowUnauthorized ? true : false
-            );
-            if (pwSettings && !pwSettings.emptyPassword) {
-                cookieString = this.getSessionCookieString(pwSettings);
-                const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings.xsrfCookie };
-                requestInit = { ...requestInit, headers: requestHeaders };
-            } else if (pwSettings && pwSettings.emptyPassword) {
+            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl);
+            if (pwSettings && pwSettings.requestHeaders) {
+                requestInit = { ...requestInit, headers: pwSettings.requestHeaders };
+                cookieString = (pwSettings.requestHeaders as any).Cookie || '';
+
+                // Password may have overwritten the base url and token as well
+                if (pwSettings.remappedBaseUrl) {
+                    (serverSettings as any).baseUrl = pwSettings.remappedBaseUrl;
+                    (serverSettings as any).wsUrl = pwSettings.remappedBaseUrl.replace('http', 'ws');
+                }
+                if (pwSettings.remappedToken) {
+                    (serverSettings as any).token = pwSettings.remappedToken;
+                }
+            } else if (pwSettings) {
                 serverSettings = { ...serverSettings, token: connInfo.token };
             } else {
                 // Failed to get password info, notify the user
@@ -260,12 +296,13 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             serverSettings = { ...serverSettings, token: connInfo.token };
         }
 
+        const allowUnauthorized = this.configService.getSettings(undefined).datascience
+            .allowUnauthorizedRemoteConnection;
         // If this is an https connection and we want to allow unauthorized connections set that option on our agent
         // we don't need to save the agent as the previous behaviour is just to create a temporary default agent when not specified
-        if (connInfo.baseUrl.startsWith('https') && connInfo.allowUnauthorized) {
+        if (connInfo.baseUrl.startsWith('https') && allowUnauthorized) {
             const requestAgent = new HttpsAgent({ rejectUnauthorized: false });
             requestInit = { ...requestInit, agent: requestAgent };
-            allowUnauthorized = true;
         }
 
         // This replaces the WebSocket constructor in jupyter lab services with our own implementation
@@ -276,7 +313,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             init: requestInit,
             WebSocket: createJupyterWebSocket(
                 cookieString,
-                allowUnauthorized
+                allowUnauthorized,
+                connInfo.authorizationHeader
                 // tslint:disable-next-line:no-any
             ) as any,
             // Redefine fetch to our node-modules so it picks up the correct version.
@@ -284,12 +322,66 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             // tslint:disable-next-line:no-any
             fetch: nodeFetch.default as any,
             // tslint:disable-next-line:no-any
-            Request: nodeFetch.Request as any,
+            Request: requestCtor,
             // tslint:disable-next-line:no-any
             Headers: nodeFetch.Headers as any
         };
 
         traceInfo(`Creating server with settings : ${JSON.stringify(serverSettings)}`);
         return this.jupyterlab.ServerConnection.makeSettings(serverSettings);
+    }
+
+    // If connecting on HTTP without a token prompt the user that this connection may not be secure
+    private async insecureServerWarningPrompt(): Promise<boolean> {
+        const insecureMessage = localize.DataScience.insecureSessionMessage();
+        const insecureLabels = [
+            localize.Common.bannerLabelYes(),
+            localize.Common.bannerLabelNo(),
+            localize.Common.doNotShowAgain()
+        ];
+        const response = await this.appShell.showWarningMessage(insecureMessage, ...insecureLabels);
+
+        switch (response) {
+            case localize.Common.bannerLabelYes():
+                // On yes just proceed as normal
+                return true;
+
+            case localize.Common.doNotShowAgain():
+                // For don't ask again turn on the global true
+                await this.userAllowsInsecureConnections.updateValue(true);
+                return true;
+
+            case localize.Common.bannerLabelNo():
+            default:
+                // No or for no choice return back false to block
+                return false;
+        }
+    }
+
+    // Check if our server connection is considered secure. If it is not, ask the user if they want to connect
+    // If not, throw to bail out on the process
+    private async secureConnectionCheck(connInfo: IJupyterConnection): Promise<void> {
+        // If they have turned on global server trust then everything is secure
+        if (this.userAllowsInsecureConnections.value) {
+            return;
+        }
+
+        // If they are local launch, https, or have a token, then they are secure
+        if (connInfo.localLaunch || connInfo.baseUrl.startsWith('https') || connInfo.token !== 'null') {
+            return;
+        }
+
+        // At this point prompt the user, cache the promise so we don't ask multiple times for the same server
+        let serverSecurePromise = JupyterSessionManager.secureServers.get(connInfo.baseUrl);
+
+        if (serverSecurePromise === undefined) {
+            serverSecurePromise = this.insecureServerWarningPrompt();
+            JupyterSessionManager.secureServers.set(connInfo.baseUrl, serverSecurePromise);
+        }
+
+        // If our server is not secure, throw here to bail out on the process
+        if (!(await serverSecurePromise)) {
+            throw new Error(localize.DataScience.insecureSessionDenied());
+        }
     }
 }

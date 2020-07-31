@@ -14,9 +14,7 @@ import {
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
 import { IConfigurationService, IOutputChannel, Product, ProductType } from '../../client/common/types';
-import { ICondaService } from '../../client/interpreter/contracts';
 import { ILinter, ILinterManager } from '../../client/linters/types';
-import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { TEST_OUTPUT_CHANNEL } from '../../client/testing/common/constants';
 import { TEST_TIMEOUT } from '../constants';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
@@ -58,7 +56,6 @@ suite('Multiroot Linting', () => {
         ioc.registerMockInterpreterTypes();
         ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
-        ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             CTagsProductPathService,
@@ -124,13 +121,13 @@ suite('Multiroot Linting', () => {
 
     test('Enabling Flake8 in root and also in Workspace, should return errors', async () => {
         await runTest(Product.flake8, true, true, flake8Setting);
-    });
+    }).timeout(TEST_TIMEOUT * 2);
     test('Enabling Flake8 in root and disabling in Workspace, should not return errors', async () => {
         await runTest(Product.flake8, true, false, flake8Setting);
-    });
+    }).timeout(TEST_TIMEOUT * 2);
     test('Disabling Flake8 in root and enabling in Workspace, should return errors', async () => {
         await runTest(Product.flake8, false, true, flake8Setting);
-    });
+    }).timeout(TEST_TIMEOUT * 2);
 
     async function runTest(product: Product, global: boolean, wks: boolean, setting: string): Promise<void> {
         const config = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);

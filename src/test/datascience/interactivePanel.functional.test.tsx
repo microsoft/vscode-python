@@ -108,11 +108,15 @@ suite('DataScience Interactive Panel', () => {
                 variables: [],
                 visible: true,
                 containerHeight: 0,
-                gridHeight: 200
+                gridHeight: 200,
+                refreshCount: 0,
+                showVariablesOnDebug: false
             },
             setVariableExplorerHeight: noopAny,
             editorOptions: {},
-            settings: { showCellInputCode: true, allowInput: true, extraSettings: { editor: {} } } as any
+            settings: { showCellInputCode: true, allowInput: true, extraSettings: { editor: {} } } as any,
+            isNotebookTrusted: true,
+            shouldShowTrustMessage: false
         };
     });
     test('Input Cell is displayed', () => {

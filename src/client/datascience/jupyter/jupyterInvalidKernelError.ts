@@ -8,12 +8,12 @@ import { IJupyterKernelSpec } from '../types';
 import { LiveKernelModel } from './kernels/types';
 
 export class JupyterInvalidKernelError extends Error {
-    constructor(private _kernelSpec: IJupyterKernelSpec | LiveKernelModel) {
-        super(localize.DataScience.kernelInvalid().format(_kernelSpec.display_name || _kernelSpec.name));
+    constructor(private _kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined) {
+        super(localize.DataScience.kernelInvalid().format(_kernelSpec?.display_name || _kernelSpec?.name || ''));
         sendTelemetryEvent(Telemetry.KernelInvalid);
     }
 
-    public get kernelSpec(): IJupyterKernelSpec | LiveKernelModel {
+    public get kernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
         return this._kernelSpec;
     }
 }

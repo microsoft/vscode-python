@@ -67,7 +67,7 @@ class TestRunner {
             // Language server.
             await this.enableLanguageServer(true);
             const languageServerLogFile = path.join(logFilesPath, `languageServer_loadtimes${i}.txt`);
-            console.log(`Start Performance Tests: Counter ${i}, for Release version with Language Server`);
+            console.log(`Start Performance Tests: Counter ${i}, for Release version with language server`);
             await this.capturePerfTimes(Version.Release, languageServerLogFile);
             languageServerLogFiles.push(languageServerLogFile);
         }

@@ -36,8 +36,12 @@ export namespace Transfer {
     }
 
     export function showExportAsMenu(arg: CommonReducerArg): IMainState {
-        postActionToExtension(arg, InteractiveWindowMessages.ExportNotebookAs, arg.payload.data); // want to send filename
-        return arg.prevState;
+        const cellContents = arg.prevState.cellVMs.map((v) => v.cell);
+        postActionToExtension(arg, InteractiveWindowMessages.ExportNotebookAs, cellContents);
+
+        return {
+            ...arg.prevState
+        };
     }
 
     export function save(arg: CommonReducerArg): IMainState {
@@ -74,6 +78,11 @@ export namespace Transfer {
         return arg.prevState;
     }
 
+    export function launchNotebookTrustPrompt(arg: CommonReducerArg) {
+        postActionToExtension(arg, InteractiveWindowMessages.LaunchNotebookTrustPrompt);
+        return arg.prevState;
+    }
+
     export function linkClick(arg: CommonReducerArg<CommonActionType, ILinkClickAction>): IMainState {
         if (arg.payload.data.href.startsWith('data:image/png')) {
             postActionToExtension(arg, InteractiveWindowMessages.SavePng, arg.payload.data.href);
@@ -86,6 +95,15 @@ export namespace Transfer {
     export function getAllCells(arg: CommonReducerArg): IMainState {
         const cells = arg.prevState.cellVMs.map((c) => c.cell);
         postActionToExtension(arg, InteractiveWindowMessages.ReturnAllCells, cells);
+        return arg.prevState;
+    }
+
+    export function hasCell(arg: CommonReducerArg<CommonActionType, string>): IMainState {
+        const foundCell = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data);
+        postActionToExtension(arg, InteractiveWindowMessages.HasCellResponse, {
+            id: arg.payload.data,
+            result: foundCell !== undefined
+        });
         return arg.prevState;
     }
 
@@ -303,6 +321,10 @@ export namespace Transfer {
         postActionToExtension(arg, InteractiveWindowMessages.LoadAllCellsComplete, {
             cells: arg.prevState.cellVMs.map((c) => c.cell)
         });
+        if (!arg.prevState.isNotebookTrusted) {
+            // As soon as an untrusted notebook is loaded, prompt the user to trust it
+            postActionToExtension(arg, InteractiveWindowMessages.LaunchNotebookTrustPrompt);
+        }
         return arg.prevState;
     }
 }

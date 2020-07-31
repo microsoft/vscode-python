@@ -13,9 +13,9 @@ import { Activation } from '../../client/datascience/activation';
 import { JupyterDaemonModule } from '../../client/datascience/constants';
 import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
-import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
+import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
 import {
     INotebookAndInteractiveWindowUsageTracker,
     INotebookEditor,
@@ -25,7 +25,7 @@ import { PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { FakeClock } from '../common';
 import { createPythonInterpreter } from '../utils/interpreters';
 
-suite('Data Science - Activation', () => {
+suite('DataScience - Activation', () => {
     let activator: IExtensionSingleActivationService;
     let notebookEditorProvider: INotebookEditorProvider;
     let jupyterInterpreterService: JupyterInterpreterService;

@@ -4,7 +4,6 @@
 'use strict';
 
 import { Uri } from 'vscode';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
 
 export const IPythonInPathCommandProvider = Symbol('IPythonInPathCommandProvider');
 export interface IPythonInPathCommandProvider {
@@ -16,6 +15,7 @@ export interface IPipEnvServiceHelper {
     trackWorkspaceFolder(pythonPath: string, workspaceFolder: Uri): Promise<void>;
 }
 
+export const IInterpreterHashProviderFactory = Symbol('IInterpreterHashProviderFactory');
 /**
  * Factory to create a hash provider.
  * Getting the hash of an interpreter can vary based on the type of the interpreter.
@@ -27,6 +27,7 @@ export interface IInterpreterHashProviderFactory {
     create(options: { pythonPath: string } | { resource: Uri }): Promise<IInterpreterHashProvider>;
 }
 
+export const IInterpreterHashProvider = Symbol('IInterpreterHashProvider');
 /**
  * Provides the ability to get the has of a given interpreter.
  *
@@ -45,6 +46,10 @@ export interface IInterpreterHashProvider {
     getInterpreterHash(pythonPath: string): Promise<string>;
 }
 
+export const IWindowsStoreHashProvider = Symbol('IWindowStoreHashProvider');
+export interface IWindowsStoreHashProvider extends IInterpreterHashProvider {}
+
+export const IWindowsStoreInterpreter = Symbol('IWindowsStoreInterpreter');
 export interface IWindowsStoreInterpreter {
     /**
      * Whether this is a Windows Store/App Interpreter.
@@ -62,8 +67,4 @@ export interface IWindowsStoreInterpreter {
      * @memberof IInterpreterHelper
      */
     isHiddenInterpreter(pythonPath: string): boolean;
-}
-
-export interface IInterpreterFilter {
-    isHiddenInterpreter(interpreter: PythonInterpreter): boolean;
 }

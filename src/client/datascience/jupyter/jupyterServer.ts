@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -27,6 +26,7 @@ import {
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     INotebook,
+    INotebookMetadataLive,
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../types';
@@ -101,7 +101,7 @@ export class JupyterServerBase implements INotebookServer {
     public createNotebook(
         resource: Resource,
         identity: Uri,
-        notebookMetadata?: nbformat.INotebookMetadata,
+        notebookMetadata?: INotebookMetadataLive,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         if (!this.sessionManager) {
@@ -248,7 +248,7 @@ export class JupyterServerBase implements INotebookServer {
         _disposableRegistry: IDisposableRegistry,
         _configService: IConfigurationService,
         _serviceContainer: IServiceContainer,
-        _notebookMetadata?: nbformat.INotebookMetadata,
+        _notebookMetadata?: INotebookMetadataLive,
         _cancelToken?: CancellationToken
     ): Promise<INotebook> {
         throw new Error('You forgot to override createNotebookInstance');

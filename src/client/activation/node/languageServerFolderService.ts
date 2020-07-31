@@ -8,6 +8,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import { IWorkspaceService } from '../../common/application/types';
+import { PYLANCE_EXTENSION_ID } from '../../common/constants';
 import { NugetPackage } from '../../common/nuget/types';
 import { IConfigurationService, IExtensions, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -99,12 +100,7 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
             return undefined;
         }
 
-        const extensionName = this.workspaceService.getConfiguration('python').get<string>('lsExtensionName');
-        if (!extensionName) {
-            return undefined;
-        }
-
-        const extension = this.extensions.getExtension<ILSExtensionApi>(extensionName);
+        const extension = this.extensions.getExtension<ILSExtensionApi>(PYLANCE_EXTENSION_ID);
         if (!extension) {
             return undefined;
         }

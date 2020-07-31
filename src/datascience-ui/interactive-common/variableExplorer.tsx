@@ -33,6 +33,7 @@ interface IVariableExplorerProps {
     supportsDebugging: boolean;
     fontSize: number;
     executionCount: number;
+    refreshCount: number;
     offsetHeight: number;
     gridHeight: number;
     containerHeight: number;
@@ -83,6 +84,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     // has been sent or not.
     private requestedPages: number[] = [];
     private requestedPagesExecutionCount: number = 0;
+    private requestedRefreshCount: number = 0;
     private gridColumns: {
         key: string;
         name: string;
@@ -111,7 +113,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 key: 'buttons',
                 name: '',
                 type: 'boolean',
-                width: 34,
+                width: 36,
                 sortable: false,
                 resizable: false,
                 formatter: (
@@ -139,7 +141,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             },
             {
                 key: 'size',
-                name: getLocString('DataScience.variableExplorerSizeColumn', 'Count'),
+                name: getLocString('DataScience.variableExplorerCountColumn', 'Size'),
                 type: 'string',
                 width: 120,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.numeric} />,
@@ -273,7 +275,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     private getRowHeight() {
-        return this.props.fontSize + 9;
+        return this.props.fontSize + 11;
     }
 
     private setInitialHeight() {
@@ -396,7 +398,9 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         // Skip if already pending or already have a value
         const haveValue = this.props.variables[index]?.value;
-        const newExecution = this.props.executionCount !== this.requestedPagesExecutionCount;
+        const newExecution =
+            this.props.executionCount !== this.requestedPagesExecutionCount ||
+            this.props.refreshCount !== this.requestedRefreshCount;
         // tslint:disable-next-line: restrict-plus-operands
         const notRequested = !this.requestedPages.find((n) => n <= index && index < n + pageSize);
         if (!haveValue && (newExecution || notRequested)) {
@@ -411,7 +415,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             }
 
             // Clear out requested pages if new requested execution
-            if (this.requestedPagesExecutionCount !== this.props.executionCount) {
+            if (
+                this.requestedPagesExecutionCount !== this.props.executionCount ||
+                this.requestedRefreshCount !== this.props.refreshCount
+            ) {
                 this.requestedPages = [];
             }
 
@@ -420,6 +427,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
             // Save the execution count for this request so we can verify we can skip it on next request.
             this.requestedPagesExecutionCount = this.props.executionCount;
+            this.requestedRefreshCount = this.props.refreshCount;
 
             // Load this page.
             this.props.pageIn(pageIndex + 1, pageSize);

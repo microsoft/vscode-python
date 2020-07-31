@@ -30,17 +30,9 @@ export namespace Diagnostics {
         'diagnostics.upgradeCodeRunner',
         'Please update the Code Runner extension for it to be compatible with the Python extension.'
     );
-    export const removePythonPathSettingsJson = localize(
-        'diagnostics.removePythonPathSettingsJson',
-        'The setting "python.pythonPath" defined in your settings.json is now deprecated. Do you want us to delete it from your settings.json only? [Learn more](https://aka.ms/AA7jfor).'
-    );
-    export const removePythonPathCodeWorkspace = localize(
-        'diagnostics.removePythonPathCodeWorkspace',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file only? [Learn more](https://aka.ms/AA7jfor).'
-    );
-    export const removePythonPathCodeWorkspaceAndSettingsJson = localize(
-        'diagnostics.removePythonPathCodeWorkspaceAndSettingsJson',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file and settings.json? [Learn more](https://aka.ms/AA7jfor).'
+    export const removedPythonPathFromSettings = localize(
+        'diagnostics.removedPythonPathFromSettings',
+        'We removed the "python.pythonPath" setting from your settings.json file as the setting is no longer used by the Python extension. You can get the path of your selected interpreter in the Python output channel. [Learn more](https://aka.ms/AA7jfor).'
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
@@ -91,6 +83,12 @@ export namespace Common {
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
 }
 
+export namespace CommonSurvey {
+    export const remindMeLaterLabel = localize('CommonSurvey.remindMeLaterLabel', 'Remind me later');
+    export const yesLabel = localize('CommonSurvey.yesLabel', 'Yes, take survey now');
+    export const noLabel = localize('CommonSurvey.noLabel', 'No, thanks');
+}
+
 export namespace AttachProcess {
     export const unsupportedOS = localize('AttachProcess.unsupportedOS', "Operating system '{0}' not supported.");
     export const attachTitle = localize('AttachProcess.attachTitle', 'Attach to process');
@@ -102,24 +100,56 @@ export namespace AttachProcess {
     export const refreshList = localize('AttachProcess.refreshList', 'Refresh process list');
 }
 
-export namespace LanguageService {
-    export const bannerMessage = localize(
-        'LanguageService.bannerMessage',
-        'Can you please take 2 minutes to tell us how the Python Language Server is working for you?'
+export namespace Pylance {
+    export const proposePylanceMessage = localize(
+        'Pylance.proposePylanceMessage',
+        'Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.'
     );
-    export const bannerLabelYes = localize('LanguageService.bannerLabelYes', 'Yes, take survey now');
-    export const bannerLabelNo = localize('LanguageService.bannerLabelNo', 'No, thanks');
+    export const tryItNow = localize('Pylance.tryItNow', 'Try it now');
+    export const remindMeLater = localize('Pylance.remindMeLater', 'Remind me later');
+
+    export const installPylanceMessage = localize(
+        'Pylance.installPylanceMessage',
+        'Pylance extension is not installed. Click Yes to open Pylance installation page.'
+    );
+    export const pylanceNotInstalledMessage = localize(
+        'Pylance.pylanceNotInstalledMessage',
+        'Pylance extension is not installed.'
+    );
+    export const pylanceInstalledReloadPromptMessage = localize(
+        'Pylance.pylanceInstalledReloadPromptMessage',
+        'Pylance extension is now installed. Reload window to activate?'
+    );
+}
+
+export namespace LanguageService {
+    export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi Python language engine.');
+    export const startingMicrosoft = localize(
+        'LanguageService.startingMicrosoft',
+        'Starting Microsoft Python language server.'
+    );
+    export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');
+    export const startingNone = localize(
+        'LanguageService.startingNone',
+        'Editor support is inactive since language server is set to None.'
+    );
+
+    export const reloadAfterLanguageServerChange = localize(
+        'LanguageService.reloadAfterLanguageServerChange',
+        'Please reload the window switching between language servers.'
+    );
+
     export const lsFailedToStart = localize(
         'LanguageService.lsFailedToStart',
-        'We encountered an issue starting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.'
+        'We encountered an issue starting the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
     );
     export const lsFailedToDownload = localize(
         'LanguageService.lsFailedToDownload',
-        'We encountered an issue downloading the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.'
+        'We encountered an issue downloading the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
     );
     export const lsFailedToExtract = localize(
         'LanguageService.lsFailedToExtract',
-        'We encountered an issue extracting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.'
+        'We encountered an issue extracting the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
     );
     export const downloadFailedOutputMessage = localize(
         'LanguageService.downloadFailedOutputMessage',
@@ -186,7 +216,8 @@ export namespace InterpreterQuickPickList {
             'InterpreterQuickPickList.browsePath.detail',
             'Browse your file system to find a Python interpreter.'
         ),
-        openButtonLabel: localize('python.command.python.setInterpreter.title', 'Select Interpreter')
+        openButtonLabel: localize('python.command.python.setInterpreter.title', 'Select Interpreter'),
+        title: localize('InterpreterQuickPickList.browsePath.title', 'Select Python interpreter')
     };
 }
 export namespace ExtensionChannels {
@@ -260,6 +291,34 @@ export namespace DataScienceSurveyBanner {
     export const bannerLabelYes = localize('DataScienceSurveyBanner.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('DataScienceSurveyBanner.bannerLabelNo', 'No, thanks');
 }
+export namespace DataScienceRendererExtension {
+    export const installingExtension = localize(
+        'DataScienceRendererExtension.installingExtension',
+        'Installing Notebook Renderers extension... '
+    );
+    export const installationCompleteMessage = localize(
+        'DataScienceRendererExtension.installationCompleteMessage',
+        'complete.'
+    );
+    export const startingDownloadOutputMessage = localize(
+        'DataScienceRendererExtension.startingDownloadOutputMessage',
+        'Starting download of Notebook Renderers extension.'
+    );
+    export const downloadingMessage = localize(
+        'DataScienceRendererExtension.downloadingMessage',
+        'Downloading Notebook Renderers Extension... '
+    );
+    export const downloadCompletedOutputMessage = localize(
+        'DataScienceRendererExtension.downloadCompletedOutputMessage',
+        'Notebook Renderers extension download complete.'
+    );
+}
+export namespace DataScienceNotebookSurveyBanner {
+    export const bannerMessage = localize(
+        'DataScienceNotebookSurveyBanner.bannerMessage',
+        'Can you please take 2 minutes to tell us how the Preview Notebook Editor is working for you?'
+    );
+}
 
 export namespace Installer {
     export const noCondaOrPipInstaller = localize(
@@ -278,6 +337,8 @@ export namespace ExtensionSurveyBanner {
         'ExtensionSurveyBanner.bannerMessage',
         'Can you please take 2 minutes to tell us how the Python extension is working for you?'
     );
+    export const bannerLabelYes = localize('ExtensionSurveyBanner.bannerLabelYes', 'Yes, take survey now');
+    export const bannerLabelNo = localize('ExtensionSurveyBanner.bannerLabelNo', 'No, thanks');
     export const maybeLater = localize('ExtensionSurveyBanner.maybeLater', 'Maybe later');
 }
 
@@ -286,7 +347,39 @@ export namespace Products {
 }
 
 export namespace DataScience {
-    export const historyTitle = localize('DataScience.historyTitle', 'Python Interactive');
+    export const unknownServerUri = localize(
+        'DataScience.unknownServerUri',
+        'Server URI cannot be used. Did you uninstall an extension that provided a Jupyter server connection?'
+    );
+    export const uriProviderDescriptionFormat = localize(
+        'DataScience.uriProviderDescriptionFormat',
+        '{0} (From {1} extension)'
+    );
+    export const unknownPackage = localize('DataScience.unknownPackage', 'unknown');
+    export const interactiveWindowTitle = localize('DataScience.interactiveWindowTitle', 'Python Interactive');
+    export const interactiveWindowTitleFormat = localize(
+        'DataScience.interactiveWindowTitleFormat',
+        'Python Interactive - {0}'
+    );
+
+    export const interactiveWindowModeBannerTitle = localize(
+        'DataScience.interactiveWindowModeBannerTitle',
+        'Do you want to open a new Python Interactive window for this file? [More Information](command:workbench.action.openSettings?%5B%22python.dataScience.interactiveWindowMode%22%5D).'
+    );
+
+    export const interactiveWindowModeBannerSwitchYes = localize(
+        'DataScience.interactiveWindowModeBannerSwitchYes',
+        'Yes'
+    );
+    export const interactiveWindowModeBannerSwitchAlways = localize(
+        'DataScience.interactiveWindowModeBannerSwitchAlways',
+        'Always'
+    );
+    export const interactiveWindowModeBannerSwitchNo = localize(
+        'DataScience.interactiveWindowModeBannerSwitchNo',
+        'No'
+    );
+
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');
     export const badWebPanelFormatString = localize(
         'DataScience.badWebPanelFormatString',
@@ -300,7 +393,8 @@ export namespace DataScience {
         'DataScience.installingMissingDependencies',
         'Installing missing dependencies'
     );
-    export const performingExport = localize('DataScience.performingExport', 'Performing export');
+    export const performingExport = localize('DataScience.performingExport', 'Performing Export');
+    export const convertingToPDF = localize('DataScience.convertingToPDF', 'Converting to PDF');
     export const exportNotebookToPython = localize(
         'DataScience.exportNotebookToPython',
         'Exporting Notebook to Python'
@@ -520,9 +614,14 @@ export namespace DataScience {
         'DataScience.jupyterSelectURINotRunningDetail',
         'Cannot connect at this time. Status unknown.'
     );
+    export const jupyterSelectUserAndPasswordTitle = localize(
+        'DataScience.jupyterSelectUserAndPasswordTitle',
+        'Enter your user name and password to connect to Jupyter Hub'
+    );
+    export const jupyterSelectUserPrompt = localize('DataScience.jupyterSelectUserPrompt', 'Enter your user name');
     export const jupyterSelectPasswordPrompt = localize(
         'DataScience.jupyterSelectPasswordPrompt',
-        'Enter your notebook password'
+        'Enter your password'
     );
     export const jupyterNotebookFailure = localize(
         'DataScience.jupyterNotebookFailure',
@@ -571,6 +670,7 @@ export namespace DataScience {
     export const exportCancel = localize('DataScience.exportCancel', 'Cancel');
     export const exportPythonQuickPickLabel = localize('DataScience.exportPythonQuickPickLabel', 'Python Script');
     export const exportHTMLQuickPickLabel = localize('DataScience.exportHTMLQuickPickLabel', 'HTML');
+    export const exportPDFQuickPickLabel = localize('DataScience.exportPDFQuickPickLabel', 'PDF');
     export const restartKernelAfterInterruptMessage = localize(
         'DataScience.restartKernelAfterInterruptMessage',
         'Interrupting the kernel timed out. Do you want to restart the kernel instead? All variables will be lost.'
@@ -627,6 +727,8 @@ export namespace DataScience {
     export const fetchingDataViewer = localize('DataScience.fetchingDataViewer', 'Fetching data ...');
     export const noRowsInDataViewer = localize('DataScience.noRowsInDataViewer', 'No rows match current filter');
     export const jupyterServer = localize('DataScience.jupyterServer', 'Jupyter Server');
+    export const notebookIsTrusted = localize('DataScience.notebookIsTrusted', 'Trusted');
+    export const notebookIsNotTrusted = localize('DataScience.notebookIsNotTrusted', 'Not Trusted');
     export const noKernel = localize('DataScience.noKernel', 'No Kernel');
     export const serverNotStarted = localize('DataScience.serverNotStarted', 'Not Started');
     export const selectKernel = localize('DataScience.selectKernel', 'Select a Kernel');
@@ -775,7 +877,7 @@ export namespace DataScience {
         'DataScience.remoteDebuggerNotSupported',
         'Debugging while attached to a remote server is not currently supported.'
     );
-    export const notebookExportAs = localize('DataScience.notebookExportAs', 'Convert and save to a python script');
+    export const notebookExportAs = localize('DataScience.notebookExportAs', 'Export As');
     export const exportAsPythonFileTitle = localize('DataScience.exportAsPythonFileTitle', 'Save As Python File');
     export const exportAsQuickPickPlaceholder = localize('DataScience.exportAsQuickPickPlaceholder', 'Export As...');
     export const openExportedFileMessage = localize(
@@ -784,6 +886,10 @@ export namespace DataScience {
     );
     export const openExportFileYes = localize('DataScience.openExportFileYes', 'Yes');
     export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
+    export const exportToPDFDependencyMessage = localize(
+        'DataScience.exportToPDFDependencyMessage',
+        'If you have not installed xelatex (TeX) you will need to do so before you can export to PDF, for further instructions please look [here](https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex). \r\nTo avoid installing xelatex (TeX) you might want to try exporting to HTML and using your browsers "Print to PDF" feature.'
+    );
     export const failedExportMessage = localize('DataScience.failedExportMessage', 'Export failed.');
     export const runCell = localize('DataScience.runCell', 'Run cell');
     export const deleteCell = localize('DataScience.deleteCell', 'Delete cell');
@@ -816,13 +922,14 @@ export namespace DataScience {
         'DataScience.findJupyterCommandProgressSearchCurrentPath',
         'Searching current path.'
     );
+    export const gatherError = localize('DataScience.gatherError', 'Gather internal error');
     export const gatheredScriptDescription = localize(
         'DataScience.gatheredScriptDescription',
-        '# This file was generated by an experimental feature called "Gather".\n#\n#     The intent is that it contains only the code required to produce\n#     the same results as the cell originally selected for gathering.\n#     Please note that the Python analysis is quite conservative, so if\n#     it is unsure whether a line of code is necessary for execution, it\n#     will err on the side of including it.\n#\n# Please let us know if you are satisfied with what was gathered here:\n# https://aka.ms/gathersurvey\n\n'
+        '# This file was generated by the Gather Extension.\n# It requires version 2020.7.94776 (or newer) of the Python Extension.\n#\n#     The intent is that it contains only the code required to produce\n#     the same results as the cell originally selected for gathering.\n#     Please note that the Python analysis is quite conservative, so if\n#     it is unsure whether a line of code is necessary for execution, it\n#     will err on the side of including it.\n#\n# Please let us know if you are satisfied with what was gathered here:\n# https://aka.ms/gathersurvey\n\n'
     );
     export const gatheredNotebookDescriptionInMarkdown = localize(
         'DataScience.gatheredNotebookDescriptionInMarkdown',
-        '# Gathered Notebook\nGathered from ```{0}```\n\n|   |   |\n|---|---|\n|&nbsp;&nbsp;&nbsp|This notebook was generated by an experimental feature called "Gather". The intent is that it contains only the code and cells required to produce the same results as the cell originally selected for gathering. Please note that the Python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.|\n\n**Are you satisfied with the code that was gathered?**\n\n[Yes](https://command:python.datascience.gatherquality?yes) [No](https://command:python.datascience.gatherquality?no)'
+        '# Gathered Notebook\nGathered from ```{0}```\n\n|   |   |\n|---|---|\n|&nbsp;&nbsp;&nbsp|This notebook was generated by the Gather Extension. It requires version 2020.7.94776 (or newer) of the Python Extension, please update [here](https://command:python.datascience.latestExtension). The intent is that it contains only the code and cells required to produce the same results as the cell originally selected for gathering. Please note that the Python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.|\n\n**Are you satisfied with the code that was gathered?**\n\n[Yes](https://command:python.datascience.gatherquality?yes) [No](https://command:python.datascience.gatherquality?no)'
     );
     export const savePngTitle = localize('DataScience.savePngTitle', 'Save Image');
     export const fallbackToUseActiveInterpeterAsKernel = localize(
@@ -975,7 +1082,29 @@ export namespace DataScience {
     );
     export const usingPreviewNotebookWithOtherNotebookWarning = localize(
         'DataScience.usingPreviewNotebookWithOtherNotebookWarning',
-        'Using the Preview Notebook Editor along with the stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
+        'Opening the same file in the Preview Notebook Editor and stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
+    );
+    export const launchNotebookTrustPrompt = localize(
+        'DataScience.launchNotebookTrustPrompt',
+        'A notebook could execute harmful code when opened. Some outputs have been hidden. Do you trust this notebook? [Learn more.](https://aka.ms/trusted-notebooks)'
+    );
+    export const trustNotebook = localize('DataScience.launchNotebookTrustPrompt.yes', 'Trust');
+    export const doNotTrustNotebook = localize('DataScience.launchNotebookTrustPrompt.no', 'Do not trust');
+    export const trustAllNotebooks = localize(
+        'DataScience.launchNotebookTrustPrompt.trustAllNotebooks',
+        'Trust all notebooks'
+    );
+    export const insecureSessionMessage = localize(
+        'DataScience.insecureSessionMessage',
+        'Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?'
+    );
+    export const insecureSessionDenied = localize(
+        'DataScience.insecureSessionDenied',
+        'Denied connection to insecure server.'
+    );
+    export const previewNotebookOnlySupportedInVSCInsiders = localize(
+        'DataScience.previewNotebookOnlySupportedInVSCInsiders',
+        'The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code.'
     );
 }
 
@@ -1003,7 +1132,7 @@ export namespace StartPage {
 
     export const releaseNotes = localize(
         'StartPage.releaseNotes',
-        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features'
+        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features.'
     );
     export const tutorialAndDoc = localize(
         'StartPage.tutorialAndDoc',

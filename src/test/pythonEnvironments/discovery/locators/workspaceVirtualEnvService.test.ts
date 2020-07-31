@@ -75,7 +75,8 @@ class Venvs {
     }
 }
 
-const timeoutMs = IS_CI_SERVER ? 60_000 : 15_000;
+const baseTimeoutMs = 30_000;
+const timeoutMs = IS_CI_SERVER ? baseTimeoutMs * 4 : baseTimeoutMs;
 suite('Interpreters - Workspace VirtualEnv Service', function () {
     this.timeout(timeoutMs);
     this.retries(0);

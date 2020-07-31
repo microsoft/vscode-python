@@ -2,13 +2,13 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2020.7.0-dev",
+    "version": "2020.8.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
-    "enableProposedApi": false,
+    "enableProposedApi": true,
     "author": {
         "name": "Microsoft Corporation"
     },
@@ -28,7 +28,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.46.0"
+        "vscode": "^1.47.0"
     },
     "keywords": [
         "python",
@@ -42,7 +42,11 @@
         "Linters",
         "Snippets",
         "Formatters",
-        "Other"
+        "Other",
+        "Extension Packs",
+        "Data Science",
+        "Machine Learning",
+        "Notebooks"
     ],
     "activationEvents": [
         "onLanguage:python",
@@ -59,6 +63,7 @@
         "onCommand:python.viewTestOutput",
         "onCommand:python.viewOutput",
         "onCommand:python.datascience.viewJupyterOutput",
+        "onCOmmand:python.datascience.export",
         "onCommand:python.datascience.exportAsPythonScript",
         "onCommand:python.datascience.exportToHTML",
         "onCommand:python.datascience.exportToPDF",
@@ -84,7 +89,7 @@
         "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.datascience.createnewnotebook",
         "onCommand:python.startPage.open",
-        "onCommand:python.datascience.showhistorypane",
+        "onCommand:python.datascience.createnewinteractive",
         "onCommand:python.datascience.importnotebook",
         "onCommand:python.datascience.importnotebookfile",
         "onCommand:python.datascience.opennotebook",
@@ -96,7 +101,7 @@
         "onCommand:python.datascience.selectjupytercommandline",
         "onCommand:python.enableSourceMapSupport",
         "onNotebookEditor:jupyter-notebook",
-        "workspaceContains:**/mspythonconfig.json",
+        "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml"
     ],
     "main": "./out/client/extension",
@@ -124,6 +129,11 @@
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
             },
             {
+                "command": "notebook.cell.execute",
+                "key": "shift+enter",
+                "when": "notebookCellListFocused"
+            },
+            {
                 "command": "python.datascience.runcurrentcell",
                 "key": "ctrl+enter",
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
@@ -138,7 +148,7 @@
                 "win": "F",
                 "linux": "F",
                 "key": "F",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.find"
             },
             {
@@ -146,7 +156,7 @@
                 "win": "K",
                 "linux": "K",
                 "key": "K",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "list.focusUp"
             },
             {
@@ -154,7 +164,7 @@
                 "win": "J",
                 "linux": "J",
                 "key": "J",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "list.focusDown"
             },
             {
@@ -162,7 +172,7 @@
                 "win": "A",
                 "linux": "A",
                 "key": "A",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.insertCodeCellAbove"
             },
             {
@@ -170,7 +180,7 @@
                 "win": "B",
                 "linux": "B",
                 "key": "B",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.insertCodeCellBelow"
             },
             {
@@ -178,7 +188,7 @@
                 "win": "D D",
                 "linux": "D D",
                 "key": "D D",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.delete"
             },
             {
@@ -186,7 +196,7 @@
                 "win": "Z",
                 "linux": "Z",
                 "key": "Z",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.undo"
             },
             {
@@ -194,7 +204,7 @@
                 "win": "C",
                 "linux": "C",
                 "key": "C",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.copy"
             },
             {
@@ -202,7 +212,7 @@
                 "win": "X",
                 "linux": "X",
                 "key": "X",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.cut"
             },
             {
@@ -210,14 +220,14 @@
                 "win": "V",
                 "linux": "V",
                 "key": "V",
-                "when": "notebookEditorFocused && !inputFocus",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.paste"
             },
             {
                 "mac": "ctrl+shift+-",
                 "win": "ctrl+shift+-",
                 "linux": "ctrl+shift+-",
-                "when": "editorTextFocus && inputFocus && notebookEditorFocused",
+                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookViewType == jupyter-notebook",
                 "command": "notebook.cell.split"
             }
         ],
@@ -358,6 +368,16 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.export",
+                "title": "%DataScience.notebookExportAs%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/export_to_python.svg",
+                    "dark": "resources/dark/export_to_python.svg"
+                },
+                "enablement": "notebookViewType == jupyter-notebook && python.datascience.isnotebooktrusted"
+            },
+            {
                 "command": "python.datascience.exportAsPythonScript",
                 "title": "%python.command.python.datascience.exportAsPythonScript.title%",
                 "category": "Python"
@@ -365,6 +385,11 @@
             {
                 "command": "python.datascience.exportToHTML",
                 "title": "%python.command.python.datascience.exportToHTML.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.exportToPDF",
+                "title": "%python.command.python.datascience.exportToPDF.title%",
                 "category": "Python"
             },
             {
@@ -589,8 +614,8 @@
                 "category": "Python"
             },
             {
-                "command": "python.datascience.showhistorypane",
-                "title": "%python.command.python.datascience.showhistorypane.title%",
+                "command": "python.datascience.createnewinteractive",
+                "title": "%python.command.python.datascience.createnewinteractive.title%",
                 "category": "Python"
             },
             {
@@ -728,7 +753,22 @@
             {
                 "command": "python.datascience.notebookeditor.restartkernel",
                 "title": "%python.command.python.datascience.restartkernel.title%",
-                "category": "Python"
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/restart-kernel.svg",
+                    "dark": "resources/dark/restart-kernel.svg"
+                },
+                "enablement": "python.datascience.notebookeditor.canrestartNotebookkernel"
+            },
+            {
+                "command": "python.datascience.notebookeditor.trust",
+                "title": "%DataScience.trustNotebookCommandTitle%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/un-trusted.svg",
+                    "dark": "resources/dark/un-trusted.svg"
+                },
+                "enablement": "notebookViewType == jupyter-notebook && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
             },
             {
                 "command": "python.datascience.notebookeditor.runallcells",
@@ -789,6 +829,11 @@
             {
                 "command": "python.datascience.gatherquality",
                 "title": "DataScience.gatherQuality",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.latestExtension",
+                "title": "DataScience.latestExtension",
                 "category": "Python"
             }
         ],
@@ -889,6 +934,24 @@
                     "title": "%python.command.python.execInTerminal.title%",
                     "group": "navigation",
                     "when": "resourceLangId == python && python.showPlayIcon"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.restartkernel",
+                    "title": "%python.command.python.datascience.restartkernel.title%",
+                    "group": "navigation",
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook'"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.trust",
+                    "title": "%DataScience.trustNotebookCommandTitle%",
+                    "group": "navigation@1",
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
+                },
+                {
+                    "command": "python.datascience.export",
+                    "title": "%DataScience.notebookExportAs%",
+                    "group": "navigation",
+                    "when": "resourceLangId == jupyter && notebookViewType == 'jupyter-notebook' && python.datascience.isnotebooktrusted"
                 }
             ],
             "explorer/context": [
@@ -933,13 +996,19 @@
                     "command": "python.datascience.exportAsPythonScript",
                     "title": "%python.command.python.datascience.exportAsPythonScript.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.exportToHTML",
                     "title": "%python.command.python.datascience.exportToHTML.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
+                },
+                {
+                    "command": "python.datascience.exportToPDF",
+                    "title": "%python.command.python.datascience.exportToPDF.title%",
+                    "category": "Python",
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.switchOffInsidersChannel",
@@ -1105,10 +1174,10 @@
                     "when": "editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled"
                 },
                 {
-                    "command": "python.datascience.showhistorypane",
-                    "title": "%python.command.python.datascience.showhistorypane.title%",
+                    "command": "python.datascience.createnewinteractive",
+                    "title": "%python.command.python.datascience.createnewinteractive.title%",
                     "category": "Python",
-                    "when": "python.datascience.featureenabled && !python.datascience.isinteractiveactive"
+                    "when": "python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.runallcells",
@@ -1202,55 +1271,61 @@
                     "command": "python.datascience.notebookeditor.undocells",
                     "title": "%python.command.python.datascience.undocells.title%",
                     "category": "Python",
-                    "when": "python.datascience.haveinteractivecells && python.datascience.featureenabled && python.datascience.isnativeactive && !notebookEditorFocused"
+                    "when": "python.datascience.haveinteractivecells && python.datascience.featureenabled && python.datascience.isnativeactive && !notebookEditorFocused && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.redocells",
                     "title": "%python.command.python.datascience.redocells.title%",
                     "category": "Python",
-                    "when": "python.datascience.havenativeredoablecells && python.datascience.featureenabled && python.datascience.isnativeactive && !notebookEditorFocused"
+                    "when": "python.datascience.havenativeredoablecells && python.datascience.featureenabled && python.datascience.isnativeactive && !notebookEditorFocused&& python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.removeallcells",
                     "title": "%python.command.python.datascience.notebookeditor.removeallcells.title%",
                     "category": "Python",
-                    "when": "python.datascience.havenativecells && python.datascience.featureenabled && python.datascience.isnativeactive"
+                    "when": "python.datascience.havenativecells && python.datascience.featureenabled && python.datascience.isnativeactive && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.interruptkernel",
                     "title": "%python.command.python.datascience.interruptkernel.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.restartkernel",
                     "title": "%python.command.python.datascience.restartkernel.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.trust",
+                    "title": "%DataScience.trustNotebookCommandTitle%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled && notebookEditorFocused && !python.datascience.isnotebooktrusted && python.datascience.trustfeatureenabled"
                 },
                 {
                     "command": "python.datascience.notebookeditor.runallcells",
                     "title": "%python.command.python.datascience.notebookeditor.runallcells.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.runselectedcell",
                     "title": "%python.command.python.datascience.notebookeditor.runselectedcell.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.havecellselected && !notebookEditorFocused"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.havecellselected && !notebookEditorFocused && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.runselectedcell",
                     "title": "%python.command.python.datascience.notebookeditor.runselectedcell.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && notebookEditorFocused"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && notebookEditorFocused && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.notebookeditor.addcellbelow",
                     "title": "%python.command.python.datascience.notebookeditor.addcellbelow.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
                     "command": "python.datascience.expandallcells",
@@ -1340,6 +1415,18 @@
                 {
                     "command": "python.datascience.gatherquality",
                     "title": "%DataScience.gatherQuality%",
+                    "category": "Python",
+                    "when": "false"
+                },
+                {
+                    "command": "python.datascience.latestExtension",
+                    "title": "%DataScience.latestExtension%",
+                    "category": "Python",
+                    "when": "false"
+                },
+                {
+                    "command": "python.datascience.export",
+                    "title": "%DataScience.notebookExportAs%",
                     "category": "Python",
                     "when": "false"
                 }
@@ -1883,7 +1970,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "LS - enabled",
                             "AlwaysDisplayTestExplorer - experiment",
                             "ShowExtensionSurveyPrompt - enabled",
                             "Reload - experiment",
@@ -1896,6 +1982,8 @@
                             "CollectNodeLSRequestTiming - experiment",
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
+                            "EnableTrustedNotebooks",
+                            "tryPylance",
                             "All"
                         ]
                     },
@@ -1907,7 +1995,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "LS - enabled",
                             "AlwaysDisplayTestExplorer - experiment",
                             "ShowExtensionSurveyPrompt - enabled",
                             "Reload - experiment",
@@ -1920,6 +2007,8 @@
                             "CollectNodeLSRequestTiming - experiment",
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
+                            "EnableTrustedNotebooks",
+                            "tryPylance",
                             "All"
                         ]
                     },
@@ -2180,22 +2269,16 @@
                     "description": "Modify plot output so that it can be expanded into a plot viewer window.",
                     "scope": "resource"
                 },
-                "python.dataScience.enableGather": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Python Insiders Only: Enable experimental gather feature for executed cells. For a gathered cell, that cell and only the code it depends on will be exported to a new notebook.",
-                    "scope": "resource"
-                },
                 "python.dataScience.gatherToScript": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Python Insiders Only: If experimental gather feature is enabled, gather code to a python script rather than a notebook.",
+                    "description": "Gather code to a python script rather than a notebook.",
                     "scope": "resource"
                 },
                 "python.dataScience.gatherSpecPath": {
                     "type": "string",
                     "default": "",
-                    "description": "Python Insiders Only: If experimental gather feature is enabled, this setting specifies a folder that contains additional or replacement spec files used for analysis.",
+                    "description": "This setting specifies a folder that contains additional or replacement spec files used for analysis.",
                     "scope": "resource"
                 },
                 "python.dataScience.codeLenses": {
@@ -2276,6 +2359,17 @@
                             }
                         ]
                     ]
+                },
+                "python.dataScience.interactiveWindowMode": {
+                    "type": "string",
+                    "enum": [
+                        "perFile",
+                        "single",
+                        "multiple"
+                    ],
+                    "scope": "resource",
+                    "description": "Behavior of the Python Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
+                    "default": "multiple"
                 },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
@@ -2368,6 +2462,7 @@
                     "type": "string",
                     "enum": [
                         "Jedi",
+                        "Pylance",
                         "Microsoft",
                         "None"
                     ],
@@ -3051,9 +3146,9 @@
                     "scope": "application"
                 },
                 "python.dataScience.runStartupCommands": {
-                    "type": "string",
+                    "type": "array",
                     "default": "",
-                    "description": "A series of Python instructions or iPython magic commands separated by '\\n' that will be executed when the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
+                    "description": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
                     "scope": "application"
                 },
                 "python.dataScience.debugJustMyCode": {
@@ -3061,6 +3156,12 @@
                     "default": true,
                     "description": "When debugging, debug just my code.",
                     "scope": "resource"
+                },
+                "python.dataScience.alwaysTrustNotebooks": {
+                    "type": "boolean",
+                    "default": false,
+                    "markdownDescription": "Enabling this setting will automatically trust any opened notebook and therefore display markdown and render code cells. You will no longer be prompted to trust individual notebooks and harmful code could automatically run. \n\n[Learn more.](https://aka.ms/trusted-notebooks)",
+                    "scope": "machine"
                 },
                 "python.insidersChannel": {
                     "type": "string",
@@ -3192,7 +3293,45 @@
                     "when": "testsDiscovered"
                 }
             ]
-        }
+        },
+        "notebookOutputRenderer": [
+            {
+                "viewType": "jupyter-notebook-renderer",
+                "displayName": "Jupyter Notebook Renderer",
+                "mimeTypes": [
+                    "application/geo+json",
+                    "application/vdom.v1+json",
+                    "application/vnd.dataresource+json",
+                    "application/vnd.plotly.v1+json",
+                    "application/vnd.vega.v2+json",
+                    "application/vnd.vega.v3+json",
+                    "application/vnd.vega.v4+json",
+                    "application/vnd.vega.v5+json",
+                    "application/vnd.vegalite.v1+json",
+                    "application/vnd.vegalite.v2+json",
+                    "application/vnd.vegalite.v3+json",
+                    "application/vnd.vegalite.v4+json",
+                    "application/x-nteract-model-debug+json",
+                    "image/gif",
+                    "image/png",
+                    "image/jpeg",
+                    "text/latex",
+                    "text/vnd.plotly.v1+html"
+                ]
+            }
+        ],
+        "notebookProvider": [
+            {
+                "viewType": "jupyter-notebook",
+                "displayName": "Jupyter Notebook (preview)",
+                "selector": [
+                    {
+                        "filenamePattern": "*.ipynb"
+                    }
+                ],
+                "priority": "option"
+            }
+        ]
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
@@ -3219,7 +3358,7 @@
         "testDebugger": "node ./out/test/testBootstrap.js ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "pretestDataScience": "node ./out/test/datascience/dsTestSetup.js",
-        "testDataScience": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_PYTHON_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=ds.test VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
+        "testDataScience": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_PYTHON_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=ds.test VSC_PYTHON_FORCE_LOGGING=1 VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testMultiWorkspace": "node ./out/test/testBootstrap.js ./out/test/multiRootTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
         "testSmoke": "node ./out/test/smokeTest.js",
@@ -3244,6 +3383,7 @@
         "detect-indent": "^6.0.0",
         "diff-match-patch": "^1.0.0",
         "fast-deep-equal": "^2.0.1",
+        "font-awesome": "^4.7.0",
         "fs-extra": "^4.0.3",
         "fuzzy": "^0.1.3",
         "get-port": "^3.2.0",
@@ -3254,7 +3394,7 @@
         "is-online": "^8.2.1",
         "jsonc-parser": "^2.0.3",
         "line-by-line": "^0.1.6",
-        "lodash": "^4.17.15",
+        "lodash": "^4.17.19",
         "log4js": "^6.1.2",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
@@ -3315,7 +3455,6 @@
         "@jupyter-widgets/controls": "^1.5.2",
         "@jupyter-widgets/jupyterlab-manager": "^1.0.2",
         "@jupyter-widgets/output": "^2.0.1",
-        "@nteract/plotly": "^1.48.3",
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
@@ -3323,7 +3462,7 @@
         "@nteract/transform-vega": "^6.0.3",
         "@nteract/transforms": "^4.4.7",
         "@phosphor/widgets": "^1.9.3",
-        "@raghb1/node-memwatch": "^3.0.1",
+        "@sinonjs/fake-timers": "^6.0.1",
         "@testing-library/react": "^9.4.0",
         "@types/ansi-regex": "^4.0.0",
         "@types/chai": "^4.1.2",
@@ -3366,13 +3505,14 @@
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
         "@types/sinon": "^7.5.1",
+        "@types/sinonjs__fake-timers": "^6.0.1",
         "@types/socket.io": "^2.1.4",
         "@types/stack-trace": "0.0.29",
         "@types/temp": "^0.8.32",
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
-        "@types/vscode": "^1.46.0",
+        "@types/vscode": "^1.47.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",
@@ -3392,7 +3532,7 @@
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
         "chai-http": "^4.3.0",
-        "codecov": "^3.6.5",
+        "codecov": "^3.7.1",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^5.1.1",
         "cors": "^2.8.5",
@@ -3450,6 +3590,7 @@
         "node-html-parser": "^1.1.13",
         "nyc": "^15.0.0",
         "playwright-chromium": "^0.13.0",
+        "plotly.js-dist": "^1.54.5",
         "postcss": "^7.0.27",
         "postcss-cssnext": "^3.1.0",
         "postcss-import": "^12.0.1",

@@ -53,7 +53,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
         return `${this.languageServerFolder}.${serverVersion!.version.raw}`;
     }
 
-    @traceDecorators.verbose('Get latest version of Language Server')
+    @traceDecorators.verbose('Get latest version of language server')
     public getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined> {
         const minVersion = this.getMinimalLanguageServerVersion();
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(

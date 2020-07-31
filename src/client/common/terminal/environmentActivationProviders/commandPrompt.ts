@@ -6,26 +6,61 @@ import * as path from 'path';
 import { IServiceContainer } from '../../../ioc/types';
 import '../../extensions';
 import { TerminalShellType } from '../types';
-import { BaseActivationCommandProvider } from './baseActivationProvider';
+import { ActivationScripts, VenvBaseActivationCommandProvider } from './baseActivationProvider';
+
+// For a given shell the scripts are in order of precedence.
+const SCRIPTS: ActivationScripts = ({
+    // Group 1
+    [TerminalShellType.commandPrompt]: ['activate.bat', 'Activate.ps1'],
+    // Group 2
+    [TerminalShellType.powershell]: ['Activate.ps1', 'activate.bat'],
+    [TerminalShellType.powershellCore]: ['Activate.ps1', 'activate.bat']
+} as unknown) as ActivationScripts;
+
+export function getAllScripts(pathJoin: (...p: string[]) => string): string[] {
+    const scripts: string[] = [];
+    for (const key of Object.keys(SCRIPTS)) {
+        const shell = key as TerminalShellType;
+        for (const name of SCRIPTS[shell]) {
+            if (!scripts.includes(name)) {
+                scripts.push(
+                    name,
+                    // We also add scripts in subdirs.
+                    pathJoin('Scripts', name),
+                    pathJoin('scripts', name)
+                );
+            }
+        }
+    }
+    return scripts;
+}
 
 @injectable()
-export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
+export class CommandPromptAndPowerShell extends VenvBaseActivationCommandProvider {
+    protected readonly scripts: ActivationScripts;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
+        this.scripts = ({} as unknown) as ActivationScripts;
+        for (const key of Object.keys(SCRIPTS)) {
+            const shell = key as TerminalShellType;
+            const scripts: string[] = [];
+            for (const name of SCRIPTS[shell]) {
+                scripts.push(
+                    name,
+                    // We also add scripts in subdirs.
+                    path.join('Scripts', name),
+                    path.join('scripts', name)
+                );
+            }
+            this.scripts[shell] = scripts;
+        }
     }
-    public isShellSupported(targetShell: TerminalShellType): boolean {
-        return (
-            targetShell === TerminalShellType.commandPrompt ||
-            targetShell === TerminalShellType.powershell ||
-            targetShell === TerminalShellType.powershellCore
-        );
-    }
+
     public async getActivationCommandsForInterpreter(
         pythonPath: string,
         targetShell: TerminalShellType
     ): Promise<string[] | undefined> {
-        // Dependending on the target shell, look for the preferred script file.
-        const scriptFile = await this.findScriptFile(pythonPath, this.getScriptsInOrderOfPreference(targetShell));
+        const scriptFile = await this.findScriptFile(pythonPath, targetShell);
         if (!scriptFile) {
             return;
         }
@@ -42,20 +77,6 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
             return [];
         } else {
             return;
-        }
-    }
-
-    private getScriptsInOrderOfPreference(targetShell: TerminalShellType): string[] {
-        const batchFiles = ['activate.bat', path.join('Scripts', 'activate.bat'), path.join('scripts', 'activate.bat')];
-        const powerShellFiles = [
-            'Activate.ps1',
-            path.join('Scripts', 'Activate.ps1'),
-            path.join('scripts', 'Activate.ps1')
-        ];
-        if (targetShell === TerminalShellType.commandPrompt) {
-            return batchFiles.concat(powerShellFiles);
-        } else {
-            return powerShellFiles.concat(batchFiles);
         }
     }
 }

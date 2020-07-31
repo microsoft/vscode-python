@@ -1,6 +1,3 @@
-export const LSControl = 'LS - control';
-export const LSEnabled = 'LS - enabled';
-
 // Experiment to check whether to always display the test explorer.
 export enum AlwaysDisplayTestExplorerGroups {
     control = 'AlwaysDisplayTestExplorer - control',
@@ -83,14 +80,19 @@ export enum NotebookEditorSupport {
     nativeNotebookExperiment = 'NativeNotebook - experiment'
 }
 
-// Experiment to turn on the start page
-export enum EnableStartPage {
-    experiment = 'EnableStartPage'
-}
-
 // Experiment to remove the Kernel/Server Tooblar in the Interactive Window when running a local Jupyter Server.
 // It doesn't make sense to have it there, the user can already change the kernel
 // by changing the python interpreter on the status bar.
 export enum RemoveKernelToolbarInInteractiveWindow {
     experiment = 'RemoveKernelToolbarInInteractiveWindow'
+}
+
+// Experiment to turn on trusted notebooks checks
+export enum EnableTrustedNotebooks {
+    experiment = 'EnableTrustedNotebooks'
+}
+
+// Experiment to offer switch to Pylance language server
+export enum TryPylance {
+    experiment = 'tryPylance'
 }

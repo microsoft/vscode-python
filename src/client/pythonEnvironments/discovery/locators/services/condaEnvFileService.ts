@@ -8,7 +8,7 @@
  * More details: https://github.com/microsoft/vscode-python/issues/8886
  */
 
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
@@ -22,7 +22,6 @@ import { AnacondaCompanyName } from './conda';
 /**
  * Locate conda env interpreters based on the "conda environments file".
  */
-@injectable()
 export class CondaEnvFileService extends CacheableLocatorService {
     constructor(
         @inject(IInterpreterHelper) private helperService: IInterpreterHelper,

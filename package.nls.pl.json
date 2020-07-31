@@ -29,7 +29,6 @@
     "python.command.python.datascience.runcurrentcelladvance.title": "Uruchom bieżące komórki i pokaż",
     "python.command.python.datascience.execSelectionInteractive.title": "Uruchom zaznaczony obszar w oknie IPythona",
     "python.command.python.datascience.runcell.title": "Uruchom komórki",
-    "python.command.python.datascience.showhistorypane.title": "Pokaż okno IPythona",
     "python.command.python.datascience.selectjupyteruri.title": "Podaj identyfikator URI serwera Jupyter",
     "python.command.python.datascience.importnotebook.title": "Importuj notatnik Jupyter",
     "python.command.python.datascience.importnotebookonfile.title": "Importuj notatnik Jupyter",

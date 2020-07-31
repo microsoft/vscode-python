@@ -193,6 +193,31 @@ suite('Python Settings', async () => {
         config.verifyAll();
     });
 
+    function testLanguageServer(languageServer: LanguageServerType, expectedValue: LanguageServerType) {
+        test(languageServer, () => {
+            expected.pythonPath = 'python3';
+            expected.languageServer = languageServer;
+            initializeConfig(expected);
+            config
+                .setup((c) => c.get<LanguageServerType>('languageServer'))
+                .returns(() => expected.languageServer)
+                .verifiable(TypeMoq.Times.once());
+
+            settings.update(config.object);
+
+            expect(settings.languageServer).to.be.equal(expectedValue);
+            config.verifyAll();
+        });
+    }
+
+    suite('languageServer settings', async () => {
+        Object.values(LanguageServerType).forEach(async (languageServer) => {
+            testLanguageServer(languageServer, languageServer);
+        });
+
+        testLanguageServer('invalid' as LanguageServerType, LanguageServerType.Jedi);
+    });
+
     function testExperiments(enabled: boolean) {
         expected.pythonPath = 'python3';
         // tslint:disable-next-line:no-any
@@ -282,6 +307,7 @@ suite('Python Settings', async () => {
     test('File env variables remain in settings', () => {
         expected.datascience = {
             allowImportFromNotebook: true,
+            alwaysTrustNotebooks: true,
             jupyterLaunchTimeout: 20000,
             jupyterLaunchRetries: 3,
             enabled: true,
@@ -307,7 +333,8 @@ suite('Python Settings', async () => {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            widgetScriptSources: []
+            widgetScriptSources: [],
+            interactiveWindowMode: 'single'
         };
         expected.pythonPath = 'python3';
         // tslint:disable-next-line:no-any

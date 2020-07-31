@@ -18,6 +18,7 @@ import {
     StreamMessageReader,
     StreamMessageWriter
 } from 'vscode-jsonrpc/node';
+import { IPlatformService } from '../../../client/common/platform/types';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { IPythonExecutionService } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
@@ -44,6 +45,7 @@ suite('Daemon', () => {
     let fullyQualifiedPythonPath: string = PYTHON_PATH;
     let pythonDaemon: PythonDaemonExecutionService;
     let pythonExecutionService: IPythonExecutionService;
+    let platformService: IPlatformService;
     let disposables: IDisposable[] = [];
     suiteSetup(() => {
         // When running locally.
@@ -67,8 +69,10 @@ suite('Daemon', () => {
         );
         connection.listen();
         pythonExecutionService = mock<IPythonExecutionService>();
+        platformService = mock<IPlatformService>();
         pythonDaemon = new PythonDaemonExecutionService(
             instance(pythonExecutionService),
+            instance(platformService),
             fullyQualifiedPythonPath,
             pythonProc,
             connection

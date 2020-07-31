@@ -38,6 +38,7 @@ interface ICellOutputProps {
     themeMatplotlibPlots?: boolean;
     expandImage(imageHtml: string): void;
     widgetFailed(ex: Error): void;
+    openSettings(settings?: string): void;
 }
 
 interface ICellOutputData {
@@ -484,14 +485,14 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         const transformedList = outputs.map(this.transformOutput.bind(this));
 
         transformedList.forEach((transformed, index) => {
-            const mimetype = transformed.output.mimeType;
+            const mimeType = transformed.output.mimeType;
             if (isIPyWidgetOutput(transformed.output.mimeBundle)) {
                 // Create a view for this output if not already there.
                 this.renderWidget(transformed.output);
-            } else if (mimetype && isMimeTypeSupported(mimetype)) {
+            } else if (mimeType && isMimeTypeSupported(mimeType)) {
                 // If that worked, use the transform
                 // Get the matching React.Component for that mimetype
-                const Transform = getTransform(mimetype);
+                const Transform = getTransform(mimeType);
 
                 let className = transformed.output.isText ? 'cell-output-text' : 'cell-output-html';
                 className = transformed.output.isError ? `${className} cell-output-error` : className;
@@ -511,7 +512,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         buffer.push(
                             <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
                                 {transformed.extraButton}
-                                <TrimmedOutputMessage></TrimmedOutputMessage>
+                                <TrimmedOutputMessage openSettings={this.props.openSettings} />
                                 <Transform data={transformed.output.data} />
                             </div>
                         );
@@ -525,14 +526,14 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     }
                 }
             } else if (
-                !mimetype ||
-                mimetype.startsWith('application/scrapbook.scrap.') ||
-                mimetype.startsWith('application/aml')
+                !mimeType ||
+                mimeType.startsWith('application/scrapbook.scrap.') ||
+                mimeType.startsWith('application/aml')
             ) {
                 // Silently skip rendering of these mime types, render an empty div so the user sees the cell was executed.
                 buffer.push(<div key={index}></div>);
             } else {
-                const str: string = this.getUnknownMimeTypeFormatString().format(mimetype);
+                const str: string = this.getUnknownMimeTypeFormatString().format(mimeType);
                 buffer.push(<div key={index}>{str}</div>);
             }
         });

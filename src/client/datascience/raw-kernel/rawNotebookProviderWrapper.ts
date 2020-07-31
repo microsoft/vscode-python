@@ -8,7 +8,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -17,7 +17,7 @@ import {
     Resource
 } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
+import { DataScienceStartupTime, JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
@@ -25,7 +25,7 @@ import { IKernelLauncher } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     ConnectNotebookProviderOptions,
-    IDataScience,
+    IDataScienceFileSystem,
     INotebook,
     IRawConnection,
     IRawNotebookProvider,
@@ -40,13 +40,13 @@ interface IRawNotebookProviderInterface extends IRoleBasedObject, IRawNotebookPr
 type RawNotebookProviderClassType = {
     new (
         liveShare: ILiveShareApi,
-        dataScience: IDataScience,
+        startupTime: number,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         configService: IConfigurationService,
         workspaceService: IWorkspaceService,
         appShell: IApplicationShell,
-        fs: IFileSystem,
+        fs: IDataScienceFileSystem,
         serviceContainer: IServiceContainer,
         kernelLauncher: IKernelLauncher,
         kernelSelector: KernelSelector,
@@ -65,13 +65,13 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
-        @inject(IDataScience) dataScience: IDataScience,
+        @inject(DataScienceStartupTime) startupTime: number,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(IFileSystem) fs: IFileSystem,
+        @inject(IDataScienceFileSystem) fs: IDataScienceFileSystem,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IKernelLauncher) kernelLauncher: IKernelLauncher,
         @inject(KernelSelector) kernelSelector: KernelSelector,
@@ -86,7 +86,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             HostRawNotebookProvider,
             GuestRawNotebookProvider,
             liveShare,
-            dataScience,
+            startupTime,
             disposableRegistry,
             asyncRegistry,
             configService,

@@ -98,6 +98,8 @@ export enum InteractiveWindowMessages {
     StopDebugging = 'stop_debugging',
     GatherCode = 'gather_code',
     GatherCodeToScript = 'gather_code_to_script',
+    LaunchNotebookTrustPrompt = 'launch_notebook_trust_prompt',
+    TrustNotebookComplete = 'trust_notebook_complete',
     LoadAllCells = 'load_all_cells',
     LoadAllCellsComplete = 'load_all_cells_complete',
     ScrollToCell = 'scroll_to_cell',
@@ -138,7 +140,9 @@ export enum InteractiveWindowMessages {
     ShowBreak = 'show_break',
     ShowingIp = 'showing_ip',
     DebugStateChange = 'debug_state_change',
-    KernelIdle = 'kernel_idle'
+    KernelIdle = 'kernel_idle',
+    HasCell = 'has_cell',
+    HasCellResponse = 'has_cell_response'
 }
 
 export enum IPyWidgetMessages {
@@ -156,10 +160,15 @@ export enum IPyWidgetMessages {
     IPyWidgets_WidgetScriptSourceResponse = 'IPyWidgets_WidgetScriptSourceResponse',
     IPyWidgets_msg = 'IPyWidgets_msg',
     IPyWidgets_binary_msg = 'IPyWidgets_binary_msg',
-    IPyWidgets_msg_handled = 'IPyWidgets_msg_handled',
+    // Message was received by the widget kernel and added to the msgChain queue for processing
+    IPyWidgets_msg_received = 'IPyWidgets_msg_received',
+    // IOPub message was fully handled by the widget kernel
+    IPyWidgets_iopub_msg_handled = 'IPyWidgets_iopub_msg_handled',
     IPyWidgets_kernelOptions = 'IPyWidgets_kernelOptions',
     IPyWidgets_registerCommTarget = 'IPyWidgets_registerCommTarget',
     IPyWidgets_RegisterMessageHook = 'IPyWidgets_RegisterMessageHook',
+    // Message sent when the extension has finished an operation requested by the kernel UI for processing a message
+    IPyWidgets_ExtensionOperationHandled = 'IPyWidgets_ExtensionOperationHandled',
     IPyWidgets_RemoveMessageHook = 'IPyWidgets_RemoveMessageHook',
     IPyWidgets_MessageHookCall = 'IPyWidgets_MessageHookCall',
     IPyWidgets_MessageHookResult = 'IPyWidgets_MessageHookResult',
@@ -203,6 +212,12 @@ export interface IAddedSysInfo {
     type: SysInfoReason;
     id: string;
     sysInfoCell: ICell;
+    notebookIdentity: Uri;
+}
+
+export interface IFinishCell {
+    cell: ICell;
+    notebookIdentity: Uri;
 }
 
 export interface IExecuteInfo {
@@ -325,6 +340,8 @@ export interface IRefreshVariablesRequest {
 
 export interface ILoadAllCells {
     cells: ICell[];
+    isNotebookTrusted?: boolean;
+    shouldShowTrustMessage?: boolean;
 }
 
 export interface IScrollToCell {
@@ -532,8 +549,10 @@ export class IInteractiveWindowMapping {
     // tslint:disable-next-line: no-any
     public [IPyWidgetMessages.IPyWidgets_binary_msg]: { id: string; data: any };
     public [IPyWidgetMessages.IPyWidgets_msg]: { id: string; data: string };
-    public [IPyWidgetMessages.IPyWidgets_msg_handled]: { id: string };
+    public [IPyWidgetMessages.IPyWidgets_msg_received]: { id: string };
+    public [IPyWidgetMessages.IPyWidgets_iopub_msg_handled]: { id: string };
     public [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: string;
+    public [IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled]: { id: string; type: IPyWidgetMessages };
     public [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: { hookMsgId: string; lastHookedMsgId: string | undefined };
     public [IPyWidgetMessages.IPyWidgets_MessageHookCall]: {
         requestId: string;
@@ -549,7 +568,7 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_mirror_execute]: { id: string; msg: KernelMessage.IExecuteRequestMsg };
     public [InteractiveWindowMessages.StartCell]: ICell;
     public [InteractiveWindowMessages.ForceVariableRefresh]: never | undefined;
-    public [InteractiveWindowMessages.FinishCell]: ICell;
+    public [InteractiveWindowMessages.FinishCell]: IFinishCell;
     public [InteractiveWindowMessages.UpdateCellWithExecutionResults]: ICell;
     public [InteractiveWindowMessages.GotoCodeCell]: IGotoCode;
     public [InteractiveWindowMessages.CopyCodeCell]: ICopyCode;
@@ -559,7 +578,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
     public [InteractiveWindowMessages.OpenSettings]: string | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
-    public [InteractiveWindowMessages.ExportNotebookAs]: never | undefined;
+    public [InteractiveWindowMessages.ExportNotebookAs]: ICell[];
     public [InteractiveWindowMessages.GetAllCells]: never | undefined;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
     public [InteractiveWindowMessages.DeleteAllCells]: IAddCellAction;
@@ -611,6 +630,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.StopDebugging]: never | undefined;
     public [InteractiveWindowMessages.GatherCode]: ICell;
     public [InteractiveWindowMessages.GatherCodeToScript]: ICell;
+    public [InteractiveWindowMessages.LaunchNotebookTrustPrompt]: never | undefined;
+    public [InteractiveWindowMessages.TrustNotebookComplete]: never | undefined;
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;
     public [InteractiveWindowMessages.LoadAllCellsComplete]: ILoadAllCells;
     public [InteractiveWindowMessages.ScrollToCell]: IScrollToCell;
@@ -659,4 +680,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ShowingIp]: never | undefined;
     public [InteractiveWindowMessages.KernelIdle]: never | undefined;
     public [InteractiveWindowMessages.DebugStateChange]: IDebugStateChange;
+    public [InteractiveWindowMessages.HasCell]: string;
+    public [InteractiveWindowMessages.HasCellResponse]: { id: string; result: boolean };
 }

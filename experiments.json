@@ -66,18 +66,6 @@
         "max": 0
     },
     {
-        "name": "LS - enabled",
-        "salt": "LS",
-        "min": 0,
-        "max": 4
-    },
-    {
-        "name": "LS - control",
-        "salt": "LS",
-        "min": 20,
-        "max": 24
-    },
-    {
         "name": "UseTerminalToGetActivatedEnvVars - experiment",
         "salt": "UseTerminalToGetActivatedEnvVars",
         "min": 0,
@@ -105,12 +93,12 @@
         "name": "LocalZMQKernel - experiment",
         "salt": "LocalZMQKernel",
         "min": 0,
-        "max": 5
+        "max": 75
     },
     {
         "name": "LocalZMQKernel - control",
         "salt": "LocalZMQKernel",
-        "min": 5,
+        "min": 75,
         "max": 100
     },
     {
@@ -153,25 +141,25 @@
         "name": "DeprecatePythonPath - experiment",
         "salt": "DeprecatePythonPath",
         "min": 0,
-        "max": 10
+        "max": 20
     },
     {
         "name": "DeprecatePythonPath - control",
         "salt": "DeprecatePythonPath",
-        "min": 90,
-        "max": 100
-    },
-    {
-        "name": "RunByLine - control",
-        "salt": "RunByLine",
-        "min": 0,
+        "min": 80,
         "max": 100
     },
     {
         "name": "RunByLine - experiment",
         "salt": "RunByLine",
-        "max": 0,
-        "min": 0
+        "min": 0,
+        "max": 40
+    },
+    {
+        "name": "RunByLine - control",
+        "salt": "RunByLine",
+        "min": 40,
+        "max": 100
     },
     {
         "name": "CustomEditorSupport - control",

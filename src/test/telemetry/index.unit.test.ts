@@ -128,7 +128,7 @@ suite('Telemetry', () => {
         const measures = { start: 123, end: 987 };
         const expectedProperties = { ...properties, one: 'two' };
 
-        setSharedProperty('one', 'two');
+        setSharedProperty('one' as any, 'two' as any);
 
         // tslint:disable-next-line:no-any
         sendTelemetryEvent(eventName as any, measures, properties as any);
@@ -146,7 +146,7 @@ suite('Telemetry', () => {
         const measures = { start: 123, end: 987 };
         const expectedProperties = { ...properties, foo: 'baz' };
 
-        setSharedProperty('foo', 'baz');
+        setSharedProperty('foo' as any, 'baz' as any);
 
         // tslint:disable-next-line:no-any
         sendTelemetryEvent(eventName as any, measures, properties as any);

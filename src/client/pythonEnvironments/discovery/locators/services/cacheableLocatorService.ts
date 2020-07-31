@@ -3,7 +3,6 @@
 
 // tslint:disable:no-any
 
-import { injectable, unmanaged } from 'inversify';
 import * as md5 from 'md5';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
@@ -60,7 +59,6 @@ export class CacheableLocatorPromiseCache {
     }
 }
 
-@injectable()
 export abstract class CacheableLocatorService implements IInterpreterLocatorService {
     protected readonly _hasInterpreters: Deferred<boolean>;
     private readonly promisesPerResource = new CacheableLocatorPromiseCache();
@@ -70,9 +68,9 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     private _didTriggerInterpreterSuggestions: boolean;
 
     constructor(
-        @unmanaged() private readonly name: string,
-        @unmanaged() protected readonly serviceContainer: IServiceContainer,
-        @unmanaged() private cachePerWorkspace: boolean = false
+        private readonly name: string,
+        protected readonly serviceContainer: IServiceContainer,
+        private cachePerWorkspace: boolean = false
     ) {
         this._hasInterpreters = createDeferred<boolean>();
         this.cacheKeyPrefix = `INTERPRETERS_CACHE_v3_${name}`;

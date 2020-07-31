@@ -17,6 +17,8 @@ labels: classify, type-bug
 -   Relevant/affected Python-related VS Code extensions and their versions: XXX
 -   Value of the `python.languageServer` setting: XXX
 
+[**NOTE**: If you suspect that your issue is related to the Microsoft Python Language Server (`python.languageServer: 'Microsoft'`), please download our new language server [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) from the VS Code marketplace to see if that fixes your issue]
+
 ## Expected behaviour
 
 XXX
@@ -46,23 +48,6 @@ Note: If you think a GIF of what is happening would be helpful, consider tools l
 
 ```
 XXX
-```
-
-</p>
-</details>
-
-<br />
-
-<details>
-
-<summary>
-Output from <code>Console</code> under the <code>Developer Tools</code> panel (toggle Developer Tools on under <code>Help</code>; turn on source maps to make any tracebacks be useful by running <code>Enable source map support for extension debugging</code>)
-</summary>
-
-<p>
-
-```
-XXXX
 ```
 
 </p>

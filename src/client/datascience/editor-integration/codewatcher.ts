@@ -13,11 +13,12 @@ import {
     Selection,
     TextDocument,
     TextEditor,
-    TextEditorRevealType
+    TextEditorRevealType,
+    Uri
 } from 'vscode';
 
 import { IDocumentManager } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IConfigurationService, IDataScienceSettings, IDisposable, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -30,6 +31,7 @@ import {
     ICodeLensFactory,
     ICodeWatcher,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IInteractiveWindowProvider
 } from '../types';
 
@@ -54,13 +56,9 @@ function getIndex(index: number, length: number): number {
 
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
-    public get codeLensUpdated(): Event<void> {
-        return this.codeLensUpdatedEvent.event;
-    }
     private static sentExecuteCellTelemetry: boolean = false;
     private document?: TextDocument;
     private version: number = -1;
-    private fileName: string = '';
     private codeLenses: CodeLens[] = [];
     private cells: ICellRange[] = [];
     private cachedSettings: IDataScienceSettings | undefined;
@@ -70,7 +68,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     constructor(
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper,
@@ -81,8 +79,7 @@ export class CodeWatcher implements ICodeWatcher {
     public setDocument(document: TextDocument) {
         this.document = document;
 
-        // Cache these, we don't want to pull an old version if the document is updated
-        this.fileName = document.fileName;
+        // Cache the version, we don't want to pull an old version if the document is updated
         this.version = document.version;
 
         // Get document cells here. Make a copy of our settings.
@@ -99,8 +96,12 @@ export class CodeWatcher implements ICodeWatcher {
         this.closeDocumentDisposable = this.documentManager.onDidCloseTextDocument(this.onDocumentClosed.bind(this));
     }
 
-    public getFileName() {
-        return this.fileName;
+    public get codeLensUpdated(): Event<void> {
+        return this.codeLensUpdatedEvent.event;
+    }
+
+    public get uri() {
+        return this.document?.uri;
     }
 
     public getVersion() {
@@ -157,9 +158,9 @@ export class CodeWatcher implements ICodeWatcher {
 
                 // Note: We do a get or create active before all addCode commands to make sure that we either have a history up already
                 // or if we do not we need to start it up as these commands are all expected to start a new history if needed
-                const success = await this.addCode(code, this.getFileName(), range.start.line);
+                const success = await this.addCode(code, this.document.uri, range.start.line);
                 if (!success) {
-                    await this.addErrorMessage(leftCount);
+                    await this.addErrorMessage(this.document.uri, leftCount);
                     break;
                 }
             }
@@ -208,9 +209,9 @@ export class CodeWatcher implements ICodeWatcher {
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
                 const code = this.document.getText(range);
-                const success = await this.addCode(code, this.getFileName(), lens.range.start.line);
+                const success = await this.addCode(code, this.document.uri, lens.range.start.line);
                 if (!success) {
-                    await this.addErrorMessage(leftCount);
+                    await this.addErrorMessage(this.document.uri, leftCount);
                     break;
                 }
             } else {
@@ -236,9 +237,9 @@ export class CodeWatcher implements ICodeWatcher {
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
                 const code = this.document.getText(lens.range);
-                const success = await this.addCode(code, this.getFileName(), lens.range.start.line);
+                const success = await this.addCode(code, this.document.uri, lens.range.start.line);
                 if (!success) {
-                    await this.addErrorMessage(leftCount);
+                    await this.addErrorMessage(this.document.uri, leftCount);
                     break;
                 }
             }
@@ -247,11 +248,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
     public async runSelectionOrLine(activeEditor: TextEditor | undefined) {
-        if (
-            this.document &&
-            activeEditor &&
-            this.fileSystem.arePathsSame(activeEditor.document.fileName, this.document.fileName)
-        ) {
+        if (this.document && activeEditor && this.fs.arePathsSame(activeEditor.document.uri, this.document.uri)) {
             // Get just the text of the selection or the current line if none
             const codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
             if (!codeToExecute) {
@@ -261,7 +258,7 @@ export class CodeWatcher implements ICodeWatcher {
             if (!normalizedCode || normalizedCode.trim().length === 0) {
                 return;
             }
-            await this.addCode(normalizedCode, this.getFileName(), activeEditor.selection.start.line, activeEditor);
+            await this.addCode(normalizedCode, this.document.uri, activeEditor.selection.start.line, activeEditor);
         }
     }
 
@@ -274,7 +271,7 @@ export class CodeWatcher implements ICodeWatcher {
             );
 
             if (code && code.trim().length) {
-                await this.addCode(code, this.getFileName(), 0);
+                await this.addCode(code, this.document.uri, 0);
             }
         }
     }
@@ -288,7 +285,7 @@ export class CodeWatcher implements ICodeWatcher {
             );
 
             if (code && code.trim().length) {
-                await this.addCode(code, this.getFileName(), targetLine);
+                await this.addCode(code, this.document.uri, targetLine);
             }
         }
     }
@@ -924,7 +921,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     private onDocumentClosed(doc: TextDocument): void {
-        if (this.document && this.fileSystem.arePathsSame(doc.fileName, this.document.fileName)) {
+        if (this.document && this.fs.arePathsSame(doc.uri, this.document.uri)) {
             this.codeLensUpdatedEvent.dispose();
             this.closeDocumentDisposable?.dispose(); // NOSONAR
             this.updateRequiredDisposable?.dispose(); // NOSONAR
@@ -933,7 +930,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     private async addCode(
         code: string,
-        file: string,
+        file: Uri,
         line: number,
         editor?: TextEditor,
         debug?: boolean
@@ -941,7 +938,7 @@ export class CodeWatcher implements ICodeWatcher {
         let result = false;
         try {
             const stopWatch = new StopWatch();
-            const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
+            const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreate(file);
             if (debug) {
                 result = await activeInteractiveWindow.debugCode(code, file, line, editor);
             } else {
@@ -955,12 +952,12 @@ export class CodeWatcher implements ICodeWatcher {
         return result;
     }
 
-    private async addErrorMessage(leftCount: number): Promise<void> {
+    private async addErrorMessage(file: Uri, leftCount: number): Promise<void> {
         // Only show an error message if any left
         if (leftCount > 0) {
             const message = localize.DataScience.cellStopOnErrorFormatMessage().format(leftCount.toString());
             try {
-                const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
+                const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreate(file);
                 return activeInteractiveWindow.addMessage(message);
             } catch (err) {
                 await this.dataScienceErrorHandler.handleError(err);
@@ -1003,7 +1000,7 @@ export class CodeWatcher implements ICodeWatcher {
                 const code = this.document.getText(currentRunCellLens.range);
                 await this.addCode(
                     code,
-                    this.getFileName(),
+                    this.document.uri,
                     currentRunCellLens.range.start.line,
                     this.documentManager.activeTextEditor,
                     debug
@@ -1059,7 +1056,7 @@ export class CodeWatcher implements ICodeWatcher {
     private async runFileInteractiveInternal(debug: boolean) {
         if (this.document) {
             const code = this.document.getText();
-            await this.addCode(code, this.getFileName(), 0, undefined, debug);
+            await this.addCode(code, this.document.uri, 0, undefined, debug);
         }
     }
 

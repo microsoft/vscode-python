@@ -13,7 +13,7 @@ import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../commo
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import '../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -27,6 +27,7 @@ import { CodeSnippits, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
     ICell,
+    IDataScienceFileSystem,
     IJupyterKernelSpec,
     IJupyterSession,
     INotebook,
@@ -176,7 +177,7 @@ export class JupyterNotebookBase implements INotebook {
     private disposed = new EventEmitter<void>();
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
-    private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>>();
+    private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => void>();
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this.session.kernelSocket;
     }
@@ -193,7 +194,7 @@ export class JupyterNotebookBase implements INotebook {
         private getDisposedError: () => Error,
         private workspace: IWorkspaceService,
         private applicationService: IApplicationShell,
-        private fs: IFileSystem
+        private fs: IDataScienceFileSystem
     ) {
         this.sessionStartTime = Date.now();
 
@@ -225,13 +226,19 @@ export class JupyterNotebookBase implements INotebook {
                 this.sessionStatusChanged.dispose();
                 this.onStatusChangedEvent = undefined;
             }
-
-            traceInfo(`Shutting down session ${this.identity.toString()}`);
-            if (this.session) {
-                await this.session.dispose().catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
-            }
             this.loggers.forEach((d) => d.dispose());
             this.disposed.fire();
+
+            try {
+                traceInfo(`Shutting down session ${this.identity.toString()}`);
+                if (this.session) {
+                    await this.session
+                        .dispose()
+                        .catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
+                }
+            } catch (exc) {
+                traceError(`Exception shutting down session `, exc);
+            }
         }
     }
 
@@ -285,9 +292,15 @@ export class JupyterNotebookBase implements INotebook {
             }
 
             // Run any startup commands that we specified. Support the old form too
-            const setting = settings.runStartupCommands || settings.runMagicCommands;
+            let setting = settings.runStartupCommands || settings.runMagicCommands;
+
+            // Convert to string in case we get an array of startup commands.
+            if (Array.isArray(setting)) {
+                setting = setting.join(`\n`);
+            }
+
             if (setting) {
-                // Cleanup the linefeeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
+                // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
                 const cleanedUp = setting.replace(/\\n/g, '\n');
                 const cells = await this.executeSilently(cleanedUp, cancelToken);
                 traceInfo(`Run startup code for notebook: ${cleanedUp} - results: ${cells.length}`);
@@ -656,9 +669,7 @@ export class JupyterNotebookBase implements INotebook {
         return this.loggers;
     }
 
-    public registerIOPubListener(
-        listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>
-    ): void {
+    public registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void {
         this.ioPubListeners.add(listener);
     }
 
@@ -915,11 +926,11 @@ export class JupyterNotebookBase implements INotebook {
         if (this._executionInfo && this._executionInfo.connectionInfo.localLaunch && !this._workingDirectory) {
             // See what our working dir is supposed to be
             const suggested = this._executionInfo.workingDir;
-            if (suggested && (await this.fs.directoryExists(suggested))) {
+            if (suggested && (await this.fs.localDirectoryExists(suggested))) {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggested;
                 return this.changeDirectoryIfPossible(this._workingDirectory);
-            } else if (launchingFile && (await this.fs.fileExists(launchingFile))) {
+            } else if (launchingFile && (await this.fs.localFileExists(launchingFile))) {
                 // Combine the working directory with this file if possible.
                 this._workingDirectory = expandWorkingDir(
                     this._executionInfo.workingDir,
@@ -939,7 +950,7 @@ export class JupyterNotebookBase implements INotebook {
             this._executionInfo &&
             this._executionInfo.connectionInfo.localLaunch &&
             this._executionInfo.kernelSpec?.language === PYTHON_LANGUAGE &&
-            (await this.fs.directoryExists(directory))
+            (await this.fs.localDirectoryExists(directory))
         ) {
             await this.executeSilently(CodeSnippits.UpdateCWDAndPath.format(directory));
         }
@@ -951,10 +962,7 @@ export class JupyterNotebookBase implements INotebook {
         clearState: RefBool,
         msg: KernelMessage.IIOPubMessage
         // tslint:disable-next-line: no-any
-    ): Promise<any> {
-        // tslint:disable-next-line: no-any
-        let result: Promise<any> = Promise.resolve();
-
+    ) {
         // Let our loggers get a first crack at the message. They may change it
         this.getLoggers().forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
 
@@ -1007,10 +1015,8 @@ export class JupyterNotebookBase implements INotebook {
                 subscriber.cell.data.execution_count = msg.content.execution_count as number;
             }
 
-            // Tell all of the listeners about the event. They can cause this to not return until
-            // they are done handling the event.
-            // One such example is a comm_msg for ipywidgets. We have to wait for it to finish.
-            result = Promise.all([...this.ioPubListeners].map((l) => l(msg, msg.header.msg_id)));
+            // Tell all of the listeners about the event.
+            [...this.ioPubListeners].forEach((l) => l(msg, msg.header.msg_id));
 
             // Show our update if any new output.
             if (shouldUpdateSubscriber) {
@@ -1020,8 +1026,6 @@ export class JupyterNotebookBase implements INotebook {
             // If not a restart error, then tell the subscriber
             subscriber.error(this.sessionStartTime, err);
         }
-
-        return result;
     }
 
     private checkForExit(): Error | undefined {

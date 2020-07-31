@@ -4,7 +4,7 @@
 import '../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
-import { ConfigurationChangeEvent, Uri, ViewColumn, WebviewPanel, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationChangeEvent, extensions, Uri, ViewColumn, WebviewPanel, WorkspaceConfiguration } from 'vscode';
 
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
@@ -15,7 +15,7 @@ import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { DefaultTheme, Telemetry } from './constants';
+import { DefaultTheme, GatherExtension, Telemetry } from './constants';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
 import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from './types';
 
@@ -29,10 +29,9 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
     private webPanel: IWebPanel | undefined;
     private webPanelInit: Deferred<void> | undefined = createDeferred<void>();
     private messageListener: IWebPanelMessageListener;
-    private themeChangeHandler: IDisposable | undefined;
-    private settingsChangeHandler: IDisposable | undefined;
     private themeIsDarkPromise: Deferred<boolean> | undefined = createDeferred<boolean>();
     private startupStopwatch = new StopWatch();
+    private readonly _disposables: IDisposable[] = [];
 
     constructor(
         @unmanaged() protected configService: IConfigurationService,
@@ -48,7 +47,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         ) => IWebPanelMessageListener,
         @unmanaged() private rootPath: string,
         @unmanaged() private scripts: string[],
-        @unmanaged() private title: string,
+        @unmanaged() private _title: string,
         @unmanaged() private viewColumn: ViewColumn,
         @unmanaged() protected readonly useCustomEditorApi: boolean,
         @unmanaged() private readonly enableVariablesDuringDebugging: boolean,
@@ -62,12 +61,12 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         );
 
         // Listen for settings changes from vscode.
-        this.themeChangeHandler = this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this);
+        this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
 
         // Listen for settings changes
-        this.settingsChangeHandler = this.configService
-            .getSettings(undefined)
-            .onDidChange(this.onDataScienceSettingsChanged.bind(this));
+        this._disposables.push(
+            this.configService.getSettings(undefined).onDidChange(this.onDataScienceSettingsChanged.bind(this))
+        );
     }
 
     public async show(preserveFocus: boolean): Promise<void> {
@@ -91,20 +90,19 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 this.webPanel.close();
                 this.webPanel = undefined;
             }
-            if (this.themeChangeHandler) {
-                this.themeChangeHandler.dispose();
-                this.themeChangeHandler = undefined;
-            }
-            if (this.settingsChangeHandler) {
-                this.settingsChangeHandler.dispose();
-                this.settingsChangeHandler = undefined;
-            }
+
+            this._disposables.forEach((item) => item.dispose());
+
             this.webPanelInit = undefined;
             this.themeIsDarkPromise = undefined;
         }
     }
+    public get title() {
+        return this._title;
+    }
 
     public setTitle(newTitle: string) {
+        this._title = newTitle;
         if (!this.isDisposed && this.webPanel) {
             this.webPanel.setTitle(newTitle);
         }
@@ -125,7 +123,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         return this.webPanel?.asWebviewUri(localResource);
     }
 
-    protected abstract getOwningResource(): Promise<Resource>;
+    protected abstract get owningResource(): Resource;
 
     //tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
@@ -173,10 +171,12 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
     }
 
     protected async generateDataScienceExtraSettings(): Promise<IDataScienceExtraSettings> {
-        const resource = await this.getOwningResource();
+        const resource = this.owningResource;
         const editor = this.workspaceService.getConfiguration('editor');
         const workbench = this.workspaceService.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
+        const ext = extensions.getExtension(GatherExtension);
+
         return {
             ...this.configService.getSettings(resource).datascience,
             extraSettings: {
@@ -218,7 +218,8 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             },
             webviewExperiments: {
                 removeKernelToolbarInInteractiveWindow: await this.hideKernelToolbarInInteractiveWindow
-            }
+            },
+            gatherIsInstalled: ext ? true : false
         };
     }
 
@@ -265,6 +266,9 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []
             });
 
+            // Track to seee if our web panel fails to load
+            this._disposables.push(this.webPanel.loadFailed(this.onWebPanelLoadFailed, this));
+
             traceInfo('Web view created.');
         }
 
@@ -285,6 +289,11 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         // Stringify our settings to send over to the panel
         const dsSettings = JSON.stringify(await this.generateDataScienceExtraSettings());
         this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
+    };
+
+    // If our webpanel fails to load then just dispose ourselves
+    private onWebPanelLoadFailed = async () => {
+        this.dispose();
     };
 
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
@@ -312,7 +321,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         const isDark = settings.ignoreVscodeTheme
             ? false
             : await this.themeFinder.isThemeDark(settings.extraSettings.theme);
-        const resource = await this.getOwningResource();
+        const resource = this.owningResource;
         const css = await this.cssGenerator.generateThemeCss(resource, requestIsDark, settings.extraSettings.theme);
         return this.postMessageInternal(CssMessages.GetCssResponse, {
             css,
@@ -326,7 +335,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         const settings = await this.generateDataScienceExtraSettings();
         const isDark = settings.ignoreVscodeTheme ? false : request?.isDark;
         this.setTheme(isDark);
-        const resource = await this.getOwningResource();
+        const resource = this.owningResource;
         const monacoTheme = await this.cssGenerator.generateMonacoTheme(resource, isDark, settings.extraSettings.theme);
         return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
     }
@@ -366,7 +375,6 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             event.affectsConfiguration('editor.scrollbar.horizontalScrollbarSize') ||
             event.affectsConfiguration('files.autoSave') ||
             event.affectsConfiguration('files.autoSaveDelay') ||
-            event.affectsConfiguration('python.dataScience.enableGather') ||
             event.affectsConfiguration('python.dataScience.widgetScriptSources')
         ) {
             // See if the theme changed

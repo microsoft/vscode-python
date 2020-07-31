@@ -11,7 +11,7 @@ import '../common/extensions';
 import { traceDecorators } from '../common/logger';
 import { IPlatformService } from '../common/platform/types';
 import { IBrowserService, IExperimentsManager, IPersistentStateFactory, IRandom } from '../common/types';
-import { Common, ExtensionSurveyBanner, LanguageService } from '../common/utils/localize';
+import { Common, ExtensionSurveyBanner } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IExtensionSingleActivationService } from './types';
@@ -78,7 +78,11 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
 
     @traceDecorators.error('Failed to display prompt for extension survey')
     public async showSurvey() {
-        const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
+        const prompts = [
+            ExtensionSurveyBanner.bannerLabelYes(),
+            ExtensionSurveyBanner.maybeLater(),
+            Common.doNotShowAgain()
+        ];
         const telemetrySelections: ['Yes', 'Maybe later', 'Do not show again'] = [
             'Yes',
             'Maybe later',
@@ -91,7 +95,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         if (!selection) {
             return;
         }
-        if (selection === LanguageService.bannerLabelYes()) {
+        if (selection === ExtensionSurveyBanner.bannerLabelYes()) {
             this.launchSurvey();
             // Disable survey for a few weeks
             await this.persistentState

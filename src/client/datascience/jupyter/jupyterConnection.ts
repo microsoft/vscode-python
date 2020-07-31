@@ -8,14 +8,14 @@ import { Subscription } from 'rxjs';
 import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import { ObservableExecutionResult, Output } from '../../common/process/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { RegExpValues } from '../constants';
-import { IJupyterConnection } from '../types';
+import { IDataScienceFileSystem, IJupyterConnection } from '../types';
 import { JupyterConnectError } from './jupyterConnectError';
 
 // tslint:disable-next-line:no-require-imports no-var-requires no-any
@@ -38,7 +38,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     private startPromise: Deferred<IJupyterConnection>;
     private launchTimeout: NodeJS.Timer | number;
     private configService: IConfigurationService;
-    private fileSystem: IFileSystem;
+    private fs: IDataScienceFileSystem;
     private stderr: string[] = [];
     private connectionDisposed = false;
     private subscriptions: Subscription[] = [];
@@ -51,7 +51,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         private cancelToken?: CancellationToken
     ) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
+        this.fs = serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem);
 
         // Cancel our start promise if a cancellation occurs
         if (cancelToken) {
@@ -120,7 +120,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
         if (serverInfos && serverInfos.length > 0 && !this.startPromise.completed) {
             const matchInfo = serverInfos.find((info) =>
-                this.fileSystem.arePathsSame(this.notebookDir, info.notebook_dir)
+                this.fs.areLocalPathsSame(this.notebookDir, info.notebook_dir)
             );
             if (matchInfo) {
                 const url = matchInfo.url;

@@ -10,7 +10,7 @@
 
 ---
 
-[For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
+[For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [Pylance](https://github.com/microsoft/pylance-release) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
 
 ## Contributing a pull request
 
@@ -71,7 +71,7 @@ TypeScript errors and warnings will be displayed in the `Problems` window of Vis
 
 ### Run dev build and validate your changes
 
-To test changes, open the `vscode-python` folder in VSCode, and select the workspace titled `vscode`.
+To test changes, open the `vscode-python` folder in VSCode, and select the workspace titled `vscode-python`.
 Then, open the debug panel by clicking the `Run and Debug` icon on the sidebar, select the `Extension`
 option from the top menu, and click start. A new window will launch with the title
 `[Extension Development Host]`.
@@ -253,17 +253,14 @@ than the next sprint from when it was submitted (see
 
 ### Release cycle
 
-Planning is done as two week sprints. We start a sprint every other Wednesday.
-You can look at the newest
-[milestone](https://github.com/Microsoft/vscode-python/milestones) to see when
-the current sprint ends. All
-[P0](https://github.com/Microsoft/vscode-python/labels/P0) issues are expected
+Planning is done as one week sprints. We start a sprint every Thursday.
+All [P0](https://github.com/Microsoft/vscode-python/labels/P0) issues are expected
 to be fixed in the current sprint, else the next release will be blocked.
 [P1](https://github.com/Microsoft/vscode-python/labels/P1) issues are a
 top-priority and we try to close before the next release. All other issues are
 considered best-effort for that sprint.
 
-The extension aims to do a new release every four weeks (two sprints). A
+The extension aims to do a new release once a month. A
 [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan)
 is created for each release to help track anything that requires a
 person to do (long-term this project aims to automate as much of the

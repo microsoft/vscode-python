@@ -14,7 +14,6 @@ import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
-import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
@@ -41,16 +40,21 @@ export class RawJupyterSession extends BaseJupyterSession {
     private _disposables: IDisposable[] = [];
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
-        kernelSelector: KernelSelector,
         private readonly resource: Resource,
-        private readonly outputChannel: IOutputChannel
+        private readonly outputChannel: IOutputChannel,
+        private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
+        restartSessionUsed: (id: Kernel.IKernelConnection) => void
     ) {
-        super(kernelSelector);
+        super(restartSessionUsed);
     }
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
-    public async waitForIdle(_timeout: number): Promise<void> {
-        // RawKernels are good to go right away
+    public async waitForIdle(timeout: number): Promise<void> {
+        // Wait until status says idle.
+        if (this.session) {
+            return this.waitForIdleOnSession(this.session, timeout);
+        }
+        return Promise.resolve();
     }
     public async dispose(): Promise<void> {
         this._disposables.forEach((d) => d.dispose());
@@ -124,9 +128,6 @@ export class RawJupyterSession extends BaseJupyterSession {
             throw error;
         }
 
-        // Start our restart session at this point
-        this.startRestartSession();
-
         this.connected = true;
         return (newSession as RawSession).kernelProcess.kernelSpec;
     }
@@ -134,7 +135,8 @@ export class RawJupyterSession extends BaseJupyterSession {
     public async createNewKernelSession(
         kernel: IJupyterKernelSpec | LiveKernelModel,
         timeoutMS: number,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonInterpreter,
+        _cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         if (!kernel || 'session' in kernel) {
             // Don't allow for connecting to a LiveKernelModel
@@ -201,7 +203,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
         const startPromise = this.startRawSession(kernelSpec, interpreter, cancelToken);
         return startPromise.then((session) => {
-            this.kernelSelector.addKernelToIgnoreList(session.kernel);
+            this.restartSessionCreated(session.kernel);
             return session;
         });
     }

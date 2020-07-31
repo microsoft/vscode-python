@@ -14,6 +14,18 @@ export * from './extHostedTypes';
 export * from './uri';
 
 export namespace vscMock {
+    export enum ExtensionKind {
+        /**
+         * Extension runs where the UI runs.
+         */
+        UI = 1,
+
+        /**
+         * Extension runs where the remote extension host runs.
+         */
+        Workspace = 2
+    }
+
     export class Disposable {
         constructor(private callOnDispose: Function) {}
         public dispose(): any {

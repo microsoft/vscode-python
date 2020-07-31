@@ -7,10 +7,11 @@ import * as path from 'path';
 import { Memento, Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { traceError, traceInfo } from '../common/logger';
+import { IPythonExecutionFactory } from '../common/process/types';
 import { DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { Settings } from './constants';
-import { ICell } from './types';
+import { ICell, IDataScienceFileSystem } from './types';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -147,5 +148,38 @@ export function generateNewNotebookUri(counter: number, title?: string, forVSCod
         // saved.
         const filePath = Uri.file(path.join(os.tmpdir(), fileName));
         return filePath.with({ scheme: 'untitled', path: filePath.fsPath });
+    }
+}
+
+export async function getRealPath(
+    fs: IDataScienceFileSystem,
+    execFactory: IPythonExecutionFactory,
+    pythonPath: string,
+    expectedPath: string
+): Promise<string | undefined> {
+    if (await fs.localDirectoryExists(expectedPath)) {
+        return expectedPath;
+    }
+    if (await fs.localFileExists(expectedPath)) {
+        return expectedPath;
+    }
+
+    // If can't find the path, try turning it into a real path.
+    const pythonRunner = await execFactory.create({ pythonPath });
+    const result = await pythonRunner.exec(
+        ['-c', `import os;print(os.path.realpath("${expectedPath.replace(/\\/g, '\\\\')}"))`],
+        {
+            throwOnStdErr: false,
+            encoding: 'utf-8'
+        }
+    );
+    if (result && result.stdout) {
+        const trimmed = result.stdout.trim();
+        if (await fs.localDirectoryExists(trimmed)) {
+            return trimmed;
+        }
+        if (await fs.localFileExists(trimmed)) {
+            return trimmed;
+        }
     }
 }

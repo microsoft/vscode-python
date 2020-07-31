@@ -10,6 +10,7 @@ import { Uri } from 'vscode';
 import { IDocumentManager } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
+import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import {
     IJupyterDebugService,
     IJupyterVariable,
@@ -26,7 +27,8 @@ import { waitForVariablesUpdated } from './testHelpers';
 export async function verifyAfterStep(
     ioc: DataScienceIocContainer,
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    verify: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>
+    verify: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
+    numberOfRefreshesRequired: number = 1
 ) {
     const interactive = await getOrCreateInteractiveWindow(ioc);
     const debuggerBroke = createDeferred();
@@ -35,9 +37,9 @@ export async function verifyAfterStep(
     const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
     const file = Uri.file('foo.py');
     docManager.addDocument('a=1\na', file.fsPath);
-    const debugPromise = interactive.debugCode('a=1\na', file.fsPath, 1, undefined, undefined);
+    const debugPromise = interactive.window.debugCode('a=1\na', file, 1, undefined, undefined);
     await debuggerBroke.promise;
-    const variableRefresh = waitForVariablesUpdated(ioc, 'default');
+    const variableRefresh = waitForVariablesUpdated(interactive.mount, numberOfRefreshesRequired);
     await jupyterDebugger.requestVariables(); // This is necessary because not running inside of VS code. Normally it would do this.
     await variableRefresh;
     wrapper.update();
@@ -135,7 +137,7 @@ export async function verifyCanFetchData<T>(
     const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
     const notebook = await notebookProvider.getOrCreateNotebook({
         getOnly: true,
-        identity: Uri.parse(Identifiers.InteractiveWindowIdentity)
+        identity: getDefaultInteractiveIdentity()
     });
     expect(notebook).to.not.be.undefined;
     const variableList = await variableFetcher.getVariables(notebook!, {
@@ -143,7 +145,8 @@ export async function verifyCanFetchData<T>(
         startIndex: 0,
         pageSize: 100,
         sortAscending: true,
-        sortColumn: 'INDEX'
+        sortColumn: 'INDEX',
+        refreshCount: 0
     });
     expect(variableList.pageResponse.length).to.be.greaterThan(0, 'No variables returned');
     const variable = variableList.pageResponse.find((v) => v.name === name);

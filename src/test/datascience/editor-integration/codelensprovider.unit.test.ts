@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, Disposable, TextDocument } from 'vscode';
+import { CancellationTokenSource, Disposable, TextDocument, Uri } from 'vscode';
 
 import {
     ICommandManager,
@@ -10,10 +10,14 @@ import {
     IDocumentManager,
     IVSCodeNotebook
 } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
-import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../../../client/datascience/types';
+import {
+    ICodeWatcher,
+    IDataScienceCodeLensProvider,
+    IDataScienceFileSystem,
+    IDebugLocationTracker
+} from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line: max-func-body-length
@@ -27,7 +31,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let debugService: TypeMoq.IMock<IDebugService>;
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let fileSystem: TypeMoq.IMock<IDataScienceFileSystem>;
     let tokenSource: CancellationTokenSource;
     let vscodeNotebook: TypeMoq.IMock<IVSCodeNotebook>;
     const disposables: Disposable[] = [];
@@ -42,7 +46,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         debugLocationTracker = TypeMoq.Mock.ofType<IDebugLocationTracker>();
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        fileSystem = TypeMoq.Mock.ofType<IDataScienceFileSystem>();
         vscodeNotebook = TypeMoq.Mock.ofType<IVSCodeNotebook>();
         dataScienceSettings.setup((d) => d.enabled).returns(() => true);
         pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);
@@ -52,6 +56,11 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .setup((c) => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve());
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
+        fileSystem
+            .setup((f) => f.areLocalPathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((a, b) => {
+                return a.toLowerCase() === b.toLowerCase();
+            });
 
         codeLensProvider = new DataScienceCodeLensProvider(
             serviceContainer.object,
@@ -92,7 +101,8 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     test('Initialize Code Lenses same doc called', () => {
         // Create our document
         const document = TypeMoq.Mock.ofType<TextDocument>();
-        document.setup((d) => d.fileName).returns(() => 'test.py');
+        const uri = Uri.file('test.py');
+        document.setup((d) => d.fileName).returns(() => uri.fsPath);
         document.setup((d) => d.version).returns(() => 1);
 
         const targetCodeWatcher = TypeMoq.Mock.ofType<ICodeWatcher>();
@@ -100,11 +110,13 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .setup((tc) => tc.getCodeLenses())
             .returns(() => [])
             .verifiable(TypeMoq.Times.exactly(2));
-        targetCodeWatcher.setup((tc) => tc.getFileName()).returns(() => 'test.py');
+        targetCodeWatcher.setup((tc) => tc.uri).returns(() => uri);
         targetCodeWatcher.setup((tc) => tc.getVersion()).returns(() => 1);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
-            .returns(() => targetCodeWatcher.object)
+            .returns(() => {
+                return targetCodeWatcher.object;
+            })
             .verifiable(TypeMoq.Times.once());
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
 
@@ -162,7 +174,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .setup((tc) => tc.getCodeLenses())
             .returns(() => [])
             .verifiable(TypeMoq.Times.exactly(3));
-        targetCodeWatcher.setup((tc) => tc.getFileName()).returns(() => 'test.py');
+        targetCodeWatcher.setup((tc) => tc.uri).returns(() => Uri.file('test.py'));
         targetCodeWatcher.setup((tc) => tc.getVersion()).returns(() => 1);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))

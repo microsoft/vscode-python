@@ -6,9 +6,7 @@
 import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { LanguageServerDownloader } from '../../../client/activation/common/downloader';
 import { DotNetLanguageServerActivator } from '../../../client/activation/languageServer/activator';
-import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { DotNetLanguageServerManager } from '../../../client/activation/languageServer/manager';
 import {
     ILanguageServerDownloader,
@@ -16,19 +14,15 @@ import {
     ILanguageServerManager
 } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
-import { WorkspaceService } from '../../../client/common/application/workspace';
-import { PythonSettings } from '../../../client/common/configSettings';
-import { ConfigurationService } from '../../../client/common/configuration/service';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { IConfigurationService, IPythonExtensionBanner, IPythonSettings } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { sleep } from '../../core';
 
 // tslint:disable:max-func-body-length
 
-suite('Language Server - Activator', () => {
+suite('Microsoft Language Server - Activator', () => {
     let activator: DotNetLanguageServerActivator;
     let workspaceService: IWorkspaceService;
     let manager: ILanguageServerManager;
@@ -37,14 +31,16 @@ suite('Language Server - Activator', () => {
     let lsFolderService: ILanguageServerFolderService;
     let configuration: IConfigurationService;
     let settings: IPythonSettings;
+    let banner: IPythonExtensionBanner;
     setup(() => {
         manager = mock(DotNetLanguageServerManager);
-        workspaceService = mock(WorkspaceService);
-        fs = mock(FileSystem);
-        lsDownloader = mock(LanguageServerDownloader);
-        lsFolderService = mock(DotNetLanguageServerFolderService);
-        configuration = mock(ConfigurationService);
-        settings = mock(PythonSettings);
+        workspaceService = mock<IWorkspaceService>();
+        fs = mock<IFileSystem>();
+        lsDownloader = mock<ILanguageServerDownloader>();
+        lsFolderService = mock<ILanguageServerFolderService>();
+        configuration = mock<IConfigurationService>();
+        settings = mock<IPythonSettings>();
+        banner = mock<IPythonExtensionBanner>();
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
         activator = new DotNetLanguageServerActivator(
             instance(manager),
@@ -52,7 +48,8 @@ suite('Language Server - Activator', () => {
             instance(fs),
             instance(lsDownloader),
             instance(lsFolderService),
-            instance(configuration)
+            instance(configuration),
+            instance(banner)
         );
     });
     test('Manager must be started without any workspace', async () => {
@@ -67,10 +64,10 @@ suite('Language Server - Activator', () => {
     });
     test('Manager must be disposed', async () => {
         activator.dispose();
-
         verify(manager.dispose()).once();
     });
     test('Server should be disconnected but be started', async () => {
+        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         await activator.start(undefined);
 
         verify(manager.start(undefined, undefined)).once();
@@ -147,11 +144,6 @@ suite('Language Server - Activator', () => {
         verify(workspaceService.workspaceFolders).once();
     });
 
-    test('Manager must be disposed', async () => {
-        activator.dispose();
-
-        verify(manager.dispose()).once();
-    });
     test('Download and check if ICU config exists', async () => {
         const languageServerFolder = 'Some folder name';
         const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);

@@ -40,10 +40,14 @@ suite('Terminal Activator', () => {
             }
         })(TypeMoq.Mock.ofType<ITerminalHelper>().object, [handler1.object, handler2.object], configService.object);
     });
-    async function testActivationAndHandlers(activationSuccessful: boolean) {
+    async function testActivationAndHandlers(
+        activationSuccessful: boolean,
+        activateEnvironmentSetting: boolean,
+        hidden: boolean = false
+    ) {
         terminalSettings
             .setup((b) => b.activateEnvironment)
-            .returns(() => activationSuccessful)
+            .returns(() => activateEnvironmentSetting)
             .verifiable(TypeMoq.Times.once());
         baseActivator
             .setup((b) => b.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -74,7 +78,8 @@ suite('Terminal Activator', () => {
 
         const terminal = TypeMoq.Mock.ofType<Terminal>();
         const activated = await activator.activateEnvironmentInTerminal(terminal.object, {
-            preserveFocus: activationSuccessful
+            preserveFocus: activationSuccessful,
+            hideFromUser: hidden
         });
 
         assert.equal(activated, activationSuccessful);
@@ -82,6 +87,8 @@ suite('Terminal Activator', () => {
         handler1.verifyAll();
         handler2.verifyAll();
     }
-    test('Terminal is activated and handlers are invoked', () => testActivationAndHandlers(true));
-    test('Terminal is not activated and handlers are invoked', () => testActivationAndHandlers(false));
+    test('Terminal is activated and handlers are invoked', () => testActivationAndHandlers(true, true));
+    test('Terminal is not activated if auto-activate setting is set to true but terminal is hidden', () =>
+        testActivationAndHandlers(false, true, true));
+    test('Terminal is not activated and handlers are invoked', () => testActivationAndHandlers(false, false));
 });

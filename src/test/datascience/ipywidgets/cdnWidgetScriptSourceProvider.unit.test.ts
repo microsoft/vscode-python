@@ -12,16 +12,20 @@ import { EventEmitter, Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { HttpClient } from '../../../client/common/net/httpClient';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
+import { DataScienceFileSystem } from '../../../client/datascience/dataScienceFileSystem';
 import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/cdnWidgetScriptSourceProvider';
 import { IPyWidgetScriptSource } from '../../../client/datascience/ipywidgets/ipyWidgetScriptSource';
 import { IWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/types';
 import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
-import { IJupyterConnection, ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
+import {
+    IDataScienceFileSystem,
+    IJupyterConnection,
+    ILocalResourceUriConverter,
+    INotebook
+} from '../../../client/datascience/types';
 
 // tslint:disable: no-var-requires no-require-imports max-func-body-length no-any match-default-export-name no-console
 const request = require('request');
@@ -37,7 +41,7 @@ suite('DataScience - ipywidget - CDN', () => {
     let configService: IConfigurationService;
     let httpClient: IHttpClient;
     let settings: PythonSettings;
-    let fileSystem: IFileSystem;
+    let fileSystem: IDataScienceFileSystem;
     let webviewUriConverter: ILocalResourceUriConverter;
     let tempFileCount = 0;
     suiteSetup(function () {
@@ -50,15 +54,15 @@ suite('DataScience - ipywidget - CDN', () => {
         notebook = mock(JupyterNotebookBase);
         configService = mock(ConfigurationService);
         httpClient = mock(HttpClient);
-        fileSystem = mock(FileSystem);
+        fileSystem = mock(DataScienceFileSystem);
         webviewUriConverter = mock(IPyWidgetScriptSource);
         settings = { datascience: { widgetScriptSources: [] } } as any;
         when(configService.getSettings(anything())).thenReturn(settings as any);
         when(httpClient.downloadFile(anything())).thenCall(request);
-        when(fileSystem.fileExists(anything())).thenCall((f) => fs.pathExists(f));
+        when(fileSystem.localFileExists(anything())).thenCall((f) => fs.pathExists(f));
 
-        when(fileSystem.createTemporaryFile(anything())).thenCall(createTemporaryFile);
-        when(fileSystem.createWriteStream(anything())).thenCall((p) => fs.createWriteStream(p));
+        when(fileSystem.createTemporaryLocalFile(anything())).thenCall(createTemporaryFile);
+        when(fileSystem.createLocalWriteStream(anything())).thenCall((p) => fs.createWriteStream(p));
         when(fileSystem.createDirectory(anything())).thenCall((d) => fs.ensureDir(d));
         when(webviewUriConverter.rootScriptFolder).thenReturn(
             Uri.file(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts'))

@@ -8,7 +8,7 @@ import { Commands } from '../../../client/datascience/constants';
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - Server Selector Command', () => {
+suite('DataScience - Server Selector Command', () => {
     let serverSelectorCommand: JupyterServerSelectorCommand;
     let commandManager: ICommandManager;
     let serverSelector: JupyterServerSelector;

@@ -4,12 +4,12 @@ import { inject, injectable } from 'inversify';
 import { gte } from 'semver';
 
 import { Uri } from 'vscode';
+import { IPlatformService } from '../../common/platform/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
-import { WindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { traceError } from '../logger';
@@ -50,7 +50,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
+        @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
+        @inject(IPlatformService) private readonly platformService: IPlatformService
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -109,6 +110,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                     this.disposables,
                     { ...options, pythonPath },
                     activatedProc!,
+                    this.platformService,
                     activatedEnvVars
                 );
                 await daemon.initialize();
@@ -119,6 +121,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                     this.disposables,
                     { ...options, pythonPath },
                     activatedProc!,
+                    this.platformService,
                     activatedEnvVars
                 );
                 return factory.createDaemonService<T>();

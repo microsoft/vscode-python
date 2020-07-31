@@ -59,6 +59,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CommonActionType.GATHER_CELL_TO_SCRIPT]: Transfer.gatherToScript,
     [CommonActionType.EDITOR_LOADED]: Transfer.started,
     [CommonActionType.LOADED_ALL_CELLS]: Transfer.loadedAllCells,
+    [CommonActionType.LAUNCH_NOTEBOOK_TRUST_PROMPT]: Transfer.launchNotebookTrustPrompt,
     [CommonActionType.UNMOUNT]: Creation.unmount,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS]: CommonEffects.handleLoadIPyWidgetClassSuccess,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: CommonEffects.handleLoadIPyWidgetClassFailure,
@@ -66,6 +67,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CommonActionType.CONTINUE]: Execution.continueExec,
     [CommonActionType.STEP]: Execution.step,
     [CommonActionType.RUN_BY_LINE]: Execution.runByLine,
+    [CommonActionType.OPEN_SETTINGS]: CommonEffects.openSettings,
 
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.StartCell]: Creation.startCell,
@@ -74,6 +76,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [InteractiveWindowMessages.NotebookDirty]: CommonEffects.notebookDirty,
     [InteractiveWindowMessages.NotebookClean]: CommonEffects.notebookClean,
     [InteractiveWindowMessages.LoadAllCells]: Creation.loadAllCells,
+    [InteractiveWindowMessages.TrustNotebookComplete]: CommonEffects.trustNotebook,
     [InteractiveWindowMessages.NotebookRunAllCells]: Execution.executeAllCells,
     [InteractiveWindowMessages.NotebookRunSelectedCell]: Execution.executeSelectedCell,
     [InteractiveWindowMessages.NotebookAddCellBelow]: Creation.addAndFocusCell,

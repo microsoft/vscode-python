@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
@@ -14,7 +14,6 @@ import { parseCondaInfo } from './conda';
 /**
  * Locates conda env interpreters based on the conda service's info.
  */
-@injectable()
 export class CondaEnvService extends CacheableLocatorService {
     constructor(
         @inject(ICondaService) private condaService: ICondaService,

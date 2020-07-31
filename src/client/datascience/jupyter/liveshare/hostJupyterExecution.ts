@@ -9,7 +9,7 @@ import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
+
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -20,7 +20,13 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { IJupyterConnection, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
+import {
+    IDataScienceFileSystem,
+    IJupyterConnection,
+    IJupyterExecution,
+    INotebookServer,
+    INotebookServerOptions
+} from '../../types';
 import { getJupyterConnectionDisplayName } from '../jupyterConnection';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
@@ -43,7 +49,7 @@ export class HostJupyterExecution
         interpreterService: IInterpreterService,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
-        fileSys: IFileSystem,
+        fs: IDataScienceFileSystem,
         workspace: IWorkspaceService,
         configService: IConfigurationService,
         kernelSelector: KernelSelector,
@@ -64,7 +70,7 @@ export class HostJupyterExecution
             jupyterOutputChannel,
             serviceContainer
         );
-        this.serverCache = new ServerCache(configService, workspace, fileSys);
+        this.serverCache = new ServerCache(configService, workspace, fs);
         asyncRegistry.push(this);
     }
 
@@ -135,9 +141,11 @@ export class HostJupyterExecution
         }
     }
 
-    public getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
-        // See if we have this server or not.
-        return this.serverCache.get(options);
+    public async getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
+        if (!this._disposed) {
+            // See if we have this server or not.
+            return this.serverCache.get(options);
+        }
     }
 
     private onRemoteIsNotebookSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {

@@ -14,7 +14,7 @@ import { ProgressReporter } from '../../../client/datascience/progress/progressR
 import { IProgressReporter, ReportableAction } from '../../../client/datascience/progress/types';
 import { noop } from '../../core';
 
-suite('Data Science - Progress Reporter Decorator', () => {
+suite('DataScience - Progress Reporter Decorator', () => {
     let reporter: IProgressReporter;
 
     class SomeClassThatDoesSomething {

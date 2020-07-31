@@ -13,3 +13,20 @@
 .react-grid-variable-explorer-cell-numeric {
     color: var(--code-numeric-color, var(--vscode-editor-foreground));
 }
+
+/* High contrast uses an inverse for selection highlights, so just use foreground when hovering */
+body.vscode-high-contrast .react-grid-Row:hover .react-grid-variable-explorer-cell-variable {
+    color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
+}
+
+body.vscode-high-contrast .react-grid-Row:hover .react-grid-variable-explorer-cell-type {
+    color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
+}
+
+body.vscode-high-contrast .react-grid-Row:hover .react-grid-variable-explorer-cell-string {
+    color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
+}
+
+body.vscode-high-contrast .react-grid-Row:hover .react-grid-variable-explorer-cell-numeric {
+    color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
+}

@@ -16,6 +16,8 @@ import {
     InputStep,
     IQuickPickParameters
 } from '../../../../common/utils/multiStepInput';
+import { captureTelemetry, sendTelemetryEvent } from '../../../../telemetry';
+import { EventName } from '../../../../telemetry/constants';
 import { IInterpreterQuickPickItem, IInterpreterSelector, IPythonPathUpdaterServiceManager } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
 
@@ -80,6 +82,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         }
     }
 
+    @captureTelemetry(EventName.SELECT_INTERPRETER_ENTER_BUTTON)
     public async _enterOrBrowseInterpreterPath(
         input: IMultiStepInput<InterpreterStateArgs>,
         state: InterpreterStateArgs
@@ -99,15 +102,18 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
 
         if (typeof selection === 'string') {
             // User entered text in the filter box to enter path to python, store it
+            sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'enter' });
             state.path = selection;
         } else if (selection && selection.label === InterpreterQuickPickList.browsePath.label()) {
+            sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_CHOICE, undefined, { choice: 'browse' });
             const filtersKey = 'Executables';
             const filtersObject: { [name: string]: string[] } = {};
             filtersObject[filtersKey] = ['exe'];
             const uris = await this.applicationShell.showOpenDialog({
                 filters: this.platformService.isWindows ? filtersObject : undefined,
                 openLabel: InterpreterQuickPickList.browsePath.openButtonLabel(),
-                canSelectMany: false
+                canSelectMany: false,
+                title: InterpreterQuickPickList.browsePath.title()
             });
             if (uris && uris.length > 0) {
                 state.path = uris[0].fsPath;
@@ -115,6 +121,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
         }
     }
 
+    @captureTelemetry(EventName.SELECT_INTERPRETER)
     public async setInterpreter() {
         const targetConfig = await this.getConfigTarget();
         if (!targetConfig) {

@@ -94,6 +94,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                     className="add-cell-line-top"
                     click={this.insertAboveFirst}
                     baseTheme={this.props.baseTheme}
+                    isNotebookTrusted={this.props.isNotebookTrusted}
                 />
             );
 
@@ -125,7 +126,12 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         setTimeout(() => this.props.insertAboveFirst(), 1);
     }
     private renderToolbarPanel() {
-        return <ToolbarComponent></ToolbarComponent>;
+        return (
+            <ToolbarComponent
+                shouldShowTrustMessage={this.props.shouldShowTrustMessage}
+                isNotebookTrusted={this.props.isNotebookTrusted}
+            ></ToolbarComponent>
+        );
     }
 
     private renderVariablePanel(baseTheme: string) {
@@ -185,6 +191,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
+            refreshCount: this.props.variableState.refreshCount,
             offsetHeight: toolbarHeight,
             supportsDebugging:
                 this.props.settings && this.props.settings.variableOptions
@@ -194,11 +201,23 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     };
 
     private pageInVariableData = (startIndex: number, pageSize: number) => {
-        this.props.getVariableData(this.props.currentExecutionCount, startIndex, pageSize);
+        this.props.getVariableData(
+            this.props.currentExecutionCount,
+            this.props.variableState.refreshCount,
+            startIndex,
+            pageSize
+        );
+    };
+
+    private isNotebookTrusted = () => {
+        return this.props.isNotebookTrusted;
     };
 
     // tslint:disable-next-line: cyclomatic-complexity
     private mainKeyDown = (event: KeyboardEvent) => {
+        if (!this.isNotebookTrusted()) {
+            return; // Disable keyboard interaction with untrusted notebooks
+        }
         // Handler for key down presses in the main panel
         switch (event.key) {
             // tslint:disable-next-line: no-suspicious-comment
@@ -309,6 +328,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                     baseTheme={this.props.baseTheme}
                     className="add-cell-line-cell"
                     click={addNewCell}
+                    isNotebookTrusted={this.props.isNotebookTrusted}
                 />
             ) : null;
 
@@ -341,7 +361,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         font={this.props.font}
                         allowUndo={this.props.undoStack.length > 0}
                         editorOptions={this.props.editorOptions}
-                        enableGather={this.props.settings.enableGather}
+                        gatherIsInstalled={this.props.settings.gatherIsInstalled}
                         themeMatplotlibPlots={this.props.settings.themeMatplotlibPlots}
                         // Focus pending does not apply to native editor.
                         focusPending={0}
@@ -354,6 +374,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                                 : false
                         }
                         language={this.props.kernel.language}
+                        isNotebookTrusted={this.props.isNotebookTrusted}
                     />
                 </ErrorBoundary>
                 {lastLine}

@@ -12,7 +12,7 @@ import { SortImportsEditingProvider } from '../../client/providers/importSortPro
 import { ISortImportsEditingProvider } from '../../client/providers/types';
 import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { updateSetting } from '../common';
-import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
+import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_TIMEOUT } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 
 const sortingPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'sorting');
@@ -36,7 +36,9 @@ suite('Sorting', () => {
         await updateSetting('sortImports.args', [], Uri.file(sortingPath), configTarget);
         await closeActiveWindows();
     });
-    setup(async () => {
+    setup(async function () {
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(TEST_TIMEOUT * 2);
         await initializeTest();
         initializeDI();
         fs.writeFileSync(fileToFormatWithConfig, fs.readFileSync(originalFileToFormatWithConfig));
@@ -56,11 +58,9 @@ suite('Sorting', () => {
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
         ioc.registerInterpreterStorageTypes();
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
-        ioc.serviceManager.addSingletonInstance<IInterpreterService>(
-            IInterpreterService,
-            instance(mock(InterpreterService))
-        );
+        ioc.registerMockInterpreterTypes();
+        ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
+        ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
     }
     test('Without Config', async () => {
         const textDocument = await workspace.openTextDocument(fileToFormatWithoutConfig);
@@ -158,7 +158,7 @@ suite('Sorting', () => {
         const originalContent = textDocument.getText();
         await commands.executeCommand(Commands.Sort_Imports);
         assert.notEqual(originalContent, textDocument.getText(), 'Contents have not changed');
-    });
+    }).timeout(TEST_TIMEOUT * 2);
 
     test('With Changes and Config implicit from cwd', async () => {
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);

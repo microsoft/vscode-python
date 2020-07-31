@@ -6,11 +6,14 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
-import { IBaseCellVSCodeMetadata } from '../../../../../types/@jupyterlab_coreutils_nbformat';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
-import { ICell, INotebookModel } from '../../types';
-import { findMappedNotebookCell } from './cellMappers';
-import { createVSCCellOutputsFromOutputs, translateErrorOutput, updateVSCNotebookCellMetadata } from './helpers';
+import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
+import { createVSCCellOutputsFromOutputs, translateErrorOutput } from './helpers';
+
+export interface IBaseCellVSCodeMetadata {
+    end_execution_time?: string;
+    start_execution_time?: string;
+}
 
 export function hasTransientOutputForAnotherCell(output?: nbformat.IOutput) {
     return (
@@ -32,12 +35,12 @@ export function hasTransientOutputForAnotherCell(output?: nbformat.IOutput) {
  */
 export function handleUpdateDisplayDataMessage(
     msg: KernelMessage.IUpdateDisplayDataMsg,
-    model: INotebookModel,
+    model: VSCodeNotebookModel,
     document: NotebookDocument
 ): boolean {
     // Find any cells that have this same display_id
     return (
-        model.cells.filter((cellToCheck) => {
+        model.cells.filter((cellToCheck, index) => {
             if (cellToCheck.data.cell_type !== 'code') {
                 return false;
             }
@@ -68,8 +71,8 @@ export function handleUpdateDisplayDataMessage(
                 return false;
             }
 
-            const vscCell = findMappedNotebookCell(cellToCheck, document.cells);
-            updateCellOutput(vscCell, cellToCheck, changedOutputs);
+            const vscCell = document.cells[index];
+            updateCellOutput(vscCell, changedOutputs);
             return true;
         }).length > 0
     );
@@ -86,9 +89,8 @@ export function updateCellWithErrorStatus(cell: NotebookCell, ex: Partial<Error>
 /**
  * @returns {boolean} Returns `true` if execution count has changed.
  */
-export function updateCellExecutionCount(vscCell: NotebookCell, cell: ICell, executionCount: number): boolean {
-    if (cell.data.execution_count !== executionCount && vscCell.metadata.executionOrder !== executionCount) {
-        cell.data.execution_count = executionCount;
+export function updateCellExecutionCount(vscCell: NotebookCell, executionCount: number): boolean {
+    if (vscCell.metadata.executionOrder !== executionCount) {
         vscCell.metadata.executionOrder = executionCount;
         return true;
     }
@@ -98,55 +100,20 @@ export function updateCellExecutionCount(vscCell: NotebookCell, cell: ICell, exe
 /**
  * Updates our Cell Model with the cell output.
  * As we execute a cell we get output from jupyter. This code will ensure the cell is updated with the output.
- * (this has nothing to do with VSCode cells), this is out ICell in INotebookModel.
+ * Here we update both the VSCode Cell as well as our ICell (cell in our INotebookModel).
  * @returns {(boolean | undefined)} Returns `true` if output has changed.
  */
-export function updateCellOutput(vscCell: NotebookCell, cell: ICell, outputs: nbformat.IOutput[]): boolean | undefined {
-    cell.data.outputs = outputs;
+export function updateCellOutput(vscCell: NotebookCell, outputs: nbformat.IOutput[]): boolean | undefined {
     const newOutput = createVSCCellOutputsFromOutputs(outputs);
     // If there was no output and still no output, then nothing to do.
-    if (
-        Array.isArray(cell.data.outputs) &&
-        cell.data.outputs.length === 0 &&
-        newOutput.length === 0 &&
-        vscCell.outputs.length === 0
-    ) {
+    if (vscCell.outputs.length === 0 && newOutput.length === 0) {
         return;
     }
     // Compare outputs (at the end of the day everything is serializable).
     // Hence this is a safe comparison.
-    if (
-        Array.isArray(vscCell.outputs) &&
-        vscCell.outputs.length === newOutput.length &&
-        JSON.stringify(vscCell.outputs) === JSON.stringify(newOutput)
-    ) {
+    if (vscCell.outputs.length === newOutput.length && JSON.stringify(vscCell.outputs) === JSON.stringify(newOutput)) {
         return;
     }
-    updateVSCNotebookCellMetadata(vscCell.metadata, cell);
     vscCell.outputs = newOutput;
     return true;
-}
-
-/**
- * Store execution start and end times in ISO format for portability.
- */
-export function updateCellExecutionTimes(notebookCellModel: ICell, startTime?: number, duration?: number) {
-    const startTimeISO = startTime ? new Date(startTime).toISOString() : undefined;
-    const endTimeISO = duration && startTime ? new Date(startTime + duration).toISOString() : undefined;
-    updateCellMetadata(notebookCellModel, {
-        end_execution_time: endTimeISO,
-        start_execution_time: startTimeISO
-    });
-}
-
-export function updateCellMetadata(notebookCellModel: ICell, metadata: Partial<IBaseCellVSCodeMetadata>) {
-    const originalVscodeMetadata: IBaseCellVSCodeMetadata = notebookCellModel.data.metadata.vscode || {};
-    // Update our model with the new metadata stored in jupyter.
-    notebookCellModel.data.metadata = {
-        ...notebookCellModel.data.metadata,
-        vscode: {
-            ...originalVscodeMetadata,
-            ...metadata
-        }
-    };
 }

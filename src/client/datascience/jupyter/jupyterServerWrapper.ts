@@ -9,7 +9,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -19,9 +19,9 @@ import {
 } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
+import { DataScienceStartupTime, JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import {
-    IDataScience,
+    IDataScienceFileSystem,
     IJupyterConnection,
     IJupyterSessionManagerFactory,
     INotebook,
@@ -40,7 +40,7 @@ interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {}
 type JupyterServerClassType = {
     new (
         liveShare: ILiveShareApi,
-        dataScience: IDataScience,
+        startupTime: number,
         asyncRegistry: IAsyncDisposableRegistry,
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
@@ -48,7 +48,7 @@ type JupyterServerClassType = {
         workspaceService: IWorkspaceService,
         serviceContainer: IServiceContainer,
         appShell: IApplicationShell,
-        fs: IFileSystem,
+        fs: IDataScienceFileSystem,
         kernelSelector: KernelSelector,
         interpreterService: IInterpreterService,
         outputChannel: IOutputChannel
@@ -67,14 +67,14 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
-        @inject(IDataScience) dataScience: IDataScience,
+        @inject(DataScienceStartupTime) startupTime: number,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(IFileSystem) fs: IFileSystem,
+        @inject(IDataScienceFileSystem) fs: IDataScienceFileSystem,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutput: IOutputChannel,
@@ -87,7 +87,7 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
             HostJupyterServer,
             GuestJupyterServer,
             liveShare,
-            dataScience,
+            startupTime,
             asyncRegistry,
             disposableRegistry,
             configService,

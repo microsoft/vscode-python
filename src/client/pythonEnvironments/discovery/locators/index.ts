@@ -1,8 +1,7 @@
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { traceDecorators } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
-import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { OSType } from '../../../common/utils/platform';
 import {
@@ -17,10 +16,9 @@ import {
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../../interpreter/contracts';
-import { IInterpreterFilter } from '../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonInterpreter } from '../../info';
-import { InterpreterFilter } from './services/interpreterFilter';
+import { isHiddenInterpreter } from './services/interpreterFilter';
 import { GetInterpreterLocatorOptions } from './types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -29,8 +27,7 @@ const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 /**
  * Facilitates locating Python interpreters.
  */
-@injectable()
-export class PythonInterpreterLocatorService implements IInterpreterLocatorService {
+export class PythonInterpreterLocatorService {
     public didTriggerInterpreterSuggestions: boolean;
 
     private readonly disposables: Disposable[] = [];
@@ -38,12 +35,8 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     private readonly interpreterLocatorHelper: IInterpreterLocatorHelper;
     private readonly _hasInterpreters: Deferred<boolean>;
 
-    constructor(
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(InterpreterFilter) private readonly interpreterFilter: IInterpreterFilter
-    ) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this._hasInterpreters = createDeferred<boolean>();
-        serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
         this.interpreterLocatorHelper = serviceContainer.get<IInterpreterLocatorHelper>(IInterpreterLocatorHelper);
         this.didTriggerInterpreterSuggestions = false;
@@ -96,7 +89,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         const items = flatten(listOfInterpreters)
             .filter((item) => !!item)
             .map((item) => item!)
-            .filter((item) => !this.interpreterFilter.isHiddenInterpreter(item));
+            .filter((item) => !isHiddenInterpreter(item));
         this._hasInterpreters.resolve(items.length > 0);
         return this.interpreterLocatorHelper.mergeInterpreters(items);
     }

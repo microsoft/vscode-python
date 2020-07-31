@@ -11,6 +11,9 @@ import { IProtocolParser } from '../types';
 
 const PROTOCOL_START_INDENTIFIER = '\r\n\r\n';
 
+// tslint:disable-next-line: no-any
+type Listener = (...args: any[]) => void;
+
 /**
  * Parsers the debugger Protocol messages and raises the following events:
  * 1. 'data', message (for all protocol messages)
@@ -24,13 +27,14 @@ const PROTOCOL_START_INDENTIFIER = '\r\n\r\n';
  * @implements {IProtocolParser}
  */
 @injectable()
-export class ProtocolParser extends EventEmitter implements IProtocolParser {
+export class ProtocolParser implements IProtocolParser {
     private rawData = new Buffer(0);
     private contentLength: number = -1;
     private disposed: boolean = false;
     private stream?: Readable;
+    private events: EventEmitter;
     constructor() {
-        super();
+        this.events = new EventEmitter();
     }
     public dispose() {
         if (this.stream) {
@@ -42,6 +46,14 @@ export class ProtocolParser extends EventEmitter implements IProtocolParser {
         this.stream = stream;
         stream.addListener('data', this.dataCallbackHandler);
     }
+    public on(event: string | symbol, listener: Listener): this {
+        this.events.on(event, listener);
+        return this;
+    }
+    public once(event: string | symbol, listener: Listener): this {
+        this.events.once(event, listener);
+        return this;
+    }
     private dataCallbackHandler = (data: string | Buffer) => {
         this.handleData(data as Buffer);
     };
@@ -52,30 +64,30 @@ export class ProtocolParser extends EventEmitter implements IProtocolParser {
             case 'event': {
                 const event = message as DebugProtocol.Event;
                 if (typeof event.event === 'string') {
-                    this.emit(`${message.type}_${event.event}`, event);
+                    this.events.emit(`${message.type}_${event.event}`, event);
                 }
                 break;
             }
             case 'request': {
                 const request = message as DebugProtocol.Request;
                 if (typeof request.command === 'string') {
-                    this.emit(`${message.type}_${request.command}`, request);
+                    this.events.emit(`${message.type}_${request.command}`, request);
                 }
                 break;
             }
             case 'response': {
                 const reponse = message as DebugProtocol.Response;
                 if (typeof reponse.command === 'string') {
-                    this.emit(`${message.type}_${reponse.command}`, reponse);
+                    this.events.emit(`${message.type}_${reponse.command}`, reponse);
                 }
                 break;
             }
             default: {
-                this.emit(`${message.type}`, message);
+                this.events.emit(`${message.type}`, message);
             }
         }
 
-        this.emit('data', message);
+        this.events.emit('data', message);
     }
     private handleData(data: Buffer): void {
         if (this.disposed) {

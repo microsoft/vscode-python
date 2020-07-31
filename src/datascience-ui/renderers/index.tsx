@@ -19,9 +19,12 @@ import * as ReactDOM from 'react-dom';
 import '../../client/common/extensions';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { handleLinkClick } from '../interactive-common/handlers';
-import type { IVsCodeApi } from '../react-common/postOffice';
+import { JupyterNotebookRenderer } from './constants';
 import { CellOutput } from './render';
-export declare function acquireVsCodeApi(): IVsCodeApi;
+
+const notebookApi = acquireNotebookRendererApi(JupyterNotebookRenderer);
+
+notebookApi.onDidCreateOutput(({ element }) => renderOutput(element.querySelector('script')!));
 
 /**
  * Called from renderer to render output.
@@ -33,18 +36,18 @@ function renderOutput(tag: HTMLScriptElement) {
     try {
         const output = JSON.parse(tag.innerHTML) as nbformat.IExecuteResult | nbformat.IDisplayData;
         // tslint:disable-next-line: no-console
-        console.log(`Rendering mimeType ${mimeType}`);
+        console.log(`Rendering mimeType ${mimeType}`, output);
 
         // Create an element to render in, or reuse a previous element.
-        if (tag.nextElementSibling instanceof HTMLDivElement) {
-            container = tag.nextElementSibling;
+        const maybeOldContainer = tag.previousElementSibling;
+        if (maybeOldContainer instanceof HTMLDivElement && maybeOldContainer.dataset.renderer) {
+            container = maybeOldContainer;
             // tslint:disable-next-line: no-inner-html
             container.innerHTML = '';
         } else {
             container = document.createElement('div');
-            tag.parentNode?.insertBefore(container, tag.nextSibling); // NOSONAR
+            tag.parentNode?.insertBefore(container, tag.nextSibling);
         }
-        tag.parentElement?.removeChild(tag); // NOSONAR
 
         ReactDOM.render(React.createElement(CellOutput, { mimeType, output }, null), container);
     } catch (ex) {
@@ -65,7 +68,7 @@ function renderOnLoad() {
 
 // tslint:disable-next-line: no-any
 function postToExtension(type: string, payload: any) {
-    acquireVsCodeApi().postMessage({ type, payload }); // NOSONAR
+    notebookApi.postMessage({ type, payload });
 }
 function linkHandler(href: string) {
     if (href.startsWith('data:image/png')) {
@@ -76,10 +79,7 @@ function linkHandler(href: string) {
 }
 
 // tslint:disable-next-line: no-any
-function initialize(global: Record<string, any>) {
-    // Expose necessary hooks for client renderer to render output.
-    // tslint:disable-next-line: no-any
-    Object.assign(global, { 'vscode-jupyter': { renderOutput } });
+function initialize() {
     document.addEventListener('click', (e) => handleLinkClick(e, linkHandler), true);
     // Possible this (pre-render script loaded after notebook attempted to render something).
     // At this point we need to go and render the existing output.
@@ -88,4 +88,4 @@ function initialize(global: Record<string, any>) {
 
 // tslint:disable-next-line: no-console
 console.log('Pre-Render scripts loaded');
-initialize(window);
+initialize();

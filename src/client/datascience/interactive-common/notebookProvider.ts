@@ -5,20 +5,18 @@
 
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IWorkspaceService } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
-import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
+import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,
-    IInteractiveWindowProvider,
     IJupyterNotebookProvider,
     INotebook,
-    INotebookEditor,
-    INotebookEditorProvider,
     INotebookProvider,
     INotebookProviderConnection,
     IRawNotebookProvider
@@ -28,26 +26,27 @@ import {
 export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
+    private readonly _onSessionStatusChanged = new EventEmitter<{ status: ServerStatus; notebook: INotebook }>();
     private _connectionMade = new EventEmitter<void>();
+    private _potentialKernelChanged = new EventEmitter<{ identity: Uri; kernel: KernelSpecInterpreter }>();
     private _type: 'jupyter' | 'raw' = 'jupyter';
     public get activeNotebooks() {
         return [...this.notebooks.values()];
     }
+    public get onSessionStatusChanged() {
+        return this._onSessionStatusChanged.event;
+    }
+    public get onPotentialKernelChanged() {
+        return this._potentialKernelChanged.event;
+    }
     constructor(
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
-        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(INotebookStorageProvider) storageProvider: INotebookStorageProvider
     ) {
-        disposables.push(editorProvider.onDidCloseNotebookEditor(this.onDidCloseNotebookEditor, this));
         disposables.push(storageProvider.onSavedAs(this.onSavedAs, this));
-        disposables.push(
-            interactiveWindowProvider.onDidChangeActiveInteractiveWindow(this.checkAndDisposeNotebook, this)
-        );
         this.rawNotebookProvider
             .supported()
             .then((b) => (this._type = b ? 'raw' : 'jupyter'))
@@ -92,17 +91,18 @@ export class NotebookProvider implements INotebookProvider {
     public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
         const rawKernel = await this.rawNotebookProvider.supported();
 
+        // Check our own promise cache
+        if (this.notebooks.get(options.identity.toString())) {
+            return this.notebooks.get(options.identity.toString())!!;
+        }
+
         // Check to see if our provider already has this notebook
         const notebook = rawKernel
             ? await this.rawNotebookProvider.getNotebook(options.identity, options.token)
             : await this.jupyterNotebookProvider.getNotebook(options);
         if (notebook) {
+            this.cacheNotebookPromise(options.identity, Promise.resolve(notebook));
             return notebook;
-        }
-
-        // Next check our own promise cache
-        if (this.notebooks.get(options.identity.fsPath)) {
-            return this.notebooks.get(options.identity.fsPath)!!;
         }
 
         // If get only, don't create a notebook
@@ -145,19 +145,25 @@ export class NotebookProvider implements INotebookProvider {
         return promise;
     }
 
+    // This method is here so that the kernel selector can pick a kernel and not have
+    // to know about any of the UI that's active.
+    public firePotentialKernelChanged(identity: Uri, kernel: KernelSpecInterpreter) {
+        this._potentialKernelChanged.fire({ identity, kernel });
+    }
+
     private fireConnectionMade() {
         this._connectionMade.fire();
     }
 
     // Cache the promise that will return a notebook
     private cacheNotebookPromise(identity: Uri, promise: Promise<INotebook>) {
-        this.notebooks.set(identity.fsPath, promise);
+        this.notebooks.set(identity.toString(), promise);
 
         // Remove promise from cache if the same promise still exists.
         const removeFromCache = () => {
-            const cachedPromise = this.notebooks.get(identity.fsPath);
+            const cachedPromise = this.notebooks.get(identity.toString());
             if (cachedPromise === promise) {
-                this.notebooks.delete(identity.fsPath);
+                this.notebooks.delete(identity.toString());
             }
         };
 
@@ -165,24 +171,17 @@ export class NotebookProvider implements INotebookProvider {
             .then((nb) => {
                 // If the notebook is disposed, remove from cache.
                 nb.onDisposed(removeFromCache);
+                nb.onSessionStatusChanged(
+                    (e) => this._onSessionStatusChanged.fire({ status: e, notebook: nb }),
+                    this,
+                    this.disposables
+                );
                 this._notebookCreated.fire({ identity: identity, notebook: nb });
             })
             .catch(noop);
 
         // If promise fails, then remove the promise from cache.
         promise.catch(removeFromCache);
-    }
-
-    private async onDidCloseNotebookEditor(editor: INotebookEditor) {
-        // First find all notebooks associated with this editor (ipynb file).
-        const editors = this.editorProvider.editors.filter(
-            (e) => this.fs.arePathsSame(e.file.fsPath, editor.file.fsPath) && e !== editor
-        );
-
-        // If we have no editors for this file, then dispose the notebook.
-        if (editors.length === 0) {
-            await this.disposeNotebook(editor.file);
-        }
     }
 
     private async onSavedAs(e: { new: Uri; old: Uri }) {
@@ -192,43 +191,5 @@ export class NotebookProvider implements INotebookProvider {
             this.notebooks.set(e.new.toString(), notebookPromise);
             this.notebooks.delete(e.old.toString());
         }
-    }
-
-    /**
-     * Interactive windows have just one window.
-     * When that it closed, just close all of the notebooks associated with interactive windows.
-     */
-    private checkAndDisposeNotebook() {
-        if (this.interactiveWindowProvider.getActive()) {
-            return;
-        }
-
-        Array.from(this.notebooks.values()).forEach((promise) => {
-            promise
-                .then((notebook) => {
-                    if (notebook.identity.scheme === 'history') {
-                        notebook.dispose().ignoreErrors();
-                    }
-                })
-                .catch(noop);
-        });
-
-        this.notebooks.clear();
-    }
-
-    private async disposeNotebook(resource: Uri) {
-        // First find all notebooks associated with this editor (ipynb file).
-        const notebookPromise = this.notebooks.get(resource.fsPath);
-        if (!notebookPromise) {
-            // Possible it was closed before a notebook could be created.
-            return;
-        }
-        this.notebooks.delete(resource.fsPath);
-        const notebook = await notebookPromise.catch(noop);
-        if (!notebook) {
-            return;
-        }
-
-        await notebook.dispose().catch(noop);
     }
 }

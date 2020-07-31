@@ -40,31 +40,31 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
         verify(input.showInputBox(anything())).once();
     });
     test('Configure port will default to 5678 if entered value is not a number', async () => {
-        const config: { port?: number } = {};
+        const config: { connect?: { port?: number } } = {};
         when(input.showInputBox(anything())).thenResolve('xyz');
 
         await provider.configurePort(instance(input), config);
 
         verify(input.showInputBox(anything())).once();
-        expect(config.port).to.equal(5678);
+        expect(config).to.be.deep.equal({ connect: { port: 5678 } });
     });
     test('Configure port will default to 5678', async () => {
-        const config: { port?: number } = {};
+        const config: { connect?: { port?: number } } = {};
         when(input.showInputBox(anything())).thenResolve();
 
         await provider.configurePort(instance(input), config);
 
         verify(input.showInputBox(anything())).once();
-        expect(config.port).to.equal(5678);
+        expect(config).to.be.deep.equal({ connect: { port: 5678 } });
     });
     test('Configure port will use user selected value', async () => {
-        const config: { port?: number } = {};
+        const config: { connect?: { port?: number } } = {};
         when(input.showInputBox(anything())).thenResolve('1234');
 
         await provider.configurePort(instance(input), config);
 
         verify(input.showInputBox(anything())).once();
-        expect(config.port).to.equal(1234);
+        expect(config).to.be.deep.equal({ connect: { port: 1234 } });
     });
     test('Launch JSON with default host name', async () => {
         const folder = { uri: Uri.parse(path.join('one', 'two')), name: '1', index: 0 };
@@ -85,8 +85,10 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
             name: DebugConfigStrings.attach.snippet.name(),
             type: DebuggerTypeName,
             request: 'attach',
-            port: 5678,
-            host: 'localhost',
+            connect: {
+                host: 'localhost',
+                port: 5678
+            },
             pathMappings: [
                 {
                     localRoot: '${workspaceFolder}',
@@ -105,7 +107,7 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
         when(input.showInputBox(anything())).thenResolve('Hello');
         provider.configurePort = (_, cfg) => {
             portConfigured = true;
-            cfg.port = 9999;
+            cfg.connect!.port = 9999;
             return Promise.resolve();
         };
 
@@ -118,8 +120,10 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
             name: DebugConfigStrings.attach.snippet.name(),
             type: DebuggerTypeName,
             request: 'attach',
-            port: 9999,
-            host: 'Hello',
+            connect: {
+                host: 'Hello',
+                port: 9999
+            },
             pathMappings: [
                 {
                     localRoot: '${workspaceFolder}',

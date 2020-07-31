@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { actionCreators } from '../history-react/redux/actions';
 import { getLocString } from '../react-common/locReactSide';
 
 interface ITrimmedOutputMessage {
-    openSettings(): void;
+    openSettings(setting?: string): void;
 }
 
-class TrimmedOutputMessageComponent extends React.PureComponent<ITrimmedOutputMessage> {
+export class TrimmedOutputMessage extends React.PureComponent<ITrimmedOutputMessage> {
     constructor(props: ITrimmedOutputMessage) {
         super(props);
     }
@@ -31,10 +29,6 @@ class TrimmedOutputMessageComponent extends React.PureComponent<ITrimmedOutputMe
         );
     }
     private changeTextOutputLimit = () => {
-        this.props.openSettings();
+        this.props.openSettings('python.dataScience.textOutputLimit');
     };
 }
-
-export const TrimmedOutputMessage = connect(undefined, {
-    openSettings: () => actionCreators.openSettings('python.dataScience.textOutputLimit')
-})(TrimmedOutputMessageComponent);

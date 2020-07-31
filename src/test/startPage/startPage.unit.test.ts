@@ -16,7 +16,7 @@ import {
 import { IFileSystem } from '../../client/common/platform/types';
 import { StartPage } from '../../client/common/startPage/startPage';
 import { IStartPage } from '../../client/common/startPage/types';
-import { IConfigurationService, IExperimentService, IExtensionContext } from '../../client/common/types';
+import { IConfigurationService, IExtensionContext } from '../../client/common/types';
 import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../../client/datascience/types';
 import { MockPythonSettings } from '../datascience/mockPythonSettings';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
@@ -36,7 +36,6 @@ suite('StartPage tests', () => {
     let context: typemoq.IMock<IExtensionContext>;
     let appEnvironment: typemoq.IMock<IApplicationEnvironment>;
     let memento: typemoq.IMock<Memento>;
-    let experiment: typemoq.IMock<IExperimentService>;
     const dummySettings = new MockPythonSettings(undefined, new MockAutoSelectionService());
 
     function setupVersions(savedVersion: string, actualVersion: string) {
@@ -71,7 +70,6 @@ suite('StartPage tests', () => {
         context = typemoq.Mock.ofType<IExtensionContext>();
         appEnvironment = typemoq.Mock.ofType<IApplicationEnvironment>();
         memento = typemoq.Mock.ofType<Memento>();
-        experiment = typemoq.Mock.ofType<IExperimentService>();
 
         configuration.setup((cs) => cs.getSettings(undefined)).returns(() => dummySettings);
 
@@ -87,8 +85,7 @@ suite('StartPage tests', () => {
             documentManager.object,
             appShell.object,
             context.object,
-            appEnvironment.object,
-            experiment.object
+            appEnvironment.object
         );
     });
 

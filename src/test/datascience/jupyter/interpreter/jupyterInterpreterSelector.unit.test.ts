@@ -16,7 +16,7 @@ import { JupyterInterpreterStateStore } from '../../../../client/datascience/jup
 import { InterpreterSelector } from '../../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
 
-suite('Data Science - Jupyter Interpreter Picker', () => {
+suite('DataScience - Jupyter Interpreter Picker', () => {
     let picker: JupyterInterpreterSelector;
     let interpreterSelector: IInterpreterSelector;
     let appShell: IApplicationShell;

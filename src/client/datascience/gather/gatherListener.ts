@@ -6,7 +6,8 @@ import { createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
+import type { nbformat } from '@jupyterlab/coreutils';
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -21,6 +22,7 @@ import {
 } from '../interactive-common/interactiveWindowTypes';
 import {
     ICell,
+    IDataScienceFileSystem,
     IGatherLogger,
     IGatherProvider,
     IInteractiveWindowListener,
@@ -42,6 +44,8 @@ export class GatherListener implements IInteractiveWindowListener {
     private notebookUri: Uri | undefined;
     private gatherProvider: IGatherProvider | undefined;
     private gatherTimer: StopWatch | undefined;
+    private linesSubmitted: number = 0;
+    private cellsSubmitted: number = 0;
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -50,7 +54,7 @@ export class GatherListener implements IInteractiveWindowListener {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IFileSystem) private fileSystem: IFileSystem
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem
     ) {}
 
     public dispose() {
@@ -78,8 +82,24 @@ export class GatherListener implements IInteractiveWindowListener {
                 break;
 
             case InteractiveWindowMessages.RestartKernel:
+                this.linesSubmitted = 0;
+                this.cellsSubmitted = 0;
                 if (this.gatherProvider) {
-                    this.gatherProvider.resetLog();
+                    try {
+                        this.gatherProvider.resetLog();
+                    } catch (e) {
+                        traceError('Gather: Exception at Reset Log', e);
+                        sendTelemetryEvent(Telemetry.GatherException, undefined, { exceptionType: 'reset' });
+                    }
+                }
+                break;
+
+            case InteractiveWindowMessages.FinishCell:
+                const cell = payload.cell as ICell;
+                if (cell && cell.data && cell.data.source) {
+                    const lineCount: number = cell.data.source.length as number;
+                    this.linesSubmitted += lineCount;
+                    this.cellsSubmitted += 1;
                 }
                 break;
 
@@ -112,7 +132,7 @@ export class GatherListener implements IInteractiveWindowListener {
         }
     }
 
-    private getGatherProvider(nb: INotebook): IGatherProvider | undefined {
+    private getGatherProvider(nb: INotebook): any | undefined {
         const gatherLogger = <IGatherLogger>(
             nb.getLoggers().find((logger: INotebookExecutionLogger) => (<IGatherLogger>logger).getGatherProvider)
         );
@@ -138,8 +158,20 @@ export class GatherListener implements IInteractiveWindowListener {
 
     private gatherCodeInternal = async (cell: ICell, toScript: boolean = false) => {
         this.gatherTimer = new StopWatch();
+        let slicedProgram: string | undefined;
 
-        const slicedProgram = this.gatherProvider ? this.gatherProvider.gatherCode(cell) : 'Gather internal error';
+        try {
+            slicedProgram = this.gatherProvider
+                ? this.gatherProvider.gatherCode(cell)
+                : localize.DataScience.gatherError();
+        } catch (e) {
+            traceError('Gather: Exception at gatherCode', e);
+            sendTelemetryEvent(Telemetry.GatherException, undefined, { exceptionType: 'gather' });
+            const newline = '\n';
+            const defaultCellMarker =
+                this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
+            slicedProgram = defaultCellMarker + newline + localize.DataScience.gatherError() + newline + (e as string);
+        }
 
         if (!slicedProgram) {
             sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'err' });
@@ -151,33 +183,49 @@ export class GatherListener implements IInteractiveWindowListener {
                 sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'script' });
             } else {
                 await this.showNotebook(slicedProgram, cell);
-                sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'notebook' });
+                sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, {
+                    result: 'notebook'
+                });
             }
+
+            sendTelemetryEvent(Telemetry.GatherStats, undefined, {
+                linesSubmitted: this.linesSubmitted,
+                cellsSubmitted: this.cellsSubmitted,
+                linesGathered: slicedProgram.trim().splitLines().length,
+                cellsGathered: generateCellsFromString(slicedProgram).length
+            });
         }
     };
 
     private async showNotebook(slicedProgram: string, cell: ICell) {
         if (slicedProgram) {
+            const file =
+                cell.file === Identifiers.EmptyFileName && this.notebookUri ? this.notebookUri.fsPath : cell.file;
+
             let cells: ICell[] = [
                 {
                     id: uuid(),
                     file: '',
                     line: 0,
                     state: 0,
-                    data: createMarkdownCell(
-                        localize.DataScience.gatheredNotebookDescriptionInMarkdown().format(
-                            cell.file === Identifiers.EmptyFileName && this.notebookUri
-                                ? this.notebookUri.fsPath
-                                : cell.file
-                        )
-                    )
+                    data: createMarkdownCell(localize.DataScience.gatheredNotebookDescriptionInMarkdown().format(file))
                 }
             ];
 
             // Create new notebook with the returned program and open it.
             cells = cells.concat(generateCellsFromString(slicedProgram));
 
-            const notebook = await this.jupyterExporter.translateToNotebook(cells);
+            // Try to get a kernelspec
+            let kernelspec: nbformat.IKernelspecMetadata | undefined;
+            try {
+                const text = await this.fs.readLocalFile(file);
+                const json = JSON.parse(text);
+                kernelspec = json.metadata.kernelspec;
+            } catch (e) {
+                traceError('Gather: No kernelspec found', e);
+            }
+
+            const notebook = await this.jupyterExporter.translateToNotebook(cells, undefined, kernelspec);
             if (notebook) {
                 const contents = JSON.stringify(notebook);
                 const editor = await this.ipynbProvider.createNew(contents);
@@ -225,7 +273,7 @@ export class GatherListener implements IInteractiveWindowListener {
         // Don't want to open the gathered code on top of the interactive window
         let viewColumn: ViewColumn | undefined;
         const fileNameMatch = this.documentManager.visibleTextEditors.filter((textEditor) =>
-            this.fileSystem.arePathsSame(textEditor.document.fileName, filename)
+            this.fs.areLocalPathsSame(textEditor.document.fileName, filename)
         );
         const definedVisibleEditors = this.documentManager.visibleTextEditors.filter(
             (textEditor) => textEditor.viewColumn !== undefined

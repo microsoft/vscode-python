@@ -5,7 +5,9 @@
 
 import { assert } from 'chai';
 import { ElementHandle } from 'playwright-chromium';
+import { sleep } from '../../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { INotebookEditor } from '../../../client/datascience/types';
 import { BaseWebUI } from './helpers';
 
 enum CellToolbarButton {
@@ -17,6 +19,10 @@ enum MainToolbarButton {
 }
 
 export class NotebookEditorUI extends BaseWebUI {
+    private _editor: INotebookEditor | undefined;
+    public _setEditor(editor: INotebookEditor) {
+        this._editor = editor;
+    }
     public async getCellCount(): Promise<number> {
         const items = await this.page!.$$('.cell-wrapper');
         return items.length;
@@ -29,7 +35,16 @@ export class NotebookEditorUI extends BaseWebUI {
 
     public async executeCell(cellIndex: number): Promise<void> {
         const renderedPromise = this.waitForMessage(InteractiveWindowMessages.ExecutionRendered);
+        // Make sure to wait for idle so that the button is clickable.
+        await this.waitForIdle();
+
+        // Wait just a bit longer to make sure button is visible (not sure why it isn't clicking the button sometimes)
+        await sleep(500);
+
+        // Click the run button.
         const runButton = await this.getToolbarButton(cellIndex, CellToolbarButton.run);
+        // tslint:disable-next-line: no-console
+        console.log(`Executing cell ${cellIndex} by clicking ${runButton.toString()}`);
         await Promise.all([runButton.click({ button: 'left', force: true, timeout: 0 }), renderedPromise]);
     }
 
@@ -58,6 +73,14 @@ export class NotebookEditorUI extends BaseWebUI {
         const items = await this.page!.$$('.cell-wrapper');
         return items[cellIndex];
     }
+
+    private waitForIdle(): Promise<void> {
+        if (this._editor && this._editor.notebook) {
+            return this._editor.notebook.waitForIdle(60_000);
+        }
+        return Promise.resolve();
+    }
+
     private async getMainToolbarButton(button: MainToolbarButton): Promise<ElementHandle<Element>> {
         // First wait for the toolbar button to be visible.
         await this.page!.waitForFunction(

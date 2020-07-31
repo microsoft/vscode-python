@@ -10,6 +10,7 @@ export function getDefaultSettings() {
     // tslint:disable-next-line: no-unnecessary-local-variable
     const result: IDataScienceExtraSettings = {
         allowImportFromNotebook: true,
+        alwaysTrustNotebooks: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         enabled: true,
@@ -31,6 +32,7 @@ export function getDefaultSettings() {
         codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
         variableExplorerExclude: 'module;function;builtin_function_or_method',
         enablePlotViewer: true,
+        interactiveWindowMode: 'multiple',
         extraSettings: {
             editor: {
                 cursor: 'line',
@@ -71,6 +73,7 @@ export function getDefaultSettings() {
         webviewExperiments: {
             removeKernelToolbarInInteractiveWindow: false
         },
+        gatherIsInstalled: false,
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],

@@ -1,14 +1,14 @@
 import { inject, injectable } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
-import { CancellationToken, TextDocument, Uri, WorkspaceEdit } from 'vscode';
+import { CancellationToken, CancellationTokenSource, TextDocument, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { Commands, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { traceError } from '../common/logger';
 import * as internalScripts from '../common/process/internal/scripts';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IEditorUtils, IOutputChannel } from '../common/types';
-import { createDeferred } from '../common/utils/async';
+import { createDeferred, createDeferredFromPromise, Deferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
@@ -17,6 +17,10 @@ import { ISortImportsEditingProvider } from './types';
 
 @injectable()
 export class SortImportsEditingProvider implements ISortImportsEditingProvider {
+    private readonly isortPromises = new Map<
+        string,
+        { deferred: Deferred<WorkspaceEdit | undefined>; tokenSource: CancellationTokenSource }
+    >();
     private readonly processServiceFactory: IProcessServiceFactory;
     private readonly pythonExecutionFactory: IPythonExecutionFactory;
     private readonly shell: IApplicationShell;
@@ -34,7 +38,23 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     }
 
     @captureTelemetry(EventName.FORMAT_SORT_IMPORTS)
-    public async provideDocumentSortImportsEdits(
+    public async provideDocumentSortImportsEdits(uri: Uri): Promise<WorkspaceEdit | undefined> {
+        if (this.isortPromises.has(uri.fsPath)) {
+            const isortPromise = this.isortPromises.get(uri.fsPath)!;
+            if (!isortPromise.deferred.completed) {
+                // Cancelling the token will kill the previous isort process & discard its result.
+                isortPromise.tokenSource.cancel();
+            }
+        }
+        const tokenSource = new CancellationTokenSource();
+        const promise = this._provideDocumentSortImportsEdits(uri, tokenSource.token);
+        const deferred = createDeferredFromPromise(promise);
+        this.isortPromises.set(uri.fsPath, { deferred, tokenSource });
+        // If token has been cancelled discard the result.
+        return promise.then((edit) => (tokenSource.token.isCancellationRequested ? undefined : edit));
+    }
+
+    public async _provideDocumentSortImportsEdits(
         uri: Uri,
         token?: CancellationToken
     ): Promise<WorkspaceEdit | undefined> {

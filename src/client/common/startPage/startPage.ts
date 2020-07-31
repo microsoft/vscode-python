@@ -4,7 +4,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ConfigurationTarget, EventEmitter, ViewColumn } from 'vscode';
+import { ConfigurationTarget, EventEmitter, Uri, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Commands, Telemetry } from '../../datascience/constants';
@@ -19,9 +19,8 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../application/types';
-import { EnableStartPage } from '../experiments/groups';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IExperimentService, IExtensionContext, Resource } from '../types';
+import { IConfigurationService, IExtensionContext, Resource } from '../types';
 import * as localize from '../utils/localize';
 import { StopWatch } from '../utils/stopWatch';
 import { StartPageMessageListener } from './startPageMessageListener';
@@ -51,8 +50,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment,
-        @inject(IExperimentService) private readonly expService: IExperimentService
+        @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment
     ) {
         super(
             configuration,
@@ -98,8 +96,8 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         }, 3000);
     }
 
-    public async getOwningResource(): Promise<Resource> {
-        return Promise.resolve(undefined);
+    public get owningResource(): Resource {
+        return undefined;
     }
 
     public async close(): Promise<void> {
@@ -120,11 +118,9 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             case StartPageMessages.Started:
                 this.webviewDidLoad = true;
                 break;
-            case StartPageMessages.RequestReleaseNotesAndShowAgainSetting:
+            case StartPageMessages.RequestShowAgainSetting:
                 const settings = this.configuration.getSettings();
-                const filteredNotes = await this.handleReleaseNotesRequest();
-                await this.postMessage(StartPageMessages.SendReleaseNotes, {
-                    notes: filteredNotes,
+                await this.postMessage(StartPageMessages.SendSetting, {
                     showAgainSetting: settings.showStartPage
                 });
                 break;
@@ -159,7 +155,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                     content: `#%%\nprint("${localize.StartPage.helloWorld()}")`
                 });
                 await this.documentManager.showTextDocument(doc2, 1, true);
-                await this.commandManager.executeCommand(Commands.RunAllCells, '');
+                await this.commandManager.executeCommand(Commands.RunAllCells, Uri.parse(''));
                 break;
             case StartPageMessages.OpenCommandPalette:
                 sendTelemetryEvent(Telemetry.StartPageOpenCommandPalette);
@@ -226,10 +222,16 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         const version: string = this.appEnvironment.packageJson.version;
         let shouldShowStartPage: boolean;
 
-        if (savedVersion && (savedVersion === version || this.savedVersionisOlder(savedVersion, version))) {
-            // There has not been an update
-            shouldShowStartPage = false;
+        if (savedVersion) {
+            if (savedVersion === version || this.savedVersionisOlder(savedVersion, version)) {
+                // There has not been an update
+                shouldShowStartPage = false;
+            } else {
+                sendTelemetryEvent(Telemetry.StartPageOpenedFromNewUpdate);
+                shouldShowStartPage = true;
+            }
         } else {
+            sendTelemetryEvent(Telemetry.StartPageOpenedFromNewInstall);
             shouldShowStartPage = true;
         }
 
@@ -239,17 +241,10 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         return shouldShowStartPage;
     }
 
-    // This gets the release notes from StartPageReleaseNotes.md
-    private async handleReleaseNotesRequest(): Promise<string[]> {
-        const releaseNotes = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'StartPageReleaseNotes.md'));
-        return releaseNotes.splitLines();
-    }
-
     private async activateBackground(): Promise<void> {
-        const enabled = await this.expService.inExperiment(EnableStartPage.experiment);
         const settings = this.configuration.getSettings();
 
-        if (enabled && settings.showStartPage && this.appEnvironment.extensionChannel === 'stable') {
+        if (settings.showStartPage && this.appEnvironment.extensionChannel === 'stable') {
             // extesionVersionChanged() reads CHANGELOG.md
             // So we use separate if's to try and avoid reading a file every time
             const firstTimeOrUpdate = await this.extensionVersionChanged();

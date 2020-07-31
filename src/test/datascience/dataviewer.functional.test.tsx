@@ -10,7 +10,7 @@ import { mount, ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
 import * as uuid from 'uuid/v4';
-import { Disposable, Uri } from 'vscode';
+import { Disposable } from 'vscode';
 
 import { Identifiers } from '../../client/datascience/constants';
 import {
@@ -19,6 +19,7 @@ import {
     IDataViewerDataProvider,
     IDataViewerFactory
 } from '../../client/datascience/data-viewing/types';
+import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import {
     IJupyterVariable,
     IJupyterVariableDataProviderFactory,
@@ -30,7 +31,7 @@ import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGri
 import { noop, sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
-import { waitForMessage } from './testHelpers';
+import { IMountedWebView } from './mountedWebView';
 
 // import { asyncDump } from '../common/asyncDump';
 suite('DataScience DataViewer tests', () => {
@@ -63,9 +64,9 @@ suite('DataScience DataViewer tests', () => {
         return ioc.activate();
     });
 
-    function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
+    function mountWebView() {
         // Setup our webview panel
-        const wrapper = ioc.createWebView(
+        const mounted = ioc.createWebView(
             () => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} testMode={true} />),
             'default'
         );
@@ -76,7 +77,7 @@ suite('DataScience DataViewer tests', () => {
             IJupyterVariableDataProviderFactory
         );
 
-        return wrapper;
+        return mounted;
     }
 
     teardown(async () => {
@@ -132,7 +133,7 @@ suite('DataScience DataViewer tests', () => {
     async function injectCode(code: string): Promise<void> {
         const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
         notebook = await notebookProvider.getOrCreateNotebook({
-            identity: Uri.parse(Identifiers.InteractiveWindowIdentity)
+            identity: getDefaultInteractiveIdentity()
         });
         if (notebook) {
             const cells = await notebook.execute(code, Identifiers.EmptyFileName, 0, uuid());
@@ -148,24 +149,19 @@ suite('DataScience DataViewer tests', () => {
         }
     }
 
-    function getCompletedPromise(): Promise<void> {
-        return waitForMessage(ioc, DataViewerMessages.CompletedData);
+    function getCompletedPromise(mountedWebView: IMountedWebView): Promise<void> {
+        return mountedWebView.waitForMessage(DataViewerMessages.CompletedData);
     }
 
     // tslint:disable-next-line:no-any
-    function runMountedTest(
-        name: string,
-        testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>
-    ) {
+    function runMountedTest(name: string, testFunc: (mount: IMountedWebView) => Promise<void>) {
         test(name, async () => {
             const wrapper = mountWebView();
             try {
                 await testFunc(wrapper);
             } finally {
                 // Make sure to unmount the wrapper or it will interfere with other tests
-                if (wrapper && wrapper.length) {
-                    wrapper.unmount();
-                }
+                wrapper.dispose();
             }
         });
     }
@@ -240,42 +236,42 @@ suite('DataScience DataViewer tests', () => {
 
     runMountedTest('Data Frame', async (wrapper) => {
         await injectCode('import pandas as pd\r\ndf = pd.DataFrame([0, 1, 2, 3])');
-        const gotAllRows = getCompletedPromise();
+        const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('df', 'DataFrame');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
     });
 
     runMountedTest('List', async (wrapper) => {
         await injectCode('ls = [0, 1, 2, 3]');
-        const gotAllRows = getCompletedPromise();
+        const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('ls', 'list');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
     });
 
     runMountedTest('Series', async (wrapper) => {
         await injectCode('import pandas as pd\r\ns = pd.Series([0, 1, 2, 3])');
-        const gotAllRows = getCompletedPromise();
+        const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('s', 'Series');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
     });
 
     runMountedTest('np.array', async (wrapper) => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
-        const gotAllRows = getCompletedPromise();
+        const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('x', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
     });
 
     runMountedTest('Failure', async (_wrapper) => {
@@ -290,27 +286,27 @@ suite('DataScience DataViewer tests', () => {
 
     runMountedTest('Sorting', async (wrapper) => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
-        const gotAllRows = getCompletedPromise();
+        const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('x', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
-        sortRows(wrapper, '0', false);
-        verifyRows(wrapper, [3, 3, 2, 2, 1, 1, 0, 0]);
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+        sortRows(wrapper.wrapper, '0', false);
+        verifyRows(wrapper.wrapper, [3, 3, 2, 2, 1, 1, 0, 0]);
     });
 
     runMountedTest('Filter', async (wrapper) => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
-        const gotAllRows = getCompletedPromise();
+        const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('x', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
-        await filterRows(wrapper, '0', '> 1');
-        verifyRows(wrapper, [2, 2, 3, 3]);
-        await filterRows(wrapper, '0', '0');
-        verifyRows(wrapper, [0, 0]);
+        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+        await filterRows(wrapper.wrapper, '0', '> 1');
+        verifyRows(wrapper.wrapper, [2, 2, 3, 3]);
+        await filterRows(wrapper.wrapper, '0', '0');
+        verifyRows(wrapper.wrapper, [0, 0]);
     });
 });

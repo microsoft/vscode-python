@@ -10,11 +10,10 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
-import type { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { isTestExecution } from '../../../common/constants';
 import { traceInfo } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
+
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -29,12 +28,13 @@ import { IServiceContainer } from '../../../ioc/types';
 import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import {
-    IDataScience,
+    IDataScienceFileSystem,
     IJupyterSession,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     INotebook,
     INotebookExecutionLogger,
+    INotebookMetadataLive,
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../../types';
@@ -54,7 +54,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
     private sharedPort: vscode.Disposable | undefined;
     constructor(
         private liveShare: ILiveShareApi,
-        _dataScience: IDataScience,
+        _startupTime: number,
         asyncRegistry: IAsyncDisposableRegistry,
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
@@ -62,7 +62,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         private workspaceService: IWorkspaceService,
         serviceContainer: IServiceContainer,
         private appService: IApplicationShell,
-        private fs: IFileSystem,
+        private fs: IDataScienceFileSystem,
         private readonly kernelSelector: KernelSelector,
         private readonly interpreterService: IInterpreterService,
         outputChannel: IOutputChannel
@@ -179,7 +179,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
         serviceContainer: IServiceContainer,
-        notebookMetadata?: nbformat.INotebookMetadata,
+        notebookMetadata?: INotebookMetadataLive,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         // See if already exists.
@@ -267,7 +267,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
     private async computeLaunchInfo(
         resource: Resource,
         sessionManager: IJupyterSessionManager,
-        notebookMetadata?: nbformat.INotebookMetadata,
+        notebookMetadata?: INotebookMetadataLive,
         cancelToken?: CancellationToken
     ): Promise<{ info: INotebookServerLaunchInfo; changedKernel: boolean }> {
         // First we need our launch information so we can start a new session (that's what our notebook is really)
@@ -288,7 +288,11 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         // Find a kernel that can be used.
         // Do this only if kernel information has been provided in the metadata, or the resource's interpreter is different.
         let changedKernel = false;
-        if (notebookMetadata?.kernelspec || resourceInterpreter?.displayName !== launchInfo.interpreter?.displayName) {
+        if (
+            notebookMetadata?.kernelspec ||
+            notebookMetadata?.id ||
+            resourceInterpreter?.displayName !== launchInfo.interpreter?.displayName
+        ) {
             const kernelInfo = await (launchInfo.connectionInfo.localLaunch
                 ? this.kernelSelector.getKernelForLocalConnection(
                       resource,

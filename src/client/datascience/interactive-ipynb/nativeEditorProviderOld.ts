@@ -3,25 +3,60 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationTokenSource, TextDocument, TextEditor, Uri } from 'vscode';
+import { CancellationTokenSource, Memento, TextDocument, TextEditor, Uri, WebviewPanel } from 'vscode';
 
 import { CancellationToken } from 'vscode-jsonrpc';
 import {
+    IApplicationShell,
     ICommandManager,
     ICustomEditorService,
     IDocumentManager,
+    ILiveShareApi,
+    IWebPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
-import { JUPYTER_LANGUAGE } from '../../common/constants';
-import { IFileSystem } from '../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { noop } from '../../common/utils/misc';
+import { JUPYTER_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
+
+import {
+    GLOBAL_MEMENTO,
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentService,
+    IExperimentsManager,
+    IMemento,
+    WORKSPACE_MEMENTO
+} from '../../common/types';
+import { isNotebookCell, noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { Commands } from '../constants';
+import { Commands, Identifiers } from '../constants';
+import { IDataViewerFactory } from '../data-viewing/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
-import { IDataScienceErrorHandler, INotebookEditor, INotebookModel } from '../types';
-import { NativeEditorProvider } from './nativeEditorProvider';
-import { INotebookStorageProvider } from './notebookStorageProvider';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { NativeEditorProvider } from '../notebookStorage/nativeEditorProvider';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
+import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
+import {
+    ICodeCssGenerator,
+    IDataScienceErrorHandler,
+    IDataScienceFileSystem,
+    IInteractiveWindowListener,
+    IJupyterDebugger,
+    IJupyterVariableDataProviderFactory,
+    IJupyterVariables,
+    INotebookEditor,
+    INotebookEditorProvider,
+    INotebookExporter,
+    INotebookImporter,
+    INotebookModel,
+    INotebookProvider,
+    IStatusProvider,
+    IThemeFinder,
+    ITrustService
+} from '../types';
+import { NativeEditor } from './nativeEditor';
+import { NativeEditorOldWebView } from './nativeEditorOldWebView';
+import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -47,13 +82,23 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(ICustomEditorService) customEditorService: ICustomEditorService,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
-        @inject(INotebookStorageProvider) storage: INotebookStorageProvider
+        @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
+        @inject(INotebookProvider) notebookProvider: INotebookProvider
     ) {
-        super(serviceContainer, asyncRegistry, disposables, workspace, configuration, customEditorService, storage);
+        super(
+            serviceContainer,
+            asyncRegistry,
+            disposables,
+            workspace,
+            configuration,
+            customEditorService,
+            storage,
+            notebookProvider
+        );
 
         // No live share sync required as open document from vscode will give us our contents.
 
@@ -148,6 +193,50 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             debounceFunc();
         }
     }
+
+    protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): NativeEditor {
+        const editor = new NativeEditorOldWebView(
+            this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
+            this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),
+            this.serviceContainer.get<IApplicationShell>(IApplicationShell),
+            this.serviceContainer.get<IDocumentManager>(IDocumentManager),
+            this.serviceContainer.get<IWebPanelProvider>(IWebPanelProvider),
+            this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
+            this.serviceContainer.get<ICodeCssGenerator>(ICodeCssGenerator),
+            this.serviceContainer.get<IThemeFinder>(IThemeFinder),
+            this.serviceContainer.get<IStatusProvider>(IStatusProvider),
+            this.serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem),
+            this.serviceContainer.get<IConfigurationService>(IConfigurationService),
+            this.serviceContainer.get<ICommandManager>(ICommandManager),
+            this.serviceContainer.get<INotebookExporter>(INotebookExporter),
+            this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
+            this.serviceContainer.get<NativeEditorSynchronizer>(NativeEditorSynchronizer),
+            this.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider),
+            this.serviceContainer.get<IDataViewerFactory>(IDataViewerFactory),
+            this.serviceContainer.get<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory),
+            this.serviceContainer.get<IJupyterVariables>(IJupyterVariables, Identifiers.ALL_VARIABLES),
+            this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger),
+            this.serviceContainer.get<INotebookImporter>(INotebookImporter),
+            this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
+            this.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO),
+            this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO),
+            this.serviceContainer.get<IExperimentsManager>(IExperimentsManager),
+            this.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry),
+            this.serviceContainer.get<INotebookProvider>(INotebookProvider),
+            this.serviceContainer.get<boolean>(UseCustomEditorApi),
+            this.serviceContainer.get<INotebookStorageProvider>(INotebookStorageProvider),
+            this.serviceContainer.get<ITrustService>(ITrustService),
+            this.serviceContainer.get<IExperimentService>(IExperimentService),
+            model,
+            panel,
+            this.serviceContainer.get<KernelSelector>(KernelSelector)
+        );
+        this.activeEditors.set(model.file.fsPath, editor);
+        this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
+        this.openedEditor(editor);
+        return editor;
+    }
+
     private autoSaveNotebookInHotExitFile(model: INotebookModel) {
         // Refetch settings each time as they can change before the debounce can happen
         const fileSettings = this.workspace.getConfiguration('files', model.file);
@@ -180,10 +269,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
     private async create(file: Uri): Promise<INotebookEditor> {
         let editor = this.activeEditors.get(file.fsPath);
         if (!editor) {
-            editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
-            this.activeEditors.set(file.fsPath, editor);
-            this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
-            await this.loadNotebookEditor(editor, file);
+            editor = await this.loadNotebookEditor(file);
             await this.showEditor(editor);
         }
         return editor;
@@ -212,6 +298,10 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
     ) => {
         // See if this is an ipynb file
         if (this.isNotebook(document) && this.configuration.getSettings(document.uri).datascience.useNotebookEditor) {
+            if (await this.isDocumentOpenedInVSCodeNotebook(document)) {
+                return;
+            }
+
             const closeActiveEditorCommand = 'workbench.action.closeActiveEditor';
             try {
                 const uri = document.uri;
@@ -241,6 +331,15 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         }
     };
     /**
+     * If the INotebookModel associated with a Notebook is of type VSCodeNotebookModel, then its used with a VSC Notebook.
+     * I.e. document is already opened in a VSC Notebook.
+     */
+    private async isDocumentOpenedInVSCodeNotebook(document: TextDocument): Promise<boolean> {
+        const model = await this.loadModel(document.uri);
+        // This is temporary code.
+        return model instanceof VSCodeNotebookModel;
+    }
+    /**
      * Check if user is attempting to compare two ipynb files.
      * If yes, then return `true`, else `false`.
      *
@@ -265,8 +364,9 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         // on the side (different view column).
         const gitSchemeEditor = this.documentManager.visibleTextEditors.find(
             (editorUri) =>
+                editorUri.document &&
                 editorUri.document.uri.scheme === 'git' &&
-                this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath)
+                this.fs.arePathsSame(editorUri.document.uri, editor.document.uri)
         );
 
         if (!gitSchemeEditor) {
@@ -277,7 +377,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         const fileSchemeEditor = this.documentManager.visibleTextEditors.find(
             (editorUri) =>
                 editorUri !== gitSchemeEditor &&
-                this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath) &&
+                this.fs.arePathsSame(editorUri.document.uri, editor.document.uri) &&
                 editorUri.viewColumn === gitSchemeEditor.viewColumn
         );
         if (!fileSchemeEditor) {
@@ -293,6 +393,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         const validUriScheme = document.uri.scheme !== 'git';
         return (
             validUriScheme &&
+            !isNotebookCell(document) &&
             (document.languageId === JUPYTER_LANGUAGE ||
                 path.extname(document.fileName).toLocaleLowerCase() === '.ipynb')
         );

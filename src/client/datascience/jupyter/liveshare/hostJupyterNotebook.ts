@@ -8,13 +8,14 @@ import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 import { traceError } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
+
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { Identifiers, LiveShare, LiveShareCommands } from '../../constants';
 import { IExecuteInfo } from '../../interactive-common/interactiveWindowTypes';
 import {
     ICell,
+    IDataScienceFileSystem,
     IJupyterSession,
     INotebook,
     INotebookExecutionInfo,
@@ -52,7 +53,7 @@ export class HostJupyterNotebook
         getDisposedError: () => Error,
         workspace: IWorkspaceService,
         appService: IApplicationShell,
-        fs: IFileSystem
+        fs: IDataScienceFileSystem
     ) {
         super(
             liveShare,

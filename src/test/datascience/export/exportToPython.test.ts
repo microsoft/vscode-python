@@ -4,10 +4,10 @@
 // tslint:disable: no-var-requires no-require-imports no-invalid-this no-any
 import { assert } from 'chai';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
 import { IDocumentManager } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { ExportFormat, IExport } from '../../../client/datascience/export/types';
+import { IDataScienceFileSystem } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
@@ -30,12 +30,14 @@ suite('DataScience - Export Python', () => {
     teardown(closeActiveWindows);
     suiteTeardown(closeActiveWindows);
     test('Export To Python', async () => {
-        const fileSystem = api.serviceContainer.get<IFileSystem>(IFileSystem);
+        const fileSystem = api.serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem);
         const exportToPython = api.serviceContainer.get<IExport>(IExport, ExportFormat.python);
-        const target = Uri.file((await fileSystem.createTemporaryFile('.py')).filePath);
+        const target = Uri.file((await fileSystem.createTemporaryLocalFile('.py')).filePath);
+        const token = new CancellationTokenSource();
         await exportToPython.export(
             Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb')),
-            target
+            target,
+            token.token
         );
 
         const documentManager = api.serviceContainer.get<IDocumentManager>(IDocumentManager);

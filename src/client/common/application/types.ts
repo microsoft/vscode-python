@@ -1024,6 +1024,10 @@ export interface IApplicationEnvironment {
      * The version of the editor.
      */
     readonly vscodeVersion: string;
+    /**
+     * The custom uri scheme the editor registers to in the operating system.
+     */
+    readonly uriScheme: string;
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
@@ -1056,6 +1060,10 @@ export type WebPanelMessage = {
 // Wraps the VS Code webview panel
 export const IWebPanel = Symbol('IWebPanel');
 export interface IWebPanel {
+    /**
+     * Event is fired when the load for a web panel fails
+     */
+    readonly loadFailed: Event<void>;
     /**
      * Convert a uri for the local file system to one that can be used inside webviews.
      *

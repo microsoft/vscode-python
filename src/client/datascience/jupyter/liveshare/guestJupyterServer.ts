@@ -12,7 +12,6 @@ import * as localize from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
-    IDataScience,
     IJupyterConnection,
     IJupyterSessionManagerFactory,
     INotebook,
@@ -33,7 +32,7 @@ export class GuestJupyterServer
 
     constructor(
         private liveShare: ILiveShareApi,
-        private dataScience: IDataScience,
+        private activationStartTime: number,
         _asyncRegistry: IAsyncDisposableRegistry,
         private disposableRegistry: IDisposableRegistry,
         private configService: IConfigurationService,
@@ -78,7 +77,7 @@ export class GuestJupyterServer
             resource,
             identity,
             this.launchInfo,
-            this.dataScience.activationStartTime
+            this.activationStartTime
         );
         deferred.resolve(result);
         const oldDispose = result.dispose.bind(result);

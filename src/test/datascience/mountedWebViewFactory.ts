@@ -36,7 +36,8 @@ export class MountedWebViewFactory implements IMountedWebViewFactory, IDisposabl
         if (this.map.has(id)) {
             throw new Error(`Mounted web view already exists for id ${id}`);
         }
-        const obj = new MountedWebView(mount, id, () => this.map.delete(id));
+        const obj = new MountedWebView(mount, id);
+        obj.onDisposed(() => this.map.delete(id));
         this.map.set(id, obj);
         return obj;
     }

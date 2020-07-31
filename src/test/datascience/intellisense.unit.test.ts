@@ -10,7 +10,6 @@ import { Uri } from 'vscode';
 import { LanguageServerType } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
-import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
 import { Identifiers } from '../../client/datascience/constants';
 import { IntellisenseDocument } from '../../client/datascience/interactive-common/intellisense/intellisenseDocument';
@@ -21,7 +20,7 @@ import {
     InteractiveWindowMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
-import { ICell, INotebookProvider } from '../../client/datascience/types';
+import { ICell, IDataScienceFileSystem, INotebookProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { createEmptyCell, generateTestCells } from '../../datascience-ui/interactive-common/mainState';
 import { generateReverseChange, IMonacoTextModel } from '../../datascience-ui/react-common/monacoHelpers';
@@ -51,7 +50,7 @@ suite('DataScience Intellisense Unit Tests', () => {
     let languageServerCache: MockLanguageServerCache;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let fileSystem: TypeMoq.IMock<IDataScienceFileSystem>;
     let notebookProvider: TypeMoq.IMock<INotebookProvider>;
     let cells: ICell[] = [createEmptyCell(Identifiers.EditCellId, null)];
     const pythonSettings = new (class extends PythonSettings {
@@ -65,7 +64,7 @@ suite('DataScience Intellisense Unit Tests', () => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        fileSystem = TypeMoq.Mock.ofType<IDataScienceFileSystem>();
         notebookProvider = TypeMoq.Mock.ofType<INotebookProvider>();
         const variableProvider = mock(JupyterVariables);
 
@@ -74,7 +73,9 @@ suite('DataScience Intellisense Unit Tests', () => {
         workspaceService.setup((w) => w.rootPath).returns(() => '/foo/bar');
         fileSystem
             .setup((f) => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((f1: string, f2: string) => f1.toLowerCase() === f2.toLowerCase());
+            .returns((f1: Uri, f2: Uri) => {
+                return f1?.fsPath?.toLowerCase() === f2.fsPath?.toLowerCase();
+            });
 
         intellisenseProvider = new IntellisenseProvider(
             workspaceService.object,

@@ -6,12 +6,11 @@ import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { Resource } from '../../client/common/types';
-import { Identifiers } from '../../client/datascience/constants';
+import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
     ICellHashProvider,
-    IGatherProvider,
     IJupyterKernelSpec,
     INotebook,
     INotebookCompletion,
@@ -29,7 +28,7 @@ export class MockJupyterNotebook implements INotebook {
         return this.providerConnection;
     }
     public get identity(): Uri {
-        return Uri.parse(Identifiers.InteractiveWindowIdentity);
+        return getDefaultInteractiveIdentity();
     }
     public kernelSocket = new Observable<KernelSocketInformation | undefined>();
     public get onSessionStatusChanged(): Event<ServerStatus> {
@@ -60,13 +59,8 @@ export class MockJupyterNotebook implements INotebook {
     constructor(private providerConnection: INotebookProviderConnection | undefined) {
         noop();
     }
-    public registerIOPubListener(
-        _listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>
-    ): void {
+    public registerIOPubListener(_listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void {
         noop();
-    }
-    public getGatherProvider(): IGatherProvider | undefined {
-        throw new Error('Method not implemented.');
     }
     public getCellHashProvider(): ICellHashProvider | undefined {
         throw new Error('Method not implemented.');

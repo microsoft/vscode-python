@@ -23,17 +23,25 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../client/common/crypto';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ICryptoUtils, IDisposable, IExtensionContext } from '../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import {
     IEditorContentChange,
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { NativeEditorStorage } from '../../../client/datascience/interactive-ipynb/nativeEditorStorage';
-import { NotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
+import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
-import { ICell, IJupyterExecution, INotebookModel, INotebookServerOptions } from '../../../client/datascience/types';
+import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
+import { NativeEditorStorage } from '../../../client/datascience/notebookStorage/nativeEditorStorage';
+import { NotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
+import {
+    ICell,
+    IDataScienceFileSystem,
+    IJupyterExecution,
+    INotebookModel,
+    INotebookServerOptions,
+    ITrustService
+} from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
@@ -47,13 +55,14 @@ import { MockWorkspaceConfiguration } from '../mockWorkspaceConfig';
 suite('DataScience - Native Editor Storage', () => {
     let workspace: IWorkspaceService;
     let configService: IConfigurationService;
-    let fileSystem: typemoq.IMock<IFileSystem>;
+    let fileSystem: typemoq.IMock<IDataScienceFileSystem>;
     let docManager: IDocumentManager;
     let interpreterService: IInterpreterService;
     let webPanelProvider: IWebPanelProvider;
     let executionProvider: IJupyterExecution;
     let globalMemento: MockMemento;
     let localMemento: MockMemento;
+    let trustService: ITrustService;
     let context: typemoq.IMock<IExtensionContext>;
     let crypto: ICryptoUtils;
     let lastWriteFileValue: any;
@@ -242,12 +251,13 @@ suite('DataScience - Native Editor Storage', () => {
         globalMemento = new MockMemento();
         localMemento = new MockMemento();
         configService = mock(ConfigurationService);
-        fileSystem = typemoq.Mock.ofType<IFileSystem>();
+        fileSystem = typemoq.Mock.ofType<IDataScienceFileSystem>();
         docManager = mock(DocumentManager);
         workspace = mock(WorkspaceService);
         interpreterService = mock(InterpreterService);
         webPanelProvider = mock(WebPanelProvider);
         executionProvider = mock(JupyterExecutionFactory);
+        trustService = mock(TrustService);
         const settings = mock(PythonSettings);
         const settingsChangedEvent = new EventEmitter<void>();
 
@@ -271,6 +281,9 @@ suite('DataScience - Native Editor Storage', () => {
 
         const serverStartedEvent = new EventEmitter<INotebookServerOptions>();
         when(executionProvider.serverStarted).thenReturn(serverStartedEvent.event);
+
+        when(trustService.isNotebookTrusted(anything(), anything())).thenReturn(Promise.resolve(true));
+        when(trustService.trustNotebook(anything(), anything())).thenReturn(Promise.resolve());
 
         testIndex += 1;
         when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
@@ -297,7 +310,16 @@ suite('DataScience - Native Editor Storage', () => {
         fileSystem
             .setup((f) => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny()))
             .returns((a1, a2) => {
-                if (a1.includes(`${testIndex}.ipynb`)) {
+                if (a1.fsPath && a1.fsPath.includes(`${testIndex}.ipynb`)) {
+                    lastWriteFileValue = a2;
+                    wroteToFileEvent.fire(a2);
+                }
+                return Promise.resolve();
+            });
+        fileSystem
+            .setup((f) => f.writeLocalFile(typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns((a1, a2) => {
+                if (a1 && a1.includes(`${testIndex}.ipynb`)) {
                     lastWriteFileValue = a2;
                     wroteToFileEvent.fire(a2);
                 }
@@ -305,6 +327,11 @@ suite('DataScience - Native Editor Storage', () => {
             });
         fileSystem
             .setup((f) => f.readFile(typemoq.It.isAny()))
+            .returns((_a1) => {
+                return Promise.resolve(lastWriteFileValue);
+            });
+        fileSystem
+            .setup((f) => f.readLocalFile(typemoq.It.isAny()))
             .returns((_a1) => {
                 return Promise.resolve(lastWriteFileValue);
             });
@@ -324,7 +351,8 @@ suite('DataScience - Native Editor Storage', () => {
             context.object,
             globalMemento,
             localMemento,
-            false
+            trustService,
+            new NotebookModelFactory(false)
         );
 
         return new NotebookStorageProvider(notebookStorage, []);
@@ -389,13 +417,13 @@ suite('DataScience - Native Editor Storage', () => {
             kind: 'remove_all',
             oldDirty: model.isDirty,
             newDirty: true,
-            oldCells: model.cells,
+            oldCells: [...model.cells],
             newCellId: '1'
         });
     }
 
     test('Create new editor and add some cells', async () => {
-        model = await storage.load(baseUri);
+        model = await storage.get(baseUri);
         insertCell(0, '1');
         const cells = model.cells;
         expect(cells).to.be.lengthOf(4);
@@ -404,7 +432,7 @@ suite('DataScience - Native Editor Storage', () => {
     });
 
     test('Move cells around', async () => {
-        model = await storage.load(baseUri);
+        model = await storage.get(baseUri);
         swapCells('NotebookImport#0', 'NotebookImport#1');
         const cells = model.cells;
         expect(cells).to.be.lengthOf(3);
@@ -413,7 +441,7 @@ suite('DataScience - Native Editor Storage', () => {
     });
 
     test('Edit/delete cells', async () => {
-        model = await storage.load(baseUri);
+        model = await storage.get(baseUri);
         expect(model.isDirty).to.be.equal(false, 'Editor should not be dirty');
         editCell(
             [
@@ -453,7 +481,7 @@ suite('DataScience - Native Editor Storage', () => {
     test('Editing a file and closing will keep contents', async () => {
         await filesConfig?.update('autoSave', 'off');
 
-        model = await storage.load(baseUri);
+        model = await storage.get(baseUri);
         expect(model.isDirty).to.be.equal(false, 'Editor should not be dirty');
         editCell(
             [
@@ -482,7 +510,7 @@ suite('DataScience - Native Editor Storage', () => {
 
         // Recreate
         storage = createStorage();
-        model = await storage.load(baseUri);
+        model = await storage.get(baseUri);
 
         const cells = model.cells;
         expect(cells).to.be.lengthOf(3);
@@ -492,7 +520,7 @@ suite('DataScience - Native Editor Storage', () => {
     });
 
     test('Editing a new file and closing will keep contents', async () => {
-        model = await storage.load(untiledUri, undefined, true);
+        model = await storage.get(untiledUri, undefined, true);
         expect(model.isDirty).to.be.equal(false, 'Editor should not be dirty');
         insertCell(0, 'a=1');
 
@@ -501,7 +529,7 @@ suite('DataScience - Native Editor Storage', () => {
 
         // Recreate
         storage = createStorage();
-        model = await storage.load(untiledUri);
+        model = await storage.get(untiledUri);
 
         const cells = model.cells;
         expect(cells).to.be.lengthOf(2);
@@ -520,7 +548,7 @@ suite('DataScience - Native Editor Storage', () => {
 
         // Put the regular file into the local storage
         await localMemento.update(`notebook-storage-${file.toString()}`, differentFile);
-        model = await storage.load(file);
+        model = await storage.get(file);
 
         // It should load with that value
         const cells = model.cells;
@@ -541,7 +569,7 @@ suite('DataScience - Native Editor Storage', () => {
             contents: differentFile,
             lastModifiedTimeMs: Date.now()
         });
-        model = await storage.load(file);
+        model = await storage.get(file);
 
         // It should load with that value
         const cells = model.cells;
@@ -571,7 +599,7 @@ suite('DataScience - Native Editor Storage', () => {
             lastModifiedTimeMs: Date.now()
         });
 
-        model = await storage.load(file);
+        model = await storage.get(file);
 
         // It should load with that value
         const cells = model.cells;

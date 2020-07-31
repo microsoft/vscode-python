@@ -6,30 +6,34 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
-import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
-import { IFileSystem } from '../../../../client/common/platform/types';
 import { IPathUtils } from '../../../../client/common/types';
 import * as localize from '../../../../client/common/utils/localize';
 import { Architecture } from '../../../../client/common/utils/platform';
+import { DataScienceFileSystem } from '../../../../client/datascience/dataScienceFileSystem';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IKernelSpecQuickPickItem } from '../../../../client/datascience/jupyter/kernels/types';
 import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
-import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
+import {
+    IDataScienceFileSystem,
+    IJupyterKernel,
+    IJupyterKernelSpec,
+    IJupyterSessionManager
+} from '../../../../client/datascience/types';
 import { InterpreterSelector } from '../../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
 import { InterpreterType } from '../../../../client/pythonEnvironments/info';
 
 // tslint:disable-next-line: max-func-body-length
-suite('Data Science - KernelSelections', () => {
+suite('DataScience - KernelSelections', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
     let kernelFinder: IKernelFinder;
     let interpreterSelector: IInterpreterSelector;
     let pathUtils: IPathUtils;
-    let fs: IFileSystem;
+    let fs: IDataScienceFileSystem;
     let sessionManager: IJupyterSessionManager;
     const activePython1KernelModel = {
         lastActivityTime: new Date(2011, 11, 10, 12, 15, 0, 0),
@@ -135,7 +139,7 @@ suite('Data Science - KernelSelections', () => {
         sessionManager = mock(JupyterSessionManager);
         kernelService = mock(KernelService);
         kernelFinder = mock<IKernelFinder>();
-        fs = mock(FileSystem);
+        fs = mock(DataScienceFileSystem);
         pathUtils = mock(PathUtils);
         when(pathUtils.getDisplayName(anything())).thenReturn('<user friendly path>');
         when(pathUtils.getDisplayName(anything(), anything())).thenReturn('<user friendly path>');

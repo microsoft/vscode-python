@@ -78,3 +78,50 @@
 #variable-explorer-data-grid .rdg-selected {
     visibility: hidden;
 }
+
+// High contrast theme changes
+
+// Notifications-background and line-highlight-border don't work in high contrast mode, so skip the header color in high contrast themes
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Header {
+    background-color: var(--override-background, var(--vscode-editor-background));
+    border-color: var(--override-foreground, var(--vscode-editor-foreground));
+}
+
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-HeaderCell {
+    background-color: var(--override-background, var(--vscode-editor-background));
+    border-color: var(--override-foreground, var(--vscode-editor-foreground));
+}
+
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row--odd {
+    background-color: var(--override-background, var(--vscode-editor-background));
+    border-color: var(--override-foreground, var(--vscode-editor-foreground));
+}
+
+// Since we have removed zebra striping in HC mode, add back in grid lines
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Cell {
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--override-foreground, var(--vscode-editor-foreground));
+}
+
+
+// HC inverts selection colors, so use the selection foreground color on hover
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Cell:hover {
+    color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
+}
+
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row:hover {
+    color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
+}
+
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row:hover .react-grid-Cell {
+    color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
+}
+
+// HC inverts selection, which messes up our icons, just keep them with the same foreground / background combo
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row:hover .react-grid-Cell .variable-explorer-button-cell {
+    color: var(--override-foreground, var(--vscode-editor-foreground));
+    background-color: var(--override-background, var(--vscode-editor-background));
+}
+
+

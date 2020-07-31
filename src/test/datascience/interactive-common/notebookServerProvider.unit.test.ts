@@ -24,7 +24,7 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
 }
 
 // tslint:disable: max-func-body-length
-suite('Data Science - NotebookServerProvider', () => {
+suite('DataScience - NotebookServerProvider', () => {
     let serverProvider: NotebookServerProvider;
     let progressReporter: ProgressReporter;
     let configurationService: IConfigurationService;

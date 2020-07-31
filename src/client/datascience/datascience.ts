@@ -105,7 +105,7 @@ export class DataScience implements IDataScience {
             const resultSettings: JSONObject = {};
             for (const k of keys) {
                 const currentValue = settings[k];
-                if (typeof currentValue === 'string') {
+                if (typeof currentValue === 'string' && k !== 'interactiveWindowMode') {
                     const inspectResult = pythonConfig.inspect<string>(`dataScience.${k}`);
                     if (inspectResult && inspectResult.defaultValue !== currentValue) {
                         resultSettings[k] = 'non-default';

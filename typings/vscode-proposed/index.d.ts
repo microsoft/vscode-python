@@ -9,7 +9,8 @@ import {
     ViewColumn,
     CancellationToken,
     Disposable,
-    DocumentSelector
+    DocumentSelector,
+    ProviderResult
 } from 'vscode';
 
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
@@ -83,6 +84,11 @@ export enum NotebookCellRunState {
     Idle = 2,
     Success = 3,
     Error = 4
+}
+
+export enum NotebookRunState {
+    Running = 1,
+    Idle = 2
 }
 
 export interface NotebookCellMetadata {
@@ -187,6 +193,11 @@ export interface NotebookDocumentMetadata {
      * Additional attributes of the document metadata.
      */
     custom?: { [key: string]: any };
+
+    /**
+     * The document's current run state
+     */
+    runState?: NotebookRunState;
 }
 
 export interface NotebookDocument {
@@ -201,16 +212,22 @@ export interface NotebookDocument {
 }
 
 export interface NotebookConcatTextDocument {
+    uri: Uri;
     isClosed: boolean;
     dispose(): void;
     onDidChange: Event<void>;
     version: number;
     getText(): string;
     getText(range: Range): string;
+
     offsetAt(position: Position): number;
     positionAt(offset: number): Position;
+    validateRange(range: Range): Range;
+    validatePosition(position: Position): Position;
+
     locationAt(positionOrRange: Position | Range): Location;
     positionAt(location: Location): Position;
+    contains(uri: Uri): boolean;
 }
 
 export interface NotebookEditorCellEdit {
@@ -257,6 +274,11 @@ export interface NotebookEditor {
     readonly onDidDispose: Event<void>;
 
     /**
+     * Active kernel used in the editor
+     */
+    readonly kernel?: NotebookKernel;
+
+    /**
      * Fired when the output hosting webview posts a message.
      */
     readonly onDidReceiveMessage: Event<any>;
@@ -278,8 +300,7 @@ export interface NotebookEditor {
 }
 
 export interface NotebookOutputSelector {
-    type: string;
-    subTypes?: string[];
+    mimeTypes?: string[];
 }
 
 export interface NotebookRenderRequest {
@@ -295,6 +316,20 @@ export interface NotebookOutputRenderer {
      *
      */
     render(document: NotebookDocument, request: NotebookRenderRequest): string;
+
+    /**
+     * Call before HTML from the renderer is executed, and will be called for
+     * every editor associated with notebook documents where the renderer
+     * is or was used.
+     *
+     * The communication object will only send and receive messages to the
+     * render API, retrieved via `acquireNotebookRendererApi`, acquired with
+     * this specific renderer's ID.
+     *
+     * If you need to keep an association between the communication object
+     * and the document for use in the `render()` method, you can use a WeakMap.
+     */
+    resolveNotebook?(document: NotebookDocument, communication: NotebookCommunication): void;
 
     readonly preloads?: Uri[];
 }
@@ -354,18 +389,50 @@ export interface NotebookData {
     readonly metadata: NotebookDocumentMetadata;
 }
 
-interface NotebookDocumentEditEvent {
+interface NotebookDocumentContentChangeEvent {
     /**
      * The document that the edit is for.
      */
     readonly document: NotebookDocument;
 }
 
+interface NotebookDocumentEditEvent {
+    /**
+     * The document that the edit is for.
+     */
+    readonly document: NotebookDocument;
+
+    /**
+     * Undo the edit operation.
+     *
+     * This is invoked by VS Code when the user undoes this edit. To implement `undo`, your
+     * extension should restore the document and editor to the state they were in just before this
+     * edit was added to VS Code's internal edit stack by `onDidChangeCustomDocument`.
+     */
+    undo(): Thenable<void> | void;
+
+    /**
+     * Redo the edit operation.
+     *
+     * This is invoked by VS Code when the user redoes this edit. To implement `redo`, your
+     * extension should restore the document and editor to the state they were in just after this
+     * edit was added to VS Code's internal edit stack by `onDidChangeCustomDocument`.
+     */
+    redo(): Thenable<void> | void;
+
+    /**
+     * Display name describing the edit.
+     *
+     * This will be shown to users in the UI for undo/redo operations.
+     */
+    readonly label?: string;
+}
+
 interface NotebookDocumentBackup {
     /**
      * Unique identifier for the backup.
      *
-     * This id is passed back to your extension in `openCustomDocument` when opening a custom editor from a backup.
+     * This id is passed back to your extension in `openCustomDocument` when opening a notebook editor from a backup.
      */
     readonly id: string;
 
@@ -386,12 +453,48 @@ interface NotebookDocumentOpenContext {
     readonly backupId?: string;
 }
 
+/**
+ * Communication object passed to the {@link NotebookContentProvider} and
+ * {@link NotebookOutputRenderer} to communicate with the webview.
+ */
+export interface NotebookCommunication {
+    /**
+     * ID of the editor this object communicates with. A single notebook
+     * document can have multiple attached webviews and editors, when the
+     * notebook is split for instance. The editor ID lets you differentiate
+     * between them.
+     */
+    readonly editorId: string;
+
+    /**
+     * Fired when the output hosting webview posts a message.
+     */
+    readonly onDidReceiveMessage: Event<any>;
+    /**
+     * Post a message to the output hosting webview.
+     *
+     * Messages are only delivered if the editor is live.
+     *
+     * @param message Body of the message. This must be a string or other json serilizable object.
+     */
+    postMessage(message: any): Thenable<boolean>;
+
+    /**
+     * Convert a uri for the local file system to one that can be used inside outputs webview.
+     */
+    asWebviewUri(localResource: Uri): Uri;
+}
+
 export interface NotebookContentProvider {
+    /**
+     * Content providers should always use [file system providers](#FileSystemProvider) to
+     * resolve the raw content for `uri` as the resouce is not necessarily a file on disk.
+     */
     openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): NotebookData | Promise<NotebookData>;
+    resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Promise<void>;
     saveNotebook(document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
     saveNotebookAs(targetResource: Uri, document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
-    readonly onDidChangeNotebook: Event<NotebookDocumentEditEvent>;
-    revertNotebook(document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
+    readonly onDidChangeNotebook: Event<NotebookDocumentContentChangeEvent | NotebookDocumentEditEvent>;
     backupNotebook(
         document: NotebookDocument,
         context: NotebookDocumentBackupContext,
@@ -402,16 +505,43 @@ export interface NotebookContentProvider {
 }
 
 export interface NotebookKernel {
+    readonly id?: string;
     label: string;
+    description?: string;
+    isPreferred?: boolean;
     preloads?: Uri[];
-    executeCell(document: NotebookDocument, cell: NotebookCell, token: CancellationToken): Promise<void>;
-    executeAllCells(document: NotebookDocument, token: CancellationToken): Promise<void>;
+    executeCell(document: NotebookDocument, cell: NotebookCell): void;
+    cancelCellExecution(document: NotebookDocument, cell: NotebookCell): void;
+    executeAllCells(document: NotebookDocument): void;
+    cancelAllCellsExecution(document: NotebookDocument): void;
+}
+
+export interface NotebookDocumentFilter {
+    viewType?: string;
+    filenamePattern?: GlobPattern;
+    excludeFileNamePattern?: GlobPattern;
+}
+
+export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKernel> {
+    onDidChangeKernels?: Event<void>;
+    provideKernels(document: NotebookDocument, token: CancellationToken): ProviderResult<T[]>;
+    resolveKernel?(
+        kernel: T,
+        document: NotebookDocument,
+        webview: NotebookCommunication,
+        token: CancellationToken
+    ): ProviderResult<void>;
 }
 
 export namespace notebook {
     export function registerNotebookContentProvider(
         notebookType: string,
         provider: NotebookContentProvider
+    ): Disposable;
+
+    export function registerNotebookKernelProvider(
+        selector: NotebookDocumentFilter,
+        provider: NotebookKernelProvider
     ): Disposable;
 
     export function registerNotebookKernel(id: string, selectors: GlobPattern[], kernel: NotebookKernel): Disposable;
@@ -449,4 +579,9 @@ export namespace notebook {
         notebook: NotebookDocument,
         selector?: DocumentSelector
     ): NotebookConcatTextDocument;
+
+    export const onDidChangeActiveNotebookKernel: Event<{
+        document: NotebookDocument;
+        kernel: NotebookKernel | undefined;
+    }>;
 }

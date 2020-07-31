@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
-
-import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import {
     CancellationToken,
@@ -15,6 +12,7 @@ import {
     ViewColumn,
     WebviewPanel
 } from 'vscode';
+import '../../common/extensions';
 
 import * as uuid from 'uuid/v4';
 import { createErrorOutput } from '../../../datascience-ui/common/cellFactory';
@@ -28,20 +26,15 @@ import {
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { traceError, traceInfo } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
-    GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
     IExperimentService,
     IExperimentsManager,
-    IMemento,
-    Resource,
-    WORKSPACE_MEMENTO
+    Resource
 } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
@@ -64,6 +57,7 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
@@ -74,10 +68,12 @@ import {
     INotebookEditorProvider,
     INotebookExporter,
     INotebookImporter,
+    INotebookMetadataLive,
     INotebookModel,
     INotebookProvider,
     IStatusProvider,
     IThemeFinder,
+    ITrustService,
     WebViewViewChangeEventArgs
 } from '../types';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
@@ -87,14 +83,15 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { isTestExecution, PYTHON_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
+import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
+import { EnableTrustedNotebooks } from '../../common/experiments/groups';
 import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
-import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { LiveKernelModel } from '../jupyter/kernels/types';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
-@injectable()
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
@@ -137,7 +134,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get isDirty(): boolean {
         return this.model ? this.model.isDirty : false;
     }
-    public model: Readonly<INotebookModel> | undefined;
+    public get model(): Readonly<INotebookModel> {
+        return this._model;
+    }
+    public readonly type: 'old' | 'custom' = 'custom';
     protected savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     protected closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     protected modifiedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
@@ -145,43 +145,46 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private sentExecuteCellTelemetry: boolean = false;
     private _onDidChangeViewState = new EventEmitter<void>();
     private executedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
-    private loadedPromise: Deferred<void> = createDeferred<void>();
     private startupTimer: StopWatch = new StopWatch();
     private loadedAllCells: boolean = false;
     private executeCancelTokens = new Set<CancellationTokenSource>();
+    private loadPromise: Promise<void>;
+    private previouslyNotTrusted: boolean = false;
 
     constructor(
-        @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
-        @inject(ILiveShareApi) liveShare: ILiveShareApi,
-        @inject(IApplicationShell) applicationShell: IApplicationShell,
-        @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IWebPanelProvider) provider: IWebPanelProvider,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
-        @inject(IThemeFinder) themeFinder: IThemeFinder,
-        @inject(IStatusProvider) statusProvider: IStatusProvider,
-        @inject(IFileSystem) fileSystem: IFileSystem,
-        @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(ICommandManager) commandManager: ICommandManager,
-        @inject(INotebookExporter) jupyterExporter: INotebookExporter,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(NativeEditorSynchronizer) private readonly synchronizer: NativeEditorSynchronizer,
-        @inject(INotebookEditorProvider) private editorProvider: INotebookEditorProvider,
-        @inject(IDataViewerFactory) dataExplorerFactory: IDataViewerFactory,
-        @inject(IJupyterVariableDataProviderFactory)
+        listeners: IInteractiveWindowListener[],
+        liveShare: ILiveShareApi,
+        applicationShell: IApplicationShell,
+        documentManager: IDocumentManager,
+        provider: IWebPanelProvider,
+        disposables: IDisposableRegistry,
+        cssGenerator: ICodeCssGenerator,
+        themeFinder: IThemeFinder,
+        statusProvider: IStatusProvider,
+        fs: IDataScienceFileSystem,
+        configuration: IConfigurationService,
+        commandManager: ICommandManager,
+        jupyterExporter: INotebookExporter,
+        workspaceService: IWorkspaceService,
+        private readonly synchronizer: NativeEditorSynchronizer,
+        private editorProvider: INotebookEditorProvider,
+        dataExplorerFactory: IDataViewerFactory,
         jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) jupyterVariables: IJupyterVariables,
-        @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
-        @inject(INotebookImporter) protected readonly importer: INotebookImporter,
-        @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) workspaceStorage: Memento,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
-        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(KernelSwitcher) switcher: KernelSwitcher,
-        @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
-        @inject(IExperimentService) expService: IExperimentService
+        jupyterVariables: IJupyterVariables,
+        jupyterDebugger: IJupyterDebugger,
+        protected readonly importer: INotebookImporter,
+        errorHandler: IDataScienceErrorHandler,
+        globalStorage: Memento,
+        workspaceStorage: Memento,
+        experimentsManager: IExperimentsManager,
+        asyncRegistry: IAsyncDisposableRegistry,
+        notebookProvider: INotebookProvider,
+        useCustomEditorApi: boolean,
+        private trustService: ITrustService,
+        private expService: IExperimentService,
+        private _model: INotebookModel,
+        webviewPanel: WebviewPanel | undefined,
+        selector: KernelSelector
     ) {
         super(
             listeners,
@@ -193,7 +196,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             cssGenerator,
             themeFinder,
             statusProvider,
-            fileSystem,
+            fs,
             configuration,
             jupyterExporter,
             workspaceService,
@@ -213,40 +216,40 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 path.join(nativeEditorDir, 'commons.initial.bundle.js'),
                 path.join(nativeEditorDir, 'nativeEditor.js')
             ],
-            localize.DataScience.nativeEditorTitle(),
+            path.basename(_model.file.fsPath),
             ViewColumn.Active,
             experimentsManager,
-            switcher,
             notebookProvider,
             useCustomEditorApi,
-            expService
+            expService,
+            selector
         );
         asyncRegistry.push(this);
 
+        asyncRegistry.push(this.trustService.onDidSetNotebookTrust(this.monitorChangesToTrust, this));
         this.synchronizer.subscribeToUserActions(this, this.postMessage.bind(this));
+
+        traceInfo(`Loading web panel for ${this.model.file}`);
+
+        // Load the web panel using our file path so it can find
+        // relative files next to the notebook.
+        this.loadPromise = super
+            .loadWebPanel(path.dirname(this.file.fsPath), webviewPanel)
+            .catch((e) => this.errorHandler.handleError(e));
+
+        // Sign up for dirty events
+        this._model.changed(this.modelChanged.bind(this));
+        this.previouslyNotTrusted = !this._model.isTrusted;
     }
 
+    public async show(preserveFocus?: boolean) {
+        await this.loadPromise;
+        return super.show(preserveFocus);
+    }
     public dispose(): Promise<void> {
         super.dispose();
         this.model?.dispose(); // NOSONAR
         return this.close();
-    }
-
-    public async load(model: INotebookModel, webViewPanel: WebviewPanel): Promise<void> {
-        // Save the model we're using
-        this.model = model;
-
-        // Indicate we have our identity
-        this.loadedPromise.resolve();
-
-        traceInfo(`Loading web panel for ${model.file}`);
-
-        // Load the web panel using our file path so it can find
-        // relative files next to the notebook.
-        await super.loadWebPanel(path.dirname(this.file.fsPath), webViewPanel);
-
-        // Sign up for dirty events
-        model.changed(this.modelChanged.bind(this));
     }
 
     // tslint:disable-next-line: no-any
@@ -256,7 +259,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             case InteractiveWindowMessages.Started:
                 if (this.model) {
                     // Load our cells, but don't wait for this to finish, otherwise the window won't load.
-                    this.sendInitialCellsToWebView(this.model.cells)
+                    this.sendInitialCellsToWebView([...this.model.cells], this.model.isTrusted)
                         .then(() => {
                             // May alread be dirty, if so send a message
                             if (this.model?.isDirty) {
@@ -295,6 +298,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 this.handleMessage(message, payload, this.loadCellsComplete);
                 break;
 
+            case InteractiveWindowMessages.LaunchNotebookTrustPrompt:
+                this.handleMessage(message, payload, this.launchNotebookTrustPrompt);
+                break;
+
             case InteractiveWindowMessages.RestartKernel:
                 this.interruptExecution();
                 break;
@@ -312,15 +319,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    public async getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined> {
-        await this.loadedPromise.promise;
-        if (this.model) {
-            return this.model.metadata;
-        }
+    public get notebookMetadata(): INotebookMetadataLive | undefined {
+        return this.model.metadata;
     }
 
     public async updateNotebookOptions(
-        kernelSpec: IJupyterKernelSpec,
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel,
         interpreter: PythonInterpreter | undefined
     ): Promise<void> {
         if (this.model) {
@@ -336,6 +340,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
+    public async hasCell(id: string): Promise<boolean> {
+        if (this.model && this.model.cells.find((c) => c.id === id)) {
+            return true;
+        }
+        return false;
+    }
+
     public runAllCells() {
         this.postMessage(InteractiveWindowMessages.NotebookRunAllCells).ignoreErrors();
     }
@@ -348,10 +359,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.postMessage(InteractiveWindowMessages.NotebookAddCellBelow, { newCellId: uuid() }).ignoreErrors();
     }
 
-    public async getOwningResource(): Promise<Resource> {
+    public get owningResource(): Resource {
         // Resource to use for loading and our identity are the same.
-        const identity = await this.getNotebookIdentity();
-        return identity.resource;
+        return this.notebookIdentity.resource;
     }
 
     protected addSysInfo(reason: SysInfoReason): Promise<void> {
@@ -362,6 +372,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // These are not supported.
         return Promise.resolve();
+    }
+
+    protected async createNotebookIfProviderConnectionExists() {
+        if (this._model.isTrusted) {
+            await super.createNotebookIfProviderConnectionExists();
+        }
     }
 
     protected submitCode(
@@ -441,12 +457,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    protected async getNotebookIdentity(): Promise<INotebookIdentity> {
-        if (this.loadedPromise) {
-            await this.loadedPromise.promise;
-        }
-
-        // File should be set now
+    protected get notebookIdentity(): INotebookIdentity {
         return {
             resource: this.file,
             type: 'native'
@@ -456,7 +467,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     protected async setLaunchingFile(_file: string): Promise<void> {
         // For the native editor, use our own file as the path
         const notebook = this.getNotebook();
-        if (this.fileSystem.fileExists(this.file.fsPath) && notebook) {
+        if (notebook) {
             await notebook.setLaunchingFile(this.file.fsPath);
         }
     }
@@ -588,7 +599,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         }
     }
-
+    private async monitorChangesToTrust() {
+        if (this.previouslyNotTrusted && this.model?.isTrusted) {
+            this.previouslyNotTrusted = false;
+            // Tell UI to update main state
+            this.postMessage(InteractiveWindowMessages.TrustNotebookComplete).ignoreErrors();
+        }
+    }
     private renameVariableExplorerHeights(name: string, updatedName: string) {
         // Updates the workspace storage to reflect the updated name of the notebook
         // should be called if the name of the notebook changes
@@ -601,6 +618,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         value[updatedName] = value[name];
         delete value[name];
         this.workspaceStorage.update(VariableExplorerStateKeys.height, value);
+    }
+
+    private async launchNotebookTrustPrompt() {
+        if (this.model && !this.model.isTrusted) {
+            await this.commandManager.executeCommand(Commands.TrustNotebook, this.model.file);
+        }
     }
 
     private interruptExecution() {
@@ -678,9 +701,15 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    private async sendInitialCellsToWebView(cells: ICell[]): Promise<void> {
+    private async sendInitialCellsToWebView(cells: ICell[], isNotebookTrusted: boolean): Promise<void> {
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: cells.length });
-        return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
+
+        const shouldShowTrustMessage = await this.expService.inExperiment(EnableTrustedNotebooks.experiment);
+        return this.postMessage(InteractiveWindowMessages.LoadAllCells, {
+            cells,
+            isNotebookTrusted,
+            shouldShowTrustMessage
+        });
     }
 
     private async exportAs(): Promise<void> {
@@ -688,7 +717,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (!activeEditor || !activeEditor.model) {
             return;
         }
-        this.commandManager.executeCommand(Commands.Export, activeEditor.model);
+        this.commandManager.executeCommand(Commands.Export, activeEditor.model, undefined);
     }
 
     private logNativeCommand(args: INativeCommand) {
@@ -704,7 +733,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // If we don't have a server right now, at least show our kernel name (this seems to slow down tests
         // too much though)
         if (!isTestExecution()) {
-            const metadata = await this.getNotebookMetadata();
+            const metadata = this.notebookMetadata;
             if (!this.notebook && metadata?.kernelspec) {
                 this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                     jupyterServerStatus: ServerStatus.NotStarted,
@@ -718,6 +747,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
+    @captureTelemetry(Telemetry.RunByLineStart)
     private async handleRunByLine(runByLine: IRunByLine) {
         try {
             // If there's any payload, it has the code and the id

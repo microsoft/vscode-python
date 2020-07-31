@@ -4,38 +4,78 @@
 import * as assert from 'assert';
 import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
-import { Uri } from 'vscode';
+import { CodeLens, Uri } from 'vscode';
 
+import { ICommandManager, IDocumentManager } from '../../client/common/application/types';
+import { Resource } from '../../client/common/types';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
-import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import {
+    ICodeWatcher,
+    IDataScienceCodeLensProvider,
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    IJupyterExecution
+} from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addMockData, getCellResults, mountWebView } from './testHelpers';
+import { MockDocumentManager } from './mockDocumentManager';
+import { IMountedWebView } from './mountedWebView';
+import { addMockData, getCellResults } from './testHelpers';
+import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 
-export function getInteractiveCellResults(
+export async function getInteractiveCellResults(
     ioc: DataScienceIocContainer,
-    // tslint:disable-next-line: no-any
-    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    updater: () => Promise<void>
-    // tslint:disable-next-line: no-any
-): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-    return getCellResults(ioc, 'default', wrapper, 'InteractiveCell', updater);
+    updater: () => Promise<void>,
+    window?: IInteractiveWindow | undefined
+): Promise<ReactWrapper> {
+    const mountedWebView = ioc.get<TestInteractiveWindowProvider>(IInteractiveWindowProvider).getMountedWebView(window);
+    return getCellResults(mountedWebView, 'InteractiveCell', updater);
 }
 
-export async function getOrCreateInteractiveWindow(ioc: DataScienceIocContainer): Promise<IInteractiveWindow> {
-    const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-    return (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
+export async function getOrCreateInteractiveWindow(
+    ioc: DataScienceIocContainer,
+    owner?: Resource
+): Promise<{ window: IInteractiveWindow; mount: IMountedWebView }> {
+    const interactiveWindowProvider = ioc.get<TestInteractiveWindowProvider>(IInteractiveWindowProvider);
+    const window = (await interactiveWindowProvider.getOrCreate(owner)) as InteractiveWindow;
+    const mount = interactiveWindowProvider.getMountedWebView(window);
+    await window.show();
+    return { window, mount };
+}
+
+export function createCodeWatcher(
+    docText: string,
+    docName: string,
+    ioc: DataScienceIocContainer
+): ICodeWatcher | undefined {
+    const doc = ioc.addDocument(docText, docName);
+    const codeLensProvider = ioc.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
+    return codeLensProvider.getCodeWatcher(doc);
+}
+
+export async function runCodeLens(
+    uri: Uri,
+    codeLens: CodeLens | undefined,
+    ioc: DataScienceIocContainer
+): Promise<void> {
+    const documentManager = ioc.get<MockDocumentManager>(IDocumentManager);
+    await documentManager.showTextDocument(uri);
+    const commandManager = ioc.get<ICommandManager>(ICommandManager);
+    if (codeLens && codeLens.command) {
+        // tslint:disable-next-line: no-any
+        await commandManager.executeCommand(codeLens.command.command as any, ...codeLens.command.arguments);
+    }
 }
 
 export function closeInteractiveWindow(ioc: DataScienceIocContainer, window: IInteractiveWindow) {
     const promise = window.dispose();
-    ioc.getWebPanel('default').dispose();
+    ioc.get<TestInteractiveWindowProvider>(IInteractiveWindowProvider).getMountedWebView(window).dispose();
     return promise;
 }
 
-export function runMountedTest(
+export function runTest(
     name: string,
     // tslint:disable-next-line:no-any
-    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, context: Mocha.Context) => Promise<void>,
+    testFunc: (context: Mocha.Context) => Promise<void>,
     getIOC: () => DataScienceIocContainer
 ) {
     test(name, async function () {
@@ -43,9 +83,8 @@ export function runMountedTest(
         const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
         if (await jupyterExecution.isNotebookSupported()) {
             addMockData(ioc, 'a=1\na', 1);
-            const wrapper = mountWebView(ioc, 'interactive');
             // tslint:disable-next-line: no-invalid-this
-            await testFunc(wrapper, this);
+            await testFunc(this);
         } else {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -55,22 +94,14 @@ export function runMountedTest(
 
 export async function addCode(
     ioc: DataScienceIocContainer,
-    // tslint:disable-next-line: no-any
-    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
     code: string,
     expectError: boolean = false,
     uri: Uri = Uri.file('foo.py')
     // tslint:disable-next-line: no-any
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-    // Adding code should cause 5 renders to happen.
-    // 1) Input
-    // 2) Status ready
-    // 3) Execute_Input message
-    // 4) Output message (if there's only one)
-    // 5) Status finished
-    return getInteractiveCellResults(ioc, wrapper, async () => {
-        const history = await getOrCreateInteractiveWindow(ioc);
-        const success = await history.addCode(code, uri.fsPath, 2);
+    const { window } = await getOrCreateInteractiveWindow(ioc);
+    return getInteractiveCellResults(ioc, async () => {
+        const success = await window.addCode(code, uri, 2);
         if (expectError) {
             assert.equal(success, false, `${code} did not produce an error`);
         }

@@ -7,11 +7,12 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Event, EventEmitter, TextEditor, Uri, WindowState } from 'vscode';
 import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IDisposable } from '../../common/types';
 import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import {
     FileSettings,
+    IDataScienceFileSystem,
     IInteractiveWindowListener,
     INotebookEditor,
     INotebookEditorProvider,
@@ -45,7 +46,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         this.workspace.onDidChangeConfiguration(this.onSettingsChanded.bind(this), this, this.disposables);
@@ -110,7 +111,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
             return;
         }
         return this.notebookEditorProvider.editors.find((item) =>
-            this.fileSystem.arePathsSame(item.file.fsPath, uri.fsPath)
+            this.fs.areLocalPathsSame(item.file.fsPath, uri.fsPath)
         );
     }
     private getAutoSaveSettings(): FileSettings {

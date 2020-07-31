@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Event, EventEmitter } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,
@@ -17,7 +17,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
-import { IJupyterExecution, INotebookServer, INotebookServerOptions } from '../types';
+import { IDataScienceFileSystem, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
 import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
 import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
@@ -33,7 +33,7 @@ type JupyterExecutionClassType = {
         interpreterService: IInterpreterService,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
-        fileSystem: IFileSystem,
+        fileSystem: IDataScienceFileSystem,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
         kernelSelector: KernelSelector,
@@ -58,7 +58,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IFileSystem) fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) fs: IDataScienceFileSystem,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(KernelSelector) kernelSelector: KernelSelector,
@@ -76,7 +76,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
             interpreterService,
             disposableRegistry,
             asyncRegistry,
-            fileSystem,
+            fs,
             workspace,
             configuration,
             kernelSelector,
@@ -140,7 +140,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         const execution = await this.executionFactory.get();
         return execution.spawnNotebook(file);
     }
-    public async importNotebook(file: string, template: string | undefined): Promise<string> {
+    public async importNotebook(file: Uri, template: string | undefined): Promise<string> {
         const execution = await this.executionFactory.get();
         return execution.importNotebook(file, template);
     }
