@@ -10,7 +10,7 @@ import * as typemoq from 'typemoq';
 
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
-import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
+import { IPlatformService } from '../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
 import { IExtensionContext, IInstaller, IPathUtils, Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
@@ -19,14 +19,14 @@ import { defaultKernelSpecName } from '../../client/datascience/jupyter/kernels/
 import { JupyterKernelSpec } from '../../client/datascience/jupyter/kernels/jupyterKernelSpec';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
-import { IJupyterKernelSpec } from '../../client/datascience/types';
+import { IDataScienceFileSystem, IJupyterKernelSpec } from '../../client/datascience/types';
 import { IInterpreterLocatorService, IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 
 suite('Kernel Finder', () => {
     let interpreterService: typemoq.IMock<IInterpreterService>;
     let interpreterLocator: typemoq.IMock<IInterpreterLocatorService>;
-    let fileSystem: typemoq.IMock<IFileSystem>;
+    let fileSystem: typemoq.IMock<IDataScienceFileSystem>;
     let platformService: typemoq.IMock<IPlatformService>;
     let pathUtils: typemoq.IMock<IPathUtils>;
     let context: typemoq.IMock<IExtensionContext>;
@@ -55,11 +55,11 @@ suite('Kernel Finder', () => {
 
     function setupFileSystem() {
         fileSystem
-            .setup((fs) => fs.writeFile(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
+            .setup((fs) => fs.writeLocalFile(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
             .returns(() => Promise.resolve());
-        fileSystem.setup((fs) => fs.getSubDirectories(typemoq.It.isAnyString())).returns(() => Promise.resolve(['']));
+        // fileSystem.setup((fs) => fs.getSubDirectories(typemoq.It.isAnyString())).returns(() => Promise.resolve(['']));
         fileSystem
-            .setup((fs) => fs.search(typemoq.It.isAnyString(), typemoq.It.isAnyString(), typemoq.It.isAny()))
+            .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), typemoq.It.isAnyString(), typemoq.It.isAny()))
             .returns(() =>
                 Promise.resolve([
                     path.join(kernel.name, 'kernel.json'),
@@ -71,9 +71,9 @@ suite('Kernel Finder', () => {
 
     function setupFindFileSystem() {
         fileSystem
-            .setup((fs) => fs.writeFile(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
+            .setup((fs) => fs.writeLocalFile(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
             .returns(() => Promise.resolve());
-        fileSystem.setup((fs) => fs.getSubDirectories(typemoq.It.isAnyString())).returns(() => Promise.resolve(['']));
+        // fileSystem.setup((fs) => fs.getSubDirectories(typemoq.It.isAnyString())).returns(() => Promise.resolve(['']));
     }
 
     setup(() => {
@@ -82,7 +82,7 @@ suite('Kernel Finder', () => {
 
         context = typemoq.Mock.ofType<IExtensionContext>();
         context.setup((c) => c.globalStoragePath).returns(() => './');
-        fileSystem = typemoq.Mock.ofType<IFileSystem>();
+        fileSystem = typemoq.Mock.ofType<IDataScienceFileSystem>();
 
         installer = mock<IInstaller>();
         when(installer.isInstalled(anything(), anything())).thenResolve(true);
@@ -229,13 +229,13 @@ suite('Kernel Finder', () => {
             const activePathA = path.join(activePath, activeKernelA.name, 'kernel.json');
             const activePathB = path.join(activePath, activeKernelB.name, 'kernel.json');
             fileSystem
-                .setup((fs) => fs.writeFile(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
+                .setup((fs) => fs.writeLocalFile(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
                 .returns(() => Promise.resolve());
+            // fileSystem
+            //     .setup((fs) => fs.getSubDirectories(typemoq.It.isAnyString()))
+            //     .returns(() => Promise.resolve(['']));
             fileSystem
-                .setup((fs) => fs.getSubDirectories(typemoq.It.isAnyString()))
-                .returns(() => Promise.resolve(['']));
-            fileSystem
-                .setup((fs) => fs.search(typemoq.It.isAnyString(), activePath, typemoq.It.isAny()))
+                .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), activePath, typemoq.It.isAny()))
                 .returns(() =>
                     Promise.resolve([
                         path.join(activeKernelA.name, 'kernel.json'),
@@ -247,27 +247,27 @@ suite('Kernel Finder', () => {
             const interpreter1Path = path.join('Interpreter1', 'share', 'jupyter', 'kernels');
             const interpreter1FullPath = path.join(interpreter1Path, interpreter1Kernel.name, 'kernel.json');
             fileSystem
-                .setup((fs) => fs.search(typemoq.It.isAnyString(), interpreter0Path, typemoq.It.isAny()))
+                .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), interpreter0Path, typemoq.It.isAny()))
                 .returns(() => Promise.resolve([path.join(interpreter0Kernel.name, 'kernel.json')]));
             fileSystem
-                .setup((fs) => fs.search(typemoq.It.isAnyString(), interpreter1Path, typemoq.It.isAny()))
+                .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), interpreter1Path, typemoq.It.isAny()))
                 .returns(() => Promise.resolve([path.join(interpreter1Kernel.name, 'kernel.json')]));
 
             // Global path setup
             const globalPath = path.join('usr', 'share', 'jupyter', 'kernels');
             const globalFullPath = path.join(globalPath, globalKernel.name, 'kernel.json');
             fileSystem
-                .setup((fs) => fs.search(typemoq.It.isAnyString(), globalPath, typemoq.It.isAny()))
+                .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), globalPath, typemoq.It.isAny()))
                 .returns(() => Promise.resolve([path.join(globalKernel.name, 'kernel.json')]));
 
             // Empty global paths
             const globalAPath = path.join('usr', 'local', 'share', 'jupyter', 'kernels');
             fileSystem
-                .setup((fs) => fs.search(typemoq.It.isAnyString(), globalAPath, typemoq.It.isAny()))
+                .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), globalAPath, typemoq.It.isAny()))
                 .returns(() => Promise.resolve([]));
             const globalBPath = path.join('Library', 'Jupyter', 'kernels');
             fileSystem
-                .setup((fs) => fs.search(typemoq.It.isAnyString(), globalBPath, typemoq.It.isAny()))
+                .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), globalBPath, typemoq.It.isAny()))
                 .returns(() => Promise.resolve([]));
 
             // Jupyter path setup
@@ -284,15 +284,15 @@ suite('Kernel Finder', () => {
                 'kernel.json'
             );
             fileSystem
-                .setup((fs) => fs.search(typemoq.It.isAnyString(), jupyterPathKernelAPath, typemoq.It.isAny()))
+                .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), jupyterPathKernelAPath, typemoq.It.isAny()))
                 .returns(() => Promise.resolve([path.join(jupyterPathKernelA.name, 'kernel.json')]));
             fileSystem
-                .setup((fs) => fs.search(typemoq.It.isAnyString(), jupyterPathKernelBPath, typemoq.It.isAny()))
+                .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), jupyterPathKernelBPath, typemoq.It.isAny()))
                 .returns(() => Promise.resolve([path.join(jupyterPathKernelB.name, 'kernel.json')]));
 
             // Set the file system to return our kernelspec json
             fileSystem
-                .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
                 .returns((param: string) => {
                     switch (param) {
                         case activePathA:
@@ -376,7 +376,7 @@ suite('Kernel Finder', () => {
                 .setup((il) => il.getInterpreters(typemoq.It.isAny(), typemoq.It.isAny()))
                 .returns(() => Promise.resolve(interpreters));
 
-            fileSystem = typemoq.Mock.ofType<IFileSystem>();
+            fileSystem = typemoq.Mock.ofType<IDataScienceFileSystem>();
 
             activeInterpreter = {
                 path: context.object.globalStoragePath,
@@ -420,7 +420,7 @@ suite('Kernel Finder', () => {
         test('KernelSpec is in cache', async () => {
             setupFileSystem();
             fileSystem
-                .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
                 .returns((param: string) => {
                     if (param.includes(cacheFile)) {
                         return Promise.resolve(`["${kernel.name}"]`);
@@ -435,7 +435,7 @@ suite('Kernel Finder', () => {
         test('KernelSpec is in the active interpreter', async () => {
             setupFileSystem();
             fileSystem
-                .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
                 .returns((pathParam: string) => {
                     if (pathParam.includes(cacheFile)) {
                         return Promise.resolve('[]');
@@ -466,7 +466,7 @@ suite('Kernel Finder', () => {
                 .returns(() => Promise.resolve(activeInterpreter2));
 
             fileSystem
-                .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
                 .returns((pathParam: string) => {
                     if (pathParam.includes(cacheFile)) {
                         return Promise.resolve('[]');
@@ -484,10 +484,10 @@ suite('Kernel Finder', () => {
         test('KernelSpec is in the interpreters', async () => {
             setupFileSystem();
             fileSystem
-                .setup((fs) => fs.search(typemoq.It.isAnyString(), typemoq.It.isAnyString(), typemoq.It.isAny()))
+                .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), typemoq.It.isAnyString(), typemoq.It.isAny()))
                 .returns(() => Promise.resolve([]));
             fileSystem
-                .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
                 .returns((pathParam: string) => {
                     if (pathParam.includes(cacheFile)) {
                         return Promise.resolve('[]');
@@ -502,10 +502,10 @@ suite('Kernel Finder', () => {
         test('KernelSpec is in disk', async () => {
             setupFileSystem();
             fileSystem
-                .setup((fs) => fs.search(typemoq.It.isAnyString(), typemoq.It.isAnyString(), typemoq.It.isAny()))
+                .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), typemoq.It.isAnyString(), typemoq.It.isAny()))
                 .returns(() => Promise.resolve([kernelName]));
             fileSystem
-                .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
                 .returns((pathParam: string) => {
                     if (pathParam.includes(cacheFile)) {
                         return Promise.resolve('[]');
@@ -523,7 +523,7 @@ suite('Kernel Finder', () => {
         test('KernelSpec not found, returning default', async () => {
             setupFileSystem();
             fileSystem
-                .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
                 .returns((pathParam: string) => {
                     if (pathParam.includes(cacheFile)) {
                         return Promise.resolve('[]');
@@ -539,7 +539,7 @@ suite('Kernel Finder', () => {
         test('Kernel metadata already has a default spec, return the same default spec', async () => {
             setupFileSystem();
             fileSystem
-                .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
                 .returns((pathParam: string) => {
                     if (pathParam.includes(cacheFile)) {
                         return Promise.resolve('[]');
@@ -559,7 +559,7 @@ suite('Kernel Finder', () => {
         test('KernelSpec not found, returning default, then search for it again and find it in the cache', async () => {
             setupFileSystem();
             fileSystem
-                .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
                 .returns((pathParam: string) => {
                     if (pathParam.includes(cacheFile)) {
                         return Promise.resolve('[]');
@@ -574,7 +574,7 @@ suite('Kernel Finder', () => {
 
             setupFileSystem();
             fileSystem
-                .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
                 .returns((pathParam: string) => {
                     if (pathParam.includes(cacheFile)) {
                         return Promise.resolve(`["${spec.path}"]`);
@@ -594,7 +594,7 @@ suite('Kernel Finder', () => {
         test('Look for KernelA with no cache, find KernelA and KenelB, then search for KernelB and find it in cache', async () => {
             setupFileSystem();
             fileSystem
-                .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
                 .returns((pathParam: string) => {
                     if (pathParam.includes(cacheFile)) {
                         return Promise.resolve('[]');
@@ -614,10 +614,10 @@ suite('Kernel Finder', () => {
 
             setupFileSystem();
             fileSystem
-                .setup((fs) => fs.search(typemoq.It.isAnyString(), typemoq.It.isAnyString(), typemoq.It.isAny()))
+                .setup((fs) => fs.searchLocal(typemoq.It.isAnyString(), typemoq.It.isAnyString(), typemoq.It.isAny()))
                 .verifiable(typemoq.Times.never()); // this never executing means the kernel was found in cache
             fileSystem
-                .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
                 .returns((pathParam: string) => {
                     if (pathParam.includes(cacheFile)) {
                         return Promise.resolve(

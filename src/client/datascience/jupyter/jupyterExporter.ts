@@ -12,7 +12,7 @@ import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -22,6 +22,7 @@ import {
     CellState,
     ICell,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IJupyterExecution,
     INotebookEditorProvider,
     INotebookExporter,
@@ -34,7 +35,7 @@ export class JupyterExporter implements INotebookExporter {
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fileSystem: IDataScienceFileSystem,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
@@ -58,8 +59,8 @@ export class JupyterExporter implements INotebookExporter {
         try {
             // tslint:disable-next-line: no-any
             const contents = JSON.stringify(notebook);
-            await this.trustService.trustNotebook(Uri.file(file.toLowerCase()), contents);
-            await this.fileSystem.writeFile(file, contents, { encoding: 'utf8', flag: 'w' });
+            await this.trustService.trustNotebook(Uri.file(file), contents);
+            await this.fileSystem.writeFile(Uri.file(file), contents);
             if (!showOpenPrompt) {
                 return;
             }
@@ -90,7 +91,8 @@ export class JupyterExporter implements INotebookExporter {
     }
     public async translateToNotebook(
         cells: ICell[],
-        changeDirectory?: string
+        changeDirectory?: string,
+        kernelSpec?: nbformat.IKernelspecMetadata
     ): Promise<nbformat.INotebookContent | undefined> {
         // If requested, add in a change directory cell to fix relative paths
         if (changeDirectory && this.configService.getSettings().datascience.changeDirOnImportExport) {
@@ -113,7 +115,8 @@ export class JupyterExporter implements INotebookExporter {
                 pygments_lexer: `ipython${pythonNumber}`,
                 version: pythonNumber
             },
-            orig_nbformat: 2
+            orig_nbformat: 2,
+            kernelspec: kernelSpec
         };
 
         // Create an object for matching cell definitions
@@ -171,7 +174,7 @@ export class JupyterExporter implements INotebookExporter {
             const filename = cell.file;
 
             // First check that this is an absolute file that exists (we add in temp files to run system cell)
-            if (path.isAbsolute(filename) && (await this.fileSystem.fileExists(filename))) {
+            if (path.isAbsolute(filename) && (await this.fileSystem.localFileExists(filename))) {
                 // We've already check that workspace folders above
                 for (const folder of this.workspaceService.workspaceFolders!) {
                     if (filename.toLowerCase().startsWith(folder.uri.fsPath.toLowerCase())) {

@@ -12,9 +12,9 @@ import type { NotebookContentProvider as VSCodeNotebookContentProvider } from 'v
 import { NotebookCellData } from '../../../../typings/vscode-proposed';
 import { ICommandManager } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { INotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
 import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/notebook/notebookEditorCompatibilitySupport';
+import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { CellState, INotebookModel } from '../../../client/datascience/types';
 // tslint:disable: no-any
 suite('DataScience - NativeNotebook ContentProvider', () => {
@@ -106,7 +106,6 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
-                            runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
                             runnable: false
                         }
                     }
@@ -191,7 +190,6 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
-                            runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
                             runnable: false
                         }
                     }

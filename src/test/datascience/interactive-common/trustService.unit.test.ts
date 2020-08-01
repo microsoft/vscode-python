@@ -10,8 +10,8 @@ import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { ExperimentService } from '../../../client/common/experiments/service';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IExtensionContext } from '../../../client/common/types';
+import { DataScienceFileSystem } from '../../../client/datascience/dataScienceFileSystem';
 import { DigestStorage } from '../../../client/datascience/interactive-ipynb/digestStorage';
 import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 
@@ -22,17 +22,17 @@ suite('DataScience - TrustService', () => {
         alwaysTrustNotebooks = false;
         const configService = mock(ConfigurationService);
         const experimentService = mock(ExperimentService);
-        const fileSystem = mock(FileSystem);
+        const fileSystem = mock(DataScienceFileSystem);
         const context = typemoq.Mock.ofType<IExtensionContext>();
         context.setup((c) => c.globalStoragePath).returns(() => os.tmpdir());
         when(configService.getSettings()).thenCall(() => {
             // tslint:disable-next-line: no-any
             return { datascience: { alwaysTrustNotebooks } } as any;
         });
-        when(fileSystem.appendFile(anything(), anything())).thenCall((f, c) => fs.appendFile(f, c));
-        when(fileSystem.readFile(anything())).thenCall((f) => fs.readFile(f));
-        when(fileSystem.createDirectory(anything())).thenCall((d) => fs.mkdir(d));
-        when(fileSystem.directoryExists(anything())).thenCall((d) => fs.pathExists(d));
+        when(fileSystem.appendLocalFile(anything(), anything())).thenCall((f, c) => fs.appendFile(f, c));
+        when(fileSystem.readLocalFile(anything())).thenCall((f) => fs.readFile(f));
+        when(fileSystem.createLocalDirectory(anything())).thenCall((d) => fs.mkdir(d));
+        when(fileSystem.localDirectoryExists(anything())).thenCall((d) => fs.pathExists(d));
         when(experimentService.inExperiment(anything())).thenResolve(true); // Pretend we're in an experiment so that trust checks proceed
 
         const digestStorage = new DigestStorage(instance(fileSystem), context.object);

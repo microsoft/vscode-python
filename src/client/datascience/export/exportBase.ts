@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Uri } from 'vscode';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
-import { IJupyterSubCommandExecutionService, INotebookImporter } from '../types';
+import { IDataScienceFileSystem, IJupyterSubCommandExecutionService, INotebookImporter } from '../types';
 import { ExportFormat, IExport } from './types';
 
 @injectable()
@@ -14,7 +14,7 @@ export class ExportBase implements IExport {
         @inject(IPythonExecutionFactory) protected readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IJupyterSubCommandExecutionService)
         protected jupyterService: IJupyterSubCommandExecutionService,
-        @inject(IFileSystem) protected readonly fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) protected readonly fs: IDataScienceFileSystem,
         @inject(INotebookImporter) protected readonly importer: INotebookImporter
     ) {}
 
@@ -41,7 +41,7 @@ export class ExportBase implements IExport {
             return;
         }
 
-        const tempTarget = await this.fileSystem.createTemporaryFile(path.extname(target.fsPath));
+        const tempTarget = await this.fs.createTemporaryLocalFile(path.extname(target.fsPath));
         const args = [
             source.fsPath,
             '--to',
@@ -63,7 +63,7 @@ export class ExportBase implements IExport {
         }
 
         try {
-            await this.fileSystem.copyFile(tempTarget.filePath, target.fsPath);
+            await this.fs.copyLocal(tempTarget.filePath, target.fsPath);
         } catch {
             throw new Error(result.stderr);
         } finally {

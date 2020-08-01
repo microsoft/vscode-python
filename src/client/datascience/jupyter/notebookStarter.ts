@@ -12,7 +12,7 @@ import { CancellationToken, Disposable } from 'vscode';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { WrappedError } from '../../common/errors/errorUtils';
 import { traceInfo } from '../../common/logger';
-import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
+import { TemporaryDirectory } from '../../common/platform/types';
 import { IDisposable, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -21,7 +21,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
-import { IJupyterConnection, IJupyterSubCommandExecutionService } from '../types';
+import { IDataScienceFileSystem, IJupyterConnection, IJupyterSubCommandExecutionService } from '../types';
 import { JupyterConnectionWaiter } from './jupyterConnection';
 import { JupyterInstallError } from './jupyterInstallError';
 
@@ -39,7 +39,7 @@ export class NotebookStarter implements Disposable {
     constructor(
         @inject(IJupyterSubCommandExecutionService)
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel
     ) {}
@@ -226,7 +226,7 @@ export class NotebookStarter implements Disposable {
         // In the temp dir, create an empty config python file. This is the same
         // as starting jupyter with all of the defaults.
         const configFile = path.join(tempDir.path, 'jupyter_notebook_config.py');
-        await this.fileSystem.writeFile(configFile, '');
+        await this.fs.writeLocalFile(configFile, '');
         traceInfo(`Generating custom default config at ${configFile}`);
 
         // Create extra args based on if we have a config or not
@@ -245,7 +245,7 @@ export class NotebookStarter implements Disposable {
         const args: string[] = [];
         // Check for a docker situation.
         try {
-            const cgroup = await this.fileSystem.readFile('/proc/self/cgroup').catch(() => '');
+            const cgroup = await this.fs.readLocalFile('/proc/self/cgroup').catch(() => '');
             if (!cgroup.includes('docker') && !cgroup.includes('kubepods')) {
                 return args;
             }
@@ -268,7 +268,7 @@ export class NotebookStarter implements Disposable {
     }
     private async generateTempDir(): Promise<TemporaryDirectory> {
         const resultDir = path.join(os.tmpdir(), uuid());
-        await this.fileSystem.createDirectory(resultDir);
+        await this.fs.createLocalDirectory(resultDir);
 
         return {
             path: resultDir,
@@ -279,7 +279,7 @@ export class NotebookStarter implements Disposable {
                 let count = 0;
                 while (count < 10) {
                     try {
-                        await this.fileSystem.deleteDirectory(resultDir);
+                        await this.fs.deleteLocalDirectory(resultDir);
                         count = 10;
                     } catch {
                         count += 1;

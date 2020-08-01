@@ -93,7 +93,7 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
 
         // Dirty state comes from undo. At least VS code will track it that way. However
         // skip file changes as we don't forward those to VS code
-        if (change.kind !== 'save' && change.kind !== 'saveAs' && change.kind !== 'updateTrust') {
+        if (change.kind !== 'save' && change.kind !== 'saveAs') {
             this.changeCount += 1;
         }
 

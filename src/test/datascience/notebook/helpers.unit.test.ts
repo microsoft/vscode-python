@@ -73,7 +73,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                     editable: true,
                     executionOrder: undefined,
                     hasExecutionOrder: false,
-                    runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
                     runnable: false
                 }
             }
@@ -123,11 +122,27 @@ suite('DataScience - NativeNotebook helpers', () => {
                 [
                     {
                         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-                        data: { 'text/plain': 'Error' }
+                        data: { 'text/plain': 'Error' },
+                        metadata: {
+                            custom: {
+                                vscode: {
+                                    name: 'stderr',
+                                    outputType: 'stream'
+                                }
+                            }
+                        }
                     },
                     {
                         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
-                        data: { 'text/plain': 'NoError' }
+                        data: { 'text/plain': 'NoError' },
+                        metadata: {
+                            custom: {
+                                vscode: {
+                                    name: 'stdout',
+                                    outputType: 'stream'
+                                }
+                            }
+                        }
                     }
                 ]
             );
@@ -146,6 +161,14 @@ suite('DataScience - NativeNotebook helpers', () => {
                         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                         data: {
                             'text/plain': '\u001b[K\u001b[33m✅ \u001b[0m Loading\n'
+                        },
+                        metadata: {
+                            custom: {
+                                vscode: {
+                                    name: 'stderr',
+                                    outputType: 'stream'
+                                }
+                            }
                         }
                     }
                 ]
@@ -165,6 +188,14 @@ suite('DataScience - NativeNotebook helpers', () => {
                         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                         data: {
                             'text/plain': '1 is < 2'
+                        },
+                        metadata: {
+                            custom: {
+                                vscode: {
+                                    name: 'stderr',
+                                    outputType: 'stream'
+                                }
+                            }
                         }
                     }
                 ]
@@ -184,6 +215,14 @@ suite('DataScience - NativeNotebook helpers', () => {
                         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                         data: {
                             'text/plain': '1 is < 2\u001b[K\u001b[33m✅ \u001b[0m Loading\n'
+                        },
+                        metadata: {
+                            custom: {
+                                vscode: {
+                                    name: 'stderr',
+                                    outputType: 'stream'
+                                }
+                            }
                         }
                     }
                 ]
@@ -202,8 +241,8 @@ suite('DataScience - NativeNotebook helpers', () => {
                 [
                     {
                         outputKind: vscodeNotebookEnums.CellOutputKind.Error,
-                        ename: '',
-                        evalue: '',
+                        ename: 'Error Name',
+                        evalue: 'Error Value',
                         traceback: ['stack1', 'stack2', 'stack3']
                     }
                 ]
@@ -212,6 +251,8 @@ suite('DataScience - NativeNotebook helpers', () => {
 
         ['display_data', 'execute_result'].forEach((output_type) => {
             suite(`Rich output for output_type = ${output_type}`, () => {
+                // If `output_type` === `exeucte_result` then we must have an execution_count.
+                const additionalMetadata = output_type === 'execute_result' ? { execution_count: undefined } : {};
                 test('Text mimeType output', async () => {
                     validateCellOutputTranslation(
                         [
@@ -228,7 +269,14 @@ suite('DataScience - NativeNotebook helpers', () => {
                                 data: {
                                     'text/plain': 'Hello World!'
                                 },
-                                metadata: undefined
+                                metadata: {
+                                    custom: {
+                                        vscode: {
+                                            ...additionalMetadata,
+                                            outputType: output_type
+                                        }
+                                    }
+                                }
                             }
                         ]
                     );
@@ -252,7 +300,14 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     'image/png': 'base64PNG',
                                     'image/jpeg': 'base64JPEG'
                                 },
-                                metadata: undefined
+                                metadata: {
+                                    custom: {
+                                        vscode: {
+                                            ...additionalMetadata,
+                                            outputType: output_type
+                                        }
+                                    }
+                                }
                             }
                         ]
                     );
@@ -277,7 +332,13 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     'image/png': 'base64PNG'
                                 },
                                 metadata: {
-                                    custom: { needs_background: 'light' }
+                                    custom: {
+                                        needs_background: 'light',
+                                        vscode: {
+                                            ...additionalMetadata,
+                                            outputType: output_type
+                                        }
+                                    }
                                 }
                             }
                         ]
@@ -303,7 +364,13 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     'image/png': 'base64PNG'
                                 },
                                 metadata: {
-                                    custom: { needs_background: 'dark' }
+                                    custom: {
+                                        needs_background: 'dark',
+                                        vscode: {
+                                            ...additionalMetadata,
+                                            outputType: output_type
+                                        }
+                                    }
                                 }
                             }
                         ]
@@ -330,7 +397,11 @@ suite('DataScience - NativeNotebook helpers', () => {
                                 },
                                 metadata: {
                                     custom: {
-                                        'image/png': { height: '111px', width: '999px' }
+                                        'image/png': { height: '111px', width: '999px' },
+                                        vscode: {
+                                            ...additionalMetadata,
+                                            outputType: output_type
+                                        }
                                     }
                                 }
                             }
@@ -360,7 +431,11 @@ suite('DataScience - NativeNotebook helpers', () => {
                                 metadata: {
                                     custom: {
                                         unconfined: true,
-                                        'image/png': { width: '999px' }
+                                        'image/png': { width: '999px' },
+                                        vscode: {
+                                            ...additionalMetadata,
+                                            outputType: output_type
+                                        }
                                     }
                                 }
                             }

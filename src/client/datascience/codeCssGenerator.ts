@@ -6,13 +6,12 @@ import { inject, injectable } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
-
 import { IWorkspaceService } from '../common/application/types';
 import { traceError, traceInfo, traceWarning } from '../common/logger';
-import { IFileSystem } from '../common/platform/types';
+
 import { IConfigurationService, Resource } from '../common/types';
 import { DefaultTheme } from './constants';
-import { ICodeCssGenerator, IThemeFinder } from './types';
+import { ICodeCssGenerator, IDataScienceFileSystem, IThemeFinder } from './types';
 
 // tslint:disable:no-any
 const DarkTheme = 'dark';
@@ -99,7 +98,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IThemeFinder) private themeFinder: IThemeFinder,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IFileSystem) private fs: IFileSystem
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem
     ) {}
 
     public generateThemeCss(resource: Resource, isDark: boolean, theme: string): Promise<string> {
@@ -360,12 +359,12 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
 
     private readTokenColors = async (themeFile: string): Promise<JSONArray> => {
         try {
-            const tokenContent = await this.fs.readFile(themeFile);
+            const tokenContent = await this.fs.readLocalFile(themeFile);
             const theme = parse(tokenContent);
             let tokenColors: JSONArray = [];
 
             if (typeof theme.tokenColors === 'string') {
-                const style = await this.fs.readData(theme.tokenColors);
+                const style = await this.fs.readLocalData(theme.tokenColors);
                 tokenColors = JSON.parse(style.toString());
             } else {
                 tokenColors = theme.tokenColors as JSONArray;
@@ -398,7 +397,7 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
     };
 
     private readBaseColors = async (themeFile: string): Promise<JSONObject> => {
-        const tokenContent = await this.fs.readFile(themeFile);
+        const tokenContent = await this.fs.readLocalFile(themeFile);
         const theme = parse(tokenContent);
         const colors = theme.colors as JSONObject;
 
@@ -424,7 +423,7 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
                 traceInfo(`Loading colors from ${themeRoot} ...`);
 
                 // This should be the path to the file. Load it as a json object
-                const contents = await this.fs.readFile(themeRoot);
+                const contents = await this.fs.readLocalFile(themeRoot);
                 const json = parse(contents);
 
                 // There should be a theme colors section
@@ -477,7 +476,7 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
                 traceInfo(`Loading base colors from ${themeRoot} ...`);
 
                 // This should be the path to the file. Load it as a json object
-                const contents = await this.fs.readFile(themeRoot);
+                const contents = await this.fs.readLocalFile(themeRoot);
                 const json = parse(contents);
 
                 // There should be a theme colors section

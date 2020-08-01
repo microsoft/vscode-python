@@ -17,6 +17,8 @@ labels: classify, type-bug
 -   Relevant/affected Python-related VS Code extensions and their versions: XXX
 -   Value of the `python.languageServer` setting: XXX
 
+[**NOTE**: If you suspect that your issue is related to the Microsoft Python Language Server (`python.languageServer: 'Microsoft'`), please download our new language server [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) from the VS Code marketplace to see if that fixes your issue]
+
 ## Expected behaviour
 
 XXX

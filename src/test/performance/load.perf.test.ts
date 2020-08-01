@@ -77,7 +77,7 @@ suite('Activation Times', () => {
 
             console.log(`Dev version loaded in ${devActivationAvgTime}ms`);
             console.log(`Release version loaded in ${releaseActivationAvgTime}ms`);
-            console.log(`Language Server loaded in ${languageServerActivationAvgTime}ms`);
+            console.log(`Language server loaded in ${languageServerActivationAvgTime}ms`);
 
             expect(devActivationAvgTime - releaseActivationAvgTime).to.be.lessThan(
                 AllowedIncreaseInActivationDelayInMS,

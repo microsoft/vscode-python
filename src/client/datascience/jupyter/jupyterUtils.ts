@@ -42,9 +42,11 @@ export async function createRemoteConnectionInfo(
     const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
     const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
     const serverUri = id && uriHandle ? await providerRegistration.getJupyterServerUri(id, uriHandle) : undefined;
-    const baseUrl = serverUri ? serverUri.baseUrl : `${url.protocol}//${url.host}${url.pathname}`;
-    const token = serverUri ? serverUri.token : `${url.searchParams.get('token')}`;
-    const hostName = serverUri ? new URL(serverUri.baseUrl).hostname : url.hostname;
+    const baseUrl = serverUri && serverUri.baseUrl ? serverUri.baseUrl : `${url.protocol}//${url.host}${url.pathname}`;
+    const token = serverUri && serverUri.token ? serverUri.token : `${url.searchParams.get('token')}`;
+    const hostName = serverUri && serverUri.baseUrl ? new URL(serverUri.baseUrl).hostname : url.hostname;
+    const displayName =
+        serverUri && serverUri.displayName ? serverUri.displayName : getJupyterConnectionDisplayName(token, baseUrl);
 
     return {
         type: 'jupyter',
@@ -54,7 +56,7 @@ export async function createRemoteConnectionInfo(
         localLaunch: false,
         localProcExitCode: undefined,
         valid: true,
-        displayName: getJupyterConnectionDisplayName(token, baseUrl),
+        displayName,
         disconnected: (_l) => {
             return { dispose: noop };
         },

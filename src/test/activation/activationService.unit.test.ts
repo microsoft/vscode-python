@@ -21,6 +21,7 @@ import {
     IConfigurationService,
     IDisposable,
     IDisposableRegistry,
+    IExtensions,
     IOutputChannel,
     IPersistentState,
     IPersistentStateFactory,
@@ -65,6 +66,7 @@ suite('Language Server Activation - ActivationService', () => {
                     const configService = TypeMoq.Mock.ofType<IConfigurationService>();
                     pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
                     const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
+                    const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
                     const folderVer: FolderVersionPair = {
                         path: '',
                         version: new SemVer('1.2.3')
@@ -125,6 +127,9 @@ suite('Language Server Activation - ActivationService', () => {
                     serviceContainer
                         .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
                         .returns(() => langFolderServiceMock.object);
+                    serviceContainer
+                        .setup((c) => c.get(TypeMoq.It.isValue(IExtensions)))
+                        .returns(() => extensionsMock.object);
                     serviceContainer
                         .setup((s) =>
                             s.get(
@@ -191,7 +196,7 @@ suite('Language Server Activation - ActivationService', () => {
                         .returns(() => TypeMoq.Mock.ofType<Disposable>().object)
                         .verifiable(TypeMoq.Times.once());
 
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => languageServerType);
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
@@ -672,6 +677,7 @@ suite('Language Server Activation - ActivationService', () => {
             const e = new EventEmitter<void>();
             interpreterService.setup((i) => i.onDidChangeInterpreter).returns(() => e.event);
             const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
+            const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
             const folderVer: FolderVersionPair = {
                 path: '',
                 version: new SemVer('1.2.3')
@@ -720,6 +726,7 @@ suite('Language Server Activation - ActivationService', () => {
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
                 .returns(() => langFolderServiceMock.object);
+            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExtensions))).returns(() => extensionsMock.object);
             serviceContainer
                 .setup((s) =>
                     s.get(
@@ -837,6 +844,7 @@ suite('Language Server Activation - ActivationService', () => {
             const e = new EventEmitter<void>();
             interpreterService.setup((i) => i.onDidChangeInterpreter).returns(() => e.event);
             const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
+            const extensionsMock = TypeMoq.Mock.ofType<IExtensions>();
             const folderVer: FolderVersionPair = {
                 path: '',
                 version: new SemVer('1.2.3')
@@ -885,6 +893,7 @@ suite('Language Server Activation - ActivationService', () => {
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
                 .returns(() => langFolderServiceMock.object);
+            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IExtensions))).returns(() => extensionsMock.object);
             serviceContainer
                 .setup((s) =>
                     s.get(

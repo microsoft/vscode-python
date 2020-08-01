@@ -141,7 +141,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             },
             {
                 key: 'size',
-                name: getLocString('DataScience.variableExplorerSizeColumn', 'Count'),
+                name: getLocString('DataScience.variableExplorerCountColumn', 'Size'),
                 type: 'string',
                 width: 120,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.numeric} />,

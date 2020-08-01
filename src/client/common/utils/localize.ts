@@ -100,27 +100,56 @@ export namespace AttachProcess {
     export const refreshList = localize('AttachProcess.refreshList', 'Refresh process list');
 }
 
-export namespace LanguageService {
+export namespace Pylance {
     export const proposePylanceMessage = localize(
-        'LanguageService.proposePylanceMessage',
+        'Pylance.proposePylanceMessage',
         'Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.'
     );
-    export const tryItNow = localize('LanguageService.tryItNow', 'Try it now');
-    export const remindMeLater = localize('LanguageService.remindMeLater', 'Remind me later');
+    export const tryItNow = localize('Pylance.tryItNow', 'Try it now');
+    export const remindMeLater = localize('Pylance.remindMeLater', 'Remind me later');
 
-    export const bannerLabelYes = localize('LanguageService.bannerLabelYes', 'Yes, take survey now');
-    export const bannerLabelNo = localize('LanguageService.bannerLabelNo', 'No, thanks');
+    export const installPylanceMessage = localize(
+        'Pylance.installPylanceMessage',
+        'Pylance extension is not installed. Click Yes to open Pylance installation page.'
+    );
+    export const pylanceNotInstalledMessage = localize(
+        'Pylance.pylanceNotInstalledMessage',
+        'Pylance extension is not installed.'
+    );
+    export const pylanceInstalledReloadPromptMessage = localize(
+        'Pylance.pylanceInstalledReloadPromptMessage',
+        'Pylance extension is now installed. Reload window to activate?'
+    );
+}
+
+export namespace LanguageService {
+    export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi Python language engine.');
+    export const startingMicrosoft = localize(
+        'LanguageService.startingMicrosoft',
+        'Starting Microsoft Python language server.'
+    );
+    export const startingPylance = localize('LanguageService.startingPylance', 'Starting Pylance language server.');
+    export const startingNone = localize(
+        'LanguageService.startingNone',
+        'Editor support is inactive since language server is set to None.'
+    );
+
+    export const reloadAfterLanguageServerChange = localize(
+        'LanguageService.reloadAfterLanguageServerChange',
+        'Please reload the window switching between language servers.'
+    );
+
     export const lsFailedToStart = localize(
         'LanguageService.lsFailedToStart',
-        'We encountered an issue starting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.'
+        'We encountered an issue starting the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
     );
     export const lsFailedToDownload = localize(
         'LanguageService.lsFailedToDownload',
-        'We encountered an issue downloading the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.'
+        'We encountered an issue downloading the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
     );
     export const lsFailedToExtract = localize(
         'LanguageService.lsFailedToExtract',
-        'We encountered an issue extracting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.'
+        'We encountered an issue extracting the language server. Reverting to Jedi language engine. Check the Python output panel for details.'
     );
     export const downloadFailedOutputMessage = localize(
         'LanguageService.downloadFailedOutputMessage',
@@ -308,6 +337,8 @@ export namespace ExtensionSurveyBanner {
         'ExtensionSurveyBanner.bannerMessage',
         'Can you please take 2 minutes to tell us how the Python extension is working for you?'
     );
+    export const bannerLabelYes = localize('ExtensionSurveyBanner.bannerLabelYes', 'Yes, take survey now');
+    export const bannerLabelNo = localize('ExtensionSurveyBanner.bannerLabelNo', 'No, thanks');
     export const maybeLater = localize('ExtensionSurveyBanner.maybeLater', 'Maybe later');
 }
 

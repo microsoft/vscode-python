@@ -8,7 +8,7 @@ import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { Commands as coreCommands } from '../../common/constants';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IStartPage } from '../../common/startPage/types';
 import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
@@ -19,6 +19,7 @@ import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
+    IDataScienceFileSystem,
     INotebookEditorProvider
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
@@ -47,7 +48,7 @@ export class CommandRegistry implements IDisposable {
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
         @inject(IStartPage) private startPage: IStartPage,
         @inject(ExportCommands) private readonly exportCommand: ExportCommands,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
@@ -107,7 +108,7 @@ export class CommandRegistry implements IDisposable {
     private getCodeWatcher(file: Uri | undefined): ICodeWatcher | undefined {
         if (file) {
             const possibleDocuments = this.documentManager.textDocuments.filter((d) =>
-                this.fileSystem.arePathsSame(d.uri.fsPath, file.fsPath)
+                this.fs.arePathsSame(d.uri, file)
             );
             if (possibleDocuments && possibleDocuments.length === 1) {
                 return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
 import {
     CancellationToken,
     CodeLens,
@@ -29,14 +28,8 @@ import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
-import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
-import {
-    ILanguageServerActivator,
-    ILanguageServerDownloader,
-    ILanguageServerFolderService,
-    ILanguageServerManager
-} from '../types';
+import { ILanguageServerActivator, ILanguageServerManager } from '../types';
 
 /**
  * Starts the language server managers per workspaces (currently one for first workspace).
@@ -52,8 +45,6 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         protected readonly manager: ILanguageServerManager,
         private readonly workspace: IWorkspaceService,
         protected readonly fs: IFileSystem,
-        protected readonly lsDownloader: ILanguageServerDownloader,
-        protected readonly languageServerFolderService: ILanguageServerFolderService,
         protected readonly configurationService: IConfigurationService
     ) {}
 
@@ -169,23 +160,6 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         context: SignatureHelpContext
     ): ProviderResult<SignatureHelp> {
         return this.handleProvideSignatureHelp(document, position, token, context);
-    }
-
-    protected async ensureLanguageServerFileIsAvailable(
-        resource: Resource,
-        fileName: string
-    ): Promise<string | undefined> {
-        const settings = this.configurationService.getSettings(resource);
-        if (!settings.downloadLanguageServer) {
-            return;
-        }
-        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
-        const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
-        const mscorlib = path.join(languageServerFolderPath, fileName);
-        if (!(await this.fs.fileExists(mscorlib))) {
-            await this.lsDownloader.downloadLanguageServer(languageServerFolderPath, resource);
-        }
-        return languageServerFolderPath;
     }
 
     protected getLanguageClient(): vscodeLanguageClient.LanguageClient | undefined {

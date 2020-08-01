@@ -13,7 +13,7 @@ import { Cancellation, wrapCancellationTokens } from '../../../common/cancellati
 import { PYTHON_LANGUAGE, PYTHON_WARNINGS } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
+
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { ReadWrite } from '../../../common/types';
 import { sleep } from '../../../common/utils/async';
@@ -27,6 +27,7 @@ import { Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import {
+    IDataScienceFileSystem,
     IJupyterKernelSpec,
     IJupyterSessionManager,
     IJupyterSubCommandExecutionService,
@@ -71,7 +72,7 @@ export class KernelService {
         @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService
     ) {}
     /**
@@ -114,8 +115,8 @@ export class KernelService {
                     return false;
                 }
                 return (
-                    this.fileSystem.arePathsSame(item.argv[0], option.path) ||
-                    this.fileSystem.arePathsSame(item.metadata?.interpreter?.path || '', option.path)
+                    this.fs.areLocalPathsSame(item.argv[0], option.path) ||
+                    this.fs.areLocalPathsSame(item.metadata?.interpreter?.path || '', option.path)
                 );
             });
         } else {
@@ -401,7 +402,7 @@ export class KernelService {
         const specedKernel = kernel as JupyterKernelSpec;
         if (specedKernel.specFile) {
             let specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(
-                await this.fileSystem.readFile(specedKernel.specFile)
+                await this.fs.readLocalFile(specedKernel.specFile)
             );
             let shouldUpdate = false;
 
@@ -456,10 +457,7 @@ export class KernelService {
 
             // Update the kernel.json with our new stuff.
             if (shouldUpdate) {
-                await this.fileSystem.writeFile(specedKernel.specFile, JSON.stringify(specModel, undefined, 2), {
-                    flag: 'w',
-                    encoding: 'utf8'
-                });
+                await this.fs.writeLocalFile(specedKernel.specFile, JSON.stringify(specModel, undefined, 2));
             }
 
             // Always update the metadata for the original kernel.
@@ -544,7 +542,7 @@ export class KernelService {
         }
 
         const specFile = await getRealPath(
-            this.fileSystem,
+            this.fs,
             this.execFactory,
             pythonPath,
             path.join(groups.path, 'kernel.json')
@@ -553,7 +551,7 @@ export class KernelService {
             throw new Error('KernelSpec file not found');
         }
 
-        const kernelModel = JSON.parse(await this.fileSystem.readFile(specFile));
+        const kernelModel = JSON.parse(await this.fs.readLocalFile(specFile));
         kernelModel.name = groups.name;
         return new JupyterKernelSpec(kernelModel as Kernel.ISpecModel, specFile);
     }

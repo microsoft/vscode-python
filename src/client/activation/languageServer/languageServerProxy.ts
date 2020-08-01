@@ -33,7 +33,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
     ) {
         this.startupCompleted = createDeferred<void>();
     }
-    @traceDecorators.verbose('Stopping Language Server')
+    @traceDecorators.verbose('Stopping language server')
     public dispose() {
         if (this.languageClient) {
             // Do not await on this.
@@ -45,7 +45,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
             d.dispose();
         }
         if (this.startupCompleted.completed) {
-            this.startupCompleted.reject(new Error('Disposed Language Server'));
+            this.startupCompleted.reject(new Error('Disposed language server'));
             this.startupCompleted = createDeferred<void>();
         }
         this.disposed = true;
@@ -86,7 +86,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
             await this.startupCompleted.promise;
         }
     }
-    @traceDecorators.error('Failed to load Language Server extension')
+    @traceDecorators.error('Failed to load language server extension')
     public loadExtension(args?: {}) {
         if (this.extensionLoadedArgs.has(args || '')) {
             return;
@@ -111,7 +111,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
         }
         this.startupCompleted.resolve();
     }
-    @swallowExceptions('Activating Unit Tests Manager for Language Server')
+    @swallowExceptions('Activating Unit Tests Manager for Microsoft Python Language Server')
     protected async registerTestServices() {
         if (!this.languageClient) {
             throw new Error('languageClient not initialized');

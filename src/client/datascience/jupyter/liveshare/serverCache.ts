@@ -8,10 +8,10 @@ import { CancellationToken, CancellationTokenSource } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
+
 import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
 import { sleep } from '../../../common/utils/async';
-import { INotebookServer, INotebookServerOptions } from '../../types';
+import { IDataScienceFileSystem, INotebookServer, INotebookServerOptions } from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 
 interface IServerData {
@@ -29,7 +29,7 @@ export class ServerCache implements IAsyncDisposable {
     constructor(
         private configService: IConfigurationService,
         private workspace: IWorkspaceService,
-        private fileSystem: IFileSystem
+        private fs: IDataScienceFileSystem
     ) {}
 
     public async getOrCreate(
@@ -131,7 +131,7 @@ export class ServerCache implements IAsyncDisposable {
             workingDir:
                 options && options.workingDir
                     ? options.workingDir
-                    : await calculateWorkingDirectory(this.configService, this.workspace, this.fileSystem),
+                    : await calculateWorkingDirectory(this.configService, this.workspace, this.fs),
             metadata: options?.metadata,
             allowUI: options?.allowUI ? options.allowUI : () => false
         };

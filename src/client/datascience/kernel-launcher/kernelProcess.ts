@@ -15,11 +15,10 @@ import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { cleanEnvironment, findIndexOfConnectionFile } from '../jupyter/kernels/helpers';
-import { IJupyterKernelSpec } from '../types';
+import { IDataScienceFileSystem, IJupyterKernelSpec } from '../types';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
 import { IKernelConnection, IKernelProcess, IPythonKernelDaemon, PythonKernelDiedError } from './types';
 
-import { IFileSystem } from '../../common/platform/types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
@@ -51,7 +50,7 @@ export class KernelProcess implements IKernelProcess {
         private readonly daemonPool: KernelDaemonPool,
         private readonly _connection: IKernelConnection,
         kernelSpec: IJupyterKernelSpec,
-        private readonly file: IFileSystem,
+        private readonly fs: IDataScienceFileSystem,
         private readonly resource: Resource,
         private readonly interpreter?: PythonInterpreter
     ) {
@@ -127,7 +126,7 @@ export class KernelProcess implements IKernelProcess {
             this.exitEvent.fire({});
         });
         swallowExceptions(() => this.pythonKernelLauncher?.dispose());
-        swallowExceptions(async () => (this.connectionFile ? this.file.deleteFile(this.connectionFile) : noop()));
+        swallowExceptions(async () => (this.connectionFile ? this.fs.deleteLocalFile(this.connectionFile) : noop()));
     }
 
     // Make sure that the heartbeat channel is open for connections
@@ -173,13 +172,10 @@ export class KernelProcess implements IKernelProcess {
             // Note: We have to dispose the temp file and recreate it because otherwise the file
             // system will hold onto the file with an open handle. THis doesn't work so well when
             // a different process tries to open it.
-            const tempFile = await this.file.createTemporaryFile('.json');
+            const tempFile = await this.fs.createTemporaryLocalFile('.json');
             this.connectionFile = tempFile.filePath;
             await tempFile.dispose();
-            await this.file.writeFile(this.connectionFile, JSON.stringify(this._connection), {
-                encoding: 'utf-8',
-                flag: 'w'
-            });
+            await this.fs.writeLocalFile(this.connectionFile, JSON.stringify(this._connection));
 
             // Then replace the connection file argument with this file
             this._kernelSpec.argv[indexOfConnectionFile] = this.connectionFile;

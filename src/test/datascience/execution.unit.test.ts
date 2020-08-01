@@ -19,8 +19,6 @@ import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
-import { FileSystem } from '../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../client/common/platform/types';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
 import {
@@ -42,6 +40,7 @@ import {
 } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { DataScienceFileSystem } from '../../client/datascience/dataScienceFileSystem';
 import { JupyterInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
@@ -51,6 +50,7 @@ import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelS
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
 import {
+    IDataScienceFileSystem,
     IJupyterKernelSpec,
     IJupyterSubCommandExecutionService,
     INotebookServer
@@ -98,7 +98,7 @@ suite('Jupyter Execution', async () => {
     const application = mock(ApplicationShell);
     const processServiceFactory = mock(ProcessServiceFactory);
     const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
-    const fileSystem = mock(FileSystem);
+    const fileSystem = mock(DataScienceFileSystem);
     const activationHelper = mock(EnvironmentActivationService);
     const serviceContainer = mock(ServiceContainer);
     const workspaceService = mock(WorkspaceService);
@@ -783,7 +783,7 @@ suite('Jupyter Execution', async () => {
             ('Unknown interpreter' as any) as Error
         );
         if (runInDocker) {
-            when(fileSystem.readFile('/proc/self/cgroup')).thenResolve('hello docker world');
+            when(fileSystem.readLocalFile('/proc/self/cgroup')).thenResolve('hello docker world');
         }
         // Create our working python and process service.
         const workingService = createTypeMoq<IPythonExecutionService>('working');
@@ -863,7 +863,7 @@ suite('Jupyter Execution', async () => {
 
         // Service container needs logger, file system, and config service
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
-        when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
+        when(serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem)).thenReturn(instance(fileSystem));
         when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
         when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(application));
         when(configService.getSettings(anything())).thenReturn(pythonSettings);
@@ -923,11 +923,11 @@ suite('Jupyter Execution', async () => {
             },
             filePath: '/foo/bar/baz.py'
         };
-        when(fileSystem.createTemporaryFile(anything())).thenResolve(tempFile);
-        when(fileSystem.createDirectory(anything())).thenResolve();
-        when(fileSystem.deleteDirectory(anything())).thenResolve();
-        when(fileSystem.fileExists(workingKernelSpec)).thenResolve(true);
-        when(fileSystem.readFile(workingKernelSpec)).thenResolve(
+        when(fileSystem.createTemporaryLocalFile(anything())).thenResolve(tempFile);
+        when(fileSystem.createLocalDirectory(anything())).thenResolve();
+        when(fileSystem.deleteLocalDirectory(anything())).thenResolve();
+        when(fileSystem.localFileExists(workingKernelSpec)).thenResolve(true);
+        when(fileSystem.readLocalFile(workingKernelSpec)).thenResolve(
             '{"display_name":"Python 3","language":"python","argv":["/foo/bar/python.exe","-m","ipykernel_launcher","-f","{connection_file}"]}'
         );
 

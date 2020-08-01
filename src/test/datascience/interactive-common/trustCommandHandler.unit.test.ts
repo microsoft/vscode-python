@@ -15,13 +15,14 @@ import { EnableTrustedNotebooks } from '../../../client/common/experiments/group
 import { IDisposable, IExperimentService } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { Commands } from '../../../client/datascience/constants';
-import { INotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { TrustCommandHandler } from '../../../client/datascience/interactive-ipynb/trustCommandHandler';
 import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
+import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
+import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider, INotebookModel, ITrustService } from '../../../client/datascience/types';
 import { noop } from '../../core';
 import { MockMemento } from '../../mocks/mementos';
-import { createNotebookModel, disposeAllDisposables } from '../notebook/helper';
+import { createNotebookDocument, createNotebookModel, disposeAllDisposables } from '../notebook/helper';
 
 // tslint:disable: no-any
 
@@ -49,6 +50,7 @@ suite('DataScience - Trust Command Handler', () => {
         testIndex += 1;
         when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
         model = createNotebookModel(false, Uri.file('a'), new MockMemento(), instance(crypto));
+        createNotebookDocument(model as VSCodeNotebookModel);
         when(storageProvider.get(anything())).thenResolve(model);
         disposables = [];
 

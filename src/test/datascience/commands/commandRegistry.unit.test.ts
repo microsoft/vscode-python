@@ -7,7 +7,6 @@ import { DebugService } from '../../../client/common/application/debugService';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { StartPage } from '../../../client/common/startPage/startPage';
 import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../../client/datascience/commands/commandRegistry';
@@ -15,8 +14,9 @@ import { ExportCommands } from '../../../client/datascience/commands/exportComma
 import { NotebookCommands } from '../../../client/datascience/commands/notebookCommands';
 import { JupyterServerSelectorCommand } from '../../../client/datascience/commands/serverSelector';
 import { Commands } from '../../../client/datascience/constants';
+import { DataScienceFileSystem } from '../../../client/datascience/dataScienceFileSystem';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
-import { NativeEditorProvider } from '../../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable: max-func-body-length
@@ -40,7 +40,7 @@ suite('DataScience - Commands', () => {
         const appShell = mock(ApplicationShell);
         const startPage = mock(StartPage);
         const exportCommand = mock(ExportCommands);
-        const fileSystem = mock(FileSystem);
+        const fileSystem = mock(DataScienceFileSystem);
 
         commandRegistry = new CommandRegistry(
             documentManager,

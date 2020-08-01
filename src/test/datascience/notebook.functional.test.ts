@@ -20,7 +20,6 @@ import { Cancellation, CancellationError } from '../../client/common/cancellatio
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { LocalZMQKernel } from '../../client/common/experiments/groups';
 import { traceError, traceInfo } from '../../client/common/logger';
-import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
@@ -34,6 +33,7 @@ import { HostJupyterNotebook } from '../../client/datascience/jupyter/liveshare/
 import {
     CellState,
     ICell,
+    IDataScienceFileSystem,
     IJupyterConnection,
     IJupyterExecution,
     IJupyterKernelSpec,
@@ -662,14 +662,14 @@ suite('DataScience notebook tests', () => {
                 }
 
                 // Save to a temp file
-                const fileSystem = ioc.serviceManager.get<IFileSystem>(IFileSystem);
+                const fileSystem = ioc.serviceManager.get<IDataScienceFileSystem>(IDataScienceFileSystem);
                 const importer = ioc.serviceManager.get<INotebookImporter>(INotebookImporter);
-                const temp = await fileSystem.createTemporaryFile('.ipynb');
+                const temp = await fileSystem.createTemporaryLocalFile('.ipynb');
 
                 try {
                     await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
                     // Try importing this. This should verify export works and that importing is possible
-                    const results = await importer.importFromFile(temp.filePath);
+                    const results = await importer.importFromFile(Uri.file(temp.filePath));
 
                     // Make sure we have a single chdir in our results
                     const first = results.indexOf('os.chdir');
@@ -1128,8 +1128,8 @@ plt.show()`,
                     'Jupyter is not outputting the path to the config'
                 );
                 const configPath = match !== null ? match[1] : '';
-                const filesystem = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
-                await filesystem.writeFile(configPath, 'c.NotebookApp.password_required = True'); // This should make jupyter fail
+                const filesystem = ioc.serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem);
+                await filesystem.writeLocalFile(configPath, 'c.NotebookApp.password_required = True'); // This should make jupyter fail
                 modifiedConfig = true;
             }
 

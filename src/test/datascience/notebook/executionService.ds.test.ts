@@ -18,7 +18,6 @@ import { initialize } from '../../initialize';
 import {
     assertHasExecutionCompletedSuccessfully,
     assertHasExecutionCompletedWithErrors,
-    assertHasTextOutputInICell,
     assertHasTextOutputInVSCode,
     assertNotHasTextOutputInVSCode,
     assertVSCCellHasErrors,
@@ -26,7 +25,8 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
     insertPythonCellAndWait,
-    startJupyter
+    startJupyter,
+    trustAllNotebooks
 } from './helper';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -46,7 +46,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         if (!(await canRunTests())) {
             return this.skip();
         }
+        await trustAllNotebooks();
         await startJupyter();
+        await trustAllNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -130,53 +132,45 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Verify Cell output, execution count and status', async () => {
         await insertPythonCellAndWait('print("Hello World")', 0);
-        const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells!;
-        const cellModels = editorProvider.activeEditor?.model?.cells!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells!;
 
         editorProvider.activeEditor!.runAllCells();
 
         // Wait till execution count changes and status is success.
         await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(vscCell[0]),
+            async () => assertHasExecutionCompletedSuccessfully(cell[0]),
             15_000,
             'Cell did not get executed'
         );
 
         // Verify output.
-        assertHasTextOutputInVSCode(vscCell[0], 'Hello World', 0);
-        assertHasTextOutputInICell(cellModels[0], 'Hello World', 0);
+        assertHasTextOutputInVSCode(cell[0], 'Hello World', 0);
 
         // Verify execution count.
-        const execCount = cellModels[0].data.execution_count;
-        assert.ok(execCount, 'Execution count should be > 0');
-        assert.equal(execCount, vscCell[0].metadata.executionOrder, 'Execution count should be the same');
+        assert.ok(cell[0].metadata.executionOrder, 'Execution count should be > 0');
     });
     test('Verify multiple cells get executed', async () => {
         await insertPythonCellAndWait('print("Foo Bar")', 0);
         await insertPythonCellAndWait('print("Hello World")', 1);
-        const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells!;
-        const cellModels = editorProvider.activeEditor?.model?.cells!;
+        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
 
         editorProvider.activeEditor!.runAllCells();
 
         // Wait till execution count changes and status is success.
         await waitForCondition(
             async () =>
-                assertHasExecutionCompletedSuccessfully(vscCell[0]) &&
-                assertHasExecutionCompletedSuccessfully(vscCell[1]),
+                assertHasExecutionCompletedSuccessfully(cells[0]) && assertHasExecutionCompletedSuccessfully(cells[1]),
             15_000,
             'Cells did not get executed'
         );
 
         // Verify output.
-        assertHasTextOutputInVSCode(vscCell[0], 'Foo Bar', 0);
-        assertHasTextOutputInICell(cellModels[0], 'Foo Bar', 0);
-        assertHasTextOutputInVSCode(vscCell[1], 'Hello World', 0);
-        assertHasTextOutputInICell(cellModels[1], 'Hello World', 0);
+        assertHasTextOutputInVSCode(cells[0], 'Foo Bar', 0);
+        assertHasTextOutputInVSCode(cells[1], 'Hello World', 0);
 
         // Verify execution count.
-        assert.ok(vscCell[0].metadata.executionOrder, 'Execution count should be > 0');
-        assert.equal(vscCell[1].metadata.executionOrder! - 1, vscCell[0].metadata.executionOrder!);
+        assert.ok(cells[0].metadata.executionOrder, 'Execution count should be > 0');
+        assert.equal(cells[1].metadata.executionOrder! - 1, cells[0].metadata.executionOrder!);
     });
     test('Verify metadata for successfully executed cell', async () => {
         await insertPythonCellAndWait('print("Foo Bar")', 0);
@@ -213,17 +207,19 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.lengthOf(cell.outputs, 1, 'Incorrect output');
         const errorOutput = cell.outputs[0] as CellErrorOutput;
         assert.equal(errorOutput.outputKind, vscodeNotebookEnums.CellOutputKind.Error, 'Incorrect output');
-        assert.isEmpty(errorOutput.ename, 'Incorrect ename'); // As status contains ename, we don't want this displayed again.
-        assert.isEmpty(errorOutput.evalue, 'Incorrect evalue'); // As status contains ename, we don't want this displayed again.
+        assert.equal(errorOutput.ename, 'NameError', 'Incorrect ename'); // As status contains ename, we don't want this displayed again.
+        assert.equal(errorOutput.evalue, "name 'abcd' is not defined", 'Incorrect evalue'); // As status contains ename, we don't want this displayed again.
         assert.isNotEmpty(errorOutput.traceback, 'Incorrect traceback');
         expect(cell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
-        // expect(cell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0'); // For some reason VSC doesn't get updated quickly (flaky VSC).
-        // expect(cell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0'); // For some reason VSC doesn't get updated quickly (flaky VSC).
+        expect(cell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
+        expect(cell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
         assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error, 'Incorrect State');
         assert.include(cell.metadata.statusMessage!, 'NameError', 'Must contain error message');
         assert.include(cell.metadata.statusMessage!, 'abcd', 'Must contain error message');
     });
-    test('Clearing output while executing will ensure output is cleared', async () => {
+    test('Clearing output while executing will ensure output is cleared', async function () {
+        // https://github.com/microsoft/vscode-python/issues/12302
+        return this.skip();
         // Assume you are executing a cell that prints numbers 1-100.
         // When printing number 50, you click clear.
         // Cell output should now start printing output from 51 onwards, & not 1.

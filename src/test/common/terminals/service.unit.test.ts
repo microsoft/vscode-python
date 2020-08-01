@@ -116,7 +116,20 @@ suite('Terminal Service', () => {
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
-    test('Ensure terminal shown', async () => {
+    test('Ensure terminal is not shown if `hideFromUser` option is set to `true`', async () => {
+        terminalHelper
+            .setup((helper) => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+        service = new TerminalService(mockServiceContainer.object, { hideFromUser: true });
+        terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
+        await service.show();
+
+        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.never());
+    });
+
+    test('Ensure terminal shown otherwise', async () => {
         terminalHelper
             .setup((helper) => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined));

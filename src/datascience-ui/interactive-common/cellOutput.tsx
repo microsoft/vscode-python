@@ -38,6 +38,7 @@ interface ICellOutputProps {
     themeMatplotlibPlots?: boolean;
     expandImage(imageHtml: string): void;
     widgetFailed(ex: Error): void;
+    openSettings(settings?: string): void;
 }
 
 interface ICellOutputData {
@@ -511,7 +512,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         buffer.push(
                             <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
                                 {transformed.extraButton}
-                                <TrimmedOutputMessage></TrimmedOutputMessage>
+                                <TrimmedOutputMessage openSettings={this.props.openSettings} />
                                 <Transform data={transformed.output.data} />
                             </div>
                         );

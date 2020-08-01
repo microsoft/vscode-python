@@ -12,9 +12,9 @@ import {
 import { IDisposableRegistry } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { NotebookModelChange } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
-import { INotebookStorageProvider } from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
+import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
 import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
+import { INotebookStorageProvider } from '../../client/datascience/notebookStorage/notebookStorageProvider';
 import { INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { createTemporaryFile } from '../utils/fs';
 

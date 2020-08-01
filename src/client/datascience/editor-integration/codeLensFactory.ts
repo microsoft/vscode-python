@@ -6,7 +6,7 @@ import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, Uri } from
 
 import { IDocumentManager } from '../../common/application/types';
 import { traceWarning } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -17,6 +17,7 @@ import {
     ICell,
     ICellHashProvider,
     ICodeLensFactory,
+    IDataScienceFileSystem,
     IFileHashes,
     IInteractiveWindowListener,
     INotebook,
@@ -56,7 +57,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager
     ) {
         this.documentManager.onDidCloseTextDocument(this.onClosedDocument.bind(this));
@@ -447,7 +448,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
 
     private createExecutionLens(document: TextDocument, range: Range, hashes: IFileHashes[]) {
         const list = hashes
-            .filter((h) => this.fileSystem.arePathsSame(h.file, document.fileName))
+            .filter((h) => this.fs.areLocalPathsSame(h.file, document.fileName))
             .map((f) => f.hashes)
             .flat();
         if (list) {

@@ -9,6 +9,7 @@ import { splitMultilineString } from '../../../datascience-ui/common';
 import { traceError } from '../../common/logger';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
+import { createCellFromVSCNotebookCell, updateVSCNotebookAfterTrustingNotebook } from '../notebook/helpers/helpers';
 import { ICell } from '../types';
 import { BaseNotebookModel } from './baseModel';
 
@@ -18,10 +19,36 @@ interface IBaseCellVSCodeMetadata {
     start_execution_time?: string;
 }
 
+// https://github.com/microsoft/vscode-python/issues/13155
+// tslint:disable-next-line: no-any
+function sortObjectPropertiesRecursively(obj: any): any {
+    if (Array.isArray(obj)) {
+        return obj.map(sortObjectPropertiesRecursively);
+    }
+    if (obj !== undefined && obj !== null && typeof obj === 'object' && Object.keys(obj).length > 0) {
+        return (
+            Object.keys(obj)
+                .sort()
+                // tslint:disable-next-line: no-any
+                .reduce<Record<string, any>>((sortedObj, prop) => {
+                    sortedObj[prop] = sortObjectPropertiesRecursively(obj[prop]);
+                    return sortedObj;
+                    // tslint:disable-next-line: no-any
+                }, {}) as any
+        );
+    }
+    return obj;
+}
+
 // Exported for test mocks
 export class VSCodeNotebookModel extends BaseNotebookModel {
     public get isDirty(): boolean {
         return this.document?.isDirty === true;
+    }
+    public get cells(): ICell[] {
+        return this.document
+            ? this.document.cells.map((cell) => createCellFromVSCNotebookCell(cell, this))
+            : this._cells;
     }
     private document?: NotebookDocument;
 
@@ -43,6 +70,14 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
      */
     public associateNotebookDocument(document: NotebookDocument) {
         this.document = document;
+    }
+    public trust() {
+        super.trust();
+        if (this.document) {
+            updateVSCNotebookAfterTrustingNotebook(this.document, this._cells);
+            // We don't need old cells.
+            this._cells = [];
+        }
     }
     public updateCellSource(cellId: string, source: string): void {
         const cell = this.getCell(cellId);
@@ -132,6 +167,14 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             // This line is required because ts-node sucks on GHA.
             // tslint:disable-next-line: no-any
         } as any;
+    }
+    protected generateNotebookJson() {
+        const json = super.generateNotebookJson();
+        // https://github.com/microsoft/vscode-python/issues/13155
+        // Object keys in metadata, cells and the like need to be sorted alphabetically.
+        // Jupyter (Python) seems to sort them alphabetically.
+        // We should do the same to minimize changes to content when saving ipynb.
+        return sortObjectPropertiesRecursively(json);
     }
 
     protected handleRedo(change: NotebookModelChange): boolean {

@@ -62,7 +62,9 @@ export class TerminalService implements ITerminalService, Disposable {
     }
     public async show(preserveFocus: boolean = true): Promise<void> {
         await this.ensureTerminal(preserveFocus);
-        this.terminal!.show(preserveFocus);
+        if (!this.options?.hideFromUser) {
+            this.terminal!.show(preserveFocus);
+        }
     }
     private async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
         if (this.terminal) {

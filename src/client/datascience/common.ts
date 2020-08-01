@@ -7,12 +7,11 @@ import * as path from 'path';
 import { Memento, Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { traceError, traceInfo } from '../common/logger';
-import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { Settings } from './constants';
-import { ICell } from './types';
+import { ICell, IDataScienceFileSystem } from './types';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -153,15 +152,15 @@ export function generateNewNotebookUri(counter: number, title?: string, forVSCod
 }
 
 export async function getRealPath(
-    fs: IFileSystem,
+    fs: IDataScienceFileSystem,
     execFactory: IPythonExecutionFactory,
     pythonPath: string,
     expectedPath: string
 ): Promise<string | undefined> {
-    if (await fs.directoryExists(expectedPath)) {
+    if (await fs.localDirectoryExists(expectedPath)) {
         return expectedPath;
     }
-    if (await fs.fileExists(expectedPath)) {
+    if (await fs.localFileExists(expectedPath)) {
         return expectedPath;
     }
 
@@ -176,10 +175,10 @@ export async function getRealPath(
     );
     if (result && result.stdout) {
         const trimmed = result.stdout.trim();
-        if (await fs.directoryExists(trimmed)) {
+        if (await fs.localDirectoryExists(trimmed)) {
             return trimmed;
         }
-        if (await fs.fileExists(trimmed)) {
+        if (await fs.localFileExists(trimmed)) {
             return trimmed;
         }
     }

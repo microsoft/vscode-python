@@ -5,7 +5,6 @@ import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Memento, Uri } from 'vscode';
 import { IApplicationShell, ILiveShareApi } from '../../client/common/application/types';
-import { IFileSystem } from '../../client/common/platform/types';
 import {
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
@@ -21,7 +20,7 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { resetIdentity } from '../../client/datascience/interactive-window/identity';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
+import { IDataScienceFileSystem, IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { IMountedWebView } from './mountedWebView';
@@ -47,7 +46,7 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
         @inject(IServiceContainer) private readonly container: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IFileSystem) fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) fileSystem: IDataScienceFileSystem,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
         @inject(IApplicationShell) appShell: IApplicationShell

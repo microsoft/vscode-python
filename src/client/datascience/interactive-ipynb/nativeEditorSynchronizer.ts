@@ -4,10 +4,10 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { SyncPayload } from '../interactive-common/types';
-import { INotebookEditor } from '../types';
+import { IDataScienceFileSystem, INotebookEditor } from '../types';
 
 // tslint:disable: no-any
 
@@ -20,13 +20,13 @@ type UserActionNotificationCallback = <M extends IInteractiveWindowMapping, T ex
 export class NativeEditorSynchronizer {
     private registeredNotebooks = new Map<INotebookEditor, UserActionNotificationCallback>();
     private enabled = true;
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
+    constructor(@inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem) {}
     public notifyUserAction(message: SyncPayload, editor: INotebookEditor) {
         if (!this.enabled) {
             return;
         }
         this.registeredNotebooks.forEach((cb, item) => {
-            if (item !== editor && this.fs.arePathsSame(item.file.fsPath, editor.file.fsPath)) {
+            if (item !== editor && this.fs.arePathsSame(item.file, editor.file)) {
                 cb(InteractiveWindowMessages.Sync, message as any);
             }
         });

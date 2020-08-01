@@ -6,22 +6,22 @@
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { TextEditor, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { IBrowserService, IDisposable } from '../../../client/common/types';
 import { ExportFileOpener } from '../../../client/datascience/export/exportFileOpener';
 import { ExportFormat } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
+import { IDataScienceFileSystem } from '../../../client/datascience/types';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 
 suite('DataScience - Export File Opener', () => {
     let fileOpener: ExportFileOpener;
     let documentManager: IDocumentManager;
-    let fileSystem: IFileSystem;
+    let fileSystem: IDataScienceFileSystem;
     let applicationShell: IApplicationShell;
     let browserService: IBrowserService;
     setup(async () => {
         documentManager = mock<IDocumentManager>();
-        fileSystem = mock<IFileSystem>();
+        fileSystem = mock<IDataScienceFileSystem>();
         applicationShell = mock<IApplicationShell>();
         browserService = mock<IBrowserService>();
         const reporter = mock(ProgressReporter);

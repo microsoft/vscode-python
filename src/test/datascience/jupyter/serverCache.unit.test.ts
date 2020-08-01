@@ -6,8 +6,8 @@ import { CancellationToken } from 'vscode';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { sleep } from '../../../client/common/utils/async';
+import { DataScienceFileSystem } from '../../../client/datascience/dataScienceFileSystem';
 import { ServerCache } from '../../../client/datascience/jupyter/liveshare/serverCache';
 import { INotebookServerOptions } from '../../../client/datascience/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
@@ -16,7 +16,7 @@ import { MockJupyterServer } from '../mockJupyterServer';
 // tslint:disable: max-func-body-length
 suite('DataScience - ServerCache', () => {
     let serverCache: ServerCache;
-    const fileSystem = mock(FileSystem);
+    const fileSystem = mock(DataScienceFileSystem);
     const workspaceService = mock(WorkspaceService);
     const configService = mock(ConfigurationService);
     const server = new MockJupyterServer();

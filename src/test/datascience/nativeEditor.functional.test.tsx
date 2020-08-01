@@ -21,7 +21,6 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../client/common/application/types';
-import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Commands, Identifiers } from '../../client/datascience/constants';
@@ -716,16 +715,6 @@ df.head()`;
                 });
 
                 runMountedTest('Startup and shutdown', async () => {
-                    // Stub the `stat` method to return a dummy value.
-                    try {
-                        sinon
-                            .stub(ioc.serviceContainer.get<IFileSystem>(IFileSystem), 'stat')
-                            .resolves({ mtime: 0 } as any);
-                    } catch (e) {
-                        // tslint:disable-next-line: no-console
-                        console.log(`Stub failure ${e}`);
-                    }
-
                     addMockData(ioc, 'b=2\nb', 2);
                     addMockData(ioc, 'c=3\nc', 3);
 
@@ -1922,7 +1911,7 @@ df.head()`;
                         // Add, then undo, keep doing at least 3 times and confirm it works as expected.
                         for (let i = 0; i < 3; i += 1) {
                             // Add a new cell
-                            let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                            let update = waitForMessage(ioc, InteractiveWindowMessages.SelectedCell);
                             simulateKeyPressOnCell(0, { code: 'a' });
                             await update;
 
@@ -1930,18 +1919,12 @@ df.head()`;
                             // fixed when we switch to redux)
                             await sleep(100);
 
-                            // There should be 4 cells and first cell is focused.
-                            assert.equal(isCellSelected(wrapper, 'NativeCell', 0), false);
+                            // There should be 4 cells and first cell is selected.
+                            assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
                             assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
-                            assert.equal(isCellFocused(wrapper, 'NativeCell', 0), true);
+                            assert.equal(isCellFocused(wrapper, 'NativeCell', 0), false);
                             assert.equal(isCellFocused(wrapper, 'NativeCell', 1), false);
                             assert.equal(wrapper.find('NativeCell').length, 4);
-
-                            // Unfocus the cell
-                            update = waitForMessage(ioc, InteractiveWindowMessages.UnfocusedCellEditor);
-                            simulateKeyPressOnCell(0, { code: 'Escape' });
-                            await update;
-                            assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
 
                             // Press 'ctrl+z'. This should do nothing
                             simulateKeyPressOnCell(0, { code: 'z', ctrlKey: true });

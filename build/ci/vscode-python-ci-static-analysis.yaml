@@ -48,17 +48,6 @@ jobs:
       - task: VulnerabilityAssessment@0
         continueOnError: true
 
-      - task: TSLint@1
-        inputs:
-          RuleLibrary: 'tslint'
-          Ruleset: 'tsrecommended'
-          FileSelectionType: 'fileGlob'
-          Files: '$(Build.SourcesDirectory)\src\**\*.ts'
-          OutputFormat: 'json'
-          ToolVersion: 'latest'
-          TypeScriptVersion: 'latest'
-        continueOnError: true
-
       - task: ESLint@1
         inputs:
           Configuration: 'recommended'

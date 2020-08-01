@@ -26,7 +26,7 @@ import {
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { traceError, traceInfo } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -57,6 +57,7 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
@@ -160,7 +161,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
         statusProvider: IStatusProvider,
-        fileSystem: IFileSystem,
+        fs: IDataScienceFileSystem,
         configuration: IConfigurationService,
         commandManager: ICommandManager,
         jupyterExporter: INotebookExporter,
@@ -195,7 +196,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             cssGenerator,
             themeFinder,
             statusProvider,
-            fileSystem,
+            fs,
             configuration,
             jupyterExporter,
             workspaceService,
@@ -373,6 +374,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return Promise.resolve();
     }
 
+    protected async createNotebookIfProviderConnectionExists() {
+        if (this._model.isTrusted) {
+            await super.createNotebookIfProviderConnectionExists();
+        }
+    }
+
     protected submitCode(
         code: string,
         file: string,
@@ -460,7 +467,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     protected async setLaunchingFile(_file: string): Promise<void> {
         // For the native editor, use our own file as the path
         const notebook = this.getNotebook();
-        if (this.fileSystem.fileExists(this.file.fsPath) && notebook) {
+        if (notebook) {
             await notebook.setLaunchingFile(this.file.fsPath);
         }
     }

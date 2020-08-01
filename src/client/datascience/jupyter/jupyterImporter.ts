@@ -3,20 +3,24 @@
 'use strict';
 import '../../common/extensions';
 
-import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 
+import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CodeSnippits, Identifiers } from '../constants';
-import { CellState, ICell, IJupyterExecution, IJupyterInterpreterDependencyManager, INotebookImporter } from '../types';
-import { InvalidNotebookFileError } from './invalidNotebookFileError';
+import {
+    IDataScienceFileSystem,
+    IJupyterExecution,
+    IJupyterInterpreterDependencyManager,
+    INotebookImporter
+} from '../types';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {
@@ -38,7 +42,7 @@ export class JupyterImporter implements INotebookImporter {
     private templatePromise: Promise<string | undefined>;
 
     constructor(
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
@@ -50,15 +54,14 @@ export class JupyterImporter implements INotebookImporter {
         this.templatePromise = this.createTemplateFile();
     }
 
-    public async importFromFile(contentsFile: string, originalFile?: string): Promise<string> {
+    public async importFromFile(sourceFile: Uri): Promise<string> {
         const template = await this.templatePromise;
 
         // If the user has requested it, add a cd command to the imported file so that relative paths still work
         const settings = this.configuration.getSettings();
         let directoryChange: string | undefined;
         if (settings.datascience.changeDirOnImportExport) {
-            // If an original file is passed in, then use that for calculating the directory change as contents might be an invalid location
-            directoryChange = await this.calculateDirectoryChange(originalFile ? originalFile : contentsFile);
+            directoryChange = await this.calculateDirectoryChange(sourceFile);
         }
 
         // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
@@ -68,7 +71,7 @@ export class JupyterImporter implements INotebookImporter {
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (await this.jupyterExecution.isImportSupported()) {
-            let fileOutput: string = await this.jupyterExecution.importNotebook(contentsFile, template);
+            let fileOutput: string = await this.jupyterExecution.importNotebook(sourceFile, template);
             if (fileOutput.includes('get_ipython()')) {
                 fileOutput = this.addIPythonImport(fileOutput);
             }
@@ -79,46 +82,6 @@ export class JupyterImporter implements INotebookImporter {
         }
 
         throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
-    }
-
-    public async importCellsFromFile(file: string): Promise<ICell[]> {
-        // First convert to a python file to verify this file is valid. This is
-        // an easy way to have something else verify the validity of the file. If nbconvert isn't installed
-        // just assume the file is correct.
-        const results = (await this.jupyterExecution.isImportSupported()) ? await this.importFromFile(file) : '';
-        if (results) {
-            // Then read in the file as json. This json should already
-            return this.importCells(await this.fileSystem.readFile(file));
-        }
-
-        throw new InvalidNotebookFileError(file);
-    }
-
-    public async importCells(json: string): Promise<ICell[]> {
-        // Should we do validation here? jupyterlabs has a ContentsManager that can do validation, but skipping
-        // for now because:
-        // a) JSON parse should validate that it's JSON
-        // b) cells check should validate it's at least close to a notebook
-        // tslint:disable-next-line: no-any
-        const contents = json ? (JSON.parse(json) as any) : undefined;
-        if (contents && contents.cells) {
-            // Convert the cells into actual cell objects
-            const cells = contents.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[];
-
-            // Convert the inputdata into our ICell format
-            return cells.map((c, index) => {
-                return {
-                    id: `NotebookImport#${index}`,
-                    file: Identifiers.EmptyFileName,
-                    line: 0,
-                    state: CellState.finished,
-                    data: c,
-                    type: 'preview'
-                };
-            });
-        }
-
-        throw new InvalidNotebookFileError();
     }
 
     public dispose = () => {
@@ -148,15 +111,15 @@ export class JupyterImporter implements INotebookImporter {
     };
 
     // When importing a file, calculate if we can create a %cd so that the relative paths work
-    private async calculateDirectoryChange(notebookFile: string): Promise<string | undefined> {
+    private async calculateDirectoryChange(notebookFile: Uri): Promise<string | undefined> {
         let directoryChange: string | undefined;
         try {
             // Make sure we don't already have an import/export comment in the file
-            const contents = await this.fileSystem.readFile(notebookFile);
+            const contents = await this.fs.readFile(notebookFile);
             const haveChangeAlready = contents.includes(CodeSnippits.ChangeDirectoryCommentIdentifier);
 
             if (!haveChangeAlready) {
-                const notebookFilePath = path.dirname(notebookFile);
+                const notebookFilePath = path.dirname(notebookFile.fsPath);
                 // First see if we have a workspace open, this only works if we have a workspace root to be relative to
                 if (this.workspaceService.hasWorkspaceFolders) {
                     const workspacePath = this.workspaceService.workspaceFolders![0].uri.fsPath;
@@ -192,14 +155,14 @@ export class JupyterImporter implements INotebookImporter {
 
     private async createTemplateFile(): Promise<string | undefined> {
         // Create a temp file on disk
-        const file = await this.fileSystem.createTemporaryFile('.tpl');
+        const file = await this.fs.createTemporaryLocalFile('.tpl');
 
         // Write our template into it
         if (file) {
             try {
                 // Save this file into our disposables so the temp file goes away
                 this.disposableRegistry.push(file);
-                await this.fileSystem.appendFile(
+                await this.fs.appendLocalFile(
                     file.filePath,
                     this.nbconvertTemplateFormat.format(this.defaultCellMarker)
                 );

@@ -3,16 +3,15 @@
 
 'use strict';
 
-import * as fs from 'fs-extra';
 import { sha256 } from 'hash.js';
 import * as path from 'path';
 import request from 'request';
 import { Uri } from 'vscode';
 import { traceError, traceInfo } from '../../common/logger';
-import { IFileSystem, TemporaryFile } from '../../common/platform/types';
+import { TemporaryFile } from '../../common/platform/types';
 import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../common/types';
 import { createDeferred, sleep } from '../../common/utils/async';
-import { ILocalResourceUriConverter } from '../types';
+import { IDataScienceFileSystem, ILocalResourceUriConverter } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 // Source borrowed from https://github.com/jupyter-widgets/ipywidgets/blob/54941b7a4b54036d089652d91b39f937bde6b6cd/packages/html-manager/src/libembed-amd.ts#L33
@@ -76,7 +75,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         private readonly configurationSettings: IConfigurationService,
         private readonly httpClient: IHttpClient,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
-        private readonly fileSystem: IFileSystem
+        private readonly fs: IDataScienceFileSystem
     ) {}
     public dispose() {
         this.cache.clear();
@@ -90,7 +89,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
         // Might be on disk, try there first.
         if (!cached) {
-            if (diskPath && (await this.fileSystem.fileExists(diskPath))) {
+            if (diskPath && (await this.fs.localFileExists(diskPath))) {
                 const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
                 cached = { moduleName, scriptUri, source: 'cdn' };
                 this.cache.set(key, cached);
@@ -101,13 +100,13 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         if (!cached) {
             try {
                 // Make sure the disk path directory exists. We'll be downloading it to there.
-                await this.fileSystem.createDirectory(path.dirname(diskPath));
+                await this.fs.createLocalDirectory(path.dirname(diskPath));
 
                 // Then get the first one that returns.
                 tempFile = await this.downloadFastestCDN(moduleName, moduleVersion);
                 if (tempFile) {
                     // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
-                    await fs.copyFile(tempFile.filePath, diskPath);
+                    await this.fs.copyLocal(tempFile.filePath, diskPath);
 
                     // Now we can generate the script URI so the local converter doesn't try to copy it.
                     const scriptUri = (
@@ -202,7 +201,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         };
         req.on('response', (r) => {
             if (r.statusCode === 200) {
-                const ws = this.fileSystem.createWriteStream(filePath);
+                const ws = this.fs.createLocalWriteStream(filePath);
                 r.on('error', errorHandler)
                     .pipe(ws)
                     .on('close', () => deferred.resolve(true));
@@ -220,7 +219,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
     private async downloadFile(downloadUrl: string): Promise<TemporaryFile | undefined> {
         // Create a temp file to download the results to
-        const tempFile = await this.fileSystem.createTemporaryFile('.js');
+        const tempFile = await this.fs.createTemporaryLocalFile('.js');
 
         // Otherwise do an http get on the url. Retry at least 5 times
         let retryCount = 5;

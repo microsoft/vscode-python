@@ -9,7 +9,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
-import { IFileSystem } from '../../common/platform/types';
+
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -21,6 +21,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { DataScienceStartupTime, JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import {
+    IDataScienceFileSystem,
     IJupyterConnection,
     IJupyterSessionManagerFactory,
     INotebook,
@@ -47,7 +48,7 @@ type JupyterServerClassType = {
         workspaceService: IWorkspaceService,
         serviceContainer: IServiceContainer,
         appShell: IApplicationShell,
-        fs: IFileSystem,
+        fs: IDataScienceFileSystem,
         kernelSelector: KernelSelector,
         interpreterService: IInterpreterService,
         outputChannel: IOutputChannel
@@ -73,7 +74,7 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(IFileSystem) fs: IFileSystem,
+        @inject(IDataScienceFileSystem) fs: IDataScienceFileSystem,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutput: IOutputChannel,

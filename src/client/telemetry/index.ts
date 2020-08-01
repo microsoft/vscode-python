@@ -1287,15 +1287,11 @@ export interface IEventNamePropertyMapping {
         lsVersion?: string;
     };
     /**
-     * Telemetry event sent when user specified None to the language server.
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_NONE]: never | undefined;
-    /**
-     * Telemetry sent from Language Server (details of telemetry sent can be provided by LS team)
+     * Telemetry sent from language server (details of telemetry sent can be provided by LS team)
      */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
     /**
-     * Telemetry sent when the client makes a request to the Language Server
+     * Telemetry sent when the client makes a request to the language server
      */
     [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: any;
     /**
@@ -2221,4 +2217,7 @@ export interface IEventNamePropertyMapping {
     [VSCodeNativeTelemetry.ChangeToCode]: never | undefined;
     [VSCodeNativeTelemetry.ChangeToMarkdown]: never | undefined;
     [VSCodeNativeTelemetry.RunAllCells]: never | undefined;
+    [Telemetry.VSCNotebookCellTranslationFailed]: {
+        isErrorOutput: boolean; // Whether we're trying to translate an error output when we shuldn't be.
+    };
 }

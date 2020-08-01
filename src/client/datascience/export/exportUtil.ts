@@ -4,21 +4,21 @@ import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, Uri } from 'vscode';
-import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
+import { TemporaryDirectory } from '../../common/platform/types';
 import { sleep } from '../../common/utils/async';
-import { ICell, INotebookExporter, INotebookModel, INotebookStorage } from '../types';
+import { ICell, IDataScienceFileSystem, INotebookExporter, INotebookModel, INotebookStorage } from '../types';
 
 @injectable()
 export class ExportUtil {
     constructor(
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(INotebookStorage) private notebookStorage: INotebookStorage,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter
     ) {}
 
     public async generateTempDir(): Promise<TemporaryDirectory> {
         const resultDir = path.join(os.tmpdir(), uuid());
-        await this.fileSystem.createDirectory(resultDir);
+        await this.fs.createLocalDirectory(resultDir);
 
         return {
             path: resultDir,
@@ -29,7 +29,7 @@ export class ExportUtil {
                 let count = 0;
                 while (count < 10) {
                     try {
-                        await this.fileSystem.deleteDirectory(resultDir);
+                        await this.fs.deleteLocalDirectory(resultDir);
                         count = 10;
                     } catch {
                         await sleep(3000);
@@ -43,20 +43,20 @@ export class ExportUtil {
     public async makeFileInDirectory(model: INotebookModel, fileName: string, dirPath: string): Promise<string> {
         const newFilePath = path.join(dirPath, fileName);
 
-        await this.fileSystem.writeFile(newFilePath, model.getContent(), 'utf-8');
+        await this.fs.writeLocalFile(newFilePath, model.getContent());
 
         return newFilePath;
     }
 
     public async getModelFromCells(cells: ICell[]): Promise<INotebookModel> {
         const tempDir = await this.generateTempDir();
-        const tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
+        const tempFile = await this.fs.createTemporaryLocalFile('.ipynb');
         let model: INotebookModel;
 
         try {
             await this.jupyterExporter.exportToFile(cells, tempFile.filePath, false);
             const newPath = path.join(tempDir.path, '.ipynb');
-            await this.fileSystem.copyFile(tempFile.filePath, newPath);
+            await this.fs.copyLocal(tempFile.filePath, newPath);
             model = await this.notebookStorage.get(Uri.file(newPath));
         } finally {
             tempFile.dispose();

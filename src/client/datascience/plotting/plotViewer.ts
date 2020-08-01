@@ -12,10 +12,10 @@ import { createDeferred } from '../../../client/common/utils/async';
 import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { ICodeCssGenerator, IPlotViewer, IThemeFinder } from '../types';
+import { ICodeCssGenerator, IDataScienceFileSystem, IPlotViewer, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { PlotViewerMessageListener } from './plotViewerMessageListener';
 import { IExportPlotRequest, IPlotViewerMapping, PlotViewerMessages } from './types';
@@ -33,7 +33,7 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean
     ) {
         super(
@@ -148,7 +148,7 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
                         // tslint:disable-next-line: no-require-imports
                         const pdfkit = require('pdfkit/js/pdfkit.standalone') as typeof import('pdfkit');
                         const doc = new pdfkit();
-                        const ws = this.fileSystem.createWriteStream(file.fsPath);
+                        const ws = this.fs.createLocalWriteStream(file.fsPath);
                         traceInfo(`Writing pdf to ${file.fsPath}`);
                         ws.on('finish', () => deferred.resolve);
                         // See docs or demo from source https://cdn.statically.io/gh/alafr/SVG-to-PDFKit/master/examples/demo.htm
@@ -163,13 +163,13 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
 
                     case '.png':
                         const buffer = new Buffer(payload.png.replace('data:image/png;base64', ''), 'base64');
-                        await this.fileSystem.writeFile(file.fsPath, buffer);
+                        await this.fs.writeLocalFile(file.fsPath, buffer);
                         break;
 
                     default:
                     case '.svg':
                         // This is the easy one:
-                        await this.fileSystem.writeFile(file.fsPath, payload.svg);
+                        await this.fs.writeLocalFile(file.fsPath, payload.svg);
                         break;
                 }
             }

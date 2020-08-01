@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -14,7 +14,7 @@ import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { KernelLauncherDaemonModule } from '../constants';
-import { IJupyterKernelSpec, IKernelDependencyService } from '../types';
+import { IDataScienceFileSystem, IJupyterKernelSpec, IKernelDependencyService } from '../types';
 import { PythonKernelDaemon } from './kernelDaemon';
 import { IPythonKernelDaemon } from './types';
 
@@ -39,7 +39,7 @@ export class KernelDaemonPool implements IDisposable {
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IEnvironmentVariablesProvider) private readonly envVars: IEnvironmentVariablesProvider,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
         @inject(IInterpreterService) private readonly interrpeterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService
@@ -171,7 +171,7 @@ export class KernelDaemonPool implements IDisposable {
         // then kill that daemon, as its no longer valid.
         this.daemonPool = this.daemonPool.filter((item) => {
             const interpreterForWorkspace = currentInterpreterInEachWorksapce.get(item.key);
-            if (!interpreterForWorkspace || !this.fs.arePathsSame(interpreterForWorkspace, item.interpreterPath)) {
+            if (!interpreterForWorkspace || !this.fs.areLocalPathsSame(interpreterForWorkspace, item.interpreterPath)) {
                 item.daemon.then((d) => d.dispose()).catch(noop);
                 return false;
             }

@@ -400,10 +400,6 @@ export interface INotebookModelModifyChange extends INotebookModelChange {
     newCells: ICell[];
     oldCells: ICell[];
 }
-export interface INotebookModelTrustChange extends INotebookModelChange {
-    kind: 'updateTrust';
-    isNotebookTrusted: boolean;
-}
 export interface INotebookModelCellExecutionCountChange extends INotebookModelChange {
     kind: 'updateCellExecutionCount';
     cellId: string;
@@ -525,8 +521,7 @@ export type NotebookModelChange =
     | INotebookModelEditChange
     | INotebookModelVersionChange
     | INotebookModelChangeTypeChange
-    | INotebookModelCellExecutionCountChange
-    | INotebookModelTrustChange;
+    | INotebookModelCellExecutionCountChange;
 
 export interface IRunByLine {
     cell: ICell;

@@ -61,7 +61,7 @@ export namespace Creation {
             cellId: arg.payload.data.cellId,
             newCellId: arg.payload.data.newCellId
         });
-        queueIncomingActionWithPayload(arg, CommonActionType.FOCUS_CELL, {
+        queueIncomingActionWithPayload(arg, CommonActionType.SELECT_CELL, {
             cellId: arg.payload.data.newCellId,
             cursorPos: CursorPos.Current
         });
@@ -73,7 +73,7 @@ export namespace Creation {
             cellId: arg.payload.data.cellId,
             newCellId: arg.payload.data.newCellId
         });
-        queueIncomingActionWithPayload(arg, CommonActionType.FOCUS_CELL, {
+        queueIncomingActionWithPayload(arg, CommonActionType.SELECT_CELL, {
             cellId: arg.payload.data.newCellId,
             cursorPos: CursorPos.Current
         });

@@ -7,9 +7,9 @@ import { ICryptoUtils } from '../../common/types';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { pruneCell } from '../common';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
-import { isUntitled } from '../interactive-ipynb/nativeEditorStorage';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { ICell, IJupyterKernelSpec, INotebookMetadataLive, INotebookModel } from '../types';
+import { isUntitled } from './nativeEditorStorage';
 
 export const ActiveKernelIdList = `Active_Kernel_Id_List`;
 // This is the number of kernel ids that will be remembered between opening and closing VS code
@@ -86,24 +86,32 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public getContent(): string {
         return this.generateNotebookContent();
     }
+    public trust() {
+        this._isTrusted = true;
+    }
     protected handleUndo(_change: NotebookModelChange): boolean {
         return false;
     }
-
     protected handleRedo(change: NotebookModelChange): boolean {
         let changed = false;
         switch (change.kind) {
             case 'version':
                 changed = this.updateVersionInfo(change.interpreter, change.kernelSpec);
                 break;
-            case 'updateTrust':
-                this._isTrusted = change.isNotebookTrusted;
-                break;
             default:
                 break;
         }
 
         return changed;
+    }
+    protected generateNotebookJson() {
+        // Make sure we have some
+        this.ensureNotebookJson();
+
+        // Reuse our original json except for the cells.
+        const json = { ...this.notebookJson };
+        json.cells = this.cells.map((c) => pruneCell(c.data));
+        return json;
     }
 
     private handleModelChange(change: NotebookModelChange) {
@@ -123,16 +131,11 @@ export abstract class BaseNotebookModel implements INotebookModel {
         }
 
         // Forward onto our listeners if necessary
-        if ((changed || this.isDirty !== oldDirty) && change.kind !== 'updateTrust') {
+        if (changed || this.isDirty !== oldDirty) {
             this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty, model: this });
         }
         // Slightly different for the event we send to VS code. Skip version and file changes. Only send user events.
-        if (
-            (changed || this.isDirty !== oldDirty) &&
-            change.kind !== 'version' &&
-            change.source === 'user' &&
-            change.kind !== 'updateTrust'
-        ) {
+        if ((changed || this.isDirty !== oldDirty) && change.kind !== 'version' && change.source === 'user') {
             this._editEventEmitter.fire(change);
         }
     }
@@ -217,15 +220,9 @@ export abstract class BaseNotebookModel implements INotebookModel {
     }
 
     private generateNotebookContent(): string {
-        // Make sure we have some
-        this.ensureNotebookJson();
-
-        // Reuse our original json except for the cells.
-        const json = { ...this.notebookJson };
-        json.cells = this.cells.map((c) => pruneCell(c.data));
+        const json = this.generateNotebookJson();
         return JSON.stringify(json, null, this.indentAmount);
     }
-
     private getStoredKernelId(): string | undefined {
         // Stored as a list so we don't take up too much space
         const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);

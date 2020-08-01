@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { IDataScienceSettings, IDisposableRegistry, IPythonSettings } from '../../../client/common/types';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
-import { INotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
+import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../client/datascience/types';
 
 function Uri(filename: string): vscode.Uri {

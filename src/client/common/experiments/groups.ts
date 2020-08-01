@@ -80,11 +80,6 @@ export enum NotebookEditorSupport {
     nativeNotebookExperiment = 'NativeNotebook - experiment'
 }
 
-// Experiment to turn on the start page
-export enum EnableStartPage {
-    experiment = 'EnableStartPage'
-}
-
 // Experiment to remove the Kernel/Server Tooblar in the Interactive Window when running a local Jupyter Server.
 // It doesn't make sense to have it there, the user can already change the kernel
 // by changing the python interpreter on the status bar.

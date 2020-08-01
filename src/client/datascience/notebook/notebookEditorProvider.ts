@@ -6,31 +6,28 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import type { NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from 'vscode-proposed';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IVSCodeNotebook,
-    NotebookCellLanguageChangeEvent,
-    NotebookCellOutputsChangeEvent,
-    NotebookCellsChangeEvent
-} from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import '../../common/extensions';
-import { IFileSystem } from '../../common/platform/types';
+
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, setSharedProperty } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
-import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
-import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
+import {
+    IDataScienceFileSystem,
+    INotebookEditor,
+    INotebookEditorProvider,
+    INotebookProvider,
+    IStatusProvider
+} from '../types';
 import { JupyterNotebookView } from './constants';
-import { mapVSCNotebookCellsToNotebookCellModels } from './helpers/cellMappers';
-import { updateCellModelWithChangesToVSCCell } from './helpers/cellUpdateHelpers';
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
-import { INotebookContentProvider, INotebookExecutionService } from './types';
+import { INotebookExecutionService } from './types';
 
 /**
  * Notebook Editor provider used by other parts of DS code.
@@ -65,7 +62,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private readonly notebooksWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
-        @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider,
         @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -74,13 +70,12 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(UseVSCodeNotebookEditorApi) useVSCodeNotebookEditorApi: boolean,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(
             this.vscodeNotebook.onDidChangeActiveNotebookEditor(this.onDidChangeActiveVsCodeNotebookEditor, this)
         );
-        this.disposables.push(this.vscodeNotebook.onDidChangeNotebookDocument(this.onDidChangeNotebookDocument, this));
         this.disposables.push(
             this.commandManager.registerCommand(Commands.OpenNotebookInPreviewEditor, async (uri?: Uri) => {
                 if (uri) {
@@ -149,7 +144,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
 
             // Find all notebooks associated with this editor (ipynb file).
             const otherEditors = this.editors.filter(
-                (e) => this.fileSystem.arePathsSame(e.file.fsPath, editor.file.fsPath) && e !== editor
+                (e) => this.fs.areLocalPathsSame(e.file.fsPath, editor.file.fsPath) && e !== editor
             );
 
             // If we have no editors for this file, then dispose the notebook.
@@ -165,7 +160,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         }
         const uri = doc.uri;
         const model = await this.storage.get(uri, undefined, undefined, true);
-        mapVSCNotebookCellsToNotebookCellModels(doc, model);
+        if (model instanceof VSCodeNotebookModel) {
+            model.associateNotebookDocument(doc);
+        }
         // In open method we might be waiting.
         let editor = this.notebookEditorsByUri.get(uri.toString());
         if (!editor) {
@@ -178,7 +175,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 executionService,
                 this.commandManager,
                 notebookProvider,
-                this.contentProvider,
                 this.statusProvider,
                 this.appShell,
                 this.configurationService,
@@ -237,20 +233,5 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         }
         this.notebookEditorsByUri.delete(uri.toString());
         this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());
-    }
-    private async onDidChangeNotebookDocument(
-        e: NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
-    ): Promise<void> {
-        if (!isJupyterNotebook(e.document)) {
-            return;
-        }
-        const model = await this.storage.get(e.document.uri, undefined, undefined, true);
-        if (!(model instanceof VSCodeNotebookModel)) {
-            throw new Error('NotebookModel not of type VSCodeNotebookModel');
-        }
-        if (updateCellModelWithChangesToVSCCell(e, model)) {
-            // If we have updated the notebook document, then trigger changes.
-            this.contentProvider.notifyChangesToDocument(e.document);
-        }
     }
 }

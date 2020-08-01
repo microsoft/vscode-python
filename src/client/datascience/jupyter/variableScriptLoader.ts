@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 'use strict';
 import * as path from 'path';
-import { IFileSystem } from '../../common/platform/types';
+
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IJupyterVariable } from '../types';
+import { IDataScienceFileSystem, IJupyterVariable } from '../types';
 
 export class VariableScriptLoader {
     private fetchVariableShapeScript?: string;
     private filesLoaded: boolean = false;
 
-    constructor(private fileSystem: IFileSystem) {}
+    constructor(private fs: IDataScienceFileSystem) {}
 
     public readShapeScript(targetVariable: IJupyterVariable): Promise<string | undefined> {
         return this.readScript(targetVariable, () => this.fetchVariableShapeScript);
@@ -63,7 +63,7 @@ export class VariableScriptLoader {
             'vscode_datascience_helpers',
             'getJupyterVariableShape.py'
         );
-        this.fetchVariableShapeScript = await this.fileSystem.readFile(file);
+        this.fetchVariableShapeScript = await this.fs.readLocalFile(file);
         this.filesLoaded = true;
     }
 }

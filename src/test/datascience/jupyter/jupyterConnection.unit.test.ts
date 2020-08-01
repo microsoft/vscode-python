@@ -8,13 +8,13 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationToken } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { ObservableExecutionResult, Output } from '../../../client/common/process/types';
 import { IConfigurationService, IDataScienceSettings } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
+import { DataScienceFileSystem } from '../../../client/datascience/dataScienceFileSystem';
 import { JupyterConnectionWaiter, JupyterServerInfo } from '../../../client/datascience/jupyter/jupyterConnection';
+import { IDataScienceFileSystem } from '../../../client/datascience/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -24,7 +24,7 @@ suite('DataScience - JupyterConnection', () => {
     let launchResult: ObservableExecutionResult<string>;
     let getServerInfoStub: sinon.SinonStub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>;
     let configService: IConfigurationService;
-    let fs: IFileSystem;
+    let fs: IDataScienceFileSystem;
     let serviceContainer: IServiceContainer;
     // tslint:disable-next-line: no-any
     const dsSettings: IDataScienceSettings = { jupyterLaunchTimeout: 10_000 } as any;
@@ -77,14 +77,14 @@ suite('DataScience - JupyterConnection', () => {
         };
         getServerInfoStub = sinon.stub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>();
         serviceContainer = mock(ServiceContainer);
-        fs = mock(FileSystem);
+        fs = mock(DataScienceFileSystem);
         configService = mock(ConfigurationService);
         const settings = mock(PythonSettings);
         getServerInfoStub.resolves(dummyServerInfos);
-        when(fs.arePathsSame(anything(), anything())).thenCall((path1, path2) => path1 === path2);
+        when(fs.areLocalPathsSame(anything(), anything())).thenCall((path1, path2) => path1 === path2);
         when(settings.datascience).thenReturn(dsSettings);
         when(configService.getSettings(anything())).thenReturn(instance(settings));
-        when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fs));
+        when(serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem)).thenReturn(instance(fs));
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
     });
 
