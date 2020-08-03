@@ -159,10 +159,13 @@ export class JupyterNotebookBase implements INotebook {
     private _executionInfo: INotebookExecutionInfo;
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
     public get onDisposed(): Event<void> {
-        return this.disposed.event;
+        return this.disposedEvent.event;
     }
     public get onKernelChanged(): Event<IJupyterKernelSpec | LiveKernelModel> {
         return this.kernelChanged.event;
+    }
+    public get disposed() {
+        return this._disposed;
     }
     private kernelChanged = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>();
     public get onKernelRestarted(): Event<void> {
@@ -174,7 +177,7 @@ export class JupyterNotebookBase implements INotebook {
     }
     private readonly kernelRestarted = new EventEmitter<void>();
     private readonly kernelInterrupted = new EventEmitter<void>();
-    private disposed = new EventEmitter<void>();
+    private disposedEvent = new EventEmitter<void>();
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
     private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => void>();
@@ -227,7 +230,7 @@ export class JupyterNotebookBase implements INotebook {
                 this.onStatusChangedEvent = undefined;
             }
             this.loggers.forEach((d) => d.dispose());
-            this.disposed.fire();
+            this.disposedEvent.fire();
 
             try {
                 traceInfo(`Shutting down session ${this.identity.toString()}`);

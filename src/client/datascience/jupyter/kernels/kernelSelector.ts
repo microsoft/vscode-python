@@ -32,7 +32,7 @@ import {
 import { createDefaultKernelSpec } from './helpers';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
-import { IKernelSpecQuickPickItem, KernelSelection, LiveKernelModel } from './types';
+import { IKernelSpecQuickPickItem, KernelSelection, LiveKernelModel, IKernelSelectionUsage } from './types';
 
 export type KernelSpecInterpreter = {
     kernelSpec?: IJupyterKernelSpec;
@@ -54,7 +54,7 @@ export type KernelSpecInterpreter = {
 };
 
 @injectable()
-export class KernelSelector {
+export class KernelSelector implements IKernelSelectionUsage {
     /**
      * List of ids of kernels that should be hidden from the kernel picker.
      *
@@ -325,7 +325,7 @@ export class KernelSelector {
             interpreter: interpreter
         };
     }
-    public async tryToUseKernel(
+    public async useSelectedKernel(
         selection: KernelSelection,
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
@@ -539,7 +539,7 @@ export class KernelSelector {
         if (!selection?.selection) {
             return {};
         }
-        return this.tryToUseKernel(selection.selection, resource, type, session, cancelToken);
+        return this.useSelectedKernel(selection.selection, resource, type, session, cancelToken);
     }
 
     // When switching to an interpreter in raw kernel mode then just create a default kernelspec for that interpreter to use

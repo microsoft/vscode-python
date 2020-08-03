@@ -183,6 +183,7 @@ export interface INotebook extends IAsyncDisposable {
     kernelSocket: Observable<KernelSocketInformation | undefined>;
     readonly identity: Uri;
     readonly status: ServerStatus;
+    readonly disposed: boolean;
     onSessionStatusChanged: Event<ServerStatus>;
     onDisposed: Event<void>;
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;

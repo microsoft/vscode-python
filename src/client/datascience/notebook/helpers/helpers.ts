@@ -25,12 +25,16 @@ import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { CellState, ICell, INotebookModel } from '../../types';
+import { CellState, ICell, IJupyterKernelSpec, INotebookModel } from '../../types';
 import { JupyterNotebookView } from '../constants';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { LiveKernelModel } from '../../jupyter/kernels/types';
+import { getDefaultNotebookContent, updateVersionInfoInMetadata } from '../../notebookStorage/baseModel';
+import { INotebookContentProvider } from '../types';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 interface IBaseCellVSCodeMetadata {
@@ -53,6 +57,26 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     }
 }
 
+export function updateKernelInNotebookMetadata(
+    document: NotebookDocument,
+    kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+    interpreter: PythonInterpreter | undefined,
+    notebookContentProvider: INotebookContentProvider
+) {
+    // tslint:disable-next-line: no-any
+    let notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
+    if (!notebookContent) {
+        notebookContent = getDefaultNotebookContent(3);
+    }
+    if (!notebookContent.metadata) {
+        notebookContent.metadata = getDefaultNotebookContent(3).metadata;
+    }
+    const info = updateVersionInfoInMetadata(notebookContent.metadata, interpreter, kernelSpec);
+
+    if (info.changed) {
+        notebookContentProvider.notifyChangesToDocument(document);
+    }
+}
 /**
  * Converts a NotebookModel into VSCode friendly format.
  */

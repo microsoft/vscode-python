@@ -3,10 +3,12 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import type { NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel } from 'vscode-proposed';
+import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
+import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
+import { IKernelSelectionUsage, KernelSelection } from '../jupyter/kernels/types';
 import { INotebookExecutionService } from './types';
 
 /**
@@ -45,12 +47,33 @@ export class NotebookKernel implements VSCNotebookKernel {
     get preloads(): Uri[] {
         return [];
     }
-    public get label(): string {
-        return 'Jupyter';
+    private kernelValidated = createDeferred<KernelSpecInterpreter>();
+    private validating?: boolean;
+    public get hasBeenValidated() {
+        return this.kernelValidated.promise;
     }
     private cellExecutions = new WeakMap<NotebookCell, MultiCancellationTokenSource>();
     private documentExecutions = new WeakMap<NotebookDocument, MultiCancellationTokenSource>();
-    constructor(@inject(INotebookExecutionService) private readonly execution: INotebookExecutionService) {}
+    constructor(
+        public readonly label: string,
+        public readonly description: string,
+        private readonly selection: KernelSelection,
+        private readonly execution: INotebookExecutionService,
+        private readonly kernelSelectionUsage: IKernelSelectionUsage
+    ) {}
+    public async validate(uri: Uri) {
+        if (this.kernelValidated.completed) {
+            return;
+        }
+        if (this.validating) {
+            return this.kernelValidated.promise;
+        }
+        this.validating = true;
+        this.kernelSelectionUsage
+            .useSelectedKernel(this.selection, uri, 'raw')
+            .then(() => this.kernelValidated.resolve())
+            .catch((e) => this.kernelValidated.reject(e));
+    }
     public executeCell(document: NotebookDocument, cell: NotebookCell) {
         if (this.cellExecutions.has(cell)) {
             return;

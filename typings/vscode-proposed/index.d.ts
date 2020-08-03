@@ -141,6 +141,16 @@ export interface NotebookCellMetadata {
     lastRunDuration?: number;
 
     /**
+     * Whether a code cell's editor is collapsed
+     */
+    inputCollapsed?: boolean;
+
+    /**
+     * Whether a code cell's outputs are collapsed
+     */
+    outputCollapsed?: boolean;
+
+    /**
      * Additional attributes of a cell metadata.
      */
     custom?: { [key: string]: any };
@@ -375,6 +385,11 @@ export interface NotebookCellLanguageChangeEvent {
     readonly language: string;
 }
 
+export interface NotebookCellMetadataChangeEvent {
+    readonly document: NotebookDocument;
+    readonly cell: NotebookCell;
+}
+
 export interface NotebookCellData {
     readonly cellKind: CellKind;
     readonly source: string;
@@ -533,23 +548,6 @@ export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKerne
     ): ProviderResult<void>;
 }
 
-export interface NotebookDocumentFilter {
-    viewType?: string;
-    filenamePattern?: GlobPattern;
-    excludeFileNamePattern?: GlobPattern;
-}
-
-export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKernel> {
-    onDidChangeKernels?: Event<void>;
-    provideKernels(document: NotebookDocument, token: CancellationToken): ProviderResult<T[]>;
-    resolveKernel?(
-        kernel: T,
-        document: NotebookDocument,
-        webview: NotebookCommunication,
-        token: CancellationToken
-    ): ProviderResult<void>;
-}
-
 export namespace notebook {
     export function registerNotebookContentProvider(
         notebookType: string,
@@ -585,6 +583,7 @@ export namespace notebook {
     export const onDidChangeNotebookCells: Event<NotebookCellsChangeEvent>;
     export const onDidChangeCellOutputs: Event<NotebookCellOutputsChangeEvent>;
     export const onDidChangeCellLanguage: Event<NotebookCellLanguageChangeEvent>;
+    export const onDidChangeCellMetadata: Event<NotebookCellMetadataChangeEvent>;
     /**
      * Create a document that is the concatenation of all  notebook cells. By default all code-cells are included
      * but a selector can be provided to narrow to down the set of cells.

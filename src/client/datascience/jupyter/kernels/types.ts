@@ -7,7 +7,8 @@ import type { Session } from '@jupyterlab/services';
 import { CancellationToken, QuickPickItem } from 'vscode';
 import { Resource } from '../../../common/types';
 import { PythonInterpreter } from '../../../pythonEnvironments/info';
-import { IJupyterKernel, IJupyterKernelSpec } from '../../types';
+import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
+import { KernelSpecInterpreter } from './kernelSelector';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
@@ -28,4 +29,18 @@ export interface IKernelSpecQuickPickItem extends QuickPickItem {
 
 export interface IKernelSelectionListProvider {
     getKernelSelections(resource: Resource, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]>;
+}
+
+export interface IKernelSelectionUsage {
+    /**
+     * Given a kernel selection, this method will attempt to use that kernel and return the corresponding Interpreter, Kernel Spec and the like.
+     * This method will also check if required dependencies are installed or not, and will install them if required.
+     */
+    useSelectedKernel(
+        selection: KernelSelection,
+        resource: Resource,
+        type: 'raw' | 'jupyter' | 'noConnection',
+        session?: IJupyterSessionManager,
+        cancelToken?: CancellationToken
+    ): Promise<KernelSpecInterpreter | {}>;
 }
