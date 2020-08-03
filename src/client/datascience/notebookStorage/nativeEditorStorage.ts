@@ -2,7 +2,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationToken, Memento, Uri } from 'vscode';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { traceError } from '../../common/logger';
 import { isFileNotFoundError } from '../../common/platform/errors';
@@ -24,6 +24,7 @@ import {
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
+import { VSCodeNotebookModel } from './vscNotebookModel';
 
 const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
@@ -53,11 +54,6 @@ export function getNextUntitledCounter(file: Uri | undefined, currentValue: numb
 
 @injectable()
 export class NativeEditorStorage implements INotebookStorage {
-    public get onSavedAs(): Event<{ new: Uri; old: Uri }> {
-        return this.savedAs.event;
-    }
-    private readonly savedAs = new EventEmitter<{ new: Uri; old: Uri }>();
-
     // Keep track of if we are backing up our file already
     private backingUp = false;
     // If backup requests come in while we are already backing up save the most recent one here
@@ -119,13 +115,15 @@ export class NativeEditorStorage implements INotebookStorage {
     }
 
     public async saveAs(model: INotebookModel, file: Uri): Promise<void> {
-        const old = model.file;
         const contents = model.getContent();
         const parallelize = [this.fs.writeFile(file, contents)];
         if (model.isTrusted) {
             parallelize.push(this.trustService.trustNotebook(file, contents));
         }
         await Promise.all(parallelize);
+        if (model instanceof VSCodeNotebookModel) {
+            return;
+        }
         model.update({
             source: 'user',
             kind: 'saveAs',
@@ -134,7 +132,6 @@ export class NativeEditorStorage implements INotebookStorage {
             target: file,
             sourceUri: model.file
         });
-        this.savedAs.fire({ new: file, old });
     }
     public async backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string): Promise<void> {
         // If we are already backing up, save this request replacing any other previous requests

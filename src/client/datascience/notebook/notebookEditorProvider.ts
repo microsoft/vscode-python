@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import type { NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from 'vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import '../../common/extensions';
 
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -69,7 +68,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(UseVSCodeNotebookEditorApi) useVSCodeNotebookEditorApi: boolean,
         @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
@@ -82,21 +80,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                     setSharedProperty('ds_notebookeditor', 'native');
                     captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false);
                     this.open(uri).ignoreErrors();
-                }
-            })
-        );
-
-        // Swap the uris.
-        this.disposables.push(
-            this.storage.onSavedAs((e) => {
-                // We are interested in this ONLY if we have a VS Code NotebookEditor opened or if we belong to the nb experiment.
-                if (!useVSCodeNotebookEditorApi && !this.vscodeNotebook.notebookDocuments.length) {
-                    return;
-                }
-                const savedEditor = this.notebookEditorsByUri.get(e.old.toString());
-                if (savedEditor) {
-                    this.notebookEditorsByUri.delete(e.old.toString());
-                    this.notebookEditorsByUri.set(e.new.toString(), savedEditor);
                 }
             })
         );

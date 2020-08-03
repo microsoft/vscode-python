@@ -11,7 +11,6 @@ import { IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
 import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
-import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,
@@ -43,10 +42,8 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(INotebookStorageProvider) storageProvider: INotebookStorageProvider
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {
-        disposables.push(storageProvider.onSavedAs(this.onSavedAs, this));
         this.rawNotebookProvider
             .supported()
             .then((b) => (this._type = b ? 'raw' : 'jupyter'))
@@ -182,14 +179,5 @@ export class NotebookProvider implements INotebookProvider {
 
         // If promise fails, then remove the promise from cache.
         promise.catch(removeFromCache);
-    }
-
-    private async onSavedAs(e: { new: Uri; old: Uri }) {
-        // Swap the Uris when a notebook is saved as a different file.
-        const notebookPromise = this.notebooks.get(e.old.toString());
-        if (notebookPromise) {
-            this.notebooks.set(e.new.toString(), notebookPromise);
-            this.notebooks.delete(e.old.toString());
-        }
     }
 }

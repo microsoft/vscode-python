@@ -7,7 +7,6 @@ import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { IDataScienceSettings, IDisposableRegistry, IPythonSettings } from '../../../client/common/types';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
-import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../client/datascience/types';
 
 function Uri(filename: string): vscode.Uri {
@@ -42,7 +41,6 @@ suite('DataScience - NotebookProvider', () => {
         // Set up our settings
         pythonSettings = mock<IPythonSettings>();
         dataScienceSettings = mock<IDataScienceSettings>();
-        const storageProvider = mock<INotebookStorageProvider>();
         when(pythonSettings.datascience).thenReturn(instance(dataScienceSettings));
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(dataScienceSettings.jupyterServerURI).thenReturn('local');
@@ -53,8 +51,7 @@ suite('DataScience - NotebookProvider', () => {
             instance(disposableRegistry),
             instance(rawNotebookProvider),
             instance(jupyterNotebookProvider),
-            instance(workspaceService),
-            instance(storageProvider)
+            instance(workspaceService)
         );
     });
 

@@ -10,6 +10,7 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { generateNewNotebookUri } from '../common';
 import { INotebookModel, INotebookStorage } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';
+import { VSCodeNotebookModel } from './vscNotebookModel';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 
@@ -32,7 +33,6 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         disposables.push(this);
-        disposables.push(storage.onSavedAs((e) => this._savedAs.fire(e)));
     }
     public async save(model: INotebookModel, cancellation: CancellationToken) {
         await this.storage.save(model, cancellation);
@@ -40,6 +40,9 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     public async saveAs(model: INotebookModel, targetResource: Uri) {
         const oldUri = model.file;
         await this.storage.saveAs(model, targetResource);
+        if (model instanceof VSCodeNotebookModel) {
+            return;
+        }
         this.trackModel(model);
         this.storageAndModels.delete(oldUri.toString());
         this.storageAndModels.set(targetResource.toString(), Promise.resolve(model));

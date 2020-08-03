@@ -14,7 +14,6 @@ import type {
     NotebookDocumentContentChangeEvent,
     NotebookDocumentOpenContext
 } from 'vscode-proposed';
-import { ICommandManager } from '../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../common/constants';
 import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
@@ -42,7 +41,6 @@ export class NotebookContentProvider implements INotebookContentProvider {
     }
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(NotebookEditorCompatibilitySupport)
         private readonly compatibilitySupport: NotebookEditorCompatibilitySupport
     ) {}
@@ -85,11 +83,7 @@ export class NotebookContentProvider implements INotebookContentProvider {
         if (cancellation.isCancellationRequested) {
             return;
         }
-        if (model.isUntitled) {
-            await this.commandManager.executeCommand('workbench.action.files.saveAs', document.uri);
-        } else {
-            await this.notebookStorage.save(model, cancellation);
-        }
+        await this.notebookStorage.save(model, cancellation);
     }
 
     public async saveNotebookAs(
