@@ -17,7 +17,7 @@ import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook } from './helpers/helpers';
-// import { IPyWidgetNotebookOutputRenderer } from './ipyWidgetRenderer';
+import { IPyWidgetNotebookOutputRenderer } from './ipyWidgetRenderer';
 import { KernelProvider } from './kernelProvider';
 // import { NotebookOutputRenderer } from './renderer';
 import { INotebookContentProvider } from './types';
@@ -39,7 +39,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(KernelProvider) private readonly kernelProvider: KernelProvider,
         // @inject(NotebookOutputRenderer) private readonly renderer: NotebookOutputRenderer,
         // // @inject(INotebookExecutionService) private readonly _execution: INotebookExecutionService,
-        // @inject(IPyWidgetNotebookOutputRenderer) private readonly ipyWidgetRenderer: IPyWidgetNotebookOutputRenderer,
+        @inject(IPyWidgetNotebookOutputRenderer) private readonly ipyWidgetRenderer: IPyWidgetNotebookOutputRenderer,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -97,15 +97,15 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             //         this.renderer
             //     )
             // );
-            // this.disposables.push(
-            //     this.vscNotebook.registerNotebookOutputRenderer(
-            //         'jupyter-ipywidget-renderer',
-            //         {
-            //             mimeTypes: ['application/vnd.jupyter.widget-view+json']
-            //         },
-            //         this.ipyWidgetRenderer
-            //     )
-            // );
+            this.disposables.push(
+                this.vscNotebook.registerNotebookOutputRenderer(
+                    'jupyter-ipywidget-renderer',
+                    {
+                        mimeTypes: ['application/vnd.jupyter.widget-view+json']
+                    },
+                    this.ipyWidgetRenderer
+                )
+            );
         } catch (ex) {
             // If something goes wrong, and we're not in Insiders & not using the NativeEditor experiment, then swallow errors.
             traceError('Failed to register VS Code Notebook API', ex);

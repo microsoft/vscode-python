@@ -9,20 +9,15 @@ import type { ISignal, Signal } from '@phosphor/signaling';
 import * as WebSocketWS from 'ws';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { deserializeDataViews, serializeDataViews } from '../../client/common/utils/serializers';
-import {
-    IInteractiveWindowMapping,
-    IPyWidgetMessages
-} from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { KernelSocketOptions } from '../../client/datascience/types';
-import { IMessageHandler, PostOffice } from '../react-common/postOffice';
+import { IPyWidgetMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IPyWidgetsPostOffice, KernelSocketOptions } from '../renderers/ipywidgets/types';
 
 // tslint:disable:no-any
 
 // tslint:disable: no-any
 // Proxy kernel that wraps the default kernel. We need this entire class because
 // we can't derive from DefaultKernel.
-class ProxyKernel implements IMessageHandler, Kernel.IKernel {
-    private readonly _ioPubMessageSignal: Signal<this, KernelMessage.IIOPubMessage>;
+class ProxyKernel implements Kernel.IKernel {
     public get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
         return this._ioPubMessageSignal;
     }
@@ -74,7 +69,9 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     public get isDisposed(): boolean {
         return this.realKernel.isDisposed;
     }
+    private readonly _ioPubMessageSignal: Signal<this, KernelMessage.IIOPubMessage>;
     private realKernel: Kernel.IKernel;
+    private disposables: { dispose(): {} }[] = [];
     private hookResults = new Map<string, boolean | PromiseLike<boolean>>();
     private websocket: WebSocketWS & { sendEnabled: boolean };
     private messageHook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>;
@@ -82,15 +79,15 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     private lastHookedMessageId: string | undefined;
     // Messages that are awaiting extension messages to be fully handled
     private awaitingExtensionMessage: Map<string, Deferred<void>>;
-    constructor(options: KernelSocketOptions, private postOffice: PostOffice) {
-        // Dummy websocket we give to the underlying real kernel
-        let proxySocketInstance: any;
+    constructor(options: KernelSocketOptions, private postOffice: IPyWidgetsPostOffice) {
         class ProxyWebSocket {
+            // Dummy websocket we give to the underlying real kernel
+            public static instance: ProxyWebSocket;
             public onopen?: ((this: ProxyWebSocket) => any) | null;
             public onmessage?: ((this: ProxyWebSocket, ev: MessageEvent) => any) | null;
             public sendEnabled: boolean = true;
             constructor() {
-                proxySocketInstance = this;
+                ProxyWebSocket.instance = this;
             }
             public close(_code?: number | undefined, _reason?: string | undefined): void {
                 // Nothing.
@@ -100,10 +97,10 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
                 // the extension side.
                 if (this.sendEnabled) {
                     if (typeof data === 'string') {
-                        postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg, data);
+                        postOffice.postKernelMessage(IPyWidgetMessages.IPyWidgets_msg, data);
                     } else {
                         // Serialize binary data properly before sending to extension.
-                        postOffice.sendMessage<IInteractiveWindowMapping>(
+                        postOffice.postKernelMessage(
                             IPyWidgetMessages.IPyWidgets_binary_msg,
                             serializeDataViews([data as any])
                         );
@@ -134,9 +131,10 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
         this._ioPubMessageSignal = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this.realKernel.iopubMessage.connect(this.onIOPubMessage, this);
-
-        postOffice.addHandler(this);
-        this.websocket = proxySocketInstance;
+        // tslint:disable-next-line: no-console
+        console.error('Hook up Receive Kernel Message');
+        postOffice.onDidReceiveKernelMessage(this.handleMessage, this, this.disposables);
+        this.websocket = (ProxyWebSocket.instance as unknown) as WebSocketWS & { sendEnabled: boolean };
         this.messageHook = this.messageHookInterceptor.bind(this);
         this.messageHooks = new Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>();
         this.fakeOpenSocket();
@@ -240,10 +238,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     ): void {
         // When a comm target has been registered, we need to register this in the real kernel in extension side.
         // Hence send that message to extension.
-        this.postOffice.sendMessage<IInteractiveWindowMapping>(
-            IPyWidgetMessages.IPyWidgets_registerCommTarget,
-            targetName
-        );
+        this.postOffice.postKernelMessage(IPyWidgetMessages.IPyWidgets_registerCommTarget, targetName);
         return this.realKernel.registerCommTarget(targetName, callback);
     }
     public removeCommTarget(
@@ -253,11 +248,24 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         return this.realKernel.removeCommTarget(targetName, callback);
     }
     public dispose(): void {
-        this.postOffice.removeHandler(this);
+        this.disposables.forEach((d) => d.dispose());
         return this.realKernel.dispose();
     }
-    public handleMessage(type: string, payload?: any): boolean {
-        // Handle messages as they come in. Note: Do not await anything here. THey have to be inorder.
+    public handleMessage({ type, payload }: { type: string; payload?: any }): boolean {
+        // tslint:disable: no-console
+        switch (type) {
+            case IPyWidgetMessages.IPyWidgets_MessageHookCall:
+            case IPyWidgetMessages.IPyWidgets_msg:
+            case IPyWidgetMessages.IPyWidgets_binary_msg:
+            case IPyWidgetMessages.IPyWidgets_mirror_execute:
+            case IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled:
+                console.debug(`handleMessage inside kernel ${type}`, payload);
+                break;
+            default:
+                break;
+        }
+
+        // Handle messages as they come in. Note: Do not await anything here. THey have to be in order.
         // If not, we could switch to message chaining or an observable instead.
         switch (type) {
             case IPyWidgetMessages.IPyWidgets_MessageHookCall:
@@ -267,14 +275,19 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
             case IPyWidgetMessages.IPyWidgets_msg:
                 if (this.websocket && this.websocket.onmessage) {
                     this.websocket.onmessage({ target: this.websocket, data: payload.data, type: '' });
+                } else {
+                    console.error('Not handled');
                 }
                 this.sendResponse(payload.id);
                 break;
 
             case IPyWidgetMessages.IPyWidgets_binary_msg:
                 if (this.websocket && this.websocket.onmessage) {
+                    console.error('Binary message deserialized');
                     const deserialized = deserializeDataViews(payload.data)![0];
                     this.websocket.onmessage({ target: this.websocket, data: deserialized as any, type: '' });
+                } else {
+                    console.error('Not handled');
                 }
                 this.sendResponse(payload.id);
                 break;
@@ -308,7 +321,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.awaitingExtensionMessage.set(key, waitPromise);
 
         // Tell the other side about this.
-        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RegisterMessageHook, msgId);
+        this.postOffice.postKernelMessage(IPyWidgetMessages.IPyWidgets_RegisterMessageHook, msgId);
 
         // Save the real hook so we can call it
         this.messageHooks.set(msgId, hook);
@@ -330,7 +343,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         const key = this.generateExtensionResponseKey(msgId, IPyWidgetMessages.IPyWidgets_RemoveMessageHook.toString());
         this.awaitingExtensionMessage.set(key, waitPromise);
 
-        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RemoveMessageHook, {
+        this.postOffice.postKernelMessage(IPyWidgetMessages.IPyWidgets_RemoveMessageHook, {
             hookMsgId: msgId,
             lastHookedMsgId: this.lastHookedMessageId
         });
@@ -358,7 +371,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     }
 
     private sendResponse(id: string) {
-        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg_received, {
+        this.postOffice.postKernelMessage(IPyWidgetMessages.IPyWidgets_msg_received, {
             id
         });
     }
@@ -419,18 +432,15 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
             if ((result as any).then) {
                 // tslint:disable-next-line: no-any
                 (result as any).then((r: boolean) => {
-                    this.postOffice.sendMessage<IInteractiveWindowMapping>(
-                        IPyWidgetMessages.IPyWidgets_MessageHookResult,
-                        {
-                            requestId: args.requestId,
-                            parentId: args.parentId,
-                            msgType: args.msg.header.msg_type,
-                            result: r
-                        }
-                    );
+                    this.postOffice.postKernelMessage(IPyWidgetMessages.IPyWidgets_MessageHookResult, {
+                        requestId: args.requestId,
+                        parentId: args.parentId,
+                        msgType: args.msg.header.msg_type,
+                        result: r
+                    });
                 });
             } else {
-                this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_MessageHookResult, {
+                this.postOffice.postKernelMessage(IPyWidgetMessages.IPyWidgets_MessageHookResult, {
                     requestId: args.requestId,
                     parentId: args.parentId,
                     msgType: args.msg.header.msg_type,
@@ -439,7 +449,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
             }
         } else {
             // If no hook registered, make sure not to remove messages.
-            this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_MessageHookResult, {
+            this.postOffice.postKernelMessage(IPyWidgetMessages.IPyWidgets_MessageHookResult, {
                 requestId: args.requestId,
                 parentId: args.parentId,
                 msgType: args.msg.header.msg_type,
@@ -489,13 +499,12 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
 
     // Finish an iopub message by sending a message to the UI and then emitting that we are done with it
     private finishIOPubMessage(message: KernelMessage.IIOPubMessage) {
-        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_iopub_msg_handled, {
+        this.postOffice.postKernelMessage(IPyWidgetMessages.IPyWidgets_iopub_msg_handled, {
             id: message.header.msg_id
         });
         this._ioPubMessageSignal.emit(message);
     }
 }
-
 /**
  * Creates a kernel from a websocket.
  * Check code in `node_modules/@jupyterlab/services/lib/kernel/default.js`.
@@ -504,11 +513,11 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
  */
 export function create(
     options: KernelSocketOptions,
-    postOffice: PostOffice,
+    postOffice: IPyWidgetsPostOffice,
     pendingMessages: { message: string; payload: any }[]
 ): Kernel.IKernel {
     const result = new ProxyKernel(options, postOffice);
     // Make sure to handle all the missed messages
-    pendingMessages.forEach((m) => result.handleMessage(m.message, m.payload));
+    pendingMessages.forEach((m) => result.handleMessage({ type: m.message, payload: m.payload }));
     return result;
 }
