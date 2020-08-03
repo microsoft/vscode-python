@@ -1173,6 +1173,11 @@ export interface INotebookProvider {
      */
     activeNotebooks: Promise<INotebook>[];
     /**
+     * Disposes notebook associated with the given identity.
+     * Using `getOrCreateNotebook` would be incorrect as thats async, and its possible a document has been opened in the interim (meaning we could end up disposing something that is required).
+     */
+    disposeAssociatedNotebook(options: { identity: Uri }): void;
+    /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */
     getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
