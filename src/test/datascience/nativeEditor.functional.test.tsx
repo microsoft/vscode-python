@@ -763,9 +763,12 @@ df.head()`;
                     verifyHtmlOnCell(editor.mount.wrapper, 'NativeCell', `1`, 0);
                 });
 
-                test('IANHU Failure', async () => {
+                test('Failure', async () => {
                     let fail = true;
                     const errorThrownDeferred = createDeferred<Error>();
+
+                    // Turn off raw kernel for this test as it's testing jupyter usable error
+                    ioc.setExperimentState(LocalZMQKernel.experiment, false);
 
                     // REmap the functions in the execution and error handler. Note, we can't rebind them as
                     // they've already been injected into the INotebookProvider
@@ -2454,11 +2457,18 @@ df.head()`;
                         // First cell should still have the 'collapsed' metadata
                         assert.ok(fileObject.cells[0].metadata.collapsed, 'Metadata erased during execution');
 
-                        // Old language info should be cleared out by the new execution
-                        assert.isUndefined(
-                            fileObject.metadata.language_info,
-                            'Old language info should be cleared out'
-                        );
+                        // Old language info should be changed by the new execution
+                        if (!ioc.shouldMockJupyter) {
+                            // For real jupyter raw kernel will use a default kernel without associated interpreter language_info
+                            // so the execution should clear it out
+                            assert.isUndefined(
+                                fileObject.metadata.language_info,
+                                'Old language info should be cleared out'
+                            );
+                        } else {
+                            // In the mock case we return a mock kernelspec + interpreter language info, so it should be replaced
+                            assert.notEqual(fileObject.metadata.language_info.version, '1.2.3');
+                        }
 
                         // Some tests don't have a kernelspec, in which case we should remove it
                         // If there is a spec, we should update the name and display name
