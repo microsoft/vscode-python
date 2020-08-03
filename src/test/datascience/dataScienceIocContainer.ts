@@ -1175,7 +1175,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         when(this.applicationShell.showSaveDialog(anything())).thenReturn(Promise.resolve(Uri.file('test.ipynb')));
         when(this.applicationShell.setStatusBarMessage(anything())).thenReturn(dummyDisposable);
-        when(this.applicationShell.showInputBox(anything())).thenReturn(Promise.resolve('PythonIANHU'));
+        when(this.applicationShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
         const eventCallback = (
             _listener: (e: WindowState) => any,
             _thisArgs?: any,
