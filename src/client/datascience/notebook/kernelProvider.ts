@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import {
     NotebookCommunication,
@@ -20,6 +20,7 @@ import { INotebook, INotebookProvider } from '../types';
 import { updateKernelInNotebookMetadata } from './helpers/helpers';
 import { NotebookKernel } from './notebookKernel';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
+@injectable()
 export class KernelProvider implements NotebookKernelProvider {
     public get onDidChangeKernels(): Event<void> {
         return this._onDidChangeKernels.event;
@@ -45,12 +46,12 @@ export class KernelProvider implements NotebookKernelProvider {
      */
     public async resolveKernel(
         kernel: NotebookKernel,
-        _document: NotebookDocument,
+        document: NotebookDocument,
         _webview: NotebookCommunication,
         token: CancellationToken
     ): Promise<void> {
         return Promise.race([
-            kernel.hasBeenValidated.then(() => void 0),
+            kernel.validate(document.uri).then(() => void 0),
             createPromiseFromCancellation({ cancelAction: 'resolve', token, defaultValue: void 0 })
         ]);
     }
@@ -70,7 +71,7 @@ export class KernelProvider implements NotebookKernelProvider {
             (kernel) =>
                 new NotebookKernel(
                     kernel.label,
-                    kernel.description || '',
+                    kernel.description || kernel.detail || '',
                     kernel.selection,
                     this.execution,
                     this.kernelSelector

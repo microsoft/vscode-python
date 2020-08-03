@@ -64,8 +64,10 @@ import type {
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookDocument,
+    NotebookDocumentFilter,
     NotebookEditor,
     NotebookKernel,
+    NotebookKernelProvider,
     NotebookOutputRenderer,
     NotebookOutputSelector
 } from 'vscode-proposed';
@@ -1543,7 +1545,7 @@ export interface IVSCodeNotebook {
     readonly activeNotebookEditor: NotebookEditor | undefined;
     registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable;
 
-    registerNotebookKernel(id: string, selectors: GlobPattern[], kernel: NotebookKernel): Disposable;
+    registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
 
     registerNotebookOutputRenderer(
         id: string,

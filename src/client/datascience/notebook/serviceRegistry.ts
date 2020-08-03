@@ -8,8 +8,8 @@ import { IServiceManager } from '../../ioc/types';
 import { NotebookContentProvider } from './contentProvider';
 import { NotebookExecutionService } from './executionService';
 import { NotebookIntegration } from './integration';
+import { KernelProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
-import { NotebookKernel } from './notebookKernel';
 import { NotebookOutputRenderer } from './renderer';
 import { NotebookSurveyBanner, NotebookSurveyDataLogger } from './survey';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
@@ -26,9 +26,9 @@ export function registerTypes(serviceManager: IServiceManager) {
         NotebookDisposeService
     );
     serviceManager.addSingleton<NotebookIntegration>(NotebookIntegration, NotebookIntegration);
-    serviceManager.addSingleton<NotebookKernel>(NotebookKernel, NotebookKernel);
     serviceManager.addSingleton<NotebookOutputRenderer>(NotebookOutputRenderer, NotebookOutputRenderer);
     serviceManager.addSingleton<NotebookSurveyBanner>(NotebookSurveyBanner, NotebookSurveyBanner);
+    serviceManager.addSingleton<KernelProvider>(KernelProvider, KernelProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookSurveyDataLogger
