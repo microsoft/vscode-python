@@ -3,13 +3,14 @@
 
 'use strict';
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { NotebookDocument } from '../../../../typings/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
 import { INotebookProvider } from '../types';
 
+@injectable()
 export class NotebookDisposeService implements IExtensionSingleActivationService {
     constructor(
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
