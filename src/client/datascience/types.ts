@@ -1084,8 +1084,13 @@ export interface INotebookStorage {
     save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
     backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string): Promise<void>;
-    get(file: Uri, contents?: string, backupId?: string, forVSCodeNotebook?: boolean): Promise<INotebookModel>;
-    get(
+    getOrCreateModel(
+        file: Uri,
+        contents?: string,
+        backupId?: string,
+        forVSCodeNotebook?: boolean
+    ): Promise<INotebookModel>;
+    getOrCreateModel(
         file: Uri,
         contents?: string,
         // tslint:disable-next-line: unified-signatures

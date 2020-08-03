@@ -51,7 +51,7 @@ suite('DataScience - Trust Command Handler', () => {
         when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
         model = createNotebookModel(false, Uri.file('a'), new MockMemento(), instance(crypto));
         createNotebookDocument(model as VSCodeNotebookModel);
-        when(storageProvider.get(anything())).thenResolve(model);
+        when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
         disposables = [];
 
         experiments = mock<IExperimentService>();

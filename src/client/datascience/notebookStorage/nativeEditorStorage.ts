@@ -81,20 +81,20 @@ export class NativeEditorStorage implements INotebookStorage {
         return `${path.basename(model.file.fsPath)}-${uuid()}`;
     }
 
-    public get(
+    public getOrCreateModel(
         file: Uri,
         possibleContents?: string,
         backupId?: string,
         forVSCodeNotebook?: boolean
     ): Promise<INotebookModel>;
-    public get(
+    public getOrCreateModel(
         file: Uri,
         possibleContents?: string,
         // tslint:disable-next-line: unified-signatures
         skipDirtyContents?: boolean,
         forVSCodeNotebook?: boolean
     ): Promise<INotebookModel>;
-    public get(
+    public getOrCreateModel(
         file: Uri,
         possibleContents?: string,
         // tslint:disable-next-line: no-any

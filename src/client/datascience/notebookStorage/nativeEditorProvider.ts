@@ -221,7 +221,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         this.untitledCounter = getNextUntitledCounter(file, this.untitledCounter);
 
         // Load our model from our storage object.
-        const model = await this.storage.get(file, contents, options);
+        const model = await this.storage.getOrCreateModel(file, contents, options);
 
         // Make sure to listen to events on the model
         this.trackModel(model);

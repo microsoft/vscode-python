@@ -67,7 +67,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                     ],
                     isTrusted: isNotebookTrusted
                 };
-                when(storageProvider.get(anything(), anything(), anything(), anything())).thenResolve(
+                when(storageProvider.getOrCreateModel(anything(), anything(), anything(), anything())).thenResolve(
                     (model as unknown) as INotebookModel
                 );
 
@@ -150,7 +150,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                     ],
                     isTrusted: isNotebookTrusted
                 };
-                when(storageProvider.get(anything(), anything(), anything(), anything())).thenResolve(
+                when(storageProvider.getOrCreateModel(anything(), anything(), anything(), anything())).thenResolve(
                     (model as unknown) as INotebookModel
                 );
 

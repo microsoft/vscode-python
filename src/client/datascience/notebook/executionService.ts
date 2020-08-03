@@ -150,7 +150,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
     private async getNotebookAndModel(
         document: NotebookDocument
     ): Promise<{ model: VSCodeNotebookModel; nb: INotebook }> {
-        const model = await this.notebookStorage.get(document.uri, undefined, undefined, true);
+        const model = await this.notebookStorage.getOrCreateModel(document.uri, undefined, undefined, true);
         const nb = await this.notebookProvider.getOrCreateNotebook({
             identity: document.uri,
             resource: document.uri,
