@@ -10,7 +10,6 @@ import { Uri } from 'vscode';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import type { NotebookContentProvider as VSCodeNotebookContentProvider } from 'vscode-proposed';
 import { NotebookCellData } from '../../../../typings/vscode-proposed';
-import { ICommandManager } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
 import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/notebook/notebookEditorCompatibilitySupport';
@@ -23,15 +22,10 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
     const fileUri = Uri.file('a.ipynb');
     setup(async () => {
         storageProvider = mock<INotebookStorageProvider>();
-        const commandManager = mock<ICommandManager>();
         const compatSupport = mock(NotebookEditorCompatibilitySupport);
         when(compatSupport.canOpenWithOurNotebookEditor(anything())).thenReturn(true);
         when(compatSupport.canOpenWithVSCodeNotebookEditor(anything())).thenReturn(true);
-        contentProvider = new NotebookContentProvider(
-            instance(storageProvider),
-            instance(commandManager),
-            instance(compatSupport)
-        );
+        contentProvider = new NotebookContentProvider(instance(storageProvider), instance(compatSupport));
     });
     [true, false].forEach((isNotebookTrusted) => {
         suite(isNotebookTrusted ? 'Trusted Notebook' : 'Un-trusted notebook', () => {
