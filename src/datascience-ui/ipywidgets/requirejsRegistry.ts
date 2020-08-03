@@ -44,6 +44,7 @@ function getScriptsWithAValidScriptUriToBeRegistered(scripts: WidgetScriptSource
 }
 
 function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
+    // tslint:disable: no-console
     // tslint:disable-next-line: no-any
     const requirejs = (window as any).requirejs as { config: Function };
     if (!requirejs) {
@@ -54,6 +55,7 @@ function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
         paths: {}
     };
     scripts.forEach((script) => {
+        console.warn('Script registered', script.scriptUri);
         scriptsAlreadyRegisteredInRequireJs.set(script.moduleName, script.scriptUri);
         // Drop the `.js` from the scriptUri.
         const scriptUri = script.scriptUri.toLowerCase().endsWith('.js')
@@ -64,6 +66,7 @@ function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
     });
 
     requirejs.config(config);
+    // console.trace(`requirejs.config registered`);
 }
 
 export function registerScripts(scripts: WidgetScriptSource[]) {

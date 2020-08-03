@@ -15,7 +15,7 @@ export class IPyWidgetNotebookOutputRenderer implements VSCNotebookOutputRendere
     constructor() {
         this.preloads = [
             // Uri.file(path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook', 'require.js'))
-            Uri.file(path.join(EXTENSION_ROOT_DIR, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')),
+            Uri.file(path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook', 'ipywidgets.js')),
             Uri.file(path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'renderers', 'ipywidgets.js'))
         ];
     }

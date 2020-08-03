@@ -47,8 +47,6 @@ export class WidgetManagerComponent extends React.Component<Props> {
     };
     constructor(props: Props) {
         super(props);
-        // tslint:disable-next-line: no-console
-        console.error('init widgetmanager comopnent');
         const ele =
             typeof this.props.widgetContainerElement === 'string'
                 ? document.getElementById(this.props.widgetContainerElement)!
@@ -61,7 +59,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
             const payload = msg.payload;
             if (type === SharedMessages.UpdateSettings) {
                 // tslint:disable-next-line: no-console
-                console.error('Got Message 1');
+                // console.error('Got Message 1');
                 const settings = JSON.parse(payload) as IDataScienceExtraSettings;
                 this.widgetsCanLoadFromCDN = settings.widgetScriptSources.length > 0;
             } else if (
@@ -69,13 +67,14 @@ export class WidgetManagerComponent extends React.Component<Props> {
                 type === IPyWidgetMessages.IPyWidgets_onKernelChanged
             ) {
                 // tslint:disable-next-line: no-console
-                console.error('Got Message 2');
+                // console.error('Got Message 2');
                 // This happens when we have restarted a kernel.
                 // If user changed the kernel, then some widgets might exist now and some might now.
                 this.widgetSourceRequests.clear();
                 this.registeredWidgetSources.clear();
-            } else {
-                console.error('Got unknown Message 2');
+                // } else {
+                //     // tslint:disable-next-line: no-console
+                //     console.error(`Got unknown Message 2 ${type}`, msg);
             }
         });
     }

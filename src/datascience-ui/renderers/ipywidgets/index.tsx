@@ -37,17 +37,17 @@ notebookApi.onWillDestroyOutput((e) => {
 });
 
 notebookApi.onDidCreateOutput(({ element, outputId }) => renderOutput(outputId, element.querySelector('script')!));
-notebookApi.onDidReceiveMessage((msg) => {
-    // tslint:disable-next-line: no-console
-    console.error(`Message from renderer`, msg);
-});
-window.addEventListener('message', (e) => {
-    // tslint:disable-next-line: no-console
-    console.error(`Message from backend`, e.data);
-    if (e.data && e.data.type === 'fromKernel') {
-        postToKernel('HelloKernel', 'WorldKernel');
-    }
-});
+// notebookApi.onDidReceiveMessage((msg) => {
+//     // tslint:disable-next-line: no-console
+//     console.error(`Message from renderer`, msg);
+// });
+// window.addEventListener('message', (e) => {
+//     // tslint:disable-next-line: no-console
+//     // console.error(`Message from backend`, e.data);
+//     if (e.data && e.data.type === 'fromKernel') {
+//         postToKernel('HelloKernel', 'WorldKernel');
+//     }
+// });
 const renderedWidgets = new Set<string>();
 /**
  * Called from renderer to render output.
@@ -71,6 +71,7 @@ function renderOutput(outputId: string, tag: HTMLScriptElement) {
             container = document.createElement('div');
             tag.parentNode?.insertBefore(container, tag.nextSibling);
         }
+        // tslint:disable-next-line: no-any
         const model = output['application/vnd.jupyter.widget-view+json'] as any;
         if (!model) {
             // tslint:disable-next-line: no-console
@@ -97,8 +98,8 @@ function renderOutput(outputId: string, tag: HTMLScriptElement) {
         console.error(`Failed to render ipywidget type ${mimeType}`, ex);
     }
 
-    postToRendererExtension('Hello', 'World');
-    postToKernel('HelloKernel', 'WorldKernel');
+    // postToRendererExtension('Hello', 'World');
+    // postToKernel('HelloKernel', 'WorldKernel');
 }
 
 // /**
@@ -112,9 +113,9 @@ function renderOutput(outputId: string, tag: HTMLScriptElement) {
 // }
 
 // tslint:disable-next-line: no-any
-function postToRendererExtension(type: string, payload: any) {
-    notebookApi.postMessage({ type, payload });
-}
+// function postToRendererExtension(type: string, payload: any) {
+//     notebookApi.postMessage({ type, payload });
+// }
 // tslint:disable-next-line: no-any
 function postToKernel(type: string, payload?: any) {
     vscApi.postMessage({ type, payload });
@@ -141,41 +142,39 @@ class MyPostOffice implements IPyWidgetsPostOffice {
     private readonly scripts = new Map<string, Deferred<WidgetScriptSource>>();
     constructor() {
         window.addEventListener('message', (e) => {
-            // tslint:disable-next-line: no-console
-            console.error('processing messages');
-            // tslint:disable: no-console
-            if (e.data && e.data.type === '__IPYWIDGET_KERNEL_MESSAGE') {
+            // tslint:disable
+            const type: string | undefined = e.data.type ?? e.data.message;
+            if (e.data && type) {
+                // tslint:disable-next-line: no-console
+                // console.error('processing messages', e.data);
                 // tslint:disable-next-line: no-console
                 const payload = e.data.payload;
-                if ('message' in payload && !('type' in payload)) {
-                    payload.type = payload.message; // Inconsistency in messages sent, we send using `message` but use `type` at receiving end.
-                }
-                if (payload.type === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse) {
-                    console.error('Got Script source', payload.payload);
-                    const source: WidgetScriptSource | undefined = payload.payload;
+                if (type === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse) {
+                    // console.error('Got Script source', payload);
+                    const source: WidgetScriptSource | undefined = payload;
                     if (source && this.scripts.has(source.moduleName)) {
-                        console.error('Got Script source and module', payload.payload);
+                        // console.error('Got Script source and module', payload);
                         this.scripts.get(source.moduleName)?.resolve(source); // NOSONAR
                     } else {
                         console.error('Got Script source and module not found', source?.moduleName);
                     }
                     return;
+                } else if (type && type.toUpperCase().startsWith('IPYWIDGET')) {
+                    // tslint:disable-next-line: no-console
+                    // console.error(`Message from real backend kernel`, payload);
+                    this._gotMessage.fire({ type, message: type, payload });
+                } else if (type === '__IPYWIDGET_BACKEND_READY') {
+                    this.backendReady.resolve();
+                // } else {
+                //     console.error(`No idea what this data is`, e.data);
                 }
-                // tslint:disable-next-line: no-console
-                console.error(`Message from real backend kernel`, payload);
-                this._gotMessage.fire(e.data.payload);
-            }
-            if (e.data && e.data.type === '__IPYWIDGET_BACKEND_READY') {
-                this.backendReady.resolve();
             }
         });
         // postToKernel('__IPYWIDGET_KERNEL_MESSAGE', { message: IPyWidgetMessages.IPyWidgets_Ready });
     }
     // tslint:disable-next-line: no-any
     public postKernelMessage(message: any, payload: any): void {
-        this.backendReady.promise
-            .then(() => postToKernel('__IPYWIDGET_KERNEL_MESSAGE', { message, payload }))
-            .catch(noop);
+        this.backendReady.promise.then(() => postToKernel(message, payload)).catch(noop);
     }
     public async getWidgetScriptSource(options: {
         moduleName: string;
@@ -190,7 +189,7 @@ class MyPostOffice implements IPyWidgetsPostOffice {
         return deferred.promise;
     }
     public onReady(): void {
-        postToKernel('__IPYWIDGET_KERNEL_MESSAGE', { message: IPyWidgetMessages.IPyWidgets_Ready });
+        postToKernel(IPyWidgetMessages.IPyWidgets_Ready);
         postToKernel('READY');
     }
 }

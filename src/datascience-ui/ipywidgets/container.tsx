@@ -255,6 +255,8 @@ export class WidgetManagerComponent extends React.Component<Props> {
 
         return request.deferred.promise
             .then(() => {
+                // tslint:disable-next-line: no-console
+                console.error('Attempting to load module');
                 const widgetSource = this.registeredWidgetSources.get(moduleName);
                 if (widgetSource) {
                     warnAboutWidgetVersionsThatAreNotSupported(

@@ -12,7 +12,7 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import 'rxjs/add/operator/concatMap';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { createDeferred, Deferred } from '../../../client/common/utils/async';
+import { createDeferred, Deferred, sleep } from '../../../client/common/utils/async';
 import { IPyWidgetMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { WIDGET_MIMETYPE } from '../../../client/datascience/ipywidgets/constants';
 import { create as createKernel } from './kernel';
@@ -77,7 +77,7 @@ export class WidgetManager implements IIPyWidgetManager {
     }
     public handleMessage(msg: { type: string; payload?: any }) {
         // tslint:disable-next-line: no-console
-        console.error('handleMessage in manager.ts', msg);
+        // console.error('handleMessage in manager.ts', msg);
         const { type, payload } = msg;
         // console.error('handleMessage in manager.ts', msg);
         if (type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
@@ -145,9 +145,13 @@ export class WidgetManager implements IIPyWidgetManager {
         // That 3rd party library may not be available and may have to be downloaded.
         // Hence the promise to wait until it has been created.
         try {
-            debugger;
+            // tslint:disable: no-console
+            console.log('Render Widget in manager1.ts');
+            await sleep(1_000);
             const model = await modelPromise;
+            console.log('Render Widget in manager2.ts');
             const view = await this.manager.create_view(model, { el: ele });
+            console.log('Render Widget in manager2.ts');
             // tslint:disable-next-line: no-any
             return this.manager.display_view(data, view, { node: ele });
         } catch (ex) {

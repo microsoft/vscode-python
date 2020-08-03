@@ -136,10 +136,12 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         // That 3rd party library may not be available and may have to be downloaded.
         // Hence the promise to wait until it has been created.
         try {
-            // tslint:disable-next-line: no-debugger
-            debugger;
+            // tslint:disable: no-console
+            console.log('Render Widget in manager1.ts');
             const model = await modelPromise;
+            console.log('Render Widget in manager2.ts');
             const view = await this.manager.create_view(model, { el: ele });
+            console.log('Render Widget in manager2.ts');
             // tslint:disable-next-line: no-any
             return this.manager.display_view(data, view, { node: ele });
         } catch (ex) {

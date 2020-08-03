@@ -48,7 +48,7 @@ export class NotebookKernel implements VSCNotebookKernel {
     get preloads(): Uri[] {
         return [
             // Uri.file(join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook', 'require.js')),
-            Uri.file(join(EXTENSION_ROOT_DIR, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')),
+            Uri.file(join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook', 'ipywidgets.js')),
             Uri.file(join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'renderers', 'ipywidgets.js'))
         ];
     }

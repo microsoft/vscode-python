@@ -252,8 +252,19 @@ class ProxyKernel implements Kernel.IKernel {
         return this.realKernel.dispose();
     }
     public handleMessage({ type, payload }: { type: string; payload?: any }): boolean {
-        // tslint:disable-next-line: no-console
-        console.error(`handleMessage inside kernel ${type}`, payload);
+        // tslint:disable: no-console
+        switch (type) {
+            case IPyWidgetMessages.IPyWidgets_MessageHookCall:
+            case IPyWidgetMessages.IPyWidgets_msg:
+            case IPyWidgetMessages.IPyWidgets_binary_msg:
+            case IPyWidgetMessages.IPyWidgets_mirror_execute:
+            case IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled:
+                console.debug(`handleMessage inside kernel ${type}`, payload);
+                break;
+            default:
+                break;
+        }
+
         // Handle messages as they come in. Note: Do not await anything here. THey have to be in order.
         // If not, we could switch to message chaining or an observable instead.
         switch (type) {
@@ -264,14 +275,19 @@ class ProxyKernel implements Kernel.IKernel {
             case IPyWidgetMessages.IPyWidgets_msg:
                 if (this.websocket && this.websocket.onmessage) {
                     this.websocket.onmessage({ target: this.websocket, data: payload.data, type: '' });
+                } else {
+                    console.error('Not handled');
                 }
                 this.sendResponse(payload.id);
                 break;
 
             case IPyWidgetMessages.IPyWidgets_binary_msg:
                 if (this.websocket && this.websocket.onmessage) {
+                    console.error('Binary message deserialized');
                     const deserialized = deserializeDataViews(payload.data)![0];
                     this.websocket.onmessage({ target: this.websocket, data: deserialized as any, type: '' });
+                } else {
+                    console.error('Not handled');
                 }
                 this.sendResponse(payload.id);
                 break;

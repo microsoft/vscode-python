@@ -152,7 +152,8 @@ export class KernelProvider implements NotebookKernelProvider, ILocalResourceUri
         // this.getIPyWidgetMessageDispatcher(document);
         // await dispatcher.initialize();
         dispatcher.postMessage((e) => {
-            webview.postMessage({ type: '__IPYWIDGET_KERNEL_MESSAGE', payload: e });
+            // webview.postMessage({ type: '__IPYWIDGET_KERNEL_MESSAGE', payload: e });
+            webview.postMessage(e);
         });
         // }
         // return Promise.race([
@@ -163,23 +164,20 @@ export class KernelProvider implements NotebookKernelProvider, ILocalResourceUri
         console.error('Kernel', kernel);
         webview.postMessage({ type: 'fromKernel', payload: 'DataFromKernel' });
         webview.onDidReceiveMessage((msg) => {
-            if (
-                msg &&
-                msg.type === '__IPYWIDGET_KERNEL_MESSAGE' &&
-                (msg.payload.type === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest ||
-                    msg.payload.message === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest)
-            ) {
-                this.sendWidgetSource(msg.payload.payload.moduleName, msg.payload.payload.moduleVersion).catch((ex) =>
+            const type: string = msg.type || msg.message;
+            if (msg && type === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest) {
+                this.sendWidgetSource(msg.payload.moduleName, msg.payload.moduleVersion).catch((ex) =>
                     // tslint:disable-next-line: no-console
                     console.error('Failed to get widget script source in kernelProvider.ts', ex)
                 );
                 return;
+            } else if (msg && type && type.toUpperCase().startsWith('IPYWIDGET')) {
+                // tslint:disable-next-line: no-any
+                dispatcher.receiveMessage({ message: type, payload: msg.payload } as any);
+            } else {
+                // tslint:disable-next-line: no-console
+                console.error(`Message from UI kernel`, msg);
             }
-            if (msg && msg.type === '__IPYWIDGET_KERNEL_MESSAGE') {
-                dispatcher.receiveMessage(msg.payload);
-            }
-            // tslint:disable-next-line: no-console
-            console.error(`Message from UI kernel`, msg);
         });
         // Let UI kernel know we are ready.
         webview.postMessage({ type: '__IPYWIDGET_BACKEND_READY' });
@@ -242,8 +240,8 @@ export class KernelProvider implements NotebookKernelProvider, ILocalResourceUri
         } finally {
             // Send to UI (even if there's an error) continues instead of hanging while waiting for a response.
             this.webview.postMessage({
-                type: '__IPYWIDGET_KERNEL_MESSAGE',
-                payload: { type: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse, payload: widgetSource }
+                type: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
+                payload: widgetSource
             });
             // Send to UI (even if there's an error) continues instead of hanging while waiting for a response.
             this.webview.postMessage({
