@@ -10,11 +10,6 @@ import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory
 import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
 import { createVSCCellOutputsFromOutputs, translateErrorOutput } from './helpers';
 
-export interface IBaseCellVSCodeMetadata {
-    end_execution_time?: string;
-    start_execution_time?: string;
-}
-
 export function hasTransientOutputForAnotherCell(output?: nbformat.IOutput) {
     return (
         output &&

@@ -62,18 +62,21 @@ export class NotebookKernel implements VSCNotebookKernel {
         private readonly execution: INotebookExecutionService,
         private readonly kernelSelectionUsage: IKernelSelectionUsage
     ) {}
-    public async validate(uri: Uri) {
-        if (this.kernelValidated.completed) {
-            return;
-        }
+    public async validate(uri: Uri): Promise<KernelSpecInterpreter> {
         if (this.validating) {
             return this.kernelValidated.promise;
         }
         this.validating = true;
-        this.kernelSelectionUsage
+        return this.kernelSelectionUsage
             .useSelectedKernel(this.selection, uri, 'raw')
-            .then(() => this.kernelValidated.resolve())
-            .catch((e) => this.kernelValidated.reject(e));
+            .then((e) => {
+                this.kernelValidated.resolve(e);
+                return e;
+            })
+            .catch((e) => {
+                this.kernelValidated.reject(e);
+                throw e;
+            });
     }
     public executeCell(document: NotebookDocument, cell: NotebookCell) {
         if (this.cellExecutions.has(cell)) {

@@ -38,7 +38,7 @@ import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
 import { INotebookContentProvider } from '../types';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
-interface IBaseCellVSCodeMetadata {
+export interface IBaseCellVSCodeMetadata {
     end_execution_time?: string;
     start_execution_time?: string;
 }

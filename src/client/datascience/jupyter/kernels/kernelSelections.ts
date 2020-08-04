@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, EventEmitter } from 'vscode';
+import { traceError } from '../../../common/logger';
 import { IPathUtils, Resource } from '../../../common/types';
 import { createDeferredFromPromise } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
@@ -300,7 +301,7 @@ export class KernelSelectionProvider {
                 });
 
             const unifiedList = [...installedKernels!, ...interpreters];
-            // Sorty by name.
+            // Sort by name.
             unifiedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
             return unifiedList;
@@ -314,11 +315,23 @@ export class KernelSelectionProvider {
         const liveItemsDeferred = createDeferredFromPromise(liveItems);
         const cachedItemsDeferred = createDeferredFromPromise(cachedItems);
         Promise.race([cachedItems, liveItems])
-            .then(() => {
+            .then(async () => {
                 // If the cached items completed first, then if later the live items completes we need to notify
-                // others that this selection has changed.
+                // others that this selection has changed (however check if the results are different).
                 if (cachedItemsDeferred.completed && !liveItemsDeferred.completed) {
-                    liveItems.then(() => this._listChanged.fire()).catch(noop);
+                    try {
+                        const [liveItemsList, cachedItemsList] = await Promise.all([liveItems, cachedItems]);
+                        // If the list of live items is different from the cached list, then notify a change.
+                        if (
+                            liveItemsList.length !== cachedItemsList.length &&
+                            liveItemsList.length > 0 &&
+                            JSON.stringify(liveItemsList) !== JSON.stringify(cachedItemsList)
+                        ) {
+                            this._listChanged.fire();
+                        }
+                    } catch (ex) {
+                        traceError('Error in fetching kernel selections', ex);
+                    }
                 }
             })
             .catch(noop);
