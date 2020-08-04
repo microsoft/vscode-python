@@ -212,7 +212,6 @@ export class HostRawNotebookProvider
     }
 
     // Get the notebook execution info for this raw session instance
-    //private async getExecutionInfo(kernelSpec?: IJupyterKernelSpec): Promise<INotebookExecutionInfo> {
     private async getExecutionInfo(kernelSpecInterpreter: KernelSpecInterpreter): Promise<INotebookExecutionInfo> {
         return {
             connectionInfo: this.getConnection(),

@@ -678,7 +678,6 @@ for i in range(0, 100):
         'Multiple Interpreters',
         async (context) => {
             if (!ioc.mockJupyter) {
-                //ioc.setExperimentState(LocalZMQKernel.experiment, false);
                 const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
                 const interpreterService = ioc.get<IInterpreterService>(IInterpreterService);
                 const interpreters = await ioc.getFunctionalTestInterpreters();
