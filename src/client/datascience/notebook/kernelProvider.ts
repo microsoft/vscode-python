@@ -136,6 +136,7 @@ export class KernelProvider implements NotebookKernelProvider {
         // If we have a notebook, change its kernel now
         if (notebook) {
             if (!this.notebookKernelChangeHandled.has(notebook)) {
+                this.notebookKernelChangeHandled.add(notebook);
                 notebook.onKernelChanged(
                     (e) => {
                         if (notebook.disposed) {

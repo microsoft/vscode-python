@@ -312,7 +312,7 @@ export class KernelSelectionProvider {
             this.localSuggestionsCache.length > 0 ? Promise.resolve(this.localSuggestionsCache) : liveItems;
 
         const liveItemsDeferred = createDeferredFromPromise(liveItems);
-        const cachedItemsDeferred = createDeferredFromPromise(liveItems);
+        const cachedItemsDeferred = createDeferredFromPromise(cachedItems);
         Promise.race([cachedItems, liveItems])
             .then(() => {
                 // If the cached items completed first, then if later the live items completes we need to notify

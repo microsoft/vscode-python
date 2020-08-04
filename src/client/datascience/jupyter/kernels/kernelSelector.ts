@@ -32,7 +32,7 @@ import {
 import { createDefaultKernelSpec } from './helpers';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
-import { IKernelSpecQuickPickItem, KernelSelection, LiveKernelModel, IKernelSelectionUsage } from './types';
+import { IKernelSelectionUsage, IKernelSpecQuickPickItem, KernelSelection, LiveKernelModel } from './types';
 
 export type KernelSpecInterpreter = {
     kernelSpec?: IJupyterKernelSpec;
