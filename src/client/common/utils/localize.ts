@@ -787,7 +787,7 @@ export namespace DataScience {
         'Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0'
     );
     export const addCellBelowCommandTitle = localize('DataScience.addCellBelowCommandTitle', 'Add cell');
-    export const debugCellCommandTitle = localize('DataScience.debugCellCommandTitle', 'Debug cell');
+    export const debugCellCommandTitle = localize('DataScience.debugCellCommandTitle', 'Debug Cell');
     export const debugStepOverCommandTitle = localize('DataScience.debugStepOverCommandTitle', 'Step over');
     export const debugContinueCommandTitle = localize('DataScience.debugContinueCommandTitle', 'Continue');
     export const debugStopCommandTitle = localize('DataScience.debugStopCommandTitle', 'Stop');

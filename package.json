@@ -1080,73 +1080,73 @@
                     "command": "python.datascience.insertCellBelowPosition",
                     "title": "%python.command.python.datascience.insertCellBelowPosition.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.insertCellBelow",
                     "title": "%python.command.python.datascience.insertCellBelow.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.insertCellAbove",
                     "title": "%python.command.python.datascience.insertCellAbove.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.deleteCells",
                     "title": "%python.command.python.datascience.deleteCells.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.selectCell",
                     "title": "%python.command.python.datascience.selectCell.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.selectCellContents",
                     "title": "%python.command.python.datascience.selectCellContents.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.extendSelectionByCellAbove",
                     "title": "%python.command.python.datascience.extendSelectionByCellAbove.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.extendSelectionByCellBelow",
                     "title": "%python.command.python.datascience.extendSelectionByCellBelow.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.moveCellsUp",
                     "title": "%python.command.python.datascience.moveCellsUp.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.moveCellsDown",
                     "title": "%python.command.python.datascience.moveCellsDown.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.changeCellToMarkdown",
                     "title": "%python.command.python.datascience.changeCellToMarkdown.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.changeCellToCode",
                     "title": "%python.command.python.datascience.changeCellToCode.title%",
                     "category": "Python",
-                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.runcurrentcell",

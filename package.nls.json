@@ -446,7 +446,7 @@
     "downloading.file.progress": "{0}{1} of {2} KB ({3}%)",
     "DataScience.jupyterDataRateExceeded": "Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0",
     "DataScience.addCellBelowCommandTitle": "Add cell",
-    "DataScience.debugCellCommandTitle": "Debug cell",
+    "DataScience.debugCellCommandTitle": "Debug Cell",
     "DataScience.debugStepOverCommandTitle": "Step over",
     "DataScience.debugContinueCommandTitle": "Continue",
     "DataScience.debugStopCommandTitle": "Stop",
