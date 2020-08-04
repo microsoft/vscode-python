@@ -47,7 +47,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
     private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration;
     private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
-    private pendingTimeouts: NodeJS.Timeout[] = [];
+    private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
 
     constructor(
         _liveShare: ILiveShareApi,
@@ -407,7 +407,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     private clearTimeouts() {
-        this.pendingTimeouts.forEach(clearTimeout);
+        // tslint:disable-next-line: no-any
+        this.pendingTimeouts.forEach((t) => clearTimeout(t as any));
         this.pendingTimeouts = [];
     }
 
