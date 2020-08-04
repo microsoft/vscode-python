@@ -1718,6 +1718,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RestartJupyterTime]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
     [Telemetry.RestartKernelCommand]: never | undefined;
+    /**
+     * Run Cell Commands in Interactive Python
+     */
     [Telemetry.RunAllCells]: never | undefined;
     [Telemetry.RunSelectionOrLine]: never | undefined;
     [Telemetry.RunCell]: never | undefined;
@@ -1729,6 +1732,26 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
     [Telemetry.ScrolledToCell]: never | undefined;
+    /**
+     * Cell Edit Commands in Interactive Python
+     */
+    [Telemetry.InsertCellBelowPosition]: never | undefined;
+    [Telemetry.InsertCellBelow]: never | undefined;
+    [Telemetry.InsertCellAbove]: never | undefined;
+    [Telemetry.DeleteCells]: never | undefined;
+    [Telemetry.SelectCell]: never | undefined;
+    [Telemetry.SelectCellContents]: never | undefined;
+    [Telemetry.ExtendSelectionByCellAbove]: never | undefined;
+    [Telemetry.ExtendSelectionByCellBelow]: never | undefined;
+    [Telemetry.MoveCellsUp]: never | undefined;
+    [Telemetry.MoveCellsDown]: never | undefined;
+    [Telemetry.ChangeCellToMarkdown]: never | undefined;
+    [Telemetry.ChangeCellToCode]: never | undefined;
+    /**
+     * Misc
+     */
+    [Telemetry.AddEmptyCellToBottom]: never | undefined;
+    [Telemetry.RunCurrentCellAndAddBelow]: never | undefined;
     [Telemetry.CellCount]: { count: number };
     [Telemetry.Save]: never | undefined;
     [Telemetry.SelfCertsMessageClose]: never | undefined;

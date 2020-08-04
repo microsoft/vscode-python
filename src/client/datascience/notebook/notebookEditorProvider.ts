@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import type { NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from 'vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import '../../common/extensions';
 
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -69,10 +68,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(UseVSCodeNotebookEditorApi) useVSCodeNotebookEditorApi: boolean,
         @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
+        this.disposables.push(this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
         this.disposables.push(
             this.vscodeNotebook.onDidChangeActiveNotebookEditor(this.onDidChangeActiveVsCodeNotebookEditor, this)
         );
@@ -82,21 +81,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                     setSharedProperty('ds_notebookeditor', 'native');
                     captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false);
                     this.open(uri).ignoreErrors();
-                }
-            })
-        );
-
-        // Swap the uris.
-        this.disposables.push(
-            this.storage.onSavedAs((e) => {
-                // We are interested in this ONLY if we have a VS Code NotebookEditor opened or if we belong to the nb experiment.
-                if (!useVSCodeNotebookEditorApi && !this.vscodeNotebook.notebookDocuments.length) {
-                    return;
-                }
-                const savedEditor = this.notebookEditorsByUri.get(e.old.toString());
-                if (savedEditor) {
-                    this.notebookEditorsByUri.delete(e.old.toString());
-                    this.notebookEditorsByUri.set(e.new.toString(), savedEditor);
                 }
             })
         );
@@ -159,7 +143,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             return;
         }
         const uri = doc.uri;
-        const model = await this.storage.get(uri, undefined, undefined, true);
+        const model = await this.storage.getOrCreateModel(uri, undefined, undefined, true);
         if (model instanceof VSCodeNotebookModel) {
             model.associateNotebookDocument(doc);
         }
@@ -205,6 +189,23 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         this.trackedVSCodeNotebookEditors.add(editor);
         this.disposables.push(editor.onDidDispose(() => this.onDidDisposeVSCodeNotebookEditor(editor)));
     }
+    private async onDidCloseNotebookDocument(document: NotebookDocument) {
+        this.disposeResourceRelatedToNotebookEditor(document.uri);
+    }
+    private disposeResourceRelatedToNotebookEditor(uri: Uri) {
+        // Ok, dispose all of the resources associated with this document.
+        // In our case, we only have one editor.
+        const editor = this.notebookEditorsByUri.get(uri.toString());
+        if (editor) {
+            this.closedEditor(editor);
+            editor.dispose();
+            if (editor.model) {
+                editor.model.dispose();
+            }
+        }
+        this.notebookEditorsByUri.delete(uri.toString());
+        this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());
+    }
     /**
      * We know a notebook editor has been closed.
      * We need to close/dispose all of our resources related to this notebook document.
@@ -220,18 +221,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         ) {
             return;
         }
-
-        // Ok, dispose all of the resources associated with this document.
-        // In our case, we only have one editor.
-        const editor = this.notebookEditorsByUri.get(uri.toString());
-        if (editor) {
-            this.closedEditor(editor);
-            editor.dispose();
-            if (editor.model) {
-                editor.model.dispose();
-            }
-        }
-        this.notebookEditorsByUri.delete(uri.toString());
-        this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());
+        this.disposeResourceRelatedToNotebookEditor(closedEditor.document.uri);
     }
 }

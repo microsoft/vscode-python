@@ -10,6 +10,7 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { generateNewNotebookUri } from '../common';
 import { INotebookModel, INotebookStorage } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';
+import { VSCodeNotebookModel } from './vscNotebookModel';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 
@@ -32,7 +33,6 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         disposables.push(this);
-        disposables.push(storage.onSavedAs((e) => this._savedAs.fire(e)));
     }
     public async save(model: INotebookModel, cancellation: CancellationToken) {
         await this.storage.save(model, cancellation);
@@ -40,6 +40,9 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     public async saveAs(model: INotebookModel, targetResource: Uri) {
         const oldUri = model.file;
         await this.storage.saveAs(model, targetResource);
+        if (model instanceof VSCodeNotebookModel) {
+            return;
+        }
         this.trackModel(model);
         this.storageAndModels.delete(oldUri.toString());
         this.storageAndModels.set(targetResource.toString(), Promise.resolve(model));
@@ -56,8 +59,13 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     public deleteBackup(model: INotebookModel, backupId?: string) {
         return this.storage.deleteBackup(model, backupId);
     }
-    public get(file: Uri, contents?: string, backupId?: string, forVSCodeNotebook?: boolean): Promise<INotebookModel>;
-    public get(
+    public getOrCreateModel(
+        file: Uri,
+        contents?: string,
+        backupId?: string,
+        forVSCodeNotebook?: boolean
+    ): Promise<INotebookModel>;
+    public getOrCreateModel(
         file: Uri,
         contents?: string,
         // tslint:disable-next-line: unified-signatures
@@ -65,8 +73,13 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         forVSCodeNotebook?: boolean
     ): Promise<INotebookModel>;
 
-    // tslint:disable-next-line: no-any
-    public get(file: Uri, contents?: string, options?: any, forVSCodeNotebook?: boolean): Promise<INotebookModel> {
+    public getOrCreateModel(
+        file: Uri,
+        contents?: string,
+        // tslint:disable-next-line: no-any
+        options?: any,
+        forVSCodeNotebook?: boolean
+    ): Promise<INotebookModel> {
         const key = file.toString();
         if (!this.storageAndModels.has(key)) {
             // Every time we load a new untitled file, up the counter past the max value for this counter
@@ -74,7 +87,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
                 file,
                 NotebookStorageProvider.untitledCounter
             );
-            const promise = this.storage.get(file, contents, options, forVSCodeNotebook);
+            const promise = this.storage.getOrCreateModel(file, contents, options, forVSCodeNotebook);
             this.storageAndModels.set(key, promise.then(this.trackModel.bind(this)));
         }
         return this.storageAndModels.get(key)!;
@@ -90,7 +103,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         const uri = this.getNextNewNotebookUri(forVSCodeNotebooks);
 
         // Always skip loading from the hot exit file. When creating a new file we want a new file.
-        return this.get(uri, contents, true);
+        return this.getOrCreateModel(uri, contents, true);
     }
 
     private getNextNewNotebookUri(forVSCodeNotebooks?: boolean): Uri {

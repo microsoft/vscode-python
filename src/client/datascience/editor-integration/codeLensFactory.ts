@@ -10,12 +10,13 @@ import { traceWarning } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { generateCellRangesFromDocument, ICellRange } from '../cellFactory';
+import { generateCellRangesFromDocument } from '../cellFactory';
 import { CodeLensCommands, Commands, Identifiers } from '../constants';
 import { InteractiveWindowMessages, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
 import {
     ICell,
     ICellHashProvider,
+    ICellRange,
     ICodeLensFactory,
     IDataScienceFileSystem,
     IFileHashes,
@@ -117,6 +118,16 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     }
 
     public createCodeLenses(document: TextDocument): CodeLens[] {
+        const cache = this.getCodeLensCacheData(document);
+        return [...cache.documentLenses, ...cache.gotoCellLens];
+    }
+
+    public getCellRanges(document: TextDocument): ICellRange[] {
+        const cache = this.getCodeLensCacheData(document);
+        return cache.cellRanges;
+    }
+
+    private getCodeLensCacheData(document: TextDocument): CodeLensCacheData {
         // See if we have a cached version of the code lenses for this document
         const key = document.fileName.toLocaleLowerCase();
         let cache = this.codeLensCache.get(key);
@@ -196,8 +207,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                 });
             }
         }
-
-        return [...cache.documentLenses, ...cache.gotoCellLens];
+        return cache;
     }
 
     private trackNotebook(identity: Uri) {

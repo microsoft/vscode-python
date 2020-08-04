@@ -65,6 +65,18 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.ExecSelectionInInteractiveWindow, this.runSelectionOrLine);
         this.registerCommand(Commands.RunAllCellsAbove, this.runAllCellsAbove);
         this.registerCommand(Commands.RunCellAndAllBelow, this.runCellAndAllBelow);
+        this.registerCommand(Commands.InsertCellBelowPosition, this.insertCellBelowPosition);
+        this.registerCommand(Commands.InsertCellBelow, this.insertCellBelow);
+        this.registerCommand(Commands.InsertCellAbove, this.insertCellAbove);
+        this.registerCommand(Commands.DeleteCells, this.deleteCells);
+        this.registerCommand(Commands.SelectCell, this.selectCell);
+        this.registerCommand(Commands.SelectCellContents, this.selectCellContents);
+        this.registerCommand(Commands.ExtendSelectionByCellAbove, this.extendSelectionByCellAbove);
+        this.registerCommand(Commands.ExtendSelectionByCellBelow, this.extendSelectionByCellBelow);
+        this.registerCommand(Commands.MoveCellsUp, this.moveCellsUp);
+        this.registerCommand(Commands.MoveCellsDown, this.moveCellsDown);
+        this.registerCommand(Commands.ChangeCellToMarkdown, this.changeCellToMarkdown);
+        this.registerCommand(Commands.ChangeCellToCode, this.changeCellToCode);
         this.registerCommand(Commands.RunAllCellsAbovePalette, this.runAllCellsAboveFromCursor);
         this.registerCommand(Commands.RunCellAndAllBelowPalette, this.runCellAndAllBelowFromCursor);
         this.registerCommand(Commands.RunToLine, this.runToLine);
@@ -149,7 +161,7 @@ export class CommandRegistry implements IDisposable {
         if (codeWatcher) {
             return codeWatcher.runAllCells();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -161,7 +173,7 @@ export class CommandRegistry implements IDisposable {
         if (codeWatcher) {
             return codeWatcher.runFileInteractive();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -173,7 +185,7 @@ export class CommandRegistry implements IDisposable {
         if (codeWatcher) {
             return codeWatcher.debugFileInteractive();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -235,7 +247,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.runCurrentCell();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -244,7 +256,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.runCurrentCellAndAdvance();
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -253,7 +265,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.runSelectionOrLine(this.documentManager.activeTextEditor);
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -296,21 +308,62 @@ export class CommandRegistry implements IDisposable {
             this.commandManager.executeCommand('workbench.action.debug.continue');
         }
     }
+
     @captureTelemetry(Telemetry.AddCellBelow)
     private async addCellBelow(): Promise<void> {
-        const activeEditor = this.documentManager.activeTextEditor;
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeEditor && activeCodeWatcher) {
-            return activeCodeWatcher.addEmptyCellToBottom();
-        }
+        await this.getCurrentCodeWatcher()?.addEmptyCellToBottom();
     }
+
     private async runCurrentCellAndAddBelow(): Promise<void> {
-        const activeCodeWatcher = this.getCurrentCodeWatcher();
-        if (activeCodeWatcher) {
-            return activeCodeWatcher.runCurrentCellAndAddBelow();
-        } else {
-            return Promise.resolve();
-        }
+        this.getCurrentCodeWatcher()?.runCurrentCellAndAddBelow();
+    }
+
+    private async insertCellBelowPosition(): Promise<void> {
+        this.getCurrentCodeWatcher()?.insertCellBelowPosition();
+    }
+
+    private async insertCellBelow(): Promise<void> {
+        this.getCurrentCodeWatcher()?.insertCellBelow();
+    }
+
+    private async insertCellAbove(): Promise<void> {
+        this.getCurrentCodeWatcher()?.insertCellAbove();
+    }
+
+    private async deleteCells(): Promise<void> {
+        this.getCurrentCodeWatcher()?.deleteCells();
+    }
+
+    private async selectCell(): Promise<void> {
+        this.getCurrentCodeWatcher()?.selectCell();
+    }
+
+    private async selectCellContents(): Promise<void> {
+        this.getCurrentCodeWatcher()?.selectCellContents();
+    }
+
+    private async extendSelectionByCellAbove(): Promise<void> {
+        this.getCurrentCodeWatcher()?.extendSelectionByCellAbove();
+    }
+
+    private async extendSelectionByCellBelow(): Promise<void> {
+        this.getCurrentCodeWatcher()?.extendSelectionByCellBelow();
+    }
+
+    private async moveCellsUp(): Promise<void> {
+        this.getCurrentCodeWatcher()?.moveCellsUp();
+    }
+
+    private async moveCellsDown(): Promise<void> {
+        this.getCurrentCodeWatcher()?.moveCellsDown();
+    }
+
+    private async changeCellToMarkdown(): Promise<void> {
+        this.getCurrentCodeWatcher()?.changeCellToMarkdown();
+    }
+
+    private async changeCellToCode(): Promise<void> {
+        this.getCurrentCodeWatcher()?.changeCellToCode();
     }
 
     private async runAllCellsAboveFromCursor(): Promise<void> {
@@ -324,7 +377,7 @@ export class CommandRegistry implements IDisposable {
                 );
             }
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -339,7 +392,7 @@ export class CommandRegistry implements IDisposable {
                 );
             }
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 
@@ -351,7 +404,7 @@ export class CommandRegistry implements IDisposable {
                 return activeCodeWatcher.debugCurrentCell();
             }
         } else {
-            return Promise.resolve();
+            return;
         }
     }
 

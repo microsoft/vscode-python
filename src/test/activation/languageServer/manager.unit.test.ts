@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { instance, mock, verify, when } from 'ts-mockito';
-import { Uri } from 'vscode';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { Disposable, Uri } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient/node';
+import { Commands } from '../../../client/activation/commands';
 import { DotNetLanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServerExtension } from '../../../client/activation/languageServer/languageServerExtension';
 import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
@@ -16,6 +17,8 @@ import {
     ILanguageServerFolderService,
     ILanguageServerProxy
 } from '../../../client/activation/types';
+import { CommandManager } from '../../../client/common/application/commandManager';
+import { ICommandManager } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { ExperimentsManager } from '../../../client/common/experiments/manager';
 import { IConfigurationService, IExperimentsManager } from '../../../client/common/types';
@@ -37,6 +40,7 @@ suite('Language Server - Manager', () => {
     let folderService: ILanguageServerFolderService;
     let experimentsManager: IExperimentsManager;
     let configService: IConfigurationService;
+    let commandManager: ICommandManager;
     const languageClientOptions = ({ x: 1 } as any) as LanguageClientOptions;
     setup(() => {
         serviceContainer = mock(ServiceContainer);
@@ -46,13 +50,19 @@ suite('Language Server - Manager', () => {
         folderService = mock(DotNetLanguageServerFolderService);
         experimentsManager = mock(ExperimentsManager);
         configService = mock(ConfigurationService);
+
+        commandManager = mock(CommandManager);
+        const disposable = mock(Disposable);
+        when(commandManager.registerCommand(Commands.RestartLS, anything())).thenReturn(instance(disposable));
+
         manager = new DotNetLanguageServerManager(
             instance(serviceContainer),
             instance(analysisOptions),
             instance(lsExtension),
             instance(folderService),
             instance(experimentsManager),
-            instance(configService)
+            instance(configService),
+            instance(commandManager)
         );
     });
 

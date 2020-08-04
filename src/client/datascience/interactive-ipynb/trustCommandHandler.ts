@@ -47,7 +47,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
             return;
         }
 
-        const model = await this.storageProvider.get(uri);
+        const model = await this.storageProvider.getOrCreateModel(uri);
         if (model.isTrusted) {
             return;
         }

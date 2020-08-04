@@ -135,15 +135,6 @@ class PythonDaemon(MethodDispatcher):
             return self._execute_and_capture_output(exec_file)
 
     @error_decorator
-    def m_exec_code(self, code):
-        self.log.info("Exec code %s", code)
-
-        def exec_code():
-            eval(code, globals())
-
-        return self._execute_and_capture_output(exec_code)
-
-    @error_decorator
     def m_exec_file_observable(self, file_name, args=[], cwd=None, env=None):
         args = [] if args is None else args
         old_argv, sys.argv = sys.argv, [""] + args

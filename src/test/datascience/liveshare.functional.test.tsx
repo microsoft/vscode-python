@@ -15,6 +15,7 @@ import {
     ILiveShareApi,
     ILiveShareTestingApi
 } from '../../client/common/application/types';
+import { LocalZMQKernel } from '../../client/common/experiments/groups';
 import { Resource } from '../../client/common/types';
 import { Commands } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -321,6 +322,10 @@ suite('DataScience LiveShare tests', () => {
     });
 
     test('Going through codewatcher', async () => {
+        // Currently keeping the liveshare tests via jupyter connect
+        hostContainer.setExperimentState(LocalZMQKernel.experiment, false);
+        guestContainer.setExperimentState(LocalZMQKernel.experiment, false);
+
         // Should only need mock data in host
         addMockData(hostContainer!, '#%%\na=1\na', 1);
 
@@ -355,6 +360,10 @@ suite('DataScience LiveShare tests', () => {
     });
 
     test('Export from guest', async () => {
+        // Currently keeping the liveshare tests via jupyter connect
+        hostContainer.setExperimentState(LocalZMQKernel.experiment, false);
+        guestContainer.setExperimentState(LocalZMQKernel.experiment, false);
+
         const originalFileSystem = guestContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem) as MockFileSystem;
 
         // Should only need mock data in host

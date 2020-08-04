@@ -37,7 +37,7 @@ suite('DataScience - Export Util', () => {
         );
 
         await exportUtil.removeSvgs(file);
-        const model = await notebookStorage.get(file);
+        const model = await notebookStorage.getOrCreateModel(file);
 
         // make sure no svg exists in model
         const SVG = 'image/svg+xml';

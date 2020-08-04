@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import {
     CodeLens,
+    commands,
     Event,
     EventEmitter,
     Position,
@@ -25,6 +27,7 @@ import { ICodeExecutionHelper } from '../../terminals/types';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, Identifiers, Telemetry } from '../constants';
 import {
+    ICellRange,
     ICodeLensFactory,
     ICodeWatcher,
     IDataScienceErrorHandler,
@@ -32,12 +35,32 @@ import {
     IInteractiveWindowProvider
 } from '../types';
 
+function getIndex(index: number, length: number): number {
+    // return index within the length range with negative indexing
+    if (length <= 0) {
+        throw new RangeError(`Length must be > 0 not ${length}`);
+    }
+    // negative index count back from length
+    if (index < 0) {
+        index += length;
+    }
+    // bounded index
+    if (index < 0) {
+        return 0;
+    } else if (index >= length) {
+        return length - 1;
+    } else {
+        return index;
+    }
+}
+
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
     private static sentExecuteCellTelemetry: boolean = false;
     private document?: TextDocument;
     private version: number = -1;
     private codeLenses: CodeLens[] = [];
+    private cells: ICellRange[] = [];
     private cachedSettings: IDataScienceSettings | undefined;
     private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
     private updateRequiredDisposable: IDisposable | undefined;
@@ -64,6 +87,7 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Use the factory to generate our new code lenses.
         this.codeLenses = this.codeLensFactory.createCodeLenses(document);
+        this.cells = this.codeLensFactory.getCellRanges(document);
 
         // Listen for changes
         this.updateRequiredDisposable = this.codeLensFactory.updateRequired(this.onCodeLensFactoryUpdated.bind(this));
@@ -95,7 +119,7 @@ export class CodeWatcher implements ICodeWatcher {
     @captureTelemetry(Telemetry.DebugCurrentCell)
     public async debugCurrentCell() {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
-            return Promise.resolve();
+            return;
         }
 
         // Run the cell that matches the current cursor position.
@@ -267,9 +291,9 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunCell)
-    public runCell(range: Range): Promise<void> {
+    public async runCell(range: Range): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
-            return Promise.resolve();
+            return;
         }
 
         // Run the cell clicked. Advance if the cursor is inside this cell and we're allowed to
@@ -281,9 +305,9 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.DebugCurrentCell)
-    public debugCell(range: Range): Promise<void> {
+    public async debugCell(range: Range): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
-            return Promise.resolve();
+            return;
         }
 
         // Debug the cell clicked.
@@ -291,9 +315,9 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunCurrentCell)
-    public runCurrentCell(): Promise<void> {
+    public async runCurrentCell(): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
-            return Promise.resolve();
+            return;
         }
 
         // Run the cell that matches the current cursor position.
@@ -310,22 +334,18 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runMatchingCell(this.documentManager.activeTextEditor.selection, true);
     }
 
+    // telemetry captured on CommandRegistry
     public async addEmptyCellToBottom(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
-        const cellDelineator = this.getDefaultCellMarker(editor?.document.uri);
         if (editor) {
-            editor.edit((editBuilder) => {
-                editBuilder.insert(new Position(editor.document.lineCount, 0), `\n\n${cellDelineator}\n`);
-            });
-
-            const newPosition = new Position(editor.document.lineCount + 3, 0); // +3 to account for the added spaces and to position after the new mark
-            return this.advanceToRange(new Range(newPosition, newPosition));
+            this.insertCell(editor, editor.document.lineCount + 1);
         }
     }
 
+    @captureTelemetry(Telemetry.RunCurrentCellAndAddBelow)
     public async runCurrentCellAndAddBelow(): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
-            return Promise.resolve();
+            return;
         }
 
         const editor = this.documentManager.activeTextEditor;
@@ -360,6 +380,531 @@ export class CodeWatcher implements ICodeWatcher {
         );
     }
 
+    @captureTelemetry(Telemetry.InsertCellBelowPosition)
+    public insertCellBelowPosition() {
+        const editor = this.documentManager.activeTextEditor;
+        if (editor && editor.selection) {
+            this.insertCell(editor, editor.selection.end.line + 1);
+        }
+    }
+
+    @captureTelemetry(Telemetry.InsertCellBelow)
+    public insertCellBelow() {
+        const editor = this.documentManager.activeTextEditor;
+        if (editor && editor.selection) {
+            const cell = this.getCellFromPosition(editor.selection.end);
+            if (cell) {
+                this.insertCell(editor, cell.range.end.line + 1);
+            } else {
+                this.insertCell(editor, editor.selection.end.line + 1);
+            }
+        }
+    }
+
+    @captureTelemetry(Telemetry.InsertCellAbove)
+    public insertCellAbove() {
+        const editor = this.documentManager.activeTextEditor;
+        if (editor && editor.selection) {
+            const cell = this.getCellFromPosition(editor.selection.start);
+            if (cell) {
+                this.insertCell(editor, cell.range.start.line);
+            } else {
+                this.insertCell(editor, editor.selection.start.line);
+            }
+        }
+    }
+
+    @captureTelemetry(Telemetry.DeleteCells)
+    public deleteCells() {
+        const editor = this.documentManager.activeTextEditor;
+        if (!editor || !editor.selection) {
+            return;
+        }
+
+        const firstLastCells = this.getStartEndCells(editor.selection);
+        if (!firstLastCells) {
+            return;
+        }
+        const startCell = firstLastCells[0];
+        const endCell = firstLastCells[1];
+
+        // Start of the document should start at position 0, 0 and end one line ahead.
+        let startLineNumber = 0;
+        let startCharacterNumber = 0;
+        let endLineNumber = endCell.range.end.line + 1;
+        let endCharacterNumber = 0;
+        // Anywhere else in the document should start at the end of line before the
+        // cell and end at the last character of the cell.
+        if (startCell.range.start.line > 0) {
+            startLineNumber = startCell.range.start.line - 1;
+            startCharacterNumber = editor.document.lineAt(startLineNumber).range.end.character;
+            endLineNumber = endCell.range.end.line;
+            endCharacterNumber = endCell.range.end.character;
+        }
+        const cellExtendedRange = new Range(
+            new Position(startLineNumber, startCharacterNumber),
+            new Position(endLineNumber, endCharacterNumber)
+        );
+        editor.edit((editBuilder) => {
+            editBuilder.replace(cellExtendedRange, '');
+            this.codeLensUpdatedEvent.fire();
+        });
+    }
+
+    @captureTelemetry(Telemetry.SelectCell)
+    public selectCell() {
+        const editor = this.documentManager.activeTextEditor;
+        if (editor && editor.selection) {
+            const startEndCells = this.getStartEndCells(editor.selection);
+            if (startEndCells) {
+                const startCell = startEndCells[0];
+                const endCell = startEndCells[1];
+                if (editor.selection.anchor.isBeforeOrEqual(editor.selection.active)) {
+                    editor.selection = new Selection(startCell.range.start, endCell.range.end);
+                } else {
+                    editor.selection = new Selection(endCell.range.end, startCell.range.start);
+                }
+            }
+        }
+    }
+
+    @captureTelemetry(Telemetry.SelectCellContents)
+    public selectCellContents() {
+        const editor = this.documentManager.activeTextEditor;
+        if (!editor || !editor.selection) {
+            return;
+        }
+        const startEndCellIndex = this.getStartEndCellIndex(editor.selection);
+        if (!startEndCellIndex) {
+            return;
+        }
+        const startCellIndex = startEndCellIndex[0];
+        const endCellIndex = startEndCellIndex[1];
+        const isAnchorLessEqualActive = editor.selection.anchor.isBeforeOrEqual(editor.selection.active);
+
+        const cells = this.cells;
+        const selections: Selection[] = [];
+        for (let i = startCellIndex; i <= endCellIndex; i += 1) {
+            const cell = cells[i];
+            let anchorLine = cell.range.start.line + 1;
+            let achorCharacter = 0;
+            let activeLine = cell.range.end.line;
+            let activeCharacter = cell.range.end.character;
+            // if cell is only one line long, select the end of that line
+            if (cell.range.start.line === cell.range.end.line) {
+                anchorLine = cell.range.start.line;
+                achorCharacter = editor.document.lineAt(anchorLine).range.end.character;
+                activeLine = anchorLine;
+                activeCharacter = achorCharacter;
+            }
+            if (isAnchorLessEqualActive) {
+                selections.push(new Selection(anchorLine, achorCharacter, activeLine, activeCharacter));
+            } else {
+                selections.push(new Selection(activeLine, activeCharacter, anchorLine, achorCharacter));
+            }
+        }
+        editor.selections = selections;
+    }
+
+    @captureTelemetry(Telemetry.ExtendSelectionByCellAbove)
+    public extendSelectionByCellAbove() {
+        // This behaves similarly to excel "Extend Selection by One Cell Above".
+        // The direction of the selection matters (i.e. where the active cursor)
+        // position is. First, it ensures that complete cells are selection.
+        // If so, then if active cursor is in cells below it contracts the
+        // selection range. If the active cursor is above, it expands the
+        // selection range.
+        const editor = this.documentManager.activeTextEditor;
+        if (!editor || !editor.selection) {
+            return;
+        }
+        const currentSelection = editor.selection;
+        const startEndCellIndex = this.getStartEndCellIndex(editor.selection);
+        if (!startEndCellIndex) {
+            return;
+        }
+
+        const isAnchorLessThanActive = editor.selection.anchor.isBefore(editor.selection.active);
+
+        const cells = this.cells;
+        const startCellIndex = startEndCellIndex[0];
+        const endCellIndex = startEndCellIndex[1];
+        const startCell = cells[startCellIndex];
+        const endCell = cells[endCellIndex];
+
+        if (
+            !startCell.range.start.isEqual(currentSelection.start) ||
+            !endCell.range.end.isEqual(currentSelection.end)
+        ) {
+            // full cell range not selected, first select a full cell range.
+            let selection: Selection;
+            if (isAnchorLessThanActive) {
+                if (startCellIndex < endCellIndex) {
+                    // active at end of cell before endCell
+                    selection = new Selection(startCell.range.start, cells[endCellIndex - 1].range.end);
+                } else {
+                    // active at end of startCell
+                    selection = new Selection(startCell.range.end, startCell.range.start);
+                }
+            } else {
+                // active at start of start cell.
+                selection = new Selection(endCell.range.end, startCell.range.start);
+            }
+            editor.selection = selection;
+        } else {
+            // full cell range is selected now decide if expanding or contracting?
+            if (isAnchorLessThanActive && startCellIndex < endCellIndex) {
+                // anchor is above active, contract selection by cell below.
+                const newEndCell = cells[endCellIndex - 1];
+                editor.selection = new Selection(startCell.range.start, newEndCell.range.end);
+            } else {
+                // anchor is below active, expand selection by cell above.
+                if (startCellIndex > 0) {
+                    const aboveCell = cells[startCellIndex - 1];
+                    editor.selection = new Selection(endCell.range.end, aboveCell.range.start);
+                }
+            }
+        }
+    }
+
+    @captureTelemetry(Telemetry.ExtendSelectionByCellBelow)
+    public extendSelectionByCellBelow() {
+        // This behaves similarly to excel "Extend Selection by One Cell Above".
+        // The direction of the selection matters (i.e. where the active cursor)
+        // position is. First, it ensures that complete cells are selection.
+        // If so, then if active cursor is in cells below it expands the
+        // selection range. If the active cursor is above, it contracts the
+        // selection range.
+        const editor = this.documentManager.activeTextEditor;
+        if (!editor || !editor.selection) {
+            return;
+        }
+        const currentSelection = editor.selection;
+        const startEndCellIndex = this.getStartEndCellIndex(editor.selection);
+        if (!startEndCellIndex) {
+            return;
+        }
+
+        const isAnchorLessEqualActive = editor.selection.anchor.isBeforeOrEqual(editor.selection.active);
+
+        const cells = this.cells;
+        const startCellIndex = startEndCellIndex[0];
+        const endCellIndex = startEndCellIndex[1];
+        const startCell = cells[startCellIndex];
+        const endCell = cells[endCellIndex];
+
+        if (
+            !startCell.range.start.isEqual(currentSelection.start) ||
+            !endCell.range.end.isEqual(currentSelection.end)
+        ) {
+            // full cell range not selected, first select a full cell range.
+            let selection: Selection;
+            if (isAnchorLessEqualActive) {
+                // active at start of start cell.
+                selection = new Selection(startCell.range.start, endCell.range.end);
+            } else {
+                if (startCellIndex < endCellIndex) {
+                    // active at end of cell before endCell
+                    selection = new Selection(cells[startCellIndex + 1].range.start, endCell.range.end);
+                } else {
+                    // active at end of startCell
+                    selection = new Selection(endCell.range.start, endCell.range.end);
+                }
+            }
+            editor.selection = selection;
+        } else {
+            // full cell range is selected now decide if expanding or contracting?
+            if (isAnchorLessEqualActive || startCellIndex === endCellIndex) {
+                // anchor is above active, expand selection by cell below.
+                if (endCellIndex < cells.length - 1) {
+                    const extendCell = cells[endCellIndex + 1];
+                    editor.selection = new Selection(startCell.range.start, extendCell.range.end);
+                }
+            } else {
+                // anchor is below active, contract selection by cell above.
+                if (startCellIndex < endCellIndex) {
+                    const contractCell = cells[startCellIndex + 1];
+                    editor.selection = new Selection(endCell.range.end, contractCell.range.start);
+                }
+            }
+        }
+    }
+
+    @captureTelemetry(Telemetry.MoveCellsUp)
+    public async moveCellsUp(): Promise<void> {
+        await this.moveCellsDirection(true);
+    }
+
+    @captureTelemetry(Telemetry.MoveCellsDown)
+    public async moveCellsDown(): Promise<void> {
+        await this.moveCellsDirection(false);
+    }
+
+    @captureTelemetry(Telemetry.ChangeCellToMarkdown)
+    public changeCellToMarkdown() {
+        this.applyToCells((editor, cell, _) => {
+            return this.changeCellTo(editor, cell, 'markdown');
+        });
+    }
+
+    @captureTelemetry(Telemetry.ChangeCellToCode)
+    public changeCellToCode() {
+        this.applyToCells((editor, cell, _) => {
+            return this.changeCellTo(editor, cell, 'code');
+        });
+    }
+
+    private applyToCells(callback: (editor: TextEditor, cell: ICellRange, cellIndex: number) => void) {
+        const editor = this.documentManager.activeTextEditor;
+        const startEndCellIndex = this.getStartEndCellIndex(editor?.selection);
+        if (!editor || !startEndCellIndex) {
+            return;
+        }
+        const cells = this.cells;
+        const startIndex = startEndCellIndex[0];
+        const endIndex = startEndCellIndex[1];
+        for (let cellIndex = startIndex; cellIndex <= endIndex; cellIndex += 1) {
+            callback(editor, cells[cellIndex], cellIndex);
+        }
+    }
+
+    private changeCellTo(editor: TextEditor, cell: ICellRange, toCellType: nbformat.CellType) {
+        // change cell from code -> markdown or markdown -> code
+        if (toCellType === 'raw') {
+            throw Error('Cell Type raw not implemented');
+        }
+
+        // don't change cell type if already that type
+        if (cell.cell_type === toCellType) {
+            return;
+        }
+        const cellMatcher = new CellMatcher(this.configService.getSettings(editor.document.uri).datascience);
+        const definitionLine = editor.document.lineAt(cell.range.start.line);
+        const definitionText = editor.document.getText(definitionLine.range);
+
+        // new definition text
+        const cellMarker = this.getDefaultCellMarker(editor.document.uri);
+        const definitionMatch =
+            toCellType === 'markdown'
+                ? cellMatcher.codeExecRegEx.exec(definitionText) // code -> markdown
+                : cellMatcher.markdownExecRegEx.exec(definitionText); // markdown -> code
+        if (!definitionMatch) {
+            return;
+        }
+        const definitionExtra = definitionMatch[definitionMatch.length - 1];
+        const newDefinitionText =
+            toCellType === 'markdown'
+                ? `${cellMarker} [markdown]${definitionExtra}` // code -> markdown
+                : `${cellMarker}${definitionExtra}`; // markdown -> code
+
+        editor.edit(async (editBuilder) => {
+            editBuilder.replace(definitionLine.range, newDefinitionText);
+            cell.cell_type = toCellType;
+            if (cell.range.start.line < cell.range.end.line) {
+                editor.selection = new Selection(
+                    cell.range.start.line + 1,
+                    0,
+                    cell.range.end.line,
+                    cell.range.end.character
+                );
+                // ensure all lines in markdown cell have a comment.
+                // these are not included in the test because it's unclear
+                // how TypeMoq works with them.
+                commands.executeCommand('editor.action.removeCommentLine');
+                if (toCellType === 'markdown') {
+                    commands.executeCommand('editor.action.addCommentLine');
+                }
+            }
+        });
+    }
+
+    private async moveCellsDirection(directionUp: boolean): Promise<boolean> {
+        const editor = this.documentManager.activeTextEditor;
+        if (!editor || !editor.selection) {
+            return false;
+        }
+        const startEndCellIndex = this.getStartEndCellIndex(editor.selection);
+        if (!startEndCellIndex) {
+            return false;
+        }
+        const startCellIndex = startEndCellIndex[0];
+        const endCellIndex = startEndCellIndex[1];
+        const cells = this.cells;
+        const startCell = cells[startCellIndex];
+        const endCell = cells[endCellIndex];
+        if (!startCell || !endCell) {
+            return false;
+        }
+        const currentRange = new Range(startCell.range.start, endCell.range.end);
+        const relativeSelectionRange = new Range(
+            editor.selection.start.line - currentRange.start.line,
+            editor.selection.start.character,
+            editor.selection.end.line - currentRange.start.line,
+            editor.selection.end.character
+        );
+        const isActiveBeforeAnchor = editor.selection.active.isBefore(editor.selection.anchor);
+        let thenSetSelection: Thenable<boolean>;
+        if (directionUp) {
+            if (startCellIndex === 0) {
+                return false;
+            } else {
+                const aboveCell = cells[startCellIndex - 1];
+                const thenExchangeTextLines = this.exchangeTextLines(editor, aboveCell.range, currentRange);
+                thenSetSelection = thenExchangeTextLines.then((isEditSuccessful) => {
+                    if (isEditSuccessful) {
+                        editor.selection = new Selection(
+                            aboveCell.range.start.line + relativeSelectionRange.start.line,
+                            relativeSelectionRange.start.character,
+                            aboveCell.range.start.line + relativeSelectionRange.end.line,
+                            relativeSelectionRange.end.character
+                        );
+                    }
+                    return isEditSuccessful;
+                });
+            }
+        } else {
+            if (endCellIndex === cells.length - 1) {
+                return false;
+            } else {
+                const belowCell = cells[endCellIndex + 1];
+                const thenExchangeTextLines = this.exchangeTextLines(editor, currentRange, belowCell.range);
+                const belowCellLineLength = belowCell.range.end.line - belowCell.range.start.line;
+                const aboveCellLineLength = currentRange.end.line - currentRange.start.line;
+                const diffCellLineLength = belowCellLineLength - aboveCellLineLength;
+                thenSetSelection = thenExchangeTextLines.then((isEditSuccessful) => {
+                    if (isEditSuccessful) {
+                        editor.selection = new Selection(
+                            belowCell.range.start.line + diffCellLineLength + relativeSelectionRange.start.line,
+                            relativeSelectionRange.start.character,
+                            belowCell.range.start.line + diffCellLineLength + relativeSelectionRange.end.line,
+                            relativeSelectionRange.end.character
+                        );
+                    }
+                    return isEditSuccessful;
+                });
+            }
+        }
+        return thenSetSelection.then((isEditSuccessful) => {
+            if (isEditSuccessful && isActiveBeforeAnchor) {
+                editor.selection = new Selection(editor.selection.active, editor.selection.anchor);
+            }
+            return true;
+        });
+    }
+
+    private exchangeTextLines(editor: TextEditor, aboveRange: Range, belowRange: Range): Thenable<boolean> {
+        const aboveStartLine = aboveRange.start.line;
+        const aboveEndLine = aboveRange.end.line;
+        const belowStartLine = belowRange.start.line;
+        const belowEndLine = belowRange.end.line;
+
+        if (aboveEndLine >= belowStartLine) {
+            throw RangeError(`Above lines must be fully above not ${aboveEndLine} <= ${belowStartLine}`);
+        }
+
+        const above = new Range(
+            aboveStartLine,
+            0,
+            aboveEndLine,
+            editor.document.lineAt(aboveEndLine).range.end.character
+        );
+        const aboveText = editor.document.getText(above);
+
+        const below = new Range(
+            belowStartLine,
+            0,
+            belowEndLine,
+            editor.document.lineAt(belowEndLine).range.end.character
+        );
+        const belowText = editor.document.getText(below);
+
+        let betweenText = '';
+        if (aboveEndLine + 1 < belowStartLine) {
+            const betweenStatLine = aboveEndLine + 1;
+            const betweenEndLine = belowStartLine - 1;
+            const between = new Range(
+                betweenStatLine,
+                0,
+                betweenEndLine,
+                editor.document.lineAt(betweenEndLine).range.end.character
+            );
+            betweenText = `${editor.document.getText(between)}\n`;
+        }
+
+        const newText = `${belowText}\n${betweenText}${aboveText}`;
+        const newRange = new Range(above.start, below.end);
+        return editor.edit((editBuilder) => {
+            editBuilder.replace(newRange, newText);
+            this.codeLensUpdatedEvent.fire();
+        });
+    }
+
+    private getStartEndCells(selection: Selection): ICellRange[] | undefined {
+        const startEndCellIndex = this.getStartEndCellIndex(selection);
+        if (startEndCellIndex) {
+            const startCell = this.getCellFromIndex(startEndCellIndex[0]);
+            const endCell = this.getCellFromIndex(startEndCellIndex[1]);
+            return [startCell, endCell];
+        }
+    }
+
+    private getStartEndCellIndex(selection?: Selection): number[] | undefined {
+        if (!selection) {
+            return undefined;
+        }
+        let startCellIndex = this.getCellIndex(selection.start);
+        let endCellIndex = startCellIndex;
+        // handle if the selection is the same line, hence same cell
+        if (selection.start.line !== selection.end.line) {
+            endCellIndex = this.getCellIndex(selection.end);
+        }
+        // handle when selection is above the top most cell
+        if (startCellIndex === -1) {
+            if (endCellIndex === -1) {
+                return undefined;
+            } else {
+                // selected a range above the first cell.
+                startCellIndex = 0;
+                const startCell = this.getCellFromIndex(0);
+                if (selection.start.line > startCell.range.start.line) {
+                    throw RangeError(
+                        `Should not be able to pick a range with an end in a cell and start after a cell. ${selection.start.line} > ${startCell.range.end.line}`
+                    );
+                }
+            }
+        }
+        if (startCellIndex >= 0 && endCellIndex >= 0) {
+            return [startCellIndex, endCellIndex];
+        }
+    }
+
+    private insertCell(editor: TextEditor, line: number) {
+        // insertCell
+        //
+        // Inserts a cell at current line defined as two new lines and then
+        // moves cursor to within the cell.
+        // ```
+        // # %%
+        //
+        // ```
+        //
+        const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
+        let newCell = `${cellDelineator}\n\n`;
+        if (line >= editor.document.lineCount) {
+            newCell = `\n${cellDelineator}\n`;
+        }
+
+        const cellStartPosition = new Position(line, 0);
+        const newCursorPosition = new Position(line + 1, 0);
+
+        editor.edit((editBuilder) => {
+            editBuilder.insert(cellStartPosition, newCell);
+            this.codeLensUpdatedEvent.fire();
+        });
+
+        editor.selection = new Selection(newCursorPosition, newCursorPosition);
+    }
+
     private getDefaultCellMarker(resource: Resource): string {
         return (
             this.configService.getSettings(resource).datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker
@@ -370,6 +915,7 @@ export class CodeWatcher implements ICodeWatcher {
         // Update our code lenses.
         if (this.document) {
             this.codeLenses = this.codeLensFactory.createCodeLenses(this.document);
+            this.cells = this.codeLensFactory.getCellRanges(this.document);
         }
         this.codeLensUpdatedEvent.fire();
     }
@@ -437,16 +983,14 @@ export class CodeWatcher implements ICodeWatcher {
         if (currentRunCellLens) {
             // Move the next cell if allowed.
             if (advance) {
-                // Either use the next cell that we found, or add a new one into the document
-                let nextRange: Range;
-                if (!nextRunCellLens) {
-                    nextRange = this.createNewCell(currentRunCellLens.range);
+                if (nextRunCellLens) {
+                    this.advanceToRange(nextRunCellLens.range);
                 } else {
-                    nextRange = nextRunCellLens.range;
-                }
-
-                if (nextRange) {
-                    this.advanceToRange(nextRange);
+                    // insert new cell at bottom after current
+                    const editor = this.documentManager.activeTextEditor;
+                    if (editor) {
+                        this.insertCell(editor, currentRunCellLens.range.end.line + 1);
+                    }
                 }
             }
 
@@ -461,6 +1005,31 @@ export class CodeWatcher implements ICodeWatcher {
                     this.documentManager.activeTextEditor,
                     debug
                 );
+            }
+        }
+    }
+
+    private getCellIndex(position: Position): number {
+        return this.cells.findIndex((cell) => position && cell.range.contains(position));
+    }
+
+    private getCellFromIndex(index: number): ICellRange {
+        const cells = this.cells;
+        const indexBounded = getIndex(index, cells.length);
+        return cells[indexBounded];
+    }
+
+    private getCellFromPosition(position?: Position): ICellRange | undefined {
+        if (!position) {
+            const editor = this.documentManager.activeTextEditor;
+            if (editor && editor.selection) {
+                position = editor.selection.active;
+            }
+        }
+        if (position) {
+            const index = this.getCellIndex(position);
+            if (index >= 0) {
+                return this.cells[index];
             }
         }
     }
@@ -489,24 +1058,6 @@ export class CodeWatcher implements ICodeWatcher {
             const code = this.document.getText();
             await this.addCode(code, this.document.uri, 0, undefined, debug);
         }
-    }
-
-    // User has picked run and advance on the last cell of a document
-    // Create a new cell at the bottom and put their selection there, ready to type
-    private createNewCell(currentRange: Range): Range {
-        const editor = this.documentManager.activeTextEditor;
-        const newPosition = new Position(currentRange.end.line + 3, 0); // +3 to account for the added spaces and to position after the new mark
-
-        if (editor) {
-            editor.edit((editBuilder) => {
-                editBuilder.insert(
-                    new Position(currentRange.end.line + 1, 0),
-                    `\n\n${this.getDefaultCellMarker(editor.document.uri)}\n`
-                );
-            });
-        }
-
-        return new Range(newPosition, newPosition);
     }
 
     // Advance the cursor to the selected range

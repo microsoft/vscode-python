@@ -665,6 +665,18 @@ export interface ICodeWatcher {
     debugFileInteractive(): Promise<void>;
     addEmptyCellToBottom(): Promise<void>;
     runCurrentCellAndAddBelow(): Promise<void>;
+    insertCellBelowPosition(): void;
+    insertCellBelow(): void;
+    insertCellAbove(): void;
+    deleteCells(): void;
+    selectCell(): void;
+    selectCellContents(): void;
+    extendSelectionByCellAbove(): void;
+    extendSelectionByCellBelow(): void;
+    moveCellsUp(): Promise<void>;
+    moveCellsDown(): Promise<void>;
+    changeCellToMarkdown(): void;
+    changeCellToCode(): void;
     debugCurrentCell(): Promise<void>;
 }
 
@@ -672,6 +684,7 @@ export const ICodeLensFactory = Symbol('ICodeLensFactory');
 export interface ICodeLensFactory {
     updateRequired: Event<void>;
     createCodeLenses(document: TextDocument): CodeLens[];
+    getCellRanges(document: TextDocument): ICellRange[];
 }
 
 export enum CellState {
@@ -690,6 +703,18 @@ export interface ICell {
     state: CellState;
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
     extraLines?: number[];
+}
+
+// CellRange is used as the basis for creating new ICells.
+// Was only intended to aggregate together ranges to create an ICell
+// However the "range" aspect is useful when working with plain text document
+// Ultimately, it would probably be ideal to be ICell and change line to range.
+// Specificially see how this is being used for the ICodeLensFactory to
+// provide cells for the CodeWatcher to use.
+export interface ICellRange {
+    range: Range;
+    title: string;
+    cell_type: string;
 }
 
 export interface IInteractiveWindowInfo {
@@ -1079,13 +1104,17 @@ export interface INotebookModel {
 export const INotebookStorage = Symbol('INotebookStorage');
 
 export interface INotebookStorage {
-    readonly onSavedAs: Event<{ new: Uri; old: Uri }>;
     generateBackupId(model: INotebookModel): string;
     save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
     backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string): Promise<void>;
-    get(file: Uri, contents?: string, backupId?: string, forVSCodeNotebook?: boolean): Promise<INotebookModel>;
-    get(
+    getOrCreateModel(
+        file: Uri,
+        contents?: string,
+        backupId?: string,
+        forVSCodeNotebook?: boolean
+    ): Promise<INotebookModel>;
+    getOrCreateModel(
         file: Uri,
         contents?: string,
         // tslint:disable-next-line: unified-signatures
@@ -1143,6 +1172,11 @@ export interface INotebookProvider {
      * List of all notebooks (active and ones that are being constructed).
      */
     activeNotebooks: Promise<INotebook>[];
+    /**
+     * Disposes notebook associated with the given identity.
+     * Using `getOrCreateNotebook` would be incorrect as thats async, and its possible a document has been opened in the interim (meaning we could end up disposing something that is required).
+     */
+    disposeAssociatedNotebook(options: { identity: Uri }): void;
     /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */

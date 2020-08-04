@@ -926,8 +926,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(experimentManager.inExperiment(anything())).thenCall((exp) => {
             const setState = this.experimentState.get(exp);
             if (setState === undefined) {
-                // Default to true if not the zmq kernel
-                return exp !== LocalZMQKernel.experiment;
+                if (this.shouldMockJupyter) {
+                    // RawKernel doesn't currently have a mock layer
+                    return exp !== LocalZMQKernel.experiment;
+                } else {
+                    // All experiments to true by default if not mocking jupyter
+                    return true;
+                }
             }
             return setState;
         });

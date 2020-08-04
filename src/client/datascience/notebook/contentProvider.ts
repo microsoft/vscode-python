@@ -14,7 +14,6 @@ import type {
     NotebookDocumentContentChangeEvent,
     NotebookDocumentOpenContext
 } from 'vscode-proposed';
-import { ICommandManager } from '../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../common/constants';
 import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
@@ -42,7 +41,6 @@ export class NotebookContentProvider implements INotebookContentProvider {
     }
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(NotebookEditorCompatibilitySupport)
         private readonly compatibilitySupport: NotebookEditorCompatibilitySupport
     ) {}
@@ -72,8 +70,8 @@ export class NotebookContentProvider implements INotebookContentProvider {
         }
         // If there's no backup id, then skip loading dirty contents.
         const model = await (openContext.backupId
-            ? this.notebookStorage.get(uri, undefined, openContext.backupId, true)
-            : this.notebookStorage.get(uri, undefined, true, true));
+            ? this.notebookStorage.getOrCreateModel(uri, undefined, openContext.backupId, true)
+            : this.notebookStorage.getOrCreateModel(uri, undefined, true, true));
 
         setSharedProperty('ds_notebookeditor', 'native');
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cells.length });
@@ -81,15 +79,11 @@ export class NotebookContentProvider implements INotebookContentProvider {
     }
     @captureTelemetry(Telemetry.Save, undefined, true)
     public async saveNotebook(document: NotebookDocument, cancellation: CancellationToken) {
-        const model = await this.notebookStorage.get(document.uri, undefined, undefined, true);
+        const model = await this.notebookStorage.getOrCreateModel(document.uri, undefined, undefined, true);
         if (cancellation.isCancellationRequested) {
             return;
         }
-        if (model.isUntitled) {
-            await this.commandManager.executeCommand('workbench.action.files.saveAs', document.uri);
-        } else {
-            await this.notebookStorage.save(model, cancellation);
-        }
+        await this.notebookStorage.save(model, cancellation);
     }
 
     public async saveNotebookAs(
@@ -97,7 +91,7 @@ export class NotebookContentProvider implements INotebookContentProvider {
         document: NotebookDocument,
         cancellation: CancellationToken
     ): Promise<void> {
-        const model = await this.notebookStorage.get(document.uri, undefined, undefined, true);
+        const model = await this.notebookStorage.getOrCreateModel(document.uri, undefined, undefined, true);
         if (!cancellation.isCancellationRequested) {
             await this.notebookStorage.saveAs(model, targetResource);
         }
@@ -107,7 +101,7 @@ export class NotebookContentProvider implements INotebookContentProvider {
         _context: NotebookDocumentBackupContext,
         cancellation: CancellationToken
     ): Promise<NotebookDocumentBackup> {
-        const model = await this.notebookStorage.get(document.uri, undefined, undefined, true);
+        const model = await this.notebookStorage.getOrCreateModel(document.uri, undefined, undefined, true);
         const id = this.notebookStorage.generateBackupId(model);
         await this.notebookStorage.backup(model, cancellation, id);
         return {

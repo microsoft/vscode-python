@@ -1,17 +1,109 @@
-
 {
 	"env": {
 		"node": true,
-		"es6": true
+		"es6": true,
+		"mocha": true
 	},
+	"parser": "@typescript-eslint/parser",
+	"plugins": [
+		"@typescript-eslint"
+	],
+	"extends": [
+		"airbnb",
+		"plugin:@typescript-eslint/recommended",
+		"plugin:import/errors",
+		"plugin:import/warnings",
+		"plugin:import/typescript"
+	],
 	"rules": {
-		"no-console": 0,
-		"no-cond-assign": 0,
-		"no-unused-vars": 1,
-		"no-extra-semi": "warn",
-        "semi": "warn",
-        "prettier/prettier": "error"
-	},
-    "extends": ["eslint:recommended", "prettier"],
-    "plugins": ["prettier"]
+		// Overriding ESLint rules with Typescript-specific ones
+		"@typescript-eslint/ban-ts-comment": [
+			"error",
+			{
+				"ts-ignore": "allow-with-description"
+			}
+		],
+		"no-bitwise": "off",
+		"no-dupe-class-members": "off",
+		"@typescript-eslint/no-dupe-class-members": "error",
+		"no-empty-function": "off",
+		"@typescript-eslint/no-empty-function": [
+			"error"
+		],
+		"@typescript-eslint/no-empty-interface": "off",
+		"@typescript-eslint/no-non-null-assertion": "off",
+		"no-unused-vars": "off",
+		"@typescript-eslint/no-unused-vars": "error",
+		"no-use-before-define": "off",
+		"@typescript-eslint/no-use-before-define": [
+			"error",
+			{
+				"functions": false
+			}
+		],
+		"no-useless-constructor": "off",
+		"@typescript-eslint/no-useless-constructor": "error",
+		"@typescript-eslint/no-var-requires": "off",
+		// Other rules
+		"comma-dangle": "off",
+		"func-names": "off",
+		"import/extensions": "off",
+		"import/namespace": "off",
+		"import/no-extraneous-dependencies": "off",
+		"import/no-unresolved": [
+			"error",
+			{
+				"ignore": [
+					"monaco-editor",
+					"vscode"
+				]
+			}
+		],
+		"import/prefer-default-export": "off",
+		"indent": [
+			"error",
+			4,
+			{
+				"SwitchCase": 1
+			}
+		],
+		"max-classes-per-file": "off",
+		"max-len": [
+			"error",
+			{
+				"code": 120
+			}
+		],
+		"no-confusing-arrow": [
+			"error",
+			{
+				"allowParens": true
+			}
+		],
+		"no-console": "off",
+		"no-control-regex": "off",
+		"no-extend-native": "off",
+		"no-multi-str": "off",
+		"no-param-reassign": "off",
+		"no-prototype-builtins": "off",
+		"no-template-curly-in-string": "off",
+		"no-underscore-dangle": "off",
+		"no-useless-escape": "off",
+		"no-void": [
+			"error",
+			{
+				"allowAsStatement": true
+			}
+		],
+		"operator-assignment": "off",
+		"react/jsx-filename-extension": [
+			1,
+			{
+				"extensions": [
+					".tsx"
+				]
+			}
+		],
+		"strict": "off"
+	}
 }

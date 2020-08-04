@@ -156,6 +156,11 @@ export abstract class BaseNotebookModel implements INotebookModel {
         ) {
             this.notebookJson.metadata.language_info.version = interpreter.version.raw;
             changed = true;
+        } else if (!interpreter && this.notebookJson.metadata?.language_info) {
+            // It's possible, such as with raw kernel and a default kernelspec to not have interpreter info
+            // for this case clear out old invalid language_info entries as they are related to the previous execution
+            this.notebookJson.metadata.language_info = undefined;
+            changed = true;
         }
 
         if (kernelSpec && this.notebookJson.metadata && !this.notebookJson.metadata.kernelspec) {

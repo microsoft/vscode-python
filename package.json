@@ -529,6 +529,66 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.insertCellBelowPosition",
+                "title": "%python.command.python.datascience.insertCellBelowPosition.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.insertCellBelow",
+                "title": "%python.command.python.datascience.insertCellBelow.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.insertCellAbove",
+                "title": "%python.command.python.datascience.insertCellAbove.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.deleteCells",
+                "title": "%python.command.python.datascience.deleteCells.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.selectCell",
+                "title": "%python.command.python.datascience.selectCell.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.selectCellContents",
+                "title": "%python.command.python.datascience.selectCellContents.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.extendSelectionByCellAbove",
+                "title": "%python.command.python.datascience.extendSelectionByCellAbove.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.extendSelectionByCellBelow",
+                "title": "%python.command.python.datascience.extendSelectionByCellBelow.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.moveCellsUp",
+                "title": "%python.command.python.datascience.moveCellsUp.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.moveCellsDown",
+                "title": "%python.command.python.datascience.moveCellsDown.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.changeCellToMarkdown",
+                "title": "%python.command.python.datascience.changeCellToMarkdown.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.changeCellToCode",
+                "title": "%python.command.python.datascience.changeCellToCode.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.runcurrentcelladvance",
                 "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
                 "category": "Python"
@@ -775,6 +835,11 @@
                 "command": "python.datascience.latestExtension",
                 "title": "DataScience.latestExtension",
                 "category": "Python"
+            },
+            {
+                "command": "python.analysis.restartLanguageServer",
+                "title": "%python.command.python.analysis.restartLanguageServer.title%",
+                "category": "Python"
             }
         ],
         "menus": {
@@ -1010,6 +1075,78 @@
                     "title": "Open",
                     "category": "Python",
                     "when": "config.noExists"
+                },
+                {
+                    "command": "python.datascience.insertCellBelowPosition",
+                    "title": "%python.command.python.datascience.insertCellBelowPosition.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.insertCellBelow",
+                    "title": "%python.command.python.datascience.insertCellBelow.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.insertCellAbove",
+                    "title": "%python.command.python.datascience.insertCellAbove.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.deleteCells",
+                    "title": "%python.command.python.datascience.deleteCells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.selectCell",
+                    "title": "%python.command.python.datascience.selectCell.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.selectCellContents",
+                    "title": "%python.command.python.datascience.selectCellContents.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.extendSelectionByCellAbove",
+                    "title": "%python.command.python.datascience.extendSelectionByCellAbove.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.extendSelectionByCellBelow",
+                    "title": "%python.command.python.datascience.extendSelectionByCellBelow.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.moveCellsUp",
+                    "title": "%python.command.python.datascience.moveCellsUp.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.moveCellsDown",
+                    "title": "%python.command.python.datascience.moveCellsDown.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.changeCellToMarkdown",
+                    "title": "%python.command.python.datascience.changeCellToMarkdown.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.changeCellToCode",
+                    "title": "%python.command.python.datascience.changeCellToCode.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && editorFocus && editorLangId == python && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.runcurrentcell",
@@ -1438,6 +1575,14 @@
                                 "type": "string",
                                 "description": "Path (fully qualified) to python executable. Defaults to the value in settings",
                                 "default": "${command:python.interpreterPath}"
+                            },
+                            "pythonArgs": {
+                                "type": "array",
+                                "description": "Command-line arguments passed to the Python interpreter. To pass arguments to the debug target, use \"args\".",
+                                "default": [],
+                                "items": {
+                                    "type": "string"
+                                }
                             },
                             "args": {
                                 "type": "array",
@@ -2336,7 +2481,7 @@
                     ],
                     "default": "Jedi",
                     "description": "Defines type of the language server.",
-                    "scope": "resource"
+                    "scope": "window"
                 },
                 "python.analysis.openFilesOnly": {
                     "type": "boolean",
@@ -3385,6 +3530,8 @@
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",
         "@types/xml2js": "^0.4.2",
+        "@typescript-eslint/eslint-plugin": "^3.7.0",
+        "@typescript-eslint/parser": "^3.7.0",
         "acorn": "^6.4.1",
         "ansi-to-html": "^0.6.7",
         "babel-loader": "^8.0.3",
@@ -3413,8 +3560,14 @@
         "download": "^7.0.0",
         "enzyme": "^3.7.0",
         "enzyme-adapter-react-16": "^1.6.0",
+        "eslint": "^7.2.0",
+        "eslint-config-airbnb": "^18.2.0",
         "eslint-config-prettier": "^6.9.0",
+        "eslint-plugin-import": "^2.22.0",
+        "eslint-plugin-jsx-a11y": "^6.3.1",
         "eslint-plugin-prettier": "^3.1.2",
+        "eslint-plugin-react": "^7.20.3",
+        "eslint-plugin-react-hooks": "^4.0.0",
         "event-stream": "3.3.4",
         "expose-loader": "^0.7.5",
         "express": "^4.17.1",
@@ -3507,7 +3660,7 @@
         "tslint-plugin-prettier": "^2.1.0",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
-        "typescript": "^3.8.3",
+        "typescript": "^3.9.7",
         "typescript-formatter": "^7.1.0",
         "unicode-properties": "^1.3.1",
         "url-loader": "^1.1.2",
