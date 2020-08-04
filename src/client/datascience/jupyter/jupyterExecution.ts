@@ -398,13 +398,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     private extractJupyterServerHandleAndId(uri: string): { handle: JupyterServerUriHandle; id: string } | undefined {
-        let url: URL;
-        try {
-            url = new URL(uri);
-        } catch (err) {
-            // This should already have been parsed when set, so just throw if it's not right here
-            throw err;
-        }
+        const url: URL = new URL(uri);
 
         // Id has to be there too.
         const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
