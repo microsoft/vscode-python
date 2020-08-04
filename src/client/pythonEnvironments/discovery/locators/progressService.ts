@@ -3,17 +3,18 @@
 
 'use strict';
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter } from 'vscode';
 import { traceDecorators } from '../../../common/logger';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferredFrom, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
-import { IInterpreterLocatorService } from '../../../interpreter/contracts';
+import { IInterpreterLocatorProgressService, IInterpreterLocatorService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonInterpreter } from '../../info';
 
-export class InterpreterLocatorProgressService {
+@injectable()
+export class InterpreterLocatorProgressService implements IInterpreterLocatorProgressService {
     private deferreds: Deferred<PythonInterpreter[]>[] = [];
     private readonly refreshing = new EventEmitter<void>();
     private readonly refreshed = new EventEmitter<void>();

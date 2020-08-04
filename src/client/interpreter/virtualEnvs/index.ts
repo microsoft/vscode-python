@@ -14,7 +14,7 @@ import { IServiceContainer } from '../../ioc/types';
 import * as globalenvs from '../../pythonEnvironments/discovery/globalenv';
 import * as subenvs from '../../pythonEnvironments/discovery/subenv';
 import { InterpreterType } from '../../pythonEnvironments/info';
-import { IPipEnvService } from '../contracts';
+import { IInterpreterLocatorService, IPipEnvService, PIPENV_SERVICE } from '../contracts';
 import { IVirtualEnvironmentManager } from './types';
 
 @injectable()
@@ -26,7 +26,10 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
-        this.pipEnvService = serviceContainer.get<IPipEnvService>(IPipEnvService);
+        this.pipEnvService = serviceContainer.get<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            PIPENV_SERVICE
+        ) as IPipEnvService;
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
 

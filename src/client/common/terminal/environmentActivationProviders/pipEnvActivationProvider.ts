@@ -3,10 +3,15 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import '../../../common/extensions';
-import { IInterpreterService, IPipEnvService } from '../../../interpreter/contracts';
+import {
+    IInterpreterLocatorService,
+    IInterpreterService,
+    IPipEnvService,
+    PIPENV_SERVICE
+} from '../../../interpreter/contracts';
 import { InterpreterType } from '../../../pythonEnvironments/info';
 import { IWorkspaceService } from '../../application/types';
 import { IFileSystem } from '../../platform/types';
@@ -16,7 +21,9 @@ import { ITerminalActivationCommandProvider, TerminalShellType } from '../types'
 export class PipEnvActivationCommandProvider implements ITerminalActivationCommandProvider {
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IPipEnvService) private readonly pipenvService: IPipEnvService,
+        @inject(IInterpreterLocatorService)
+        @named(PIPENV_SERVICE)
+        private readonly pipenvService: IPipEnvService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}

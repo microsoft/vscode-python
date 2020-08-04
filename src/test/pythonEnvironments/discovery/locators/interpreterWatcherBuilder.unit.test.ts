@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
-import { IInterpreterWatcherRegistry, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../../client/interpreter/contracts';
+import { IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../../client/ioc/container';
 import { InterpreterWatcherBuilder } from '../../../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
 
@@ -20,12 +20,9 @@ suite('Interpreters - Watcher Builder', () => {
         const watcher = { register: () => Promise.resolve() };
 
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn();
-        when(
-            serviceContainer.get<IInterpreterWatcherRegistry>(
-                IInterpreterWatcherRegistry,
-                WORKSPACE_VIRTUAL_ENV_SERVICE
-            )
-        ).thenReturn((watcher as any) as IInterpreterWatcherRegistry);
+        when(serviceContainer.get<IInterpreterWatcher>(IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE)).thenReturn(
+            (watcher as any) as IInterpreterWatcher
+        );
 
         const item = await builder.getWorkspaceVirtualEnvInterpreterWatcher(undefined);
 
@@ -38,12 +35,9 @@ suite('Interpreters - Watcher Builder', () => {
         const watcher = { register: () => Promise.resolve() };
 
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn();
-        when(
-            serviceContainer.get<IInterpreterWatcherRegistry>(
-                IInterpreterWatcherRegistry,
-                WORKSPACE_VIRTUAL_ENV_SERVICE
-            )
-        ).thenReturn((watcher as any) as IInterpreterWatcherRegistry);
+        when(serviceContainer.get<IInterpreterWatcher>(IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE)).thenReturn(
+            (watcher as any) as IInterpreterWatcher
+        );
 
         const [item1, item2, item3] = await Promise.all([
             builder.getWorkspaceVirtualEnvInterpreterWatcher(undefined),

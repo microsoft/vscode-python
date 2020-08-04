@@ -20,6 +20,7 @@ import {
 } from '../common/types';
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
+import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/info';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -69,7 +70,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IInterpreterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory
+        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory
     ) {
         this.locator = serviceContainer.get<IInterpreterLocatorService>(
             IInterpreterLocatorService,

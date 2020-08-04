@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../../common/application/types';
@@ -21,6 +21,7 @@ import { CacheableLocatorService } from './cacheableLocatorService';
 
 const pipEnvFileNameVariable = 'PIPENV_PIPFILE';
 
+@injectable()
 export class PipEnvService extends CacheableLocatorService implements IPipEnvService {
     private readonly helper: IInterpreterHelper;
     private readonly processServiceFactory: IProcessServiceFactory;

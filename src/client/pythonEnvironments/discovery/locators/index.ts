@@ -1,7 +1,8 @@
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { traceDecorators } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
+import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { OSType } from '../../../common/utils/platform';
 import {
@@ -27,7 +28,8 @@ const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 /**
  * Facilitates locating Python interpreters.
  */
-export class PythonInterpreterLocatorService {
+@injectable()
+export class PythonInterpreterLocatorService implements IInterpreterLocatorService {
     public didTriggerInterpreterSuggestions: boolean;
 
     private readonly disposables: Disposable[] = [];
@@ -37,6 +39,7 @@ export class PythonInterpreterLocatorService {
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this._hasInterpreters = createDeferred<boolean>();
+        serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
         this.interpreterLocatorHelper = serviceContainer.get<IInterpreterLocatorHelper>(IInterpreterLocatorHelper);
         this.didTriggerInterpreterSuggestions = false;

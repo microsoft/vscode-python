@@ -1,5 +1,6 @@
 // tslint:disable:no-unnecessary-callback-wrapper no-require-imports no-var-requires
 
+import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
@@ -12,15 +13,16 @@ import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
+@injectable()
 export class BaseVirtualEnvService extends CacheableLocatorService {
     private readonly virtualEnvMgr: IVirtualEnvironmentManager;
     private readonly helper: IInterpreterHelper;
     private readonly fileSystem: IFileSystem;
     public constructor(
-        private searchPathsProvider: IVirtualEnvironmentsSearchPathProvider,
-        serviceContainer: IServiceContainer,
-        name: string,
-        cachePerWorkspace: boolean = false
+        @unmanaged() private searchPathsProvider: IVirtualEnvironmentsSearchPathProvider,
+        @unmanaged() serviceContainer: IServiceContainer,
+        @unmanaged() name: string,
+        @unmanaged() cachePerWorkspace: boolean = false
     ) {
         super(name, serviceContainer, cachePerWorkspace);
         this.virtualEnvMgr = serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);

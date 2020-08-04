@@ -1,9 +1,10 @@
 import * as fsapi from 'fs-extra';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { traceError } from '../../../common/logger';
 import { IS_WINDOWS } from '../../../common/platform/constants';
 import { IFileSystem } from '../../../common/platform/types';
+import { IInterpreterLocatorHelper } from '../../../interpreter/contracts';
 import { IPipEnvServiceHelper } from '../../../interpreter/locators/types';
 import { InterpreterType, PythonInterpreter } from '../../info';
 
@@ -25,7 +26,8 @@ export async function lookForInterpretersInDirectory(pathToCheck: string, _: IFi
     }
 }
 
-export class InterpreterLocatorHelper {
+@injectable()
+export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper
