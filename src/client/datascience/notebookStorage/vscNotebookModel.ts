@@ -51,6 +51,12 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             : this._cells;
     }
     private document?: NotebookDocument;
+    public get notebookContentWithoutCells(): Partial<nbformat.INotebookContent> {
+        return {
+            ...this.notebookJson,
+            cells: []
+        };
+    }
 
     constructor(
         isTrusted: boolean,

@@ -16,8 +16,9 @@ import { noop } from '../../common/utils/misc';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
+import { KernelSelection } from '../jupyter/kernels/types';
 import { INotebook, INotebookProvider } from '../types';
-import { updateKernelInNotebookMetadata } from './helpers/helpers';
+import { getNotebookMetadata, updateKernelInNotebookMetadata } from './helpers/helpers';
 import { NotebookKernel } from './notebookKernel';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
 @injectable()
@@ -56,27 +57,58 @@ export class KernelProvider implements NotebookKernelProvider {
         ]);
     }
     public async provideKernels(document: NotebookDocument, token: CancellationToken): Promise<NotebookKernel[]> {
-        const rawKernels = await this.kernelSelectionProvider.getKernelSelectionsForLocalSession(
-            document.uri,
-            'raw',
-            undefined,
-            token
-        );
-
+        const [preferredKernel, kernels] = await Promise.all([
+            this.kernelSelector.getKernelForLocalConnection(
+                document.uri,
+                'raw',
+                undefined,
+                getNotebookMetadata(document),
+                true,
+                token
+            ),
+            this.kernelSelectionProvider.getKernelSelectionsForLocalSession(document.uri, 'raw', undefined, token)
+        ]);
         if (token.isCancellationRequested) {
             return [];
         }
+        function isPreferredKernel(item: KernelSelection) {
+            if (!preferredKernel.interpreter && !preferredKernel.kernelModel && !preferredKernel.kernelSpec) {
+                return false;
+            }
+            if (
+                preferredKernel.interpreter &&
+                item.interpreter &&
+                preferredKernel.interpreter.path === item.interpreter.path
+            ) {
+                return true;
+            }
+            if (
+                preferredKernel.kernelSpec &&
+                item.kernelSpec &&
+                JSON.stringify(preferredKernel.kernelSpec) === JSON.stringify(item.kernelSpec)
+            ) {
+                return true;
+            }
+            if (
+                preferredKernel.kernelModel &&
+                item.kernelModel &&
+                JSON.stringify(preferredKernel.kernelModel) === JSON.stringify(item.kernelModel)
+            ) {
+                return true;
+            }
+            return false;
+        }
 
-        return rawKernels.map(
-            (kernel) =>
-                new NotebookKernel(
-                    kernel.label,
-                    kernel.description || kernel.detail || '',
-                    kernel.selection,
-                    this.execution,
-                    this.kernelSelector
-                )
-        );
+        return kernels.map((kernel) => {
+            return new NotebookKernel(
+                kernel.label,
+                kernel.description || kernel.detail || '',
+                kernel.selection,
+                isPreferredKernel(kernel.selection),
+                this.execution,
+                this.kernelSelector
+            );
+        });
     }
     private async onDidChangeActiveNotebookKernel(newKernelInfo: {
         document: NotebookDocument;

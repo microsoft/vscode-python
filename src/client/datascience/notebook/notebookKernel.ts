@@ -58,6 +58,7 @@ export class NotebookKernel implements VSCNotebookKernel {
         public readonly label: string,
         public readonly description: string,
         private readonly selection: KernelSelection,
+        public readonly isPreferred: boolean,
         private readonly execution: INotebookExecutionService,
         private readonly kernelSelectionUsage: IKernelSelectionUsage
     ) {}

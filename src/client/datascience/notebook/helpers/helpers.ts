@@ -33,7 +33,8 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 import cloneDeep = require('lodash/cloneDeep');
 import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { LiveKernelModel } from '../../jupyter/kernels/types';
-import { getDefaultNotebookContent, updateVersionInfoInMetadata } from '../../notebookStorage/baseModel';
+import { updateVersionInfoInMetadata } from '../../notebookStorage/baseModel';
+import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
 import { INotebookContentProvider } from '../types';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
@@ -57,6 +58,11 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     }
 }
 
+export function getNotebookMetadata(document: NotebookDocument): nbformat.INotebookMetadata | undefined {
+    // tslint:disable-next-line: no-any
+    const notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
+    return notebookContent?.metadata;
+}
 export function updateKernelInNotebookMetadata(
     document: NotebookDocument,
     kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
@@ -64,12 +70,10 @@ export function updateKernelInNotebookMetadata(
     notebookContentProvider: INotebookContentProvider
 ) {
     // tslint:disable-next-line: no-any
-    let notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
-    if (!notebookContent) {
-        notebookContent = getDefaultNotebookContent(3);
-    }
-    if (!notebookContent.metadata) {
-        notebookContent.metadata = getDefaultNotebookContent(3).metadata;
+    const notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
+    if (!notebookContent || !notebookContent.metadata) {
+        traceError('VSCode Notebook does not have custom metadata', notebookContent);
+        throw new Error('VSCode Notebook does not have custom metadata');
     }
     const info = updateVersionInfoInMetadata(notebookContent.metadata, interpreter, kernelSpec);
 
@@ -80,7 +84,7 @@ export function updateKernelInNotebookMetadata(
 /**
  * Converts a NotebookModel into VSCode friendly format.
  */
-export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookData {
+export function notebookModelToVSCNotebookData(model: VSCodeNotebookModel): NotebookData {
     const cells = model.cells
         .map(createVSCNotebookCellDataFromCell.bind(undefined, model))
         .filter((item) => !!item)
@@ -91,6 +95,7 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
         cells,
         languages: [defaultLanguage],
         metadata: {
+            custom: model.notebookContentWithoutCells,
             cellEditable: model.isTrusted,
             cellRunnable: model.isTrusted,
             editable: model.isTrusted,

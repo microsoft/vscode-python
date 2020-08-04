@@ -19,6 +19,7 @@ import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
+import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { notebookModelToVSCNotebookData } from './helpers/helpers';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
 import { INotebookContentProvider } from './types';
@@ -72,7 +73,9 @@ export class NotebookContentProvider implements INotebookContentProvider {
         const model = await (openContext.backupId
             ? this.notebookStorage.getOrCreateModel(uri, undefined, openContext.backupId, true)
             : this.notebookStorage.getOrCreateModel(uri, undefined, true, true));
-
+        if (!(model instanceof VSCodeNotebookModel)) {
+            throw new Error('Incorrect NotebookModel, expected VSCodeNotebookModel');
+        }
         setSharedProperty('ds_notebookeditor', 'native');
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cells.length });
         return notebookModelToVSCNotebookData(model);
