@@ -91,6 +91,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     public dispose(): Promise<void> {
         this.disposed = true;
+        this.clearTimeouts();
         return Promise.resolve();
     }
 
