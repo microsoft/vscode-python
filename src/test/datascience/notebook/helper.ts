@@ -400,7 +400,7 @@ export function createNotebookModel(
             data: c
         };
     });
-    return new VSCodeNotebookModel(trusted, uri, JSON.parse(JSON.stringify(cells)), globalMemento, crypto);
+    return new VSCodeNotebookModel(trusted, uri, JSON.parse(JSON.stringify(cells)), globalMemento, crypto, nbJson);
 }
 
 export function createNotebookDocument(
