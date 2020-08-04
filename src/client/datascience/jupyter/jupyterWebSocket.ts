@@ -15,7 +15,7 @@ export const JupyterWebSockets = new Map<string, WebSocketWS & IKernelSocket>();
 export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?: boolean, getAuthHeaders?: () => any) {
     class JupyterWebSocket extends KernelSocketWrapper(WebSocketWS) {
         private kernelId: string | undefined;
-        private timer: NodeJS.Timeout;
+        private timer: NodeJS.Timeout | number;
 
         constructor(url: string, protocols?: string | string[] | undefined) {
             let co: WebSocketWS.ClientOptions = {};
@@ -49,7 +49,7 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
             if (this.kernelId) {
                 JupyterWebSockets.set(this.kernelId, this);
                 this.on('close', () => {
-                    clearInterval(this.timer);
+                    clearInterval(this.timer as any);
                     JupyterWebSockets.delete(this.kernelId!);
                 });
             } else {
