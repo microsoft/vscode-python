@@ -46,13 +46,13 @@ export class KernelProvider {
         );
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });
-        this.deleteMappingIfKernelIdDisposed(uri, kernel);
+        this.deleteMappingIfKernelIsDisposed(uri, kernel);
         return kernel;
     }
     /**
      * If a kernel has been disposed, then remove the mapping of Uri + Kernel.
      */
-    private deleteMappingIfKernelIdDisposed(uri: Uri, kernel: IKernel) {
+    private deleteMappingIfKernelIsDisposed(uri: Uri, kernel: IKernel) {
         kernel.onDisposed(
             () => {
                 if (this.get(uri) === kernel) {

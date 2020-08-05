@@ -60,7 +60,6 @@ export class Kernel implements IKernel {
     private _notebookPromise?: Promise<INotebook | undefined>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
     private restarting?: Deferred<void>;
-    // executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     constructor(
         public readonly uri: Uri,
         private readonly _metadata: KernelSelection,
