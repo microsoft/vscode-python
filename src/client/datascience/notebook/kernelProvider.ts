@@ -17,8 +17,9 @@ import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { KernelSelection } from '../jupyter/kernels/types';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebook, INotebookProvider } from '../types';
-import { getNotebookMetadata, updateKernelInNotebookMetadata } from './helpers/helpers';
+import { getNotebookMetadata, isJupyterNotebook, updateKernelInNotebookMetadata } from './helpers/helpers';
 import { NotebookKernel } from './notebookKernel';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
 @injectable()
@@ -33,6 +34,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
         @inject(KernelSelector) private readonly kernelSelector: KernelSelector,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
+        @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
         @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
@@ -119,13 +121,21 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         }
 
         const document = newKernelInfo.document;
+        if (!isJupyterNotebook(document)) {
+            return;
+        }
         const selection = await newKernelInfo.kernel.validate(document.uri);
         const editor = this.notebook.notebookEditors.find((item) => item.document === document);
         if (!selection || !editor || editor.kernel !== newKernelInfo.kernel) {
             // Possibly closed or different kernel picked.
             return;
         }
-
+        const model = await this.storageProvider.getOrCreateModel(document.uri);
+        if (!model || !model.isTrusted) {
+            // If a model is not trusted, we cannot change the kernel (this results in changes to notebook metadata).
+            // Cuz we store selected kernel in the notebook metadata.
+            return;
+        }
         // Change kernel and update metadata.
         const notebook = await this.notebookProvider.getOrCreateNotebook({
             resource: document.uri,
