@@ -119,7 +119,7 @@ suite(`DataScience JupyterServerUriProvider tests`, () => {
         assert.deepEqual(authHeader, { Bearer: '1' }, 'Bearer token invalid');
 
         // Wait a bit
-        await sleep(300);
+        await sleep(500);
 
         authHeader = server?.getConnectionInfo()?.getAuthHeader?.call(undefined);
 
