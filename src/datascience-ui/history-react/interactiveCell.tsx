@@ -199,7 +199,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                 >
                     <Image
                         baseTheme={this.props.baseTheme}
-                        class={this.props.cellVM.gathering ? 'image-button-image rotate' : 'image-button-image'}
+                        class="image-button-image"
                         image={this.props.cellVM.gathering ? ImageName.Sync : ImageName.GatherCode}
                     />
                 </ImageButton>
