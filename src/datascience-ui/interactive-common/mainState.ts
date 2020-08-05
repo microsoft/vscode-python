@@ -56,6 +56,7 @@ export interface ICellViewModel {
     uiSideError?: string;
     runningByLine: DebugState;
     currentStack?: DebugProtocol.StackFrame[];
+    gathering: boolean;
 }
 
 export type IMainState = {
@@ -227,7 +228,8 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         cursorPos: CursorPos.Current,
         hasBeenRun: false,
         scrollCount: 0,
-        runningByLine: DebugState.Design
+        runningByLine: DebugState.Design,
+        gathering: false
     };
 }
 
@@ -281,7 +283,8 @@ export function createCellVM(
         hasBeenRun: false,
         scrollCount: 0,
         runDuringDebug,
-        runningByLine: DebugState.Design
+        runningByLine: DebugState.Design,
+        gathering: false
     };
 
     // Update the input text

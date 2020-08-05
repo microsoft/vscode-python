@@ -1,5 +1,5 @@
 /* Import common styles and then override them below */
-@import "../interactive-common/common.css";
+@import '../interactive-common/common.css';
 
 .toolbar-menu-bar-child {
     background: var(--override-background, var(--vscode-editor-background));
@@ -37,12 +37,11 @@
 }
 
 .cell-outer {
-    display:grid;
+    display: grid;
     grid-template-columns: auto minmax(0, 1fr) 8px;
     grid-column-gap: 3px;
     width: 100%;
 }
-
 
 .cell-output {
     margin: 0px;
@@ -51,13 +50,13 @@
     background: transparent;
 }
 
-.cell-output>div {
+.cell-output > div {
     background: var(--override-widget-background, var(--vscode-notifications-background));
 }
 
 xmp {
     margin: 0px;
-} 
+}
 
 .cell-input {
     margin: 0;
