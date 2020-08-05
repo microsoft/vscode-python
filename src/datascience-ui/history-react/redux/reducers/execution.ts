@@ -10,10 +10,10 @@ import { InteractiveWindowMessages } from '../../../../client/datascience/intera
 import { CellState } from '../../../../client/datascience/types';
 import { generateMarkdownFromCodeLines } from '../../../common';
 import { createCellFrom } from '../../../common/cellFactory';
-import { createCellVM, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
+import { createCellVM, IMainState } from '../../../interactive-common/mainState';
 import { postActionToExtension } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { IChangeGatherStatus, ICodeAction } from '../../../interactive-common/redux/reducers/types';
+import { ICodeAction } from '../../../interactive-common/redux/reducers/types';
 import { InteractiveReducerArg } from '../mapping';
 import { Creation } from './creation';
 
@@ -125,26 +125,6 @@ export namespace Execution {
                 submittedText: true
             };
         }
-        return arg.prevState;
-    }
-
-    export function gathering(arg: InteractiveReducerArg<IChangeGatherStatus>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
-        if (index >= 0) {
-            const cellVMs = [...arg.prevState.cellVMs];
-            const current = arg.prevState.cellVMs[index];
-            const newCell: ICellViewModel = {
-                ...current,
-                gathering: arg.payload.data.gathering
-            };
-            cellVMs[index] = newCell;
-
-            return {
-                ...arg.prevState,
-                cellVMs
-            };
-        }
-
         return arg.prevState;
     }
 }

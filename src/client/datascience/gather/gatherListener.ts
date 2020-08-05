@@ -46,6 +46,7 @@ export class GatherListener implements IInteractiveWindowListener {
     private linesSubmitted: number = 0;
     private cellsSubmitted: number = 0;
     private statusBar: StatusBarItem;
+    private readonly twoSeconds = 2000;
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -83,7 +84,7 @@ export class GatherListener implements IInteractiveWindowListener {
                 });
                 setTimeout(() => {
                     this.statusBar.show();
-                }, 2000);
+                }, this.twoSeconds);
                 this.handleMessage(message, payload, this.doGather);
                 break;
 
@@ -94,7 +95,7 @@ export class GatherListener implements IInteractiveWindowListener {
                 });
                 setTimeout(() => {
                     this.statusBar.show();
-                }, 2000);
+                }, this.twoSeconds);
                 this.handleMessage(message, payload, this.doGatherToScript);
                 break;
 
