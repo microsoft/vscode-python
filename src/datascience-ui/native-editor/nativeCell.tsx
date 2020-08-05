@@ -510,7 +510,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     baseTheme={this.props.baseTheme}
                     onClick={this.addNewCellBelow}
                     disabled={!this.props.isNotebookTrusted}
-                    tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}
+                    tooltip={getLocString('DataScience.insertBelow', 'Insert Cell Below')}
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.InsertBelow} />
                 </ImageButton>
@@ -524,7 +524,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         baseTheme={this.props.baseTheme}
                         onClick={moveUp}
                         disabled={this.props.firstCell || !this.props.isNotebookTrusted}
-                        tooltip={getLocString('DataScience.moveCellUp', 'Move cell up')}
+                        tooltip={getLocString('DataScience.moveCellUp', 'Move Cell Up')}
                     >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Up} />
                     </ImageButton>
@@ -534,7 +534,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         baseTheme={this.props.baseTheme}
                         onClick={moveDown}
                         disabled={this.props.lastCell || !this.props.isNotebookTrusted}
-                        tooltip={getLocString('DataScience.moveCellDown', 'Move cell down')}
+                        tooltip={getLocString('DataScience.moveCellDown', 'Move Cell Down')}
                     >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Down} />
                     </ImageButton>
@@ -604,8 +604,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
             !this.props.gatherIsInstalled;
         const switchTooltip =
             this.props.cellVM.cell.data.cell_type === 'code'
-                ? getLocString('DataScience.switchToMarkdown', 'Change to markdown')
-                : getLocString('DataScience.switchToCode', 'Change to code');
+                ? getLocString('DataScience.switchToMarkdown', 'Change to Markdown')
+                : getLocString('DataScience.switchToCode', 'Change to Code');
         const otherCellType = this.props.cellVM.cell.data.cell_type === 'code' ? 'markdown' : 'code';
         const otherCellTypeCommand =
             otherCellType === 'markdown'
@@ -630,7 +630,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                             className={'image-button-empty'} // Just takes up space for now
                             baseTheme={this.props.baseTheme}
                             onClick={runCell}
-                            tooltip={getLocString('DataScience.runCell', 'Run cell')}
+                            tooltip={getLocString('DataScience.runCell', 'Run Cell')}
                             hidden={this.isMarkdownCell()}
                             disabled={true}
                         >
@@ -639,7 +639,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={step}
-                            tooltip={getLocString('DataScience.step', 'Run next line (F10)')}
+                            tooltip={getLocString('DataScience.step', 'Run Next Line (F10)')}
                             hidden={this.isMarkdownCell()}
                             disabled={this.props.busy || this.props.runningByLine === DebugState.Run}
                         >
@@ -673,7 +673,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     <ImageButton
                         baseTheme={this.props.baseTheme}
                         onClick={runCell}
-                        tooltip={getLocString('DataScience.runCell', 'Run cell')}
+                        tooltip={getLocString('DataScience.runCell', 'Run Cell')}
                         hidden={this.isMarkdownCell()}
                         disabled={this.props.busy || !this.props.isNotebookTrusted}
                     >
@@ -682,7 +682,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     <ImageButton
                         baseTheme={this.props.baseTheme}
                         onClick={runbyline}
-                        tooltip={getLocString('DataScience.runByLine', 'Run by line')}
+                        tooltip={getLocString('DataScience.runByLine', 'Run By Line')}
                         hidden={this.isMarkdownCell() || !this.props.supportsRunByLine}
                         disabled={this.props.busy || !this.props.isNotebookTrusted}
                     >
@@ -719,7 +719,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     <ImageButton
                         baseTheme={this.props.baseTheme}
                         onClick={deleteCell}
-                        tooltip={getLocString('DataScience.deleteCell', 'Delete cell')}
+                        tooltip={getLocString('DataScience.deleteCell', 'Delete Cell')}
                         className="delete-cell-button hover-cell-button"
                         disabled={!this.props.isNotebookTrusted}
                     >

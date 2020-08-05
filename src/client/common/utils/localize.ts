@@ -425,7 +425,7 @@ export namespace DataScience {
     export const exportDialogFailed = localize('DataScience.exportDialogFailed', 'Failed to export notebook. {0}');
     export const exportOpenQuestion = localize('DataScience.exportOpenQuestion', 'Open in browser');
     export const exportOpenQuestion1 = localize('DataScience.exportOpenQuestion1', 'Open in editor');
-    export const runCellLensCommandTitle = localize('python.command.python.datascience.runcell.title', 'Run cell');
+    export const runCellLensCommandTitle = localize('python.command.python.datascience.runcell.title', 'Run Cell');
     export const importDialogTitle = localize('DataScience.importDialogTitle', 'Import Jupyter Notebook');
     export const importDialogFilter = localize('DataScience.importDialogFilter', 'Jupyter Notebooks');
     export const notebookCheckForImportTitle = localize(
@@ -517,11 +517,11 @@ export namespace DataScience {
     export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
     export const runAllCellsLensCommandTitle = localize(
         'python.command.python.datascience.runallcells.title',
-        'Run all cells'
+        'Run All Cells'
     );
     export const runAllCellsAboveLensCommandTitle = localize(
         'python.command.python.datascience.runallcellsabove.title',
-        'Run above'
+        'Run Above'
     );
     export const runCellAndAllBelowLensCommandTitle = localize(
         'python.command.python.datascience.runcellandallbelow.title',
@@ -560,16 +560,16 @@ export namespace DataScience {
         "Failed to start a session for the Kernel '{0}'. \nView Jupyter [log](command:{1}) for further details."
     );
     export const executingCode = localize('DataScience.executingCode', 'Executing Cell');
-    export const collapseAll = localize('DataScience.collapseAll', 'Collapse all cell inputs');
-    export const expandAll = localize('DataScience.expandAll', 'Expand all cell inputs');
+    export const collapseAll = localize('DataScience.collapseAll', 'Collapse All Cell Inputs');
+    export const expandAll = localize('DataScience.expandAll', 'Expand All Cell Inputs');
     export const collapseSingle = localize('DataScience.collapseSingle', 'Collapse');
     export const expandSingle = localize('DataScience.expandSingle', 'Expand');
-    export const exportKey = localize('DataScience.export', 'Export as Jupyter notebook');
+    export const exportKey = localize('DataScience.export', 'Export as Jupyter Notebook');
     export const restartServer = localize('DataScience.restartServer', 'Restart IPython Kernel');
     export const undo = localize('DataScience.undo', 'Undo');
     export const redo = localize('DataScience.redo', 'Redo');
-    export const save = localize('DataScience.save', 'Save file');
-    export const clearAll = localize('DataScience.clearAll', 'Remove all cells');
+    export const save = localize('DataScience.save', 'Save File');
+    export const clearAll = localize('DataScience.clearAll', 'Remove All Cells');
     export const reloadRequired = localize(
         'DataScience.reloadRequired',
         'Please reload the window for new settings to take effect.'
@@ -786,14 +786,14 @@ export namespace DataScience {
         'DataScience.jupyterDataRateExceeded',
         'Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0'
     );
-    export const addCellBelowCommandTitle = localize('DataScience.addCellBelowCommandTitle', 'Add cell');
+    export const addCellBelowCommandTitle = localize('DataScience.addCellBelowCommandTitle', 'Add Cell');
     export const debugCellCommandTitle = localize('DataScience.debugCellCommandTitle', 'Debug Cell');
-    export const debugStepOverCommandTitle = localize('DataScience.debugStepOverCommandTitle', 'Step over');
+    export const debugStepOverCommandTitle = localize('DataScience.debugStepOverCommandTitle', 'Step Over');
     export const debugContinueCommandTitle = localize('DataScience.debugContinueCommandTitle', 'Continue');
     export const debugStopCommandTitle = localize('DataScience.debugStopCommandTitle', 'Stop');
     export const runCurrentCellAndAddBelow = localize(
         'DataScience.runCurrentCellAndAddBelow',
-        'Run current and add cell below'
+        'Run Current and Add Cell Below'
     );
     export const variableExplorerDisabledDuringDebugging = localize(
         'DataScience.variableExplorerDisabledDuringDebugging',
@@ -845,7 +845,7 @@ export namespace DataScience {
         'DataScience.cellStopOnErrorFormatMessage',
         '{0} cells were canceled due to an error in the previous cell.'
     );
-    export const scrollToCellTitleFormatMessage = localize('DataScience.scrollToCellTitleFormatMessage', 'Go to [{0}]');
+    export const scrollToCellTitleFormatMessage = localize('DataScience.scrollToCellTitleFormatMessage', 'Go To [{0}]');
     export const instructionComments = localize(
         'DataScience.instructionComments',
         '# To add a new cell, type "{0}"\n# To add a new markdown cell, type "{0} [markdown]"\n'
@@ -890,17 +890,17 @@ export namespace DataScience {
         'DataScience.exportToPDFDependencyMessage',
         'If you have not installed xelatex (TeX) you will need to do so before you can export to PDF, for further instructions please look [here](https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex). \r\nTo avoid installing xelatex (TeX) you might want to try exporting to HTML and using your browsers "Print to PDF" feature.'
     );
-    export const failedExportMessage = localize('DataScience.failedExportMessage', 'Export failed.');
-    export const runCell = localize('DataScience.runCell', 'Run cell');
-    export const deleteCell = localize('DataScience.deleteCell', 'Delete cell');
-    export const moveCellUp = localize('DataScience.moveCellUp', 'Move cell up');
-    export const moveCellDown = localize('DataScience.moveCellDown', 'Move cell down');
-    export const moveSelectedCellUp = localize('DataScience.moveSelectedCellUp', 'Move selected cell up');
-    export const moveSelectedCellDown = localize('DataScience.deleteCell', 'Move selected cell down');
-    export const insertBelow = localize('DataScience.insertBelow', 'Insert cell below');
-    export const insertAbove = localize('DataScience.insertAbove', 'Insert cell above');
-    export const addCell = localize('DataScience.addCell', 'Add cell');
-    export const runAll = localize('DataScience.runAll', 'Insert cell');
+    export const failedExportMessage = localize('DataScience.failedExportMessage', 'Export Failed.');
+    export const runCell = localize('DataScience.runCell', 'Run Cell');
+    export const deleteCell = localize('DataScience.deleteCell', 'Delete Cell');
+    export const moveCellUp = localize('DataScience.moveCellUp', 'Move Cell Up');
+    export const moveCellDown = localize('DataScience.moveCellDown', 'Move Cell Down');
+    export const moveSelectedCellUp = localize('DataScience.moveSelectedCellUp', 'Move Selected Cell Up');
+    export const moveSelectedCellDown = localize('DataScience.deleteCell', 'Move Selected Cell Down');
+    export const insertBelow = localize('DataScience.insertBelow', 'Insert Cell Below');
+    export const insertAbove = localize('DataScience.insertAbove', 'Insert Cell Above');
+    export const addCell = localize('DataScience.addCell', 'Add Cell');
+    export const runAll = localize('DataScience.runAll', 'Run All Cells');
     export const convertingToPythonFile = localize(
         'DataScience.convertingToPythonFile',
         'Converting ipynb to python file'

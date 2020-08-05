@@ -87,8 +87,8 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
             this.props.sendCommand(NativeMouseCommandTelemetry.ToggleVariableExplorer);
         };
         const variableExplorerTooltip = this.props.variablesVisible
-            ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')
-            : getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
+            ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide Variables Active in Jupyter Kernel')
+            : getLocString('DataScience.expandVariableExplorerTooltip', 'Show Variables Active in Jupyter Kernel');
         const runAbove = () => {
             if (selectedInfo.selectedCellId) {
                 this.props.executeAbove(selectedInfo.selectedCellId);
@@ -145,7 +145,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             onClick={runAbove}
                             disabled={!canRunAbove || this.props.busy || !this.props.isNotebookTrusted}
                             className="native-button"
-                            tooltip={getLocString('DataScience.runAbove', 'Run cells above')}
+                            tooltip={getLocString('DataScience.runAbove', 'Run Cells Above')}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}
@@ -158,7 +158,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             onClick={runBelow}
                             disabled={!canRunBelow || this.props.busy || !this.props.isNotebookTrusted}
                             className="native-button"
-                            tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}
+                            tooltip={getLocString('DataScience.runBelow', 'Run Cell and Below')}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}
@@ -171,7 +171,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             onClick={this.props.restartKernel}
                             disabled={!canRestartAndInterruptKernel || !this.props.isNotebookTrusted}
                             className="native-button"
-                            tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
+                            tooltip={getLocString('DataScience.restartServer', 'Restart IPython Kernel')}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}
@@ -184,7 +184,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             onClick={this.props.interruptKernel}
                             disabled={!canRestartAndInterruptKernel || !this.props.isNotebookTrusted}
                             className="native-button"
-                            tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
+                            tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython Kernel')}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}
@@ -197,7 +197,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             onClick={addCell}
                             disabled={!this.props.isNotebookTrusted}
                             className="native-button"
-                            tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}
+                            tooltip={getLocString('DataScience.addNewCell', 'Insert Cell')}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}
@@ -249,7 +249,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             onClick={this.props.exportAs}
                             disabled={!this.props.cellCount || this.props.busy || !this.props.isNotebookTrusted}
                             className="native-button"
-                            tooltip={getLocString('DataScience.notebookExportAs', 'Export as')}
+                            tooltip={getLocString('DataScience.notebookExportAs', 'Export As')}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}
