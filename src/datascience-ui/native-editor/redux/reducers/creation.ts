@@ -224,7 +224,8 @@ export namespace Creation {
             cursorPos: CursorPos.Current,
             hasBeenRun: false,
             scrollCount: 0,
-            runningByLine: DebugState.Design
+            runningByLine: DebugState.Design,
+            gathering: false
         };
 
         Transfer.postModelRemoveAll(arg, newVM.cell.id);
@@ -280,7 +281,8 @@ export namespace Creation {
                 cursorPos: CursorPos.Current,
                 hasBeenRun: false,
                 scrollCount: 0,
-                runningByLine: DebugState.Design
+                runningByLine: DebugState.Design,
+                gathering: false
             };
 
             // Send messages to other side to indicate the new add

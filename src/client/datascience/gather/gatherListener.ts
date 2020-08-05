@@ -77,6 +77,10 @@ export class GatherListener implements IInteractiveWindowListener {
                 break;
 
             case InteractiveWindowMessages.GatherCode:
+                this.postEmitter.fire({
+                    message: InteractiveWindowMessages.Gathering,
+                    payload: { cellId: payload.id, gathering: true }
+                });
                 setTimeout(() => {
                     this.statusBar.show();
                 }, 2000);
@@ -84,6 +88,10 @@ export class GatherListener implements IInteractiveWindowListener {
                 break;
 
             case InteractiveWindowMessages.GatherCodeToScript:
+                this.postEmitter.fire({
+                    message: InteractiveWindowMessages.Gathering,
+                    payload: { cellId: payload.id, gathering: true }
+                });
                 setTimeout(() => {
                     this.statusBar.show();
                 }, 2000);
@@ -157,7 +165,13 @@ export class GatherListener implements IInteractiveWindowListener {
                 traceError(`Gather to Notebook error: ${err}`);
                 this.applicationShell.showErrorMessage(err);
             })
-            .finally(() => this.statusBar.hide());
+            .finally(() => {
+                this.postEmitter.fire({
+                    message: InteractiveWindowMessages.Gathering,
+                    payload: { cellId: payload.id, gathering: false }
+                });
+                this.statusBar.hide();
+            });
     }
 
     private doGatherToScript(payload: ICell): Promise<void> {
@@ -166,7 +180,13 @@ export class GatherListener implements IInteractiveWindowListener {
                 traceError(`Gather to Script error: ${err}`);
                 this.applicationShell.showErrorMessage(err);
             })
-            .finally(() => this.statusBar.hide());
+            .finally(() => {
+                this.postEmitter.fire({
+                    message: InteractiveWindowMessages.Gathering,
+                    payload: { cellId: payload.id, gathering: false }
+                });
+                this.statusBar.hide();
+            });
     }
 
     private gatherCodeInternal = async (cell: ICell, toScript: boolean = false) => {

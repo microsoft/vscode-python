@@ -257,4 +257,9 @@ export type NotifyIPyWidgeWidgetVersionNotSupportedAction = {
     moduleVersion: string;
 };
 
+export interface IChangeGatherStatus {
+    cellId: string;
+    gathering: boolean;
+}
+
 export type CommonAction<T = never | undefined> = ActionWithPayload<T, CommonActionType | InteractiveWindowMessages>;

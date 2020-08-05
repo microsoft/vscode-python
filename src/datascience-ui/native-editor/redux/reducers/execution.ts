@@ -23,6 +23,7 @@ import {
     CommonActionType,
     ICellAction,
     IChangeCellTypeAction,
+    IChangeGatherStatus,
     IExecuteAction
 } from '../../../interactive-common/redux/reducers/types';
 import { NativeEditorReducerArg } from '../mapping';
@@ -207,6 +208,26 @@ export namespace Execution {
             };
             cellVMs[index] = newCell;
             Transfer.changeCellType(arg, cellVMs[index].cell);
+
+            return {
+                ...arg.prevState,
+                cellVMs
+            };
+        }
+
+        return arg.prevState;
+    }
+
+    export function gathering(arg: NativeEditorReducerArg<IChangeGatherStatus>): IMainState {
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
+        if (index >= 0) {
+            const cellVMs = [...arg.prevState.cellVMs];
+            const current = arg.prevState.cellVMs[index];
+            const newCell: ICellViewModel = {
+                ...current,
+                gathering: arg.payload.data.gathering
+            };
+            cellVMs[index] = newCell;
 
             return {
                 ...arg.prevState,
