@@ -1,13 +1,14 @@
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Position, StatusBarItem, Uri, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Position, Uri, ViewColumn } from 'vscode';
 import { createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 
 import type { nbformat } from '@jupyterlab/coreutils';
+import { noop } from 'lodash';
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -45,8 +46,6 @@ export class GatherListener implements IInteractiveWindowListener {
     private gatherTimer: StopWatch | undefined;
     private linesSubmitted: number = 0;
     private cellsSubmitted: number = 0;
-    private statusBar: StatusBarItem;
-    private readonly twoSeconds = 2000;
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -56,13 +55,10 @@ export class GatherListener implements IInteractiveWindowListener {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem
-    ) {
-        this.statusBar = this.applicationShell.createStatusBarItem();
-        this.statusBar.text = localize.DataScience.gatherStatusBar();
-    }
+    ) {}
 
     public dispose() {
-        this.statusBar.dispose();
+        noop();
     }
 
     // tslint:disable-next-line: no-any
@@ -82,9 +78,6 @@ export class GatherListener implements IInteractiveWindowListener {
                     message: InteractiveWindowMessages.Gathering,
                     payload: { cellId: payload.id, gathering: true }
                 });
-                setTimeout(() => {
-                    this.statusBar.show();
-                }, this.twoSeconds);
                 this.handleMessage(message, payload, this.doGather);
                 break;
 
@@ -93,9 +86,6 @@ export class GatherListener implements IInteractiveWindowListener {
                     message: InteractiveWindowMessages.Gathering,
                     payload: { cellId: payload.id, gathering: true }
                 });
-                setTimeout(() => {
-                    this.statusBar.show();
-                }, this.twoSeconds);
                 this.handleMessage(message, payload, this.doGatherToScript);
                 break;
 
@@ -166,13 +156,12 @@ export class GatherListener implements IInteractiveWindowListener {
                 traceError(`Gather to Notebook error: ${err}`);
                 this.applicationShell.showErrorMessage(err);
             })
-            .finally(() => {
+            .finally(() =>
                 this.postEmitter.fire({
                     message: InteractiveWindowMessages.Gathering,
                     payload: { cellId: payload.id, gathering: false }
-                });
-                this.statusBar.hide();
-            });
+                })
+            );
     }
 
     private doGatherToScript(payload: ICell): Promise<void> {
@@ -181,13 +170,12 @@ export class GatherListener implements IInteractiveWindowListener {
                 traceError(`Gather to Script error: ${err}`);
                 this.applicationShell.showErrorMessage(err);
             })
-            .finally(() => {
+            .finally(() =>
                 this.postEmitter.fire({
                     message: InteractiveWindowMessages.Gathering,
                     payload: { cellId: payload.id, gathering: false }
-                });
-                this.statusBar.hide();
-            });
+                })
+            );
     }
 
     private gatherCodeInternal = async (cell: ICell, toScript: boolean = false) => {
