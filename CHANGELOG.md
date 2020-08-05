@@ -1,5 +1,98 @@
 # Changelog
 
+## 2020.8.0-rc (5 August 2020)
+
+### Enhancements
+
+1. Add "Restart Language Server" command.
+   ([#3073](https://github.com/Microsoft/vscode-python/issues/3073))
+1. Support multiple and per file interactive windows. See the description for the new 'python.dataScience.interactiveWindowMode' setting.
+   ([#3104](https://github.com/Microsoft/vscode-python/issues/3104))
+1. Add cell editing shortcuts for python interactive cells. (thanks [@earthastronaut](https://github.com/earthastronaut/)).
+   ([#12414](https://github.com/Microsoft/vscode-python/issues/12414))
+1. Allow `python.dataScience.runStartupCommands` to be an array. (thanks [@janosh](https://github.com/janosh)).
+   ([#12827](https://github.com/Microsoft/vscode-python/issues/12827))
+1. Remember remote kernel ids when reopening notebooks.
+   ([#12828](https://github.com/Microsoft/vscode-python/issues/12828))
+1. The file explorer dialog now has an appropriate title when browsing for an interpreter. (thanks [ziebam](https://github.com/ziebam)).
+   ([#12959](https://github.com/Microsoft/vscode-python/issues/12959))
+1. Warn users if they are connecting over http without a token.
+   ([#12980](https://github.com/Microsoft/vscode-python/issues/12980))
+1. Allow a custom display string for remote servers as part of the remote Jupyter server provider extensibility point.
+   ([#12988](https://github.com/Microsoft/vscode-python/issues/12988))
+1. Update to the latest version of [`jedi`](https://github.com/davidhalter/jedi) (`0.17.2`). This adds support for Python 3.9 and fixes some bugs, but is expected to be the last release to support Python 2.7 and 3.5. (thanks [Peter Law](https://github.com/PeterJCLaw/)).
+   ([#13037](https://github.com/Microsoft/vscode-python/issues/13037))
+1. Expose `Pylance` setting in `python.languageServer`. If [Pylance extension](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) is not installed, prompt user to install it.
+   ([#13122](https://github.com/Microsoft/vscode-python/issues/13122))
+1. Added "pythonArgs" to debugpy launch.json schema.
+   ([#13218](https://github.com/Microsoft/vscode-python/issues/13218))
+1. Use jupyter inspect to get signature of dynamic functions in notebook editor when language server doesn't provide enough hint.
+   ([#13259](https://github.com/Microsoft/vscode-python/issues/13259))
+
+### Fixes
+
+1. Gathered notebooks will now use the same kernelspec as the notebook it was created from.
+   ([#10924](https://github.com/Microsoft/vscode-python/issues/10924))
+1. Don't loop selection through all failed tests every time tests are run.
+   ([#11743](https://github.com/Microsoft/vscode-python/issues/11743))
+1. Some tools (like pytest) rely on the existence of `sys.path[0]`, so
+   deleting it in the isolation script can sometimes cause problems.  The
+   solution is to point `sys.path[0]` to a bogus directory that we know
+   does not exist (assuming noone modifies the extension install dir).
+   ([#11875](https://github.com/Microsoft/vscode-python/issues/11875))
+1. Fix missing css for some ipywidget output.
+   ([#12202](https://github.com/Microsoft/vscode-python/issues/12202))
+1. Delete backing untitled ipynb notebook files as soon as the remote session has been created.
+   ([#12510](https://github.com/Microsoft/vscode-python/issues/12510))
+1. Make the data science variable explorer support high contrast color theme.
+   ([#12766](https://github.com/Microsoft/vscode-python/issues/12766))
+1. The change in PR #12795 led to one particular test suite to take longer
+   to run.  Here we increase the timeout for that suite to get the test
+   passing.
+   ([#12833](https://github.com/Microsoft/vscode-python/issues/12833))
+1. Refactor data science filesystem usage to correctly handle files which are potentially remote.
+   ([#12931](https://github.com/Microsoft/vscode-python/issues/12931))
+1. Allow custom Jupyter server URI providers to have an expiration on their authorization headers.
+   ([#12987](https://github.com/Microsoft/vscode-python/issues/12987))
+1. If a webpanel fails to load, dispose our webviewhost so that it can try again.
+   ([#13106](https://github.com/Microsoft/vscode-python/issues/13106))
+1. Ensure terminal is not shown or activated if hideFromUser is set to true.
+   ([#13117](https://github.com/Microsoft/vscode-python/issues/13117))
+1. Do not automatically start kernel for untrusted notebooks.
+   ([#13124](https://github.com/Microsoft/vscode-python/issues/13124))
+1. Fix settings links to open correctly in the notebook editor.
+   ([#13156](https://github.com/Microsoft/vscode-python/issues/13156))
+1. "a" and "b" Jupyter shortcuts should not automatically enter edit mode.
+   ([#13165](https://github.com/Microsoft/vscode-python/issues/13165))
+1. Scope custom notebook keybindings to Jupyter Notebooks.
+   ([#13172](https://github.com/Microsoft/vscode-python/issues/13172))
+1. Rename "Count" column in variable explorer to "Size".
+   ([#13205](https://github.com/Microsoft/vscode-python/issues/13205))
+1. Handle `Save As` of preview Notebooks.
+   ([#13235](https://github.com/Microsoft/vscode-python/issues/13235))
+
+### Code Health
+
+1. Move non-mock jupyter nightly tests to use raw kernel by default.
+   ([#10772](https://github.com/Microsoft/vscode-python/issues/10772))
+1. Add new services to data science IOC container and rename misspelled service.
+   ([#12809](https://github.com/Microsoft/vscode-python/issues/12809))
+1. Disable Notebook icons when Notebook is not trusted.
+   ([#12893](https://github.com/Microsoft/vscode-python/issues/12893))
+1. Removed control tower code for the start page.
+   ([#12919](https://github.com/Microsoft/vscode-python/issues/12919))
+1. Add better tests for trusted notebooks in the classic notebook editor.
+   ([#12966](https://github.com/Microsoft/vscode-python/issues/12966))
+1. Custom renderers for `png/jpeg` images in `Notebooks`.
+   ([#12977](https://github.com/Microsoft/vscode-python/issues/12977))
+1. Fix broken nightly variable explorer tests.
+   ([#13075](https://github.com/Microsoft/vscode-python/issues/13075))
+1. Fix nightly flake test failures for startup and shutdown native editor test.
+   ([#13171](https://github.com/Microsoft/vscode-python/issues/13171))
+1. Fix failing interactive window and variable explorer tests.
+   ([#13269](https://github.com/Microsoft/vscode-python/issues/13269))
+
+
 ## 2020.7.1 (22 July 2020)
 
 1.  Fix language server setting when provided an invalid value, send config event more consistently.
