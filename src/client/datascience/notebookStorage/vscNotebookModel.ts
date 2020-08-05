@@ -4,7 +4,6 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { Memento, Uri } from 'vscode';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
-import { traceError } from '../../common/logger';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {

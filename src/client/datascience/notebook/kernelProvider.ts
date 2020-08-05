@@ -22,7 +22,7 @@ import { getNotebookMetadata, updateKernelInNotebookMetadata } from './helpers/h
 import { NotebookKernel } from './notebookKernel';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
 @injectable()
-export class KernelProvider implements NotebookKernelProvider {
+export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
     public get onDidChangeKernels(): Event<void> {
         return this._onDidChangeKernels.event;
     }
@@ -51,8 +51,8 @@ export class KernelProvider implements NotebookKernelProvider {
         _webview: NotebookCommunication,
         token: CancellationToken
     ): Promise<void> {
-        return Promise.race([
-            kernel.validate(document.uri).then(() => void 0),
+        await Promise.race([
+            kernel.validate(document.uri),
             createPromiseFromCancellation({ cancelAction: 'resolve', token, defaultValue: void 0 })
         ]);
     }

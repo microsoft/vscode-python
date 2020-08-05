@@ -24,6 +24,8 @@ import {
     canRunTests,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
+    executeActiveDocument,
+    executeCell,
     insertPythonCellAndWait,
     startJupyter,
     trustAllNotebooks
@@ -48,7 +50,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         }
         await trustAllNotebooks();
         await startJupyter();
-        await trustAllNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -58,31 +59,30 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     setup(deleteAllCellsAndWait);
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-
-    test('Execute cell using VSCode Command', async () => {
+    test('Execute cell using VSCode Kernel', async () => {
         await insertPythonCellAndWait('print("Hello World")', 0);
-        const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
-        await commands.executeCommand('notebook.cell.execute');
+        await executeCell(cell);
 
         // Wait till execution count changes and status is success.
         await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(vscCell[0]),
+            async () => assertHasExecutionCompletedSuccessfully(cell),
             15_000,
             'Cell did not get executed'
         );
     });
     test('Executed events are triggered', async () => {
         await insertPythonCellAndWait('print("Hello World")', 0);
-        const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
         const executed = createEventHandler(editorProvider.activeEditor!, 'executed', disposables);
         const codeExecuted = createEventHandler(editorProvider.activeEditor!, 'executed', disposables);
-        await commands.executeCommand('notebook.cell.execute');
+        await executeCell(cell);
 
         // Wait till execution count changes and status is success.
         await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(vscCell[0]),
+            async () => assertHasExecutionCompletedSuccessfully(cell),
             15_000,
             'Cell did not get executed'
         );
@@ -92,39 +92,39 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Empty cell will not get executed', async () => {
         await insertPythonCellAndWait('', 0);
-        const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells![0];
-        await commands.executeCommand('notebook.cell.execute');
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        await executeCell(cell);
 
         // After 2s, confirm status has remained unchanged.
         await sleep(2_000);
-        assert.isUndefined(vscCell?.metadata.runState);
+        assert.isUndefined(cell?.metadata.runState);
     });
     test('Empty cells will not get executed when running whole document', async () => {
         await insertPythonCellAndWait('', 0);
         await insertPythonCellAndWait('print("Hello World")', 1);
-        const vscCells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
 
-        await commands.executeCommand('notebook.execute');
+        await executeActiveDocument();
 
         // Wait till execution count changes and status is success.
         await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(vscCells[1]),
+            async () => assertHasExecutionCompletedSuccessfully(cells[1]),
             15_000,
             'Cell did not get executed'
         );
-        assert.isUndefined(vscCells[0].metadata.runState);
+        assert.isUndefined(cells[0].metadata.runState);
     });
     test('Execute cell should mark a notebook as being dirty', async () => {
         await insertPythonCellAndWait('print("Hello World")', 0);
         const contentProvider = api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider);
-        const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         const changedEvent = createEventHandler(contentProvider, 'onDidChangeNotebook', disposables);
 
-        await commands.executeCommand('notebook.cell.execute');
+        await executeCell(cell);
 
         // Wait till execution count changes and status is success.
         await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(vscCell[0]),
+            async () => assertHasExecutionCompletedSuccessfully(cell),
             15_000,
             'Cell did not get executed'
         );
@@ -132,29 +132,29 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Verify Cell output, execution count and status', async () => {
         await insertPythonCellAndWait('print("Hello World")', 0);
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
-        editorProvider.activeEditor!.runAllCells();
+        await executeActiveDocument();
 
         // Wait till execution count changes and status is success.
         await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(cell[0]),
+            async () => assertHasExecutionCompletedSuccessfully(cell),
             15_000,
             'Cell did not get executed'
         );
 
         // Verify output.
-        assertHasTextOutputInVSCode(cell[0], 'Hello World', 0);
+        assertHasTextOutputInVSCode(cell, 'Hello World', 0);
 
         // Verify execution count.
-        assert.ok(cell[0].metadata.executionOrder, 'Execution count should be > 0');
+        assert.ok(cell.metadata.executionOrder, 'Execution count should be > 0');
     });
     test('Verify multiple cells get executed', async () => {
         await insertPythonCellAndWait('print("Foo Bar")', 0);
         await insertPythonCellAndWait('print("Hello World")', 1);
         const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
 
-        editorProvider.activeEditor!.runAllCells();
+        await executeActiveDocument();
 
         // Wait till execution count changes and status is success.
         await waitForCondition(
@@ -176,7 +176,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await insertPythonCellAndWait('print("Foo Bar")', 0);
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
-        await commands.executeCommand('notebook.execute');
+        await executeActiveDocument();
 
         // Wait till execution count changes and status is success.
         await waitForCondition(
@@ -195,7 +195,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await insertPythonCellAndWait('print(abcd)', 0);
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
-        await commands.executeCommand('notebook.execute');
+        await executeActiveDocument();
 
         // Wait till execution count changes and status is error.
         await waitForCondition(
@@ -236,7 +236,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         );
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
-        await commands.executeCommand('notebook.execute');
+        await executeActiveDocument();
 
         // Wait till execution count changes and status is error.
         await waitForCondition(

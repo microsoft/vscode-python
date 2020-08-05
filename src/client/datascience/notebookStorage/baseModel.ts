@@ -20,7 +20,7 @@ type KernelIdListEntry = {
 };
 
 // tslint:disable-next-line: cyclomatic-complexity
-export function updateVersionInfoInMetadata(
+export function updateNotebookMetadata(
     metadata: nbformat.INotebookMetadata | undefined,
     interpreter: PythonInterpreter | undefined,
     kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
@@ -221,7 +221,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
         interpreter: PythonInterpreter | undefined,
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
     ): boolean {
-        const { changed, kernelId } = updateVersionInfoInMetadata(this.notebookJson.metadata, interpreter, kernelSpec);
+        const { changed, kernelId } = updateNotebookMetadata(this.notebookJson.metadata, interpreter, kernelSpec);
         if (kernelId) {
             this.kernelId = kernelId;
         }

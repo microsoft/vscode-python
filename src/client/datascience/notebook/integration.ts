@@ -17,7 +17,7 @@ import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook } from './helpers/helpers';
-import { KernelProvider } from './kernelProvider';
+import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookOutputRenderer } from './renderer';
 import { INotebookContentProvider } from './types';
 
@@ -35,7 +35,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
-        @inject(KernelProvider) private readonly kernelProvider: KernelProvider,
+        @inject(VSCodeKernelPickerProvider) private readonly kernelProvider: VSCodeKernelPickerProvider,
         @inject(NotebookOutputRenderer) private readonly renderer: NotebookOutputRenderer,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly shell: IApplicationShell,

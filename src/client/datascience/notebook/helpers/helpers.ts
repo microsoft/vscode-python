@@ -33,7 +33,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 import cloneDeep = require('lodash/cloneDeep');
 import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { LiveKernelModel } from '../../jupyter/kernels/types';
-import { updateVersionInfoInMetadata } from '../../notebookStorage/baseModel';
+import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
 import { INotebookContentProvider } from '../types';
 
@@ -75,7 +75,7 @@ export function updateKernelInNotebookMetadata(
         traceError('VSCode Notebook does not have custom metadata', notebookContent);
         throw new Error('VSCode Notebook does not have custom metadata');
     }
-    const info = updateVersionInfoInMetadata(notebookContent.metadata, interpreter, kernelSpec);
+    const info = updateNotebookMetadata(notebookContent.metadata, interpreter, kernelSpec);
 
     if (info.changed) {
         notebookContentProvider.notifyChangesToDocument(document);
@@ -294,7 +294,7 @@ function createVSCNotebookCellDataFromCodeCell(model: INotebookModel, cell: ICel
     };
 }
 
-function createIOutputFromCellOutputs(cellOutputs: CellOutput[]): nbformat.IOutput[] {
+export function createIOutputFromCellOutputs(cellOutputs: CellOutput[]): nbformat.IOutput[] {
     return cellOutputs
         .map((output) => {
             switch (output.outputKind) {

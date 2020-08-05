@@ -3,12 +3,20 @@
 
 'use strict';
 
-import type { Session } from '@jupyterlab/services';
-import { CancellationToken, QuickPickItem } from 'vscode';
-import { Resource } from '../../../common/types';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
-import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
-import { KernelSpecInterpreter } from './kernelSelector';
+import type { KernelMessage, Session } from '@jupyterlab/services';
+import type { Observable } from 'rxjs/Observable';
+import type { CancellationToken, Event, QuickPickItem, Uri } from 'vscode';
+import type { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
+import type { IAsyncDisposable, Resource } from '../../../common/types';
+import type { PythonInterpreter } from '../../../pythonEnvironments/info';
+import type {
+    ICell,
+    IJupyterKernel,
+    IJupyterKernelSpec,
+    IJupyterSessionManager,
+    KernelSocketInformation
+} from '../../types';
+import type { KernelSpecInterpreter } from './kernelSelector';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
@@ -43,4 +51,33 @@ export interface IKernelSelectionUsage {
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken
     ): Promise<KernelSpecInterpreter | {}>;
+}
+
+export interface IKernel extends IAsyncDisposable {
+    readonly uri: Uri;
+    readonly kernelSpec?: IJupyterKernelSpec | LiveKernelModel;
+    readonly onStatusChanged: Event<ServerStatus>;
+    readonly onDisposed: Event<void>;
+    readonly onRestarted: Event<void>;
+    readonly status: ServerStatus;
+    readonly disposed: boolean;
+    readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    start(): Promise<void>;
+    interrupt(timeoutInMs: number): Promise<void>;
+    restart(timeoutInMs: number): Promise<void>;
+    executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
+    registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
+}
+
+export type KernelOptions = { metadata: KernelSelection; waitForIdleTimeout?: number; launchingFile?: string };
+export interface IKernelProvider {
+    /**
+     * Get hold of the active kernel for a given Uri (Notebook or other file).
+     */
+    get(uri: Uri): IKernel | undefined;
+    /**
+     * Gets or creates a kernel for a given Uri.
+     * WARNING: If called with different options for same Uri, old kernel associated with the Uri will be disposed.
+     */
+    getOrCreate(uri: Uri, options: KernelOptions): IKernel | undefined;
 }
