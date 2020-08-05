@@ -19,6 +19,7 @@ import type {
     INotebook,
     INotebookProvider,
     INotebookProviderConnection,
+    InterruptResult,
     KernelSocketInformation
 } from '../../types';
 import type { IKernel, KernelSelection, LiveKernelModel } from './types';
@@ -112,13 +113,14 @@ export class Kernel implements IKernel {
             await this.initializeAfterStart();
         }
     }
-    public async interrupt(timeoutInMs: number): Promise<void> {
+    public async interrupt(timeoutInMs: number): Promise<InterruptResult> {
         if (this.restarting) {
             await this.restarting.promise;
         }
-        if (this._notebook) {
-            await this._notebook.interruptKernel(timeoutInMs);
+        if (!this._notebook) {
+            throw new Error('No notebook to interrupt');
         }
+        return this._notebook.interruptKernel(timeoutInMs);
     }
     public async dispose(): Promise<void> {
         this.restarting = undefined;
@@ -136,10 +138,15 @@ export class Kernel implements IKernel {
         }
         if (this._notebook) {
             this.restarting = createDeferred<void>();
-            await this._notebook.restartKernel(timeoutInMs);
-            await this.initializeAfterStart();
-            this.restarting.resolve();
-            this.restarting = undefined;
+            try {
+                await this._notebook.restartKernel(timeoutInMs);
+                await this.initializeAfterStart();
+                this.restarting.resolve();
+            } catch (ex) {
+                this.restarting.reject(ex);
+            } finally {
+                this.restarting = undefined;
+            }
         }
     }
     public registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void {

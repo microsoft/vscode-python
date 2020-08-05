@@ -14,6 +14,7 @@ import type {
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSessionManager,
+    InterruptResult,
     KernelSocketInformation
 } from '../../types';
 import type { KernelSpecInterpreter } from './kernelSelector';
@@ -63,7 +64,7 @@ export interface IKernel extends IAsyncDisposable {
     readonly disposed: boolean;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     start(): Promise<void>;
-    interrupt(timeoutInMs: number): Promise<void>;
+    interrupt(timeoutInMs: number): Promise<InterruptResult>;
     restart(timeoutInMs: number): Promise<void>;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;

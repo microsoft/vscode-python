@@ -13,6 +13,8 @@ import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
+import { KernelProvider } from '../jupyter/kernels/kernelProvider';
+import { IKernel } from '../jupyter/kernels/types';
 import {
     INotebook,
     INotebookEditor,
@@ -76,6 +78,7 @@ export class NotebookEditor implements INotebookEditor {
         private readonly executionService: INotebookExecutionService,
         private readonly commandManager: ICommandManager,
         private readonly notebookProvider: INotebookProvider,
+        private readonly kernelProvider: KernelProvider,
         private readonly statusProvider: IStatusProvider,
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
@@ -144,12 +147,8 @@ export class NotebookEditor implements INotebookEditor {
         if (this.restartingKernel) {
             return;
         }
-        const notebook = await this.notebookProvider.getOrCreateNotebook({
-            resource: this.file,
-            identity: this.file,
-            getOnly: true
-        });
-        if (!notebook || this.restartingKernel) {
+        const kernel = this.kernelProvider.get(this.file);
+        if (!kernel || this.restartingKernel) {
             return;
         }
         const status = this.statusProvider.set(DataScience.interruptKernelStatus(), true, undefined, undefined);
@@ -157,7 +156,7 @@ export class NotebookEditor implements INotebookEditor {
         try {
             const interruptTimeout = this.configurationService.getSettings(this.file).datascience
                 .jupyterInterruptTimeout;
-            const result = await notebook.interruptKernel(interruptTimeout);
+            const result = await kernel.interrupt(interruptTimeout);
             status.dispose();
 
             // We timed out, ask the user if they want to restart instead.
@@ -185,13 +184,9 @@ export class NotebookEditor implements INotebookEditor {
         if (this.restartingKernel) {
             return;
         }
-        const notebook = await this.notebookProvider.getOrCreateNotebook({
-            resource: this.file,
-            identity: this.file,
-            getOnly: true
-        });
+        const kernel = this.kernelProvider.get(this.file);
 
-        if (notebook && !this.restartingKernel) {
+        if (kernel && !this.restartingKernel) {
             if (await this.shouldAskForRestart()) {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage();
@@ -202,19 +197,19 @@ export class NotebookEditor implements INotebookEditor {
                 const response = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart();
-                    await this.restartKernelInternal(notebook);
+                    await this.restartKernelInternal(kernel);
                 } else if (response === yes) {
-                    await this.restartKernelInternal(notebook);
+                    await this.restartKernelInternal(kernel);
                 }
             } else {
-                await this.restartKernelInternal(notebook);
+                await this.restartKernelInternal(kernel);
             }
         }
     }
     public dispose() {
         this._closed.fire(this);
     }
-    private async restartKernelInternal(notebook: INotebook): Promise<void> {
+    private async restartKernelInternal(kernel: IKernel): Promise<void> {
         this.restartingKernel = true;
 
         // Set our status
@@ -222,22 +217,24 @@ export class NotebookEditor implements INotebookEditor {
 
         // Disable running cells.
         const [cellRunnable, runnable] = [this.document.metadata.cellRunnable, this.document.metadata.runnable];
+        const restartTimeout = this.configurationService.getSettings(this.file).datascience.jupyterInterruptTimeout;
         try {
             this.document.metadata.cellRunnable = false;
             this.document.metadata.runnable = false;
-            await notebook.restartKernel(
-                this.configurationService.getSettings(this.file).datascience.jupyterInterruptTimeout
-            );
-
-            // // Compute if dark or not.
-            // const knownDark = await this.isDark();
-
-            // // Before we run any cells, update the dark setting
-            // await notebook.setMatplotLibStyle(knownDark);
+            await kernel.restart(restartTimeout);
         } catch (exc) {
-            // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server
-            if (exc instanceof JupyterKernelPromiseFailedError && notebook) {
-                await notebook.dispose();
+            // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
+            // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
+            if (exc instanceof JupyterKernelPromiseFailedError && kernel) {
+                // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
+                const notebook = await this.notebookProvider.getOrCreateNotebook({
+                    resource: this.file,
+                    identity: this.file,
+                    getOnly: true
+                });
+                if (notebook) {
+                    await notebook.dispose();
+                }
                 await this.notebookProvider.connect({ getOnly: false, disableUI: false });
             } else {
                 // Show the error message

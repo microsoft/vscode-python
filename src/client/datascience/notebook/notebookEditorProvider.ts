@@ -14,6 +14,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, setSharedProperty } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
+import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import {
@@ -151,6 +152,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         let editor = this.notebookEditorsByUri.get(uri.toString());
         if (!editor) {
             const notebookProvider = this.serviceContainer.get<INotebookProvider>(INotebookProvider);
+            const kernelProvider = this.serviceContainer.get<KernelProvider>(KernelProvider);
             const executionService = this.serviceContainer.get<INotebookExecutionService>(INotebookExecutionService);
             editor = new NotebookEditor(
                 model,
@@ -159,6 +161,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 executionService,
                 this.commandManager,
                 notebookProvider,
+                kernelProvider,
                 this.statusProvider,
                 this.appShell,
                 this.configurationService,
