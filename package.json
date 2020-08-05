@@ -197,7 +197,7 @@
                 "linux": "Z",
                 "key": "Z",
                 "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
-                "command": "notebook.undo"
+                "command": "undo"
             },
             {
                 "mac": "C",
