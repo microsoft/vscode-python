@@ -88,6 +88,8 @@ suite(`DataScience JupyterServerUriProvider tests`, () => {
 
     setup(async () => {
         ioc = new DataScienceIocContainer();
+        // Force to always be a mock run. Real will try to connect to the dummy URI
+        ioc.shouldMockJupyter = true;
         ioc.registerDataScienceTypes(false);
         ioc.serviceManager.rebindInstance<IExtensions>(IExtensions, new UriMockExtensions(ioc));
         return ioc.activate();

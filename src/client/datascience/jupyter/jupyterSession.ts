@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import type { ContentsManager, Kernel, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
@@ -136,8 +137,12 @@ export class JupyterSession extends BaseJupyterSession {
         contentsManager: ContentsManager,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
-        // Create a temporary notebook for this session.
-        const backingFile = await contentsManager.newUntitled({ type: 'notebook' });
+        // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)
+        let backingFile = await contentsManager.newUntitled({ type: 'notebook' });
+        backingFile = await contentsManager.rename(
+            backingFile.path,
+            `${path.dirname(backingFile.path)}/t-${uuid()}.ipynb` // Note, the docs say the path uses UNIX delimiters.
+        );
 
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
