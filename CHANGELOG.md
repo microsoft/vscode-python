@@ -102,6 +102,7 @@ our features:
 -   [jedi](https://pypi.org/project/jedi/)
     and [parso](https://pypi.org/project/parso/)
 -   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
 -   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
 -   [rope](https://pypi.org/project/rope/) (user-installed)
 
@@ -291,7 +292,6 @@ our features:
 -   [jedi](https://pypi.org/project/jedi/)
     and [parso](https://pypi.org/project/parso/)
 -   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
--   [Pylance](https://github.com/microsoft/pylance-release)
 -   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
 -   [rope](https://pypi.org/project/rope/) (user-installed)
 
