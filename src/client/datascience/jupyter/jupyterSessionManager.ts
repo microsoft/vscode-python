@@ -166,6 +166,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
     public async startNew(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        workingDirectory: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterSession> {
         if (!this.connInfo || !this.sessionManager || !this.contentsManager || !this.serverSettings) {
@@ -180,7 +181,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.contentsManager,
             this.outputChannel,
             this.restartSessionCreatedEvent.fire.bind(this.restartSessionCreatedEvent),
-            this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent)
+            this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent),
+            workingDirectory
         );
         try {
             await session.connect(this.configService.getSettings().datascience.jupyterLaunchTimeout, cancelToken);

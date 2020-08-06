@@ -424,7 +424,11 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.connInfo = connInfo;
     }
 
-    public startNew(_kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<IJupyterSession> {
+    public startNew(
+        _kernelSpec: IJupyterKernelSpec,
+        _workingDirectory: string,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterSession> {
         if (this.sessionTimeout && cancelToken) {
             const localTimeout = this.sessionTimeout;
             return Cancellation.race(async () => {

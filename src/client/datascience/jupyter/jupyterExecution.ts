@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Uri } from 'vscode';
 
@@ -31,7 +32,7 @@ import {
     INotebookServerOptions
 } from '../types';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
-import { createRemoteConnectionInfo } from './jupyterUtils';
+import { createRemoteConnectionInfo, expandWorkingDir } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { KernelSelector, KernelSpecInterpreter } from './kernels/kernelSelector';
 import { NotebookStarter } from './notebookStarter';
@@ -49,7 +50,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         _liveShare: ILiveShareApi,
         private readonly interpreterService: IInterpreterService,
         private readonly disposableRegistry: IDisposableRegistry,
-        workspace: IWorkspaceService,
+        private readonly workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
         private readonly kernelSelector: KernelSelector,
         private readonly notebookStarter: NotebookStarter,
@@ -352,9 +353,18 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // If that works, then attempt to start the server
             traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
             const useDefaultConfig = !options || options.skipUsingDefaultConfig ? false : true;
+
+            // Expand the working directory. Create a dummy launching file in the root path (so we expand correctly)
+            const workingDirectory = expandWorkingDir(
+                options?.workingDir,
+                this.workspace.rootPath ? path.join(this.workspace.rootPath, `${uuid()}.txt`) : undefined,
+                this.workspace
+            );
+
             const connection = await this.startNotebookServer(
                 useDefaultConfig,
                 this.configuration.getSettings(undefined).datascience.jupyterCommandLineArguments,
+                workingDirectory,
                 cancelToken
             );
             if (connection) {
@@ -377,9 +387,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private async startNotebookServer(
         useDefaultConfig: boolean,
         customCommandLine: string[],
+        workingDirectory: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterConnection> {
-        return this.notebookStarter.start(useDefaultConfig, customCommandLine, cancelToken);
+        return this.notebookStarter.start(useDefaultConfig, customCommandLine, workingDirectory, cancelToken);
     }
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values

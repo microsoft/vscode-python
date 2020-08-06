@@ -85,7 +85,7 @@ suite('DataScience raw kernel tests', () => {
             undefined,
             interpreter
         );
-        await kernelProcess.launch();
+        await kernelProcess.launch(process.cwd());
         return createRawKernel(kernelProcess, uuid());
     }
 

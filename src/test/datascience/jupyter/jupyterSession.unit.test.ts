@@ -91,7 +91,8 @@ suite('DataScience - JupyterSession', () => {
             },
             () => {
                 restartSessionUsedEvent.resolve();
-            }
+            },
+            ''
         );
     });
 

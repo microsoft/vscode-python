@@ -43,9 +43,10 @@ export class RawJupyterSession extends BaseJupyterSession {
         private readonly resource: Resource,
         private readonly outputChannel: IOutputChannel,
         private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
-        restartSessionUsed: (id: Kernel.IKernelConnection) => void
+        restartSessionUsed: (id: Kernel.IKernelConnection) => void,
+        workingDirectory: string
     ) {
-        super(restartSessionUsed);
+        super(restartSessionUsed, workingDirectory);
     }
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
@@ -222,7 +223,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         cancellationPromise.catch(noop);
 
         const process = await Promise.race([
-            this.kernelLauncher.launch(kernelSpec, this.resource, interpreter),
+            this.kernelLauncher.launch(kernelSpec, this.resource, this.workingDirectory, interpreter),
             cancellationPromise
         ]);
 

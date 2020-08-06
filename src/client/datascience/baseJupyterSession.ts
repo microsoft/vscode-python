@@ -77,7 +77,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     private _jupyterLab?: typeof import('@jupyterlab/services');
 
-    constructor(private restartSessionUsed: (id: Kernel.IKernelConnection) => void) {
+    constructor(private restartSessionUsed: (id: Kernel.IKernelConnection) => void, public workingDirectory: string) {
         this.statusHandler = this.onStatusChanged.bind(this);
     }
     public dispose(): Promise<void> {

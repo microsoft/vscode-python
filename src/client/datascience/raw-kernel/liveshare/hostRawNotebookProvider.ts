@@ -3,6 +3,7 @@
 'use strict';
 import '../../../common/extensions';
 
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
@@ -142,7 +143,19 @@ export class HostRawNotebookProvider
             ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingIPyKernel())
             : undefined;
 
-        const rawSession = new RawJupyterSession(this.kernelLauncher, resource, this.outputChannel, noop, noop);
+        const workingDirectory =
+            resource && resource.scheme === 'file'
+                ? path.dirname(resource.fsPath)
+                : this.workspaceService.getWorkspaceFolder(resource)?.uri.fsPath || process.cwd();
+
+        const rawSession = new RawJupyterSession(
+            this.kernelLauncher,
+            resource,
+            this.outputChannel,
+            noop,
+            noop,
+            workingDirectory
+        );
         try {
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
 
