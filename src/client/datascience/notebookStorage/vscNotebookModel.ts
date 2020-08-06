@@ -41,7 +41,9 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         return this.document?.isDirty === true;
     }
     public get cells(): ICell[] {
-        return this.document
+        // When a notebook is not trusted, return original cells.
+        // This is because the VSCode NotebookDocument object will not have any output in the cells.
+        return this.document && this.isTrusted
             ? this.document.cells.map((cell) => createCellFromVSCNotebookCell(cell, this))
             : this._cells;
     }
@@ -82,7 +84,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     }
     protected generateNotebookJson() {
         const json = super.generateNotebookJson();
-        if (this.document) {
+        if (this.document && this.isTrusted) {
             // The metadata will be in the notebook document.
             const metadata = getNotebookMetadata(this.document);
             if (metadata) {
