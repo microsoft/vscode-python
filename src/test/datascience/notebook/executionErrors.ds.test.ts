@@ -9,7 +9,13 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { KernelProvider } from '../../../client/datascience/jupyter/kernels/kernelProvider';
 import { IKernel } from '../../../client/datascience/jupyter/kernels/types';
-import { ICell, IDataScienceErrorHandler, INotebookEditorProvider } from '../../../client/datascience/types';
+import {
+    ICell,
+    IDataScienceErrorHandler,
+    INotebook,
+    INotebookEditorProvider,
+    INotebookProvider
+} from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize, initializeTest } from '../../initialize';
 import {
@@ -29,6 +35,7 @@ suite('DataScience - VSCode Notebook - Errors in Execution', function () {
     let handleErrorStub: sinon.SinonStub<[Error], Promise<void>>;
     let errorHandler: IDataScienceErrorHandler;
     let kernel: IKernel;
+    let notebook: INotebook;
     let kernelProvider: KernelProvider;
     suiteSetup(async function () {
         this.timeout(60_000);
@@ -42,9 +49,13 @@ suite('DataScience - VSCode Notebook - Errors in Execution', function () {
         await initializeTest();
         await trustAllNotebooks();
         kernelProvider = api.serviceContainer.get<KernelProvider>(KernelProvider);
+        const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
         kernel = mock<IKernel>();
+        notebook = mock<INotebook>();
         (instance(kernel) as any).then = undefined;
+        (instance(notebook) as any).then = undefined;
         sinon.stub(kernelProvider, 'getOrCreate').returns(instance(kernel));
+        sinon.stub(notebookProvider, 'getOrCreateNotebook').resolves(instance(notebook));
 
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         errorHandler = api.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
@@ -61,7 +72,7 @@ suite('DataScience - VSCode Notebook - Errors in Execution', function () {
         // await sleep(10_000);
         // Run a cell (with a mock notebook).
         const error = new Error('MyError');
-        when(kernel.executeObservable(anything(), anything(), anything(), anything(), anything())).thenThrow(error);
+        when(kernel.executeCell(anything())).thenThrow(error);
         // Execute cells (it should throw an error).
         await executeActiveDocument();
 
@@ -77,7 +88,9 @@ suite('DataScience - VSCode Notebook - Errors in Execution', function () {
         const error = new Error('MyError');
         const subject = new Subject<ICell[]>();
         subject.error(error);
-        when(kernel.executeObservable(anything(), anything(), anything(), anything(), anything())).thenReturn(subject);
+        when(notebook.executeObservable(anything(), anything(), anything(), anything(), anything())).thenReturn(
+            subject
+        );
 
         // Execute cells (it should throw an error).
         await executeActiveDocument();
