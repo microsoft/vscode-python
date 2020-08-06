@@ -156,9 +156,12 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)
         let backingFile = await contentsManager.newUntitled(backingFileOptions);
+        const backingFileDir = path.dirname(backingFile.path);
         backingFile = await contentsManager.rename(
             backingFile.path,
-            `${path.dirname(backingFile.path)}/t-${uuid()}.ipynb` // Note, the docs say the path uses UNIX delimiters.
+            backingFileDir.length && backingFileDir !== '.'
+                ? `${backingFileDir}/t-${uuid()}.ipynb`
+                : `t-${uuid()}.ipynb` // Note, the docs say the path uses UNIX delimiters.
         );
 
         // Create our session options using this temporary notebook and our connection info
