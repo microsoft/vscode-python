@@ -171,7 +171,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             onClick={this.props.restartKernel}
                             disabled={!canRestartAndInterruptKernel || !this.props.isNotebookTrusted}
                             className="native-button"
-                            tooltip={getLocString('DataScience.restartServer', 'Restart IPython Kernel')}
+                            tooltip={getLocString('DataScience.restartServer', 'Restart Kernel')}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}

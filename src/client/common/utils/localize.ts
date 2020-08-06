@@ -565,7 +565,7 @@ export namespace DataScience {
     export const collapseSingle = localize('DataScience.collapseSingle', 'Collapse');
     export const expandSingle = localize('DataScience.expandSingle', 'Expand');
     export const exportKey = localize('DataScience.export', 'Export as Jupyter Notebook');
-    export const restartServer = localize('DataScience.restartServer', 'Restart IPython Kernel');
+    export const restartServer = localize('DataScience.restartServer', 'Restart Kernel');
     export const undo = localize('DataScience.undo', 'Undo');
     export const redo = localize('DataScience.redo', 'Redo');
     export const save = localize('DataScience.save', 'Save File');
