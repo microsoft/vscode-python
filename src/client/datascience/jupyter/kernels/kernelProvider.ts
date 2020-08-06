@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { traceWarning } from '../../../common/logger';
@@ -25,10 +26,7 @@ export class KernelProvider {
     }
     public getOrCreate(uri: Uri, options: KernelOptions): IKernel | undefined {
         const existingKernelInfo = this.kernelsByUri.get(uri.toString());
-        if (
-            existingKernelInfo &&
-            JSON.stringify(existingKernelInfo.options.metadata) === JSON.stringify(options.metadata)
-        ) {
+        if (existingKernelInfo && fastDeepEqual(existingKernelInfo.options.metadata, options.metadata)) {
             return existingKernelInfo.kernel;
         }
 

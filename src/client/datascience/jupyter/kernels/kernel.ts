@@ -32,7 +32,7 @@ export class Kernel implements IKernel {
         if (this._notebook) {
             return this._notebook.getKernelSpec();
         }
-        return this._metadata.kernelSpec || this._metadata.kernelModel;
+        return this.metadata.kernelSpec || this.metadata.kernelModel;
     }
     get onStatusChanged(): Event<ServerStatus> {
         return this._onStatusChanged.event;
@@ -63,7 +63,7 @@ export class Kernel implements IKernel {
     private restarting?: Deferred<void>;
     constructor(
         public readonly uri: Uri,
-        private readonly _metadata: KernelSelection,
+        public readonly metadata: Readonly<KernelSelection>,
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
         private readonly waitForIdleTimeoutMs: number,
@@ -93,8 +93,8 @@ export class Kernel implements IKernel {
             const metadata = ((getDefaultNotebookContent().metadata || {}) as unknown) as nbformat.INotebookMetadata;
             updateNotebookMetadata(
                 metadata,
-                this._metadata.interpreter,
-                this._metadata.kernelSpec || this._metadata.kernelModel
+                this.metadata.interpreter,
+                this.metadata.kernelSpec || this.metadata.kernelModel
             );
 
             this._notebookPromise = this.notebookProvider.getOrCreateNotebook({

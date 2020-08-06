@@ -57,6 +57,7 @@ export interface IKernelSelectionUsage {
 export interface IKernel extends IAsyncDisposable {
     readonly uri: Uri;
     readonly kernelSpec?: IJupyterKernelSpec | LiveKernelModel;
+    readonly metadata: Readonly<KernelSelection>;
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;
     readonly onRestarted: Event<void>;

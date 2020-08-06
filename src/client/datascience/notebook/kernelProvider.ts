@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import {
@@ -13,6 +14,7 @@ import { IVSCodeNotebook } from '../../common/application/types';
 import { createPromiseFromCancellation } from '../../common/cancellation';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
@@ -21,6 +23,7 @@ import { INotebook, INotebookProvider } from '../types';
 import { getNotebookMetadata, updateKernelInNotebookMetadata } from './helpers/helpers';
 import { NotebookKernel } from './notebookKernel';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
+
 @injectable()
 export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
     public get onDidChangeKernels(): Event<void> {
@@ -32,6 +35,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(INotebookExecutionService) private readonly execution: INotebookExecutionService,
         @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
         @inject(KernelSelector) private readonly kernelSelector: KernelSelector,
+        @inject(KernelProvider) private readonly kernelProvider: KernelProvider,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
@@ -85,14 +89,14 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             if (
                 preferredKernel.kernelSpec &&
                 item.kernelSpec &&
-                JSON.stringify(preferredKernel.kernelSpec) === JSON.stringify(item.kernelSpec)
+                fastDeepEqual(preferredKernel.kernelSpec, item.kernelSpec)
             ) {
                 return true;
             }
             if (
                 preferredKernel.kernelModel &&
                 item.kernelModel &&
-                JSON.stringify(preferredKernel.kernelModel) === JSON.stringify(item.kernelModel)
+                fastDeepEqual(preferredKernel.kernelModel, item.kernelModel)
             ) {
                 return true;
             }
@@ -125,6 +129,15 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             // Possibly closed or different kernel picked.
             return;
         }
+
+        // Check what the existing kernel is.
+        const existingKernel = this.kernelProvider.get(document.uri);
+        if (existingKernel && fastDeepEqual(existingKernel.metadata, newKernelInfo.kernel.selection)) {
+            return;
+        }
+
+        // Make this the new kernel (calling this method will associate the new kernel with this Uri).
+        this.kernelProvider.getOrCreate(document.uri, { metadata: newKernelInfo.kernel.selection });
 
         // Change kernel and update metadata.
         const notebook = await this.notebookProvider.getOrCreateNotebook({
