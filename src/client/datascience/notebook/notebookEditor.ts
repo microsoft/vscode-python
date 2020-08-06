@@ -24,7 +24,6 @@ import {
     IStatusProvider
 } from '../types';
 import { getDefaultCodeLanguage } from './helpers/helpers';
-import { INotebookExecutionService } from './types';
 
 export class NotebookEditor implements INotebookEditor {
     public readonly type = 'native';
@@ -75,7 +74,6 @@ export class NotebookEditor implements INotebookEditor {
         public readonly model: INotebookModel,
         public readonly document: NotebookDocument,
         private readonly vscodeNotebook: IVSCodeNotebook,
-        private readonly executionService: INotebookExecutionService,
         private readonly commandManager: ICommandManager,
         private readonly notebookProvider: INotebookProvider,
         private readonly kernelProvider: KernelProvider,
@@ -142,8 +140,6 @@ export class NotebookEditor implements INotebookEditor {
         this.executedCode.fire(code);
     }
     public async interruptKernel(): Promise<void> {
-        this.executionService.cancelPendingExecutions(this.document);
-
         if (this.restartingKernel) {
             return;
         }
@@ -154,9 +150,7 @@ export class NotebookEditor implements INotebookEditor {
         const status = this.statusProvider.set(DataScience.interruptKernelStatus(), true, undefined, undefined);
 
         try {
-            const interruptTimeout = this.configurationService.getSettings(this.file).datascience
-                .jupyterInterruptTimeout;
-            const result = await kernel.interrupt(interruptTimeout);
+            const result = await kernel.interrupt();
             status.dispose();
 
             // We timed out, ask the user if they want to restart instead.
@@ -178,8 +172,6 @@ export class NotebookEditor implements INotebookEditor {
     }
 
     public async restartKernel(): Promise<void> {
-        this.executionService.cancelPendingExecutions(this.document);
-
         sendTelemetryEvent(Telemetry.RestartKernelCommand);
         if (this.restartingKernel) {
             return;
@@ -217,11 +209,10 @@ export class NotebookEditor implements INotebookEditor {
 
         // Disable running cells.
         const [cellRunnable, runnable] = [this.document.metadata.cellRunnable, this.document.metadata.runnable];
-        const restartTimeout = this.configurationService.getSettings(this.file).datascience.jupyterInterruptTimeout;
         try {
             this.document.metadata.cellRunnable = false;
             this.document.metadata.runnable = false;
-            await kernel.restart(restartTimeout);
+            await kernel.restart();
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.

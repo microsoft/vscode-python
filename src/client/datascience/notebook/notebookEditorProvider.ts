@@ -27,7 +27,6 @@ import {
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
-import { INotebookExecutionService } from './types';
 
 /**
  * Notebook Editor provider used by other parts of DS code.
@@ -153,12 +152,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (!editor) {
             const notebookProvider = this.serviceContainer.get<INotebookProvider>(INotebookProvider);
             const kernelProvider = this.serviceContainer.get<KernelProvider>(KernelProvider);
-            const executionService = this.serviceContainer.get<INotebookExecutionService>(INotebookExecutionService);
             editor = new NotebookEditor(
                 model,
                 doc,
                 this.vscodeNotebook,
-                executionService,
                 this.commandManager,
                 notebookProvider,
                 kernelProvider,

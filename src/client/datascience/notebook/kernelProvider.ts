@@ -3,8 +3,9 @@
 
 import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Event, EventEmitter } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import {
+    NotebookCell,
     NotebookDocument,
     NotebookKernel as VSCNotebookKernel,
     NotebookKernelProvider
@@ -20,8 +21,32 @@ import { KernelSelection } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebook, INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, updateKernelInNotebookMetadata } from './helpers/helpers';
-import { NotebookKernel } from './notebookKernel';
-import { INotebookContentProvider, INotebookExecutionService } from './types';
+import { INotebookContentProvider } from './types';
+
+class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
+    get preloads(): Uri[] {
+        return [];
+    }
+    constructor(
+        public readonly label: string,
+        public readonly description: string,
+        public readonly selection: Readonly<KernelSelection>,
+        public readonly isPreferred: boolean,
+        private readonly kernelProvider: KernelProvider
+    ) {}
+    public executeCell(_: NotebookDocument, cell: NotebookCell) {
+        this.kernelProvider.get(cell.notebook.uri)?.executeCell(cell); // NOSONAR
+    }
+    public executeAllCells(document: NotebookDocument) {
+        this.kernelProvider.get(document.uri)?.executeAllCells(document); // NOSONAR
+    }
+    public cancelCellExecution(_: NotebookDocument, cell: NotebookCell) {
+        this.kernelProvider.get(cell.notebook.uri)?.interrupt(); // NOSONAR
+    }
+    public cancelAllCellsExecution(document: NotebookDocument) {
+        this.kernelProvider.get(document.uri)?.interrupt(); // NOSONAR
+    }
+}
 
 @injectable()
 export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
@@ -31,7 +56,6 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
     private readonly _onDidChangeKernels = new EventEmitter<void>();
     private notebookKernelChangeHandled = new WeakSet<INotebook>();
     constructor(
-        @inject(INotebookExecutionService) private readonly execution: INotebookExecutionService,
         @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
         @inject(KernelSelector) private readonly kernelSelector: KernelSelector,
         @inject(KernelProvider) private readonly kernelProvider: KernelProvider,
@@ -45,7 +69,10 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         this.kernelSelectionProvider.SelectionsChanged(() => this._onDidChangeKernels.fire(), this, disposables);
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
     }
-    public async provideKernels(document: NotebookDocument, token: CancellationToken): Promise<NotebookKernel[]> {
+    public async provideKernels(
+        document: NotebookDocument,
+        token: CancellationToken
+    ): Promise<VSCodeNotebookKernelMetadata[]> {
         const [preferredKernel, kernels] = await Promise.all([
             this.kernelSelector.getKernelForLocalConnection(
                 document.uri,
@@ -89,13 +116,12 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         }
 
         return kernels.map((kernel) => {
-            return new NotebookKernel(
+            return new VSCodeNotebookKernelMetadata(
                 kernel.label,
                 kernel.description || kernel.detail || '',
                 kernel.selection,
                 isPreferredKernel(kernel.selection),
-                this.execution,
-                this.kernelSelector
+                this.kernelProvider
             );
         });
     }
@@ -103,7 +129,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         document: NotebookDocument;
         kernel: VSCNotebookKernel | undefined;
     }) {
-        if (!newKernelInfo.kernel || !(newKernelInfo.kernel instanceof NotebookKernel)) {
+        if (!newKernelInfo.kernel || !(newKernelInfo.kernel instanceof VSCodeNotebookKernelMetadata)) {
             return;
         }
 
