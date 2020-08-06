@@ -58,9 +58,9 @@ def parse_args(
 
     # Parse the args!
     if "--" in argv:
-        seppos = argv.index("--")
-        toolargs = argv[seppos + 1 :]
-        argv = argv[:seppos]
+        sep_index = argv.index("--")
+        toolargs = argv[sep_index + 1 :]
+        argv = argv[:sep_index]
     else:
         toolargs = []
     args = parser.parse_args(argv)
