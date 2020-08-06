@@ -5,7 +5,7 @@
 
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import type { NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel } from 'vscode-proposed';
-import { createDeferred } from '../../common/utils/async';
+import { createDeferredFromPromise, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
 import { IKernelSelectionUsage, KernelSelection } from '../jupyter/kernels/types';
@@ -47,11 +47,7 @@ export class NotebookKernel implements VSCNotebookKernel {
     get preloads(): Uri[] {
         return [];
     }
-    private kernelValidated = createDeferred<KernelSpecInterpreter>();
-    private validating?: boolean;
-    public get hasBeenValidated() {
-        return this.kernelValidated.promise;
-    }
+    private kernelValidated?: Deferred<KernelSpecInterpreter | {}>;
     private cellExecutions = new WeakMap<NotebookCell, MultiCancellationTokenSource>();
     private documentExecutions = new WeakMap<NotebookDocument, MultiCancellationTokenSource>();
     constructor(
@@ -62,35 +58,20 @@ export class NotebookKernel implements VSCNotebookKernel {
         private readonly execution: INotebookExecutionService,
         private readonly kernelSelectionUsage: IKernelSelectionUsage
     ) {}
-    public async validate(uri: Uri): Promise<KernelSpecInterpreter> {
-        if (this.validating) {
-            return this.kernelValidated.promise;
-        }
-        this.validating = true;
-        return this.kernelSelectionUsage
-            .useSelectedKernel(this.selection, uri, 'raw')
-            .then((e) => {
-                this.kernelValidated.resolve(e);
-                return e;
-            })
-            .catch((e) => {
-                this.kernelValidated.reject(e);
-                throw e;
-            });
-    }
     public executeCell(document: NotebookDocument, cell: NotebookCell) {
         if (this.cellExecutions.has(cell)) {
             return;
         }
         const source = new MultiCancellationTokenSource();
         this.cellExecutions.set(cell, source);
-        this.execution
-            .executeCell(document, cell, source.token)
-            .finally(() => {
-                if (this.cellExecutions.get(cell) === source) {
-                    this.cellExecutions.delete(cell);
-                }
-            })
+        this.validate(document.uri)
+            .then(() =>
+                this.execution.executeCell(document, cell, source.token).finally(() => {
+                    if (this.cellExecutions.get(cell) === source) {
+                        this.cellExecutions.delete(cell);
+                    }
+                })
+            )
             .catch(noop);
     }
     public executeAllCells(document: NotebookDocument) {
@@ -99,13 +80,14 @@ export class NotebookKernel implements VSCNotebookKernel {
         }
         const source = new MultiCancellationTokenSource();
         this.documentExecutions.set(document, source);
-        this.execution
-            .executeAllCells(document, source.token)
-            .finally(() => {
-                if (this.documentExecutions.get(document) === source) {
-                    this.documentExecutions.delete(document);
-                }
-            })
+        this.validate(document.uri)
+            .then(() =>
+                this.execution.executeAllCells(document, source.token).finally(() => {
+                    if (this.documentExecutions.get(document) === source) {
+                        this.documentExecutions.delete(document);
+                    }
+                })
+            )
             .catch(noop);
     }
     public cancelCellExecution(_document: NotebookDocument, cell: NotebookCell) {
@@ -113,5 +95,17 @@ export class NotebookKernel implements VSCNotebookKernel {
     }
     public cancelAllCellsExecution(document: NotebookDocument) {
         this.documentExecutions.get(document)?.cancel(); // NOSONAR
+    }
+    private async validate(uri: Uri): Promise<KernelSpecInterpreter | {}> {
+        if (this.kernelValidated) {
+            return this.kernelValidated.promise;
+        }
+        return (this.kernelValidated = createDeferredFromPromise<KernelSpecInterpreter | {}>(
+            this.kernelSelectionUsage.useSelectedKernel(this.selection, uri, 'raw').catch(() => {
+                // Possible this gets resolved later, hence clear cached promise.
+                this.kernelValidated = undefined;
+                // tslint:disable-next-line: no-any
+            }) as any
+        ));
     }
 }

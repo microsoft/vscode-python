@@ -5,13 +5,11 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import {
-    NotebookCommunication,
     NotebookDocument,
     NotebookKernel as VSCNotebookKernel,
     NotebookKernelProvider
 } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
-import { createPromiseFromCancellation } from '../../common/cancellation';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
@@ -46,21 +44,6 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
     ) {
         this.kernelSelectionProvider.SelectionsChanged(() => this._onDidChangeKernels.fire(), this, disposables);
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
-    }
-    /**
-     * Called before running code against a kernel. An initialization phase.
-     * If the selected kernel is being validated, we can block here.
-     */
-    public async resolveKernel(
-        kernel: NotebookKernel,
-        document: NotebookDocument,
-        _webview: NotebookCommunication,
-        token: CancellationToken
-    ): Promise<void> {
-        await Promise.race([
-            kernel.validate(document.uri),
-            createPromiseFromCancellation({ cancelAction: 'resolve', token, defaultValue: void 0 })
-        ]);
     }
     public async provideKernels(document: NotebookDocument, token: CancellationToken): Promise<NotebookKernel[]> {
         const [preferredKernel, kernels] = await Promise.all([
@@ -128,9 +111,9 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         if (!isJupyterNotebook(document)) {
             return;
         }
-        const selection = await newKernelInfo.kernel.validate(document.uri);
+        const selection = newKernelInfo.kernel.selection;
         const editor = this.notebook.notebookEditors.find((item) => item.document === document);
-        if (!selection || !editor || editor.kernel !== newKernelInfo.kernel) {
+        if (!editor || editor.kernel !== newKernelInfo.kernel) {
             // Possibly closed or different kernel picked.
             return;
         }
