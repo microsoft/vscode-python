@@ -40,9 +40,9 @@ suite('DataScience - Kernel Launcher Daemon', () => {
 
         when(daemonPool.get(anything(), anything(), anything())).thenResolve(instance(kernelDaemon));
         when(observableOutputForDaemon.proc).thenResolve({} as any);
-        when(
-            kernelDaemon.start('ipkernel_launcher', deepEqual(['-f', 'file.json']), deepEqual({ env: kernelSpec.env }))
-        ).thenResolve(instance(observableOutputForDaemon));
+        when(kernelDaemon.start('ipkernel_launcher', deepEqual(['-f', 'file.json']), anything())).thenResolve(
+            instance(observableOutputForDaemon)
+        );
         launcher = new PythonKernelLauncherDaemon(instance(daemonPool));
     });
     test('Does not support launching kernels if there is no -m in argv', async () => {
@@ -64,11 +64,7 @@ suite('DataScience - Kernel Launcher Daemon', () => {
     test('If our daemon pool returns an execution service, then use it and return the daemon as undefined', async () => {
         const executionService = mock<IPythonExecutionService>();
         when(
-            executionService.execModuleObservable(
-                'ipkernel_launcher',
-                deepEqual(['-f', 'file.json']),
-                deepEqual({ env: kernelSpec.env })
-            )
+            executionService.execModuleObservable('ipkernel_launcher', deepEqual(['-f', 'file.json']), anything())
         ).thenReturn(instance(observableOutputForDaemon));
         // Make sure that it doesn't have a start function. Normally the proxy will pretend to have a start function, which we are checking for non-existance
         when((executionService as any).start).thenReturn(false);
