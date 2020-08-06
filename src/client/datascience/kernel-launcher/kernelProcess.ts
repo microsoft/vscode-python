@@ -216,6 +216,7 @@ export class KernelProcess implements IKernelProcess {
             this.pythonKernelLauncher = new PythonKernelLauncherDaemon(this.daemonPool);
             const kernelDaemonLaunch = await this.pythonKernelLauncher.launch(
                 this.resource,
+                workingDirectory,
                 this._kernelSpec,
                 this.interpreter
             );

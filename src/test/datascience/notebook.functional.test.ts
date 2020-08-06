@@ -15,7 +15,7 @@ import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
-import { IApplicationShell } from '../../client/common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { LocalZMQKernel } from '../../client/common/experiments/groups';
@@ -1463,6 +1463,18 @@ plt.show()`,
 
                 await verifySimple(notebook, `a`, 1);
                 await verifySimple(notebook, `b`, 2);
+            });
+            runTest('Current directory', async () => {
+                const rootFolder = ioc.get<IWorkspaceService>(IWorkspaceService).rootPath!;
+                const escapedPath = `'${rootFolder.replace(/\\/g, '\\\\')}'`;
+                addMockData(`import os\nos.getcwd()`, escapedPath);
+                const notebook = await notebookProvider.getOrCreateNotebook({
+                    identity: getDefaultInteractiveIdentity(),
+                    resource: Uri.file(path.join(rootFolder, 'foo.ipynb'))
+                });
+
+                assert.ok(notebook, 'did not create notebook');
+                await verifySimple(notebook, `import os\nos.getcwd()`, escapedPath);
             });
         });
     });

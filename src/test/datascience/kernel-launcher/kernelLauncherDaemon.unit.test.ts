@@ -47,12 +47,12 @@ suite('DataScience - Kernel Launcher Daemon', () => {
     });
     test('Does not support launching kernels if there is no -m in argv', async () => {
         kernelSpec.argv = ['wow'];
-        const promise = launcher.launch(undefined, kernelSpec, interpreter);
+        const promise = launcher.launch(undefined, '', kernelSpec, interpreter);
 
         await assert.isRejected(promise, /^Unsupported KernelSpec file. args must be/g);
     });
     test('Creates and returns a daemon', async () => {
-        const daemonCreationOutput = await launcher.launch(undefined, kernelSpec, interpreter);
+        const daemonCreationOutput = await launcher.launch(undefined, '', kernelSpec, interpreter);
 
         assert.isDefined(daemonCreationOutput);
 
@@ -75,7 +75,7 @@ suite('DataScience - Kernel Launcher Daemon', () => {
         // Else ts-mockit doesn't allow us to return an instance of a mock as a return value from an async function.
         (instance(executionService) as any).then = undefined;
         when(daemonPool.get(anything(), anything(), anything())).thenResolve(instance(executionService) as any);
-        const daemonCreationOutput = await launcher.launch(undefined, kernelSpec, interpreter);
+        const daemonCreationOutput = await launcher.launch(undefined, '', kernelSpec, interpreter);
 
         assert.equal(daemonCreationOutput.observableOutput, instance(observableOutputForDaemon));
         assert.isUndefined(daemonCreationOutput.daemon);

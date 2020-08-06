@@ -25,6 +25,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
     constructor(@inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool) {}
     public async launch(
         resource: Resource,
+        workingDirectory: string,
         kernelSpec: IJupyterKernelSpec,
         interpreter?: PythonInterpreter
     ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon | undefined }> {
@@ -53,12 +54,15 @@ export class PythonKernelLauncherDaemon implements IDisposable {
             // tslint:disable-next-line:no-any
             const executionService = (daemon as any) as IPythonExecutionService;
 
-            const observableOutput = executionService.execModuleObservable(moduleName, moduleArgs, { env });
+            const observableOutput = executionService.execModuleObservable(moduleName, moduleArgs, {
+                env,
+                cwd: workingDirectory
+            });
 
             return { observableOutput, daemon: undefined };
         } else {
             // In the case that we do have a kernel deamon, just return it
-            const observableOutput = await daemon.start(moduleName, moduleArgs, { env });
+            const observableOutput = await daemon.start(moduleName, moduleArgs, { env, cwd: workingDirectory });
             if (observableOutput.proc) {
                 this.processesToDispose.push(observableOutput.proc);
             }

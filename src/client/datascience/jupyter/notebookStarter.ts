@@ -218,7 +218,8 @@ export class NotebookStarter implements Disposable {
      * @memberof NotebookStarter
      */
     private getNotebookDirArgument(workingDirectory: string): string {
-        return `--notebook-dir="${workingDirectory}"`;
+        // Escape the result so Jupyter can actually read it.
+        return `--notebook-dir="${workingDirectory.replace(/\\/g, '\\\\')}"`;
     }
 
     /**

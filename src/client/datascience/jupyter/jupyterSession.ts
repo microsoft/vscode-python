@@ -148,9 +148,11 @@ export class JupyterSession extends BaseJupyterSession {
         // First make sure the notebook is in the right relative path (jupyter expects a relative path with unix delimiters)
         const relativeDirectory = path.relative(this.connInfo.rootDirectory, this.workingDirectory).replace(/\\/g, '/');
 
-        const backingFileOptions: Contents.ICreateOptions = this.connInfo.localLaunch
-            ? { type: 'notebook', path: relativeDirectory }
-            : { type: 'notebook' };
+        // However jupyter does not support relative paths outside of the original root.
+        const backingFileOptions: Contents.ICreateOptions =
+            this.connInfo.localLaunch && !relativeDirectory.startsWith('..')
+                ? { type: 'notebook', path: relativeDirectory }
+                : { type: 'notebook' };
 
         // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)
         let backingFile = await contentsManager.newUntitled(backingFileOptions);
