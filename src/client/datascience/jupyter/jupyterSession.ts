@@ -151,7 +151,13 @@ export class JupyterSession extends BaseJupyterSession {
         const backingFileOptions: Contents.ICreateOptions = this.connInfo.localLaunch
             ? { type: 'notebook', path: relativeDirectory }
             : { type: 'notebook' };
-        const backingFile = await contentsManager.newUntitled(backingFileOptions);
+
+        // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)
+        let backingFile = await contentsManager.newUntitled(backingFileOptions);
+        backingFile = await contentsManager.rename(
+            backingFile.path,
+            `${path.dirname(backingFile.path)}/t-${uuid()}.ipynb` // Note, the docs say the path uses UNIX delimiters.
+        );
 
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {

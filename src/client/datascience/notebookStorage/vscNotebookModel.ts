@@ -2,22 +2,17 @@
 // Licensed under the MIT License.
 
 import type { nbformat } from '@jupyterlab/coreutils';
-import * as assert from 'assert';
 import { Memento, Uri } from 'vscode';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
-import { splitMultilineString } from '../../../datascience-ui/common';
-import { traceError } from '../../common/logger';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
-import { createCellFromVSCNotebookCell, updateVSCNotebookAfterTrustingNotebook } from '../notebook/helpers/helpers';
+import {
+    createCellFromVSCNotebookCell,
+    getNotebookMetadata,
+    updateVSCNotebookAfterTrustingNotebook
+} from '../notebook/helpers/helpers';
 import { ICell } from '../types';
 import { BaseNotebookModel } from './baseModel';
-
-// This is the custom type we are adding into nbformat.IBaseCellMetadata
-interface IBaseCellVSCodeMetadata {
-    end_execution_time?: string;
-    start_execution_time?: string;
-}
 
 // https://github.com/microsoft/vscode-python/issues/13155
 // tslint:disable-next-line: no-any
@@ -46,11 +41,19 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         return this.document?.isDirty === true;
     }
     public get cells(): ICell[] {
-        return this.document
+        // When a notebook is not trusted, return original cells.
+        // This is because the VSCode NotebookDocument object will not have any output in the cells.
+        return this.document && this.isTrusted
             ? this.document.cells.map((cell) => createCellFromVSCNotebookCell(cell, this))
             : this._cells;
     }
     private document?: NotebookDocument;
+    public get notebookContentWithoutCells(): Partial<nbformat.INotebookContent> {
+        return {
+            ...this.notebookJson,
+            cells: []
+        };
+    }
 
     constructor(
         isTrusted: boolean,
@@ -79,97 +82,15 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             this._cells = [];
         }
     }
-    public updateCellSource(cellId: string, source: string): void {
-        const cell = this.getCell(cellId);
-        if (cell) {
-            cell.data.source = splitMultilineString(source);
-        }
-    }
-    public clearCellOutput(cell: ICell, clearExecutionCount: boolean): void {
-        if (cell.data.cell_type === 'code' && clearExecutionCount) {
-            cell.data.execution_count = null;
-        }
-        if (cell.data.metadata.vscode) {
-            (cell.data.metadata.vscode as IBaseCellVSCodeMetadata).start_execution_time = undefined;
-            (cell.data.metadata.vscode as IBaseCellVSCodeMetadata).end_execution_time = undefined;
-        }
-        cell.data.outputs = [];
-        // We want to trigger change events.
-        this.update({
-            source: 'user',
-            kind: 'clear',
-            oldDirty: this.isDirty,
-            newDirty: true,
-            oldCells: [cell]
-        });
-    }
-    /**
-     * @param {number} start The zero-based location in the array after which the new item is to be added.
-     */
-    public addCell(cell: ICell, start: number): void {
-        this._cells.splice(start, 0, cell);
-        // Get model to fire events.
-        this.update({
-            source: 'user',
-            kind: 'insert',
-            cell: cell,
-            index: start,
-            oldDirty: this.isDirty,
-            newDirty: true
-        });
-    }
-    public deleteCell(cell: ICell): void {
-        const index = this._cells.indexOf(cell);
-        this._cells.splice(index, 1);
-        // Get model to fire events.
-        this.update({
-            source: 'user',
-            kind: 'remove',
-            cell: cell,
-            index: index,
-            oldDirty: this.isDirty,
-            newDirty: true
-        });
-    }
-    public swapCells(cellToSwap: ICell, cellToSwapWith: ICell) {
-        assert.notEqual(cellToSwap, cellToSwapWith, 'Cannot swap cell with the same cell');
-
-        const indexOfCellToSwap = this.cells.indexOf(cellToSwap);
-        const indexOfCellToSwapWith = this.cells.indexOf(cellToSwapWith);
-        this._cells[indexOfCellToSwap] = cellToSwapWith;
-        this._cells[indexOfCellToSwapWith] = cellToSwap;
-        // Get model to fire events.
-        this.update({
-            source: 'user',
-            kind: 'swap',
-            firstCellId: cellToSwap.id,
-            secondCellId: cellToSwapWith.id,
-            oldDirty: this.isDirty,
-            newDirty: true
-        });
-    }
-    public updateCellOutput(cell: ICell, outputs: nbformat.IOutput[]) {
-        cell.data.outputs = outputs;
-    }
-    public updateCellExecutionCount(cell: ICell, executionCount: number) {
-        cell.data.execution_count = executionCount;
-    }
-    public updateCellMetadata(cell: ICell, metadata: Partial<IBaseCellVSCodeMetadata>) {
-        const originalVscodeMetadata: IBaseCellVSCodeMetadata =
-            (cell.data.metadata.vscode as IBaseCellVSCodeMetadata) || {};
-        // Update our model with the new metadata stored in jupyter.
-        cell.data.metadata = {
-            ...cell.data.metadata,
-            vscode: {
-                ...originalVscodeMetadata,
-                ...metadata
-            }
-            // This line is required because ts-node sucks on GHA.
-            // tslint:disable-next-line: no-any
-        } as any;
-    }
     protected generateNotebookJson() {
         const json = super.generateNotebookJson();
+        if (this.document && this.isTrusted) {
+            // The metadata will be in the notebook document.
+            const metadata = getNotebookMetadata(this.document);
+            if (metadata) {
+                json.metadata = metadata;
+            }
+        }
         // https://github.com/microsoft/vscode-python/issues/13155
         // Object keys in metadata, cells and the like need to be sorted alphabetically.
         // Jupyter (Python) seems to sort them alphabetically.
@@ -180,16 +101,5 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     protected handleRedo(change: NotebookModelChange): boolean {
         super.handleRedo(change);
         return true;
-    }
-    private getCell(cellId: string) {
-        const cell = this.cells.find((item) => item.id === cellId);
-        if (!cell) {
-            traceError(
-                `Syncing Cell Editor aborted, Unable to find corresponding ICell for ${cellId}`,
-                new Error('ICell not found')
-            );
-            return;
-        }
-        return cell;
     }
 }

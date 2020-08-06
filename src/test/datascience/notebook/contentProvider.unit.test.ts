@@ -5,16 +5,17 @@
 
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { Uri } from 'vscode';
+import { Memento, Uri } from 'vscode';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import type { NotebookContentProvider as VSCodeNotebookContentProvider } from 'vscode-proposed';
 import { NotebookCellData } from '../../../../typings/vscode-proposed';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { ICryptoUtils } from '../../../client/common/types';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
 import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/notebook/notebookEditorCompatibilitySupport';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
-import { CellState, INotebookModel } from '../../../client/datascience/types';
+import { createNotebookModel } from './helper';
 // tslint:disable: no-any
 suite('DataScience - NativeNotebook ContentProvider', () => {
     let storageProvider: INotebookStorageProvider;
@@ -30,10 +31,14 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
     [true, false].forEach((isNotebookTrusted) => {
         suite(isNotebookTrusted ? 'Trusted Notebook' : 'Un-trusted notebook', () => {
             test('Return notebook with 2 cells', async () => {
-                const model: Partial<INotebookModel> = {
-                    cells: [
-                        {
-                            data: {
+                const model = createNotebookModel(
+                    isNotebookTrusted,
+                    Uri.file('any'),
+                    instance(mock<Memento>()),
+                    instance(mock<ICryptoUtils>()),
+                    {
+                        cells: [
+                            {
                                 cell_type: 'code',
                                 execution_count: 10,
                                 hasExecutionOrder: true,
@@ -41,28 +46,17 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                                 source: 'print(1)',
                                 metadata: {}
                             },
-                            file: 'a.ipynb',
-                            id: 'MyCellId1',
-                            line: 0,
-                            state: CellState.init
-                        },
-                        {
-                            data: {
+                            {
                                 cell_type: 'markdown',
                                 hasExecutionOrder: false,
                                 source: '# HEAD',
                                 metadata: {}
-                            },
-                            file: 'a.ipynb',
-                            id: 'MyCellId2',
-                            line: 0,
-                            state: CellState.init
-                        }
-                    ],
-                    isTrusted: isNotebookTrusted
-                };
+                            }
+                        ]
+                    }
+                );
                 when(storageProvider.getOrCreateModel(anything(), anything(), anything(), anything())).thenResolve(
-                    (model as unknown) as INotebookModel
+                    model
                 );
 
                 const notebook = await contentProvider.openNotebook(fileUri, {});
@@ -107,16 +101,20 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
             });
 
             test('Return notebook with csharp language', async () => {
-                const model: Partial<INotebookModel> = {
-                    metadata: {
-                        language_info: {
-                            name: 'csharp'
+                const model = createNotebookModel(
+                    isNotebookTrusted,
+                    Uri.file('any'),
+                    instance(mock<Memento>()),
+                    instance(mock<ICryptoUtils>()),
+                    {
+                        metadata: {
+                            language_info: {
+                                name: 'csharp'
+                            },
+                            orig_nbformat: 5
                         },
-                        orig_nbformat: 5
-                    },
-                    cells: [
-                        {
-                            data: {
+                        cells: [
+                            {
                                 cell_type: 'code',
                                 execution_count: 10,
                                 hasExecutionOrder: true,
@@ -124,28 +122,17 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                                 source: 'Console.WriteLine("1")',
                                 metadata: {}
                             },
-                            file: 'a.ipynb',
-                            id: 'MyCellId1',
-                            line: 0,
-                            state: CellState.init
-                        },
-                        {
-                            data: {
+                            {
                                 cell_type: 'markdown',
                                 hasExecutionOrder: false,
                                 source: '# HEAD',
                                 metadata: {}
-                            },
-                            file: 'a.ipynb',
-                            id: 'MyCellId2',
-                            line: 0,
-                            state: CellState.init
-                        }
-                    ],
-                    isTrusted: isNotebookTrusted
-                };
+                            }
+                        ]
+                    }
+                );
                 when(storageProvider.getOrCreateModel(anything(), anything(), anything(), anything())).thenResolve(
-                    (model as unknown) as INotebookModel
+                    model
                 );
 
                 const notebook = await contentProvider.openNotebook(fileUri, {});

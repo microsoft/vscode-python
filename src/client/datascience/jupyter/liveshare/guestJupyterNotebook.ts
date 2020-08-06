@@ -74,6 +74,9 @@ export class GuestJupyterNotebook
     public onKernelRestarted = new EventEmitter<void>().event;
     public onKernelInterrupted = new EventEmitter<void>().event;
     public onDisposed = new EventEmitter<void>().event;
+    public get disposed() {
+        return false;
+    }
     private _jupyterLab?: typeof import('@jupyterlab/services');
     private responseQueue: ResponseQueue = new ResponseQueue();
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;

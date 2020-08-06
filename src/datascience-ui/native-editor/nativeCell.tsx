@@ -708,12 +708,12 @@ export class NativeCell extends React.Component<INativeCellProps> {
                             'Gather the code required to generate this cell into a new notebook'
                         )}
                         hidden={gatherDisabled}
-                        disabled={!this.props.isNotebookTrusted}
+                        disabled={!this.props.isNotebookTrusted || this.props.cellVM.gathering}
                     >
                         <Image
                             baseTheme={this.props.baseTheme}
                             class="image-button-image"
-                            image={ImageName.GatherCode}
+                            image={this.props.cellVM.gathering ? ImageName.Sync : ImageName.GatherCode}
                         />
                     </ImageButton>
                     <ImageButton

@@ -13,7 +13,9 @@ import {
     Event,
     EventEmitter,
     Hover,
+    MarkdownString,
     SignatureHelpContext,
+    SignatureInformation,
     TextDocumentContentChangeEvent,
     Uri
 } from 'vscode';
@@ -63,6 +65,24 @@ import {
     convertToVSCodeCompletionItem
 } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
+
+// These regexes are used to get the text from jupyter output by recognizing escape charactor \x1b
+const DocStringRegex = /\x1b\[1;31mDocstring:\x1b\[0m\s+([\s\S]*?)\r?\n\x1b\[1;31m/;
+const SignatureTextRegex = /\x1b\[1;31mSignature:\x1b\[0m\s+([\s\S]*?)\r?\n\x1b\[1;31m/;
+const TypeRegex = /\x1b\[1;31mType:\x1b\[0m\s+(.*)/;
+
+// This regex is to parse the name and the signature in the signature text from Jupyter,
+// Example string: some_func(param1=1, param2=2) -> int
+// match[1]: some_func
+// match[2]: (param1=1, param2=2) -> int
+const SignatureRegex = /(.+?)(\(([\s\S]*)\)(\s*->[\s\S]*)?)/;
+const GeneralCallableSignature = '(*args, **kwargs)';
+// This regex is to detect whether a markdown provided by the language server is a callable and get its signature.
+// Example string: ```python\n(function) some_func: (*args, **kwargs) -> None\n```
+// match[1]: (*args, **kwargs)
+// If the string is not a callable, no match will be found.
+// Example string: ```python\n(variable) some_var: Any\n```
+const CallableRegex = /python\n\(.+?\) \S+?: (\([\s\S]+?\))/;
 
 // tslint:disable:no-any
 @injectable()
@@ -253,6 +273,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             incomplete: false
         };
     }
+
     protected async provideHover(
         position: monacoEditor.Position,
         wordAtPosition: string | undefined,
@@ -266,9 +287,27 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         ]);
         if (!variableHover && languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
-            const result = await languageServer.provideHover(document, docPos, token);
-            if (result) {
-                return convertToMonacoHover(result);
+            const [lsResult, jupyterResult] = await Promise.all([
+                languageServer.provideHover(document, docPos, token),
+                Promise.race([
+                    this.provideJupyterHover(position, cellId, token),
+                    sleep(Settings.IntellisenseTimeout).then(() => undefined)
+                ])
+            ]);
+            const jupyterHover = jupyterResult ? convertToMonacoHover(jupyterResult) : undefined;
+            const lsHover = lsResult ? convertToMonacoHover(lsResult) : undefined;
+            // If lsHover is not valid or it is not a callable with hints,
+            // while the jupyter hover is a callable with hint,
+            // we prefer to use jupyterHover which provides better callable hints from jupyter kernel.
+            const preferJupyterHover =
+                jupyterHover &&
+                jupyterHover.contents[0] &&
+                this.isCallableWithGoodHint(jupyterHover.contents[0].value) &&
+                (!lsHover || !lsHover.contents[0] || !this.isCallableWithGoodHint(lsHover.contents[0].value));
+            if (preferJupyterHover && jupyterHover) {
+                return jupyterHover;
+            } else if (lsHover) {
+                return lsHover;
             }
         } else if (variableHover) {
             return convertToMonacoHover(variableHover);
@@ -278,6 +317,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             contents: []
         };
     }
+
     protected async provideSignatureHelp(
         position: monacoEditor.Position,
         context: monacoEditor.languages.SignatureHelpContext,
@@ -347,6 +387,37 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 }
             }
         }
+    }
+
+    private isCallableWithGoodHint(markdown: string): boolean {
+        // Check whether the markdown is a callable with the hint that is not (*args, **kwargs)
+        const match = CallableRegex.exec(markdown);
+        return match !== null && match[1] !== GeneralCallableSignature;
+    }
+
+    private convertDocMarkDown(doc: string): string {
+        // For the argument definitions (Starts with :param/:type/:return), to make markdown works well, we need to:
+        // 1. Add one more line break;
+        // 2. Replace '_' with '\_';
+        const docLines = doc.splitLines({ trim: false, removeEmptyEntries: false });
+        return docLines.map((line) => (line.startsWith(':') ? `\n${line.replace(/_/g, '\\_')}` : line)).join('\n');
+    }
+
+    private async provideJupyterHover(
+        position: monacoEditor.Position,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<Hover | undefined> {
+        // Currently we only get the callable information from jupyter,
+        // this aims to handle the case that language server cannot well recognize the dynamically created callables.
+        const callable = await this.getJupyterCallableInspectResult(position, cellId, token);
+        if (callable) {
+            const signatureMarkdown = `\`\`\`python\n(${callable.type}) ${callable.name}: ${callable.signature}\n\`\`\``;
+            const docMarkdown = this.convertDocMarkDown(callable.doc);
+            const result = new MarkdownString(`${signatureMarkdown}\n\n${docMarkdown}`);
+            return { contents: [result] };
+        }
+        return undefined;
     }
 
     private dispatchMessage<M extends IInteractiveWindowMapping, T extends keyof M>(
@@ -465,6 +536,92 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         );
     }
 
+    private convertCallableInspectResult(text: string) {
+        // This method will parse the inspect result from jupyter and get the following values of a callable:
+        // Name, Type (function or method), Signature, Documentation
+
+        const docMatch = DocStringRegex.exec(text);
+        // Variable type will be used in hover result, it could be function/method
+        const typeMatch = TypeRegex.exec(text);
+
+        const signatureTextMatch = SignatureTextRegex.exec(text);
+        // The signature text returned by jupyter contains escape sequences, we need to remove them.
+        // See https://en.wikipedia.org/wiki/ANSI_escape_code#Escape_sequences
+        const signatureText = signatureTextMatch ? signatureTextMatch[1].replace(/\x1b\[[;\d]+m/g, '') : '';
+        // Use this to get different parts of the signature: 1: Callable name, 2: Callable signature
+        const signatureMatch = SignatureRegex.exec(signatureText);
+
+        if (docMatch && typeMatch && signatureMatch) {
+            return {
+                name: signatureMatch[1],
+                type: typeMatch[1],
+                signature: signatureMatch[2],
+                doc: docMatch[1]
+            };
+        }
+        return undefined;
+    }
+
+    private async getJupyterCallableInspectResult(
+        position: monacoEditor.Position,
+        cellId: string,
+        cancelToken: CancellationToken
+    ) {
+        try {
+            const [activeNotebook, document] = await Promise.all([this.getNotebook(cancelToken), this.getDocument()]);
+            if (activeNotebook && document) {
+                const data = document.getCellData(cellId);
+                if (data) {
+                    const offsetInCode = this.getOffsetInCode(data.text, position);
+                    const jupyterResults = await activeNotebook.inspect(data.text, offsetInCode, cancelToken);
+                    if (jupyterResults && jupyterResults.hasOwnProperty('text/plain')) {
+                        return this.convertCallableInspectResult((jupyterResults as any)['text/plain'].toString());
+                    }
+                }
+            }
+        } catch (e) {
+            if (!(e instanceof CancellationError)) {
+                traceWarning(e);
+            }
+        }
+        return undefined;
+    }
+
+    private async provideJupyterSignatureHelp(
+        position: monacoEditor.Position,
+        cellId: string,
+        cancelToken: CancellationToken
+    ): Promise<monacoEditor.languages.SignatureHelp> {
+        const callable = await this.getJupyterCallableInspectResult(position, cellId, cancelToken);
+        let signatures: SignatureInformation[] = [];
+        if (callable) {
+            const signatureInfo: SignatureInformation = {
+                label: callable.signature,
+                documentation: callable.doc,
+                parameters: []
+            };
+            signatures = [signatureInfo];
+        }
+        return {
+            signatures: signatures,
+            activeParameter: 0,
+            activeSignature: 0
+        };
+    }
+
+    private getOffsetInCode(text: string, position: monacoEditor.Position) {
+        const lines = text.splitLines({ trim: false, removeEmptyEntries: false });
+        return lines.reduce((a: number, c: string, i: number) => {
+            if (i < position.lineNumber - 1) {
+                return a + c.length + 1;
+            } else if (i === position.lineNumber - 1) {
+                return a + position.column - 1;
+            } else {
+                return a;
+            }
+        }, 0);
+    }
+
     private async provideJupyterCompletionItems(
         position: monacoEditor.Position,
         _context: monacoEditor.languages.CompletionContext,
@@ -477,17 +634,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 const data = document.getCellData(cellId);
 
                 if (data) {
-                    const lines = data.text.splitLines({ trim: false, removeEmptyEntries: false });
-                    const offsetInCode = lines.reduce((a: number, c: string, i: number) => {
-                        if (i < position.lineNumber - 1) {
-                            return a + c.length + 1;
-                        } else if (i === position.lineNumber - 1) {
-                            return a + position.column - 1;
-                        } else {
-                            return a;
-                        }
-                    }, 0);
-
+                    const offsetInCode = this.getOffsetInCode(data.text, position);
                     const jupyterResults = await activeNotebook.getCompletion(data.text, offsetInCode, cancelToken);
                     if (jupyterResults && jupyterResults.matches) {
                         const filteredMatches = this.filterJupyterMatches(document, jupyterResults, cellId, position);
@@ -585,20 +732,48 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private handleSignatureHelpRequest(request: IProvideSignatureHelpRequest) {
         const cancelSource = new CancellationTokenSource();
         this.cancellationSources.set(request.requestId, cancelSource);
-        this.postTimedResponse(
-            [this.provideSignatureHelp(request.position, request.context, request.cellId, cancelSource.token)],
-            InteractiveWindowMessages.ProvideSignatureHelpResponse,
-            (s) => {
-                if (s && s[0]) {
-                    return { signatureHelp: s[0]!, requestId: request.requestId };
-                } else {
-                    return {
-                        signatureHelp: { signatures: [], activeParameter: 0, activeSignature: 0 },
-                        requestId: request.requestId
-                    };
-                }
+
+        const getSignatureHelp = async (): Promise<monacoEditor.languages.SignatureHelp> => {
+            const jupyterSignatureHelp = this.provideJupyterSignatureHelp(
+                request.position,
+                request.cellId,
+                cancelSource.token
+            );
+
+            const lsSignatureHelp = this.provideSignatureHelp(
+                request.position,
+                request.context,
+                request.cellId,
+                cancelSource.token
+            );
+
+            const defaultHelp = {
+                signatures: [],
+                activeParameter: 0,
+                activeSignature: 0
+            };
+
+            const [lsHelp, jupyterHelp] = await Promise.all([
+                lsSignatureHelp,
+                Promise.race([jupyterSignatureHelp, sleep(Settings.IntellisenseTimeout).then(() => defaultHelp)])
+            ]);
+            // Only when language server result is not valid or the signature is (*args, **kwargs) , we prefer to use the result from jupyter.
+            const preferJupyterHelp =
+                (!lsHelp.signatures[0] || lsHelp.signatures[0].label.startsWith(GeneralCallableSignature)) &&
+                jupyterHelp.signatures[0];
+            return preferJupyterHelp ? jupyterHelp : lsHelp;
+        };
+
+        this.postTimedResponse([getSignatureHelp()], InteractiveWindowMessages.ProvideSignatureHelpResponse, (s) => {
+            if (s && s[0]) {
+                return { signatureHelp: s[0]!, requestId: request.requestId };
+            } else {
+                return {
+                    signatureHelp: { signatures: [], activeParameter: 0, activeSignature: 0 },
+                    requestId: request.requestId
+                };
             }
-        );
+        });
     }
 
     private async update(request: NotebookModelChange): Promise<void> {

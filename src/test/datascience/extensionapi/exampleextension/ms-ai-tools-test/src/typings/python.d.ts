@@ -52,6 +52,7 @@ export interface IJupyterServerUri {
     token: string;
     // tslint:disable-next-line: no-any
     authorizationHeader: any; // JSON object for authorization header.
+    expiration?: Date; // Date/time when header expires and should be refreshed.
 }
 
 export type JupyterServerUriHandle = string;

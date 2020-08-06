@@ -4,7 +4,7 @@
 'use strict';
 
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
-import { Commands as LSCommands } from '../../activation/languageServer/constants';
+import { Commands as LSCommands } from '../../activation/commands';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { KernelSpecInterpreter } from '../../datascience/jupyter/kernels/kernelSelector';
 import { INotebookModel, ISwitchKernelOptions } from '../../datascience/types';
@@ -77,6 +77,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.CreateNewNotebook]: [];
     [Commands.OpenStartPage]: [];
     [LSCommands.ClearAnalyisCache]: [];
+    [LSCommands.RestartLS]: [];
 }
 
 /**

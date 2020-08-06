@@ -27,6 +27,7 @@ import {
     canRunTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
+    executeActiveDocument,
     insertPythonCellAndWait,
     saveActiveNotebook,
     startJupyter,
@@ -147,7 +148,7 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
             cell4 = vscodeNotebook.activeNotebookEditor?.document.cells![3]!;
         }
         initializeCells();
-        await commands.executeCommand('notebook.execute');
+        await executeActiveDocument();
         await sleep(5_000);
         // Wait till 1 & 2 finish & 3rd cell starts executing.
         await waitForCondition(

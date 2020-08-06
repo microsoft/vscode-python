@@ -100,6 +100,8 @@ suite('DataScience - JupyterSession', () => {
         const nbFile = 'file path';
         // tslint:disable-next-line: no-any
         when(contentsManager.newUntitled(deepEqual({ type: 'notebook' }))).thenResolve({ path: nbFile } as any);
+        // tslint:disable-next-line: no-any
+        when(contentsManager.rename(anything(), anything())).thenResolve({ path: nbFile } as any);
         when(contentsManager.delete(anything())).thenResolve();
         when(sessionManager.startNew(anything())).thenResolve(instance(session));
         kernelSpec.setup((k) => k.name).returns(() => 'some name');

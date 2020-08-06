@@ -77,7 +77,7 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
             const frames = stack.split('\n').map((f) => {
                 const result = /\((.*)\)/.exec(f);
                 if (result) {
-                    return result[1];
+                    return result[1].toLowerCase();
                 }
             });
             for (const frame of frames) {

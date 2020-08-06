@@ -9,9 +9,8 @@ import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { noop } from '../../common/utils/misc';
 import { SystemVariables } from '../../common/variables/systemVariables';
-import { Identifiers } from '../constants';
 import { getJupyterConnectionDisplayName } from '../jupyter/jupyterConnection';
-import { IJupyterConnection, IJupyterUriProviderRegistration } from '../types';
+import { IJupyterConnection, IJupyterServerUri } from '../types';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -41,10 +40,10 @@ export function expandWorkingDir(
     return process.cwd();
 }
 
-export async function createRemoteConnectionInfo(
+export function createRemoteConnectionInfo(
     uri: string,
-    providerRegistration: IJupyterUriProviderRegistration
-): Promise<IJupyterConnection> {
+    getJupyterServerUri: (uri: string) => IJupyterServerUri | undefined
+): IJupyterConnection {
     let url: URL;
     try {
         url = new URL(uri);
@@ -53,14 +52,10 @@ export async function createRemoteConnectionInfo(
         throw err;
     }
 
-    const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
-    const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
-    const serverUri = id && uriHandle ? await providerRegistration.getJupyterServerUri(id, uriHandle) : undefined;
-    const baseUrl = serverUri && serverUri.baseUrl ? serverUri.baseUrl : `${url.protocol}//${url.host}${url.pathname}`;
-    const token = serverUri && serverUri.token ? serverUri.token : `${url.searchParams.get('token')}`;
-    const hostName = serverUri && serverUri.baseUrl ? new URL(serverUri.baseUrl).hostname : url.hostname;
-    const displayName =
-        serverUri && serverUri.displayName ? serverUri.displayName : getJupyterConnectionDisplayName(token, baseUrl);
+    const serverUri = getJupyterServerUri(uri);
+    const baseUrl = serverUri ? serverUri.baseUrl : `${url.protocol}//${url.host}${url.pathname}`;
+    const token = serverUri ? serverUri.token : `${url.searchParams.get('token')}`;
+    const hostName = serverUri ? new URL(serverUri.baseUrl).hostname : url.hostname;
 
     return {
         type: 'jupyter',
@@ -70,12 +65,15 @@ export async function createRemoteConnectionInfo(
         localLaunch: false,
         localProcExitCode: undefined,
         valid: true,
-        displayName,
+        displayName:
+            serverUri && serverUri.displayName
+                ? serverUri.displayName
+                : getJupyterConnectionDisplayName(token, baseUrl),
         disconnected: (_l) => {
             return { dispose: noop };
         },
         dispose: noop,
-        authorizationHeader: serverUri ? serverUri.authorizationHeader : undefined,
-        rootDirectory: ''
+        rootDirectory: '',
+        getAuthHeader: serverUri ? () => getJupyterServerUri(uri)?.authorizationHeader : undefined
     };
 }

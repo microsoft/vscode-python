@@ -450,7 +450,7 @@ export class CommandRegistry implements IDisposable {
 
     private reportGatherQuality(val: string) {
         sendTelemetryEvent(Telemetry.GatherQualityReport, undefined, { result: val[0] === 'no' ? 'no' : 'yes' });
-        env.openExternal(Uri.parse(`https://aka.ms/gathersurvey?succeed=${val[0]}`));
+        env.openExternal(Uri.parse(`https://aka.ms/gatherfeedback?succeed=${val[0]}`));
     }
 
     private openPythonExtensionPage() {

@@ -24,7 +24,7 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
-import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
+import { KernelSelector, KernelSpecInterpreter } from '../../jupyter/kernels/kernelSelector';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
@@ -32,7 +32,6 @@ import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
     IDataScienceFileSystem,
-    IJupyterKernelSpec,
     INotebook,
     INotebookExecutionInfo,
     INotebookExecutionLogger,
@@ -181,7 +180,7 @@ export class HostRawNotebookProvider
                 );
 
                 // Get the execution info for our notebook
-                const info = await this.getExecutionInfo(kernelSpecInterpreter.kernelSpec);
+                const info = await this.getExecutionInfo(kernelSpecInterpreter);
 
                 if (rawSession.isConnected) {
                     // Create our notebook
@@ -226,12 +225,12 @@ export class HostRawNotebookProvider
     }
 
     // Get the notebook execution info for this raw session instance
-    private async getExecutionInfo(kernelSpec?: IJupyterKernelSpec): Promise<INotebookExecutionInfo> {
+    private async getExecutionInfo(kernelSpecInterpreter: KernelSpecInterpreter): Promise<INotebookExecutionInfo> {
         return {
             connectionInfo: this.getConnection(),
             uri: Settings.JupyterServerLocalLaunch,
-            interpreter: undefined,
-            kernelSpec: kernelSpec,
+            interpreter: kernelSpecInterpreter.interpreter,
+            kernelSpec: kernelSpecInterpreter.kernelSpec,
             workingDir: await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs),
             purpose: Identifiers.RawPurpose
         };

@@ -74,9 +74,9 @@ export interface IJupyterConnection extends Disposable {
     readonly token: string;
     readonly hostName: string;
     localProcExitCode: number | undefined;
-    // tslint:disable-next-line: no-any
-    authorizationHeader?: any; // Snould be a json object
     readonly rootDirectory: string; // Directory where the notebook server was started.
+    // tslint:disable-next-line: no-any
+    getAuthHeader?(): any; // Snould be a json object
 }
 
 export type INotebookProviderConnection = IRawConnection | IJupyterConnection;
@@ -184,6 +184,7 @@ export interface INotebook extends IAsyncDisposable {
     kernelSocket: Observable<KernelSocketInformation | undefined>;
     readonly identity: Uri;
     readonly status: ServerStatus;
+    readonly disposed: boolean;
     onSessionStatusChanged: Event<ServerStatus>;
     onDisposed: Event<void>;
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
@@ -199,7 +200,7 @@ export interface INotebook extends IAsyncDisposable {
         cancelToken?: CancellationToken,
         silent?: boolean
     ): Promise<ICell[]>;
-    inspect(code: string, cancelToken?: CancellationToken): Promise<JSONObject>;
+    inspect(code: string, offsetInCode?: number, cancelToken?: CancellationToken): Promise<JSONObject>;
     getCompletion(
         cellCode: string,
         offsetInCode: number,
@@ -1336,13 +1337,14 @@ export interface IJupyterServerUri {
     token: string;
     // tslint:disable-next-line: no-any
     authorizationHeader: any; // JSON object for authorization header.
+    expiration?: Date; // Date/time when header expires and should be refreshed.
     displayName: string;
 }
 
 export type JupyterServerUriHandle = string;
 
 export interface IJupyterUriProvider {
-    id: string; // Should be a unique string (like a guid)
+    readonly id: string; // Should be a unique string (like a guid)
     getQuickPickEntryItems(): QuickPickItem[];
     handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
     getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;

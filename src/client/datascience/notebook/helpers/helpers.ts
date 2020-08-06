@@ -25,15 +25,20 @@ import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { CellState, ICell, INotebookModel } from '../../types';
+import { CellState, ICell, IJupyterKernelSpec, INotebookModel } from '../../types';
 import { JupyterNotebookView } from '../constants';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { LiveKernelModel } from '../../jupyter/kernels/types';
+import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
+import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
+import { INotebookContentProvider } from '../types';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
-interface IBaseCellVSCodeMetadata {
+export interface IBaseCellVSCodeMetadata {
     end_execution_time?: string;
     start_execution_time?: string;
 }
@@ -53,10 +58,33 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     }
 }
 
+export function getNotebookMetadata(document: NotebookDocument): nbformat.INotebookMetadata | undefined {
+    // tslint:disable-next-line: no-any
+    const notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
+    return notebookContent?.metadata;
+}
+export function updateKernelInNotebookMetadata(
+    document: NotebookDocument,
+    kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+    interpreter: PythonInterpreter | undefined,
+    notebookContentProvider: INotebookContentProvider
+) {
+    // tslint:disable-next-line: no-any
+    const notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
+    if (!notebookContent || !notebookContent.metadata) {
+        traceError('VSCode Notebook does not have custom metadata', notebookContent);
+        throw new Error('VSCode Notebook does not have custom metadata');
+    }
+    const info = updateNotebookMetadata(notebookContent.metadata, interpreter, kernelSpec);
+
+    if (info.changed) {
+        notebookContentProvider.notifyChangesToDocument(document);
+    }
+}
 /**
  * Converts a NotebookModel into VSCode friendly format.
  */
-export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookData {
+export function notebookModelToVSCNotebookData(model: VSCodeNotebookModel): NotebookData {
     const cells = model.cells
         .map(createVSCNotebookCellDataFromCell.bind(undefined, model))
         .filter((item) => !!item)
@@ -67,6 +95,7 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
         cells,
         languages: [defaultLanguage],
         metadata: {
+            custom: model.notebookContentWithoutCells,
             cellEditable: model.isTrusted,
             cellRunnable: model.isTrusted,
             editable: model.isTrusted,
@@ -265,7 +294,7 @@ function createVSCNotebookCellDataFromCodeCell(model: INotebookModel, cell: ICel
     };
 }
 
-function createIOutputFromCellOutputs(cellOutputs: CellOutput[]): nbformat.IOutput[] {
+export function createIOutputFromCellOutputs(cellOutputs: CellOutput[]): nbformat.IOutput[] {
     return cellOutputs
         .map((output) => {
             switch (output.outputKind) {

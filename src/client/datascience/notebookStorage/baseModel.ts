@@ -19,6 +19,83 @@ type KernelIdListEntry = {
     kernelId: string | undefined;
 };
 
+// tslint:disable-next-line: cyclomatic-complexity
+export function updateNotebookMetadata(
+    metadata: nbformat.INotebookMetadata | undefined,
+    interpreter: PythonInterpreter | undefined,
+    kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
+) {
+    let changed = false;
+    let kernelId: string | undefined;
+    // Get our kernel_info and language_info from the current notebook
+    if (
+        interpreter &&
+        interpreter.version &&
+        metadata &&
+        metadata.language_info &&
+        metadata.language_info.version !== interpreter.version.raw
+    ) {
+        metadata.language_info.version = interpreter.version.raw;
+        changed = true;
+    } else if (!interpreter && metadata?.language_info) {
+        // It's possible, such as with raw kernel and a default kernelspec to not have interpreter info
+        // for this case clear out old invalid language_info entries as they are related to the previous execution
+        metadata.language_info = undefined;
+        changed = true;
+    }
+
+    if (kernelSpec && metadata && !metadata.kernelspec) {
+        // Add a new spec in this case
+        metadata.kernelspec = {
+            name: kernelSpec.name || kernelSpec.display_name || '',
+            display_name: kernelSpec.display_name || kernelSpec.name || ''
+        };
+        kernelId = kernelSpec.id;
+        changed = true;
+    } else if (kernelSpec && metadata && metadata.kernelspec) {
+        // Spec exists, just update name and display_name
+        const name = kernelSpec.name || kernelSpec.display_name || '';
+        const displayName = kernelSpec.display_name || kernelSpec.name || '';
+        if (
+            metadata.kernelspec.name !== name ||
+            metadata.kernelspec.display_name !== displayName ||
+            kernelId !== kernelSpec.id
+        ) {
+            changed = true;
+            metadata.kernelspec.name = name;
+            metadata.kernelspec.display_name = displayName;
+            kernelId = kernelSpec.id;
+        }
+    }
+    return { changed, kernelId };
+}
+
+export function getDefaultNotebookContent(pythonNumber: number = 3): Partial<nbformat.INotebookContent> {
+    // Use this to build our metadata object
+    // Use these as the defaults unless we have been given some in the options.
+    const metadata: nbformat.INotebookMetadata = {
+        language_info: {
+            codemirror_mode: {
+                name: 'ipython',
+                version: pythonNumber
+            },
+            file_extension: '.py',
+            mimetype: 'text/x-python',
+            name: 'python',
+            nbconvert_exporter: 'python',
+            pygments_lexer: `ipython${pythonNumber}`,
+            version: pythonNumber
+        },
+        orig_nbformat: 2
+    };
+
+    // Default notebook data.
+    return {
+        metadata: metadata,
+        nbformat: 4,
+        nbformat_minor: 2
+    };
+}
 export abstract class BaseNotebookModel implements INotebookModel {
     public get onDidDispose() {
         return this._disposed.event;
@@ -139,54 +216,15 @@ export abstract class BaseNotebookModel implements INotebookModel {
             this._editEventEmitter.fire(change);
         }
     }
-
     // tslint:disable-next-line: cyclomatic-complexity
     private updateVersionInfo(
         interpreter: PythonInterpreter | undefined,
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
     ): boolean {
-        let changed = false;
-        // Get our kernel_info and language_info from the current notebook
-        if (
-            interpreter &&
-            interpreter.version &&
-            this.notebookJson.metadata &&
-            this.notebookJson.metadata.language_info &&
-            this.notebookJson.metadata.language_info.version !== interpreter.version.raw
-        ) {
-            this.notebookJson.metadata.language_info.version = interpreter.version.raw;
-            changed = true;
-        } else if (!interpreter && this.notebookJson.metadata?.language_info) {
-            // It's possible, such as with raw kernel and a default kernelspec to not have interpreter info
-            // for this case clear out old invalid language_info entries as they are related to the previous execution
-            this.notebookJson.metadata.language_info = undefined;
-            changed = true;
+        const { changed, kernelId } = updateNotebookMetadata(this.notebookJson.metadata, interpreter, kernelSpec);
+        if (kernelId) {
+            this.kernelId = kernelId;
         }
-
-        if (kernelSpec && this.notebookJson.metadata && !this.notebookJson.metadata.kernelspec) {
-            // Add a new spec in this case
-            this.notebookJson.metadata.kernelspec = {
-                name: kernelSpec.name || kernelSpec.display_name || '',
-                display_name: kernelSpec.display_name || kernelSpec.name || ''
-            };
-            this.kernelId = kernelSpec.id;
-            changed = true;
-        } else if (kernelSpec && this.notebookJson.metadata && this.notebookJson.metadata.kernelspec) {
-            // Spec exists, just update name and display_name
-            const name = kernelSpec.name || kernelSpec.display_name || '';
-            const displayName = kernelSpec.display_name || kernelSpec.name || '';
-            if (
-                this.notebookJson.metadata.kernelspec.name !== name ||
-                this.notebookJson.metadata.kernelspec.display_name !== displayName ||
-                this.kernelId !== kernelSpec.id
-            ) {
-                changed = true;
-                this.notebookJson.metadata.kernelspec.name = name;
-                this.notebookJson.metadata.kernelspec.display_name = displayName;
-                this.kernelId = kernelSpec.id;
-            }
-        }
-
         // Update our kernel id in our global storage too
         this.setStoredKernelId(kernelSpec?.id);
 
@@ -195,32 +233,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
 
     private ensureNotebookJson() {
         if (!this.notebookJson || !this.notebookJson.metadata) {
-            // const pythonNumber = await this.extractPythonMainVersion(this._state.notebookJson);
-            const pythonNumber = this.pythonNumber;
-            // Use this to build our metadata object
-            // Use these as the defaults unless we have been given some in the options.
-            const metadata: nbformat.INotebookMetadata = {
-                language_info: {
-                    codemirror_mode: {
-                        name: 'ipython',
-                        version: pythonNumber
-                    },
-                    file_extension: '.py',
-                    mimetype: 'text/x-python',
-                    name: 'python',
-                    nbconvert_exporter: 'python',
-                    pygments_lexer: `ipython${pythonNumber}`,
-                    version: pythonNumber
-                },
-                orig_nbformat: 2
-            };
-
-            // Default notebook data.
-            this.notebookJson = {
-                metadata: metadata,
-                nbformat: 4,
-                nbformat_minor: 2
-            };
+            this.notebookJson = getDefaultNotebookContent(this.pythonNumber);
         }
     }
 

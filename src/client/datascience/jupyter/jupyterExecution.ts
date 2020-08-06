@@ -18,18 +18,20 @@ import { IServiceContainer } from '../../ioc/types';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
-import { Commands, Telemetry } from '../constants';
+import { Commands, Identifiers, Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import {
     IJupyterConnection,
     IJupyterExecution,
+    IJupyterServerUri,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
     IJupyterUriProviderRegistration,
     INotebookServer,
     INotebookServerLaunchInfo,
-    INotebookServerOptions
+    INotebookServerOptions,
+    JupyterServerUriHandle
 } from '../types';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { createRemoteConnectionInfo, expandWorkingDir } from './jupyterUtils';
@@ -45,6 +47,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private disposed: boolean = false;
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
     private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration;
+    private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
+    private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
 
     constructor(
         _liveShare: ILiveShareApi,
@@ -73,6 +77,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // When config changes happen, recreate our commands.
                     this.onSettingsChanged();
                 }
+                if (e.affectsConfiguration('python.dataScience.jupyterServerURI', undefined)) {
+                    // When server URI changes, clear our pending URI timeouts
+                    this.clearTimeouts();
+                }
             });
             this.disposableRegistry.push(disposable);
         }
@@ -84,6 +92,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     public dispose(): Promise<void> {
         this.disposed = true;
+        this.clearTimeouts();
         return Promise.resolve();
     }
 
@@ -377,8 +386,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 throw new Error(localize.DataScience.jupyterNotebookFailure().format(''));
             }
         } else {
+            // Prepare our map of server URIs
+            await this.updateServerUri(options.uri);
+
             // If we have a URI spec up a connection info for it
-            return createRemoteConnectionInfo(options.uri, this.jupyterPickerRegistration);
+            return createRemoteConnectionInfo(options.uri, this.getServerUri.bind(this));
         }
     }
 
@@ -395,5 +407,46 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values
         this.usablePythonInterpreter = undefined;
+    }
+
+    private extractJupyterServerHandleAndId(uri: string): { handle: JupyterServerUriHandle; id: string } | undefined {
+        const url: URL = new URL(uri);
+
+        // Id has to be there too.
+        const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
+        const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
+        return id && uriHandle ? { handle: uriHandle, id } : undefined;
+    }
+
+    private clearTimeouts() {
+        // tslint:disable-next-line: no-any
+        this.pendingTimeouts.forEach((t) => clearTimeout(t as any));
+        this.pendingTimeouts = [];
+    }
+
+    private getServerUri(uri: string): IJupyterServerUri | undefined {
+        const idAndHandle = this.extractJupyterServerHandleAndId(uri);
+        if (idAndHandle) {
+            return this.uriToJupyterServerUri.get(uri);
+        }
+    }
+
+    private async updateServerUri(uri: string): Promise<void> {
+        const idAndHandle = this.extractJupyterServerHandleAndId(uri);
+        if (idAndHandle) {
+            const serverUri = await this.jupyterPickerRegistration.getJupyterServerUri(
+                idAndHandle.id,
+                idAndHandle.handle
+            );
+            this.uriToJupyterServerUri.set(uri, serverUri);
+            // See if there's an expiration date
+            if (serverUri.expiration) {
+                const timeoutInMS = serverUri.expiration.getTime() - Date.now();
+                // Week seems long enough (in case the expiration is ridiculous)
+                if (timeoutInMS > 0 && timeoutInMS < 604800000) {
+                    this.pendingTimeouts.push(setTimeout(() => this.updateServerUri(uri).ignoreErrors(), timeoutInMS));
+                }
+            }
+        }
     }
 }

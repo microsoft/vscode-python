@@ -2458,17 +2458,7 @@ df.head()`;
                         assert.ok(fileObject.cells[0].metadata.collapsed, 'Metadata erased during execution');
 
                         // Old language info should be changed by the new execution
-                        if (!ioc.shouldMockJupyter) {
-                            // For real jupyter raw kernel will use a default kernel without associated interpreter language_info
-                            // so the execution should clear it out
-                            assert.isUndefined(
-                                fileObject.metadata.language_info,
-                                'Old language info should be cleared out'
-                            );
-                        } else {
-                            // In the mock case we return a mock kernelspec + interpreter language info, so it should be replaced
-                            assert.notEqual(fileObject.metadata.language_info.version, '1.2.3');
-                        }
+                        assert.notEqual(fileObject.metadata.language_info.version, '1.2.3');
 
                         // Some tests don't have a kernelspec, in which case we should remove it
                         // If there is a spec, we should update the name and display name

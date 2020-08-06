@@ -191,7 +191,7 @@ export async function trustAllNotebooks() {
     dsSettings.alwaysTrustNotebooks = true;
 }
 export async function startJupyter() {
-    const { editorProvider } = await getServices();
+    const { editorProvider, vscodeNotebook } = await getServices();
     await closeActiveWindows();
 
     const disposables: IDisposable[] = [];
@@ -207,14 +207,10 @@ export async function startJupyter() {
         const tempIPynb = await createTemporaryNotebook(templateIPynb, disposables);
         await editorProvider.open(Uri.file(tempIPynb));
         await insertPythonCell('print("Hello World")', 0);
-        const model = editorProvider.activeEditor?.model;
-        editorProvider.activeEditor?.runAllCells();
-        // Wait for 15s for Jupyter to start.
-        await waitForCondition(
-            async () => (model?.cells[0].data.outputs as []).length > 0,
-            15_000,
-            'Cell not executed'
-        );
+        const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
+        await executeActiveDocument();
+        // Wait for Jupyter to start.
+        await waitForCondition(async () => cell.outputs.length > 0, 30_000, 'Cell not executed');
 
         await closeActiveWindows();
     } finally {
@@ -400,9 +396,36 @@ export function createNotebookModel(
             data: c
         };
     });
-    return new VSCodeNotebookModel(trusted, uri, JSON.parse(JSON.stringify(cells)), globalMemento, crypto);
+    return new VSCodeNotebookModel(trusted, uri, JSON.parse(JSON.stringify(cells)), globalMemento, crypto, nbJson);
 }
-
+export async function executeCell(cell: NotebookCell) {
+    const api = await initialize();
+    const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+    await waitForCondition(
+        async () => !!vscodeNotebook.activeNotebookEditor?.kernel,
+        60_000, // Validating kernel can take a while.
+        'Timeout waiting for active kernel'
+    );
+    if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.kernel) {
+        throw new Error('No notebook or kernel');
+    }
+    // Execute cells (it should throw an error).
+    vscodeNotebook.activeNotebookEditor.kernel.executeCell(cell.notebook, cell);
+}
+export async function executeActiveDocument() {
+    const api = await initialize();
+    const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+    await waitForCondition(
+        async () => !!vscodeNotebook.activeNotebookEditor?.kernel,
+        60_000, // Validating kernel can take a while.
+        'Timeout waiting for active kernel'
+    );
+    if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.kernel) {
+        throw new Error('No notebook or kernel');
+    }
+    // Execute cells (it should throw an error).
+    vscodeNotebook.activeNotebookEditor.kernel.executeAllCells(vscodeNotebook.activeNotebookEditor.document);
+}
 export function createNotebookDocument(
     model: VSCodeNotebookModel,
     viewType: string = JupyterNotebookView

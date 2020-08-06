@@ -32,8 +32,8 @@ import { IServiceContainer } from '../ioc/types';
 import { PythonInterpreter } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
+import { Commands } from './commands';
 import { LanguageServerChangeHandler } from './common/languageServerChangeHandler';
-import { Commands } from './languageServer/constants';
 import { RefCountedLanguageServer } from './refCountedLanguageServer';
 import {
     IExtensionActivationService,
