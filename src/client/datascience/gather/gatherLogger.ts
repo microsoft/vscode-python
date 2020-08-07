@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { extensions } from 'vscode';
-import { concatMultilineStringInput } from '../../../datascience-ui/common';
+import { concatMultilineString } from '../../../datascience-ui/common';
 import { traceError } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -40,7 +40,7 @@ export class GatherLogger implements IGatherLogger {
 
                 // Strip first line marker. We can't do this at JupyterServer.executeCodeObservable because it messes up hashing
                 const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
-                cloneCell.data.source = cellMatcher.stripFirstMarker(concatMultilineStringInput(vscCell.data.source));
+                cloneCell.data.source = cellMatcher.stripFirstMarker(concatMultilineString(vscCell.data.source));
 
                 try {
                     this.gather.logExecution(cloneCell);

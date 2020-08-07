@@ -16,7 +16,7 @@ import {
     NativeMouseCommandTelemetry
 } from '../../client/datascience/constants';
 import { CellState } from '../../client/datascience/types';
-import { concatMultilineStringInput } from '../common';
+import { concatMultilineString } from '../common';
 import { CellInput } from '../interactive-common/cellInput';
 import { CellOutput } from '../interactive-common/cellOutput';
 import { ExecutionCount } from '../interactive-common/executionCount';
@@ -567,7 +567,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private getCurrentCode(): string {
         // Input may not be open at this time. If not, then use current cell contents.
         const contents = this.inputRef.current ? this.inputRef.current.getContents() : undefined;
-        return contents || concatMultilineStringInput(this.props.cellVM.cell.data.source);
+        return contents || concatMultilineString(this.props.cellVM.cell.data.source);
     }
 
     private renderMiddleToolbar = () => {

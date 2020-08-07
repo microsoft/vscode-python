@@ -14,7 +14,7 @@ import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { Identifiers } from '../../client/datascience/constants';
 import { IEditorPosition } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState, ICell, IDataScienceExtraSettings, IMessageCell } from '../../client/datascience/types';
-import { concatMultilineStringInput, splitMultilineString } from '../common';
+import { concatMultilineString, splitMultilineString } from '../common';
 import { createCodeCell } from '../common/cellFactory';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
 
@@ -261,7 +261,7 @@ export function extractInputText(inputCellVM: ICellViewModel, settings: IDataSci
         }
     }
 
-    return concatMultilineStringInput(source);
+    return concatMultilineString(source);
 }
 
 export function createCellVM(
@@ -295,7 +295,7 @@ export function createCellVM(
         inputCell.data.cell_type === 'code'
             ? extractInputText(vm, settings)
             : inputCell.data.cell_type === 'markdown'
-            ? concatMultilineStringInput(vm.cell.data.source)
+            ? concatMultilineString(vm.cell.data.source)
             : '';
     if (inputText) {
         inputLinesCount = inputText.split('\n').length;

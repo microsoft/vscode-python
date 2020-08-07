@@ -23,7 +23,7 @@ import { InteractiveWindow } from '../../client/datascience/interactive-window/i
 import { AskedForPerFileSettingKey } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
-import { concatMultilineStringInput } from '../../datascience-ui/common';
+import { concatMultilineString } from '../../datascience-ui/common';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
@@ -995,10 +995,10 @@ for i in range(0, 100):
                 assert.equal(cells.length, 2, 'Not enough cells generated');
 
                 // Run the first cell
-                await addCode(ioc, concatMultilineStringInput(cells[0].data.source));
+                await addCode(ioc, concatMultilineString(cells[0].data.source));
 
                 // Last cell should generate a series of updates. Verify we end up with a single image
-                await addCode(ioc, concatMultilineStringInput(cells[1].data.source));
+                await addCode(ioc, concatMultilineString(cells[1].data.source));
                 const cell = getLastOutputCell(ioc.getInteractiveWebPanel(undefined).wrapper, 'InteractiveCell');
 
                 const output = cell!.find('div.cell-output');

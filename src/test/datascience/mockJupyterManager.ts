@@ -40,7 +40,7 @@ import {
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceManager } from '../../client/ioc/types';
 import { PythonInterpreter } from '../../client/pythonEnvironments/info';
-import { concatMultilineStringInput } from '../../datascience-ui/common';
+import { concatMultilineString } from '../../datascience-ui/common';
 import { noop, sleep } from '../core';
 import { MockJupyterSession } from './mockJupyterSession';
 import { MockProcessService } from './mockProcessService';
@@ -306,7 +306,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     ) {
         const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
         cells.forEach((c) => {
-            const key = concatMultilineStringInput(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
+            const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
                 const taggedResult = {
                     output_type: 'generator'
@@ -349,7 +349,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     ) {
         const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
         cells.forEach((c) => {
-            const key = concatMultilineStringInput(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
+            const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
                 const taggedResult = {
                     output_type: 'input'
@@ -390,7 +390,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         cells.forEach((c) => {
             const cellMatcher = new CellMatcher();
             const key = cellMatcher
-                .stripFirstMarker(concatMultilineStringInput(c.data.source))
+                .stripFirstMarker(concatMultilineString(c.data.source))
                 .replace(LineFeedRegEx, '')
                 .toLowerCase();
             if (c.data.cell_type === 'code') {

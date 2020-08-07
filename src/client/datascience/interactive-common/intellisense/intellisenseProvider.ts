@@ -21,7 +21,7 @@ import {
 } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
-import { concatMultilineStringInput } from '../../../../datascience-ui/common';
+import { concatMultilineString } from '../../../../datascience-ui/common';
 import { ILanguageServer, ILanguageServerCache } from '../../../activation/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
@@ -793,7 +793,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         return cells
             .filter((c) => c.data.cell_type === 'code')
             .map((c) => {
-                return { code: concatMultilineStringInput(c.data.source), id: c.id };
+                return { code: concatMultilineString(c.data.source), id: c.id };
             });
     }
 
@@ -817,7 +817,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             case 'remove':
                 changes = document.insertCell(
                     request.cell.id,
-                    concatMultilineStringInput(request.cell.data.source),
+                    concatMultilineString(request.cell.data.source),
                     request.index
                 );
                 break;
@@ -853,7 +853,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             case 'insert':
                 changes = document.insertCell(
                     request.cell.id,
-                    concatMultilineStringInput(request.cell.data.source),
+                    concatMultilineString(request.cell.data.source),
                     request.codeCellAboveId || request.index
                 );
                 break;
@@ -887,7 +887,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                     .filter((c) => c.data.cell_type === 'code')
                     .map((cell) => {
                         return {
-                            code: concatMultilineStringInput(cell.data.source),
+                            code: concatMultilineString(cell.data.source),
                             id: cell.id
                         };
                     }),

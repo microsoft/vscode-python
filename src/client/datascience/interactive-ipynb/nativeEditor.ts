@@ -81,7 +81,7 @@ import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 import type { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
+import { concatMultilineString, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { EnableTrustedNotebooks } from '../../common/experiments/groups';
@@ -653,7 +653,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     cell.data.metadata.tags = cell.data.metadata.tags.filter((t) => t !== 'outputPrepend');
                 }
 
-                const code = concatMultilineStringInput(cell.data.source);
+                const code = concatMultilineString(cell.data.source);
                 // Send to ourselves.
                 await this.submitCode(code, Identifiers.EmptyFileName, 0, cell.id, cell.data, undefined, cancelToken);
             }
@@ -772,7 +772,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                             runByLine.cell,
                             runByLine.expectedExecutionCount
                         );
-                        const code = concatMultilineStringInput(runByLine.cell.data.source);
+                        const code = concatMultilineString(runByLine.cell.data.source);
                         // Send to ourselves.
                         await this.submitCode(
                             code,
