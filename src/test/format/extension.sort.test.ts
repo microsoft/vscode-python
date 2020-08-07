@@ -170,8 +170,7 @@ suite('Sorting', () => {
         assert.equal(textDocument.isDirty, true, 'Document should have been modified (pre sort)');
         await sorter.sortImports(textDocument.uri);
         assert.equal(textDocument.isDirty, true, 'Document should have been modified by sorting');
-        // 'os.EOL' is equal to '\r\n` on windows, where document ends line with '\n' character (in isort5), hence using '\n' in 'newValue'
-        const newValue = `from third_party import lib0\nfrom third_party import lib1\nfrom third_party import lib2\nfrom third_party import lib3\nfrom third_party import lib4\nfrom third_party import lib5\nfrom third_party import lib6\nfrom third_party import lib7\nfrom third_party import lib8\nfrom third_party import lib9\n`;
+        const newValue = `from third_party import lib0${EOL}from third_party import lib1${EOL}from third_party import lib2${EOL}from third_party import lib3${EOL}from third_party import lib4${EOL}from third_party import lib5${EOL}from third_party import lib6${EOL}from third_party import lib7${EOL}from third_party import lib8${EOL}from third_party import lib9${EOL}`;
         assert.equal(textDocument.getText(), newValue);
     });
 });
