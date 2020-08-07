@@ -94,27 +94,27 @@
     },
     "def": {
         "prefix": "def",
-        "body": ["def ${1:funcname}(${2:parameter_list}):", "\t${3:pass}"],
+        "body": ["def ${1:funcname}(${2:parameter_list}):", "\t\"\"\"", "\t${3:docstring}", "\t\"\"\"","\t${4:pass}"],
         "description": "Code snippet for a function definition"
     },
     "def(class method)": {
         "prefix": "def(class method)",
-        "body": ["def ${1:funcname}(self, ${2:parameter_list}):", "\t${3:pass}"],
+        "body": ["def ${1:funcname}(self, ${2:parameter_list}):", "\t\"\"\"", "\t${3:docstring}", "\t\"\"\"", "\t${4:pass}"],
         "description": "Code snippet for a class method"
     },
     "def(static class method)": {
         "prefix": "def(static class method)",
-        "body": ["@staticmethod", "def ${1:funcname}(${2:parameter_list}):", "\t${3:pass}"],
+        "body": ["@staticmethod", "def ${1:funcname}(${2:parameter_list}):", "\t\"\"\"", "\t${3:docstring}", "\t\"\"\"", "\t${4:pass}"],
         "description": "Code snippet for a static class method"
     },
     "def(abstract class method)": {
         "prefix": "def(abstract class method)",
-        "body": ["def ${1:funcname}(self, ${2:parameter_list}):", "\traise NotImplementedError"],
+        "body": ["def ${1:funcname}(self, ${2:parameter_list}):", "\t\"\"\"", "\t${3:docstring}", "\t\"\"\"", "\traise NotImplementedError"],
         "description": "Code snippet for an abstract class method"
     },
     "class": {
         "prefix": "class",
-        "body": ["class ${1:classname}(${2:object}):", "\t${3:pass}"],
+        "body": ["class ${1:classname}(${2:object}):", "\t\"\"\"", "\t${3:docstring}", "\t\"\"\"", "\t${4:pass}"],
         "description": "Code snippet for a class definition"
     },
     "lambda": {
