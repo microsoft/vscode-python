@@ -7,15 +7,18 @@
 future==0.18.2 \
     --hash=sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d \
     # via python-jsonrpc-server
-isort==4.3.21 \
-    --hash=sha256:54da7e92468955c4fceacd0c86bd0ec997b0e1ee80d97f67c35a78b719dccab1 \
-    --hash=sha256:6e811fcb295968434526407adb8796944f1988c5b65e8139058f2014cbe100fd
+isort==5.3.2 \
+    --hash=sha256:5196bd2f5b23dc91215734b1c96c6d28390061d69860a948094c12635d6d64e6 \
+    --hash=sha256:ba83762132a8661d3525f87a86549712fb7d8da79eeb452e01f327ada9e87920 \
+    # via -r requirements.in
 jedi==0.17.2 \
     --hash=sha256:86ed7d9b750603e4ba582ea8edc678657fb4007894a12bcf6f4bb97892f31d20 \
-    --hash=sha256:98cc583fa0f2f8304968199b01b6b4b94f469a1f4a74c1560506ca2a211378b5
+    --hash=sha256:98cc583fa0f2f8304968199b01b6b4b94f469a1f4a74c1560506ca2a211378b5 \
+    # via -r requirements.in
 parso==0.7.0 \
     --hash=sha256:158c140fc04112dc45bca311633ae5033c2c2a7b732fa33d0955bad8152a8dd0 \
     --hash=sha256:908e9fae2144a076d72ae4e25539143d40b8e3eafbaeae03c1bfe226f4cdf12c \
     # via jedi
 python-jsonrpc-server==0.2.0 \
-    --hash=sha256:59ce9c9523c14c493a327b3a27ee37464a36dc2b9d8ab485ecbcedd38840380a
+    --hash=sha256:59ce9c9523c14c493a327b3a27ee37464a36dc2b9d8ab485ecbcedd38840380a \
+    # via -r requirements.in
