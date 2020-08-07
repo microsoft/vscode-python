@@ -323,7 +323,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             renderWithScrollbars = true;
             // Sonar is wrong, TS won't compile without this AS
             const stream = output as nbformat.IStream; // NOSONAR
-            const formatted = concatMultilineStringOutput(stream.text);
+            const formatted = concatMultilineStringInput(stream.text);
             input = {
                 'text/html': formatted.includes('<') ? `<xmp>${formatted}</xmp>` : `<div>${formatted}</div>`
             };

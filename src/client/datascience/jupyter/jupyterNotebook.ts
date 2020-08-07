@@ -1326,12 +1326,12 @@ export class JupyterNotebookBase implements INotebook {
         if (existing) {
             // tslint:disable-next-line:restrict-plus-operands
             existing.text = existing.text + msg.content.text;
-            const originalText = formatStreamText(concatMultilineStringOutput(existing.text));
+            const originalText = formatStreamText(concatMultilineStringInput(existing.text));
             originalTextLength = originalText.length;
             existing.text = trimFunc(originalText);
             trimmedTextLength = existing.text.length;
         } else {
-            const originalText = formatStreamText(concatMultilineStringOutput(msg.content.text));
+            const originalText = formatStreamText(concatMultilineStringInput(msg.content.text));
             originalTextLength = originalText.length;
             // Create a new stream entry
             const output: nbformat.IStream = {
