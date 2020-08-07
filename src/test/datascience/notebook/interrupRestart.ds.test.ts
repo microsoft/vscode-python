@@ -9,6 +9,7 @@ import { commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { createDeferredFromPromise } from '../../../client/common/utils/async';
+import { noop } from '../../../client/common/utils/misc';
 import { KernelProvider } from '../../../client/datascience/jupyter/kernels/kernelProvider';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
@@ -27,7 +28,6 @@ import {
     trustAllNotebooks,
     waitForTextOutputInVSCode
 } from './helper';
-import { noop } from '../../../client/common/utils/misc';
 // tslint:disable-next-line: no-var-requires no-require-imports
 
 // tslint:disable: no-any no-invalid-this
