@@ -92,6 +92,8 @@ export namespace Commands {
     export const MoveCellsDown = 'python.datascience.moveCellsDown';
     export const ChangeCellToMarkdown = 'python.datascience.changeCellToMarkdown';
     export const ChangeCellToCode = 'python.datascience.changeCellToCode';
+    export const GotoNextCellInFile = 'python.datascience.gotoNextCellInFile';
+    export const GotoPrevCellInFile = 'python.datascience.gotoPrevCellInFile';
     export const ScrollToCell = 'python.datascience.scrolltocell';
     export const CreateNewNotebook = 'python.datascience.createnewnotebook';
     export const ViewJupyterOutput = 'python.datascience.viewJupyterOutput';
@@ -189,6 +191,8 @@ export enum Telemetry {
     MoveCellsDown = 'DATASCIENCE.RUN_MOVE_CELLS_DOWN',
     ChangeCellToMarkdown = 'DATASCIENCE.RUN_CHANGE_CELL_TO_MARKDOWN',
     ChangeCellToCode = 'DATASCIENCE.RUN_CHANGE_CELL_TO_CODE',
+    GotoNextCellInFile = 'DATASCIENCE.GOTO_NEXT_CELL_IN_FILE',
+    GotoPrevCellInFile = 'DATASCIENCE.GOTO_PREV_CELL_IN_FILE',
     RunSelectionOrLine = 'DATASCIENCE.RUN_SELECTION_OR_LINE',
     RunToLine = 'DATASCIENCE.RUN_TO_LINE',
     RunFromLine = 'DATASCIENCE.RUN_FROM_LINE',

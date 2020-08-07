@@ -654,6 +654,40 @@ export class CodeWatcher implements ICodeWatcher {
         });
     }
 
+    @captureTelemetry(Telemetry.GotoNextCellInFile)
+    public gotoNextCell() {
+        const editor = this.documentManager.activeTextEditor;
+        if (!editor || !editor.selection) {
+            return;
+        }
+
+        const currentSelection = editor.selection;
+
+        const currentRunCellLens = this.getCurrentCellLens(currentSelection.start);
+        const nextRunCellLens = this.getNextCellLens(currentSelection.start);
+
+        if (currentRunCellLens && nextRunCellLens) {
+            this.advanceToRange(nextRunCellLens.range);
+        }
+    }
+
+    @captureTelemetry(Telemetry.GotoPrevCellInFile)
+    public gotoPreviousCell() {
+        const editor = this.documentManager.activeTextEditor;
+        if (!editor || !editor.selection) {
+            return;
+        }
+
+        const currentSelection = editor.selection;
+
+        const currentRunCellLens = this.getCurrentCellLens(currentSelection.start);
+        const prevRunCellLens = this.getPreviousCellLens(currentSelection.start);
+
+        if (currentRunCellLens && prevRunCellLens) {
+            this.advanceToRange(prevRunCellLens.range);
+        }
+    }
+
     private applyToCells(callback: (editor: TextEditor, cell: ICellRange, cellIndex: number) => void) {
         const editor = this.documentManager.activeTextEditor;
         const startEndCellIndex = this.getStartEndCellIndex(editor?.selection);
@@ -1048,6 +1082,18 @@ export class CodeWatcher implements ICodeWatcher {
             return this.codeLenses.find(
                 (l: CodeLens, i: number) =>
                     l.command !== undefined && l.command.command === Commands.RunCell && i > currentIndex
+            );
+        }
+        return undefined;
+    }
+
+    private getPreviousCellLens(pos: Position): CodeLens | undefined {
+        const currentIndex = this.codeLenses.findIndex(
+            (l) => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell
+        );
+        if (currentIndex >= 1) {
+            return this.codeLenses.find(
+                (l: CodeLens, i: number) => l.command !== undefined && i < currentIndex && i + 1 === currentIndex
             );
         }
         return undefined;
