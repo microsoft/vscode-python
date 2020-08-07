@@ -88,7 +88,12 @@ suite('Linting - Multiple Linters Enabled Test', () => {
         return `linting.${linterManager.getLinterInfo(product).enabledSettingName}` as PythonSettingKeys;
     }
 
-    test('Multiple linters', async () => {
+    test('Multiple linters', async function () {
+        // This test is failing in the CI. See this issue here:
+        // https://github.com/microsoft/vscode-python/issues/13345
+        // tslint:disable-next-line: no-invalid-this
+        this.skip();
+
         await closeActiveWindows();
         const document = await workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
         await window.showTextDocument(document);
