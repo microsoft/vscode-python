@@ -21,6 +21,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
     protected vscfs: FileSystem;
     private globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>;
     private fsPathUtils: IFileSystemPathUtils;
+    private pendingIO = new Map<string, Thenable<any>[]>();
 
     constructor() {
         this.globFiles = promisify(glob);
@@ -111,15 +112,13 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
 
     public async readLocalData(filename: string): Promise<Buffer> {
         const uri = Uri.file(filename);
-        const data = await this.vscfs.readFile(uri);
+        const data = await this.synchronizedRead(uri);
         return Buffer.from(data);
     }
 
     public async readLocalFile(filename: string): Promise<string> {
         const uri = Uri.file(filename);
-        const result = await this.vscfs.readFile(uri);
-        const data = Buffer.from(result);
-        return data.toString(ENCODING);
+        return this.readFile(uri);
     }
 
     public async searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
@@ -138,8 +137,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
 
     public async writeLocalFile(filename: string, text: string | Buffer): Promise<void> {
         const uri = Uri.file(filename);
-        const data = typeof text === 'string' ? Buffer.from(text) : text;
-        await this.vscfs.writeFile(uri, data);
+        return this.writeFile(uri, text);
     }
 
     // URI-based filesystem functions for interacting with files provided by VS Code
@@ -164,7 +162,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
     }
 
     public async readFile(uri: Uri): Promise<string> {
-        const result = await this.vscfs.readFile(uri);
+        const result = await this.synchronizedRead(uri);
         const data = Buffer.from(result);
         return data.toString(ENCODING);
     }
@@ -173,9 +171,9 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
         return this.vscfs.stat(uri);
     }
 
-    public async writeFile(uri: Uri, text: string | Buffer): Promise<void> {
+    public writeFile(uri: Uri, text: string | Buffer): Promise<void> {
         const data = typeof text === 'string' ? Buffer.from(text) : text;
-        await this.vscfs.writeFile(uri, data);
+        return this.synchronizedWrite(uri, data);
     }
 
     private async lstat(filename: string): Promise<FileStat> {
@@ -218,5 +216,25 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
             return stat.type === FileType.Unknown;
         }
         return (stat.type & fileType) === fileType;
+    }
+
+    private async synchronizedRead(uri: Uri): Promise<Uint8Array> {
+        // VSCFS does not guarantee that a write followed by a read will read the data
+        // from the write. We need to enforce order ourselves.
+        const pendingPromises = this.pendingIO.get(uri.toString()) || [];
+        await Promise.all(pendingPromises);
+        const readPromise = this.vscfs.readFile(uri);
+        this.pendingIO.set(uri.toString(), [readPromise]);
+        return readPromise;
+    }
+
+    private async synchronizedWrite(uri: Uri, content: Uint8Array): Promise<void> {
+        // VSCFS does not guarantee that a write followed by a read will read the data
+        // from the write. We need to enforce order ourselves.
+        const pendingPromises = this.pendingIO.get(uri.toString()) || [];
+        await Promise.all(pendingPromises);
+        const writePromise = this.vscfs.writeFile(uri, content);
+        this.pendingIO.set(uri.toString(), [writePromise]);
+        return writePromise;
     }
 }

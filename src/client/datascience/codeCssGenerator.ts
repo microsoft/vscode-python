@@ -99,7 +99,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         @inject(IThemeFinder) private themeFinder: IThemeFinder,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem
-    ) {}
+    ) { }
 
     public generateThemeCss(resource: Resource, isDark: boolean, theme: string): Promise<string> {
         return this.applyThemeData(resource, isDark, theme, '', this.generateCss.bind(this));
@@ -364,8 +364,8 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
             let tokenColors: JSONArray = [];
 
             if (typeof theme.tokenColors === 'string') {
-                const style = await this.fs.readLocalData(theme.tokenColors);
-                tokenColors = JSON.parse(style.toString());
+                const style = await this.fs.readLocalFile(theme.tokenColors);
+                tokenColors = JSON.parse(style);
             } else {
                 tokenColors = theme.tokenColors as JSONArray;
             }

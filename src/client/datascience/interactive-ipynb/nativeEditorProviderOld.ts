@@ -57,6 +57,7 @@ import {
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorOldWebView } from './nativeEditorOldWebView';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
+import { createDeferred } from '../../common/utils/async';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -235,6 +236,19 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
         this.openedEditor(editor);
         return editor;
+    }
+
+    protected async loadNotebookEditor(resource: Uri, panel?: WebviewPanel) {
+        const result = await super.loadNotebookEditor(resource, panel);
+
+        // Wait for monaco ready (it's not really useable until it has a language)
+        const readyPromise = createDeferred();
+        const disposable = result.ready(() => readyPromise.resolve());
+        await result.show();
+        await readyPromise.promise;
+        disposable.dispose();
+
+        return result;
     }
 
     private autoSaveNotebookInHotExitFile(model: INotebookModel) {

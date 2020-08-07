@@ -102,7 +102,8 @@
         "onCommand:python.enableSourceMapSupport",
         "onNotebookEditor:jupyter-notebook",
         "workspaceContains:mspythonconfig.json",
-        "workspaceContains:pyproject.toml"
+        "workspaceContains:pyproject.toml",
+        "onCustomEditor:ms-python.python.notebook.ipynb"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -3343,6 +3344,18 @@
                     }
                 ],
                 "priority": "option"
+            }
+        ],
+        "customEditors": [
+            {
+                "viewType": "ms-python.python.notebook.ipynb",
+                "displayName": "Jupyter Notebook",
+                "selector": [
+                    {
+                        "filenamePattern": "*.ipynb"
+                    }
+                ],
+                "priority": "default"
             }
         ]
     },

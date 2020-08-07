@@ -223,10 +223,12 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: How to have this work for when the keyboard shortcuts are changed?
             case 's': {
-                if ((event.ctrlKey && getOSType() !== OSType.OSX) || (event.metaKey && getOSType() === OSType.OSX)) {
-                    // This is save, save our cells
-                    this.props.save();
-                    this.props.sendCommand(NativeKeyboardCommandTelemetry.Save);
+                if (!this.props.settings?.extraSettings.useCustomEditorApi) {
+                    if ((event.ctrlKey && getOSType() !== OSType.OSX) || (event.metaKey && getOSType() === OSType.OSX)) {
+                        // This is save, save our cells
+                        this.props.save();
+                        this.props.sendCommand(NativeKeyboardCommandTelemetry.Save);
+                    }
                 }
                 break;
             }

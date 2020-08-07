@@ -355,7 +355,7 @@ suite('DataScience - Native Editor Storage', () => {
             new NotebookModelFactory(false)
         );
 
-        return new NotebookStorageProvider(notebookStorage, []);
+        return new NotebookStorageProvider(notebookStorage, [], instance(workspace));
     }
 
     teardown(() => {

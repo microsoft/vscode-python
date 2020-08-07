@@ -165,12 +165,12 @@
         "name": "CustomEditorSupport - control",
         "salt": "CustomEditorSupport",
         "min": 0,
-        "max": 100
+        "max": 0
     },
     {
         "name": "CustomEditorSupport - experiment",
         "salt": "CustomEditorSupport",
-        "max": 0,
+        "max": 100,
         "min": 0
     },
     {

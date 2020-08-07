@@ -564,12 +564,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     protected saveAll() {
-        // Ask user for a save as dialog if no title
-        if (this.isUntitled) {
-            this.commandManager.executeCommand('workbench.action.files.saveAs', this.file);
-        } else {
-            this.commandManager.executeCommand('workbench.action.files.save', this.file);
-        }
+        this.commandManager.executeCommand('workbench.action.files.save', this.file);
     }
 
     private async modelChanged(change: NotebookModelChange) {
