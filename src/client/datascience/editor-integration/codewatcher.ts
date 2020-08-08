@@ -552,17 +552,22 @@ export class CodeWatcher implements ICodeWatcher {
             }
             editor.selection = selection;
         } else {
+            let newCell: ICellRange | undefined;
             // full cell range is selected now decide if expanding or contracting?
             if (isAnchorLessThanActive && startCellIndex < endCellIndex) {
                 // anchor is above active, contract selection by cell below.
-                const newEndCell = cells[endCellIndex - 1];
-                editor.selection = new Selection(startCell.range.start, newEndCell.range.end);
+                newCell = cells[endCellIndex - 1];
+                editor.selection = new Selection(startCell.range.start, newCell.range.end);
             } else {
                 // anchor is below active, expand selection by cell above.
                 if (startCellIndex > 0) {
-                    const aboveCell = cells[startCellIndex - 1];
-                    editor.selection = new Selection(endCell.range.end, aboveCell.range.start);
+                    newCell = cells[startCellIndex - 1];
+                    editor.selection = new Selection(endCell.range.end, newCell.range.start);
                 }
+            }
+
+            if (newCell) {
+                editor.revealRange(newCell.range, TextEditorRevealType.Default);
             }
         }
     }
@@ -613,19 +618,24 @@ export class CodeWatcher implements ICodeWatcher {
             }
             editor.selection = selection;
         } else {
+            let newCell: ICellRange | undefined;
             // full cell range is selected now decide if expanding or contracting?
             if (isAnchorLessEqualActive || startCellIndex === endCellIndex) {
                 // anchor is above active, expand selection by cell below.
                 if (endCellIndex < cells.length - 1) {
-                    const extendCell = cells[endCellIndex + 1];
-                    editor.selection = new Selection(startCell.range.start, extendCell.range.end);
+                    newCell = cells[endCellIndex + 1];
+                    editor.selection = new Selection(startCell.range.start, newCell.range.end);
                 }
             } else {
                 // anchor is below active, contract selection by cell above.
                 if (startCellIndex < endCellIndex) {
-                    const contractCell = cells[startCellIndex + 1];
-                    editor.selection = new Selection(endCell.range.end, contractCell.range.start);
+                    newCell = cells[startCellIndex + 1];
+                    editor.selection = new Selection(endCell.range.end, newCell.range.start);
                 }
+            }
+
+            if (newCell) {
+                editor.revealRange(newCell.range, TextEditorRevealType.Default);
             }
         }
     }
