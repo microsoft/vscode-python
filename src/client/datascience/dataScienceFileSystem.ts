@@ -21,9 +21,6 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
     protected vscfs: FileSystem;
     private globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>;
     private fsPathUtils: IFileSystemPathUtils;
-    // tslint:disable-next-line: no-any
-    private pendingIO = new Map<string, Thenable<any>[]>();
-
     constructor() {
         this.globFiles = promisify(glob);
         this.fsPathUtils = FileSystemPathUtils.withDefaults();
@@ -113,7 +110,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
 
     public async readLocalData(filename: string): Promise<Buffer> {
         const uri = Uri.file(filename);
-        const data = await this.synchronizedRead(uri);
+        const data = await this.vscfs.readFile(uri);
         return Buffer.from(data);
     }
 
@@ -163,7 +160,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
     }
 
     public async readFile(uri: Uri): Promise<string> {
-        const result = await this.synchronizedRead(uri);
+        const result = await this.vscfs.readFile(uri);
         const data = Buffer.from(result);
         return data.toString(ENCODING);
     }
@@ -172,9 +169,9 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
         return this.vscfs.stat(uri);
     }
 
-    public writeFile(uri: Uri, text: string | Buffer): Promise<void> {
+    public async writeFile(uri: Uri, text: string | Buffer): Promise<void> {
         const data = typeof text === 'string' ? Buffer.from(text) : text;
-        return this.synchronizedWrite(uri, data);
+        return this.vscfs.writeFile(uri, data);
     }
 
     private async lstat(filename: string): Promise<FileStat> {
@@ -217,29 +214,5 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
             return stat.type === FileType.Unknown;
         }
         return (stat.type & fileType) === fileType;
-    }
-
-    private async waitForPreviousIO(uri: Uri): Promise<void> {
-        const pendingPromises = this.pendingIO.get(uri.toString()) || [];
-        // Errors for previous IO should be ignored (they would have been handled elsewhere)
-        return Promise.all(pendingPromises).ignoreErrors();
-    }
-
-    private async synchronizedRead(uri: Uri): Promise<Uint8Array> {
-        // VSCFS does not guarantee that a write followed by a read will read the data
-        // from the write. We need to enforce order ourselves.
-        await this.waitForPreviousIO(uri);
-        const readPromise = this.vscfs.readFile(uri);
-        this.pendingIO.set(uri.toString(), [readPromise]);
-        return readPromise;
-    }
-
-    private async synchronizedWrite(uri: Uri, content: Uint8Array): Promise<void> {
-        // VSCFS does not guarantee that a write followed by a read will read the data
-        // from the write. We need to enforce order ourselves.
-        await this.waitForPreviousIO(uri);
-        const writePromise = this.vscfs.writeFile(uri, content);
-        this.pendingIO.set(uri.toString(), [writePromise]);
-        return writePromise;
     }
 }

@@ -135,18 +135,15 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     }
     public async saveCustomDocument(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
         const model = await this.loadModel(document.uri);
-        // 1 second timeout on save so don't wait. Just write and forget
-        this.storage.save(model, cancellation).ignoreErrors();
+        return this.storage.save(model, cancellation);
     }
     public async saveCustomDocumentAs(document: CustomDocument, targetResource: Uri): Promise<void> {
         const model = await this.loadModel(document.uri);
-        // 1 second timeout on save so don't wait. Just write and forget
-        this.storage.saveAs(model, targetResource).ignoreErrors();
+        return this.storage.saveAs(model, targetResource);
     }
     public async revertCustomDocument(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
         const model = await this.loadModel(document.uri);
-        // 1 second time limit on this so don't wait.
-        this.storage.revert(model, cancellation).ignoreErrors();
+        return this.storage.revert(model, cancellation);
     }
     public async backupCustomDocument(
         document: CustomDocument,
