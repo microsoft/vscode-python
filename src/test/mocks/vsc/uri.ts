@@ -7,6 +7,7 @@
 /* tslint:disable */
 
 import { CharCode } from './charCode';
+import * as path from 'path';
 
 export namespace vscUri {
     const isWindows = /^win/.test(process.platform);
@@ -428,6 +429,20 @@ export namespace vscUri {
                 return result;
             }
         }
+
+        static joinPath(uri: URI, ...pathFragment: string[]): URI {
+            if (!uri.path) {
+                throw new Error(`[UriError]: cannot call joinPaths on URI without path`);
+            }
+            let newPath: string;
+            if (isWindows && uri.scheme === 'file') {
+                newPath = URI.file(path.join(uri.fsPath, ...pathFragment)).path;
+            } else {
+                newPath = path.join(uri.path, ...pathFragment);
+            }
+            return uri.with({ path: newPath });
+        }
+
     }
 
     export interface UriComponents {

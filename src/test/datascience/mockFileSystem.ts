@@ -21,7 +21,11 @@ export class MockFileSystem extends DataScienceFileSystem {
         return super.readLocalFile(filePath);
     }
     public async readFile(filePath: Uri): Promise<string> {
-        return this.readLocalFile(filePath.fsPath);
+        const contents = this.contentOverloads.get(filePath.fsPath);
+        if (contents) {
+            return contents;
+        }
+        return super.readFile(filePath);
     }
     public addFileContents(filePath: string, contents: string): void {
         this.contentOverloads.set(filePath, contents);

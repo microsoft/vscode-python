@@ -218,11 +218,16 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
         return (stat.type & fileType) === fileType;
     }
 
+    private async waitForPreviousIO(uri: Uri): Promise<void> {
+        const pendingPromises = this.pendingIO.get(uri.toString()) || [];
+        // Errors for previous IO should be ignored (they would have been handled elsewhere)
+        return Promise.all(pendingPromises).ignoreErrors();
+    }
+
     private async synchronizedRead(uri: Uri): Promise<Uint8Array> {
         // VSCFS does not guarantee that a write followed by a read will read the data
         // from the write. We need to enforce order ourselves.
-        const pendingPromises = this.pendingIO.get(uri.toString()) || [];
-        await Promise.all(pendingPromises);
+        await this.waitForPreviousIO(uri);
         const readPromise = this.vscfs.readFile(uri);
         this.pendingIO.set(uri.toString(), [readPromise]);
         return readPromise;
@@ -231,8 +236,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
     private async synchronizedWrite(uri: Uri, content: Uint8Array): Promise<void> {
         // VSCFS does not guarantee that a write followed by a read will read the data
         // from the write. We need to enforce order ourselves.
-        const pendingPromises = this.pendingIO.get(uri.toString()) || [];
-        await Promise.all(pendingPromises);
+        await this.waitForPreviousIO(uri);
         const writePromise = this.vscfs.writeFile(uri, content);
         this.pendingIO.set(uri.toString(), [writePromise]);
         return writePromise;
