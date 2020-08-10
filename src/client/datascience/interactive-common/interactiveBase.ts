@@ -828,6 +828,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Start over if we somehow end up with a disposed notebook.
         if (this._notebook && this._notebook.disposed) {
             this._notebook = undefined;
+            this.notebookPromise = undefined;
             this.connectionAndNotebookPromise = undefined;
         }
         if (!this.connectionAndNotebookPromise) {
