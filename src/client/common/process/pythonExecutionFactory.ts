@@ -93,7 +93,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         });
         // No daemon support in Python 2.7 or during shutdown
         if (!interpreterService || (interpreter?.version && interpreter.version.major < 3)) {
-            return (activatedProcPromise! as unknown) as T;
+            return activatedProcPromise;
         }
 
         // Ensure we do not start multiple daemons for the same interpreter.
