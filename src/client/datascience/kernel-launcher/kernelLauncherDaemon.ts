@@ -6,7 +6,7 @@
 import { ChildProcess } from 'child_process';
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
-import { IPythonExecutionService, ObservableExecutionResult } from '../../common/process/types';
+import { ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
@@ -47,14 +47,9 @@ export class PythonKernelLauncherDaemon implements IDisposable {
 
         // The daemon pool can return back a non-IPythonKernelDaemon if daemon service is not supported or for Python 2.
         // Use a check for the daemon.start function here before we call it.
-        if (!daemon.start) {
+        if (!('start' in daemon)) {
             // If we don't have a KernelDaemon here then we have an execution service and should use that to launch
-            // Typing is a bit funk here, as createDaemon can return an execution service instead of the requested
-            // daemon class
-            // tslint:disable-next-line:no-any
-            const executionService = (daemon as any) as IPythonExecutionService;
-
-            const observableOutput = executionService.execModuleObservable(moduleName, moduleArgs, {
+            const observableOutput = daemon.execModuleObservable(moduleName, moduleArgs, {
                 env,
                 cwd: workingDirectory
             });

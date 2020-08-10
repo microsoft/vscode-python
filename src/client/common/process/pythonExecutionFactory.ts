@@ -76,7 +76,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
     public async createDaemon<T extends IPythonDaemonExecutionService | IDisposable>(
         options: DaemonExecutionFactoryCreationOptions
-    ): Promise<T> {
+    ): Promise<T | IPythonExecutionService> {
         const pythonPath = options.pythonPath
             ? options.pythonPath
             : this.configService.getSettings(options.resource).pythonPath;

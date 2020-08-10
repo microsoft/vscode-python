@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 
-import { IPythonExecutionFactory } from '../../common/process/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
 import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
@@ -23,7 +23,7 @@ type IKernelDaemonInfo = {
     workspaceResource: Resource;
     workspaceFolderIdentifier: string;
     interpreterPath: string;
-    daemon: Promise<IPythonKernelDaemon>;
+    daemon: Promise<IPythonKernelDaemon | IPythonExecutionService>;
 };
 
 @injectable()
@@ -68,7 +68,7 @@ export class KernelDaemonPool implements IDisposable {
         resource: Resource,
         kernelSpec: IJupyterKernelSpec,
         interpreter?: PythonInterpreter
-    ): Promise<IPythonKernelDaemon> {
+    ): Promise<IPythonKernelDaemon | IPythonExecutionService> {
         const pythonPath = interpreter?.path || kernelSpec.argv[0];
         // If we have environment variables in the kernel.json, then its not we support.
         // Cuz there's no way to know before hand what kernelspec can be used, hence no way to know what envs are required.
@@ -104,14 +104,26 @@ export class KernelDaemonPool implements IDisposable {
             dedicated: true,
             resource
         });
-        daemon.then((d) => this.disposables.push(d)).catch(noop);
+        daemon
+            .then((d) => {
+                if ('dispose' in d) {
+                    this.disposables.push(d);
+                }
+            })
+            .catch(noop);
         return daemon;
     }
     private async onDidEnvironmentVariablesChange(affectedResoruce: Resource) {
         const workspaceFolderIdentifier = this.workspaceService.getWorkspaceFolderIdentifier(affectedResoruce);
         this.daemonPool = this.daemonPool.filter((item) => {
             if (item.workspaceFolderIdentifier === workspaceFolderIdentifier) {
-                item.daemon.then((d) => d.dispose()).catch(noop);
+                item.daemon
+                    .then((d) => {
+                        if ('dispose' in d) {
+                            d.dispose();
+                        }
+                    })
+                    .catch(noop);
                 return false;
             }
             return true;
@@ -132,7 +144,16 @@ export class KernelDaemonPool implements IDisposable {
         const daemon = this.createDaemon(resource, interpreter.path);
         // Once a daemon is created ensure we pre-warm it (will load ipykernel and start the kernker process waiting to start the actual kernel code).
         // I.e. we'll start python process thats the kernel, but will not start the kernel module (`python -m ipykernel`).
-        daemon.then((d) => d.preWarm()).catch(traceError.bind(`Failed to prewarm kernel daemon ${interpreter.path}`));
+        daemon
+            .then((d) => {
+                // Prewarm if we support prewarming
+                if ('preWarm' in d) {
+                    d.preWarm().catch(traceError.bind(`Failed to prewarm kernel daemon ${interpreter.path}`));
+                }
+            })
+            .catch((e) => {
+                traceError(`Failed to load deamon: ${e}`);
+            });
         this.daemonPool.push({
             daemon,
             interpreterPath: interpreter.path,
@@ -172,7 +193,13 @@ export class KernelDaemonPool implements IDisposable {
         this.daemonPool = this.daemonPool.filter((item) => {
             const interpreterForWorkspace = currentInterpreterInEachWorksapce.get(item.key);
             if (!interpreterForWorkspace || !this.fs.areLocalPathsSame(interpreterForWorkspace, item.interpreterPath)) {
-                item.daemon.then((d) => d.dispose()).catch(noop);
+                item.daemon
+                    .then((d) => {
+                        if ('dispose' in d) {
+                            d.dispose();
+                        }
+                    })
+                    .catch(noop);
                 return false;
             }
 
