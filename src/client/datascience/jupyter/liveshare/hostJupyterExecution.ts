@@ -186,7 +186,8 @@ export class HostJupyterExecution
                     disconnected: (_l) => {
                         return { dispose: noop };
                     },
-                    dispose: noop
+                    dispose: noop,
+                    rootDirectory: connectionInfo.rootDirectory
                 };
             }
         }

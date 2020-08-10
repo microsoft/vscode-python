@@ -2,14 +2,16 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter, GlobPattern } from 'vscode';
+import { Disposable, Event, EventEmitter } from 'vscode';
 import type {
     notebook,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookDocument,
+    NotebookDocumentFilter,
     NotebookEditor,
     NotebookKernel,
+    NotebookKernelProvider,
     NotebookOutputRenderer,
     NotebookOutputSelector
 } from 'vscode-proposed';
@@ -25,6 +27,17 @@ import {
 
 @injectable()
 export class VSCodeNotebook implements IVSCodeNotebook {
+    public get onDidChangeActiveNotebookKernel(): Event<{
+        document: NotebookDocument;
+        kernel: NotebookKernel | undefined;
+    }> {
+        return this.canUseNotebookApi
+            ? this.notebook.onDidChangeActiveNotebookKernel
+            : new EventEmitter<{
+                  document: NotebookDocument;
+                  kernel: NotebookKernel | undefined;
+              }>().event;
+    }
     public get onDidChangeActiveNotebookEditor(): Event<NotebookEditor | undefined> {
         return this.canUseNotebookApi
             ? this.notebook.onDidChangeActiveNotebookEditor
@@ -88,8 +101,11 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable {
         return this.notebook.registerNotebookContentProvider(notebookType, provider);
     }
-    public registerNotebookKernel(id: string, selectors: GlobPattern[], kernel: NotebookKernel): Disposable {
-        return this.notebook.registerNotebookKernel(id, selectors, kernel);
+    public registerNotebookKernelProvider(
+        selector: NotebookDocumentFilter,
+        provider: NotebookKernelProvider
+    ): Disposable {
+        return this.notebook.registerNotebookKernelProvider(selector, provider);
     }
     public registerNotebookOutputRenderer(
         id: string,

@@ -6,7 +6,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { JSONObject } from '@phosphor/coreutils';
 import * as React from 'react';
-import { concatMultilineStringOutput } from '../common';
+import { concatMultilineString } from '../common';
 import { fixMarkdown } from '../interactive-common/markdownManipulation';
 import { getTransform } from '../interactive-common/transforms';
 
@@ -86,7 +86,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     }
     private renderLatex(data: nbformat.MultilineString | JSONObject) {
         // Fixup latex to make sure it has the requisite $$ around it
-        data = fixMarkdown(concatMultilineStringOutput(data as nbformat.MultilineString), true);
+        data = fixMarkdown(concatMultilineString(data as nbformat.MultilineString, true), true);
         return this.renderOutput(data);
     }
 }

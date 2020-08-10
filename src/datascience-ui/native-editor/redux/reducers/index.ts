@@ -57,6 +57,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CommonActionType.LINK_CLICK]: Transfer.linkClick,
     [CommonActionType.GATHER_CELL]: Transfer.gather,
     [CommonActionType.GATHER_CELL_TO_SCRIPT]: Transfer.gatherToScript,
+    [InteractiveWindowMessages.Gathering]: Transfer.gathering,
     [CommonActionType.EDITOR_LOADED]: Transfer.started,
     [CommonActionType.LOADED_ALL_CELLS]: Transfer.loadedAllCells,
     [CommonActionType.LAUNCH_NOTEBOOK_TRUST_PROMPT]: Transfer.launchNotebookTrustPrompt,

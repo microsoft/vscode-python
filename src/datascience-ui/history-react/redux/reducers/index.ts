@@ -71,5 +71,6 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [InteractiveWindowMessages.UpdateKernel]: Kernel.updateStatus,
     [SharedMessages.LocInit]: CommonEffects.handleLocInit,
     [InteractiveWindowMessages.UpdateDisplayData]: CommonEffects.handleUpdateDisplayData,
-    [InteractiveWindowMessages.HasCell]: Transfer.hasCell
+    [InteractiveWindowMessages.HasCell]: Transfer.hasCell,
+    [InteractiveWindowMessages.Gathering]: Transfer.gathering
 };

@@ -42,11 +42,7 @@ import { LiveKernelModel } from './kernels/types';
 
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import {
-    concatMultilineStringInput,
-    concatMultilineStringOutput,
-    formatStreamText
-} from '../../../datascience-ui/common';
+import { concatMultilineString, formatStreamText } from '../../../datascience-ui/common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { RefBool } from '../../common/refBool';
 
@@ -159,10 +155,13 @@ export class JupyterNotebookBase implements INotebook {
     private _executionInfo: INotebookExecutionInfo;
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
     public get onDisposed(): Event<void> {
-        return this.disposed.event;
+        return this.disposedEvent.event;
     }
     public get onKernelChanged(): Event<IJupyterKernelSpec | LiveKernelModel> {
         return this.kernelChanged.event;
+    }
+    public get disposed() {
+        return this._disposed;
     }
     private kernelChanged = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>();
     public get onKernelRestarted(): Event<void> {
@@ -174,7 +173,7 @@ export class JupyterNotebookBase implements INotebook {
     }
     private readonly kernelRestarted = new EventEmitter<void>();
     private readonly kernelInterrupted = new EventEmitter<void>();
-    private disposed = new EventEmitter<void>();
+    private disposedEvent = new EventEmitter<void>();
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
     private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => void>();
@@ -227,7 +226,7 @@ export class JupyterNotebookBase implements INotebook {
                 this.onStatusChangedEvent = undefined;
             }
             this.loggers.forEach((d) => d.dispose());
-            this.disposed.fire();
+            this.disposedEvent.fire();
 
             try {
                 traceInfo(`Shutting down session ${this.identity.toString()}`);
@@ -354,7 +353,7 @@ export class JupyterNotebookBase implements INotebook {
         return deferred.promise;
     }
 
-    public inspect(code: string, cancelToken?: CancellationToken): Promise<JSONObject> {
+    public inspect(code: string, offsetInCode = 0, cancelToken?: CancellationToken): Promise<JSONObject> {
         // Create a deferred that will fire when the request completes
         const deferred = createDeferred<JSONObject>();
 
@@ -366,7 +365,7 @@ export class JupyterNotebookBase implements INotebook {
         } else {
             // Ask session for inspect result
             this.session
-                .requestInspect({ code, cursor_pos: 0, detail_level: 0 })
+                .requestInspect({ code, cursor_pos: offsetInCode, detail_level: 0 })
                 .then((r) => {
                     if (r && r.content.status === 'ok') {
                         deferred.resolve(r.content.data);
@@ -795,7 +794,7 @@ export class JupyterNotebookBase implements INotebook {
                 outputs.forEach((o) => {
                     if (o.output_type === 'stream') {
                         const stream = o as nbformat.IStream;
-                        result = result.concat(formatStreamText(concatMultilineStringOutput(stream.text)));
+                        result = result.concat(formatStreamText(concatMultilineString(stream.text, true)));
                     } else {
                         const data = o.data;
                         if (data && data.hasOwnProperty('text/plain')) {
@@ -856,7 +855,9 @@ export class JupyterNotebookBase implements INotebook {
 
     private generateRequest = (
         code: string,
-        silent?: boolean
+        silent?: boolean,
+        // tslint:disable-next-line: no-any
+        metadata?: Record<string, any>
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined => {
         //traceInfo(`Executing code in jupyter : ${code}`);
         try {
@@ -870,7 +871,8 @@ export class JupyterNotebookBase implements INotebook {
                           allow_stdin: true, // Allow when silent too in case runStartupCommands asks for a password
                           store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count
                       },
-                      silent // Dispose only silent futures. Otherwise update_display_data doesn't finda future for a previous cell.
+                      silent, // Dispose only silent futures. Otherwise update_display_data doesn't find a future for a previous cell.
+                      metadata
                   )
                 : undefined;
         } catch (exc) {
@@ -1095,7 +1097,10 @@ export class JupyterNotebookBase implements INotebook {
                 subscriber.error(this.sessionStartTime, exitError);
                 subscriber.complete(this.sessionStartTime);
             } else {
-                const request = this.generateRequest(concatMultilineStringInput(subscriber.cell.data.source), silent);
+                const request = this.generateRequest(concatMultilineString(subscriber.cell.data.source), silent, {
+                    ...subscriber.cell.data.metadata,
+                    ...{ cellId: subscriber.cell.id }
+                });
 
                 // Transition to the busy stage
                 subscriber.cell.state = CellState.executing;
@@ -1317,12 +1322,12 @@ export class JupyterNotebookBase implements INotebook {
         if (existing) {
             // tslint:disable-next-line:restrict-plus-operands
             existing.text = existing.text + msg.content.text;
-            const originalText = formatStreamText(concatMultilineStringOutput(existing.text));
+            const originalText = formatStreamText(concatMultilineString(existing.text));
             originalTextLength = originalText.length;
             existing.text = trimFunc(originalText);
             trimmedTextLength = existing.text.length;
         } else {
-            const originalText = formatStreamText(concatMultilineStringOutput(msg.content.text));
+            const originalText = formatStreamText(concatMultilineString(msg.content.text));
             originalTextLength = originalText.length;
             // Create a new stream entry
             const output: nbformat.IStream = {

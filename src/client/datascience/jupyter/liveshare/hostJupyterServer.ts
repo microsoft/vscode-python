@@ -6,6 +6,7 @@ import '../../../common/extensions';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import * as os from 'os';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
@@ -215,8 +216,17 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 );
             }
 
-            // Start a session (or use the existing one)
-            const session = possibleSession || (await sessionManager.startNew(info.kernelSpec, cancelToken));
+            // Figure out the working directory we need for our new notebook.
+            const workingDirectory =
+                resource && resource.scheme === 'file'
+                    ? path.dirname(resource.fsPath)
+                    : this.workspaceService.getWorkspaceFolder(resource)?.uri.fsPath || process.cwd();
+
+            // Start a session (or use the existing one if allowed)
+            const session =
+                possibleSession && this.fs.areLocalPathsSame(possibleSession.workingDirectory, workingDirectory)
+                    ? possibleSession
+                    : await sessionManager.startNew(info.kernelSpec, workingDirectory, cancelToken);
             traceInfo(`Started session ${this.id}`);
             return { info, session };
         };

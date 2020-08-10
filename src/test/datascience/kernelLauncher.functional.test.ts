@@ -37,10 +37,10 @@ suite('DataScience - Kernel Launcher', () => {
     setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-        kernelFinder = new MockKernelFinder(ioc.serviceContainer.get<IKernelFinder>(IKernelFinder));
-        const processServiceFactory = ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
-        const daemonPool = ioc.serviceContainer.get<KernelDaemonPool>(KernelDaemonPool);
-        const fileSystem = ioc.serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem);
+        kernelFinder = new MockKernelFinder(ioc.get<IKernelFinder>(IKernelFinder));
+        const processServiceFactory = ioc.get<IProcessServiceFactory>(IProcessServiceFactory);
+        const daemonPool = ioc.get<KernelDaemonPool>(KernelDaemonPool);
+        const fileSystem = ioc.get<IDataScienceFileSystem>(IDataScienceFileSystem);
         kernelLauncher = new KernelLauncher(processServiceFactory, fileSystem, daemonPool);
         await ioc.activate();
         if (!ioc.mockJupyter) {
@@ -67,7 +67,7 @@ suite('DataScience - Kernel Launcher', () => {
         } else {
             let exitExpected = false;
             const deferred = createDeferred<boolean>();
-            const kernel = await kernelLauncher.launch(kernelSpec, undefined);
+            const kernel = await kernelLauncher.launch(kernelSpec, undefined, process.cwd());
             kernel.exited(() => {
                 if (exitExpected) {
                     deferred.resolve(true);
@@ -109,7 +109,7 @@ suite('DataScience - Kernel Launcher', () => {
             };
             kernelFinder.addKernelSpec(pythonInterpreter.path, spec);
 
-            const kernel = await kernelLauncher.launch(spec, undefined);
+            const kernel = await kernelLauncher.launch(spec, undefined, process.cwd());
             const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
 
             assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
@@ -139,7 +139,7 @@ suite('DataScience - Kernel Launcher', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
-            const kernel = await kernelLauncher.launch(kernelSpec, undefined);
+            const kernel = await kernelLauncher.launch(kernelSpec, undefined, process.cwd());
 
             try {
                 const zmq = await import('zeromq');

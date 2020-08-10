@@ -1,7 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { ContentsManager, Kernel, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import type {
+    Contents,
+    ContentsManager,
+    Kernel,
+    ServerConnection,
+    Session,
+    SessionManager
+} from '@jupyterlab/services';
+import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
@@ -28,9 +36,10 @@ export class JupyterSession extends BaseJupyterSession {
         private contentsManager: ContentsManager,
         private readonly outputChannel: IOutputChannel,
         private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
-        restartSessionUsed: (id: Kernel.IKernelConnection) => void
+        restartSessionUsed: (id: Kernel.IKernelConnection) => void,
+        readonly workingDirectory: string
     ) {
-        super(restartSessionUsed);
+        super(restartSessionUsed, workingDirectory);
         this.kernelSpec = kernelSpec;
     }
 
@@ -136,8 +145,24 @@ export class JupyterSession extends BaseJupyterSession {
         contentsManager: ContentsManager,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
-        // Create a temporary notebook for this session.
-        const backingFile = await contentsManager.newUntitled({ type: 'notebook' });
+        // First make sure the notebook is in the right relative path (jupyter expects a relative path with unix delimiters)
+        const relativeDirectory = path.relative(this.connInfo.rootDirectory, this.workingDirectory).replace(/\\/g, '/');
+
+        // However jupyter does not support relative paths outside of the original root.
+        const backingFileOptions: Contents.ICreateOptions =
+            this.connInfo.localLaunch && !relativeDirectory.startsWith('..')
+                ? { type: 'notebook', path: relativeDirectory }
+                : { type: 'notebook' };
+
+        // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)
+        let backingFile = await contentsManager.newUntitled(backingFileOptions);
+        const backingFileDir = path.dirname(backingFile.path);
+        backingFile = await contentsManager.rename(
+            backingFile.path,
+            backingFileDir.length && backingFileDir !== '.'
+                ? `${backingFileDir}/t-${uuid()}.ipynb`
+                : `t-${uuid()}.ipynb` // Note, the docs say the path uses UNIX delimiters.
+        );
 
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
@@ -171,7 +196,7 @@ export class JupyterSession extends BaseJupyterSession {
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(() => {
-                        if (this.connInfo && !this.connInfo.localLaunch) {
+                        if (this.connInfo) {
                             this.contentsManager.delete(backingFile.path).ignoreErrors();
                         }
                     }),

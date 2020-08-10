@@ -40,19 +40,19 @@ suite('DataScience - Kernel Launcher Daemon', () => {
 
         when(daemonPool.get(anything(), anything(), anything())).thenResolve(instance(kernelDaemon));
         when(observableOutputForDaemon.proc).thenResolve({} as any);
-        when(
-            kernelDaemon.start('ipkernel_launcher', deepEqual(['-f', 'file.json']), deepEqual({ env: kernelSpec.env }))
-        ).thenResolve(instance(observableOutputForDaemon));
+        when(kernelDaemon.start('ipkernel_launcher', deepEqual(['-f', 'file.json']), anything())).thenResolve(
+            instance(observableOutputForDaemon)
+        );
         launcher = new PythonKernelLauncherDaemon(instance(daemonPool));
     });
     test('Does not support launching kernels if there is no -m in argv', async () => {
         kernelSpec.argv = ['wow'];
-        const promise = launcher.launch(undefined, kernelSpec, interpreter);
+        const promise = launcher.launch(undefined, '', kernelSpec, interpreter);
 
         await assert.isRejected(promise, /^Unsupported KernelSpec file. args must be/g);
     });
     test('Creates and returns a daemon', async () => {
-        const daemonCreationOutput = await launcher.launch(undefined, kernelSpec, interpreter);
+        const daemonCreationOutput = await launcher.launch(undefined, '', kernelSpec, interpreter);
 
         assert.isDefined(daemonCreationOutput);
 
@@ -64,18 +64,14 @@ suite('DataScience - Kernel Launcher Daemon', () => {
     test('If our daemon pool returns an execution service, then use it and return the daemon as undefined', async () => {
         const executionService = mock<IPythonExecutionService>();
         when(
-            executionService.execModuleObservable(
-                'ipkernel_launcher',
-                deepEqual(['-f', 'file.json']),
-                deepEqual({ env: kernelSpec.env })
-            )
+            executionService.execModuleObservable('ipkernel_launcher', deepEqual(['-f', 'file.json']), anything())
         ).thenReturn(instance(observableOutputForDaemon));
         // Make sure that it doesn't have a start function. Normally the proxy will pretend to have a start function, which we are checking for non-existance
         when((executionService as any).start).thenReturn(false);
         // Else ts-mockit doesn't allow us to return an instance of a mock as a return value from an async function.
         (instance(executionService) as any).then = undefined;
         when(daemonPool.get(anything(), anything(), anything())).thenResolve(instance(executionService) as any);
-        const daemonCreationOutput = await launcher.launch(undefined, kernelSpec, interpreter);
+        const daemonCreationOutput = await launcher.launch(undefined, '', kernelSpec, interpreter);
 
         assert.equal(daemonCreationOutput.observableOutput, instance(observableOutputForDaemon));
         assert.isUndefined(daemonCreationOutput.daemon);

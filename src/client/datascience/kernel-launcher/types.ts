@@ -16,6 +16,7 @@ export interface IKernelLauncher {
     launch(
         kernelSpec: IJupyterKernelSpec,
         resource: Resource,
+        workingDirectory: string,
         interpreter?: PythonInterpreter
     ): Promise<IKernelProcess>;
 }

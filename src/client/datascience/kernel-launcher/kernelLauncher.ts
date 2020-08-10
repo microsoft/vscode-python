@@ -35,6 +35,7 @@ export class KernelLauncher implements IKernelLauncher {
     public async launch(
         kernelSpec: IJupyterKernelSpec,
         resource: Resource,
+        workingDirectory: string,
         interpreter?: PythonInterpreter
     ): Promise<IKernelProcess> {
         const connection = await this.getKernelConnection();
@@ -47,7 +48,7 @@ export class KernelLauncher implements IKernelLauncher {
             resource,
             interpreter
         );
-        await kernelProcess.launch();
+        await kernelProcess.launch(workingDirectory);
         return kernelProcess;
     }
 

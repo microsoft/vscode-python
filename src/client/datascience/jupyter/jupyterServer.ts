@@ -86,10 +86,15 @@ export class JupyterServerBase implements INotebookServer {
 
         // Create our session manager
         this.sessionManager = await this.sessionManagerFactory.create(launchInfo.connectionInfo);
+
         // Try creating a session just to ensure we're connected. Callers of this function check to make sure jupyter
         // is running and connectable.
         let session: IJupyterSession | undefined;
-        session = await this.sessionManager.startNew(launchInfo.kernelSpec, cancelToken);
+        session = await this.sessionManager.startNew(
+            launchInfo.kernelSpec,
+            launchInfo.connectionInfo.rootDirectory,
+            cancelToken
+        );
         const idleTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
         // The wait for idle should throw if we can't connect.
         await session.waitForIdle(idleTimeout);

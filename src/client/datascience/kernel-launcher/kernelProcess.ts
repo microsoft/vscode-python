@@ -64,7 +64,7 @@ export class KernelProcess implements IKernelProcess {
     }
 
     @captureTelemetry(Telemetry.RawKernelProcessLaunch, undefined, true)
-    public async launch(): Promise<void> {
+    public async launch(workingDirectory: string): Promise<void> {
         if (this.launchedOnce) {
             throw new Error('Kernel has already been launched.');
         }
@@ -73,7 +73,7 @@ export class KernelProcess implements IKernelProcess {
         // Update our connection arguments in the kernel spec
         await this.updateConnectionArgs();
 
-        const exeObs = await this.launchAsObservable();
+        const exeObs = await this.launchAsObservable(workingDirectory);
 
         let stdout = '';
         let stderr = '';
@@ -210,12 +210,13 @@ export class KernelProcess implements IKernelProcess {
         return newConnectionArgs;
     }
 
-    private async launchAsObservable() {
+    private async launchAsObservable(workingDirectory: string) {
         let exeObs: ObservableExecutionResult<string> | undefined;
         if (this.isPythonKernel) {
             this.pythonKernelLauncher = new PythonKernelLauncherDaemon(this.daemonPool);
             const kernelDaemonLaunch = await this.pythonKernelLauncher.launch(
                 this.resource,
+                workingDirectory,
                 this._kernelSpec,
                 this.interpreter
             );
@@ -230,7 +231,8 @@ export class KernelProcess implements IKernelProcess {
             const executable = this._kernelSpec.argv[0];
             const executionService = await this.processExecutionFactory.create(this.resource);
             exeObs = executionService.execObservable(executable, this._kernelSpec.argv.slice(1), {
-                env: this._kernelSpec.env
+                env: this._kernelSpec.env,
+                cwd: workingDirectory
             });
         }
 

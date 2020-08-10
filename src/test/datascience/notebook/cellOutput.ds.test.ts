@@ -79,7 +79,9 @@ suite('DataScience - VSCode Notebook - (fake execution) (Clearing Output)', func
             const testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables2));
             await editorProvider.open(testIPynb);
         });
-        test('Clearing output when not executing', async () => {
+        test('Clearing output when not executing', async function () {
+            // tslint:disable-next-line: no-unused-expression
+            return this.skip();
             const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
 
             // Verify we have execution counts and output.
@@ -127,7 +129,10 @@ suite('DataScience - VSCode Notebook - (fake execution) (Clearing Output)', func
             cell2ObservableResult.unsubscribe();
         });
 
-        test('Clear cell status, output and execution count before executing a cell', async () => {
+        test('Clear cell status, output and execution count before executing a cell', async function () {
+            // tslint:disable-next-line: no-unused-expression
+            return this.skip();
+
             await insertPythonCellAndWait('# Some bogus cell', 0);
             const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
             // Setup original state in cell.
@@ -171,7 +176,9 @@ suite('DataScience - VSCode Notebook - (fake execution) (Clearing Output)', func
             await waitForExecutionOrderInVSCCell(vscCell, executionCount);
             await waitForTextOutputInVSCode(vscCell, 'Hello', 0);
         });
-        test('Clear cell output while executing will only clear output when executing a cell', async () => {
+        test('Clear cell output while executing will only clear output when executing a cell', async function () {
+            // tslint:disable-next-line: no-unused-expression
+            return this.skip();
             await insertPythonCellAndWait('# Some bogus cell', 0);
             const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
             // Setup original state in cell.

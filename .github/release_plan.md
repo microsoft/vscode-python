@@ -15,7 +15,7 @@
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md) (🤖)
         -   [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) (typically `python news --final --update CHANGELOG.md | code-insiders -`)
         -   [ ] Copy over the "Thanks" section from the previous release
-        -   [ ] Make sure the "Thanks" section is up-to-date (e.g. compare to versions in requirements.json)
+        -   [ ] Make sure the "Thanks" section is up-to-date (e.g. compare to versions in [`requirements.txt`](https://github.com/microsoft/vscode-python/blob/master/requirements.txt))
         -   [ ] Touch up news entries (e.g. add missing periods)
         -   [ ] Check the Markdown rendering to make sure everything looks good
         -   [ ] Add any relevant news entries for `debugpy` and the language server if they were updated

@@ -552,17 +552,22 @@ export class CodeWatcher implements ICodeWatcher {
             }
             editor.selection = selection;
         } else {
+            let newCell: ICellRange | undefined;
             // full cell range is selected now decide if expanding or contracting?
             if (isAnchorLessThanActive && startCellIndex < endCellIndex) {
                 // anchor is above active, contract selection by cell below.
-                const newEndCell = cells[endCellIndex - 1];
-                editor.selection = new Selection(startCell.range.start, newEndCell.range.end);
+                newCell = cells[endCellIndex - 1];
+                editor.selection = new Selection(startCell.range.start, newCell.range.end);
             } else {
                 // anchor is below active, expand selection by cell above.
                 if (startCellIndex > 0) {
-                    const aboveCell = cells[startCellIndex - 1];
-                    editor.selection = new Selection(endCell.range.end, aboveCell.range.start);
+                    newCell = cells[startCellIndex - 1];
+                    editor.selection = new Selection(endCell.range.end, newCell.range.start);
                 }
+            }
+
+            if (newCell) {
+                editor.revealRange(newCell.range, TextEditorRevealType.Default);
             }
         }
     }
@@ -613,19 +618,24 @@ export class CodeWatcher implements ICodeWatcher {
             }
             editor.selection = selection;
         } else {
+            let newCell: ICellRange | undefined;
             // full cell range is selected now decide if expanding or contracting?
             if (isAnchorLessEqualActive || startCellIndex === endCellIndex) {
                 // anchor is above active, expand selection by cell below.
                 if (endCellIndex < cells.length - 1) {
-                    const extendCell = cells[endCellIndex + 1];
-                    editor.selection = new Selection(startCell.range.start, extendCell.range.end);
+                    newCell = cells[endCellIndex + 1];
+                    editor.selection = new Selection(startCell.range.start, newCell.range.end);
                 }
             } else {
                 // anchor is below active, contract selection by cell above.
                 if (startCellIndex < endCellIndex) {
-                    const contractCell = cells[startCellIndex + 1];
-                    editor.selection = new Selection(endCell.range.end, contractCell.range.start);
+                    newCell = cells[startCellIndex + 1];
+                    editor.selection = new Selection(endCell.range.end, newCell.range.start);
                 }
+            }
+
+            if (newCell) {
+                editor.revealRange(newCell.range, TextEditorRevealType.Default);
             }
         }
     }
@@ -652,6 +662,40 @@ export class CodeWatcher implements ICodeWatcher {
         this.applyToCells((editor, cell, _) => {
             return this.changeCellTo(editor, cell, 'code');
         });
+    }
+
+    @captureTelemetry(Telemetry.GotoNextCellInFile)
+    public gotoNextCell() {
+        const editor = this.documentManager.activeTextEditor;
+        if (!editor || !editor.selection) {
+            return;
+        }
+
+        const currentSelection = editor.selection;
+
+        const currentRunCellLens = this.getCurrentCellLens(currentSelection.start);
+        const nextRunCellLens = this.getNextCellLens(currentSelection.start);
+
+        if (currentRunCellLens && nextRunCellLens) {
+            this.advanceToRange(nextRunCellLens.range);
+        }
+    }
+
+    @captureTelemetry(Telemetry.GotoPrevCellInFile)
+    public gotoPreviousCell() {
+        const editor = this.documentManager.activeTextEditor;
+        if (!editor || !editor.selection) {
+            return;
+        }
+
+        const currentSelection = editor.selection;
+
+        const currentRunCellLens = this.getCurrentCellLens(currentSelection.start);
+        const prevRunCellLens = this.getPreviousCellLens(currentSelection.start);
+
+        if (currentRunCellLens && prevRunCellLens) {
+            this.advanceToRange(prevRunCellLens.range);
+        }
     }
 
     private applyToCells(callback: (editor: TextEditor, cell: ICellRange, cellIndex: number) => void) {
@@ -1048,6 +1092,18 @@ export class CodeWatcher implements ICodeWatcher {
             return this.codeLenses.find(
                 (l: CodeLens, i: number) =>
                     l.command !== undefined && l.command.command === Commands.RunCell && i > currentIndex
+            );
+        }
+        return undefined;
+    }
+
+    private getPreviousCellLens(pos: Position): CodeLens | undefined {
+        const currentIndex = this.codeLenses.findIndex(
+            (l) => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell
+        );
+        if (currentIndex >= 1) {
+            return this.codeLenses.find(
+                (l: CodeLens, i: number) => l.command !== undefined && i < currentIndex && i + 1 === currentIndex
             );
         }
         return undefined;

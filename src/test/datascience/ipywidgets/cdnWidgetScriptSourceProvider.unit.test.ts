@@ -134,7 +134,8 @@ suite('DataScience - ipywidget - CDN', () => {
                     dispose: noop,
                     hostName: '',
                     localLaunch,
-                    token: ''
+                    token: '',
+                    rootDirectory: ''
                 };
                 when(notebook.connection).thenReturn(connection);
             });

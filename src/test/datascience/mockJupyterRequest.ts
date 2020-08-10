@@ -8,7 +8,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { ICell } from '../../client/datascience/types';
-import { concatMultilineStringInput } from '../../datascience-ui/common';
+import { concatMultilineString } from '../../datascience-ui/common';
 
 //tslint:disable:no-any
 interface IMessageResult {
@@ -283,7 +283,7 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
         const producers = [
             new SimpleMessageProducer('status', { execution_state: 'busy' }),
             new SimpleMessageProducer('execute_input', {
-                code: concatMultilineStringInput(this.cell.data.source),
+                code: concatMultilineString(this.cell.data.source),
                 execution_count: this.executionCount
             }),
             ...outputProducers,

@@ -5,10 +5,12 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken } from 'vscode';
-
+import { CancellationToken, EventEmitter } from 'vscode';
+import { traceError } from '../../../common/logger';
 import { IPathUtils, Resource } from '../../../common/types';
+import { createDeferredFromPromise } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
+import { noop } from '../../../common/utils/misc';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { IDataScienceFileSystem, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
@@ -177,6 +179,10 @@ export class InterpreterKernelSelectionListProvider implements IKernelSelectionL
 export class KernelSelectionProvider {
     private localSuggestionsCache: IKernelSpecQuickPickItem[] = [];
     private remoteSuggestionsCache: IKernelSpecQuickPickItem[] = [];
+    private _listChanged = new EventEmitter<void>();
+    public get SelectionsChanged() {
+        return this._listChanged.event;
+    }
     constructor(
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
@@ -295,16 +301,41 @@ export class KernelSelectionProvider {
                 });
 
             const unifiedList = [...installedKernels!, ...interpreters];
-            // Sorty by name.
+            // Sort by name.
             unifiedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
             return unifiedList;
         };
 
         const liveItems = getSelections().then((items) => (this.localSuggestionsCache = items));
-        // If we have someting in cache, return that, while fetching in the background.
+        // If we have something in cache, return that, while fetching in the background.
         const cachedItems =
             this.localSuggestionsCache.length > 0 ? Promise.resolve(this.localSuggestionsCache) : liveItems;
+
+        const liveItemsDeferred = createDeferredFromPromise(liveItems);
+        const cachedItemsDeferred = createDeferredFromPromise(cachedItems);
+        Promise.race([cachedItems, liveItems])
+            .then(async () => {
+                // If the cached items completed first, then if later the live items completes we need to notify
+                // others that this selection has changed (however check if the results are different).
+                if (cachedItemsDeferred.completed && !liveItemsDeferred.completed) {
+                    try {
+                        const [liveItemsList, cachedItemsList] = await Promise.all([liveItems, cachedItems]);
+                        // If the list of live items is different from the cached list, then notify a change.
+                        if (
+                            liveItemsList.length !== cachedItemsList.length &&
+                            liveItemsList.length > 0 &&
+                            JSON.stringify(liveItemsList) !== JSON.stringify(cachedItemsList)
+                        ) {
+                            this._listChanged.fire();
+                        }
+                    } catch (ex) {
+                        traceError('Error in fetching kernel selections', ex);
+                    }
+                }
+            })
+            .catch(noop);
+
         return Promise.race([cachedItems, liveItems]);
     }
 }

@@ -166,6 +166,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
     public async startNew(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        workingDirectory: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterSession> {
         if (!this.connInfo || !this.sessionManager || !this.contentsManager || !this.serverSettings) {
@@ -180,7 +181,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.contentsManager,
             this.outputChannel,
             this.restartSessionCreatedEvent.fire.bind(this.restartSessionCreatedEvent),
-            this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent)
+            this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent),
+            workingDirectory
         );
         try {
             await session.connect(this.configService.getSettings().datascience.jupyterLaunchTimeout, cancelToken);
@@ -263,12 +265,12 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
         // If authorization header is provided, then we need to prevent jupyterlab services from
         // writing the authorization header.
-        if (connInfo.authorizationHeader) {
-            requestCtor = createAuthorizingRequest(connInfo.authorizationHeader);
+        if (connInfo.getAuthHeader) {
+            requestCtor = createAuthorizingRequest(connInfo.getAuthHeader);
         }
 
         // If no token is specified prompt for a password
-        if ((connInfo.token === '' || connInfo.token === 'null') && !connInfo.authorizationHeader) {
+        if ((connInfo.token === '' || connInfo.token === 'null') && !connInfo.getAuthHeader) {
             if (this.failOnPassword) {
                 throw new Error('Password request not allowed.');
             }
@@ -314,7 +316,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             WebSocket: createJupyterWebSocket(
                 cookieString,
                 allowUnauthorized,
-                connInfo.authorizationHeader
+                connInfo.getAuthHeader
                 // tslint:disable-next-line:no-any
             ) as any,
             // Redefine fetch to our node-modules so it picks up the correct version.

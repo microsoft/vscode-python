@@ -76,10 +76,18 @@ export class RemoteServerPickerExample implements IJupyterUriProvider {
                     // some other stuff
                     if (stdout) {
                         const output = JSON.parse(stdout.toString());
+                        const currentDate = new Date();
                         resolve({
                             baseUrl: Compute_ServerUri,
                             token: '', //output.accessToken,
-                            authorizationHeader: { Authorization: `Bearer ${output.accessToken}` }
+                            authorizationHeader: { Authorization: `Bearer ${output.accessToken}` },
+                            expiration: new Date(
+                                currentDate.getFullYear(),
+                                currentDate.getMonth(),
+                                undefined,
+                                currentDate.getHours(),
+                                currentDate.getMinutes() + 1 // Expire after one minute
+                            )
                         });
                     } else {
                         reject('Unable to get az token');

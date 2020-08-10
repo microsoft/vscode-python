@@ -1747,6 +1747,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.MoveCellsDown]: never | undefined;
     [Telemetry.ChangeCellToMarkdown]: never | undefined;
     [Telemetry.ChangeCellToCode]: never | undefined;
+    [Telemetry.GotoNextCellInFile]: never | undefined;
+    [Telemetry.GotoPrevCellInFile]: never | undefined;
     /**
      * Misc
      */

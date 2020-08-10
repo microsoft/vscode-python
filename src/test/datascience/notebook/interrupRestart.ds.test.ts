@@ -21,6 +21,7 @@ import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
+    executeActiveDocument,
     insertPythonCellAndWait,
     startJupyter,
     trustAllNotebooks,
@@ -108,7 +109,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
         const cell = vscEditor.document.cells[0];
 
-        await commands.executeCommand('notebook.execute');
+        await executeActiveDocument();
 
         // Wait for cell to get busy.
         await waitForCondition(async () => assertVSCCellIsRunning(cell), 15_000, 'Cell not being executed');
@@ -127,7 +128,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await restartPromise;
 
         // Confirm we can execute a cell (using the new kernel session).
-        await commands.executeCommand('notebook.execute');
+        await executeActiveDocument();
 
         // Wait for cell to get busy.
         await waitForCondition(async () => assertVSCCellIsRunning(cell), 15_000, 'Cell not being executed');

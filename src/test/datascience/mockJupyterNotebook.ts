@@ -30,7 +30,6 @@ export class MockJupyterNotebook implements INotebook {
     public get identity(): Uri {
         return getDefaultInteractiveIdentity();
     }
-    public kernelSocket = new Observable<KernelSocketInformation | undefined>();
     public get onSessionStatusChanged(): Event<ServerStatus> {
         if (!this.onStatusChangedEvent) {
             this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
@@ -45,14 +44,16 @@ export class MockJupyterNotebook implements INotebook {
     public get resource(): Resource {
         return Uri.file('foo.py');
     }
+    public get onKernelInterrupted(): Event<void> {
+        return this.kernelInterrupted.event;
+    }
+    public kernelSocket = new Observable<KernelSocketInformation | undefined>();
     public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
         IJupyterKernelSpec | LiveKernelModel
     >().event;
     public onDisposed = new EventEmitter<void>().event;
     public onKernelRestarted = new EventEmitter<void>().event;
-    public get onKernelInterrupted(): Event<void> {
-        return this.kernelInterrupted.event;
-    }
+    public readonly disposed: boolean = false;
     private kernelInterrupted = new EventEmitter<void>();
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
 
@@ -73,7 +74,7 @@ export class MockJupyterNotebook implements INotebook {
         throw new Error('Method not implemented');
     }
 
-    public inspect(_code: string, _cancelToken?: CancellationToken): Promise<JSONObject> {
+    public inspect(_code: string, _offsetInCode = 0, _cancelToken?: CancellationToken): Promise<JSONObject> {
         return Promise.resolve({});
     }
 

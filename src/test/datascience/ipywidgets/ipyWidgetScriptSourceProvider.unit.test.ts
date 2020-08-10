@@ -13,6 +13,7 @@ import { PersistentState, PersistentStateFactory } from '../../../client/common/
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { Common, DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { DataScienceFileSystem } from '../../../client/datascience/dataScienceFileSystem';
 import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/cdnWidgetScriptSourceProvider';
 import { IPyWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/ipyWidgetScriptSourceProvider';
@@ -81,7 +82,8 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                     dispose: noop,
                     hostName: '',
                     localLaunch,
-                    token: ''
+                    token: '',
+                    rootDirectory: EXTENSION_ROOT_DIR
                 };
                 when(notebook.connection).thenReturn(connection);
             });

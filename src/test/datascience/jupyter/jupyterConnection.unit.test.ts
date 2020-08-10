@@ -12,6 +12,7 @@ import { ObservableExecutionResult, Output } from '../../../client/common/proces
 import { IConfigurationService, IDataScienceSettings } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { DataScienceFileSystem } from '../../../client/datascience/dataScienceFileSystem';
 import { JupyterConnectionWaiter, JupyterServerInfo } from '../../../client/datascience/jupyter/jupyterConnection';
 import { IDataScienceFileSystem } from '../../../client/datascience/types';
@@ -92,6 +93,7 @@ suite('DataScience - JupyterConnection', () => {
         return new JupyterConnectionWaiter(
             launchResult,
             notebookDir,
+            EXTENSION_ROOT_DIR,
             // tslint:disable-next-line: no-any
             getServerInfoStub as any,
             instance(serviceContainer),

@@ -395,7 +395,7 @@ export class KernelVariables implements IJupyterVariables {
     ): Promise<IJupyterVariable> {
         let result = { ...targetVariable };
         if (notebook) {
-            const output = await notebook.inspect(targetVariable.name, token);
+            const output = await notebook.inspect(targetVariable.name, 0, token);
 
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {

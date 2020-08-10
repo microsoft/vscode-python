@@ -5,15 +5,12 @@
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
+import * as fastDeepEqual from 'fast-deep-equal';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
-import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
-import { createVSCCellOutputsFromOutputs, translateErrorOutput } from './helpers';
-
-export interface IBaseCellVSCodeMetadata {
-    end_execution_time?: string;
-    start_execution_time?: string;
-}
+import { createIOutputFromCellOutputs, createVSCCellOutputsFromOutputs, translateErrorOutput } from './helpers';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export function hasTransientOutputForAnotherCell(output?: nbformat.IOutput) {
     return (
@@ -35,19 +32,18 @@ export function hasTransientOutputForAnotherCell(output?: nbformat.IOutput) {
  */
 export function handleUpdateDisplayDataMessage(
     msg: KernelMessage.IUpdateDisplayDataMsg,
-    model: VSCodeNotebookModel,
     document: NotebookDocument
 ): boolean {
     // Find any cells that have this same display_id
     return (
-        model.cells.filter((cellToCheck, index) => {
-            if (cellToCheck.data.cell_type !== 'code') {
+        document.cells.filter((cellToCheck, index) => {
+            if (cellToCheck.cellKind !== vscodeNotebookEnums.CellKind.Code) {
                 return false;
             }
 
             let updated = false;
-            const data: nbformat.ICodeCell = cellToCheck.data as nbformat.ICodeCell;
-            const changedOutputs = data.outputs.map((output) => {
+            const outputs = createIOutputFromCellOutputs(cellToCheck.outputs);
+            const changedOutputs = outputs.map((output) => {
                 if (
                     (output.output_type === 'display_data' || output.output_type === 'execute_result') &&
                     output.transient &&
@@ -111,7 +107,7 @@ export function updateCellOutput(vscCell: NotebookCell, outputs: nbformat.IOutpu
     }
     // Compare outputs (at the end of the day everything is serializable).
     // Hence this is a safe comparison.
-    if (vscCell.outputs.length === newOutput.length && JSON.stringify(vscCell.outputs) === JSON.stringify(newOutput)) {
+    if (vscCell.outputs.length === newOutput.length && fastDeepEqual(vscCell.outputs, newOutput)) {
         return;
     }
     vscCell.outputs = newOutput;

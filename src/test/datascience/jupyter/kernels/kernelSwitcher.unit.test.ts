@@ -13,6 +13,7 @@ import { ConfigurationService } from '../../../../client/common/configuration/se
 import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
 import { Common } from '../../../../client/common/utils/localize';
 import { Architecture } from '../../../../client/common/utils/platform';
+import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { JupyterSessionStartError } from '../../../../client/datascience/baseJupyterSession';
 import { NotebookProvider } from '../../../../client/datascience/interactive-common/notebookProvider';
 import { JupyterNotebookBase } from '../../../../client/datascience/jupyter/jupyterNotebook';
@@ -93,7 +94,8 @@ suite('DataScience - Kernel Switcher', () => {
                     localProcExitCode: 0,
                     valid: true,
                     displayName: '',
-                    dispose: noop
+                    dispose: noop,
+                    rootDirectory: EXTENSION_ROOT_DIR
                 };
                 when(notebook.connection).thenReturn(jupyterConnection);
             });

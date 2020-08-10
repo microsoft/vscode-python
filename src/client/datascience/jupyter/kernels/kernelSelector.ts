@@ -32,7 +32,7 @@ import {
 import { createDefaultKernelSpec } from './helpers';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
-import { IKernelSpecQuickPickItem, LiveKernelModel } from './types';
+import { IKernelSelectionUsage, IKernelSpecQuickPickItem, KernelSelection, LiveKernelModel } from './types';
 
 export type KernelSpecInterpreter = {
     kernelSpec?: IJupyterKernelSpec;
@@ -54,7 +54,7 @@ export type KernelSpecInterpreter = {
 };
 
 @injectable()
-export class KernelSelector {
+export class KernelSelector implements IKernelSelectionUsage {
     /**
      * List of ids of kernels that should be hidden from the kernel picker.
      *
@@ -325,6 +325,53 @@ export class KernelSelector {
             interpreter: interpreter
         };
     }
+    public async useSelectedKernel(
+        selection: KernelSelection,
+        resource: Resource,
+        type: 'raw' | 'jupyter' | 'noConnection',
+        session?: IJupyterSessionManager,
+        cancelToken?: CancellationToken
+    ) {
+        // Check if ipykernel is installed in this kernel.
+        if (selection.interpreter && type === 'jupyter') {
+            sendTelemetryEvent(Telemetry.SwitchToInterpreterAsKernel);
+            return this.useInterpreterAsKernel(
+                resource,
+                selection.interpreter,
+                type,
+                undefined,
+                session,
+                false,
+                cancelToken
+            );
+        } else if (selection.interpreter && type === 'raw') {
+            return this.useInterpreterAndDefaultKernel(selection.interpreter);
+        } else if (selection.kernelModel) {
+            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
+                language: this.computeLanguage(selection.kernelModel.language)
+            });
+            // tslint:disable-next-line: no-any
+            const interpreter = selection.kernelModel
+                ? await this.kernelService.findMatchingInterpreter(selection.kernelModel, cancelToken)
+                : undefined;
+            return {
+                kernelSpec: selection.kernelSpec,
+                interpreter,
+                kernelModel: selection.kernelModel
+            };
+        } else if (selection.kernelSpec) {
+            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
+                language: this.computeLanguage(selection.kernelSpec.language)
+            });
+            const interpreter = selection.kernelSpec
+                ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
+                : undefined;
+            await this.kernelService.updateKernelEnvironment(interpreter, selection.kernelSpec, cancelToken);
+            return { kernelSpec: selection.kernelSpec, interpreter };
+        } else {
+            return {};
+        }
+    }
 
     public async askForLocalKernel(
         resource: Resource,
@@ -492,45 +539,7 @@ export class KernelSelector {
         if (!selection?.selection) {
             return {};
         }
-        // Check if ipykernel is installed in this kernel.
-        if (selection.selection.interpreter && type === 'jupyter') {
-            sendTelemetryEvent(Telemetry.SwitchToInterpreterAsKernel);
-            return this.useInterpreterAsKernel(
-                resource,
-                selection.selection.interpreter,
-                type,
-                undefined,
-                session,
-                false,
-                cancelToken
-            );
-        } else if (selection.selection.interpreter && type === 'raw') {
-            return this.useInterpreterAndDefaultKernel(selection.selection.interpreter);
-        } else if (selection.selection.kernelModel) {
-            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
-                language: this.computeLanguage(selection.selection.kernelModel.language)
-            });
-            // tslint:disable-next-line: no-any
-            const interpreter = selection.selection.kernelModel
-                ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelModel, cancelToken)
-                : undefined;
-            return {
-                kernelSpec: selection.selection.kernelSpec,
-                interpreter,
-                kernelModel: selection.selection.kernelModel
-            };
-        } else if (selection.selection.kernelSpec) {
-            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
-                language: this.computeLanguage(selection.selection.kernelSpec.language)
-            });
-            const interpreter = selection.selection.kernelSpec
-                ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken)
-                : undefined;
-            await this.kernelService.updateKernelEnvironment(interpreter, selection.selection.kernelSpec, cancelToken);
-            return { kernelSpec: selection.selection.kernelSpec, interpreter };
-        } else {
-            return {};
-        }
+        return this.useSelectedKernel(selection.selection, resource, type, session, cancelToken);
     }
 
     // When switching to an interpreter in raw kernel mode then just create a default kernelspec for that interpreter to use
