@@ -21,6 +21,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
     protected vscfs: FileSystem;
     private globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>;
     private fsPathUtils: IFileSystemPathUtils;
+    // tslint:disable-next-line: no-any
     private pendingIO = new Map<string, Thenable<any>[]>();
 
     constructor() {

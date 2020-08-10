@@ -48,8 +48,8 @@ export function getSavedUriList(globalState: Memento): { uri: string; time: numb
     const uriList = globalState.get<{ uri: string; time: number }[]>(Settings.JupyterServerUriList);
     return uriList
         ? uriList.sort((a, b) => {
-            return b.time - a.time;
-        })
+              return b.time - a.time;
+          })
         : [];
 }
 export function addToUriList(globalState: Memento, uri: string, time: number) {
@@ -132,7 +132,12 @@ export function translateKernelLanguageToMonaco(kernelLanguage: string): string 
     return kernelLanguage.toLowerCase();
 }
 
-export function generateNewNotebookUri(counter: number, rootFolder: string | undefined, title?: string, forVSCodeNotebooks?: boolean): Uri {
+export function generateNewNotebookUri(
+    counter: number,
+    rootFolder: string | undefined,
+    title?: string,
+    forVSCodeNotebooks?: boolean
+): Uri {
     // However if there are files already on disk, we should be able to overwrite them because
     // they will only ever be used by 'open' editors. So just use the current counter for our untitled count.
     const fileName = title ? `${title}-${counter}.ipynb` : `${DataScience.untitledNotebookFileName()}-${counter}.ipynb`;
@@ -140,8 +145,9 @@ export function generateNewNotebookUri(counter: number, rootFolder: string | und
     if (forVSCodeNotebooks) {
         return Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
     } else {
-        return Uri.joinPath(rootFolder ? Uri.file(rootFolder) : Uri.file(os.tmpdir()), fileName)
-            .with({ scheme: 'untitled' });
+        return Uri.joinPath(rootFolder ? Uri.file(rootFolder) : Uri.file(os.tmpdir()), fileName).with({
+            scheme: 'untitled'
+        });
     }
 }
 

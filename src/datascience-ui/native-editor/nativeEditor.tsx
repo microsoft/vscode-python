@@ -224,7 +224,10 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             // TODO: How to have this work for when the keyboard shortcuts are changed?
             case 's': {
                 if (!this.props.settings?.extraSettings.useCustomEditorApi) {
-                    if ((event.ctrlKey && getOSType() !== OSType.OSX) || (event.metaKey && getOSType() === OSType.OSX)) {
+                    if (
+                        (event.ctrlKey && getOSType() !== OSType.OSX) ||
+                        (event.metaKey && getOSType() === OSType.OSX)
+                    ) {
                         // This is save, save our cells
                         this.props.save();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Save);

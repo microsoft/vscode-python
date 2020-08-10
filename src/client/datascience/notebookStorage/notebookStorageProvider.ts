@@ -6,12 +6,12 @@
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
+import { IWorkspaceService } from '../../common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { generateNewNotebookUri } from '../common';
 import { INotebookModel, INotebookStorage } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';
 import { VSCodeNotebookModel } from './vscNotebookModel';
-import { IWorkspaceService } from '../../common/application/types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 
@@ -109,7 +109,12 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     }
 
     private getNextNewNotebookUri(forVSCodeNotebooks?: boolean): Uri {
-        return generateNewNotebookUri(NotebookStorageProvider.untitledCounter, this.workspace.rootPath, undefined, forVSCodeNotebooks);
+        return generateNewNotebookUri(
+            NotebookStorageProvider.untitledCounter,
+            this.workspace.rootPath,
+            undefined,
+            forVSCodeNotebooks
+        );
     }
 
     private trackModel(model: INotebookModel): INotebookModel {
