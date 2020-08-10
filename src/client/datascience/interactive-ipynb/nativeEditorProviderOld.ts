@@ -27,6 +27,7 @@ import {
     IMemento,
     WORKSPACE_MEMENTO
 } from '../../common/types';
+import { createDeferred } from '../../common/utils/async';
 import { isNotebookCell, noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { Commands, Identifiers } from '../constants';
@@ -57,7 +58,6 @@ import {
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorOldWebView } from './nativeEditorOldWebView';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
-import { createDeferred } from '../../common/utils/async';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
