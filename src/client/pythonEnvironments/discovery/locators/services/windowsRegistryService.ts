@@ -47,7 +47,12 @@ export class WindowsRegistryService extends CacheableLocatorService {
     // tslint:disable-next-line:no-empty
     public dispose() {}
     protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
-        return this.platform.isWindows ? this.getInterpretersFromRegistry() : [];
+        return this.platform.isWindows
+            ? this.getInterpretersFromRegistry().catch((ex) => {
+                  traceError('Fetching interpreters from registry failed with error', ex);
+                  return [];
+              })
+            : [];
     }
     private async getInterpretersFromRegistry() {
         // https://github.com/python/peps/blob/master/pep-0514.txt#L357
