@@ -442,7 +442,6 @@ export namespace vscUri {
             }
             return uri.with({ path: newPath });
         }
-
     }
 
     export interface UriComponents {
