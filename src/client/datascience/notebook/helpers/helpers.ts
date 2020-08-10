@@ -16,11 +16,7 @@ import type {
     NotebookDocument
 } from 'vscode-proposed';
 import { NotebookCellRunState } from '../../../../../typings/vscode-proposed';
-import {
-    concatMultilineStringInput,
-    concatMultilineStringOutput,
-    splitMultilineString
-} from '../../../../datascience-ui/common';
+import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -200,7 +196,7 @@ function createVSCNotebookCellDataFromRawCell(model: INotebookModel, cell: ICell
         language: 'raw',
         metadata: notebookCellMetadata,
         outputs: [],
-        source: concatMultilineStringInput(cell.data.source)
+        source: concatMultilineString(cell.data.source)
     };
 }
 function createMarkdownCellFromVSCNotebookCell(cell: NotebookCell): nbformat.IMarkdownCell {
@@ -226,7 +222,7 @@ function createVSCNotebookCellDataFromMarkdownCell(model: INotebookModel, cell: 
         cellKind: vscodeNotebookEnums.CellKind.Markdown,
         language: MARKDOWN_LANGUAGE,
         metadata: notebookCellMetadata,
-        source: concatMultilineStringInput(cell.data.source),
+        source: concatMultilineString(cell.data.source),
         outputs: []
     };
 }
@@ -289,7 +285,7 @@ function createVSCNotebookCellDataFromCodeCell(model: INotebookModel, cell: ICel
         cellKind: vscodeNotebookEnums.CellKind.Code,
         language: defaultCodeLanguage,
         metadata: notebookCellMetadata,
-        source: concatMultilineStringInput(cell.data.source),
+        source: concatMultilineString(cell.data.source),
         outputs
     };
 }
@@ -458,7 +454,7 @@ function translateStreamOutput(output: nbformat.IStream, outputType: nbformat.Ou
     return {
         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
         data: {
-            ['text/plain']: concatMultilineStringOutput(output.text)
+            ['text/plain']: concatMultilineString(output.text, true)
         },
         metadata: {
             custom: { vscode: { outputType, name: output.name } }

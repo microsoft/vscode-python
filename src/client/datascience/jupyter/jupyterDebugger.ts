@@ -7,7 +7,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { DebugConfiguration, Disposable } from 'vscode';
 import * as vsls from 'vsls/vscode';
-import { concatMultilineStringOutput } from '../../../datascience-ui/common';
+import { concatMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell } from '../../common/application/types';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
@@ -478,7 +478,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 }
                 if (outputs[0].output_type === 'stream') {
                     const stream = outputs[0] as nbformat.IStream;
-                    return concatMultilineStringOutput(stream.text);
+                    return concatMultilineString(stream.text, true);
                 }
             }
         }

@@ -682,6 +682,8 @@ export interface ICodeWatcher {
     changeCellToMarkdown(): void;
     changeCellToCode(): void;
     debugCurrentCell(): Promise<void>;
+    gotoNextCell(): void;
+    gotoPreviousCell(): void;
 }
 
 export const ICodeLensFactory = Symbol('ICodeLensFactory');

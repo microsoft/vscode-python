@@ -36,7 +36,7 @@ import {
     INotebookExporter,
     ITrustService
 } from '../../client/datascience/types';
-import { concatMultilineStringInput } from '../../datascience-ui/common';
+import { concatMultilineString } from '../../datascience-ui/common';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
 import { ExecutionCount } from '../../datascience-ui/interactive-common/executionCount';
 import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
@@ -1380,7 +1380,7 @@ df.head()`;
 
                         // 3. Validate the edit received by the extension from the react side.
                         await modelEditsInExtension.promise;
-                        assert.equal(concatMultilineStringInput(model?.cells[3].data.source!), stringToType);
+                        assert.equal(concatMultilineString(model?.cells[3].data.source!), stringToType);
 
                         // Now hit escape.
                         let update = waitForMessage(ioc, InteractiveWindowMessages.UnfocusedCellEditor);
@@ -1405,7 +1405,7 @@ df.head()`;
                         // Verify the cell type.
                         assert.equal(model?.cells[3].data.cell_type, 'markdown');
                         // Verify that changing cell type didn't result in a loss of data.
-                        assert.equal(concatMultilineStringInput(model?.cells[3].data.source!), stringToType);
+                        assert.equal(concatMultilineString(model?.cells[3].data.source!), stringToType);
                     });
                 });
 
@@ -1731,7 +1731,7 @@ df.head()`;
                             const expectedActiveCell = model?.cells[index + 1];
                             // The editor has focus, confirm the value in the active element/editor is the code.
                             const codeInActiveElement = ((document.activeElement as any).value as string).trim();
-                            const expectedCode = concatMultilineStringInput(expectedActiveCell!.data.source!).trim();
+                            const expectedCode = concatMultilineString(expectedActiveCell!.data.source!).trim();
                             assert.equal(codeInActiveElement, expectedCode);
                         }
                     });

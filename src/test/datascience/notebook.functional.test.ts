@@ -46,7 +46,7 @@ import {
 } from '../../client/datascience/types';
 import { IInterpreterService, IKnownSearchPathsForInterpreters } from '../../client/interpreter/contracts';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
-import { concatMultilineStringInput } from '../../datascience-ui/common';
+import { concatMultilineString } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -222,7 +222,7 @@ suite('DataScience notebook tests', () => {
                 } else if (cellType === 'markdown') {
                     assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
                     const cell = cells[0].data as nbformat.IMarkdownCell;
-                    const outputSource = concatMultilineStringInput(cell.source);
+                    const outputSource = concatMultilineString(cell.source);
                     verifyValue(outputSource);
                 } else if (cellType === 'error') {
                     const cell = cells[0].data as nbformat.ICodeCell;
@@ -1322,7 +1322,7 @@ plt.show()`,
                     }
                     public async preExecute(cell: ICell, silent: boolean): Promise<void> {
                         if (!silent) {
-                            cellInputs.push(concatMultilineStringInput(cell.data.source));
+                            cellInputs.push(concatMultilineString(cell.data.source));
                         }
                     }
                     public async postExecute(cell: ICell, silent: boolean): Promise<void> {

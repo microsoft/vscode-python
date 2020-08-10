@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 
 import { Uri } from 'vscode';
-import { concatMultilineStringInput } from '../../../datascience-ui/common';
+import { concatMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -191,7 +191,7 @@ export class JupyterExporter implements INotebookExporter {
         // Make sure we don't already have a cell with a ChangeDirectory comment in it.
         let directoryChange: string | undefined;
         const haveChangeAlready = cells.find((c) =>
-            concatMultilineStringInput(c.data.source).includes(CodeSnippits.ChangeDirectoryCommentIdentifier)
+            concatMultilineString(c.data.source).includes(CodeSnippits.ChangeDirectoryCommentIdentifier)
         );
         if (!haveChangeAlready) {
             const notebookFilePath = path.dirname(notebookFile);

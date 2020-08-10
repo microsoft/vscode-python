@@ -85,6 +85,8 @@
     "python.command.python.datascience.moveCellsDown.title": "Move Selected Cells Down",
     "python.command.python.datascience.changeCellToMarkdown.title": "Change Cell to Markdown",
     "python.command.python.datascience.changeCellToCode.title": "Change Cell to Code",
+    "python.command.python.datascience.gotoNextCellInFile.title": "Go to Next Cell",
+    "python.command.python.datascience.gotoPrevCellInFile.title": "Go to Previous Cell",
     "python.command.python.datascience.showhistorypane.title": "Show Python Interactive Window",
     "python.command.python.datascience.createnewinteractive.title": "Create Python Interactive Window",
     "python.command.python.datascience.selectjupyteruri.title": "Specify local or remote Jupyter server for connections",

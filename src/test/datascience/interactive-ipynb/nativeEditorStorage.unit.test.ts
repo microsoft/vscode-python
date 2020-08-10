@@ -44,7 +44,7 @@ import {
 } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { concatMultilineStringInput } from '../../../datascience-ui/common';
+import { concatMultilineString } from '../../../datascience-ui/common';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
 import { MockMemento } from '../../mocks/mementos';
 import { MockWorkspaceConfiguration } from '../mockWorkspaceConfig';
@@ -467,7 +467,7 @@ suite('DataScience - Native Editor Storage', () => {
         let cells = model.cells;
         expect(cells).to.be.lengthOf(3);
         expect(cells[1].id).to.be.match(/NotebookImport#1/);
-        expect(concatMultilineStringInput(cells[1].data.source)).to.be.equals('b=2\nab');
+        expect(concatMultilineString(cells[1].data.source)).to.be.equals('b=2\nab');
         expect(model.isDirty).to.be.equal(true, 'Editor should be dirty');
         removeCell(0, cells[0]);
         cells = model.cells;
@@ -515,7 +515,7 @@ suite('DataScience - Native Editor Storage', () => {
         const cells = model.cells;
         expect(cells).to.be.lengthOf(3);
         expect(cells[1].id).to.be.match(/NotebookImport#1/);
-        expect(concatMultilineStringInput(cells[1].data.source)).to.be.equals('b=2\nab');
+        expect(concatMultilineString(cells[1].data.source)).to.be.equals('b=2\nab');
         expect(model.isDirty).to.be.equal(true, 'Editor should be dirty');
     });
 
@@ -533,7 +533,7 @@ suite('DataScience - Native Editor Storage', () => {
 
         const cells = model.cells;
         expect(cells).to.be.lengthOf(2);
-        expect(concatMultilineStringInput(cells[0].data.source)).to.be.equals('a=1');
+        expect(concatMultilineString(cells[0].data.source)).to.be.equals('a=1');
         expect(model.isDirty).to.be.equal(true, 'Editor should be dirty');
     });
 

@@ -81,7 +81,7 @@ export namespace Helpers {
 
             // Live share has been disabled for now, see https://github.com/microsoft/vscode-python/issues/7972
             // Check to see if our code still matches for the cell (in liveshare it might be updated from the other side)
-            // if (concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source) !== concatMultilineStringInput(cell.data.source)) {
+            // if (concatMultilineString(arg.prevState.cellVMs[index].cell.data.source) !== concatMultilineString(cell.data.source)) {
 
             // Prevent updates to the source, as its possible we have recieved a response for a cell execution
             // and the user has updated the cell text since then.

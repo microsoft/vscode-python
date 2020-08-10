@@ -42,11 +42,7 @@ import { LiveKernelModel } from './kernels/types';
 
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import {
-    concatMultilineStringInput,
-    concatMultilineStringOutput,
-    formatStreamText
-} from '../../../datascience-ui/common';
+import { concatMultilineString, formatStreamText } from '../../../datascience-ui/common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { RefBool } from '../../common/refBool';
 
@@ -798,7 +794,7 @@ export class JupyterNotebookBase implements INotebook {
                 outputs.forEach((o) => {
                     if (o.output_type === 'stream') {
                         const stream = o as nbformat.IStream;
-                        result = result.concat(formatStreamText(concatMultilineStringOutput(stream.text)));
+                        result = result.concat(formatStreamText(concatMultilineString(stream.text, true)));
                     } else {
                         const data = o.data;
                         if (data && data.hasOwnProperty('text/plain')) {
@@ -1101,7 +1097,7 @@ export class JupyterNotebookBase implements INotebook {
                 subscriber.error(this.sessionStartTime, exitError);
                 subscriber.complete(this.sessionStartTime);
             } else {
-                const request = this.generateRequest(concatMultilineStringInput(subscriber.cell.data.source), silent, {
+                const request = this.generateRequest(concatMultilineString(subscriber.cell.data.source), silent, {
                     ...subscriber.cell.data.metadata,
                     ...{ cellId: subscriber.cell.id }
                 });
@@ -1326,12 +1322,12 @@ export class JupyterNotebookBase implements INotebook {
         if (existing) {
             // tslint:disable-next-line:restrict-plus-operands
             existing.text = existing.text + msg.content.text;
-            const originalText = formatStreamText(concatMultilineStringOutput(existing.text));
+            const originalText = formatStreamText(concatMultilineString(existing.text));
             originalTextLength = originalText.length;
             existing.text = trimFunc(originalText);
             trimmedTextLength = existing.text.length;
         } else {
-            const originalText = formatStreamText(concatMultilineStringOutput(msg.content.text));
+            const originalText = formatStreamText(concatMultilineString(msg.content.text));
             originalTextLength = originalText.length;
             // Create a new stream entry
             const output: nbformat.IStream = {

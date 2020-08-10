@@ -77,6 +77,8 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.MoveCellsDown, this.moveCellsDown);
         this.registerCommand(Commands.ChangeCellToMarkdown, this.changeCellToMarkdown);
         this.registerCommand(Commands.ChangeCellToCode, this.changeCellToCode);
+        this.registerCommand(Commands.GotoNextCellInFile, this.gotoNextCellInFile);
+        this.registerCommand(Commands.GotoPrevCellInFile, this.gotoPrevCellInFile);
         this.registerCommand(Commands.RunAllCellsAbovePalette, this.runAllCellsAboveFromCursor);
         this.registerCommand(Commands.RunCellAndAllBelowPalette, this.runCellAndAllBelowFromCursor);
         this.registerCommand(Commands.RunToLine, this.runToLine);
@@ -364,6 +366,14 @@ export class CommandRegistry implements IDisposable {
 
     private async changeCellToCode(): Promise<void> {
         this.getCurrentCodeWatcher()?.changeCellToCode();
+    }
+
+    private async gotoNextCellInFile(): Promise<void> {
+        this.getCurrentCodeWatcher()?.gotoNextCell();
+    }
+
+    private async gotoPrevCellInFile(): Promise<void> {
+        this.getCurrentCodeWatcher()?.gotoPreviousCell();
     }
 
     private async runAllCellsAboveFromCursor(): Promise<void> {
