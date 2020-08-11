@@ -21,7 +21,8 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
-import { IServiceManager } from '../ioc/types';
+import { IServiceContainer, IServiceManager } from '../ioc/types';
+import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
@@ -47,8 +48,8 @@ import {
 } from './discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
 
-export function registerForIOC(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
+export function registerForIOC(serviceManager: IServiceManager, serviceContainer: IServiceContainer) {
+    serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelperProxy);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         PythonInterpreterLocatorService,

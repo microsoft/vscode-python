@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { WorkerPool } from '../../../client/pythonEnvironments/info/workerPool';
+import { QueuePosition, WorkerPool } from '../../../client/pythonEnvironments/info/workerPool';
 
 suite('Process Queue', () => {
     test('Run two workers to calculate square', async () => {
@@ -90,5 +90,29 @@ suite('Process Queue', () => {
         }
         assert.deepEqual(reasons, [Error('Bad input')]);
         assert.deepEqual(results, [4, 9, 25, 36]);
+    });
+
+    test('Add to the front of the queue', async () => {
+        const processOrder: number[] = [];
+        const workerPool = new WorkerPool<number, number>(async (i) => {
+            processOrder.push(i);
+            return Promise.resolve(i * i);
+        });
+
+        const promises: Promise<number>[] = [];
+        const results: number[] = [];
+        [1, 2, 3, 4, 5, 6].forEach((i) => {
+            if (i === 4) {
+                promises.push(workerPool.addToQueue(i, QueuePosition.Front));
+            } else {
+                promises.push(workerPool.addToQueue(i));
+            }
+        });
+        await Promise.all(promises).then((r) => {
+            results.push(...r);
+        });
+
+        assert.deepEqual(processOrder, [1, 2, 4, 3, 5, 6]);
+        assert.deepEqual(results, [1, 4, 9, 16, 25, 36]);
     });
 });

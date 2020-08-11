@@ -61,8 +61,13 @@ interface IWorkItem<T> {
     item: T;
 }
 
+export enum QueuePosition {
+    Back,
+    Front
+}
+
 export interface IWorkerPool<T, R> {
-    addToQueue(item: T): Promise<R>;
+    addToQueue(item: T, queuePosition: QueuePosition): Promise<R>;
     stop(): void;
 }
 
@@ -100,12 +105,13 @@ export class WorkerPool<T, R> {
     }
 
     /**
-     * Description of my method
+     * Add items to be processed to a queue.
      * @method addToQueue
      * @param {T} item: Item to process
-     * @returns
+     * @param {QueuePosition} queuePosition: Add items to the front or back of the queue.
+     * @returns A promise that when resolved gets the result from running the worker function.
      */
-    public addToQueue(item: T): Promise<R> {
+    public addToQueue(item: T, queuePosition: QueuePosition = QueuePosition.Back): Promise<R> {
         if (this.stopProcessing) {
             throw Error('Queue is stopped');
         }
@@ -114,7 +120,11 @@ export class WorkerPool<T, R> {
         // This will allow us to track multiple submissions
         // of the same item.
         const workItem: IWorkItem<T> = { item };
-        this.queue.push(workItem);
+        if (queuePosition === QueuePosition.Back) {
+            this.queue.push(workItem);
+        } else {
+            this.queue.unshift(workItem);
+        }
 
         // This is the promise that will be resolved when the work
         // item is complete. We save this in a map to resolve when
@@ -149,18 +159,24 @@ export class WorkerPool<T, R> {
         });
 
         // This is necessary to exit any worker that is waiting for an item.
-        // If we don't unblock here then the worker just remains blocked for
-        // ever.
+        // If we don't unblock here then the worker just remains blocked
+        // forever.
         this.waitingWorkersUnblockQueue.forEach((u) => u());
     }
 
     private nextWorkItem(): Promise<IWorkItem<T>> {
+        // Note that shift() return `undefined` if the queue is empty.
         const nextWorkItem = this.queue.shift();
         if (nextWorkItem) {
             return Promise.resolve(nextWorkItem);
         }
+
+        // Queue is Empty, so return a promise that will be resolved when
+        // new items are added to the queue.
         return new Promise<IWorkItem<T>>((resolve, reject) => {
             this.waitingWorkersUnblockQueue.push(() => {
+                // This will be called to unblock any worker waiting for items.
+                // We should re
                 if (this.stopProcessing) {
                     reject();
                 }

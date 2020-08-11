@@ -62,7 +62,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
             IInterpreterService,
             instance(mock(InterpreterService))
         );
-        registerForIOC(ioc.serviceManager);
+        registerForIOC(ioc.serviceManager, ioc.serviceContainer);
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 

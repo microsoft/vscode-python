@@ -37,9 +37,9 @@ export function initializeGlobals(context: IExtensionContext): [IServiceManager,
 
 export function initializeComponents(
     _context: IExtensionContext,
-    _serviceManager: IServiceManager,
-    _serviceContainer: IServiceContainer
+    serviceManager: IServiceManager,
+    serviceContainer: IServiceContainer
 ) {
-    registerForIOC(_serviceManager);
+    registerForIOC(serviceManager, serviceContainer);
     // We will be pulling code over from activateLegacy().
 }
