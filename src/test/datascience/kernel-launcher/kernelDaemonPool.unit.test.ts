@@ -66,6 +66,9 @@ suite('DataScience - Kernel Daemon Pool', () => {
         when(daemon1.preWarm()).thenResolve();
         when(daemon2.preWarm()).thenResolve();
         when(daemon3.preWarm()).thenResolve();
+        when(daemon1.dispose()).thenResolve();
+        when(daemon2.dispose()).thenResolve();
+        when(daemon3.dispose()).thenResolve();
 
         when(envVars.onDidEnvironmentVariablesChange).thenReturn(didEnvVarsChange.event);
         when(interpeterService.onDidChangeInterpreter).thenReturn(didChangeInterpreter.event);

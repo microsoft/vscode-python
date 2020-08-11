@@ -66,8 +66,6 @@ suite('DataScience - Kernel Launcher Daemon', () => {
         when(
             executionService.execModuleObservable('ipkernel_launcher', deepEqual(['-f', 'file.json']), anything())
         ).thenReturn(instance(observableOutputForDaemon));
-        // Make sure that it doesn't have a start function. Normally the proxy will pretend to have a start function, which we are checking for non-existance
-        when((executionService as any).start).thenReturn(false);
         // Else ts-mockit doesn't allow us to return an instance of a mock as a return value from an async function.
         (instance(executionService) as any).then = undefined;
         when(daemonPool.get(anything(), anything(), anything())).thenResolve(instance(executionService) as any);
