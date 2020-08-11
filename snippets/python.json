@@ -116,7 +116,7 @@
         "prefix": "class",
         "body": ["class ${1:classname}(${2:object}):", "\t\"\"\"", "\t${3:docstring}", "\t\"\"\"", "\t${4:pass}"],
         "description": "Code snippet for a class definition"
-        },
+    },
     "lambda": {
         "prefix": "lambda",
         "body": ["lambda ${1:parameter_list}: ${2:expression}"],
