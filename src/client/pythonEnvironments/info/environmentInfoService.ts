@@ -59,13 +59,20 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
         if (!this.workerPool) {
             this.workerPool = new WorkerPool<string, IEnvironmentInfo | undefined>(async (interpreterPath: string) => {
                 const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(interpreterPath), shellExecute);
-                if (interpreterInfo) {
+                if (interpreterInfo && interpreterInfo.version) {
                     return new EnvironmentInfo(
                         interpreterPath,
                         InterpreterType.cpython,
                         EnvironmentType.Unknown, // This will be handled later
                         interpreterInfo.architecture,
-                        interpreterInfo.version
+                        {
+                            raw: interpreterInfo.version.raw,
+                            major: interpreterInfo.version.major,
+                            minor: interpreterInfo.version.minor,
+                            patch: interpreterInfo.version.patch,
+                            build: interpreterInfo.version.build,
+                            prerelease: interpreterInfo.version.prerelease
+                        }
                     );
                 }
                 return undefined;
