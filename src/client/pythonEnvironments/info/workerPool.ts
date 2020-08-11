@@ -147,6 +147,11 @@ export class WorkerPool<T, R> {
         return promise;
     }
 
+    /**
+     * Stops any further processing of items. Each works is expected to finish
+     * whatever it is working on and exit.
+     * @method addToQueue
+     */
     public stop(): void {
         this.stopProcessing = true;
 
