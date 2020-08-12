@@ -403,7 +403,7 @@ suite('DataScience notebook tests', () => {
                 async () => {
                     const pythonService = await createPythonService(ioc);
 
-                    if (pythonService) {
+                    if (pythonService && !useRawKernel) {
                         const configFile = path.join(
                             EXTENSION_ROOT_DIR,
                             'src',
@@ -443,7 +443,7 @@ suite('DataScience notebook tests', () => {
 
                     const pythonService = await createPythonService(ioc);
 
-                    if (pythonService) {
+                    if (pythonService && !useRawKernel) {
                         const configFile = path.join(
                             EXTENSION_ROOT_DIR,
                             'src',
@@ -509,7 +509,7 @@ suite('DataScience notebook tests', () => {
             runTest('Remote', async () => {
                 const pythonService = await createPythonService(ioc);
 
-                if (pythonService) {
+                if (pythonService && !useRawKernel) {
                     const configFile = path.join(
                         EXTENSION_ROOT_DIR,
                         'src',
