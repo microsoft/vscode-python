@@ -11,7 +11,7 @@ import { IExtensionSingleActivationService } from '../../../client/activation/ty
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { ContextKey } from '../../../client/common/contextKey';
 import { CryptoUtils } from '../../../client/common/crypto';
-import { IDisposable, IExperimentService } from '../../../client/common/types';
+import { IDisposable } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { Commands } from '../../../client/datascience/constants';
 import { TrustCommandHandler } from '../../../client/datascience/interactive-ipynb/trustCommandHandler';
@@ -35,7 +35,6 @@ suite('DataScience - Trust Command Handler', () => {
     let disposables: IDisposable[] = [];
     let clock: fakeTimers.InstalledClock;
     let contextKeySet: sinon.SinonStub<[boolean], Promise<void>>;
-    let experiments: IExperimentService;
     let model: INotebookModel;
     let trustNotebookCommandCallback: (uri: Uri) => Promise<void>;
     let testIndex = 0;
@@ -53,8 +52,6 @@ suite('DataScience - Trust Command Handler', () => {
         when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
         disposables = [];
 
-        experiments = mock<IExperimentService>();
-
         when(trustService.trustNotebook(anything(), anything())).thenResolve();
         when(commandManager.registerCommand(anything(), anything(), anything())).thenCall(() => ({ dispose: noop }));
         when(commandManager.registerCommand(Commands.TrustNotebook, anything(), anything())).thenCall((_, cb) => {
@@ -68,8 +65,7 @@ suite('DataScience - Trust Command Handler', () => {
             instance(storageProvider),
             instance(commandManager),
             instance(applicationShell),
-            disposables,
-            instance(experiments)
+            disposables
         );
 
         clock = fakeTimers.install();
@@ -83,14 +79,6 @@ suite('DataScience - Trust Command Handler', () => {
         clock.uninstall();
     });
 
-    test('Context not set if not in experiment', async () => {
-        when(experiments.inExperiment(anything())).thenResolve(false);
-
-        await trustCommandHandler.activate();
-        await clock.runAllAsync();
-
-        assert.equal(contextKeySet.callCount, 0);
-    });
     test('Executing command will not update trust after dismissing the prompt', async () => {
         when(applicationShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
             undefined as any

@@ -180,7 +180,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private trustService: ITrustService,
-        private expService: IExperimentService,
+        expService: IExperimentService,
         private _model: INotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector
@@ -224,7 +224,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             selector
         );
         asyncRegistry.push(this);
-
         asyncRegistry.push(this.trustService.onDidSetNotebookTrust(this.monitorChangesToTrust, this));
         this.synchronizer.subscribeToUserActions(this, this.postMessage.bind(this));
 

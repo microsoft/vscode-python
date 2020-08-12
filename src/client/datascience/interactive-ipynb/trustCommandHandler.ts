@@ -9,7 +9,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
-import { IDisposableRegistry, IExperimentService } from '../../common/types';
+import { IDisposableRegistry } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { DataScience } from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -25,8 +25,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IExperimentService) private readonly experiments: IExperimentService
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     public async activate(): Promise<void> {
         this.activateInBackground().ignoreErrors();
