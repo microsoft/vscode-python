@@ -8,7 +8,7 @@ import { Uri } from 'vscode';
 import { traceError } from '../../common/logger';
 
 import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { IDataScienceFileSystem, ILocalResourceUriConverter, INotebook } from '../types';
@@ -94,8 +94,8 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
             return interpreterInfo?.sysPrefix;
         }
     }
-    private getInterpreter(): Partial<PythonInterpreter> | undefined {
-        let interpreter: undefined | Partial<PythonInterpreter> = this.notebook.getMatchingInterpreter();
+    private getInterpreter(): Partial<PythonEnvironment> | undefined {
+        let interpreter: undefined | Partial<PythonEnvironment> = this.notebook.getMatchingInterpreter();
         const kernel = this.notebook.getKernelSpec();
         interpreter = kernel?.metadata?.interpreter?.path ? kernel?.metadata?.interpreter : interpreter;
 

@@ -10,7 +10,7 @@ import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
@@ -76,7 +76,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     public async connect(
         kernelSpec: IJupyterKernelSpec,
         timeout: number,
-        interpreter?: PythonInterpreter,
+        interpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
         // Save the resource that we connect with
@@ -136,7 +136,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     public async createNewKernelSession(
         kernel: IJupyterKernelSpec | LiveKernelModel,
         timeoutMS: number,
-        interpreter?: PythonInterpreter,
+        interpreter?: PythonEnvironment,
         _cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         if (!kernel || 'session' in kernel) {
@@ -195,7 +195,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     protected async createRestartSession(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         _session: ISessionWithSocket,
-        interpreter?: PythonInterpreter,
+        interpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         if (!kernelSpec || 'session' in kernelSpec) {
@@ -212,7 +212,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
     private async startRawSession(
         kernelSpec: IJupyterKernelSpec,
-        interpreter?: PythonInterpreter,
+        interpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<RawSession> {
         const cancellationPromise = createPromiseFromCancellation({

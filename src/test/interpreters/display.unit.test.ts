@@ -36,11 +36,11 @@ import {
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
-import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 // tslint:disable:no-any max-func-body-length
 
-const info: PythonInterpreter = {
+const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
     displayName: '',
@@ -140,7 +140,7 @@ suite('Interpreters Display', () => {
     test('Display name and tooltip must come from interpreter info', async () => {
         const resource = Uri.file('x');
         const workspaceFolder = Uri.file('workspace');
-        const activeInterpreter: PythonInterpreter = {
+        const activeInterpreter: PythonEnvironment = {
             ...info,
             displayName: 'Dummy_Display_Name',
             type: EnvironmentType.Unknown,
@@ -164,7 +164,7 @@ suite('Interpreters Display', () => {
     test('Log the output channel if displayed needs to be updated with a new interpreter', async () => {
         const resource = Uri.file('x');
         const workspaceFolder = Uri.file('workspace');
-        const activeInterpreter: PythonInterpreter = {
+        const activeInterpreter: PythonEnvironment = {
             ...info,
             displayName: 'Dummy_Display_Name',
             type: EnvironmentType.Unknown,
@@ -197,10 +197,10 @@ suite('Interpreters Display', () => {
         const displayName = 'This is the display name';
 
         setupWorkspaceFolder(resource, workspaceFolder);
-        const pythonInterpreter: PythonInterpreter = ({
+        const pythonInterpreter: PythonEnvironment = ({
             displayName,
             path: pythonPath
-        } as any) as PythonInterpreter;
+        } as any) as PythonEnvironment;
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
             .returns(() => Promise.resolve(pythonInterpreter));
@@ -244,7 +244,7 @@ suite('Interpreters Display', () => {
         const workspaceFolder = Uri.file('x');
         const resource = workspaceFolder;
         const pythonPath = path.join('user', 'development', 'env', 'bin', 'python');
-        const activeInterpreter: PythonInterpreter = {
+        const activeInterpreter: PythonEnvironment = {
             ...info,
             displayName: 'Dummy_Display_Name',
             type: EnvironmentType.Unknown,
@@ -277,7 +277,7 @@ suite('Interpreters Display', () => {
         const resource = Uri.file('x');
         setup(() => {
             const workspaceFolder = Uri.file('workspace');
-            const activeInterpreter: PythonInterpreter = {
+            const activeInterpreter: PythonEnvironment = {
                 ...info,
                 displayName: 'Dummy_Display_Name',
                 type: EnvironmentType.Unknown,

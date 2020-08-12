@@ -373,7 +373,7 @@ import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs'
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ProposePylanceBanner } from '../../client/languageServices/proposeLanguageServerBanner';
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
-import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
@@ -426,7 +426,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public get kernelService() {
         return this.kernelServiceMock;
     }
-    private static jupyterInterpreters: PythonInterpreter[] = [];
+    private static jupyterInterpreters: PythonEnvironment[] = [];
     private static foundPythonPath: string | undefined;
     public applicationShell!: ApplicationShell;
     // tslint:disable-next-line:no-any
@@ -443,7 +443,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
     private worksaceFoldersChangedEvent = new EventEmitter<WorkspaceFoldersChangeEvent>();
     private documentManager = new MockDocumentManager();
-    private workingPython: PythonInterpreter = {
+    private workingPython: PythonEnvironment = {
         path: '/foo/bar/python.exe',
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
@@ -452,7 +452,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         type: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
-    private workingPython2: PythonInterpreter = {
+    private workingPython2: PythonEnvironment = {
         path: '/foo/baz/python.exe',
         version: new SemVer('3.6.7-final'),
         sysVersion: '1.0.0.0',
@@ -1331,12 +1331,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.extensionRootPath = newRoot;
     }
 
-    public async getJupyterCapableInterpreter(): Promise<PythonInterpreter | undefined> {
+    public async getJupyterCapableInterpreter(): Promise<PythonEnvironment | undefined> {
         const list = await this.getFunctionalTestInterpreters();
         return list ? list[0] : undefined;
     }
 
-    public async getFunctionalTestInterpreters(): Promise<PythonInterpreter[]> {
+    public async getFunctionalTestInterpreters(): Promise<PythonEnvironment[]> {
         // This should be cacheable as we don't install new interpreters during tests
         if (DataScienceIocContainer.jupyterInterpreters.length > 0) {
             return DataScienceIocContainer.jupyterInterpreters;
@@ -1344,7 +1344,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const list = await this.get<IInterpreterService>(IInterpreterService).getInterpreters(undefined);
         const promises = list.map((f) => this.hasFunctionalDependencies(f).then((b) => (b ? f : undefined)));
         const resolved = await Promise.all(promises);
-        DataScienceIocContainer.jupyterInterpreters = resolved.filter((r) => r) as PythonInterpreter[];
+        DataScienceIocContainer.jupyterInterpreters = resolved.filter((r) => r) as PythonEnvironment[];
         return DataScienceIocContainer.jupyterInterpreters;
     }
 
@@ -1374,7 +1374,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return this.documentManager.addDocument(code, file);
     }
 
-    public addInterpreter(newInterpreter: PythonInterpreter, commands: SupportedCommands) {
+    public addInterpreter(newInterpreter: PythonEnvironment, commands: SupportedCommands) {
         if (this.mockJupyter) {
             this.mockJupyter.addInterpreter(newInterpreter, commands);
         }
@@ -1528,7 +1528,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return '';
     }
 
-    private async hasFunctionalDependencies(interpreter: PythonInterpreter): Promise<boolean | undefined> {
+    private async hasFunctionalDependencies(interpreter: PythonEnvironment): Promise<boolean | undefined> {
         try {
             const dependencyChecker = this.serviceManager.get<JupyterInterpreterDependencyService>(
                 JupyterInterpreterDependencyService

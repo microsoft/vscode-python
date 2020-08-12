@@ -14,9 +14,9 @@ import { IInterpreterSecurityService } from '../../../client/interpreter/autoSel
 import { InterpreterSelector } from '../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterComparer, IInterpreterQuickPickItem } from '../../../client/interpreter/configuration/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { EnvironmentType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
-const info: PythonInterpreter = {
+const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
     displayName: '',
@@ -53,7 +53,7 @@ suite('Interpreters - selector', () => {
     class TestInterpreterSelector extends InterpreterSelector {
         // tslint:disable-next-line:no-unnecessary-override
         public async suggestionToQuickPickItem(
-            suggestion: PythonInterpreter,
+            suggestion: PythonEnvironment,
             workspaceUri?: Uri
         ): Promise<IInterpreterQuickPickItem> {
             return super.suggestionToQuickPickItem(suggestion, workspaceUri);
@@ -96,7 +96,7 @@ suite('Interpreters - selector', () => {
                 new PathUtils(isWindows)
             );
 
-            const initial: PythonInterpreter[] = [
+            const initial: PythonEnvironment[] = [
                 { displayName: '1', path: 'c:/path1/path1', type: EnvironmentType.Unknown },
                 { displayName: '2', path: 'c:/path1/path1', type: EnvironmentType.Unknown },
                 { displayName: '2', path: 'c:/path2/path2', type: EnvironmentType.Unknown },

@@ -64,7 +64,7 @@ export type InterpreterInformation = {
  */
 // Note that "cachedEntry" is specific to the caching machinery
 // and doesn't really belong here.
-export type PythonInterpreter = InterpreterInformation & {
+export type PythonEnvironment = InterpreterInformation & {
     companyDisplayName?: string;
     displayName?: string;
     type: EnvironmentType;
@@ -102,7 +102,7 @@ export function getInterpreterTypeName(interpreterType: EnvironmentType) {
 /**
  * Build a version-sorted list from the given one, with lowest first.
  */
-export function sortInterpreters(interpreters: PythonInterpreter[]): PythonInterpreter[] {
+export function sortInterpreters(interpreters: PythonEnvironment[]): PythonEnvironment[] {
     if (interpreters.length === 0) {
         return [];
     }

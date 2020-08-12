@@ -21,7 +21,7 @@ import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFin
 import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { IDataScienceFileSystem, IJupyterKernelSpec } from '../../client/datascience/types';
 import { IInterpreterLocatorService, IInterpreterService } from '../../client/interpreter/contracts';
-import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 suite('Kernel Finder', () => {
     let interpreterService: typemoq.IMock<IInterpreterService>;
@@ -34,8 +34,8 @@ suite('Kernel Finder', () => {
     let installer: IInstaller;
     let workspaceService: IWorkspaceService;
     let kernelFinder: IKernelFinder;
-    let activeInterpreter: PythonInterpreter;
-    let interpreters: PythonInterpreter[] = [];
+    let activeInterpreter: PythonEnvironment;
+    let interpreters: PythonEnvironment[] = [];
     let resource: Resource;
     const kernelName = 'testKernel';
     const testKernelMetadata = { name: 'testKernel', display_name: 'Test Display Name' };

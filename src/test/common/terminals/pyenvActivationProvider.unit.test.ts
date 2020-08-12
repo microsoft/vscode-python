@@ -13,7 +13,7 @@ import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { EnvironmentType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Terminal Environment Activation pyenv', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -47,7 +47,7 @@ suite('Terminal Environment Activation pyenv', () => {
     });
 
     test('Ensure no activation commands are returned if intrepreter is not pyenv', async () => {
-        const intepreterInfo: PythonInterpreter = {
+        const intepreterInfo: PythonEnvironment = {
             architecture: Architecture.Unknown,
             path: '',
             sysPrefix: '',
@@ -65,7 +65,7 @@ suite('Terminal Environment Activation pyenv', () => {
     });
 
     test('Ensure no activation commands are returned if intrepreter envName is empty', async () => {
-        const intepreterInfo: PythonInterpreter = {
+        const intepreterInfo: PythonEnvironment = {
             architecture: Architecture.Unknown,
             path: '',
             sysPrefix: '',
@@ -83,7 +83,7 @@ suite('Terminal Environment Activation pyenv', () => {
     });
 
     test('Ensure activation command is returned', async () => {
-        const intepreterInfo: PythonInterpreter = {
+        const intepreterInfo: PythonEnvironment = {
             architecture: Architecture.Unknown,
             path: '',
             sysPrefix: '',

@@ -6,7 +6,7 @@
 import { inject } from 'inversify';
 import { CancellationToken, Disposable, Event } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { Cancellation } from '../cancellation';
 import { traceVerbose } from '../logger';
 import { IFileSystem, TemporaryFile } from '../platform/types';
@@ -108,7 +108,7 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInterpreterService) private readonly interpreter: IInterpreterService,
         public readonly terminalService: TerminalService,
-        private readonly pythonInterpreter?: PythonInterpreter
+        private readonly pythonInterpreter?: PythonEnvironment
     ) {}
     public dispose() {
         this.terminalService.dispose();

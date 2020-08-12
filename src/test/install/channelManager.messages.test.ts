@@ -19,10 +19,10 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
-import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
-const info: PythonInterpreter = {
+const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
     displayName: '',
@@ -154,7 +154,7 @@ suite('Installation - channel messages', () => {
         verify: (m: string, u: string) => Promise<void>,
         methodType: 'showNoInstallersMessage' | 'getInstallationChannel' = 'showNoInstallersMessage'
     ): Promise<void> {
-        const activeInterpreter: PythonInterpreter = {
+        const activeInterpreter: PythonEnvironment = {
             ...info,
             type: interpreterType,
             path: ''
@@ -162,7 +162,7 @@ suite('Installation - channel messages', () => {
         interpreters
             .setup((x) => x.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(
-                () => new Promise<PythonInterpreter>((resolve, _reject) => resolve(activeInterpreter))
+                () => new Promise<PythonEnvironment>((resolve, _reject) => resolve(activeInterpreter))
             );
         const channels = new InstallationChannelManager(serviceContainer);
 

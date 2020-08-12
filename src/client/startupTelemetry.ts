@@ -20,7 +20,7 @@ import {
 } from './interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
-import { PythonInterpreter } from './pythonEnvironments/info';
+import { PythonEnvironment } from './pythonEnvironments/info';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry } from './telemetry/types';
@@ -129,8 +129,8 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
             .getCondaVersion()
             .then((ver) => (ver ? ver.raw : ''))
             .catch<string>(() => ''),
-        interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
-        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => [])
+        interpreterService.getActiveInterpreter().catch<PythonEnvironment | undefined>(() => undefined),
+        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonEnvironment[]>(() => [])
     ]);
     const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;

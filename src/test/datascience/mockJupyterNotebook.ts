@@ -19,7 +19,7 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../client/datascience/types';
-import { PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { noop } from '../core';
 
@@ -124,11 +124,11 @@ export class MockJupyterNotebook implements INotebook {
         return Promise.resolve();
     }
 
-    public getMatchingInterpreter(): PythonInterpreter | undefined {
+    public getMatchingInterpreter(): PythonEnvironment | undefined {
         return;
     }
 
-    public setInterpreter(_inter: PythonInterpreter) {
+    public setInterpreter(_inter: PythonEnvironment) {
         noop();
     }
 

@@ -25,7 +25,7 @@ import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import {
     IDataScienceFileSystem,
@@ -322,7 +322,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
 
                 // For the interpreter, make sure to select the one matching the kernel.
                 launchInfo.interpreter = kernelInfoToUse.metadata?.interpreter?.path
-                    ? (cloneDeep(kernelInfoToUse.metadata.interpreter) as PythonInterpreter)
+                    ? (cloneDeep(kernelInfoToUse.metadata.interpreter) as PythonEnvironment)
                     : resourceInterpreter;
                 changedKernel = true;
             }

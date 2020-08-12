@@ -11,7 +11,7 @@ import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop, swallowExceptions } from '../../common/utils/misc';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { cleanEnvironment, findIndexOfConnectionFile } from '../jupyter/kernels/helpers';
@@ -52,7 +52,7 @@ export class KernelProcess implements IKernelProcess {
         kernelSpec: IJupyterKernelSpec,
         private readonly fs: IDataScienceFileSystem,
         private readonly resource: Resource,
-        private readonly interpreter?: PythonInterpreter
+        private readonly interpreter?: PythonEnvironment
     ) {
         this.originalKernelSpec = kernelSpec;
         this._kernelSpec = cleanEnvironment(kernelSpec);

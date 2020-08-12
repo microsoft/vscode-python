@@ -10,7 +10,7 @@ import { IDisposable } from 'monaco-editor';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { IPythonKernelDaemon } from './types';
@@ -28,7 +28,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         resource: Resource,
         workingDirectory: string,
         kernelSpec: IJupyterKernelSpec,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonEnvironment
     ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon | undefined }> {
         const [daemon, wdExists] = await Promise.all([
             this.daemonPool.get(resource, kernelSpec, interpreter),

@@ -17,7 +17,7 @@ import { IPersistentState, IPersistentStateFactory, Product } from '../../../cli
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 use(chaiAsPromised);
 
@@ -58,7 +58,7 @@ suite('Module Installer - Invalid Paths', () => {
 
                     const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
 
-                    const pythonInterpreter = TypeMoq.Mock.ofType<PythonInterpreter>();
+                    const pythonInterpreter = TypeMoq.Mock.ofType<PythonEnvironment>();
                     // tslint:disable-next-line:no-any
                     pythonInterpreter.setup((i) => (i as any).then).returns(() => undefined);
                     interpreterService

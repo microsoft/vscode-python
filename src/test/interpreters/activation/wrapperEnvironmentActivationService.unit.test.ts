@@ -21,7 +21,7 @@ import { IEnvironmentActivationService } from '../../../client/interpreter/activ
 import { WrapperEnvironmentActivationService } from '../../../client/interpreter/activation/wrapperEnvironmentActivationService';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { EnvironmentType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Interpreters Activation - Python Environment Variables (wrap terminal and proc approach)', () => {
@@ -35,7 +35,7 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
     let onDidChangeEnvVars: EventEmitter<Resource>;
     let crypto: ICryptoUtils;
     let fs: IFileSystem;
-    const mockInterpreter: PythonInterpreter = {
+    const mockInterpreter: PythonEnvironment = {
         architecture: Architecture.Unknown,
         path: '',
         sysPrefix: '',
@@ -264,7 +264,7 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                 ).twice();
 
                                 // Invoke again with a different python interpreter.
-                                const newInterpreter: PythonInterpreter = {
+                                const newInterpreter: PythonEnvironment = {
                                     architecture: Architecture.x64,
                                     path: 'New',
                                     sysPrefix: '',

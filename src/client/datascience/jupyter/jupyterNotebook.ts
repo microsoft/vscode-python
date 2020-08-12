@@ -19,7 +19,7 @@ import { createDeferred, Deferred, waitForPromise } from '../../common/utils/asy
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
@@ -621,10 +621,10 @@ export class JupyterNotebookBase implements INotebook {
         throw new Error(localize.DataScience.sessionDisposed());
     }
 
-    public getMatchingInterpreter(): PythonInterpreter | undefined {
+    public getMatchingInterpreter(): PythonEnvironment | undefined {
         return (
             this._executionInfo.interpreter ||
-            (this._executionInfo.kernelSpec?.metadata?.interpreter as PythonInterpreter)
+            (this._executionInfo.kernelSpec?.metadata?.interpreter as PythonEnvironment)
         );
     }
 
@@ -635,7 +635,7 @@ export class JupyterNotebookBase implements INotebook {
     public async setKernelSpec(
         spec: IJupyterKernelSpec | LiveKernelModel,
         timeoutMS: number,
-        interpreter: PythonInterpreter | undefined
+        interpreter: PythonEnvironment | undefined
     ): Promise<void> {
         // We need to start a new session with the new kernel spec
         if (this.session) {

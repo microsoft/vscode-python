@@ -2,14 +2,14 @@ import { Disposable, Uri, workspace } from 'vscode';
 
 import { IServiceContainer } from '../ioc/types';
 import { ICommandResult, JediProxy, JediProxyHandler } from '../providers/jediProxy';
-import { PythonInterpreter } from '../pythonEnvironments/info';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 
 export class JediFactory implements Disposable {
     private disposables: Disposable[];
     private jediProxyHandlers: Map<string, JediProxyHandler<ICommandResult>>;
 
     constructor(
-        private interpreter: PythonInterpreter | undefined,
+        private interpreter: PythonEnvironment | undefined,
         // This is passed through to JediProxy().
         private serviceContainer: IServiceContainer
     ) {

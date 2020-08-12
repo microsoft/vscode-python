@@ -8,7 +8,7 @@ import { CancellationToken, Event } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
@@ -17,7 +17,7 @@ export interface IKernelLauncher {
         kernelSpec: IJupyterKernelSpec,
         resource: Resource,
         workingDirectory: string,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonEnvironment
     ): Promise<IKernelProcess>;
 }
 

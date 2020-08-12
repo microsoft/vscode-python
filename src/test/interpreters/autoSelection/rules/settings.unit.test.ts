@@ -25,13 +25,13 @@ import { InterpreterAutoSelectionService } from '../../../../client/interpreter/
 import { NextAction } from '../../../../client/interpreter/autoSelection/rules/baseRule';
 import { SettingsInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/settings';
 import { IInterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection/types';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Auto Selection - Settings Rule', () => {
     let rule: SettingsInterpretersAutoSelectionRuleTest;
     let stateFactory: IPersistentStateFactory;
     let fs: IFileSystem;
-    let state: PersistentState<PythonInterpreter | undefined>;
+    let state: PersistentState<PythonEnvironment | undefined>;
     let workspaceService: IWorkspaceService;
     let experimentsManager: IExperimentsManager;
     let interpreterPathService: IInterpreterPathService;
@@ -52,7 +52,7 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         interpreterPathService = mock(InterpreterPathService);
         when(experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control)).thenReturn(undefined);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
+        when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
             instance(state)
         );
         rule = new SettingsInterpretersAutoSelectionRuleTest(

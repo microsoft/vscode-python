@@ -13,7 +13,7 @@ import { traceError, traceInfo, traceWarning } from '../common/logger';
 import { sleep, waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import { PythonInterpreter } from '../pythonEnvironments/info';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { Identifiers, Telemetry } from './constants';
 import { JupyterInvalidKernelError } from './jupyter/jupyterInvalidKernelError';
@@ -43,7 +43,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this._session;
     }
     protected kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined;
-    protected interpreter: PythonInterpreter | undefined;
+    protected interpreter: PythonEnvironment | undefined;
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket;
     }
@@ -124,7 +124,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     public async changeKernel(
         kernel: IJupyterKernelSpec | LiveKernelModel,
         timeoutMS: number,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonEnvironment
     ): Promise<void> {
         let newSession: ISessionWithSocket | undefined;
 
@@ -317,7 +317,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected abstract async createRestartSession(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         session: ISessionWithSocket,
-        interpreter?: PythonInterpreter,
+        interpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket>;
 
@@ -325,7 +325,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected abstract createNewKernelSession(
         kernel: IJupyterKernelSpec | LiveKernelModel,
         timeoutMS: number,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonEnvironment
     ): Promise<ISessionWithSocket>;
 
     protected async waitForIdleOnSession(session: ISessionWithSocket | undefined, timeout: number): Promise<void> {

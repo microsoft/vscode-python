@@ -61,7 +61,7 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { ServiceContainer } from '../../client/ioc/container';
 import { KnownSearchPathsForInterpreters } from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
-import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
@@ -110,7 +110,7 @@ suite('Jupyter Execution', async () => {
     let ipykernelInstallCount = 0;
     let kernelSelector: KernelSelector;
     let notebookStarter: NotebookStarter;
-    const workingPython: PythonInterpreter = {
+    const workingPython: PythonEnvironment = {
         path: '/foo/bar/python.exe',
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
@@ -119,7 +119,7 @@ suite('Jupyter Execution', async () => {
         architecture: Architecture.x64
     };
 
-    const missingKernelPython: PythonInterpreter = {
+    const missingKernelPython: PythonEnvironment = {
         path: '/foo/baz/python.exe',
         version: new SemVer('3.1.1-final'),
         sysVersion: '1.0.0.0',
@@ -128,7 +128,7 @@ suite('Jupyter Execution', async () => {
         architecture: Architecture.x64
     };
 
-    const missingNotebookPython: PythonInterpreter = {
+    const missingNotebookPython: PythonEnvironment = {
         path: '/bar/baz/python.exe',
         version: new SemVer('2.1.1-final'),
         sysVersion: '1.0.0.0',
@@ -137,7 +137,7 @@ suite('Jupyter Execution', async () => {
         architecture: Architecture.x64
     };
 
-    const missingNotebookPython2: PythonInterpreter = {
+    const missingNotebookPython2: PythonEnvironment = {
         path: '/two/baz/python.exe',
         version: new SemVer('2.1.1'),
         sysVersion: '1.0.0.0',
@@ -752,7 +752,7 @@ suite('Jupyter Execution', async () => {
     }
 
     function createExecution(
-        activeInterpreter: PythonInterpreter,
+        activeInterpreter: PythonEnvironment,
         notebookStdErr?: string[],
         skipSearch?: boolean
     ): JupyterExecutionFactory {
@@ -760,7 +760,7 @@ suite('Jupyter Execution', async () => {
             .jupyterExecutionFactory;
     }
     function createExecutionAndReturnProcessService(
-        activeInterpreter: PythonInterpreter,
+        activeInterpreter: PythonEnvironment,
         notebookStdErr?: string[],
         skipSearch?: boolean,
         runInDocker?: boolean
@@ -976,7 +976,7 @@ suite('Jupyter Execution', async () => {
 
         const dependencyService = mock(JupyterInterpreterDependencyService);
         when(dependencyService.areDependenciesInstalled(anything(), anything())).thenCall(
-            async (interpreter: PythonInterpreter) => {
+            async (interpreter: PythonEnvironment) => {
                 if (interpreter === missingNotebookPython) {
                     return false;
                 }
@@ -984,7 +984,7 @@ suite('Jupyter Execution', async () => {
             }
         );
         when(dependencyService.isExportSupported(anything(), anything())).thenCall(
-            async (interpreter: PythonInterpreter) => {
+            async (interpreter: PythonEnvironment) => {
                 if (interpreter === missingNotebookPython) {
                     return false;
                 }
@@ -992,7 +992,7 @@ suite('Jupyter Execution', async () => {
             }
         );
         when(dependencyService.getDependenciesNotInstalled(anything(), anything())).thenCall(
-            async (interpreter: PythonInterpreter) => {
+            async (interpreter: PythonEnvironment) => {
                 if (interpreter === missingNotebookPython) {
                     return [Product.jupyter];
                 }

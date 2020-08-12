@@ -17,7 +17,7 @@ import { sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../contracts';
@@ -121,7 +121,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false }, true)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
-        interpreter?: PythonInterpreter,
+        interpreter?: PythonEnvironment,
         allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined> {
         // Cache key = resource + interpreter.
@@ -144,7 +144,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
     public async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
-        interpreter?: PythonInterpreter,
+        interpreter?: PythonEnvironment,
         allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const shellInfo = defaultShells[this.platform.osType];

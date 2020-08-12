@@ -128,7 +128,7 @@ import {
     PIPENV_SERVICE
 } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
-import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
 import { getExtensionSettings, PYTHON_PATH, rootWorkspaceUri } from '../common';
@@ -142,7 +142,7 @@ chai_use(chaiAsPromised);
 
 const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
 
-const info: PythonInterpreter = {
+const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
     displayName: '',
@@ -508,7 +508,7 @@ suite('Module Installer', () => {
                 PIPENV_SERVICE
             );
 
-            const interpreter: PythonInterpreter = {
+            const interpreter: PythonEnvironment = {
                 ...info,
                 type: EnvironmentType.Unknown,
                 path: PYTHON_PATH

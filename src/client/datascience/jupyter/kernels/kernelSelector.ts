@@ -14,7 +14,7 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
 import { Commands, KnownNotebookLanguages, Settings, Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
@@ -41,9 +41,9 @@ export type KernelSpecInterpreter = {
      * Sometimes, we're unable to determine the exact interpreter associalted with a kernelspec, in such cases this is a closes match.
      * E.g. when selecting a remote kernel, we do not have the remote interpreter information, we can only try to find a close match.
      *
-     * @type {PythonInterpreter}
+     * @type {PythonEnvironment}
      */
-    interpreter?: PythonInterpreter;
+    interpreter?: PythonEnvironment;
     /**
      * Active kernel from an active session.
      * If this is available, then user needs to connect to an existing kernel (instead of starting a new session).
@@ -542,7 +542,7 @@ export class KernelSelector implements IKernelSelectionUsage {
     }
 
     // When switching to an interpreter in raw kernel mode then just create a default kernelspec for that interpreter to use
-    private async useInterpreterAndDefaultKernel(interpreter: PythonInterpreter): Promise<KernelSpecInterpreter> {
+    private async useInterpreterAndDefaultKernel(interpreter: PythonEnvironment): Promise<KernelSpecInterpreter> {
         const kernelSpec = createDefaultKernelSpec(interpreter.displayName);
         return { kernelSpec, interpreter };
     }
@@ -555,7 +555,7 @@ export class KernelSelector implements IKernelSelectionUsage {
      *
      * @private
      * @param {Resource} resource
-     * @param {PythonInterpreter} interpreter
+     * @param {PythonEnvironment} interpreter
      * @param type
      * @param {string} [displayNameOfKernelNotFound]
      * @param {IJupyterSessionManager} [session]
@@ -566,7 +566,7 @@ export class KernelSelector implements IKernelSelectionUsage {
      */
     private async useInterpreterAsKernel(
         resource: Resource,
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         type: 'raw' | 'jupyter' | 'noConnection',
         displayNameOfKernelNotFound?: string,
         session?: IJupyterSessionManager,

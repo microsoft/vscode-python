@@ -31,7 +31,7 @@ import { IConfigurationService, IDisposableRegistry, IPythonSettings } from '../
 import { noop } from '../../../../client/common/utils/misc';
 import { IInterpreterHelper, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { EnvironmentType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 suite('Application Diagnostics - Checks Python Interpreter', () => {
     let diagnosticService: IDiagnosticsService;
@@ -153,7 +153,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             interpreterService.verifyAll();
         });
         test('Should return empty diagnostics if there are interpreters after double-checking', async () => {
-            const interpreter: PythonInterpreter = { type: EnvironmentType.Unknown } as any;
+            const interpreter: PythonEnvironment = { type: EnvironmentType.Unknown } as any;
 
             settings
                 .setup((s) => s.disableInstallationChecks)

@@ -18,7 +18,7 @@ import {
 } from '../../common/types';
 import { createDeferredFromPromise } from '../../common/utils/async';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../contracts';
@@ -62,7 +62,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
     )
     public async getActivatedEnvironmentVariables(
         resource: Resource,
-        interpreter?: PythonInterpreter | undefined,
+        interpreter?: PythonEnvironment | undefined,
         allowExceptions?: boolean | undefined
     ): Promise<NodeJS.ProcessEnv | undefined> {
         let key: string;
@@ -159,7 +159,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
      */
     private async getActivatedEnvVarsFromProc(
         resource: Resource,
-        interpreter?: PythonInterpreter,
+        interpreter?: PythonEnvironment,
         allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined> {
         return this.procActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions);
@@ -171,7 +171,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
     private async getActivatedEnvVarsFromTerminal(
         fallback: Promise<NodeJS.ProcessEnv | undefined>,
         resource: Resource,
-        interpreter?: PythonInterpreter,
+        interpreter?: PythonEnvironment,
         allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined> {
         if (!this.experiment.inExperiment(UseTerminalToGetActivatedEnvVars.experiment)) {
@@ -198,7 +198,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
      * 3. Similarly, each workspace could have its own env variables defined in `.env` files, and these could change as well.
      * Hence the key is computed based off of these three.
      */
-    private async getCacheKey(resource: Resource, interpreter?: PythonInterpreter | undefined): Promise<string> {
+    private async getCacheKey(resource: Resource, interpreter?: PythonEnvironment | undefined): Promise<string> {
         // Get the custom environment variables as a string (if any errors, ignore and use empty string).
         const customEnvVariables = await this.envVarsProvider
             .getCustomEnvironmentVariables(resource)

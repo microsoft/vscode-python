@@ -15,7 +15,7 @@ import { IConfigurationService, IDisposableRegistry, Resource } from '../../../c
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     ICell,
@@ -241,7 +241,7 @@ export class GuestJupyterNotebook
         }
     }
 
-    public getMatchingInterpreter(): PythonInterpreter | undefined {
+    public getMatchingInterpreter(): PythonEnvironment | undefined {
         return;
     }
 

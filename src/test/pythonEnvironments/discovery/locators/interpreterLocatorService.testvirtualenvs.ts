@@ -8,7 +8,7 @@ import * as path from 'path';
 import { RegistryImplementation } from '../../../../client/common/platform/registry';
 import { IRegistry } from '../../../../client/common/platform/types';
 import { IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE } from '../../../../client/interpreter/contracts';
-import { EnvironmentType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { getOSType, OSType } from '../../../common';
 import { TEST_TIMEOUT } from '../../../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../../../initialize';
@@ -16,7 +16,7 @@ import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 
 suite('Python interpreter locator service', () => {
     let ioc: UnitTestIocContainer;
-    let interpreters: PythonInterpreter[];
+    let interpreters: PythonEnvironment[];
     suiteSetup(async function () {
         // https://github.com/microsoft/vscode-python/issues/12634
         // tslint:disable-next-line: no-invalid-this

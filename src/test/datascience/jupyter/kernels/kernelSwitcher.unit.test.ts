@@ -22,7 +22,7 @@ import { KernelSelector, KernelSpecInterpreter } from '../../../../client/datasc
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
 import { IJupyterConnection, IJupyterKernelSpec, INotebook } from '../../../../client/datascience/types';
-import { EnvironmentType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { noop } from '../../../core';
 
 // tslint:disable: max-func-body-length no-any
@@ -34,7 +34,7 @@ suite('DataScience - Kernel Switcher', () => {
     let notebook: INotebook;
     let connection: IJupyterConnection;
     let currentKernel: IJupyterKernelSpec | LiveKernelModel;
-    let selectedInterpreter: PythonInterpreter;
+    let selectedInterpreter: PythonEnvironment;
     let settings: IPythonSettings;
     let newKernelSpec: KernelSpecInterpreter;
     setup(() => {

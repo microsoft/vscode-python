@@ -35,11 +35,11 @@ import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/t
 import { ServiceContainer } from '../../../client/ioc/container';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
-import { EnvironmentType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable:no-any max-func-body-length chai-vague-errors
 
-const pythonInterpreter: PythonInterpreter = {
+const pythonInterpreter: PythonEnvironment = {
     path: '/foo/bar/python.exe',
     version: new SemVer('3.6.6-final'),
     sysVersion: '1.0.0.0',
@@ -48,7 +48,7 @@ const pythonInterpreter: PythonInterpreter = {
     architecture: Architecture.x64
 };
 
-function title(resource?: Uri, interpreter?: PythonInterpreter) {
+function title(resource?: Uri, interpreter?: PythonEnvironment) {
     return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
 }
 
@@ -56,7 +56,7 @@ async function verifyCreateActivated(
     factory: PythonExecutionFactory,
     activationHelper: IEnvironmentActivationService,
     resource?: Uri,
-    interpreter?: PythonInterpreter
+    interpreter?: PythonEnvironment
 ): Promise<IPythonExecutionService> {
     when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve();
 

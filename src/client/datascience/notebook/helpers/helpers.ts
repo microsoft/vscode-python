@@ -27,7 +27,7 @@ import { JupyterNotebookView } from '../constants';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { LiveKernelModel } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
@@ -62,7 +62,7 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
 export function updateKernelInNotebookMetadata(
     document: NotebookDocument,
     kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
-    interpreter: PythonInterpreter | undefined,
+    interpreter: PythonEnvironment | undefined,
     notebookContentProvider: INotebookContentProvider
 ) {
     // tslint:disable-next-line: no-any

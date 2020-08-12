@@ -9,7 +9,7 @@ import * as uuid from 'uuid/v4';
 
 import { IProcessServiceFactory } from '../../common/process/types';
 import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { IDataScienceFileSystem, IJupyterKernelSpec } from '../types';
@@ -36,7 +36,7 @@ export class KernelLauncher implements IKernelLauncher {
         kernelSpec: IJupyterKernelSpec,
         resource: Resource,
         workingDirectory: string,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonEnvironment
     ): Promise<IKernelProcess> {
         const connection = await this.getKernelConnection();
         const kernelProcess = new KernelProcess(

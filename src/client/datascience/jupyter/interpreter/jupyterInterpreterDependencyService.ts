@@ -12,7 +12,7 @@ import { traceError } from '../../../common/logger';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { HelpLinks, JupyterCommands, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
@@ -123,7 +123,7 @@ export class JupyterInterpreterDependencyService {
      * Configures the python interpreter to ensure it can run Jupyter server by installing any missing dependencies.
      * If user opts not to install they can opt to select another interpreter.
      *
-     * @param {PythonInterpreter} interpreter
+     * @param {PythonEnvironment} interpreter
      * @param {JupyterInstallError} [_error]
      * @param {CancellationToken} [token]
      * @returns {Promise<JupyterInterpreterDependencyResponse>}
@@ -131,7 +131,7 @@ export class JupyterInterpreterDependencyService {
      */
     @reportAction(ReportableAction.InstallingMissingDependencies)
     public async installMissingDependencies(
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         _error?: JupyterInstallError,
         token?: CancellationToken
     ): Promise<JupyterInterpreterDependencyResponse> {
@@ -212,12 +212,12 @@ export class JupyterInterpreterDependencyService {
     /**
      * Whether all dependencies required to start & use a jupyter server are available in the provided interpreter.
      *
-     * @param {PythonInterpreter} interpreter
+     * @param {PythonEnvironment} interpreter
      * @param {CancellationToken} [token]
      * @returns {Promise<boolean>}
      * @memberof JupyterInterpreterConfigurationService
      */
-    public async areDependenciesInstalled(interpreter: PythonInterpreter, token?: CancellationToken): Promise<boolean> {
+    public async areDependenciesInstalled(interpreter: PythonEnvironment, token?: CancellationToken): Promise<boolean> {
         return this.getDependenciesNotInstalled(interpreter, token).then((items) => items.length === 0);
     }
 
@@ -225,12 +225,12 @@ export class JupyterInterpreterDependencyService {
      * Whether its possible to export ipynb to other formats.
      * Basically checks whether nbconvert is installed.
      *
-     * @param {PythonInterpreter} interpreter
+     * @param {PythonEnvironment} interpreter
      * @param {CancellationToken} [_token]
      * @returns {Promise<boolean>}
      * @memberof JupyterInterpreterConfigurationService
      */
-    public async isExportSupported(interpreter: PythonInterpreter, _token?: CancellationToken): Promise<boolean> {
+    public async isExportSupported(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
         if (this.nbconvertInstalledInInterpreter.has(interpreter.path)) {
             return true;
         }
@@ -244,13 +244,13 @@ export class JupyterInterpreterDependencyService {
     /**
      * Gets a list of the dependencies not installed, dependencies that are required to launch the jupyter notebook server.
      *
-     * @param {PythonInterpreter} interpreter
+     * @param {PythonEnvironment} interpreter
      * @param {CancellationToken} [token]
      * @returns {Promise<Product[]>}
      * @memberof JupyterInterpreterConfigurationService
      */
     public async getDependenciesNotInstalled(
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         token?: CancellationToken
     ): Promise<Product[]> {
         // If we know that all modules were available at one point in time, then use that cache.
@@ -291,12 +291,12 @@ export class JupyterInterpreterDependencyService {
      * Checks whether the jupyter sub command kernelspec is available.
      *
      * @private
-     * @param {PythonInterpreter} interpreter
+     * @param {PythonEnvironment} interpreter
      * @param {CancellationToken} [_token]
      * @returns {Promise<boolean>}
      * @memberof JupyterInterpreterConfigurationService
      */
-    private async isKernelSpecAvailable(interpreter: PythonInterpreter, _token?: CancellationToken): Promise<boolean> {
+    private async isKernelSpecAvailable(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
         const command = this.commandFactory.createInterpreterCommand(
             JupyterCommands.KernelSpecCommand,
             'jupyter',
@@ -321,13 +321,13 @@ export class JupyterInterpreterDependencyService {
      * Current solution is to get user to select another interpreter or update jupyter/python (we don't know what is wrong).
      *
      * @private
-     * @param {PythonInterpreter} interpreter
+     * @param {PythonEnvironment} interpreter
      * @param {CancellationToken} [token]
      * @returns {Promise<JupyterInterpreterDependencyResponse>}
      * @memberof JupyterInterpreterConfigurationService
      */
     private async checkKernelSpecAvailability(
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         token?: CancellationToken
     ): Promise<JupyterInterpreterDependencyResponse> {
         if (await this.isKernelSpecAvailable(interpreter)) {

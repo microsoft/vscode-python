@@ -31,7 +31,7 @@ import { EnvironmentActivationService } from '../../../../client/interpreter/act
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { EnvironmentType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { FakeClock } from '../../../common';
 
 // tslint:disable-next-line: max-func-body-length
@@ -124,7 +124,7 @@ suite('DataScience - KernelService', () => {
             }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
-        const interpreter: PythonInterpreter = {
+        const interpreter: PythonEnvironment = {
             path: 'some Path',
             displayName: 'Hello World',
             envName: 'Hello',
@@ -147,7 +147,7 @@ suite('DataScience - KernelService', () => {
     test('Should not return a matching spec from a jupyter process for a given interpreter', async () => {
         when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve([]);
 
-        const interpreter: PythonInterpreter = {
+        const interpreter: PythonEnvironment = {
             path: 'some Path',
             displayName: 'Hello World',
             envName: 'Hello',
@@ -226,7 +226,7 @@ suite('DataScience - KernelService', () => {
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
         when(fs.areLocalPathsSame('myPath2', 'myPath2')).thenReturn(true);
-        const interpreter: PythonInterpreter = {
+        const interpreter: PythonEnvironment = {
             displayName: 'Disp2',
             path: 'myPath2',
             sysPrefix: 'xyz',
@@ -311,7 +311,7 @@ suite('DataScience - KernelService', () => {
         when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve(kernelSpecs);
         when(fs.areLocalPathsSame('Some Path2', 'Some Path2')).thenReturn(true);
         when(fs.localFileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
-        const interpreter: PythonInterpreter = {
+        const interpreter: PythonEnvironment = {
             displayName: 'disp2',
             path: 'Some Path2',
             sysPrefix: 'xyz',
@@ -333,11 +333,11 @@ suite('DataScience - KernelService', () => {
     // tslint:disable-next-line: max-func-body-length
     suite('Registering Interpreters as Kernels', () => {
         let findMatchingKernelSpecStub: sinon.SinonStub<
-            [PythonInterpreter, IJupyterSessionManager?, (CancellationToken | undefined)?],
+            [PythonEnvironment, IJupyterSessionManager?, (CancellationToken | undefined)?],
             Promise<IJupyterKernelSpec | undefined>
         >;
         let fakeTimer: FakeClock;
-        const interpreter: PythonInterpreter = {
+        const interpreter: PythonEnvironment = {
             architecture: Architecture.Unknown,
             path: path.join('interpreter', 'python'),
             sysPrefix: '',
@@ -383,7 +383,7 @@ suite('DataScience - KernelService', () => {
         teardown(() => fakeTimer.uninstall());
 
         test('Fail if interpreter does not have a display name', async () => {
-            const invalidInterpreter: PythonInterpreter = {
+            const invalidInterpreter: PythonEnvironment = {
                 architecture: Architecture.Unknown,
                 path: '',
                 sysPrefix: '',

@@ -47,7 +47,7 @@ import { IInterpreterHashProvider, IInterpreterHashProviderFactory } from '../..
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
-import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
@@ -380,7 +380,7 @@ suite('Interpreters service', () => {
         });
         test('Return cached display name', async () => {
             const pythonPath = '1234';
-            const interpreterInfo: Partial<PythonInterpreter> = { path: pythonPath };
+            const interpreterInfo: Partial<PythonEnvironment> = { path: pythonPath };
             const hash = `-${md5(JSON.stringify({ ...interpreterInfo, displayName: '' }))}`;
             const expectedDisplayName = 'Formatted display name';
             persistentStateFactory
@@ -402,7 +402,7 @@ suite('Interpreters service', () => {
         });
         test('Cached display name is not used if file hashes differ', async () => {
             const pythonPath = '1234';
-            const interpreterInfo: Partial<PythonInterpreter> = { path: pythonPath };
+            const interpreterInfo: Partial<PythonEnvironment> = { path: pythonPath };
             const fileHash = 'File_Hash';
             const hashProvider = TypeMoq.Mock.ofType<IInterpreterHashProvider>();
             hashProviderFactory
@@ -474,7 +474,7 @@ suite('Interpreters service', () => {
                                             ].join(', ');
 
                                             test(testName, async () => {
-                                                const interpreterInfo: Partial<PythonInterpreter> = {
+                                                const interpreterInfo: Partial<PythonEnvironment> = {
                                                     version,
                                                     architecture: arch ? arch.value : undefined,
                                                     envName,
@@ -519,7 +519,7 @@ suite('Interpreters service', () => {
                                                 expect(displayName).to.equal(expectedDisplayName);
                                             });
 
-                                            function buildDisplayName(interpreterInfo: Partial<PythonInterpreter>) {
+                                            function buildDisplayName(interpreterInfo: Partial<PythonEnvironment>) {
                                                 const displayNameParts: string[] = ['Python'];
                                                 const envSuffixParts: string[] = [];
 
@@ -585,7 +585,7 @@ suite('Interpreters service', () => {
                 .verifiable(TypeMoq.Times.once());
             hashProvider.setup((provider) => (provider as any).then).returns(() => undefined);
 
-            const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>>();
+            const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonEnvironment }>>();
             const info = { path: 'hell', type: EnvironmentType.Venv };
             state
                 .setup((s) => s.value)
@@ -630,7 +630,7 @@ suite('Interpreters service', () => {
                 .verifiable(TypeMoq.Times.once());
             hashProvider.setup((provider) => (provider as any).then).returns(() => undefined);
 
-            const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>>();
+            const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonEnvironment }>>();
             const info = { path: 'hell', type: EnvironmentType.Venv };
             state
                 .setup((s) => s.value)

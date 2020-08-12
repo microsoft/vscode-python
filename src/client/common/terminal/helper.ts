@@ -4,7 +4,7 @@
 import { inject, injectable, multiInject, named } from 'inversify';
 import { Terminal, Uri } from 'vscode';
 import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
-import { EnvironmentType, PythonInterpreter } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITerminalManager } from '../application/types';
@@ -69,7 +69,7 @@ export class TerminalHelper implements ITerminalHelper {
     public async getEnvironmentActivationCommands(
         terminalShellType: TerminalShellType,
         resource?: Uri,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonEnvironment
     ): Promise<string[] | undefined> {
         const providers = [this.pipenv, this.pyenv, this.bashCShellFish, this.commandPromptAndPowerShell];
         const promise = this.getActivationCommands(resource || undefined, interpreter, terminalShellType, providers);
@@ -84,7 +84,7 @@ export class TerminalHelper implements ITerminalHelper {
     public async getEnvironmentActivationShellCommands(
         resource: Resource,
         shell: TerminalShellType,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonEnvironment
     ): Promise<string[] | undefined> {
         if (this.platform.osType === OSType.Unknown) {
             return;
@@ -103,7 +103,7 @@ export class TerminalHelper implements ITerminalHelper {
     protected async sendTelemetry(
         terminalShellType: TerminalShellType,
         eventName: EventName,
-        interpreter: PythonInterpreter | undefined,
+        interpreter: PythonEnvironment | undefined,
         promise: Promise<string[] | undefined>
     ): Promise<void> {
         let hasCommands = false;
@@ -123,7 +123,7 @@ export class TerminalHelper implements ITerminalHelper {
     }
     protected async getActivationCommands(
         resource: Resource,
-        interpreter: PythonInterpreter | undefined,
+        interpreter: PythonEnvironment | undefined,
         terminalShellType: TerminalShellType,
         providers: ITerminalActivationCommandProvider[]
     ): Promise<string[] | undefined> {

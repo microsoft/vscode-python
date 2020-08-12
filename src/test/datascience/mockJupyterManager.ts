@@ -39,7 +39,7 @@ import {
 } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceManager } from '../../client/ioc/types';
-import { PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { noop, sleep } from '../core';
 import { MockJupyterSession } from './mockJupyterSession';
@@ -86,9 +86,9 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private processService: MockProcessService = new MockProcessService();
     private interpreterService = this.createTypeMoq<IInterpreterService>('Interpreter Service');
     private changedInterpreterEvent: EventEmitter<void> = new EventEmitter<void>();
-    private installedInterpreters: PythonInterpreter[] = [];
+    private installedInterpreters: PythonEnvironment[] = [];
     private pythonServices: MockPythonService[] = [];
-    private activeInterpreter: PythonInterpreter | undefined;
+    private activeInterpreter: PythonEnvironment | undefined;
     private sessionTimeout: number | undefined;
     private cellDictionary: Record<string, ICell> = {};
     private kernelSpecs: { name: string; dir: string }[] = [];
@@ -212,7 +212,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         return this.connInfo!;
     }
 
-    public makeActive(interpreter: PythonInterpreter) {
+    public makeActive(interpreter: PythonEnvironment) {
         this.activeInterpreter = interpreter;
     }
 
@@ -242,7 +242,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public addInterpreter(
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         supportedCommands: SupportedCommands,
         notebookStdErr?: string[],
         notebookProc?: ChildProcess
@@ -650,7 +650,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     private setupSupportedPythonService(
         service: MockPythonService,
-        workingPython: PythonInterpreter,
+        workingPython: PythonEnvironment,
         supportedCommands: SupportedCommands,
         notebookStdErr?: string[],
         notebookProc?: ChildProcess
@@ -743,7 +743,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     private setupSupportedProcessService(
-        workingPython: PythonInterpreter,
+        workingPython: PythonEnvironment,
         supportedCommands: SupportedCommands,
         notebookStdErr?: string[]
     ) {

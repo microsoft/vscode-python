@@ -9,7 +9,7 @@ import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageClientFactory, ILanguageServerFolderService, IPlatformData } from '../types';
 
 // tslint:disable:no-require-imports no-require-imports no-var-requires max-classes-per-file
@@ -25,7 +25,7 @@ export class DotNetDownloadedLanguageClientFactory implements ILanguageClientFac
 
     public async createLanguageClient(
         resource: Resource,
-        _interpreter: PythonInterpreter | undefined,
+        _interpreter: PythonEnvironment | undefined,
         clientOptions: LanguageClientOptions,
         env?: NodeJS.ProcessEnv
     ): Promise<LanguageClient> {
@@ -58,7 +58,7 @@ export class DotNetSimpleLanguageClientFactory implements ILanguageClientFactory
 
     public async createLanguageClient(
         resource: Resource,
-        _interpreter: PythonInterpreter | undefined,
+        _interpreter: PythonEnvironment | undefined,
         clientOptions: LanguageClientOptions,
         env?: NodeJS.ProcessEnv
     ): Promise<LanguageClient> {
@@ -95,7 +95,7 @@ export class DotNetLanguageClientFactory implements ILanguageClientFactory {
 
     public async createLanguageClient(
         resource: Resource,
-        interpreter: PythonInterpreter | undefined,
+        interpreter: PythonEnvironment | undefined,
         clientOptions: LanguageClientOptions
     ): Promise<LanguageClient> {
         const settings = this.configurationService.getSettings(resource);
@@ -113,7 +113,7 @@ export class DotNetLanguageClientFactory implements ILanguageClientFactory {
 
     private async getEnvVars(
         resource: Resource,
-        interpreter: PythonInterpreter | undefined
+        interpreter: PythonEnvironment | undefined
     ): Promise<NodeJS.ProcessEnv> {
         const envVars = await this.environmentActivationService.getActivatedEnvironmentVariables(resource, interpreter);
         if (envVars && Object.keys(envVars).length > 0) {

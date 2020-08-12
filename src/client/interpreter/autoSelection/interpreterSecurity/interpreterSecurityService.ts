@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { Resource } from '../../../common/types';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { IInterpreterEvaluation, IInterpreterSecurityService, IInterpreterSecurityStorage } from '../types';
 
 @injectable()
@@ -17,7 +17,7 @@ export class InterpreterSecurityService implements IInterpreterSecurityService {
         @inject(IInterpreterEvaluation) private readonly interpreterEvaluation: IInterpreterEvaluation
     ) {}
 
-    public isSafe(interpreter: PythonInterpreter, resource?: Resource): boolean | undefined {
+    public isSafe(interpreter: PythonEnvironment, resource?: Resource): boolean | undefined {
         const unsafeInterpreters = this.interpreterSecurityStorage.unsafeInterpreters.value;
         if (unsafeInterpreters.includes(interpreter.path)) {
             return false;
@@ -29,7 +29,7 @@ export class InterpreterSecurityService implements IInterpreterSecurityService {
         return this.interpreterEvaluation.inferValueUsingCurrentState(interpreter, resource);
     }
 
-    public async evaluateAndRecordInterpreterSafety(interpreter: PythonInterpreter, resource: Resource): Promise<void> {
+    public async evaluateAndRecordInterpreterSafety(interpreter: PythonEnvironment, resource: Resource): Promise<void> {
         const unsafeInterpreters = this.interpreterSecurityStorage.unsafeInterpreters.value;
         const safeInterpreters = this.interpreterSecurityStorage.safeInterpreters.value;
         if (unsafeInterpreters.includes(interpreter.path) || safeInterpreters.includes(interpreter.path)) {

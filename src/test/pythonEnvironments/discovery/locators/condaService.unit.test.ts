@@ -17,13 +17,13 @@ import { Architecture } from '../../../../client/common/utils/platform';
 import { IInterpreterLocatorService, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { CondaService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { EnvironmentType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { MockState } from '../../../interpreters/mocks';
 
 const untildify: (value: string) => string = require('untildify');
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
-const info: PythonInterpreter = {
+const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
     displayName: '',
@@ -417,7 +417,7 @@ suite('Interpreters Conda Service', () => {
 
     test('Must use Conda env from Registry to locate conda.exe', async () => {
         const condaPythonExePath = path.join('dumyPath', 'environments', 'conda', 'Scripts', 'python.exe');
-        const registryInterpreters: PythonInterpreter[] = [
+        const registryInterpreters: PythonEnvironment[] = [
             {
                 displayName: 'One',
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
@@ -470,7 +470,7 @@ suite('Interpreters Conda Service', () => {
 
     test('Must use Conda env from Registry to latest version of locate conda.exe', async () => {
         const condaPythonExePath = path.join('dumyPath', 'environments');
-        const registryInterpreters: PythonInterpreter[] = [
+        const registryInterpreters: PythonEnvironment[] = [
             {
                 displayName: 'One',
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
@@ -541,7 +541,7 @@ suite('Interpreters Conda Service', () => {
 
     test("Must use 'conda' if conda.exe cannot be located using registry entries", async () => {
         const condaPythonExePath = path.join('dumyPath', 'environments');
-        const registryInterpreters: PythonInterpreter[] = [
+        const registryInterpreters: PythonEnvironment[] = [
             {
                 displayName: 'One',
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
@@ -863,7 +863,7 @@ suite('Interpreters Conda Service', () => {
             'Scripts',
             'python.exe'
         );
-        const registryInterpreters: PythonInterpreter[] = [
+        const registryInterpreters: PythonEnvironment[] = [
             {
                 displayName: 'One',
                 path: path.join(environmentsPath, 'path1', 'one.exe'),

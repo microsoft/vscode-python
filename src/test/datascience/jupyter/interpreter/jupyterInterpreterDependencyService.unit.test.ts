@@ -20,7 +20,7 @@ import {
     JupyterInterpreterDependencyService
 } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { IJupyterCommand, IJupyterCommandFactory } from '../../../../client/datascience/types';
-import { EnvironmentType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 // tslint:disable: max-func-body-length no-any
 
@@ -30,7 +30,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
     let installer: IInstaller;
     let commandFactory: IJupyterCommandFactory;
     let command: IJupyterCommand;
-    const pythonInterpreter: PythonInterpreter = {
+    const pythonInterpreter: PythonEnvironment = {
         path: '',
         architecture: Architecture.Unknown,
         sysPrefix: '',

@@ -4,7 +4,7 @@
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { Event, EventEmitter, Memento, Uri } from 'vscode';
 import { ICryptoUtils } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { pruneCell } from '../common';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { LiveKernelModel } from '../jupyter/kernels/types';
@@ -22,7 +22,7 @@ type KernelIdListEntry = {
 // tslint:disable-next-line: cyclomatic-complexity
 export function updateNotebookMetadata(
     metadata: nbformat.INotebookMetadata | undefined,
-    interpreter: PythonInterpreter | undefined,
+    interpreter: PythonEnvironment | undefined,
     kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
 ) {
     let changed = false;
@@ -220,7 +220,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
     }
     // tslint:disable-next-line: cyclomatic-complexity
     private updateVersionInfo(
-        interpreter: PythonInterpreter | undefined,
+        interpreter: PythonEnvironment | undefined,
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
     ): boolean {
         const { changed, kernelId } = updateNotebookMetadata(this.notebookJson.metadata, interpreter, kernelSpec);

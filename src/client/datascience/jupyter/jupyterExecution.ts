@@ -15,7 +15,7 @@ import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Identifiers, Telemetry } from '../constants';
@@ -42,7 +42,7 @@ import { NotebookStarter } from './notebookStarter';
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
 export class JupyterExecutionBase implements IJupyterExecution {
-    private usablePythonInterpreter: PythonInterpreter | undefined;
+    private usablePythonInterpreter: PythonEnvironment | undefined;
     private startedEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
     private disposed: boolean = false;
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
@@ -109,7 +109,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported();
     }
 
-    public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
+    public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined> {
         // Only try to compute this once.
         if (!this.usablePythonInterpreter && !this.disposed) {
             this.usablePythonInterpreter = await Cancellation.race(

@@ -12,7 +12,7 @@ import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { KernelLauncherDaemonModule } from '../constants';
 import { IDataScienceFileSystem, IJupyterKernelSpec, IKernelDependencyService } from '../types';
 import { PythonKernelDaemon } from './kernelDaemon';
@@ -67,7 +67,7 @@ export class KernelDaemonPool implements IDisposable {
     public async get(
         resource: Resource,
         kernelSpec: IJupyterKernelSpec,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonEnvironment
     ): Promise<IPythonKernelDaemon | IPythonExecutionService> {
         const pythonPath = interpreter?.path || kernelSpec.argv[0];
         // If we have environment variables in the kernel.json, then its not we support.

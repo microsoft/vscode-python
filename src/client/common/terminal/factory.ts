@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IWorkspaceService } from '../application/types';
 import { IFileSystem } from '../platform/types';
 import { isUri } from '../utils/misc';
@@ -59,7 +59,7 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
         title = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
         return new TerminalService(this.serviceContainer, { resource, title });
     }
-    private getTerminalId(title: string, resource?: Uri, interpreter?: PythonInterpreter): string {
+    private getTerminalId(title: string, resource?: Uri, interpreter?: PythonEnvironment): string {
         if (!resource && !interpreter) {
             return title;
         }

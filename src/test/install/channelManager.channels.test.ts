@@ -19,10 +19,10 @@ import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../client/interpr
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
-import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
-const info: PythonInterpreter = {
+const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
     displayName: '',
@@ -86,7 +86,7 @@ suite('Installation - installation channels', () => {
         mockInstaller(true, '3');
         const pipenvInstaller = mockInstaller(true, 'pipenv', 10);
 
-        const interpreter: PythonInterpreter = {
+        const interpreter: PythonEnvironment = {
             ...info,
             path: 'pipenv',
             type: EnvironmentType.VirtualEnv

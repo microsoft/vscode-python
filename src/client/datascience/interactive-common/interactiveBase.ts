@@ -47,7 +47,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
@@ -543,7 +543,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     protected abstract updateNotebookOptions(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel,
-        interpreter: PythonInterpreter | undefined
+        interpreter: PythonEnvironment | undefined
     ): Promise<void>;
 
     protected async clearResult(id: string): Promise<void> {

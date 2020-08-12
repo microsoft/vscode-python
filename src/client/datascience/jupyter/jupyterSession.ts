@@ -16,7 +16,7 @@ import { Cancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
 import { Telemetry } from '../constants';
@@ -68,7 +68,7 @@ export class JupyterSession extends BaseJupyterSession {
     public async createNewKernelSession(
         kernel: IJupyterKernelSpec | LiveKernelModel | undefined,
         timeoutMS: number,
-        _pythonInterpreter?: PythonInterpreter,
+        _pythonInterpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         let newSession: ISessionWithSocket | undefined;
@@ -97,7 +97,7 @@ export class JupyterSession extends BaseJupyterSession {
     protected async createRestartSession(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         session: ISessionWithSocket,
-        _interpreter?: PythonInterpreter,
+        _interpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         // We need all of the above to create a restart session

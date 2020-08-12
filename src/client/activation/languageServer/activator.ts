@@ -8,7 +8,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, isTestExecution } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { BANNER_NAME_PROPOSE_LS, IConfigurationService, IPythonExtensionBanner, Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { LanguageServerActivatorBase } from '../common/activatorBase';
 import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../types';
 
@@ -37,7 +37,7 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
         super(manager, workspace, fs, configurationService);
     }
 
-    public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {
+    public async start(resource: Resource, interpreter?: PythonEnvironment): Promise<void> {
         if (!isTestExecution()) {
             this.proposePylancePopup.showBanner().ignoreErrors();
         }

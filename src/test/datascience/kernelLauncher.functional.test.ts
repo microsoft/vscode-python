@@ -14,7 +14,7 @@ import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelL
 import { IKernelConnection, IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
 import { IDataScienceFileSystem, IJupyterKernelSpec } from '../../client/datascience/types';
-import { PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
@@ -24,7 +24,7 @@ import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 suite('DataScience - Kernel Launcher', () => {
     let ioc: DataScienceIocContainer;
     let kernelLauncher: KernelLauncher;
-    let pythonInterpreter: PythonInterpreter | undefined;
+    let pythonInterpreter: PythonEnvironment | undefined;
     let kernelSpec: IJupyterKernelSpec;
     let kernelFinder: MockKernelFinder;
     // tslint:disable-next-line: no-any

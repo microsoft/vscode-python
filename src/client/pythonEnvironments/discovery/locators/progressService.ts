@@ -11,11 +11,11 @@ import { createDeferredFrom, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterLocatorProgressService, IInterpreterLocatorService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { PythonInterpreter } from '../../info';
+import { PythonEnvironment } from '../../info';
 
 @injectable()
 export class InterpreterLocatorProgressService implements IInterpreterLocatorProgressService {
-    private deferreds: Deferred<PythonInterpreter[]>[] = [];
+    private deferreds: Deferred<PythonEnvironment[]>[] = [];
     private readonly refreshing = new EventEmitter<void>();
     private readonly refreshed = new EventEmitter<void>();
     private readonly locators: IInterpreterLocatorService[] = [];
@@ -38,7 +38,7 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
         });
     }
     @traceDecorators.verbose('Detected refreshing of Interpreters')
-    private handleProgress(promise: Promise<PythonInterpreter[]>) {
+    private handleProgress(promise: Promise<PythonEnvironment[]>) {
         this.deferreds.push(createDeferredFrom(promise));
         this.notifyRefreshing();
         this.checkProgress();

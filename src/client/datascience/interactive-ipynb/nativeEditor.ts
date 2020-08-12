@@ -37,7 +37,7 @@ import {
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
@@ -323,7 +323,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     public async updateNotebookOptions(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel,
-        interpreter: PythonInterpreter | undefined
+        interpreter: PythonEnvironment | undefined
     ): Promise<void> {
         if (this.model) {
             const change: NotebookModelChange = {

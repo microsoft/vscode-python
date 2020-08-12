@@ -30,7 +30,7 @@ import { FileStat, TemporaryFile } from '../common/platform/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable, InteractiveWindowMode, Resource } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
-import { PythonInterpreter } from '../pythonEnvironments/info';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
 import { IDataViewerDataProvider } from './data-viewing/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
@@ -95,7 +95,7 @@ export interface INotebookExecutionInfo {
     /**
      * The python interpreter associated with the kernel.
      */
-    interpreter: PythonInterpreter | undefined;
+    interpreter: PythonEnvironment | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
     kernelSpec: IJupyterKernelSpec | undefined | LiveKernelModel;
     workingDir: string | undefined;
@@ -110,10 +110,10 @@ export interface INotebookServerLaunchInfo {
     /**
      * The python interpreter associated with the kernel.
      *
-     * @type {(PythonInterpreter | undefined)}
+     * @type {(PythonEnvironment | undefined)}
      * @memberof INotebookServerLaunchInfo
      */
-    interpreter: PythonInterpreter | undefined;
+    interpreter: PythonEnvironment | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
     kernelSpec: IJupyterKernelSpec | undefined | LiveKernelModel;
     workingDir: string | undefined;
@@ -212,12 +212,12 @@ export interface INotebook extends IAsyncDisposable {
     setLaunchingFile(file: string): Promise<void>;
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
-    getMatchingInterpreter(): PythonInterpreter | undefined;
+    getMatchingInterpreter(): PythonEnvironment | undefined;
     getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined;
     setKernelSpec(
         spec: IJupyterKernelSpec | LiveKernelModel,
         timeoutMS: number,
-        interpreter: PythonInterpreter | undefined
+        interpreter: PythonEnvironment | undefined
     ): Promise<void>;
     getLoggers(): INotebookExecutionLogger[];
     registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
@@ -296,7 +296,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
     ): Promise<INotebookServer | undefined>;
     spawnNotebook(file: string): Promise<void>;
     importNotebook(file: Uri, template: string | undefined): Promise<string>;
-    getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined>;
+    getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
     refreshCommands(): Promise<void>;
@@ -346,7 +346,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     changeKernel(
         kernel: IJupyterKernelSpec | LiveKernelModel,
         timeoutMS: number,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonEnvironment
     ): Promise<void>;
     registerCommTarget(
         targetName: string,
@@ -436,7 +436,7 @@ export interface IJupyterKernelSpec {
      * Optionally storing the interpreter information in the metadata (helping extension search for kernels that match an interpereter).
      */
     // tslint:disable-next-line: no-any
-    readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
+    readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment> };
     readonly argv: string[];
 }
 
@@ -773,7 +773,7 @@ export interface IStatusProvider {
 }
 
 export interface IJupyterCommand {
-    interpreter(): Promise<PythonInterpreter | undefined>;
+    interpreter(): Promise<PythonEnvironment | undefined>;
     execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
@@ -784,7 +784,7 @@ export interface IJupyterCommandFactory {
         command: JupyterCommands,
         moduleName: string,
         args: string[],
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         isActiveInterpreter: boolean
     ): IJupyterCommand;
     createProcessCommand(exe: string, args: string[]): IJupyterCommand;
@@ -1019,10 +1019,10 @@ export interface IJupyterSubCommandExecutionService {
      * Gets the interpreter to be used for starting of jupyter server.
      *
      * @param {CancellationToken} [token]
-     * @returns {(Promise<PythonInterpreter | undefined>)}
+     * @returns {(Promise<PythonEnvironment | undefined>)}
      * @memberof IJupyterInterpreterService
      */
-    getSelectedInterpreter(token?: CancellationToken): Promise<PythonInterpreter | undefined>;
+    getSelectedInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined>;
     /**
      * Starts the jupyter notebook server
      *
@@ -1288,10 +1288,10 @@ export enum KernelInterpreterDependencyResponse {
 export const IKernelDependencyService = Symbol('IKernelDependencyService');
 export interface IKernelDependencyService {
     installMissingDependencies(
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         token?: CancellationToken
     ): Promise<KernelInterpreterDependencyResponse>;
-    areDependenciesInstalled(interpreter: PythonInterpreter, _token?: CancellationToken): Promise<boolean>;
+    areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
 }
 
 export const INotebookAndInteractiveWindowUsageTracker = Symbol('INotebookAndInteractiveWindowUsageTracker');

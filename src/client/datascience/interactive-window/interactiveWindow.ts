@@ -27,7 +27,7 @@ import {
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
@@ -389,7 +389,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
     protected async updateNotebookOptions(
         _kernelSpec: IJupyterKernelSpec,
-        _interpreter: PythonInterpreter | undefined
+        _interpreter: PythonEnvironment | undefined
     ): Promise<void> {
         // Do nothing as this data isn't stored in our options.
     }

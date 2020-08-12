@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { isHiddenInterpreter } from '../../../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
-import { EnvironmentType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 // tslint:disable:no-unused-expression
 
@@ -28,7 +28,7 @@ suite('Interpreters - Filter', () => {
         'C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation\\python.exe'
     ];
 
-    function getInterpreterFromPath(interpreterPath: string): PythonInterpreter {
+    function getInterpreterFromPath(interpreterPath: string): PythonEnvironment {
         return {
             path: interpreterPath,
             sysVersion: '',
@@ -45,13 +45,13 @@ suite('Interpreters - Filter', () => {
 
     doNotHideThesePaths.forEach((interpreterPath) => {
         test(`Interpreter path should NOT be hidden - ${interpreterPath}`, () => {
-            const interpreter: PythonInterpreter = getInterpreterFromPath(interpreterPath);
+            const interpreter: PythonEnvironment = getInterpreterFromPath(interpreterPath);
             expect(isHiddenInterpreter(interpreter), `${interpreterPath} should NOT be treated as hidden.`).to.be.false;
         });
     });
     hideThesePaths.forEach((interpreterPath) => {
         test(`Interpreter path should be hidden - ${interpreterPath}`, () => {
-            const interpreter: PythonInterpreter = getInterpreterFromPath(interpreterPath);
+            const interpreter: PythonEnvironment = getInterpreterFromPath(interpreterPath);
             expect(isHiddenInterpreter(interpreter), `${interpreterPath} should be treated as hidden.`).to.be.true;
         });
     });

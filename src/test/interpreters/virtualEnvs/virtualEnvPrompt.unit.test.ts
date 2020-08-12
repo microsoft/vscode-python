@@ -22,7 +22,7 @@ import { InterpreterHelper } from '../../../client/interpreter/helpers';
 import { VirtualEnvironmentPrompt } from '../../../client/interpreter/virtualEnvs/virtualEnvPrompt';
 import { CacheableLocatorService } from '../../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
 import { InterpreterWatcherBuilder } from '../../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
-import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Virtual Environment Prompt', () => {
@@ -32,7 +32,7 @@ suite('Virtual Environment Prompt', () => {
             await super.handleNewEnvironment(resource);
         }
         // tslint:disable-next-line:no-unnecessary-override
-        public async notifyUser(interpreter: PythonInterpreter, resource: Uri): Promise<void> {
+        public async notifyUser(interpreter: PythonEnvironment, resource: Uri): Promise<void> {
             await super.notifyUser(interpreter, resource);
         }
     }

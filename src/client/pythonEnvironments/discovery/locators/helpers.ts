@@ -6,7 +6,7 @@ import { IS_WINDOWS } from '../../../common/platform/constants';
 import { IFileSystem } from '../../../common/platform/types';
 import { IInterpreterLocatorHelper } from '../../../interpreter/contracts';
 import { IPipEnvServiceHelper } from '../../../interpreter/locators/types';
-import { EnvironmentType, PythonInterpreter } from '../../info';
+import { EnvironmentType, PythonEnvironment } from '../../info';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
@@ -32,7 +32,7 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper
     ) {}
-    public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
+    public async mergeInterpreters(interpreters: PythonEnvironment[]): Promise<PythonEnvironment[]> {
         const items = interpreters
             .map((item) => {
                 return { ...item };
@@ -41,7 +41,7 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                 item.path = path.normalize(item.path);
                 return item;
             })
-            .reduce<PythonInterpreter[]>((accumulator, current) => {
+            .reduce<PythonEnvironment[]>((accumulator, current) => {
                 const currentVersion = current && current.version ? current.version.raw : undefined;
                 const existingItem = accumulator.find((item) => {
                     // If same version and same base path, then ignore.
@@ -65,7 +65,7 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                     if (existingItem.type === EnvironmentType.Unknown && current.type !== EnvironmentType.Unknown) {
                         existingItem.type = current.type;
                     }
-                    const props: (keyof PythonInterpreter)[] = [
+                    const props: (keyof PythonEnvironment)[] = [
                         'envName',
                         'envPath',
                         'path',

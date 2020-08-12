@@ -9,7 +9,7 @@ import type { CancellationToken, Event, QuickPickItem, Uri } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../../types/vscode-proposed';
 import type { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import type { IAsyncDisposable, Resource } from '../../../common/types';
-import type { PythonInterpreter } from '../../../pythonEnvironments/info';
+import type { PythonEnvironment } from '../../../pythonEnvironments/info';
 import type {
     IJupyterKernel,
     IJupyterKernelSpec,

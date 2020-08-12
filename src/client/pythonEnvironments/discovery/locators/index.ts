@@ -18,7 +18,7 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { PythonInterpreter } from '../../info';
+import { PythonEnvironment } from '../../info';
 import { isHiddenInterpreter } from './services/interpreterFilter';
 import { GetInterpreterLocatorOptions } from './types';
 
@@ -49,11 +49,11 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      * The events will be fired by the indivitual locators retrieved in `getLocators`.
      *
      * @readonly
-     * @type {Event<Promise<PythonInterpreter[]>>}
+     * @type {Event<Promise<PythonEnvironment[]>>}
      * @memberof PythonInterpreterLocatorService
      */
-    public get onLocating(): Event<Promise<PythonInterpreter[]>> {
-        return new EventEmitter<Promise<PythonInterpreter[]>>().event;
+    public get onLocating(): Event<Promise<PythonEnvironment[]>> {
+        return new EventEmitter<Promise<PythonEnvironment[]>>().event;
     }
     public get hasInterpreters(): Promise<boolean> {
         return this._hasInterpreters.completed ? this._hasInterpreters.promise : Promise.resolve(false);
@@ -75,7 +75,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      * interpreters.
      */
     @traceDecorators.verbose('Get Interpreters')
-    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]> {
+    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]> {
         const locators = this.getLocators(options);
         const promises = locators.map(async (provider) => provider.getInterpreters(resource));
         locators.forEach((locator) => {
