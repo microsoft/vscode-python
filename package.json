@@ -3708,7 +3708,7 @@
         "rewiremock": "^3.13.0",
         "rimraf": "^3.0.2",
         "sass-loader": "^7.1.0",
-        "serialize-javascript": "^2.1.2",
+        "serialize-javascript": "^3.1.0",
         "shortid": "^2.2.8",
         "sinon": "^8.0.1",
         "slickgrid": "^2.4.17",
