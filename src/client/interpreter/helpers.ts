@@ -11,7 +11,7 @@ import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/l
 import {
     getInterpreterTypeName,
     InterpreterInformation,
-    InterpreterType,
+    EnvironmentType,
     PythonInterpreter,
     sortInterpreters
 } from '../pythonEnvironments/info';
@@ -118,7 +118,7 @@ export class InterpreterHelper implements IInterpreterHelper {
     public isMacDefaultPythonPath(pythonPath: string) {
         return isMacDefaultPythonPath(pythonPath);
     }
-    public getInterpreterTypeDisplayName(interpreterType: InterpreterType) {
+    public getInterpreterTypeDisplayName(interpreterType: EnvironmentType) {
         return getInterpreterTypeName(interpreterType);
     }
     public getBestInterpreter(interpreters?: PythonInterpreter[]): PythonInterpreter | undefined {

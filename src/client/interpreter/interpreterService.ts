@@ -21,7 +21,7 @@ import {
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../pythonEnvironments/info';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
@@ -307,7 +307,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (info.architecture) {
             displayNameParts.push(getArchitectureDisplayName(info.architecture));
         }
-        if (!info.envName && info.path && info.type && info.type === InterpreterType.Pipenv) {
+        if (!info.envName && info.path && info.type && info.type === EnvironmentType.Pipenv) {
             // If we do not have the name of the environment, then try to get it again.
             // This can happen based on the context (i.e. resource).
             // I.e. we can determine if an environment is PipEnv only when giving it the right workspacec path (i.e. resource).
@@ -345,7 +345,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         };
 
         const envName =
-            type === InterpreterType.Unknown
+            type === EnvironmentType.Unknown
                 ? undefined
                 : await virtualEnvManager.getEnvironmentName(pythonPath, resource);
         const pthonInfo = {

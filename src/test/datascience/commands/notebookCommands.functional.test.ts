@@ -30,7 +30,7 @@ import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { IInteractiveWindowProvider, INotebookEditorProvider } from '../../../client/datascience/types';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { InterpreterType } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable: max-func-body-length no-any
 suite('DataScience - Notebook Commands', () => {
@@ -58,7 +58,7 @@ suite('DataScience - Notebook Commands', () => {
     };
     const selectedInterpreter = {
         path: '',
-        type: InterpreterType.Conda,
+        type: EnvironmentType.Conda,
         architecture: Architecture.Unknown,
         sysPrefix: '',
         sysVersion: ''

@@ -13,7 +13,7 @@ import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
 
 suite('Terminal Environment Activation pyenv', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -53,7 +53,7 @@ suite('Terminal Environment Activation pyenv', () => {
             sysPrefix: '',
             version: new SemVer('1.1.1-alpha'),
             sysVersion: '',
-            type: InterpreterType.Unknown
+            type: EnvironmentType.Unknown
         };
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
@@ -71,7 +71,7 @@ suite('Terminal Environment Activation pyenv', () => {
             sysPrefix: '',
             version: new SemVer('1.1.1-alpha'),
             sysVersion: '',
-            type: InterpreterType.Pyenv
+            type: EnvironmentType.Pyenv
         };
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
@@ -89,7 +89,7 @@ suite('Terminal Environment Activation pyenv', () => {
             sysPrefix: '',
             version: new SemVer('1.1.1-alpha'),
             sysVersion: '',
-            type: InterpreterType.Pyenv,
+            type: EnvironmentType.Pyenv,
             envName: 'my env name'
         };
         interpreterService

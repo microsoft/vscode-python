@@ -4,7 +4,7 @@
 'use strict';
 
 import { Architecture } from '../../client/common/utils/platform';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 
 /**
  * Creates a PythonInterpreter object for testing purposes, with unique name, version and path.
@@ -22,7 +22,7 @@ export function createPythonInterpreter(info?: Partial<PythonInterpreter>): Pyth
         path: `somePath${rnd}`,
         sysPrefix: `someSysPrefix${rnd}`,
         sysVersion: `1.1.1`,
-        type: InterpreterType.Unknown,
+        type: EnvironmentType.Unknown,
         ...(info || {})
     };
 }

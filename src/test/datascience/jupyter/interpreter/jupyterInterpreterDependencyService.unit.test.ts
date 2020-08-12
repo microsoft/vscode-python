@@ -20,7 +20,7 @@ import {
     JupyterInterpreterDependencyService
 } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { IJupyterCommand, IJupyterCommandFactory } from '../../../../client/datascience/types';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 
 // tslint:disable: max-func-body-length no-any
 
@@ -35,7 +35,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
         architecture: Architecture.Unknown,
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Unknown
+        type: EnvironmentType.Unknown
     };
     setup(() => {
         appShell = mock(ApplicationShell);

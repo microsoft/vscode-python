@@ -6,7 +6,7 @@ import { IS_WINDOWS } from '../../../common/platform/constants';
 import { IFileSystem } from '../../../common/platform/types';
 import { IInterpreterLocatorHelper } from '../../../interpreter/contracts';
 import { IPipEnvServiceHelper } from '../../../interpreter/locators/types';
-import { InterpreterType, PythonInterpreter } from '../../info';
+import { EnvironmentType, PythonInterpreter } from '../../info';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
@@ -62,7 +62,7 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                 } else {
                     // Preserve type information.
                     // Possible we identified environment as unknown, but a later provider has identified env type.
-                    if (existingItem.type === InterpreterType.Unknown && current.type !== InterpreterType.Unknown) {
+                    if (existingItem.type === EnvironmentType.Unknown && current.type !== EnvironmentType.Unknown) {
                         existingItem.type = current.type;
                     }
                     const props: (keyof PythonInterpreter)[] = [
@@ -88,7 +88,7 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
             items.map(async (item) => {
                 const info = await this.pipEnvServiceHelper.getPipEnvInfo(item.path);
                 if (info) {
-                    item.type = InterpreterType.Pipenv;
+                    item.type = EnvironmentType.Pipenv;
                     item.pipEnvWorkspaceFolder = info.workspaceFolder.fsPath;
                     item.envName = info.envName || item.envName;
                 }

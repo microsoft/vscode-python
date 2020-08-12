@@ -10,7 +10,7 @@ import { OSType } from '../../../../common/utils/platform';
 import { IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IPythonInPathCommandProvider } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonInterpreter } from '../../../info';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
 /**
@@ -83,7 +83,7 @@ export class CurrentPathService extends CacheableLocatorService {
             return {
                 ...(details as PythonInterpreter),
                 path: pythonPath,
-                type: details.type ? details.type : InterpreterType.Unknown
+                type: details.type ? details.type : EnvironmentType.Unknown
             };
         });
     }

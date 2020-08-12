@@ -27,7 +27,7 @@ import {
     CurrentPathService,
     PythonInPathCommandProvider
 } from '../../client/pythonEnvironments/discovery/locators/services/currentPathService';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
@@ -145,8 +145,8 @@ suite('Interpreters CurrentPath Service', () => {
             fileSystem.verifyAll();
 
             expect(interpreters).to.be.of.length(2);
-            expect(interpreters).to.deep.include({ version, path: 'c:/root:python', type: InterpreterType.Unknown });
-            expect(interpreters).to.deep.include({ version, path: 'c:/python3', type: InterpreterType.Unknown });
+            expect(interpreters).to.deep.include({ version, path: 'c:/root:python', type: EnvironmentType.Unknown });
+            expect(interpreters).to.deep.include({ version, path: 'c:/python3', type: EnvironmentType.Unknown });
         });
     });
 });

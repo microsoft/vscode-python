@@ -21,7 +21,7 @@ import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFin
 import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { IDataScienceFileSystem, IJupyterKernelSpec } from '../../client/datascience/types';
 import { IInterpreterLocatorService, IInterpreterService } from '../../client/interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 
 suite('Kernel Finder', () => {
     let interpreterService: typemoq.IMock<IInterpreterService>;
@@ -116,7 +116,7 @@ suite('Kernel Finder', () => {
                 envName: '1',
                 sysVersion: '3.1.1.1',
                 architecture: Architecture.x64,
-                type: InterpreterType.Unknown
+                type: EnvironmentType.Unknown
             };
             interpreters = [];
             for (let i = 0; i < 2; i += 1) {
@@ -126,7 +126,7 @@ suite('Kernel Finder', () => {
                     envName: '1',
                     sysVersion: '3.1.1.1',
                     architecture: Architecture.x64,
-                    type: InterpreterType.Unknown
+                    type: EnvironmentType.Unknown
                 });
             }
 
@@ -385,7 +385,7 @@ suite('Kernel Finder', () => {
                 envName: '1',
                 sysVersion: '3.1.1.1',
                 architecture: Architecture.x64,
-                type: InterpreterType.Unknown
+                type: EnvironmentType.Unknown
             };
             for (let i = 0; i < 10; i += 1) {
                 interpreters.push({
@@ -394,7 +394,7 @@ suite('Kernel Finder', () => {
                     envName: '1',
                     sysVersion: '3.1.1.1',
                     architecture: Architecture.x64,
-                    type: InterpreterType.Unknown
+                    type: EnvironmentType.Unknown
                 });
             }
             interpreters.push(activeInterpreter);
@@ -458,7 +458,7 @@ suite('Kernel Finder', () => {
                 envName: '1',
                 sysVersion: '3.1.1.1',
                 architecture: Architecture.x64,
-                type: InterpreterType.Unknown
+                type: EnvironmentType.Unknown
             };
             // Record a second call to getActiveInterpreter, will play after the first
             interpreterService

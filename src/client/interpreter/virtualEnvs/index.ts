@@ -13,7 +13,7 @@ import { ICurrentProcess, IPathUtils } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import * as globalenvs from '../../pythonEnvironments/discovery/globalenv';
 import * as subenvs from '../../pythonEnvironments/discovery/subenv';
-import { InterpreterType } from '../../pythonEnvironments/info';
+import { EnvironmentType } from '../../pythonEnvironments/info';
 import { IInterpreterLocatorService, IPipEnvService, PIPENV_SERVICE } from '../contracts';
 import { IVirtualEnvironmentManager } from './types';
 
@@ -44,7 +44,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         return (await subenvs.getName(pythonPath, finders)) || '';
     }
 
-    public async getEnvironmentType(pythonPath: string, resource?: Uri): Promise<InterpreterType> {
+    public async getEnvironmentType(pythonPath: string, resource?: Uri): Promise<EnvironmentType> {
         const pathUtils = this.serviceContainer.get<IPathUtils>(IPathUtils);
         const plat = this.serviceContainer.get<IPlatformService>(IPlatformService);
         const candidates = plat.isWindows ? getWindowsScripts(path.join) : getNonWindowsScripts();
@@ -66,7 +66,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
                 return processService.exec(c, a);
             }
         );
-        return (await subenvs.getType(pythonPath, finders)) || InterpreterType.Unknown;
+        return (await subenvs.getType(pythonPath, finders)) || EnvironmentType.Unknown;
     }
 
     public async isVenvEnvironment(pythonPath: string) {
@@ -76,7 +76,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
             // We use a closure on "this".
             (n: string) => this.fs.fileExists(n)
         );
-        return (await find(pythonPath)) === InterpreterType.Venv;
+        return (await find(pythonPath)) === EnvironmentType.Venv;
     }
 
     public async isPyEnvEnvironment(pythonPath: string, resource?: Uri) {
@@ -94,7 +94,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
                 return processService.exec(c, a);
             }
         );
-        return (await find(pythonPath)) === InterpreterType.Pyenv;
+        return (await find(pythonPath)) === EnvironmentType.Pyenv;
     }
 
     public async isPipEnvironment(pythonPath: string, resource?: Uri) {
@@ -103,7 +103,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
             // We use a closure on "this".
             (d: string, p: string) => this.pipEnvService.isRelatedPipEnvironment(d, p)
         );
-        return (await find(pythonPath)) === InterpreterType.Pipenv;
+        return (await find(pythonPath)) === EnvironmentType.Pipenv;
     }
 
     public async getPyEnvRoot(resource?: Uri): Promise<string | undefined> {
@@ -133,7 +133,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
             // We use a closure on "this".
             (n: string) => this.fs.fileExists(n)
         );
-        return (await find(pythonPath)) === InterpreterType.VirtualEnv;
+        return (await find(pythonPath)) === EnvironmentType.VirtualEnv;
     }
 
     private async getWorkspaceRoot(resource?: Uri): Promise<string | undefined> {

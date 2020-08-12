@@ -31,7 +31,7 @@ import { EnvironmentActivationService } from '../../../../client/interpreter/act
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 import { FakeClock } from '../../../common';
 
 // tslint:disable-next-line: max-func-body-length
@@ -128,7 +128,7 @@ suite('DataScience - KernelService', () => {
             path: 'some Path',
             displayName: 'Hello World',
             envName: 'Hello',
-            type: InterpreterType.Conda
+            type: EnvironmentType.Conda
             // tslint:disable-next-line: no-any
         } as any;
 
@@ -151,7 +151,7 @@ suite('DataScience - KernelService', () => {
             path: 'some Path',
             displayName: 'Hello World',
             envName: 'Hello',
-            type: InterpreterType.Conda
+            type: EnvironmentType.Conda
             // tslint:disable-next-line: no-any
         } as any;
 
@@ -230,7 +230,7 @@ suite('DataScience - KernelService', () => {
             displayName: 'Disp2',
             path: 'myPath2',
             sysPrefix: 'xyz',
-            type: InterpreterType.Conda,
+            type: EnvironmentType.Conda,
             sysVersion: '',
             architecture: Architecture.Unknown
         };
@@ -315,7 +315,7 @@ suite('DataScience - KernelService', () => {
             displayName: 'disp2',
             path: 'Some Path2',
             sysPrefix: 'xyz',
-            type: InterpreterType.Conda,
+            type: EnvironmentType.Conda,
             sysVersion: '',
             architecture: Architecture.Unknown
         };
@@ -342,7 +342,7 @@ suite('DataScience - KernelService', () => {
             path: path.join('interpreter', 'python'),
             sysPrefix: '',
             sysVersion: '',
-            type: InterpreterType.Conda,
+            type: EnvironmentType.Conda,
             displayName: 'Hello'
         };
         // Marked as readonly, to ensure we do not update this in tests.
@@ -388,7 +388,7 @@ suite('DataScience - KernelService', () => {
                 path: '',
                 sysPrefix: '',
                 sysVersion: '',
-                type: InterpreterType.Conda
+                type: EnvironmentType.Conda
             };
 
             const promise = kernelService.registerKernel(invalidInterpreter);

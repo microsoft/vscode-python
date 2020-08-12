@@ -61,7 +61,7 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { ServiceContainer } from '../../client/ioc/container';
 import { KnownSearchPathsForInterpreters } from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
@@ -115,7 +115,7 @@ suite('Jupyter Execution', async () => {
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
-        type: InterpreterType.Unknown,
+        type: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 
@@ -124,7 +124,7 @@ suite('Jupyter Execution', async () => {
         version: new SemVer('3.1.1-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
-        type: InterpreterType.Unknown,
+        type: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 
@@ -133,7 +133,7 @@ suite('Jupyter Execution', async () => {
         version: new SemVer('2.1.1-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
-        type: InterpreterType.Unknown,
+        type: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 
@@ -142,7 +142,7 @@ suite('Jupyter Execution', async () => {
         version: new SemVer('2.1.1'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
-        type: InterpreterType.Unknown,
+        type: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 

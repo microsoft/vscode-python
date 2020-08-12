@@ -30,7 +30,7 @@ import { Architecture, OSType } from '../../../client/common/utils/platform';
 import { ICondaService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable:max-func-body-length no-any
 
@@ -53,7 +53,7 @@ suite('Terminal Service helpers', () => {
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
-        type: InterpreterType.Unknown,
+        type: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 

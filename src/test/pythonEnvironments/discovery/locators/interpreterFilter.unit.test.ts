@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { isHiddenInterpreter } from '../../../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 
 // tslint:disable:no-unused-expression
 
@@ -36,7 +36,7 @@ suite('Interpreters - Filter', () => {
             architecture: 1,
             companyDisplayName: '',
             displayName: 'python',
-            type: InterpreterType.WindowsStore,
+            type: EnvironmentType.WindowsStore,
             envName: '',
             envPath: '',
             cachedEntry: false

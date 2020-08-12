@@ -27,7 +27,7 @@ import {
 } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { PythonInterpreterLocatorService } from '../../../../client/pythonEnvironments/discovery/locators';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Locators Index', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -77,7 +77,7 @@ suite('Interpreters - Locators Index', () => {
                         path: typeName,
                         sysPrefix: typeName,
                         sysVersion: typeName,
-                        type: InterpreterType.Unknown,
+                        type: EnvironmentType.Unknown,
                         version: new SemVer('0.0.0-alpha')
                     };
 
@@ -140,7 +140,7 @@ suite('Interpreters - Locators Index', () => {
                         path: typeName,
                         sysPrefix: typeName,
                         sysVersion: typeName,
-                        type: InterpreterType.Unknown,
+                        type: EnvironmentType.Unknown,
                         version: new SemVer('0.0.0-alpha')
                     };
 
@@ -206,7 +206,7 @@ suite('Interpreters - Locators Index', () => {
                         path: typeName,
                         sysPrefix: typeName,
                         sysVersion: typeName,
-                        type: InterpreterType.Unknown,
+                        type: EnvironmentType.Unknown,
                         version: new SemVer('0.0.0-alpha')
                     };
 

@@ -1,4 +1,4 @@
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonInterpreter } from '../../../info';
 
 // tslint:disable-next-line:variable-name
 export const AnacondaCompanyNames = ['Anaconda, Inc.', 'Continuum Analytics, Inc.'];
@@ -54,7 +54,7 @@ export async function parseCondaInfo(
             ...(details as PythonInterpreter),
             path: pythonPath,
             companyDisplayName: AnacondaCompanyName,
-            type: InterpreterType.Conda,
+            type: EnvironmentType.Conda,
             envPath
         };
     });

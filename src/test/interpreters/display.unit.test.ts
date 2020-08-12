@@ -36,7 +36,7 @@ import {
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 
 // tslint:disable:no-any max-func-body-length
 
@@ -46,7 +46,7 @@ const info: PythonInterpreter = {
     displayName: '',
     envName: '',
     path: '',
-    type: InterpreterType.Unknown,
+    type: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''
@@ -143,7 +143,7 @@ suite('Interpreters Display', () => {
         const activeInterpreter: PythonInterpreter = {
             ...info,
             displayName: 'Dummy_Display_Name',
-            type: InterpreterType.Unknown,
+            type: EnvironmentType.Unknown,
             path: path.join('user', 'development', 'env', 'bin', 'python')
         };
         setupWorkspaceFolder(resource, workspaceFolder);
@@ -167,7 +167,7 @@ suite('Interpreters Display', () => {
         const activeInterpreter: PythonInterpreter = {
             ...info,
             displayName: 'Dummy_Display_Name',
-            type: InterpreterType.Unknown,
+            type: EnvironmentType.Unknown,
             path: path.join('user', 'development', 'env', 'bin', 'python')
         };
         pathUtils
@@ -247,7 +247,7 @@ suite('Interpreters Display', () => {
         const activeInterpreter: PythonInterpreter = {
             ...info,
             displayName: 'Dummy_Display_Name',
-            type: InterpreterType.Unknown,
+            type: EnvironmentType.Unknown,
             companyDisplayName: 'Company Name',
             path: pythonPath
         };
@@ -280,7 +280,7 @@ suite('Interpreters Display', () => {
             const activeInterpreter: PythonInterpreter = {
                 ...info,
                 displayName: 'Dummy_Display_Name',
-                type: InterpreterType.Unknown,
+                type: EnvironmentType.Unknown,
                 path: path.join('user', 'development', 'env', 'bin', 'python')
             };
             setupWorkspaceFolder(resource, workspaceFolder);

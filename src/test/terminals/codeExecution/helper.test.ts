@@ -20,7 +20,7 @@ import { Architecture, OSType } from '../../../client/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { isOs, isPythonVersion, PYTHON_PATH } from '../../common';
@@ -42,7 +42,7 @@ suite('Terminal - Code Execution Helper', () => {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         displayName: 'Python',
-        type: InterpreterType.Unknown,
+        type: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 

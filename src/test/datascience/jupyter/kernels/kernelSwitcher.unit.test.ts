@@ -22,7 +22,7 @@ import { KernelSelector, KernelSpecInterpreter } from '../../../../client/datasc
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
 import { IJupyterConnection, IJupyterKernelSpec, INotebook } from '../../../../client/datascience/types';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 import { noop } from '../../../core';
 
 // tslint:disable: max-func-body-length no-any
@@ -49,7 +49,7 @@ suite('DataScience - Kernel Switcher', () => {
         };
         selectedInterpreter = {
             path: '',
-            type: InterpreterType.Conda,
+            type: EnvironmentType.Conda,
             architecture: Architecture.Unknown,
             sysPrefix: '',
             sysVersion: ''

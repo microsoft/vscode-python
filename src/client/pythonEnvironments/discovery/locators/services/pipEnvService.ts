@@ -15,7 +15,7 @@ import { IPipEnvServiceHelper } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonInterpreter } from '../../../info';
 import { GetInterpreterLocatorOptions } from '../types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
@@ -106,7 +106,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         return {
             ...(details as PythonInterpreter),
             path: interpreterPath,
-            type: InterpreterType.Pipenv,
+            type: EnvironmentType.Pipenv,
             pipEnvWorkspaceFolder: pipenvCwd
         };
     }

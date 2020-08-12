@@ -21,7 +21,7 @@ import { IEnvironmentActivationService } from '../../../client/interpreter/activ
 import { WrapperEnvironmentActivationService } from '../../../client/interpreter/activation/wrapperEnvironmentActivationService';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Interpreters Activation - Python Environment Variables (wrap terminal and proc approach)', () => {
@@ -40,7 +40,7 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
         path: '',
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Conda
+        type: EnvironmentType.Conda
     };
 
     // tslint:disable-next-line: max-func-body-length
@@ -269,7 +269,7 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                     path: 'New',
                                     sysPrefix: '',
                                     sysVersion: '',
-                                    type: InterpreterType.Pipenv
+                                    type: EnvironmentType.Pipenv
                                 };
                                 when(
                                     termActivation.getActivatedEnvironmentVariables(

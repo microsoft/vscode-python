@@ -3,7 +3,7 @@ import { CodeLensProvider, Disposable, Event, TextDocument, Uri } from 'vscode';
 import { Resource } from '../common/types';
 import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/discovery/locators/services/conda';
 import { GetInterpreterLocatorOptions } from '../pythonEnvironments/discovery/locators/types';
-import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../pythonEnvironments/info';
 import { WorkspacePythonPath } from './helpers';
 import { GetInterpreterOptions } from './interpreterService';
 
@@ -84,7 +84,7 @@ export interface IInterpreterHelper {
     getActiveWorkspaceUri(resource: Resource): WorkspacePythonPath | undefined;
     getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>>;
     isMacDefaultPythonPath(pythonPath: string): Boolean;
-    getInterpreterTypeDisplayName(interpreterType: InterpreterType): string | undefined;
+    getInterpreterTypeDisplayName(interpreterType: EnvironmentType): string | undefined;
     getBestInterpreter(interpreters?: PythonInterpreter[]): PythonInterpreter | undefined;
 }
 

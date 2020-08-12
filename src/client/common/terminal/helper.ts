@@ -4,7 +4,7 @@
 import { inject, injectable, multiInject, named } from 'inversify';
 import { Terminal, Uri } from 'vscode';
 import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITerminalManager } from '../application/types';
@@ -117,7 +117,7 @@ export class TerminalHelper implements ITerminalHelper {
         }
 
         const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
-        const interpreterType = interpreter ? interpreter.type : InterpreterType.Unknown;
+        const interpreterType = interpreter ? interpreter.type : EnvironmentType.Unknown;
         const data = { failed, hasCommands, interpreterType, terminal: terminalShellType, pythonVersion };
         sendTelemetryEvent(eventName, undefined, data);
     }
@@ -131,7 +131,7 @@ export class TerminalHelper implements ITerminalHelper {
 
         // If we have a conda environment, then use that.
         const isCondaEnvironment = interpreter
-            ? interpreter.type === InterpreterType.Conda
+            ? interpreter.type === EnvironmentType.Conda
             : await this.condaService.isCondaEnvironment(settings.pythonPath);
         if (isCondaEnvironment) {
             const activationCommands = interpreter

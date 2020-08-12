@@ -15,7 +15,7 @@ import { traceError } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
 import { ICondaService, IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonInterpreter } from '../../../info';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName } from './conda';
 
@@ -121,7 +121,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
             ...(details as PythonInterpreter),
             path: interpreter,
             companyDisplayName: AnacondaCompanyName,
-            type: InterpreterType.Conda,
+            type: EnvironmentType.Conda,
             envPath: environmentPath,
             envName
         };

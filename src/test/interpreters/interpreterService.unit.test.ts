@@ -47,7 +47,7 @@ import { IInterpreterHashProvider, IInterpreterHashProviderFactory } from '../..
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
@@ -355,7 +355,7 @@ suite('Interpreters service', () => {
                     .verifiable(TypeMoq.Times.once());
                 virtualEnvMgr
                     .setup((v) => v.getEnvironmentType(TypeMoq.It.isValue(pythonPath)))
-                    .returns(() => Promise.resolve(InterpreterType.Unknown))
+                    .returns(() => Promise.resolve(EnvironmentType.Unknown))
                     .verifiable(TypeMoq.Times.once());
                 pythonExecutionService
                     .setup((p) => p.getExecutablePath())
@@ -451,8 +451,8 @@ suite('Interpreters service', () => {
                     .forEach((arch) => {
                         [undefined, path.join('a', 'b', 'c', 'd', 'bin', 'python')].forEach((pythonPath) => {
                             // Forced cast to ignore TS warnings.
-                            (EnumEx.getNamesAndValues<InterpreterType>(InterpreterType) as (
-                                | { name: string; value: InterpreterType }
+                            (EnumEx.getNamesAndValues<EnvironmentType>(EnvironmentType) as (
+                                | { name: string; value: EnvironmentType }
                                 | undefined
                             )[])
                                 .concat(undefined)
@@ -485,7 +485,7 @@ suite('Interpreters service', () => {
                                                 if (
                                                     interpreterInfo.path &&
                                                     interpreterType &&
-                                                    interpreterType.value === InterpreterType.Pipenv
+                                                    interpreterType.value === EnvironmentType.Pipenv
                                                 ) {
                                                     virtualEnvMgr
                                                         .setup((v) =>
@@ -537,7 +537,7 @@ suite('Interpreters service', () => {
                                                     !interpreterInfo.envName &&
                                                     interpreterInfo.path &&
                                                     interpreterInfo.type &&
-                                                    interpreterInfo.type === InterpreterType.Pipenv &&
+                                                    interpreterInfo.type === EnvironmentType.Pipenv &&
                                                     pipEnvName
                                                 ) {
                                                     // If we do not have the name of the environment, then try to get it again.
@@ -586,7 +586,7 @@ suite('Interpreters service', () => {
             hashProvider.setup((provider) => (provider as any).then).returns(() => undefined);
 
             const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>>();
-            const info = { path: 'hell', type: InterpreterType.Venv };
+            const info = { path: 'hell', type: EnvironmentType.Venv };
             state
                 .setup((s) => s.value)
                 .returns(() => {
@@ -631,7 +631,7 @@ suite('Interpreters service', () => {
             hashProvider.setup((provider) => (provider as any).then).returns(() => undefined);
 
             const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>>();
-            const info = { path: 'hell', type: InterpreterType.Venv };
+            const info = { path: 'hell', type: EnvironmentType.Venv };
             state
                 .setup((s) => s.value)
                 .returns(() => {

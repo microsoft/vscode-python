@@ -10,7 +10,7 @@ import { Architecture } from '../../../../common/utils/platform';
 import { IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonInterpreter } from '../../../info';
 import { parsePythonVersion } from '../../../info/pythonVersion';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
@@ -184,8 +184,8 @@ export class WindowsRegistryService extends CacheableLocatorService {
                     version: details.version || parsePythonVersion(version),
                     companyDisplayName: interpreterInfo.companyDisplayName,
                     type: this.windowsStoreInterpreter.isWindowsStoreInterpreter(executablePath)
-                        ? InterpreterType.WindowsStore
-                        : InterpreterType.Unknown
+                        ? EnvironmentType.WindowsStore
+                        : EnvironmentType.Unknown
                 } as PythonInterpreter;
             })
             .then((interpreter) =>

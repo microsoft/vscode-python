@@ -373,7 +373,7 @@ import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs'
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ProposePylanceBanner } from '../../client/languageServices/proposeLanguageServerBanner';
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
@@ -449,7 +449,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         displayName: 'Python',
-        type: InterpreterType.Unknown,
+        type: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
     private workingPython2: PythonInterpreter = {
@@ -458,7 +458,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         displayName: 'Python',
-        type: InterpreterType.Unknown,
+        type: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 

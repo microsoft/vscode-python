@@ -10,7 +10,7 @@ import { IProcessServiceFactory } from '../../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
 import { ICondaService, IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE } from '../../../../interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonInterpreter } from '../../../info';
 import { CondaEnvironmentInfo, CondaInfo } from './conda';
 import { parseCondaEnvFileContents } from './condaHelper';
 
@@ -323,7 +323,7 @@ export class CondaService implements ICondaService {
      */
     private detectCondaEnvironment(interpreter: PythonInterpreter) {
         return (
-            interpreter.type === InterpreterType.Conda ||
+            interpreter.type === EnvironmentType.Conda ||
             (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
             (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('ANACONDA') >=
                 0 ||

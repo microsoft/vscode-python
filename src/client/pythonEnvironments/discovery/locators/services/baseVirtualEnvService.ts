@@ -8,7 +8,7 @@ import { IFileSystem, IPlatformService } from '../../../../common/platform/types
 import { IInterpreterHelper, IVirtualEnvironmentsSearchPathProvider } from '../../../../interpreter/contracts';
 import { IVirtualEnvironmentManager } from '../../../../interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../../../ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonInterpreter } from '../../../info';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
@@ -92,7 +92,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             return {
                 ...(details as PythonInterpreter),
                 envName: virtualEnvName,
-                type: type! as InterpreterType
+                type: type! as EnvironmentType
             };
         });
     }

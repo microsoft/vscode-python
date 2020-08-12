@@ -44,7 +44,7 @@ import { Products } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 
 const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
@@ -416,7 +416,7 @@ suite('Module Installer', () => {
                                     test(`If 'python.globalModuleInstallation' is set to true and pythonPath directory is read only, do an elevated install`, async () => {
                                         const info = TypeMoq.Mock.ofType<PythonInterpreter>();
                                         info.setup((t: any) => t.then).returns(() => undefined);
-                                        info.setup((t) => t.type).returns(() => InterpreterType.Unknown);
+                                        info.setup((t) => t.type).returns(() => EnvironmentType.Unknown);
                                         info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
                                         setActiveInterpreter(info.object);
                                         pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
@@ -440,7 +440,7 @@ suite('Module Installer', () => {
                                     test(`If 'python.globalModuleInstallation' is set to true and pythonPath directory is not read only, send command to terminal`, async () => {
                                         const info = TypeMoq.Mock.ofType<PythonInterpreter>();
                                         info.setup((t: any) => t.then).returns(() => undefined);
-                                        info.setup((t) => t.type).returns(() => InterpreterType.Unknown);
+                                        info.setup((t) => t.type).returns(() => EnvironmentType.Unknown);
                                         info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
                                         setActiveInterpreter(info.object);
                                         pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
@@ -463,7 +463,7 @@ suite('Module Installer', () => {
                                     test(`If 'python.globalModuleInstallation' is not set to true, concatenate arguments with '--user' flag and send command to terminal`, async () => {
                                         const info = TypeMoq.Mock.ofType<PythonInterpreter>();
                                         info.setup((t: any) => t.then).returns(() => undefined);
-                                        info.setup((t) => t.type).returns(() => InterpreterType.Unknown);
+                                        info.setup((t) => t.type).returns(() => EnvironmentType.Unknown);
                                         info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
                                         setActiveInterpreter(info.object);
                                         pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => false);
@@ -483,7 +483,7 @@ suite('Module Installer', () => {
                                     test(`ignores failures in IFileSystem.isDirReadonly()`, async () => {
                                         const info = TypeMoq.Mock.ofType<PythonInterpreter>();
                                         info.setup((t: any) => t.then).returns(() => undefined);
-                                        info.setup((t) => t.type).returns(() => InterpreterType.Unknown);
+                                        info.setup((t) => t.type).returns(() => EnvironmentType.Unknown);
                                         info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
                                         setActiveInterpreter(info.object);
                                         pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
@@ -593,7 +593,7 @@ function generatePythonInterpreterVersions() {
     return versions.map((version) => {
         const info = TypeMoq.Mock.ofType<PythonInterpreter>();
         info.setup((t: any) => t.then).returns(() => undefined);
-        info.setup((t) => t.type).returns(() => InterpreterType.VirtualEnv);
+        info.setup((t) => t.type).returns(() => EnvironmentType.VirtualEnv);
         info.setup((t) => t.version).returns(() => version);
         return info.object;
     });

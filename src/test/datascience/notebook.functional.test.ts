@@ -45,7 +45,7 @@ import {
     InterruptResult
 } from '../../client/datascience/types';
 import { IInterpreterService, IKnownSearchPathsForInterpreters } from '../../client/interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
@@ -712,7 +712,7 @@ suite('DataScience notebook tests', () => {
                         version: new SemVer('3.6.6-final'),
                         sysVersion: '1.0.0.0',
                         sysPrefix: 'Python',
-                        type: InterpreterType.Unknown,
+                        type: EnvironmentType.Unknown,
                         architecture: Architecture.x64
                     };
 
