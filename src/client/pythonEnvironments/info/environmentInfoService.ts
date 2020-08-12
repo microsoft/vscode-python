@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { Architecture } from '../../common/utils/platform';
 import { shellExecute } from '../common/externalDependencies';
 import { buildPythonExecInfo } from '../exec';
@@ -17,7 +22,7 @@ export enum EnvironmentType {
     PyEnv,
     PipEnv,
     WindowsStore,
-    VEnv,
+    Venv,
     VirtualEnvWrapper,
     VirtualEnv,
     Global,
@@ -50,7 +55,7 @@ export enum EnvironmentInfoServiceQueuePriority {
 export interface IEnvironmentInfoService {
     getEnvironmentInfo(
         interpreterPath: string,
-        priority: EnvironmentInfoServiceQueuePriority
+        priority?: EnvironmentInfoServiceQueuePriority
     ): Promise<IEnvironmentInfo | undefined>;
 }
 
@@ -82,11 +87,13 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
 
     public async getEnvironmentInfo(
         interpreterPath: string,
-        priority: EnvironmentInfoServiceQueuePriority = EnvironmentInfoServiceQueuePriority.Default
+        priority?: EnvironmentInfoServiceQueuePriority
     ): Promise<IEnvironmentInfo | undefined> {
         if (priority === EnvironmentInfoServiceQueuePriority.High) {
             return this.workerPool?.addToQueue(interpreterPath, QueuePosition.Front);
         }
+
+        // priority === undefined is treated same as EnvironmentInfoServiceQueuePriority.Default
         return this.workerPool?.addToQueue(interpreterPath, QueuePosition.Back);
     }
 }
