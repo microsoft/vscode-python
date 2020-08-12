@@ -8,7 +8,6 @@ import { commands, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
-import { EnableTrustedNotebooks } from '../../common/experiments/groups';
 import '../../common/extensions';
 import { IDisposableRegistry, IExperimentService } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
@@ -33,9 +32,6 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         this.activateInBackground().ignoreErrors();
     }
     public async activateInBackground(): Promise<void> {
-        if (!(await this.experiments.inExperiment(EnableTrustedNotebooks.experiment))) {
-            return;
-        }
         const context = new ContextKey('python.datascience.trustfeatureenabled', this.commandManager);
         context.set(true).ignoreErrors();
         this.disposables.push(this.commandManager.registerCommand(Commands.TrustNotebook, this.onTrustNotebook, this));

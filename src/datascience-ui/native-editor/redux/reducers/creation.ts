@@ -338,8 +338,7 @@ export namespace Creation {
             undoStack: [],
             cellVMs: vms,
             loaded: true,
-            isNotebookTrusted: arg.payload.data.isNotebookTrusted!,
-            shouldShowTrustMessage: arg.payload.data.shouldShowTrustMessage!
+            isNotebookTrusted: arg.payload.data.isNotebookTrusted!
         };
     }
 

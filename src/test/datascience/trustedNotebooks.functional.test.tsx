@@ -6,7 +6,6 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
 import { Disposable } from 'vscode';
-import { EnableTrustedNotebooks } from '../../client/common/experiments/groups';
 import { noop } from '../../client/common/utils/misc';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider, ITrustService } from '../../client/datascience/types';
@@ -163,7 +162,6 @@ suite('Notebook trust', () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes(false);
         ioc.forceDataScienceSettingsChanged({ alwaysTrustNotebooks: false });
-        ioc.setExperimentState(EnableTrustedNotebooks.experiment, true);
         return ioc.activate();
     }
     function simulateKeyPressOnCell(cellIndex: number, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {

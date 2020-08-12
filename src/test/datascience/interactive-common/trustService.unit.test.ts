@@ -9,7 +9,6 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { ExperimentService } from '../../../client/common/experiments/service';
 import { IExtensionContext } from '../../../client/common/types';
 import { DataScienceFileSystem } from '../../../client/datascience/dataScienceFileSystem';
 import { DigestStorage } from '../../../client/datascience/interactive-ipynb/digestStorage';
@@ -21,7 +20,6 @@ suite('DataScience - TrustService', () => {
     setup(() => {
         alwaysTrustNotebooks = false;
         const configService = mock(ConfigurationService);
-        const experimentService = mock(ExperimentService);
         const fileSystem = mock(DataScienceFileSystem);
         const context = typemoq.Mock.ofType<IExtensionContext>();
         context.setup((c) => c.globalStoragePath).returns(() => os.tmpdir());
@@ -33,10 +31,8 @@ suite('DataScience - TrustService', () => {
         when(fileSystem.readLocalFile(anything())).thenCall((f) => fs.readFile(f));
         when(fileSystem.createLocalDirectory(anything())).thenCall((d) => fs.mkdir(d));
         when(fileSystem.localDirectoryExists(anything())).thenCall((d) => fs.pathExists(d));
-        when(experimentService.inExperiment(anything())).thenResolve(true); // Pretend we're in an experiment so that trust checks proceed
-
         const digestStorage = new DigestStorage(instance(fileSystem), context.object);
-        trustService = new TrustService(instance(experimentService), digestStorage, instance(configService));
+        trustService = new TrustService(digestStorage, instance(configService));
     });
 
     test('Trusting a notebook', async () => {

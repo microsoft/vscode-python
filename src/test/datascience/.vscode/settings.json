@@ -14,8 +14,7 @@
     "python.pythonPath": "python",
     "python.experiments.optInto": [
         "LocalZMQKernel - experiment",
-        "NativeNotebook - experiment",
-        "EnableTrustedNotebooks"
+        "NativeNotebook - experiment"
     ],
     // Do not set this to "Microsoft", else it will result in LS being downloaded on CI
     // and that slows down tests significantly. We have other tests on CI for testing

@@ -87,11 +87,6 @@ export enum RemoveKernelToolbarInInteractiveWindow {
     experiment = 'RemoveKernelToolbarInInteractiveWindow'
 }
 
-// Experiment to turn on trusted notebooks checks
-export enum EnableTrustedNotebooks {
-    experiment = 'EnableTrustedNotebooks'
-}
-
 // Experiment to offer switch to Pylance language server
 export enum TryPylance {
     experiment = 'tryPylance'

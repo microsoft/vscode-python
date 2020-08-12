@@ -65,8 +65,7 @@ suite('DataScience Native Toolbar', () => {
             setVariableExplorerHeight: sinon.stub(),
             launchNotebookTrustPrompt: sinon.stub(),
             variablesVisible: false,
-            isNotebookTrusted: true,
-            shouldShowTrustMessage: true
+            isNotebookTrusted: true
         };
     });
     function mountToolbar() {
@@ -266,8 +265,7 @@ suite('DataScience Native Toolbar', () => {
                 setVariableExplorerHeight: sinon.stub(),
                 launchNotebookTrustPrompt: sinon.stub(),
                 variablesVisible: false,
-                isNotebookTrusted: false,
-                shouldShowTrustMessage: true
+                isNotebookTrusted: false
             };
         });
         test('All toolbar buttons are disabled unless explicitly added to allowlist', () => {

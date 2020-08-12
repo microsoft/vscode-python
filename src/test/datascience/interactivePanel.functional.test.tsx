@@ -116,8 +116,7 @@ suite('DataScience Interactive Panel', () => {
             setVariableExplorerHeight: noopAny,
             editorOptions: {},
             settings: { showCellInputCode: true, allowInput: true, extraSettings: { editor: {} } } as any,
-            isNotebookTrusted: true,
-            shouldShowTrustMessage: false
+            isNotebookTrusted: true
         };
     });
     test('Input Cell is displayed', () => {

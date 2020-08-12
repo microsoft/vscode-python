@@ -2069,7 +2069,6 @@
                             "CollectNodeLSRequestTiming - experiment",
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
-                            "EnableTrustedNotebooks",
                             "tryPylance",
                             "All"
                         ]
@@ -2094,7 +2093,6 @@
                             "CollectNodeLSRequestTiming - experiment",
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
-                            "EnableTrustedNotebooks",
                             "tryPylance",
                             "All"
                         ]

@@ -102,7 +102,7 @@ import {
 import { CryptoUtils } from '../../client/common/crypto';
 import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibilityService';
 import { IDotNetCompatibilityService } from '../../client/common/dotnet/types';
-import { EnableTrustedNotebooks, LocalZMQKernel } from '../../client/common/experiments/groups';
+import { LocalZMQKernel } from '../../client/common/experiments/groups';
 import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
@@ -621,7 +621,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IStartPage>(IStartPage, StartPage);
 
         const experimentService = mock(ExperimentService);
-        when(experimentService.inExperiment(EnableTrustedNotebooks.experiment)).thenResolve(true);
         this.serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, instance(experimentService));
 
         this.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
