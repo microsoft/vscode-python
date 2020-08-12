@@ -49,7 +49,7 @@ import {
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
 
 export function registerForIOC(serviceManager: IServiceManager, serviceContainer: IServiceContainer) {
-    serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelperProxy);
+    serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         PythonInterpreterLocatorService,
@@ -129,4 +129,6 @@ export function registerForIOC(serviceManager: IServiceManager, serviceContainer
         KnownSearchPathsForInterpreters
     );
     serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
+
+    initializeExternalDependencies(serviceContainer);
 }

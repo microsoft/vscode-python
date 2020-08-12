@@ -26,6 +26,7 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../client/interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
+import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { PythonInterpreterLocatorService } from '../../client/pythonEnvironments/discovery/locators';
 import { InterpreterLocatorHelper } from '../../client/pythonEnvironments/discovery/locators/helpers';
@@ -62,7 +63,8 @@ import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 suite('Interpreters - Service Registry', () => {
     test('Registrations', () => {
         const serviceManager = mock(ServiceManager);
-        registerForIOC(instance(serviceManager));
+        const serviceContainer = mock(ServiceContainer);
+        registerForIOC(instance(serviceManager), instance(serviceContainer));
 
         [
             [IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters],
