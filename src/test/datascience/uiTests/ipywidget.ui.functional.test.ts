@@ -22,6 +22,7 @@ import { addMockData } from '../testHelpersCore';
 import { waitTimeForUIToUpdate } from './helpers';
 import { openNotebook } from './notebookHelpers';
 import { NotebookEditorUI } from './notebookUi';
+import { sleep } from '../../../client/common/utils/async';
 
 const sanitize = require('sanitize-filename');
 // Include default timeout.
@@ -169,6 +170,9 @@ use(chaiAsPromised);
         }
         async function verifySliderWidgetIsAvailableAfterExecution(notebookUI: NotebookEditorUI) {
             await notebookUI.executeCell(0);
+
+            // Slider output could take a bit. Wait some
+            await sleep(2000);
 
             await retryIfFail(async () => {
                 await assert.eventually.isTrue(notebookUI.cellHasOutput(0));

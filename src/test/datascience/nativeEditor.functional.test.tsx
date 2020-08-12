@@ -317,6 +317,9 @@ suite('DataScience Native Editor', () => {
                 });
 
                 runMountedTest('Remote kernel can be switched and remembered', async () => {
+                    // Turn off raw kernel for this test as it's testing remote
+                    ioc.setExperimentState(LocalZMQKernel.experiment, false);
+
                     const pythonService = await createPythonService(ioc, 2);
 
                     // Skip test for older python and raw kernel and mac
@@ -341,9 +344,16 @@ suite('DataScience Native Editor', () => {
                         // Create another notebook and connect it to the already running kernel of the other one
                         when(ioc.applicationShell.showQuickPick(anything(), anything(), anything())).thenCall(
                             async (o: IKernelSpecQuickPickItem[]) => {
-                                const existing = o.find((s) => s.selection.kernelModel?.numberOfConnections);
-                                if (existing) {
-                                    return existing;
+                                const existing = o.filter((s) => s.selection.kernelModel?.numberOfConnections);
+
+                                // Might be more than one. Get the oldest one. It has the actual activity.
+                                const sorted = existing.sort(
+                                    (a, b) =>
+                                        b.selection.kernelModel!.lastActivityTime.getTime() -
+                                        a.selection.kernelModel!.lastActivityTime.getTime()
+                                );
+                                if (sorted && sorted.length) {
+                                    return sorted[0];
                                 }
                             }
                         );
