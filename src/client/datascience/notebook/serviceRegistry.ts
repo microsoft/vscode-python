@@ -6,6 +6,7 @@
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
+import { IKernelProvider } from '../jupyter/kernels/types';
 import { NotebookContentProvider } from './contentProvider';
 import { NotebookIntegration } from './integration';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
@@ -13,7 +14,6 @@ import { NotebookDisposeService } from './notebookDisposeService';
 import { NotebookOutputRenderer } from './renderer';
 import { NotebookSurveyBanner, NotebookSurveyDataLogger } from './survey';
 import { INotebookContentProvider } from './types';
-import { IKernelProvider } from '../jupyter/kernels/types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<INotebookContentProvider>(INotebookContentProvider, NotebookContentProvider);
