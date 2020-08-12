@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
@@ -57,9 +62,10 @@ suite('Environment Info Service', () => {
         }
 
         await Promise.all(promises).then((r) => {
-            // The order of items here is based on the order of the promises
             // The processing order is non-deterministic since we don't know
-            // how long each work item will take
+            // how long each work item will take. So we compare here with
+            // results of processing in the same order as we have collected
+            // the promises.
             assert.deepEqual(r, expected);
         });
     });

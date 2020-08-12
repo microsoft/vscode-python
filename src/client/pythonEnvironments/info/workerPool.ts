@@ -1,13 +1,17 @@
-export interface IWorker {
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+interface IWorker {
     stop(): void;
     run(): void;
 }
 
-export type NextFunc<T> = () => Promise<T>;
-export type WorkFunc<T, R> = (item: T) => Promise<R>;
-export type PostResult<T, R> = (item: T, result?: R, err?: Error) => void;
+type NextFunc<T> = () => Promise<T>;
+type WorkFunc<T, R> = (item: T) => Promise<R>;
+type PostResult<T, R> = (item: T, result?: R, err?: Error) => void;
 
-export interface IWorkerFactory {
+interface IWorkerFactory {
     createWorker<T, R>(next: NextFunc<T>, workFunc: WorkFunc<T, R>, postResult: PostResult<T, R>): IWorker;
 }
 
@@ -65,10 +69,20 @@ export interface IWorkerPool<T, R> {
 }
 
 export class WorkerPool<T, R> {
+    // This collection tracks the full set of workers.
     private workers: IWorker[] = [];
+
+    // This is set by stop()
     private stopProcessing: boolean = false;
+
+    // This is where we store
     private queue: IWorkItem<T>[] = [];
+
+    // A collections that holds unblock callback for each worker waiting
+    // for a work item when the queue is empty
     private waitingWorkersUnblockQueue: (() => void)[] = [];
+
+    // A map of work item and its associated promise.
     private resultsMap: Map<IWorkItem<T>, IResultHolder<R>> = new Map();
 
     public constructor(
@@ -109,9 +123,12 @@ export class WorkerPool<T, R> {
             throw Error('Queue is stopped');
         }
 
-        // Wrap the user provided item in a wrapper object.
-        // This will allow us to track multiple submissions
-        // of the same item.
+        // Wrap the user provided item in a wrapper object. This will allow us to track multiple
+        // submissions of the same item. For example, addToQueue(2), addToQueue(2). If we did not
+        // wrap this, then from the map both submissions will look the same. Since this is a generic
+        // worker pool, we do not know if we can resolve both using the same promise. So, a better
+        // approach is to ensure each gets a unique promise, and let the worker function figure out
+        // how to handle repeat submissions.
         const workItem: IWorkItem<T> = { item };
         if (queuePosition === QueuePosition.Back) {
             this.queue.push(workItem);
@@ -174,10 +191,12 @@ export class WorkerPool<T, R> {
         return new Promise<IWorkItem<T>>((resolve, reject) => {
             this.waitingWorkersUnblockQueue.push(() => {
                 // This will be called to unblock any worker waiting for items.
-                // We should re
                 if (this.stopProcessing) {
+                    // We should reject here since the processing should be stopped.
                     reject();
                 }
+                // If we are here, this means a new item was just added and to the queue
+                // we can unblock by resolving this promise to the first item from the queue.
                 resolve(this.queue.shift());
             });
         });
