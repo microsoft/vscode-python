@@ -7,7 +7,15 @@ import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
-import { CancellationToken, Event, EventEmitter, NotebookCell, NotebookDocument, Uri } from 'vscode';
+import {
+    CancellationToken,
+    CancellationTokenSource,
+    Event,
+    EventEmitter,
+    NotebookCell,
+    NotebookDocument,
+    Uri
+} from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { ICommandManager } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
@@ -59,12 +67,7 @@ export class Kernel implements IKernel {
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
-    private get notebook() {
-        return this.notebook;
-    }
-    private set notebook(value: INotebook | undefined) {
-        this.notebook = value;
-    }
+    private notebook?: INotebook;
     private _disposed?: boolean;
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
@@ -75,6 +78,7 @@ export class Kernel implements IKernel {
     private restarting?: Deferred<void>;
     private readonly kernelValidated = new Map<string, { kernel: IKernel; promise: Promise<void> }>();
     private readonly kernelExecution: KernelExecution;
+    private startCancellation = new CancellationTokenSource();
     constructor(
         public readonly uri: Uri,
         public readonly metadata: Readonly<KernelSelection>,
@@ -114,15 +118,19 @@ export class Kernel implements IKernel {
         return this.notebook.executeObservable(code, file, line, id, silent);
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
+        await this.start({ disableUI: false, token: this.startCancellation.token });
         await this.kernelExecution.executeCell(cell);
     }
     public async executeAllCells(document: NotebookDocument): Promise<void> {
+        await this.start({ disableUI: false, token: this.startCancellation.token });
         await this.kernelExecution.executeAllCells(document);
     }
     public cancelCell(cell: NotebookCell) {
+        this.startCancellation.cancel();
         this.kernelExecution.cancelCell(cell);
     }
     public cancelAllCells(document: NotebookDocument) {
+        this.startCancellation.cancel();
         this.kernelExecution.cancelAllCells(document);
     }
     public async start(options?: { disableUI?: boolean; token?: CancellationToken }): Promise<void> {
@@ -151,7 +159,7 @@ export class Kernel implements IKernel {
             });
 
             this._notebookPromise
-                .then((nb) => (this.notebook = nb))
+                .then((nb) => (this.kernelExecution.notebook = this.notebook = nb))
                 .catch((ex) => traceError('failed to create INotebook in kernel', ex));
             await this._notebookPromise;
             await this.initializeAfterStart();

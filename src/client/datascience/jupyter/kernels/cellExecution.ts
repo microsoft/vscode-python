@@ -154,7 +154,7 @@ export class CellExecution {
      * Notify other parts of extension about the cell execution.
      */
     private notifyCellExecution() {
-        const editor = this.editorProvider.editors.find((e) => e.file.toString() === this.cell.document.uri.toString());
+        const editor = this.editorProvider.editors.find((e) => e.file.toString() === this.cell.notebook.uri.toString());
         if (!editor) {
             throw new Error('No editor for Model');
         }

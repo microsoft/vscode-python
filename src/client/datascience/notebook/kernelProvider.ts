@@ -137,13 +137,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             return;
         }
         const selection = newKernelInfo.kernel.selection;
-        const editor = this.notebook.notebookEditors.find((item) => item.document === document);
-        if (!editor || editor.kernel !== newKernelInfo.kernel) {
-            // Possibly closed or different kernel picked.
-            return;
-        }
 
-        const model = await this.storageProvider.getOrCreateModel(document.uri);
+        const model = this.storageProvider.get(document.uri);
         if (!model || !model.isTrusted) {
             // If a model is not trusted, we cannot change the kernel (this results in changes to notebook metadata).
             // This is because we store selected kernel in the notebook metadata.

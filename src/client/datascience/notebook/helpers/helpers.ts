@@ -117,9 +117,10 @@ export function notebookModelToVSCNotebookData(model: VSCodeNotebookModel): Note
     };
 }
 export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INotebookModel): ICell {
+    let cell: ICell;
     if (vscCell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
         const data = createMarkdownCellFromVSCNotebookCell(vscCell);
-        return {
+        cell = {
             data,
             file: model.file.toString(),
             id: uuid(),
@@ -128,7 +129,7 @@ export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INot
         };
     } else if (vscCell.language === 'raw') {
         const data = createRawCellFromVSCNotebookCell(vscCell);
-        return {
+        cell = {
             data,
             file: model.file.toString(),
             id: uuid(),
@@ -137,7 +138,7 @@ export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INot
         };
     } else {
         const data = createCodeCellFromVSCNotebookCell(vscCell);
-        return {
+        cell = {
             data,
             file: model.file.toString(),
             id: uuid(),
@@ -145,6 +146,13 @@ export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INot
             state: CellState.init
         };
     }
+    // Delete the `metadata.custom.vscode` property we added.
+    if ('vscode' in cell.data.metadata) {
+        const metadata = { ...cell.data.metadata };
+        delete metadata.vscode;
+        cell.data.metadata = metadata;
+    }
+    return cell;
 }
 
 /**
