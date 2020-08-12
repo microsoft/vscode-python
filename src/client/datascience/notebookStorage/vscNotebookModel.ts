@@ -91,6 +91,20 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
                 json.metadata = metadata;
             }
         }
+        if (this.document && !this.isTrusted && Array.isArray(json.cells)) {
+            // The output can contain custom metadata, we need to remove that.
+            json.cells = json.cells.map((cell) => {
+                const metadata = { ...cell.metadata };
+                if ('vscode' in metadata) {
+                    delete metadata.vscode;
+                }
+                return {
+                    ...cell,
+                    metadata
+                };
+            });
+        }
+
         // https://github.com/microsoft/vscode-python/issues/13155
         // Object keys in metadata, cells and the like need to be sorted alphabetically.
         // Jupyter (Python) seems to sort them alphabetically.
