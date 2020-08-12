@@ -1,5 +1,3 @@
-import { traceInfo } from '../../common/logger';
-
 export interface IWorker {
     stop(): void;
     run(): void;
@@ -15,15 +13,11 @@ export interface IWorkerFactory {
 
 class Worker<T, R> implements IWorker {
     private stopProcessing: boolean = false;
-    private id: string;
     public constructor(
         private readonly next: NextFunc<T>,
         private readonly workFunc: WorkFunc<T, R>,
         private readonly postResult: PostResult<T, R>
-    ) {
-        // tslint:disable-next-line: insecure-random
-        this.id = (Math.floor(Math.random() * 6) + 1).toString();
-    }
+    ) {}
     public stop() {
         this.stopProcessing = true;
     }
@@ -33,7 +27,6 @@ class Worker<T, R> implements IWorker {
             try {
                 const workItem = await this.next();
                 try {
-                    traceInfo(`Worker ${this.id}: doing stuff.`);
                     const result = await this.workFunc(workItem);
                     this.postResult(workItem, result);
                 } catch (ex) {
