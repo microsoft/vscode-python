@@ -6,7 +6,6 @@ import '../../../common/extensions';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import * as os from 'os';
-import * as path from 'path';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
@@ -40,6 +39,7 @@ import {
     INotebookServerLaunchInfo
 } from '../../types';
 import { JupyterServerBase } from '../jupyterServer';
+import { computeWorkingDirectory } from '../jupyterUtils';
 import { KernelSelector } from '../kernels/kernelSelector';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
@@ -217,10 +217,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             }
 
             // Figure out the working directory we need for our new notebook.
-            const workingDirectory =
-                resource && resource.scheme === 'file'
-                    ? path.dirname(resource.fsPath)
-                    : this.workspaceService.getWorkspaceFolder(resource)?.uri.fsPath || process.cwd();
+            const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
 
             // Start a session (or use the existing one if allowed)
             const session =

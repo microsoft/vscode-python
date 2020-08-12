@@ -4,6 +4,7 @@
 'use strict';
 
 import { ChildProcess } from 'child_process';
+import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
 import { ObservableExecutionResult } from '../../common/process/types';
@@ -29,7 +30,10 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         kernelSpec: IJupyterKernelSpec,
         interpreter?: PythonInterpreter
     ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon | undefined }> {
-        const daemon = await this.daemonPool.get(resource, kernelSpec, interpreter);
+        const [daemon, wdExists] = await Promise.all([
+            this.daemonPool.get(resource, kernelSpec, interpreter),
+            fs.pathExists(workingDirectory)
+        ]);
 
         // Check to see if we have the type of kernelspec that we expect
         const args = kernelSpec.argv.slice();
@@ -51,7 +55,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
             // If we don't have a KernelDaemon here then we have an execution service and should use that to launch
             const observableOutput = daemon.execModuleObservable(moduleName, moduleArgs, {
                 env,
-                cwd: workingDirectory
+                cwd: wdExists ? workingDirectory : process.cwd()
             });
 
             return { observableOutput, daemon: undefined };

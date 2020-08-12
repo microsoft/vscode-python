@@ -3,7 +3,6 @@
 'use strict';
 import '../../../common/extensions';
 
-import * as path from 'path';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
@@ -24,6 +23,7 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
+import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import { KernelSelector, KernelSpecInterpreter } from '../../jupyter/kernels/kernelSelector';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
@@ -142,10 +142,7 @@ export class HostRawNotebookProvider
             ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingIPyKernel())
             : undefined;
 
-        const workingDirectory =
-            resource && resource.scheme === 'file'
-                ? path.dirname(resource.fsPath)
-                : this.workspaceService.getWorkspaceFolder(resource)?.uri.fsPath || process.cwd();
+        const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
 
         const rawSession = new RawJupyterSession(
             this.kernelLauncher,

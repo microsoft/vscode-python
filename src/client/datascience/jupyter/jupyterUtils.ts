@@ -3,10 +3,12 @@
 'use strict';
 import '../../common/extensions';
 
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../common/application/types';
+import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { SystemVariables } from '../../common/variables/systemVariables';
 import { getJupyterConnectionDisplayName } from '../jupyter/jupyterConnection';
@@ -76,4 +78,15 @@ export function createRemoteConnectionInfo(
         rootDirectory: '',
         getAuthHeader: serverUri ? () => getJupyterServerUri(uri)?.authorizationHeader : undefined
     };
+}
+
+export async function computeWorkingDirectory(resource: Resource, workspace: IWorkspaceService): Promise<string> {
+    // Returning directly doesn't seem to work (typescript complains)
+    // tslint:disable-next-line: no-unnecessary-local-variable
+    const workingDirectory =
+        resource && resource.scheme === 'file' && (await fs.pathExists(path.dirname(resource.fsPath)))
+            ? path.dirname(resource.fsPath)
+            : workspace.getWorkspaceFolder(resource)?.uri.fsPath || process.cwd();
+
+    return workingDirectory;
 }
