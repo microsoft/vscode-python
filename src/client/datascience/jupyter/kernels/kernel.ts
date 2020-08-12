@@ -176,13 +176,16 @@ export class Kernel implements IKernel {
     }
     public async dispose(): Promise<void> {
         this.restarting = undefined;
+        this._notebookPromise = undefined;
         if (this.notebook) {
             await this.notebook.dispose();
             this._disposed = true;
             this._onDisposed.fire();
             this._onStatusChanged.fire(ServerStatus.Dead);
             this.notebook = undefined;
+            this.kernelExecution.notebook = undefined;
         }
+        this.kernelExecution.dispose();
     }
     public async restart(): Promise<void> {
         if (this.restarting) {
@@ -241,6 +244,7 @@ export class Kernel implements IKernel {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
             this.notebook.onDisposed(() => {
+                this._notebookPromise = undefined;
                 this._onDisposed.fire();
             });
             this.notebook.onKernelRestarted(() => {

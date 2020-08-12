@@ -69,15 +69,7 @@ export class KernelProvider implements IKernelProvider {
      * If a kernel has been disposed, then remove the mapping of Uri + Kernel.
      */
     private deleteMappingIfKernelIsDisposed(uri: Uri, kernel: IKernel) {
-        kernel.onDisposed(
-            () => {
-                if (this.get(uri) === kernel) {
-                    this.kernelsByUri.delete(uri.toString());
-                }
-            },
-            this,
-            this.disposables
-        );
+        kernel.onDisposed(() => this.kernelsByUri.delete(uri.toString()), this, this.disposables);
     }
     private disposeOldKernel(uri: Uri) {
         this.kernelsByUri

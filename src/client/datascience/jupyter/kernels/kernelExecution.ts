@@ -7,6 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Subscription } from 'rxjs';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { ICommandManager } from '../../../common/application/types';
+import { IDisposable } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { captureTelemetry } from '../../../telemetry';
@@ -29,7 +30,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  * Separate class that deals just with kernel execution.
  * Else the `Kernel` class gets very big.
  */
-export class KernelExecution {
+export class KernelExecution implements IDisposable {
     public notebook?: INotebook;
 
     private readonly registeredIOPubListeners = new WeakSet<IKernel>();
@@ -41,7 +42,7 @@ export class KernelExecution {
     private readonly kernelValidated = new WeakMap<NotebookDocument, { kernel: IKernel; promise: Promise<void> }>();
 
     private readonly executionFactory: CellExecutionFactory;
-
+    private readonly disposables: IDisposable[] = [];
     constructor(
         private readonly kernelProvider: IKernelProvider,
         private readonly commandManager: ICommandManager,
@@ -91,12 +92,17 @@ export class KernelExecution {
 
         const codeCellsToExecute = document.cells
             .filter((cell) => cell.cellKind === vscodeNotebookEnums.CellKind.Code)
+            .filter((cell) => cell.document.getText().trim().length > 0)
             .map((cell) => {
                 const cellExecution = this.executionFactory.create(cell);
                 this.cellExecutions.set(cellExecution.cell, cellExecution);
                 return cellExecution;
             });
-        cancelTokenSource.token.onCancellationRequested(() => codeCellsToExecute.forEach((cell) => cell.cancel()));
+        cancelTokenSource.token.onCancellationRequested(
+            () => codeCellsToExecute.forEach((cell) => cell.cancel()),
+            this,
+            this.disposables
+        );
 
         try {
             let executingAPreviousCellHasFailed = false;
@@ -120,6 +126,7 @@ export class KernelExecution {
                 Promise.resolve<NotebookCellRunState | undefined>(undefined)
             );
         } finally {
+            this.documentExecutions.delete(document);
             document.metadata.runState = vscodeNotebookEnums.NotebookRunState.Idle;
         }
     }
@@ -136,7 +143,9 @@ export class KernelExecution {
         }
         document.cells.forEach((cell) => this.cancelCell(cell));
     }
-
+    public dispose() {
+        this.disposables.forEach((d) => d.dispose());
+    }
     private async getKernel(document: NotebookDocument): Promise<IKernel> {
         await this.validateKernel(document);
         let kernel = this.kernelProvider.get(document.uri);
@@ -171,14 +180,18 @@ export class KernelExecution {
         const document = cellExecution.cell.notebook;
         this.handleDisplayDataMessages(document, kernel);
 
-        cellExecution.token.onCancellationRequested(() => {
-            if (cellExecution.completed) {
-                return;
-            }
+        cellExecution.token.onCancellationRequested(
+            () => {
+                if (cellExecution.completed) {
+                    return;
+                }
 
-            // Interrupt kernel only if we need to cancel a cell execution.
-            this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
-        });
+                // Interrupt kernel only if we need to cancel a cell execution.
+                this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
+            },
+            this,
+            this.disposables
+        );
 
         let subscription: Subscription | undefined;
         try {
