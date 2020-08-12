@@ -609,7 +609,7 @@ for i in range(0, 100):
                 assert.ok(interruptedKernel, 'Kernel was not interrupted');
             } else {
                 // Timing is too iffy for real jupyter. However we really just
-                // want to make sure double interrupt is supported so keep the
+                // want to make sure double interrupt is supported so keep the test.
                 context.skip();
             }
         },
