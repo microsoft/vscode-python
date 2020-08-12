@@ -4,6 +4,9 @@
 
 ### Enhancements
 
+1. Cell id and cell metadata are now passed as the metadata field for execute_request messages.
+   (thanks [stisa](https://github.com/stisa/))
+   ([#13252](https://github.com/Microsoft/vscode-python/issues/13252))
 1. Add "Restart Language Server" command.
    ([#3073](https://github.com/Microsoft/vscode-python/issues/3073))
 1. Support multiple and per file interactive windows. See the description for the new 'python.dataScience.interactiveWindowMode' setting.
