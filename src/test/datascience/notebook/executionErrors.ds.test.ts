@@ -7,8 +7,7 @@ import { assert } from 'chai';
 import { Subject } from 'rxjs';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { KernelProvider } from '../../../client/datascience/jupyter/kernels/kernelProvider';
-import { IKernel } from '../../../client/datascience/jupyter/kernels/types';
+import { IKernel, IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
     IDataScienceErrorHandler,
@@ -36,7 +35,7 @@ suite('DataScience - VSCode Notebook - Errors in Execution', function () {
     let errorHandler: IDataScienceErrorHandler;
     let kernel: IKernel;
     let notebook: INotebook;
-    let kernelProvider: KernelProvider;
+    let kernelProvider: IKernelProvider;
     suiteSetup(async function () {
         this.timeout(60_000);
         api = await initialize();
@@ -48,7 +47,7 @@ suite('DataScience - VSCode Notebook - Errors in Execution', function () {
         sinon.restore();
         await initializeTest();
         await trustAllNotebooks();
-        kernelProvider = api.serviceContainer.get<KernelProvider>(KernelProvider);
+        kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
         kernel = mock<IKernel>();
         notebook = mock<INotebook>();

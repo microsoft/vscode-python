@@ -27,6 +27,7 @@ export class CellExecutionFactory {
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider
     ) {}
+
     public create(cell: NotebookCell) {
         // tslint:disable-next-line: no-use-before-declare
         return CellExecution.fromCell(cell, this.contentProvider, this.errorHandler, this.editorProvider);
@@ -40,19 +41,29 @@ export class CellExecution {
     public get result(): Promise<NotebookCellRunState | undefined> {
         return this._result.promise;
     }
+
     public get token(): CancellationToken {
         return this.source.token;
     }
+
     public get completed() {
         return this._completed;
     }
+
     private static sentExecuteCellTelemetry?: boolean;
+
     private readonly oldCellRunState?: NotebookCellRunState;
+
     private stopWatch = new StopWatch();
+
     private readonly source = new MultiCancellationTokenSource();
+
     private readonly _result = createDeferred<NotebookCellRunState | undefined>();
+
     private started?: boolean;
+
     private _completed?: boolean;
+
     private constructor(
         public readonly cell: NotebookCell,
         private readonly contentProvider: INotebookContentProvider,
@@ -62,6 +73,7 @@ export class CellExecution {
         this.oldCellRunState = cell.metadata.runState;
         this.enqueue();
     }
+
     public static fromCell(
         cell: NotebookCell,
         contentProvider: INotebookContentProvider,
@@ -81,6 +93,7 @@ export class CellExecution {
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
         this.notifyCellExecution();
     }
+
     /**
      * Cancel execution.
      * If execution has commenced, then interrupt (via cancellation token) else dequeue from execution.
@@ -97,6 +110,7 @@ export class CellExecution {
         }
         this._result.resolve(this.cell.metadata.runState);
     }
+
     public completedWithErrors(error: Partial<Error>) {
         this.sendPerceivedCellExecute();
         this.cell.metadata.lastRunDuration = this.stopWatch.elapsedTime;
@@ -109,6 +123,7 @@ export class CellExecution {
         // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
     }
+
     public completedSuccessfully() {
         this.sendPerceivedCellExecute();
         // If we requested a cancellation, then assume it did not even run.
@@ -134,6 +149,7 @@ export class CellExecution {
         // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
     }
+
     /**
      * Notify other parts of extension about the cell execution.
      */
@@ -147,6 +163,7 @@ export class CellExecution {
         }
         editor.notifyExecution(this.cell.document.getText());
     }
+
     /**
      * This cell will no longer be processed for execution (even though it was meant to be).
      * At this point we revert cell state & indicate that it has nto started & it is not busy.
@@ -163,6 +180,7 @@ export class CellExecution {
         // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
     }
+
     /**
      * Place in queue for execution with kernel.
      * (mark it as busy).
@@ -171,6 +189,7 @@ export class CellExecution {
         this.cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Running;
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
     }
+
     private sendPerceivedCellExecute() {
         const props = { notebook: true };
         if (!CellExecution.sentExecuteCellTelemetry) {

@@ -13,11 +13,10 @@ import {
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { KernelSelection } from '../jupyter/kernels/types';
+import { IKernelProvider, KernelSelection } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebook, INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, updateKernelInNotebookMetadata } from './helpers/helpers';
@@ -32,7 +31,7 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         public readonly description: string,
         public readonly selection: Readonly<KernelSelection>,
         public readonly isPreferred: boolean,
-        private readonly kernelProvider: KernelProvider
+        private readonly kernelProvider: IKernelProvider
     ) {}
     public executeCell(_: NotebookDocument, cell: NotebookCell) {
         this.kernelProvider.get(cell.notebook.uri)?.executeCell(cell); // NOSONAR
@@ -58,7 +57,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
     constructor(
         @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
         @inject(KernelSelector) private readonly kernelSelector: KernelSelector,
-        @inject(KernelProvider) private readonly kernelProvider: KernelProvider,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,

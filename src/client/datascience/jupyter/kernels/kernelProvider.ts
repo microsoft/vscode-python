@@ -14,10 +14,10 @@ import { INotebookContentProvider } from '../../notebook/types';
 import { IDataScienceErrorHandler, INotebookEditorProvider, INotebookProvider } from '../../types';
 import { Kernel } from './kernel';
 import { KernelSelector } from './kernelSelector';
-import { IKernel, IKernelSelectionUsage, KernelOptions } from './types';
+import { IKernel, IKernelProvider, IKernelSelectionUsage, KernelOptions } from './types';
 
 @injectable()
-export class KernelProvider {
+export class KernelProvider implements IKernelProvider {
     private readonly kernelsByUri = new Map<string, { options: KernelOptions; kernel: IKernel }>();
     constructor(
         @inject(IAsyncDisposableRegistry) private asyncDisposables: IAsyncDisposableRegistry,
@@ -30,7 +30,6 @@ export class KernelProvider {
         @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider,
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
 
-        @inject(KernelProvider) private readonly kernelProvider: KernelProvider,
         @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage
     ) {}
     public get(uri: Uri): IKernel | undefined {
@@ -58,7 +57,7 @@ export class KernelProvider {
             this.errorHandler,
             this.contentProvider,
             this.editorProvider,
-            this.kernelProvider,
+            this,
             this.kernelSelectionUsage
         );
         this.asyncDisposables.push(kernel);

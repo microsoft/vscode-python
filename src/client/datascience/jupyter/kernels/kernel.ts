@@ -29,8 +29,7 @@ import {
     KernelSocketInformation
 } from '../../types';
 import { KernelExecution } from './kernelExecution';
-import { KernelProvider } from './kernelProvider';
-import type { IKernel, IKernelSelectionUsage, KernelSelection, LiveKernelModel } from './types';
+import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelSelection, LiveKernelModel } from './types';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -88,7 +87,7 @@ export class Kernel implements IKernel {
         errorHandler: IDataScienceErrorHandler,
         contentProvider: INotebookContentProvider,
         editorProvider: INotebookEditorProvider,
-        private readonly kernelProvider: KernelProvider,
+        private readonly kernelProvider: IKernelProvider,
         private readonly kernelSelectionUsage: IKernelSelectionUsage
     ) {
         this.kernelExecution = new KernelExecution(

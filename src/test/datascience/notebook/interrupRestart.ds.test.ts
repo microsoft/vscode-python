@@ -10,7 +10,7 @@ import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/appli
 import { IDisposable } from '../../../client/common/types';
 import { createDeferredFromPromise } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
-import { KernelProvider } from '../../../client/datascience/jupyter/kernels/kernelProvider';
+import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
@@ -42,7 +42,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
-    let kernelProvider: KernelProvider;
+    let kernelProvider: IKernelProvider;
     let vscEditor: VSCNotebookEditor;
     let vscodeNotebook: IVSCodeNotebook;
     const suiteDisposables: IDisposable[] = [];
@@ -57,7 +57,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
-        kernelProvider = api.serviceContainer.get<KernelProvider>(KernelProvider);
+        kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
     });
     setup(async () => {
         sinon.restore();

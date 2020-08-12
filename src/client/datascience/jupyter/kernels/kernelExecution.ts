@@ -21,8 +21,7 @@ import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancel
 import { INotebookContentProvider } from '../../notebook/types';
 import { IDataScienceErrorHandler, INotebook, INotebookEditorProvider } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
-import { KernelProvider } from './kernelProvider';
-import type { IKernel, IKernelSelectionUsage } from './types';
+import type { IKernel, IKernelProvider, IKernelSelectionUsage } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -32,13 +31,19 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  */
 export class KernelExecution {
     public notebook?: INotebook;
+
     private readonly registeredIOPubListeners = new WeakSet<IKernel>();
+
     private readonly cellExecutions = new WeakMap<NotebookCell, CellExecution>();
+
     private readonly documentExecutions = new WeakMap<NotebookDocument, MultiCancellationTokenSource>();
+
     private readonly kernelValidated = new WeakMap<NotebookDocument, { kernel: IKernel; promise: Promise<void> }>();
+
     private readonly executionFactory: CellExecutionFactory;
+
     constructor(
-        private readonly kernelProvider: KernelProvider,
+        private readonly kernelProvider: IKernelProvider,
         private readonly commandManager: ICommandManager,
         private readonly interpreterService: IInterpreterService,
         errorHandler: IDataScienceErrorHandler,
@@ -48,6 +53,7 @@ export class KernelExecution {
     ) {
         this.executionFactory = new CellExecutionFactory(this.contentProvider, errorHandler, editorProvider);
     }
+
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(cell: NotebookCell): Promise<void> {
         if (!this.notebook) {
@@ -68,6 +74,7 @@ export class KernelExecution {
             this.cellExecutions.delete(cell);
         }
     }
+
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
     public async executeAllCells(document: NotebookDocument): Promise<void> {
@@ -93,34 +100,43 @@ export class KernelExecution {
 
         try {
             let executingAPreviousCellHasFailed = false;
-            await codeCellsToExecute.reduce((previousPromise, cellToExecute) => {
-                return previousPromise.then((previousCellState) => {
-                    // If a previous cell has failed or execution cancelled, the get out.
-                    if (
-                        executingAPreviousCellHasFailed ||
-                        cancelTokenSource.token.isCancellationRequested ||
-                        previousCellState === vscodeNotebookEnums.NotebookCellRunState.Error
-                    ) {
-                        executingAPreviousCellHasFailed = true;
-                        codeCellsToExecute.forEach((cell) => cell.cancel()); // Cancel pending cells.
-                        return;
-                    }
-                    const result = this.executeIndividualCell(kernel, cellToExecute);
-                    result.finally(() => this.cellExecutions.delete(cellToExecute.cell)).catch(noop);
-                    return result;
-                });
-            }, Promise.resolve<NotebookCellRunState | undefined>(undefined));
+            await codeCellsToExecute.reduce(
+                (previousPromise, cellToExecute) =>
+                    previousPromise.then((previousCellState) => {
+                        // If a previous cell has failed or execution cancelled, the get out.
+                        if (
+                            executingAPreviousCellHasFailed ||
+                            cancelTokenSource.token.isCancellationRequested ||
+                            previousCellState === vscodeNotebookEnums.NotebookCellRunState.Error
+                        ) {
+                            executingAPreviousCellHasFailed = true;
+                            codeCellsToExecute.forEach((cell) => cell.cancel()); // Cancel pending cells.
+                            return;
+                        }
+                        const result = this.executeIndividualCell(kernel, cellToExecute);
+                        result.finally(() => this.cellExecutions.delete(cellToExecute.cell)).catch(noop);
+                        return result;
+                    }),
+                Promise.resolve<NotebookCellRunState | undefined>(undefined)
+            );
         } finally {
             document.metadata.runState = vscodeNotebookEnums.NotebookRunState.Idle;
         }
     }
-    public cancelCell(cell: NotebookCell) {
-        this.cellExecutions.get(cell)?.cancel(); // NOSONAR
+
+    public cancelCell(cell: NotebookCell): void {
+        if (this.cellExecutions.get(cell)) {
+            this.cellExecutions.get(cell)!.cancel();
+        }
     }
-    public cancelAllCells(document: NotebookDocument) {
-        this.documentExecutions.get(document)?.cancel(); // NOSONAR
+
+    public cancelAllCells(document: NotebookDocument): void {
+        if (this.documentExecutions.get(document)) {
+            this.documentExecutions.get(document)!.cancel();
+        }
         document.cells.forEach((cell) => this.cancelCell(cell));
     }
+
     private async getKernel(document: NotebookDocument): Promise<IKernel> {
         await this.validateKernel(document);
         let kernel = this.kernelProvider.get(document.uri);
@@ -242,7 +258,7 @@ export class KernelExecution {
     private handleDisplayDataMessages(document: NotebookDocument, kernel: IKernel) {
         if (!this.registeredIOPubListeners.has(kernel)) {
             this.registeredIOPubListeners.add(kernel);
-            //tslint:disable-next-line:no-require-imports
+            // tslint:disable-next-line:no-require-imports
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
             kernel.registerIOPubListener((msg) => {
                 if (

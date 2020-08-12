@@ -13,6 +13,7 @@ import { NotebookDisposeService } from './notebookDisposeService';
 import { NotebookOutputRenderer } from './renderer';
 import { NotebookSurveyBanner, NotebookSurveyDataLogger } from './survey';
 import { INotebookContentProvider } from './types';
+import { IKernelProvider } from '../jupyter/kernels/types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<INotebookContentProvider>(INotebookContentProvider, NotebookContentProvider);
@@ -25,7 +26,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         NotebookDisposeService
     );
     serviceManager.addSingleton<NotebookIntegration>(NotebookIntegration, NotebookIntegration);
-    serviceManager.addSingleton<KernelProvider>(KernelProvider, KernelProvider);
+    serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
     serviceManager.addSingleton<NotebookOutputRenderer>(NotebookOutputRenderer, NotebookOutputRenderer);
     serviceManager.addSingleton<NotebookSurveyBanner>(NotebookSurveyBanner, NotebookSurveyBanner);
     serviceManager.addSingleton<VSCodeKernelPickerProvider>(VSCodeKernelPickerProvider, VSCodeKernelPickerProvider);

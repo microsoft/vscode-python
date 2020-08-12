@@ -13,8 +13,7 @@ import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
-import { KernelProvider } from '../jupyter/kernels/kernelProvider';
-import { IKernel } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
     INotebook,
     INotebookEditor,
@@ -76,7 +75,7 @@ export class NotebookEditor implements INotebookEditor {
         private readonly vscodeNotebook: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
         private readonly notebookProvider: INotebookProvider,
-        private readonly kernelProvider: KernelProvider,
+        private readonly kernelProvider: IKernelProvider,
         private readonly statusProvider: IStatusProvider,
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
