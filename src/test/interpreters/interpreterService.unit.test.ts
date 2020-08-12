@@ -478,7 +478,7 @@ suite('Interpreters service', () => {
                                                     version,
                                                     architecture: arch ? arch.value : undefined,
                                                     envName,
-                                                    type: interpreterType ? interpreterType.value : undefined,
+                                                    envType: interpreterType ? interpreterType.value : undefined,
                                                     path: pythonPath
                                                 };
 
@@ -536,8 +536,8 @@ suite('Interpreters service', () => {
                                                 if (
                                                     !interpreterInfo.envName &&
                                                     interpreterInfo.path &&
-                                                    interpreterInfo.type &&
-                                                    interpreterInfo.type === EnvironmentType.Pipenv &&
+                                                    interpreterInfo.envType &&
+                                                    interpreterInfo.envType === EnvironmentType.Pipenv &&
                                                     pipEnvName
                                                 ) {
                                                     // If we do not have the name of the environment, then try to get it again.
@@ -548,7 +548,7 @@ suite('Interpreters service', () => {
                                                 if (interpreterInfo.envName && interpreterInfo.envName.length > 0) {
                                                     envSuffixParts.push(`'${interpreterInfo.envName}'`);
                                                 }
-                                                if (interpreterInfo.type) {
+                                                if (interpreterInfo.envType) {
                                                     envSuffixParts.push(`${interpreterType!.name}_display`);
                                                 }
 

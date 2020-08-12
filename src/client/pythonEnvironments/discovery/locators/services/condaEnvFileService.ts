@@ -121,7 +121,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
             ...(details as PythonEnvironment),
             path: interpreter,
             companyDisplayName: AnacondaCompanyName,
-            type: EnvironmentType.Conda,
+            envType: EnvironmentType.Conda,
             envPath: environmentPath,
             envName
         };

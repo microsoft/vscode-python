@@ -62,8 +62,11 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                 } else {
                     // Preserve type information.
                     // Possible we identified environment as unknown, but a later provider has identified env type.
-                    if (existingItem.type === EnvironmentType.Unknown && current.type !== EnvironmentType.Unknown) {
-                        existingItem.type = current.type;
+                    if (
+                        existingItem.envType === EnvironmentType.Unknown &&
+                        current.envType !== EnvironmentType.Unknown
+                    ) {
+                        existingItem.envType = current.envType;
                     }
                     const props: (keyof PythonEnvironment)[] = [
                         'envName',
@@ -88,7 +91,7 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
             items.map(async (item) => {
                 const info = await this.pipEnvServiceHelper.getPipEnvInfo(item.path);
                 if (info) {
-                    item.type = EnvironmentType.Pipenv;
+                    item.envType = EnvironmentType.Pipenv;
                     item.pipEnvWorkspaceFolder = info.workspaceFolder.fsPath;
                     item.envName = info.envName || item.envName;
                 }

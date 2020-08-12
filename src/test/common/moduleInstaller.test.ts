@@ -148,7 +148,7 @@ const info: PythonEnvironment = {
     displayName: '',
     envName: '',
     path: '',
-    type: EnvironmentType.Unknown,
+    envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''
@@ -510,7 +510,7 @@ suite('Module Installer', () => {
 
             const interpreter: PythonEnvironment = {
                 ...info,
-                type: EnvironmentType.Unknown,
+                envType: EnvironmentType.Unknown,
                 path: PYTHON_PATH
             };
             interpreterService

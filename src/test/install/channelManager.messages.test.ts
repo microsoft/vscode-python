@@ -28,7 +28,7 @@ const info: PythonEnvironment = {
     displayName: '',
     envName: '',
     path: '',
-    type: EnvironmentType.Unknown,
+    envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''
@@ -156,7 +156,7 @@ suite('Installation - channel messages', () => {
     ): Promise<void> {
         const activeInterpreter: PythonEnvironment = {
             ...info,
-            type: interpreterType,
+            envType: interpreterType,
             path: ''
         };
         interpreters

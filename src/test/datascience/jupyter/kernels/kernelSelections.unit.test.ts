@@ -97,7 +97,7 @@ suite('DataScience - KernelSelections', () => {
                 path: 'p1',
                 sysPrefix: '',
                 sysVersion: '',
-                type: EnvironmentType.Conda,
+                envType: EnvironmentType.Conda,
                 displayName: 'Hello1'
             },
             path: 'p1',
@@ -111,7 +111,7 @@ suite('DataScience - KernelSelections', () => {
                 path: 'p2',
                 sysPrefix: '',
                 sysVersion: '',
-                type: EnvironmentType.Conda,
+                envType: EnvironmentType.Conda,
                 displayName: 'Hello2'
             },
             path: 'p1',
@@ -125,7 +125,7 @@ suite('DataScience - KernelSelections', () => {
                 path: 'p3',
                 sysPrefix: '',
                 sysVersion: '',
-                type: EnvironmentType.Conda,
+                envType: EnvironmentType.Conda,
                 displayName: 'Hello3'
             },
             path: 'p1',

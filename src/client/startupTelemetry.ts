@@ -134,7 +134,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     ]);
     const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
-    const interpreterType = interpreter ? interpreter.type : undefined;
+    const interpreterType = interpreter ? interpreter.envType : undefined;
     const usingUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
     const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
     const usingGlobalInterpreter = isUsingGlobalInterpreterInWorkspace(settings.pythonPath, serviceContainer);

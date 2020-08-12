@@ -36,7 +36,7 @@ export class PipEnvInstaller extends ModuleInstaller {
             const interpreters = await this.pipenv.getInterpreters(resource);
             return interpreters.length > 0;
         } else {
-            return resource.type === EnvironmentType.Pipenv;
+            return resource.envType === EnvironmentType.Pipenv;
         }
     }
     protected async getExecutionInfo(moduleName: string, _resource?: InterpreterUri): Promise<ExecutionInfo> {

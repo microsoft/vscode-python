@@ -41,8 +41,8 @@ export class InterpreterComparer implements IInterpreterComparer {
             sortNameParts.push('Python');
         }
 
-        if (info.type) {
-            const name = this.interpreterHelper.getInterpreterTypeDisplayName(info.type);
+        if (info.envType) {
+            const name = this.interpreterHelper.getInterpreterTypeDisplayName(info.envType);
             if (name) {
                 envSuffixParts.push(name);
             }

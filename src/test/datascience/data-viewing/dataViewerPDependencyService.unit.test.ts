@@ -32,7 +32,7 @@ suite('DataScience - DataViewerDependencyService', () => {
             path: path.join('users', 'python', 'bin', 'python.exe'),
             sysPrefix: '',
             sysVersion: '',
-            type: EnvironmentType.Unknown,
+            envType: EnvironmentType.Unknown,
             version: new SemVer('3.3.3')
         };
         pythonExecService = mock<IPythonExecutionService>();

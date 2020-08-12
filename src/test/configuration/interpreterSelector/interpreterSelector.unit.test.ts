@@ -22,7 +22,7 @@ const info: PythonEnvironment = {
     displayName: '',
     envName: '',
     path: '',
-    type: EnvironmentType.Unknown,
+    envType: EnvironmentType.Unknown,
     version: new SemVer('1.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''

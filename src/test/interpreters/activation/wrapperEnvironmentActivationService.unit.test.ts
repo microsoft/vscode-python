@@ -40,7 +40,7 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
         path: '',
         sysPrefix: '',
         sysVersion: '',
-        type: EnvironmentType.Conda
+        envType: EnvironmentType.Conda
     };
 
     // tslint:disable-next-line: max-func-body-length
@@ -269,7 +269,7 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                     path: 'New',
                                     sysPrefix: '',
                                     sysVersion: '',
-                                    type: EnvironmentType.Pipenv
+                                    envType: EnvironmentType.Pipenv
                                 };
                                 when(
                                     termActivation.getActivatedEnvironmentVariables(

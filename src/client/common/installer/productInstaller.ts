@@ -374,7 +374,7 @@ export class DataScienceInstaller extends BaseInstaller {
 
         // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
         let installerModule;
-        if (interpreter.type === 'Conda') {
+        if (interpreter.envType === 'Conda') {
             installerModule = channels.find((v) => v.name === 'Conda');
         } else {
             installerModule = channels.find((v) => v.name === 'Pip');

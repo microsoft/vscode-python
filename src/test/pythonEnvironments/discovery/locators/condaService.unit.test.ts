@@ -29,7 +29,7 @@ const info: PythonEnvironment = {
     displayName: '',
     envName: '',
     path: '',
-    type: EnvironmentType.Unknown,
+    envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''

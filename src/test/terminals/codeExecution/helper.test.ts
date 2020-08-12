@@ -42,7 +42,7 @@ suite('Terminal - Code Execution Helper', () => {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         displayName: 'Python',
-        type: EnvironmentType.Unknown,
+        envType: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 

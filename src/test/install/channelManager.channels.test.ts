@@ -28,7 +28,7 @@ const info: PythonEnvironment = {
     displayName: '',
     envName: '',
     path: '',
-    type: EnvironmentType.Unknown,
+    envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''
@@ -89,7 +89,7 @@ suite('Installation - installation channels', () => {
         const interpreter: PythonEnvironment = {
             ...info,
             path: 'pipenv',
-            type: EnvironmentType.VirtualEnv
+            envType: EnvironmentType.VirtualEnv
         };
         pipEnv.setup((x) => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([interpreter]));
 

@@ -55,7 +55,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
-        type: EnvironmentType.Unknown,
+        envType: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 

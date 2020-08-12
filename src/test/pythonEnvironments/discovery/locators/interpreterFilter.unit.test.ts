@@ -36,7 +36,7 @@ suite('Interpreters - Filter', () => {
             architecture: 1,
             companyDisplayName: '',
             displayName: 'python',
-            type: EnvironmentType.WindowsStore,
+            envType: EnvironmentType.WindowsStore,
             envName: '',
             envPath: '',
             cachedEntry: false

@@ -49,7 +49,7 @@ suite('DataScience - Kernel Switcher', () => {
         };
         selectedInterpreter = {
             path: '',
-            type: EnvironmentType.Conda,
+            envType: EnvironmentType.Conda,
             architecture: Architecture.Unknown,
             sysPrefix: '',
             sysVersion: ''

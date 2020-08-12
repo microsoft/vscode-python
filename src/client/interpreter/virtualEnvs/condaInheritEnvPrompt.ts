@@ -79,7 +79,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
             return false;
         }
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-        if (!interpreter || interpreter.type !== EnvironmentType.Conda) {
+        if (!interpreter || interpreter.envType !== EnvironmentType.Conda) {
             return false;
         }
         const setting = this.workspaceService

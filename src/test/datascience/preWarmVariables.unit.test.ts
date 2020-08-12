@@ -27,7 +27,7 @@ suite('DataScience - PreWarm Env Vars', () => {
             path: '',
             sysPrefix: '',
             sysVersion: '',
-            type: EnvironmentType.Conda
+            envType: EnvironmentType.Conda
         };
         onDidChangeInterpreter = new EventEmitter<PythonEnvironment>();
         envActivationService = mock(EnvironmentActivationService);

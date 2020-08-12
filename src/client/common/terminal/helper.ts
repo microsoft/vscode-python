@@ -117,7 +117,7 @@ export class TerminalHelper implements ITerminalHelper {
         }
 
         const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
-        const interpreterType = interpreter ? interpreter.type : EnvironmentType.Unknown;
+        const interpreterType = interpreter ? interpreter.envType : EnvironmentType.Unknown;
         const data = { failed, hasCommands, interpreterType, terminal: terminalShellType, pythonVersion };
         sendTelemetryEvent(eventName, undefined, data);
     }
@@ -131,7 +131,7 @@ export class TerminalHelper implements ITerminalHelper {
 
         // If we have a conda environment, then use that.
         const isCondaEnvironment = interpreter
-            ? interpreter.type === EnvironmentType.Conda
+            ? interpreter.envType === EnvironmentType.Conda
             : await this.condaService.isCondaEnvironment(settings.pythonPath);
         if (isCondaEnvironment) {
             const activationCommands = interpreter

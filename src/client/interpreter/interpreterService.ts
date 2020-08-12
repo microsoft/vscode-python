@@ -307,7 +307,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (info.architecture) {
             displayNameParts.push(getArchitectureDisplayName(info.architecture));
         }
-        if (!info.envName && info.path && info.type && info.type === EnvironmentType.Pipenv) {
+        if (!info.envName && info.path && info.envType && info.envType === EnvironmentType.Pipenv) {
             // If we do not have the name of the environment, then try to get it again.
             // This can happen based on the context (i.e. resource).
             // I.e. we can determine if an environment is PipEnv only when giving it the right workspacec path (i.e. resource).
@@ -317,9 +317,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (info.envName && info.envName.length > 0) {
             envSuffixParts.push(`'${info.envName}'`);
         }
-        if (info.type) {
+        if (info.envType) {
             const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
-            const name = interpreterHelper.getInterpreterTypeDisplayName(info.type);
+            const name = interpreterHelper.getInterpreterTypeDisplayName(info.envType);
             if (name) {
                 envSuffixParts.push(name);
             }
@@ -341,7 +341,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const details: Partial<PythonEnvironment> = {
             ...(info as PythonEnvironment),
             path: pythonPath,
-            type: type
+            envType: type
         };
 
         const envName =

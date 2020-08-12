@@ -449,7 +449,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         displayName: 'Python',
-        type: EnvironmentType.Unknown,
+        envType: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
     private workingPython2: PythonEnvironment = {
@@ -458,7 +458,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         displayName: 'Python',
-        type: EnvironmentType.Unknown,
+        envType: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 

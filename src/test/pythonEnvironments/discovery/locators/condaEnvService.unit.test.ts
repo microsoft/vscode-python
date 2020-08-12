@@ -179,7 +179,7 @@ suite('Interpreters from Conda Environments', () => {
             AnacondaCompanyName,
             'Incorrect company display name for first env'
         );
-        assert.equal(interpreters[0].type, EnvironmentType.Conda, 'Environment not detected as a conda environment');
+        assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
 
         const path2 = path.join(info.envs[1], isWindows ? 'python.exe' : path.join('bin', 'python'));
         assert.equal(interpreters[1].path, path2, 'Incorrect path for first env');
@@ -188,7 +188,7 @@ suite('Interpreters from Conda Environments', () => {
             AnacondaCompanyName,
             'Incorrect company display name for first env'
         );
-        assert.equal(interpreters[1].type, EnvironmentType.Conda, 'Environment not detected as a conda environment');
+        assert.equal(interpreters[1].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
     test('Must extract display name from version info suffixed with the environment name (oxs/linux)', async () => {
         await extractDisplayNameFromVersionInfoSuffixedWithEnvironmentName(false);
@@ -293,7 +293,7 @@ suite('Interpreters from Conda Environments', () => {
             AnacondaCompanyName,
             'Incorrect company display name for first env'
         );
-        assert.equal(interpreters[0].type, EnvironmentType.Conda, 'Environment not detected as a conda environment');
+        assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
     test('Must use the default display name if sys.version is invalid and suffixed with environment name (non windows)', async () => {
         await useDefaultNameIfSysVersionIsValidAndSuffixWithEnvironmentName(false);
@@ -393,7 +393,7 @@ suite('Interpreters from Conda Environments', () => {
             AnacondaCompanyName,
             'Incorrect company display name for first env'
         );
-        assert.equal(interpreters[0].type, EnvironmentType.Conda, 'Environment not detected as a conda environment');
+        assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
     test('Must use the default display name if sys.version is empty and suffixed with environment name (non windows)', async () => {
         await useDefaultNameIfSysVersionIsEmptyAndSuffixWithEnvironmentName(false);

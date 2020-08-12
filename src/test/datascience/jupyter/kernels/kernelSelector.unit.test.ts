@@ -62,7 +62,7 @@ suite('DataScience - KernelSelector', () => {
         path: 'somePath',
         sysPrefix: '',
         sysVersion: '',
-        type: EnvironmentType.Conda,
+        envType: EnvironmentType.Conda,
         version: { raw: '3.7.1.1', major: 3, minor: 7, patch: 1, build: ['1'], prerelease: [] }
     };
 

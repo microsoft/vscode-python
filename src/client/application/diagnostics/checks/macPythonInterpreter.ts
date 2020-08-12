@@ -98,7 +98,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         if (!this.helper.isMacDefaultPythonPath(settings.pythonPath)) {
             return [];
         }
-        if (!currentInterpreter || currentInterpreter.type !== EnvironmentType.Unknown) {
+        if (!currentInterpreter || currentInterpreter.envType !== EnvironmentType.Unknown) {
             return [];
         }
 

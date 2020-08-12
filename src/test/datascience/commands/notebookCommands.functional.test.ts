@@ -58,7 +58,7 @@ suite('DataScience - Notebook Commands', () => {
     };
     const selectedInterpreter = {
         path: '',
-        type: EnvironmentType.Conda,
+        envType: EnvironmentType.Conda,
         architecture: Architecture.Unknown,
         sysPrefix: '',
         sysVersion: ''

@@ -30,9 +30,9 @@ export class SystemWideInterpretersAutoSelectionRule extends BaseRuleService {
         // Exclude non-local interpreters.
         const filteredInterpreters = interpreters.filter(
             (int) =>
-                int.type !== EnvironmentType.VirtualEnv &&
-                int.type !== EnvironmentType.Venv &&
-                int.type !== EnvironmentType.Pipenv
+                int.envType !== EnvironmentType.VirtualEnv &&
+                int.envType !== EnvironmentType.Venv &&
+                int.envType !== EnvironmentType.Pipenv
         );
         const bestInterpreter = this.helper.getBestInterpreter(filteredInterpreters);
         traceVerbose(

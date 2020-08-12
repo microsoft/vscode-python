@@ -66,7 +66,7 @@ suite('Interpreters - Locators Helper', () => {
                 path: path.join('users', 'python', 'bin', name),
                 sysPrefix: name,
                 sysVersion: name,
-                type: EnvironmentType.Unknown,
+                envType: EnvironmentType.Unknown,
                 version: new SemVer('0.0.0-alpha')
             };
             interpreters.push(interpreter);
@@ -109,7 +109,7 @@ suite('Interpreters - Locators Helper', () => {
                     path: path.join('users', `python${name}${index}`, 'bin', name + index.toString()),
                     sysPrefix: name,
                     sysVersion: name,
-                    type: EnvironmentType.Unknown,
+                    envType: EnvironmentType.Unknown,
                     version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
                 };
                 interpreters.push(interpreter);
@@ -123,7 +123,7 @@ suite('Interpreters - Locators Helper', () => {
                     path: path.join('users', 'python', 'bin', 'python.exe'),
                     sysPrefix: name,
                     sysVersion: name,
-                    type: EnvironmentType.Unknown,
+                    envType: EnvironmentType.Unknown,
                     version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
                 };
 
@@ -133,7 +133,7 @@ suite('Interpreters - Locators Helper', () => {
                     path: path.join('users', 'python', 'bin', `python${name}.exe`),
                     sysPrefix: name,
                     sysVersion: name,
-                    type: EnvironmentType.Unknown,
+                    envType: EnvironmentType.Unknown,
                     version: new SemVer(interpreter.version.raw)
                 };
 
@@ -176,7 +176,7 @@ suite('Interpreters - Locators Helper', () => {
                     path: path.join('users', 'python', 'bin', 'python.exe'),
                     sysPrefix: name,
                     sysVersion: name,
-                    type,
+                    envType: type,
                     version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
                 };
                 interpreters.push(interpreter);

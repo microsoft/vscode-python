@@ -116,7 +116,7 @@ suite('Kernel Finder', () => {
                 envName: '1',
                 sysVersion: '3.1.1.1',
                 architecture: Architecture.x64,
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             };
             interpreters = [];
             for (let i = 0; i < 2; i += 1) {
@@ -126,7 +126,7 @@ suite('Kernel Finder', () => {
                     envName: '1',
                     sysVersion: '3.1.1.1',
                     architecture: Architecture.x64,
-                    type: EnvironmentType.Unknown
+                    envType: EnvironmentType.Unknown
                 });
             }
 
@@ -385,7 +385,7 @@ suite('Kernel Finder', () => {
                 envName: '1',
                 sysVersion: '3.1.1.1',
                 architecture: Architecture.x64,
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             };
             for (let i = 0; i < 10; i += 1) {
                 interpreters.push({
@@ -394,7 +394,7 @@ suite('Kernel Finder', () => {
                     envName: '1',
                     sysVersion: '3.1.1.1',
                     architecture: Architecture.x64,
-                    type: EnvironmentType.Unknown
+                    envType: EnvironmentType.Unknown
                 });
             }
             interpreters.push(activeInterpreter);
@@ -458,7 +458,7 @@ suite('Kernel Finder', () => {
                 envName: '1',
                 sysVersion: '3.1.1.1',
                 architecture: Architecture.x64,
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             };
             // Record a second call to getActiveInterpreter, will play after the first
             interpreterService

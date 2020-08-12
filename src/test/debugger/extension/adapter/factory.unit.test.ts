@@ -42,7 +42,7 @@ suite('Debugging - Adapter Factory', () => {
         path: pythonPath,
         sysPrefix: '',
         sysVersion: '',
-        type: EnvironmentType.Unknown,
+        envType: EnvironmentType.Unknown,
         version: new SemVer('3.7.4-test')
     };
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;

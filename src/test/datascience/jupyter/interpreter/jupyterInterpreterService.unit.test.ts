@@ -38,14 +38,14 @@ suite('DataScience - Jupyter Interpreter Service', () => {
         architecture: Architecture.Unknown,
         sysPrefix: '',
         sysVersion: '',
-        type: EnvironmentType.Unknown
+        envType: EnvironmentType.Unknown
     };
     const secondPythonInterpreter: PythonEnvironment = {
         path: 'second interpreter path',
         architecture: Architecture.Unknown,
         sysPrefix: '',
         sysVersion: '',
-        type: EnvironmentType.Unknown
+        envType: EnvironmentType.Unknown
     };
 
     setup(() => {

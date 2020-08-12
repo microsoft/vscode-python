@@ -53,7 +53,7 @@ suite('Terminal Environment Activation pyenv', () => {
             sysPrefix: '',
             version: new SemVer('1.1.1-alpha'),
             sysVersion: '',
-            type: EnvironmentType.Unknown
+            envType: EnvironmentType.Unknown
         };
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
@@ -71,7 +71,7 @@ suite('Terminal Environment Activation pyenv', () => {
             sysPrefix: '',
             version: new SemVer('1.1.1-alpha'),
             sysVersion: '',
-            type: EnvironmentType.Pyenv
+            envType: EnvironmentType.Pyenv
         };
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
@@ -89,7 +89,7 @@ suite('Terminal Environment Activation pyenv', () => {
             sysPrefix: '',
             version: new SemVer('1.1.1-alpha'),
             sysVersion: '',
-            type: EnvironmentType.Pyenv,
+            envType: EnvironmentType.Pyenv,
             envName: 'my env name'
         };
         interpreterService

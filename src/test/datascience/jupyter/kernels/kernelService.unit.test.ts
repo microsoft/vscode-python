@@ -230,7 +230,7 @@ suite('DataScience - KernelService', () => {
             displayName: 'Disp2',
             path: 'myPath2',
             sysPrefix: 'xyz',
-            type: EnvironmentType.Conda,
+            envType: EnvironmentType.Conda,
             sysVersion: '',
             architecture: Architecture.Unknown
         };
@@ -315,7 +315,7 @@ suite('DataScience - KernelService', () => {
             displayName: 'disp2',
             path: 'Some Path2',
             sysPrefix: 'xyz',
-            type: EnvironmentType.Conda,
+            envType: EnvironmentType.Conda,
             sysVersion: '',
             architecture: Architecture.Unknown
         };
@@ -342,7 +342,7 @@ suite('DataScience - KernelService', () => {
             path: path.join('interpreter', 'python'),
             sysPrefix: '',
             sysVersion: '',
-            type: EnvironmentType.Conda,
+            envType: EnvironmentType.Conda,
             displayName: 'Hello'
         };
         // Marked as readonly, to ensure we do not update this in tests.
@@ -357,7 +357,7 @@ suite('DataScience - KernelService', () => {
                 something: '1',
                 interpreter: {
                     path: interpreter.path,
-                    type: interpreter.type
+                    type: interpreter.envType
                 }
             }
         };
@@ -388,7 +388,7 @@ suite('DataScience - KernelService', () => {
                 path: '',
                 sysPrefix: '',
                 sysVersion: '',
-                type: EnvironmentType.Conda
+                envType: EnvironmentType.Conda
             };
 
             const promise = kernelService.registerKernel(invalidInterpreter);

@@ -323,7 +323,7 @@ export class CondaService implements ICondaService {
      */
     private detectCondaEnvironment(interpreter: PythonEnvironment) {
         return (
-            interpreter.type === EnvironmentType.Conda ||
+            interpreter.envType === EnvironmentType.Conda ||
             (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
             (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('ANACONDA') >=
                 0 ||

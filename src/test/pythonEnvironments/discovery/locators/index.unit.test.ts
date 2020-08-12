@@ -77,7 +77,7 @@ suite('Interpreters - Locators Index', () => {
                         path: typeName,
                         sysPrefix: typeName,
                         sysVersion: typeName,
-                        type: EnvironmentType.Unknown,
+                        envType: EnvironmentType.Unknown,
                         version: new SemVer('0.0.0-alpha')
                     };
 
@@ -140,7 +140,7 @@ suite('Interpreters - Locators Index', () => {
                         path: typeName,
                         sysPrefix: typeName,
                         sysVersion: typeName,
-                        type: EnvironmentType.Unknown,
+                        envType: EnvironmentType.Unknown,
                         version: new SemVer('0.0.0-alpha')
                     };
 
@@ -206,7 +206,7 @@ suite('Interpreters - Locators Index', () => {
                         path: typeName,
                         sysPrefix: typeName,
                         sysVersion: typeName,
-                        type: EnvironmentType.Unknown,
+                        envType: EnvironmentType.Unknown,
                         version: new SemVer('0.0.0-alpha')
                     };
 

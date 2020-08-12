@@ -22,7 +22,7 @@ export function createPythonInterpreter(info?: Partial<PythonEnvironment>): Pyth
         path: `somePath${rnd}`,
         sysPrefix: `someSysPrefix${rnd}`,
         sysVersion: `1.1.1`,
-        type: EnvironmentType.Unknown,
+        envType: EnvironmentType.Unknown,
         ...(info || {})
     };
 }

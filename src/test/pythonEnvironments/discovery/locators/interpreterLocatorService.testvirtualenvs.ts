@@ -56,7 +56,7 @@ suite('Python interpreter locator service', () => {
     test('Ensure we are getting conda environment created using command `conda create -n "test_env1" -y python`', async () => {
         // Created in CI using command `conda create -n "test_env1" -y python`
         const filteredInterpreters = interpreters.filter(
-            (i) => i.envName === 'test_env1' && i.type === EnvironmentType.Conda
+            (i) => i.envName === 'test_env1' && i.envType === EnvironmentType.Conda
         );
         expect(filteredInterpreters.length).to.be.greaterThan(0, 'Environment test_env1 not found');
     });
@@ -67,7 +67,7 @@ suite('Python interpreter locator service', () => {
             if (dirName.endsWith('bin') || dirName.endsWith('Scripts')) {
                 dirName = path.dirname(dirName);
             }
-            return dirName.endsWith('test_env2') && i.type === EnvironmentType.Conda;
+            return dirName.endsWith('test_env2') && i.envType === EnvironmentType.Conda;
         });
         expect(filteredInterpreters.length).to.be.greaterThan(0, 'Environment test_env2 not found');
     });
@@ -78,7 +78,7 @@ suite('Python interpreter locator service', () => {
             if (dirName.endsWith('bin') || dirName.endsWith('Scripts')) {
                 dirName = path.dirname(dirName);
             }
-            return dirName.endsWith('test_env3') && i.type === EnvironmentType.Conda;
+            return dirName.endsWith('test_env3') && i.envType === EnvironmentType.Conda;
         });
         expect(filteredInterpreters.length).to.be.greaterThan(0, 'Environment test_env3 not found');
     });
@@ -86,7 +86,7 @@ suite('Python interpreter locator service', () => {
     test('Ensure we are getting the base conda environment', async () => {
         // Base conda environment in CI
         const filteredInterpreters = interpreters.filter(
-            (i) => (i.envName === 'base' || i.envName === 'miniconda') && i.type === EnvironmentType.Conda
+            (i) => (i.envName === 'base' || i.envName === 'miniconda') && i.envType === EnvironmentType.Conda
         );
         expect(filteredInterpreters.length).to.be.greaterThan(0, 'Base environment not found');
     });

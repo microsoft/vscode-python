@@ -126,7 +126,7 @@ suite('Interpreters from Conda Environments Text File', () => {
         assert.equal(interpreters[0].companyDisplayName, AnacondaCompanyName, 'Incorrect display name');
         assert.equal(interpreters[0].path, expectedPythonPath, 'Incorrect path');
         assert.equal(interpreters[0].envPath, validPaths[0], 'Incorrect envpath');
-        assert.equal(interpreters[0].type, EnvironmentType.Conda, 'Incorrect type');
+        assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Incorrect type');
     }
     test('Must filter files in the list and return valid items (non windows)', async () => {
         await filterFilesInEnvironmentsFileAndReturnValidItems(false);

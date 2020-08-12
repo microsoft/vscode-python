@@ -22,7 +22,7 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
         const interpreter = await this.serviceContainer
             .get<IInterpreterService>(IInterpreterService)
             .getActiveInterpreter(resource);
-        if (!interpreter || interpreter.type !== EnvironmentType.Pyenv || !interpreter.envName) {
+        if (!interpreter || interpreter.envType !== EnvironmentType.Pyenv || !interpreter.envName) {
             return;
         }
 
@@ -36,7 +36,7 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
         const interpreter = await this.serviceContainer
             .get<IInterpreterService>(IInterpreterService)
             .getInterpreterDetails(pythonPath);
-        if (!interpreter || interpreter.type !== EnvironmentType.Pyenv || !interpreter.envName) {
+        if (!interpreter || interpreter.envType !== EnvironmentType.Pyenv || !interpreter.envName) {
             return;
         }
 

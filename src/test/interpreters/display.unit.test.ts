@@ -46,7 +46,7 @@ const info: PythonEnvironment = {
     displayName: '',
     envName: '',
     path: '',
-    type: EnvironmentType.Unknown,
+    envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''
@@ -143,7 +143,7 @@ suite('Interpreters Display', () => {
         const activeInterpreter: PythonEnvironment = {
             ...info,
             displayName: 'Dummy_Display_Name',
-            type: EnvironmentType.Unknown,
+            envType: EnvironmentType.Unknown,
             path: path.join('user', 'development', 'env', 'bin', 'python')
         };
         setupWorkspaceFolder(resource, workspaceFolder);
@@ -167,7 +167,7 @@ suite('Interpreters Display', () => {
         const activeInterpreter: PythonEnvironment = {
             ...info,
             displayName: 'Dummy_Display_Name',
-            type: EnvironmentType.Unknown,
+            envType: EnvironmentType.Unknown,
             path: path.join('user', 'development', 'env', 'bin', 'python')
         };
         pathUtils
@@ -247,7 +247,7 @@ suite('Interpreters Display', () => {
         const activeInterpreter: PythonEnvironment = {
             ...info,
             displayName: 'Dummy_Display_Name',
-            type: EnvironmentType.Unknown,
+            envType: EnvironmentType.Unknown,
             companyDisplayName: 'Company Name',
             path: pythonPath
         };
@@ -280,7 +280,7 @@ suite('Interpreters Display', () => {
             const activeInterpreter: PythonEnvironment = {
                 ...info,
                 displayName: 'Dummy_Display_Name',
-                type: EnvironmentType.Unknown,
+                envType: EnvironmentType.Unknown,
                 path: path.join('user', 'development', 'env', 'bin', 'python')
             };
             setupWorkspaceFolder(resource, workspaceFolder);

@@ -35,7 +35,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
         architecture: Architecture.Unknown,
         sysPrefix: '',
         sysVersion: '',
-        type: EnvironmentType.Unknown
+        envType: EnvironmentType.Unknown
     };
     setup(() => {
         appShell = mock(ApplicationShell);

@@ -84,7 +84,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const search = 'Search for help';
         let result: string | undefined;
-        if (interpreter.type === EnvironmentType.Conda) {
+        if (interpreter.envType === EnvironmentType.Conda) {
             result = await appShell.showErrorMessage(Installer.noCondaOrPipInstaller(), Installer.searchForHelp());
         } else {
             result = await appShell.showErrorMessage(Installer.noPipInstaller(), Installer.searchForHelp());
@@ -94,7 +94,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
             const osName = platform.isWindows ? 'Windows' : platform.isMac ? 'MacOS' : 'Linux';
             appShell.openUrl(
                 `https://www.bing.com/search?q=Install Pip ${osName} ${
-                    interpreter.type === EnvironmentType.Conda ? 'Conda' : ''
+                    interpreter.envType === EnvironmentType.Conda ? 'Conda' : ''
                 }`
             );
         }

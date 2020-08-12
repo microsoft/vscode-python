@@ -340,7 +340,7 @@ suite('Language Server Activation - ActivationService', () => {
                         envName: '1',
                         sysVersion: '3.1.1.1',
                         architecture: Architecture.x64,
-                        type: EnvironmentType.Unknown
+                        envType: EnvironmentType.Unknown
                     };
                     const interpreter2: PythonEnvironment = {
                         path: '/foo/baz/python',
@@ -348,7 +348,7 @@ suite('Language Server Activation - ActivationService', () => {
                         envName: '2',
                         sysVersion: '3.1.1.1',
                         architecture: Architecture.x64,
-                        type: EnvironmentType.Unknown
+                        envType: EnvironmentType.Unknown
                     };
                     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
@@ -399,7 +399,7 @@ suite('Language Server Activation - ActivationService', () => {
                         envName: '1',
                         sysVersion: '3.1.1.1',
                         architecture: Architecture.x64,
-                        type: EnvironmentType.Unknown
+                        envType: EnvironmentType.Unknown
                     };
                     const interpreter2: PythonEnvironment = {
                         path: '/foo/baz/python',
@@ -407,7 +407,7 @@ suite('Language Server Activation - ActivationService', () => {
                         envName: '2',
                         sysVersion: '3.1.1.1',
                         architecture: Architecture.x64,
-                        type: EnvironmentType.Unknown
+                        envType: EnvironmentType.Unknown
                     };
                     let getActiveCount = 0;
                     interpreterService
