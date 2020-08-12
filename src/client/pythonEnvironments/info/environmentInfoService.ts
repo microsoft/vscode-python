@@ -60,7 +60,9 @@ export interface IEnvironmentInfoService {
 }
 
 export class EnvironmentInfoService implements IEnvironmentInfoService {
+    private readonly cache: Map<string, IEnvironmentInfo>;
     public constructor(private readonly workerPool?: IWorkerPool<string, IEnvironmentInfo | undefined>) {
+        this.cache = new Map<string, IEnvironmentInfo>();
         if (!this.workerPool) {
             this.workerPool = new WorkerPool<string, IEnvironmentInfo | undefined>(async (interpreterPath: string) => {
                 const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(interpreterPath), shellExecute);
@@ -89,11 +91,19 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
         interpreterPath: string,
         priority?: EnvironmentInfoServiceQueuePriority
     ): Promise<IEnvironmentInfo | undefined> {
-        if (priority === EnvironmentInfoServiceQueuePriority.High) {
-            return this.workerPool?.addToQueue(interpreterPath, QueuePosition.Front);
+        let result = this.cache.get(interpreterPath);
+        if (!result) {
+            if (priority === EnvironmentInfoServiceQueuePriority.High) {
+                result = await this.workerPool?.addToQueue(interpreterPath, QueuePosition.Front);
+            } else {
+                // priority === undefined is treated same as EnvironmentInfoServiceQueuePriority.Default
+                result = await this.workerPool?.addToQueue(interpreterPath, QueuePosition.Back);
+            }
+            if (result) {
+                this.cache.set(interpreterPath, result);
+            }
         }
 
-        // priority === undefined is treated same as EnvironmentInfoServiceQueuePriority.Default
-        return this.workerPool?.addToQueue(interpreterPath, QueuePosition.Back);
+        return Promise.resolve(result);
     }
 }

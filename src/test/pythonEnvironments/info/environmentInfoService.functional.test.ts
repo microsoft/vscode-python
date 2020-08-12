@@ -19,6 +19,24 @@ import {
 
 suite('Environment Info Service', () => {
     let stubShellExec: sinon.SinonStub;
+
+    function createExpectedEnvInfo(path: string) {
+        return {
+            architecture: Architecture.x64,
+            interpreterPath: path,
+            interpreterType: InterpreterType.cpython,
+            environmentType: EnvironmentType.Unknown,
+            version: {
+                build: [],
+                major: 3,
+                minor: 8,
+                patch: 3,
+                prerelease: ['final'],
+                raw: '3.8.3-final'
+            }
+        };
+    }
+
     setup(() => {
         stubShellExec = ImportMock.mockFunction(
             ExternalDep,
@@ -45,20 +63,7 @@ suite('Environment Info Service', () => {
             } else {
                 promises.push(envService.getEnvironmentInfo(path, EnvironmentInfoServiceQueuePriority.High));
             }
-            expected.push({
-                architecture: Architecture.x64,
-                interpreterPath: path,
-                interpreterType: InterpreterType.cpython,
-                environmentType: EnvironmentType.Unknown,
-                version: {
-                    build: [],
-                    major: 3,
-                    minor: 8,
-                    patch: 3,
-                    prerelease: ['final'],
-                    raw: '3.8.3-final'
-                }
-            });
+            expected.push(createExpectedEnvInfo(path));
         }
 
         await Promise.all(promises).then((r) => {
@@ -68,5 +73,27 @@ suite('Environment Info Service', () => {
             // the promises.
             assert.deepEqual(r, expected);
         });
+    });
+
+    test('Add same item to queue', async () => {
+        const envService = new EnvironmentInfoService();
+        const promises: Promise<IEnvironmentInfo | undefined>[] = [];
+        const expected: IEnvironmentInfo[] = [];
+
+        const path = 'any-path';
+        // Clear call counts
+        stubShellExec.resetHistory();
+        // Evaluate once so the result is cached.
+        await envService.getEnvironmentInfo(path);
+
+        for (let i: number = 0; i < 10; i = i + 1) {
+            promises.push(envService.getEnvironmentInfo(path));
+            expected.push(createExpectedEnvInfo(path));
+        }
+
+        await Promise.all(promises).then((r) => {
+            assert.deepEqual(r, expected);
+        });
+        assert.ok(stubShellExec.calledOnce);
     });
 });
