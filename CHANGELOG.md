@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.8.0-rc (5 August 2020)
+## 2020.8.0 (12 August 2020)
 
 ### Enhancements
 
