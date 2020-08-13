@@ -1,9 +1,12 @@
 # Changelog
 
-## 2020.8.0-rc (5 August 2020)
+## 2020.8.0 (12 August 2020)
 
 ### Enhancements
 
+1. Cell id and cell metadata are now passed as the metadata field for execute_request messages.
+   (thanks [stisa](https://github.com/stisa/))
+   ([#13252](https://github.com/Microsoft/vscode-python/issues/13252))
 1. Add "Restart Language Server" command.
    ([#3073](https://github.com/Microsoft/vscode-python/issues/3073))
 1. Support multiple and per file interactive windows. See the description for the new 'python.dataScience.interactiveWindowMode' setting.
@@ -28,6 +31,8 @@
    ([#13218](https://github.com/Microsoft/vscode-python/issues/13218))
 1. Use jupyter inspect to get signature of dynamic functions in notebook editor when language server doesn't provide enough hint.
    ([#13259](https://github.com/Microsoft/vscode-python/issues/13259))
+1. The gather icon will change and get disabled while gather is executing.
+   ([#13177](https://github.com/microsoft/vscode-python/issues/13177))
 
 ### Fixes
 
@@ -36,7 +41,7 @@
 1. Don't loop selection through all failed tests every time tests are run.
    ([#11743](https://github.com/Microsoft/vscode-python/issues/11743))
 1. Some tools (like pytest) rely on the existence of `sys.path[0]`, so
-   deleting it in the isolation script can sometimes cause problems.  The
+   deleting it in the isolation script can sometimes cause problems. The
    solution is to point `sys.path[0]` to a bogus directory that we know
    does not exist (assuming noone modifies the extension install dir).
    ([#11875](https://github.com/Microsoft/vscode-python/issues/11875))
@@ -47,7 +52,7 @@
 1. Make the data science variable explorer support high contrast color theme.
    ([#12766](https://github.com/Microsoft/vscode-python/issues/12766))
 1. The change in PR #12795 led to one particular test suite to take longer
-   to run.  Here we increase the timeout for that suite to get the test
+   to run. Here we increase the timeout for that suite to get the test
    passing.
    ([#12833](https://github.com/Microsoft/vscode-python/issues/12833))
 1. Refactor data science filesystem usage to correctly handle files which are potentially remote.

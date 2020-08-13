@@ -250,7 +250,7 @@
                 "key": "ctrl+; x",
                 "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
             },
-                        {
+            {
                 "command": "python.datascience.extendSelectionByCellAbove",
                 "key": "ctrl+alt+shift+[",
                 "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
