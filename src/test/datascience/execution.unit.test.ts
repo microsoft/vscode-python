@@ -971,7 +971,8 @@ suite('Jupyter Execution', async () => {
                 anything()
             )
         ).thenResolve({
-            kernelSpec
+            kernelSpec,
+            kind: 'kernelSpec'
         });
 
         const dependencyService = mock(JupyterInterpreterDependencyService);

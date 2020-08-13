@@ -24,7 +24,7 @@ import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
-import { KernelSelector, KernelSpecInterpreter } from '../../jupyter/kernels/kernelSelector';
+import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
@@ -41,6 +41,7 @@ import {
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
+import { KernelSelection } from '../../jupyter/kernels/types';
 
 // tslint:disable-next-line: no-require-imports
 // tslint:disable:no-any
@@ -166,7 +167,7 @@ export class HostRawNotebookProvider
             );
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch
-            if (!kernelSpecInterpreter.kernelSpec) {
+            if (!kernelSpecInterpreter?.kernelSpec) {
                 notebookPromise.reject('Failed to find a kernelspec to use for ipykernel launch');
             } else {
                 await rawSession.connect(
@@ -222,7 +223,7 @@ export class HostRawNotebookProvider
     }
 
     // Get the notebook execution info for this raw session instance
-    private async getExecutionInfo(kernelSpecInterpreter: KernelSpecInterpreter): Promise<INotebookExecutionInfo> {
+    private async getExecutionInfo(kernelSpecInterpreter: KernelSelection): Promise<INotebookExecutionInfo> {
         return {
             connectionInfo: this.getConnection(),
             uri: Settings.JupyterServerLocalLaunch,

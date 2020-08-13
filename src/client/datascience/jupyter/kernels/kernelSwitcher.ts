@@ -13,7 +13,8 @@ import { Settings } from '../../constants';
 import { RawKernelSessionStartError } from '../../raw-kernel/rawJupyterSession';
 import { IKernelDependencyService, INotebook, KernelInterpreterDependencyResponse } from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
-import { KernelSelector, KernelSpecInterpreter } from './kernelSelector';
+import { KernelSelector } from './kernelSelector';
+import { KernelSelection } from './types';
 
 @injectable()
 export class KernelSwitcher {
@@ -24,7 +25,7 @@ export class KernelSwitcher {
         @inject(KernelSelector) private readonly selector: KernelSelector
     ) {}
 
-    public async switchKernelWithRetry(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
+    public async switchKernelWithRetry(notebook: INotebook, kernel: KernelSelection): Promise<void> {
         const settings = this.configService.getSettings(notebook.resource);
         const isLocalConnection =
             notebook.connection?.localLaunch ??
@@ -66,7 +67,7 @@ export class KernelSwitcher {
             }
         }
     }
-    private async switchToKernel(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
+    private async switchToKernel(notebook: INotebook, kernel: KernelSelection): Promise<void> {
         if (notebook.connection?.type === 'raw' && kernel.interpreter) {
             const response = await this.kernelDependencyService.installMissingDependencies(kernel.interpreter);
             if (response === KernelInterpreterDependencyResponse.cancel) {
@@ -74,7 +75,7 @@ export class KernelSwitcher {
             }
         }
 
-        const switchKernel = async (newKernel: KernelSpecInterpreter) => {
+        const switchKernel = async (newKernel: KernelSelection) => {
             // Change the kernel. A status update should fire that changes our display
             await notebook.setKernelSpec(
                 newKernel.kernelSpec || newKernel.kernelModel!,

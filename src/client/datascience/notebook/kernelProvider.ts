@@ -87,7 +87,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             return [];
         }
         function isPreferredKernel(item: KernelSelection) {
-            if (!preferredKernel.interpreter && !preferredKernel.kernelModel && !preferredKernel.kernelSpec) {
+            if (!preferredKernel) {
                 return false;
             }
             if (

@@ -17,7 +17,6 @@ import type {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
-import type { KernelSpecInterpreter } from './kernelSelector';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
@@ -27,8 +26,8 @@ export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { s
  */
 export type LiveKernelConnectionMetadata = {
     kernelModel: LiveKernelModel;
-    kernelSpec: undefined;
-    interpreter: undefined;
+    kernelSpec?: undefined;
+    interpreter?: undefined;
     kind: 'live';
 };
 /**
@@ -36,9 +35,9 @@ export type LiveKernelConnectionMetadata = {
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
  */
 export type KernelSpecConnectionMetadata = {
-    kernelModel: undefined;
+    kernelModel?: undefined;
     kernelSpec: IJupyterKernelSpec;
-    interpreter: undefined;
+    interpreter?: undefined;
     kind: 'kernelSpec';
 };
 /**
@@ -46,41 +45,41 @@ export type KernelSpecConnectionMetadata = {
  * These are not necessarily raw (it could be plain old Jupyter Kernels, where we register Python interpreter as a kernel)
  */
 export type PythonKernelConnectionMetadata = {
-    kernelModel: undefined;
-    kernelSpec: undefined;
-    interpreter: PythonEnvironment;
+    kernelModel?: undefined;
+    kernelSpec?: undefined;
+    interpreter: PythonInterpreter;
     kind: 'pythonInterpreter';
 };
-// /**
-//  * Connection metadata for Kernels started using Python interpreter with Kernel spec (JSON).
-//  * Sometimes, we're unable to determine the exact interpreter associated with a kernelspec, in such cases this is a closes match.
-//  */
+/**
+ * Connection metadata for Kernels started using Python interpreter with Kernel spec (JSON).
+ * Sometimes, we're unable to determine the exact interpreter associated with a kernelspec, in such cases this is a closes match.
+ */
 
-// export type PythonKernelSpecConnectionMetadata = {
-//     kernelModel: undefined;
-//     kernelSpec: IJupyterKernelSpec;
-//     interpreter: PythonEnvironment;
-//     kind: 'pythonInterpreterKernelSpec';
-// };
-// /**
-//  * Connection metadata for Kernels started using kernelspec (JSON).
-//  * Note, we could be connecting/staring a kernel on a remote jupyter server.
-//  * Sometimes, we're unable to determine the exact interpreter associated with a kernelspec, in such cases this is a closes match.
-//  * E.g. when selecting a remote kernel, we do not have the remote interpreter information, we can only try to find a close match.}
-//  */
+export type PythonKernelSpecConnectionMetadata = {
+    kernelModel?: undefined;
+    kernelSpec: IJupyterKernelSpec;
+    interpreter?: PythonInterpreter;
+    kind: 'pythonInterpreterKernelSpec';
+};
+/**
+ * Connection metadata for Kernels started using kernelspec (JSON).
+ * Note, we could be connecting/staring a kernel on a remote jupyter server.
+ * Sometimes, we're unable to determine the exact interpreter associated with a kernelspec, in such cases this is a closes match.
+ * E.g. when selecting a remote kernel, we do not have the remote interpreter information, we can only try to find a close match.}
+ */
 
-// export type PythonLiveKernelConnectionMetadata = {
-//     kernelModel: undefined;
-//     kernelSpec: IJupyterKernelSpec;
-//     interpreter: PythonEnvironment;
-//     kind: 'pythonInterpreterLive';
-// };
+export type PythonLiveKernelConnectionMetadata = {
+    kernelModel: LiveKernelModel;
+    kernelSpec?: undefined;
+    interpreter?: PythonInterpreter;
+    kind: 'pythonInterpreterLive';
+};
 export type KernelSelection =
     | LiveKernelConnectionMetadata
     | KernelSpecConnectionMetadata
-    | PythonKernelConnectionMetadata;
-// | PythonKernelSpecConnectionMetadata
-// | PythonLiveKernelConnectionMetadata;
+    | PythonKernelConnectionMetadata
+    | PythonKernelSpecConnectionMetadata
+    | PythonLiveKernelConnectionMetadata;
 
 export interface IKernelSpecQuickPickItem<T extends KernelSelection = KernelSelection> extends QuickPickItem {
     selection: T;
@@ -100,7 +99,7 @@ export interface IKernelSelectionUsage {
         type: 'raw' | 'jupyter' | 'noConnection',
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken
-    ): Promise<KernelSpecInterpreter | {}>;
+    ): Promise<KernelSelection | undefined>;
 }
 
 export interface IKernel extends IAsyncDisposable {

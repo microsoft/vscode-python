@@ -37,8 +37,7 @@ import { NotebookModelChange } from './interactive-common/interactiveWindowTypes
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import { JupyterKernelSpec } from './jupyter/kernels/jupyterKernelSpec';
-import { KernelSpecInterpreter } from './jupyter/kernels/kernelSelector';
-import { LiveKernelModel } from './jupyter/kernels/types';
+import { LiveKernelModel, KernelSelection } from './jupyter/kernels/types';
 
 // tslint:disable-next-line:no-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
@@ -1173,7 +1172,7 @@ export interface INotebookProvider {
     /**
      * Fired when a kernel would have been changed if a notebook had existed.
      */
-    onPotentialKernelChanged: Event<{ identity: Uri; kernel: KernelSpecInterpreter }>;
+    onPotentialKernelChanged: Event<{ identity: Uri; kernel: KernelSelection }>;
 
     /**
      * List of all notebooks (active and ones that are being constructed).
@@ -1202,7 +1201,7 @@ export interface INotebookProvider {
      * @param identity identity notebook would have
      * @param kernel kernel that it was changed to.
      */
-    firePotentialKernelChanged(identity: Uri, kernel: KernelSpecInterpreter): void;
+    firePotentialKernelChanged(identity: Uri, kernel: KernelSelection): void;
 }
 
 export const IJupyterServerProvider = Symbol('IJupyterServerProvider');

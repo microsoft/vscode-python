@@ -71,8 +71,8 @@ import {
 } from '../interactive-common/interactiveWindowTypes';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
-import { KernelSelector, KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
-import { LiveKernelModel } from '../jupyter/kernels/types';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { LiveKernelModel, KernelSelection } from '../jupyter/kernels/types';
 import { CssMessages, SharedMessages } from '../messages';
 import {
     CellState,
@@ -1224,7 +1224,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 
-    private async potentialKernelChanged(data: { identity: Uri; kernel: KernelSpecInterpreter }): Promise<void> {
+    private async potentialKernelChanged(data: { identity: Uri; kernel: KernelSelection }): Promise<void> {
         const specOrModel = data.kernel.kernelModel || data.kernel.kernelSpec;
         if (!this._notebook && specOrModel && this.notebookIdentity.resource.toString() === data.identity.toString()) {
             // No notebook, send update to UI anyway

@@ -168,8 +168,8 @@ suite('DataScience - KernelSelector', () => {
                 instance(sessionManager)
             );
 
-            assert.isOk(kernel.kernelSpec === kernelSpec);
-            assert.isOk(kernel.interpreter === interpreter);
+            assert.isOk(kernel?.kernelSpec === kernelSpec);
+            assert.isOk(kernel?.interpreter === interpreter);
             verify(
                 kernelSelectionProvider.getKernelSelectionsForRemoteSession(
                     anything(),
@@ -288,8 +288,8 @@ suite('DataScience - KernelSelector', () => {
                 instance(sessionManager)
             );
 
-            assert.isOk(kernel.kernelSpec === kernelSpec);
-            assert.isOk(kernel.interpreter === interpreter);
+            assert.isOk(kernel?.kernelSpec === kernelSpec);
+            assert.isOk(kernel?.interpreter === interpreter);
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
@@ -315,7 +315,7 @@ suite('DataScience - KernelSelector', () => {
                 )
             ).thenResolve([]);
             when(
-                appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())
+                appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpreterAsKernel())
             ).thenResolve();
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve({
                 selection: { interpreter, kernelSpec }
@@ -329,7 +329,7 @@ suite('DataScience - KernelSelector', () => {
                 instance(sessionManager)
             );
 
-            assert.isOk(kernel.kernelSpec === kernelSpec);
+            assert.isOk(kernel?.kernelSpec === kernelSpec);
             verify(dependencyService.areDependenciesInstalled(interpreter, anything())).once();
             verify(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).once();
             verify(
@@ -343,7 +343,7 @@ suite('DataScience - KernelSelector', () => {
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
             verify(kernelService.registerKernel(anything(), anything())).never();
             verify(
-                appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())
+                appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpreterAsKernel())
             ).never();
             verify(
                 appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())
@@ -376,8 +376,8 @@ suite('DataScience - KernelSelector', () => {
                 instance(sessionManager)
             );
 
-            assert.isOk(kernel.kernelSpec === kernelSpec);
-            assert.isOk(kernel.interpreter === interpreter);
+            assert.isOk(kernel?.kernelSpec === kernelSpec);
+            assert.isOk(kernel?.interpreter === interpreter);
             verify(dependencyService.areDependenciesInstalled(interpreter, anything())).once();
             verify(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).once();
             verify(
@@ -390,7 +390,7 @@ suite('DataScience - KernelSelector', () => {
             ).twice(); // Once for caching.
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
             verify(
-                appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())
+                appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpreterAsKernel())
             ).never();
             verify(
                 appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())
@@ -422,7 +422,7 @@ suite('DataScience - KernelSelector', () => {
                 instance(sessionManager)
             );
 
-            assert.isOk(kernel.kernelSpec === kernelSpec);
+            assert.isOk(kernel?.kernelSpec === kernelSpec);
             verify(dependencyService.areDependenciesInstalled(interpreter, anything())).once();
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
@@ -437,7 +437,7 @@ suite('DataScience - KernelSelector', () => {
             verify(kernelService.registerKernel(interpreter, anything(), anything())).once();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             verify(
-                appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())
+                appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpreterAsKernel())
             ).never();
             verify(
                 appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())
@@ -455,9 +455,9 @@ suite('DataScience - KernelSelector', () => {
 
             const kernel = await kernelSelector.selectLocalKernel(undefined, 'raw', new StopWatch());
 
-            assert.isOk(kernel.interpreter === interpreter);
-            expect(kernel.kernelSpec, 'Should have kernelspec').to.not.be.undefined;
-            expect(kernel.kernelSpec!.name, 'Spec should have default name').to.include(defaultKernelSpecName);
+            assert.isOk(kernel?.interpreter === interpreter);
+            expect(kernel?.kernelSpec, 'Should have kernelspec').to.not.be.undefined;
+            expect(kernel!.kernelSpec!.name, 'Spec should have default name').to.include(defaultKernelSpecName);
         });
         test('For a raw connection, if a kernel spec is selected return it with the interpreter', async () => {
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
@@ -470,8 +470,8 @@ suite('DataScience - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
             const kernel = await kernelSelector.selectLocalKernel(undefined, 'raw', new StopWatch());
-            expect(kernel.kernelSpec).to.equal(kernelSpec);
-            expect(kernel.interpreter).to.equal(interpreter);
+            expect(kernel?.kernelSpec).to.equal(kernelSpec);
+            expect(kernel!.interpreter).to.equal(interpreter);
         });
     });
     // tslint:disable-next-line: max-func-body-length
@@ -521,8 +521,8 @@ suite('DataScience - KernelSelector', () => {
 
             const kernel = await kernelSelector.getKernelForLocalConnection(anything(), 'raw', undefined, nbMetadata);
 
-            assert.isOk(kernel.kernelSpec === kernelSpec);
-            assert.isOk(kernel.interpreter === interpreter);
+            assert.isOk(kernel?.kernelSpec === kernelSpec);
+            assert.isOk(kernel?.interpreter === interpreter);
         });
         test('If metadata contains kernel information, then return a matching kernel and a matching interpreter', async () => {
             when(
@@ -545,8 +545,8 @@ suite('DataScience - KernelSelector', () => {
                 nbMetadata
             );
 
-            assert.isOk(kernel.kernelSpec === kernelSpec);
-            assert.isOk(kernel.interpreter === interpreter);
+            assert.isOk(kernel?.kernelSpec === kernelSpec);
+            assert.isOk(kernel?.interpreter === interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
@@ -576,8 +576,8 @@ suite('DataScience - KernelSelector', () => {
                 nbMetadata
             );
 
-            assert.isOk(kernel.kernelSpec === kernelSpec);
-            assert.isUndefined(kernel.interpreter);
+            assert.isOk(kernel?.kernelSpec === kernelSpec);
+            assert.isUndefined(kernel?.interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
@@ -594,7 +594,7 @@ suite('DataScience - KernelSelector', () => {
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(kernelService.registerKernel(anything(), anything(), anything())).thenResolve(kernelSpec);
             when(
-                appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())
+                appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpreterAsKernel())
             ).thenResolve();
             when(
                 appShell.showInformationMessage(
@@ -619,8 +619,8 @@ suite('DataScience - KernelSelector', () => {
                 nbMetadata
             );
 
-            assert.isOk(kernel.kernelSpec === kernelSpec);
-            assert.isOk(kernel.interpreter === interpreter);
+            assert.isOk(kernel?.kernelSpec === kernelSpec);
+            assert.isOk(kernel?.interpreter === interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
@@ -642,7 +642,7 @@ suite('DataScience - KernelSelector', () => {
                 )
             ).once();
         });
-        test('If metadata is empty, then use active interperter and find a kernel matching active interpreter', async () => {
+        test('If metadata is empty, then use active interpreter and find a kernel matching active interpreter', async () => {
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(false);
             when(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
@@ -665,8 +665,8 @@ suite('DataScience - KernelSelector', () => {
                 undefined
             );
 
-            assert.isOk(kernel.kernelSpec === kernelSpec);
-            assert.isOk(kernel.interpreter === interpreter);
+            assert.isOk(kernel?.kernelSpec === kernelSpec);
+            assert.isOk(kernel?.interpreter === interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             verify(kernelService.searchAndRegisterKernel(interpreter, anything(), anything())).once();
@@ -712,9 +712,9 @@ suite('DataScience - KernelSelector', () => {
                 undefined
             );
 
-            assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');
-            assert.equal(kernel.kernelSpec?.display_name, 'foo', 'Did not find the python kernel spec');
-            assert.isOk(kernel.interpreter === interpreter);
+            assert.ok(kernel?.kernelSpec, 'No kernel spec found for remote');
+            assert.equal(kernel?.kernelSpec?.display_name, 'foo', 'Did not find the python kernel spec');
+            assert.isOk(kernel?.interpreter === interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             verify(kernelService.searchAndRegisterKernel(interpreter, anything(), anything())).never();
@@ -767,9 +767,9 @@ suite('DataScience - KernelSelector', () => {
                 kernelspec: { display_name: 'foo', name: 'foo' }
             });
 
-            assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');
-            assert.equal(kernel.kernelSpec?.display_name, 'foo', 'Did not find the preferred python kernel spec');
-            assert.isOk(kernel.interpreter === interpreter);
+            assert.ok(kernel?.kernelSpec, 'No kernel spec found for remote');
+            assert.equal(kernel?.kernelSpec?.display_name, 'foo', 'Did not find the preferred python kernel spec');
+            assert.isOk(kernel?.interpreter === interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             verify(kernelService.searchAndRegisterKernel(interpreter, anything())).never();
@@ -822,9 +822,9 @@ suite('DataScience - KernelSelector', () => {
                 kernelspec: { display_name: 'foo', name: 'foo' }
             });
 
-            assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');
-            assert.equal(kernel.kernelSpec?.display_name, 'foo', 'Did not find the preferred python kernel spec');
-            assert.isOk(kernel.interpreter === interpreter);
+            assert.ok(kernel?.kernelSpec, 'No kernel spec found for remote');
+            assert.equal(kernel?.kernelSpec?.display_name, 'foo', 'Did not find the preferred python kernel spec');
+            assert.isOk(kernel?.interpreter === interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             verify(kernelService.searchAndRegisterKernel(interpreter, anything())).never();

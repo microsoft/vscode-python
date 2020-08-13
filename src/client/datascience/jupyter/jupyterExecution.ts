@@ -36,7 +36,8 @@ import {
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { createRemoteConnectionInfo, expandWorkingDir } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import { KernelSelector, KernelSpecInterpreter } from './kernels/kernelSelector';
+import { KernelSelector } from './kernels/kernelSelector';
+import { KernelSelection } from './kernels/types';
 import { NotebookStarter } from './notebookStarter';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
@@ -141,8 +142,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
-            let kernelSpecInterpreter: KernelSpecInterpreter | undefined;
-            let kernelSpecInterpreterPromise: Promise<KernelSpecInterpreter> = Promise.resolve({});
+            let kernelSpecInterpreter: KernelSelection | undefined;
+            let kernelSpecInterpreterPromise: Promise<KernelSelection | undefined> = Promise.resolve<
+                KernelSelection | undefined
+            >(undefined);
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
             const allowUI = !options || options.allowUI();
             const kernelSpecCancelSource = new CancellationTokenSource();
@@ -186,7 +189,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
                     // In a remote non quest situation, figure out a kernel spec too.
-                    if (!kernelSpecInterpreter.kernelSpec && connection && !options?.skipSearchingForKernel) {
+                    if (!kernelSpecInterpreter?.kernelSpec && connection && !options?.skipSearchingForKernel) {
                         const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(
                             IJupyterSessionManagerFactory
                         );
@@ -201,15 +204,16 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     }
 
                     // If no kernel and not going to pick one, exit early
-                    if (!Object.keys(kernelSpecInterpreter) && !allowUI) {
+                    // tslint:disable-next-line: no-any
+                    if (!kernelSpecInterpreter && !allowUI) {
                         return undefined;
                     }
 
                     // Populate the launch info that we are starting our server with
                     const launchInfo: INotebookServerLaunchInfo = {
                         connectionInfo: connection!,
-                        interpreter: kernelSpecInterpreter.interpreter,
-                        kernelSpec: kernelSpecInterpreter.kernelSpec,
+                        interpreter: kernelSpecInterpreter?.interpreter,
+                        kernelSpec: kernelSpecInterpreter?.kernelSpec,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
                         purpose: options ? options.purpose : uuid()
@@ -252,7 +256,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                         cancelToken,
                                         launchInfo.kernelSpec?.display_name || launchInfo.kernelSpec?.name
                                     );
-                                    if (Object.keys(kernelInterpreter).length > 0) {
+                                    if (kernelInterpreter) {
                                         launchInfo.interpreter = kernelInterpreter.interpreter;
                                         launchInfo.kernelSpec =
                                             kernelInterpreter.kernelSpec || kernelInterpreter.kernelModel;

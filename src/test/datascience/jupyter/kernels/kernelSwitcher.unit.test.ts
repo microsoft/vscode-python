@@ -18,9 +18,9 @@ import { JupyterSessionStartError } from '../../../../client/datascience/baseJup
 import { NotebookProvider } from '../../../../client/datascience/interactive-common/notebookProvider';
 import { JupyterNotebookBase } from '../../../../client/datascience/jupyter/jupyterNotebook';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
-import { KernelSelector, KernelSpecInterpreter } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
+import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';
-import { LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
+import { KernelSelection, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
 import { IJupyterConnection, IJupyterKernelSpec, INotebook } from '../../../../client/datascience/types';
 import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { noop } from '../../../core';
@@ -36,7 +36,7 @@ suite('DataScience - Kernel Switcher', () => {
     let currentKernel: IJupyterKernelSpec | LiveKernelModel;
     let selectedInterpreter: PythonEnvironment;
     let settings: IPythonSettings;
-    let newKernelSpec: KernelSpecInterpreter;
+    let newKernelSpec: KernelSelection;
     setup(() => {
         connection = mock<IJupyterConnection>();
         settings = mock(PythonSettings);
@@ -56,7 +56,8 @@ suite('DataScience - Kernel Switcher', () => {
         };
         newKernelSpec = {
             kernelModel: currentKernel,
-            interpreter: selectedInterpreter
+            interpreter: selectedInterpreter,
+            kind: 'pythonInterpreterLive'
         };
         notebook = mock(JupyterNotebookBase);
         configService = mock(ConfigurationService);

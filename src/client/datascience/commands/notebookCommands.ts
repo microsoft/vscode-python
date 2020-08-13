@@ -8,9 +8,10 @@ import { Uri } from 'vscode';
 import { ICommandManager } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
 import { Commands } from '../constants';
-import { KernelSelector, KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { IInteractiveWindowProvider, INotebookEditorProvider, INotebookProvider, ISwitchKernelOptions } from '../types';
+import { KernelSelection } from '../jupyter/kernels/types';
 
 @injectable()
 export class NotebookCommands implements IDisposable {
@@ -69,7 +70,7 @@ export class NotebookCommands implements IDisposable {
         }
     }
 
-    private async setKernel(kernel: KernelSpecInterpreter, identity: Uri, resource: Uri | undefined) {
+    private async setKernel(kernel: KernelSelection, identity: Uri, resource: Uri | undefined) {
         const specOrModel = kernel?.kernelModel || kernel?.kernelSpec;
         if (kernel && specOrModel) {
             const notebook = await this.notebookProvider.getOrCreateNotebook({
