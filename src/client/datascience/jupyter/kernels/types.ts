@@ -48,7 +48,7 @@ export type KernelSpecConnectionMetadata = {
 export type PythonKernelConnectionMetadata = {
     kernelModel: undefined;
     kernelSpec: undefined;
-    interpreter: PythonInterpreter;
+    interpreter: PythonEnvironment;
     kind: 'pythonInterpreter';
 };
 // /**
@@ -59,7 +59,7 @@ export type PythonKernelConnectionMetadata = {
 // export type PythonKernelSpecConnectionMetadata = {
 //     kernelModel: undefined;
 //     kernelSpec: IJupyterKernelSpec;
-//     interpreter: PythonInterpreter;
+//     interpreter: PythonEnvironment;
 //     kind: 'pythonInterpreterKernelSpec';
 // };
 // /**
@@ -72,7 +72,7 @@ export type PythonKernelConnectionMetadata = {
 // export type PythonLiveKernelConnectionMetadata = {
 //     kernelModel: undefined;
 //     kernelSpec: IJupyterKernelSpec;
-//     interpreter: PythonInterpreter;
+//     interpreter: PythonEnvironment;
 //     kind: 'pythonInterpreterLive';
 // };
 export type KernelSelection =
