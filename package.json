@@ -289,6 +289,16 @@
                 "command": "python.datascience.gotoPrevCellInFile",
                 "key": "ctrl+alt+[",
                 "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
+            },
+            {
+                "command": "python.datascience.selectCellContents",
+                "key": "ctrl+alt+\\",
+                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
+            },
+            {
+                "command": "python.datascience.selectCell",
+                "key": "ctrl+alt+shift+\\",
+                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
             }
         ],
         "commands": [
