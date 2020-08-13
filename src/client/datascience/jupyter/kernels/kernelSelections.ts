@@ -16,7 +16,14 @@ import { IKernelFinder } from '../../kernel-launcher/types';
 import { IDataScienceFileSystem, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { detectDefaultKernelName } from './helpers';
 import { KernelService } from './kernelService';
-import { IKernelSelectionListProvider, IKernelSpecQuickPickItem, LiveKernelModel } from './types';
+import {
+    IKernelSelectionListProvider,
+    IKernelSpecQuickPickItem,
+    KernelSpecConnectionMetadata,
+    LiveKernelConnectionMetadata,
+    LiveKernelModel,
+    PythonKernelConnectionMetadata
+} from './types';
 
 // Small classes, hence all put into one file.
 // tslint:disable: max-classes-per-file
@@ -31,12 +38,12 @@ import { IKernelSelectionListProvider, IKernelSpecQuickPickItem, LiveKernelModel
 function getQuickPickItemForKernelSpec(
     kernelSpec: IJupyterKernelSpec,
     pathUtils: IPathUtils
-): IKernelSpecQuickPickItem {
+): IKernelSpecQuickPickItem<KernelSpecConnectionMetadata> {
     return {
         label: kernelSpec.display_name,
         // If we have a matching interpreter, then display that path in the dropdown else path of the kernelspec.
         detail: pathUtils.getDisplayName(kernelSpec.metadata?.interpreter?.path || kernelSpec.path),
-        selection: { kernelModel: undefined, kernelSpec: kernelSpec, interpreter: undefined }
+        selection: { kernelModel: undefined, kernelSpec: kernelSpec, interpreter: undefined, kind: 'kernelSpec' }
     };
 }
 
@@ -47,7 +54,10 @@ function getQuickPickItemForKernelSpec(
  * @param {IPathUtils} pathUtils
  * @returns {IKernelSpecQuickPickItem}
  */
-function getQuickPickItemForActiveKernel(kernel: LiveKernelModel, pathUtils: IPathUtils): IKernelSpecQuickPickItem {
+function getQuickPickItemForActiveKernel(
+    kernel: LiveKernelModel,
+    pathUtils: IPathUtils
+): IKernelSpecQuickPickItem<LiveKernelConnectionMetadata> {
     const pickPath = kernel.metadata?.interpreter?.path || kernel.path;
     return {
         label: kernel.display_name || kernel.name || '',
@@ -57,7 +67,7 @@ function getQuickPickItemForActiveKernel(kernel: LiveKernelModel, pathUtils: IPa
             kernel.lastActivityTime.toLocaleString(),
             kernel.numberOfConnections.toString()
         ),
-        selection: { kernelModel: kernel, kernelSpec: undefined, interpreter: undefined }
+        selection: { kernelModel: kernel, kernelSpec: undefined, interpreter: undefined, kind: 'live' }
     };
 }
 
@@ -68,12 +78,13 @@ function getQuickPickItemForActiveKernel(kernel: LiveKernelModel, pathUtils: IPa
  * @class ActiveJupyterSessionKernelSelectionListProvider
  * @implements {IKernelSelectionListProvider}
  */
-export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelSelectionListProvider {
+export class ActiveJupyterSessionKernelSelectionListProvider
+    implements IKernelSelectionListProvider<LiveKernelConnectionMetadata> {
     constructor(private readonly sessionManager: IJupyterSessionManager, private readonly pathUtils: IPathUtils) {}
     public async getKernelSelections(
         _resource: Resource,
         _cancelToken?: CancellationToken | undefined
-    ): Promise<IKernelSpecQuickPickItem[]> {
+    ): Promise<IKernelSpecQuickPickItem<LiveKernelConnectionMetadata>[]> {
         const [activeKernels, activeSessions, kernelSpecs] = await Promise.all([
             this.sessionManager.getRunningKernels(),
             this.sessionManager.getRunningSessions(),
@@ -105,7 +116,8 @@ export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelS
  * @class InstalledJupyterKernelSelectionListProvider
  * @implements {IKernelSelectionListProvider}
  */
-export class InstalledJupyterKernelSelectionListProvider implements IKernelSelectionListProvider {
+export class InstalledJupyterKernelSelectionListProvider
+    implements IKernelSelectionListProvider<KernelSpecConnectionMetadata> {
     constructor(
         private readonly kernelService: KernelService,
         private readonly pathUtils: IPathUtils,
@@ -114,19 +126,20 @@ export class InstalledJupyterKernelSelectionListProvider implements IKernelSelec
     public async getKernelSelections(
         _resource: Resource,
         cancelToken?: CancellationToken | undefined
-    ): Promise<IKernelSpecQuickPickItem[]> {
+    ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]> {
         const items = await this.kernelService.getKernelSpecs(this.sessionManager, cancelToken);
         return items.map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils));
     }
 }
 
 // Provider for searching for installed kernelspecs on disk without using jupyter to search
-export class InstalledRawKernelSelectionListProvider implements IKernelSelectionListProvider {
+export class InstalledRawKernelSelectionListProvider
+    implements IKernelSelectionListProvider<KernelSpecConnectionMetadata> {
     constructor(private readonly kernelFinder: IKernelFinder, private readonly pathUtils: IPathUtils) {}
     public async getKernelSelections(
         resource: Resource,
         _cancelToken?: CancellationToken
-    ): Promise<IKernelSpecQuickPickItem[]> {
+    ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]> {
         const items = await this.kernelFinder.listKernelSpecs(resource);
         return items
             .filter((item) => {
@@ -151,19 +164,25 @@ export class InstalledRawKernelSelectionListProvider implements IKernelSelection
  * @class InterpreterKernelSelectionListProvider
  * @implements {IKernelSelectionListProvider}
  */
-export class InterpreterKernelSelectionListProvider implements IKernelSelectionListProvider {
+export class InterpreterKernelSelectionListProvider
+    implements IKernelSelectionListProvider<PythonKernelConnectionMetadata> {
     constructor(private readonly interpreterSelector: IInterpreterSelector) {}
     public async getKernelSelections(
         resource: Resource,
-        _cancelToken?: CancellationToken | undefined
-    ): Promise<IKernelSpecQuickPickItem[]> {
+        _cancelToken?: CancellationToken
+    ): Promise<IKernelSpecQuickPickItem<PythonKernelConnectionMetadata>[]> {
         const items = await this.interpreterSelector.getSuggestions(resource);
         return items.map((item) => {
             return {
                 ...item,
                 // We don't want descriptions.
                 description: '',
-                selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
+                selection: {
+                    kernelModel: undefined,
+                    interpreter: item.interpreter,
+                    kernelSpec: undefined,
+                    kind: 'pythonInterpreter'
+                }
             };
         });
     }
@@ -177,8 +196,12 @@ export class InterpreterKernelSelectionListProvider implements IKernelSelectionL
  */
 @injectable()
 export class KernelSelectionProvider {
-    private localSuggestionsCache: IKernelSpecQuickPickItem[] = [];
-    private remoteSuggestionsCache: IKernelSpecQuickPickItem[] = [];
+    private localSuggestionsCache: IKernelSpecQuickPickItem<
+        KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    >[] = [];
+    private remoteSuggestionsCache: IKernelSpecQuickPickItem<
+        LiveKernelConnectionMetadata | KernelSpecConnectionMetadata
+    >[] = [];
     private _listChanged = new EventEmitter<void>();
     public get SelectionsChanged() {
         return this._listChanged.event;
@@ -203,7 +226,7 @@ export class KernelSelectionProvider {
         resource: Resource,
         sessionManager: IJupyterSessionManager,
         cancelToken?: CancellationToken
-    ): Promise<IKernelSpecQuickPickItem[]> {
+    ): Promise<IKernelSpecQuickPickItem<LiveKernelConnectionMetadata | KernelSpecConnectionMetadata>[]> {
         const getSelections = async () => {
             const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(
                 this.kernelService,
@@ -222,8 +245,8 @@ export class KernelSelectionProvider {
             return [...liveKernels!, ...installedKernels!];
         };
 
-        const liveItems = getSelections().then((items) => (this.localSuggestionsCache = items));
-        // If we have someting in cache, return that, while fetching in the background.
+        const liveItems = getSelections().then((items) => (this.remoteSuggestionsCache = items));
+        // If we have something in cache, return that, while fetching in the background.
         const cachedItems =
             this.remoteSuggestionsCache.length > 0 ? Promise.resolve(this.remoteSuggestionsCache) : liveItems;
         return Promise.race([cachedItems, liveItems]);
@@ -243,12 +266,14 @@ export class KernelSelectionProvider {
         type: 'raw' | 'jupyter' | 'noConnection',
         sessionManager?: IJupyterSessionManager,
         cancelToken?: CancellationToken
-    ): Promise<IKernelSpecQuickPickItem[]> {
+    ): Promise<IKernelSpecQuickPickItem<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>[]> {
         const getSelections = async () => {
             // For raw versus jupyter connections we need to use a different method for fetching installed kernelspecs
             // There is a possible unknown case for if we have a guest jupyter notebook that has not yet connected
             // in that case we don't use either method
-            let installedKernelsPromise: Promise<IKernelSpecQuickPickItem[]> = Promise.resolve([]);
+            let installedKernelsPromise: Promise<
+                IKernelSpecQuickPickItem<KernelSpecConnectionMetadata>[]
+            > = Promise.resolve([]);
             switch (type) {
                 case 'raw':
                     installedKernelsPromise = new InstalledRawKernelSelectionListProvider(

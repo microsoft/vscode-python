@@ -152,7 +152,12 @@ export class KernelExecution implements IDisposable {
         if (!kernel) {
             const activeInterpreter = await this.interpreterService.getActiveInterpreter(document.uri);
             kernel = this.kernelProvider.getOrCreate(document.uri, {
-                metadata: { interpreter: activeInterpreter!, kernelModel: undefined, kernelSpec: undefined },
+                metadata: {
+                    interpreter: activeInterpreter!,
+                    kernelModel: undefined,
+                    kernelSpec: undefined,
+                    kind: 'pythonInterpreter'
+                },
                 launchingFile: document.uri.fsPath
             });
         }

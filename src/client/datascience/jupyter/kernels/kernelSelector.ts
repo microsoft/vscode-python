@@ -158,13 +158,12 @@ export class KernelSelector implements IKernelSelectionUsage {
         cancelToken?: CancellationToken,
         currentKernelDisplayName?: string
     ): Promise<KernelSpecInterpreter> {
-        let suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(
+        const suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(
             resource,
             type,
             session,
             cancelToken
         );
-        suggestions = suggestions.filter((item) => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
         return this.selectKernel(
             resource,
             type,

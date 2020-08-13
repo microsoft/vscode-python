@@ -24,7 +24,12 @@ import { KernelDependencyService } from '../../../../client/datascience/jupyter/
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
-import { IKernelSpecQuickPickItem, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
+import {
+    IKernelSpecQuickPickItem,
+    KernelSpecConnectionMetadata,
+    LiveKernelConnectionMetadata,
+    LiveKernelModel
+} from '../../../../client/datascience/jupyter/kernels/types';
 import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import { IJupyterSessionManager } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
@@ -216,10 +221,12 @@ suite('DataScience - KernelSelector', () => {
                     session: {} as any
                 }
             ];
-            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map((kernelModel) => {
+            const quickPickItems: IKernelSpecQuickPickItem<
+                LiveKernelConnectionMetadata | KernelSpecConnectionMetadata
+            >[] = kernelModels.map((kernelModel) => {
                 return {
                     label: '',
-                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined }
+                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined, kind: 'live' }
                 };
             });
 
@@ -246,89 +253,6 @@ suite('DataScience - KernelSelector', () => {
             verify(
                 kernelSelectionProvider.getKernelSelectionsForRemoteSession(
                     anything(),
-                    instance(sessionManager),
-                    anything()
-                )
-            ).once();
-            verify(appShell.showQuickPick(anything(), anything(), anything())).once();
-            const suggestions = capture(appShell.showQuickPick).first()[0] as IKernelSpecQuickPickItem[];
-            assert.deepEqual(
-                suggestions,
-                quickPickItems.filter((item) => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || ''))
-            );
-        });
-        test('Should hide kernel from local sessions', async () => {
-            const kernelModels: LiveKernelModel[] = [
-                {
-                    lastActivityTime: new Date(),
-                    name: '1one',
-                    numberOfConnections: 1,
-                    id: 'id1',
-                    display_name: '1',
-                    // tslint:disable-next-line: no-any
-                    session: {} as any
-                },
-                {
-                    lastActivityTime: new Date(),
-                    name: '2two',
-                    numberOfConnections: 1,
-                    id: 'id2',
-                    display_name: '2',
-                    // tslint:disable-next-line: no-any
-                    session: {} as any
-                },
-                {
-                    lastActivityTime: new Date(),
-                    name: '3three',
-                    numberOfConnections: 1,
-                    id: 'id3',
-                    display_name: '3',
-                    // tslint:disable-next-line: no-any
-                    session: {} as any
-                },
-                {
-                    lastActivityTime: new Date(),
-                    name: '4four',
-                    numberOfConnections: 1,
-                    id: 'id4',
-                    display_name: '4',
-                    // tslint:disable-next-line: no-any
-                    session: {} as any
-                }
-            ];
-            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map((kernelModel) => {
-                return {
-                    label: '',
-                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined }
-                };
-            });
-
-            when(
-                kernelSelectionProvider.getKernelSelectionsForLocalSession(
-                    anything(),
-                    'jupyter',
-                    instance(sessionManager),
-                    anything()
-                )
-            ).thenResolve(quickPickItems);
-            when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve(undefined);
-
-            // tslint:disable-next-line: no-any
-            kernelSelector.addKernelToIgnoreList({ id: 'id2' } as any);
-            // tslint:disable-next-line: no-any
-            kernelSelector.addKernelToIgnoreList({ clientId: 'id4' } as any);
-            const kernel = await kernelSelector.selectLocalKernel(
-                undefined,
-                'jupyter',
-                new StopWatch(),
-                instance(sessionManager)
-            );
-
-            assert.isEmpty(kernel);
-            verify(
-                kernelSelectionProvider.getKernelSelectionsForLocalSession(
-                    anything(),
-                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
