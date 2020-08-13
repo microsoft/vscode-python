@@ -531,7 +531,7 @@ df.head()`;
 
                     // ioc.datascience.setup(ds => ds.selectLocalJupyterKernel()).returns(() => {
                     //     selectorCalled = true;
-                    //     const spec: KernelSpecInterpreter = {};
+                    //     const spec: kernelConnectionMetadata = {};
                     //     return Promise.resolve(spec);
                     // });
 

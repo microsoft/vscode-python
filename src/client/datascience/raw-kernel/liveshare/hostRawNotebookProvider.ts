@@ -157,7 +157,7 @@ export class HostRawNotebookProvider
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
 
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
-            const kernelSpecInterpreter = await this.kernelSelector.getKernelForLocalConnection(
+            const kernelConnectionMetadata = await this.kernelSelector.getKernelForLocalConnection(
                 resource,
                 'raw',
                 undefined,
@@ -167,18 +167,18 @@ export class HostRawNotebookProvider
             );
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch
-            if (!kernelSpecInterpreter?.kernelSpec) {
+            if (!kernelConnectionMetadata?.kernelSpec) {
                 notebookPromise.reject('Failed to find a kernelspec to use for ipykernel launch');
             } else {
                 await rawSession.connect(
-                    kernelSpecInterpreter.kernelSpec,
+                    kernelConnectionMetadata.kernelSpec,
                     launchTimeout,
-                    kernelSpecInterpreter.interpreter,
+                    kernelConnectionMetadata.interpreter,
                     cancelToken
                 );
 
                 // Get the execution info for our notebook
-                const info = await this.getExecutionInfo(kernelSpecInterpreter);
+                const info = await this.getExecutionInfo(kernelConnectionMetadata);
 
                 if (rawSession.isConnected) {
                     // Create our notebook
@@ -223,12 +223,12 @@ export class HostRawNotebookProvider
     }
 
     // Get the notebook execution info for this raw session instance
-    private async getExecutionInfo(kernelSpecInterpreter: KernelSelection): Promise<INotebookExecutionInfo> {
+    private async getExecutionInfo(kernelConnectionMetadata: KernelSelection): Promise<INotebookExecutionInfo> {
         return {
             connectionInfo: this.getConnection(),
             uri: Settings.JupyterServerLocalLaunch,
-            interpreter: kernelSpecInterpreter.interpreter,
-            kernelSpec: kernelSpecInterpreter.kernelSpec,
+            interpreter: kernelConnectionMetadata.interpreter,
+            kernelSpec: kernelConnectionMetadata.kernelSpec,
             workingDir: await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs),
             purpose: Identifiers.RawPurpose
         };

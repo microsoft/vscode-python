@@ -142,8 +142,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
-            let kernelSpecInterpreter: KernelSelection | undefined;
-            let kernelSpecInterpreterPromise: Promise<KernelSelection | undefined> = Promise.resolve<
+            let kernelConnectionMetadata: KernelSelection | undefined;
+            let kernelConnectionMetadataPromise: Promise<KernelSelection | undefined> = Promise.resolve<
                 KernelSelection | undefined
             >(undefined);
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
@@ -160,7 +160,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 // Get hold of the kernelspec and corresponding (matching) interpreter that'll be used as the spec.
                 // We can do this in parallel, while starting the server (faster).
                 traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
-                kernelSpecInterpreterPromise = this.kernelSelector.getKernelForLocalConnection(
+                kernelConnectionMetadataPromise = this.kernelSelector.getKernelForLocalConnection(
                     undefined,
                     'jupyter',
                     undefined,
@@ -177,9 +177,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
             while (tryCount <= maxTries && !this.disposed) {
                 try {
                     // Start or connect to the process
-                    [connection, kernelSpecInterpreter] = await Promise.all([
+                    [connection, kernelConnectionMetadata] = await Promise.all([
                         this.startOrConnect(options, cancelToken),
-                        kernelSpecInterpreterPromise
+                        kernelConnectionMetadataPromise
                     ]);
 
                     if (!connection.localLaunch && LocalHosts.includes(connection.hostName.toLowerCase())) {
@@ -189,12 +189,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
                     // In a remote non quest situation, figure out a kernel spec too.
-                    if (!kernelSpecInterpreter?.kernelSpec && connection && !options?.skipSearchingForKernel) {
+                    if (!kernelConnectionMetadata?.kernelSpec && connection && !options?.skipSearchingForKernel) {
                         const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(
                             IJupyterSessionManagerFactory
                         );
                         const sessionManager = await sessionManagerFactory.create(connection);
-                        kernelSpecInterpreter = await this.kernelSelector.getKernelForRemoteConnection(
+                        kernelConnectionMetadata = await this.kernelSelector.getKernelForRemoteConnection(
                             undefined,
                             sessionManager,
                             options?.metadata,
@@ -205,15 +205,15 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                     // If no kernel and not going to pick one, exit early
                     // tslint:disable-next-line: no-any
-                    if (!kernelSpecInterpreter && !allowUI) {
+                    if (!kernelConnectionMetadata && !allowUI) {
                         return undefined;
                     }
 
                     // Populate the launch info that we are starting our server with
                     const launchInfo: INotebookServerLaunchInfo = {
                         connectionInfo: connection!,
-                        interpreter: kernelSpecInterpreter?.interpreter,
-                        kernelSpec: kernelSpecInterpreter?.kernelSpec,
+                        interpreter: kernelConnectionMetadata?.interpreter,
+                        kernelSpec: kernelConnectionMetadata?.kernelSpec,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
                         purpose: options ? options.purpose : uuid()
