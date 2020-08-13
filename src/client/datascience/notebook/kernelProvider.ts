@@ -107,6 +107,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             ) {
                 return true;
             }
+            // tslint:disable-next-line: no-suspicious-comment
             // TODO for Remote kernels.
             // if (
             //     kernelConnectionMetadataHasKernelModel(preferredKernel) &&

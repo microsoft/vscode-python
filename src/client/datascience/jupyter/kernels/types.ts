@@ -64,7 +64,8 @@ export type KernelConnectionMetadata =
     | KernelSpecConnectionMetadata
     | PythonKernelConnectionMetadata;
 
-export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata> extends QuickPickItem {
+export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata>
+    extends QuickPickItem {
     selection: T;
 }
 export interface IKernelSelectionListProvider<T extends KernelConnectionMetadata = KernelConnectionMetadata> {

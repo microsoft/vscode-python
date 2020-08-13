@@ -38,7 +38,13 @@ import {
 } from '../../types';
 import { kernelConnectionMetadataHasKernelModel } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata, LiveKernelModel } from './types';
+import type {
+    IKernel,
+    IKernelProvider,
+    IKernelSelectionUsage,
+    KernelConnectionMetadata,
+    LiveKernelModel
+} from './types';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
