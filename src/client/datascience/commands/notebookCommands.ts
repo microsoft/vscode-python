@@ -10,8 +10,8 @@ import { IDisposable } from '../../common/types';
 import { Commands } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { IInteractiveWindowProvider, INotebookEditorProvider, INotebookProvider, ISwitchKernelOptions } from '../types';
 import { KernelSelection } from '../jupyter/kernels/types';
+import { IInteractiveWindowProvider, INotebookEditorProvider, INotebookProvider, ISwitchKernelOptions } from '../types';
 
 @injectable()
 export class NotebookCommands implements IDisposable {

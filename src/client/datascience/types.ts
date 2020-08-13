@@ -37,7 +37,7 @@ import { NotebookModelChange } from './interactive-common/interactiveWindowTypes
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import { JupyterKernelSpec } from './jupyter/kernels/jupyterKernelSpec';
-import { LiveKernelModel, KernelSelection } from './jupyter/kernels/types';
+import { KernelSelection, LiveKernelModel } from './jupyter/kernels/types';
 
 // tslint:disable-next-line:no-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;

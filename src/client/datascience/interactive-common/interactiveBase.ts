@@ -72,7 +72,7 @@ import {
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
-import { LiveKernelModel, KernelSelection } from '../jupyter/kernels/types';
+import { KernelSelection, LiveKernelModel } from '../jupyter/kernels/types';
 import { CssMessages, SharedMessages } from '../messages';
 import {
     CellState,

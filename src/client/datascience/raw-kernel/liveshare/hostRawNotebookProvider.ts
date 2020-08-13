@@ -25,6 +25,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
+import { KernelSelection } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
@@ -41,7 +42,6 @@ import {
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
-import { KernelSelection } from '../../jupyter/kernels/types';
 
 // tslint:disable-next-line: no-require-imports
 // tslint:disable:no-any
