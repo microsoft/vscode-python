@@ -13,9 +13,9 @@ import { Settings } from '../../constants';
 import { RawKernelSessionStartError } from '../../raw-kernel/rawJupyterSession';
 import { IKernelDependencyService, INotebook, KernelInterpreterDependencyResponse } from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
+import { kernelConnectionMetadataHasKernelModel, kernelConnectionMetadataHasKernelSpec } from './helpers';
 import { KernelSelector } from './kernelSelector';
 import { KernelConnectionMetadata } from './types';
-import { kernelConnectionMetadataHasKernelModel, kernelConnectionMetadataHasKernelSpec } from './helpers';
 
 @injectable()
 export class KernelSwitcher {
@@ -57,7 +57,7 @@ export class KernelSwitcher {
                     const potential = await this.selector.askForLocalKernel(
                         notebook.resource,
                         notebook.connection?.type || 'noConnection',
-                        kernel.kind === 'connectToLiveKernel' ? kernel.kernelModel : kernel.kernelSpec
+                        kernelConnectionMetadataHasKernelModel(kernel) ? kernel.kernelModel : kernel.kernelSpec
                     );
                     if (potential && Object.keys(potential).length > 0) {
                         kernel = potential;

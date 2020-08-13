@@ -146,6 +146,8 @@ export class Kernel implements IKernel {
         } else {
             await this.validate(this.uri);
             const metadata = ((getDefaultNotebookContent().metadata || {}) as unknown) as nbformat.INotebookMetadata;
+            // tslint:disable-next-line: no-suspicious-comment
+            // TODO: Just pass the `this.metadata` into the func.
             updateNotebookMetadata(
                 metadata,
                 this.metadata.interpreter,
