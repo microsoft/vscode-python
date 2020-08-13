@@ -94,13 +94,15 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
     }
 
     private renderTrustMessage() {
-        return (
-            <TrustMessage
-                shouldShowTrustMessage={this.props.shouldShowTrustMessage}
-                isNotebookTrusted={this.props.isNotebookTrusted}
-                launchNotebookTrustPrompt={this.props.launchNotebookTrustPrompt}
-            />
-        );
+        if (this.props.shouldShowTrustMessage) {
+            return (
+                <TrustMessage
+                    shouldShowTrustMessage={this.props.shouldShowTrustMessage}
+                    isNotebookTrusted={this.props.isNotebookTrusted}
+                    launchNotebookTrustPrompt={this.props.launchNotebookTrustPrompt}
+                />
+            );
+        }
     }
 
     private selectKernel() {
