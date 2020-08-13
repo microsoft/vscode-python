@@ -278,6 +278,7 @@ export class KernelSelector implements IKernelSelectionUsage {
                 kind: 'pythonInterpreter'
             };
         } else {
+            // Unlikely scenario, we expect there to be at least one kernel spec.
             return;
         }
     }
@@ -533,11 +534,7 @@ export class KernelSelector implements IKernelSelectionUsage {
                 }
 
                 sendTelemetryEvent(Telemetry.UseInterpreterAsKernel);
-                if (interpreter) {
-                    return { kind: 'pythonInterpreterKernelSpec', kernelSpec, interpreter };
-                } else {
-                    return { kind: 'kernelSpec', kernelSpec };
-                }
+                return { kind: 'pythonInterpreterKernelSpec', kernelSpec, interpreter };
             }
             traceInfo(`ipykernel installed in ${interpreter.path}, no matching kernel found. Will register kernel.`);
         }
@@ -566,12 +563,10 @@ export class KernelSelector implements IKernelSelectionUsage {
         // Lets pre-warm the list of local kernels (with the new list).
         this.selectionProvider.getKernelSelectionsForLocalSession(resource, type, session, cancelToken).ignoreErrors();
 
-        if (interpreter && kernelSpec) {
+        if (kernelSpec) {
             return { kind: 'pythonInterpreterKernelSpec', kernelSpec, interpreter };
-        } else if (interpreter && !kernelSpec) {
-            return { kind: 'pythonInterpreter', kernelSpec, interpreter };
-        } else if (!interpreter && kernelSpec) {
-            return { kind: 'kernelSpec', kernelSpec };
+        } else {
+            return { kind: 'pythonInterpreter', interpreter };
         }
     }
 

@@ -239,7 +239,7 @@ export class KernelSelectionProvider {
             ).getKernelSelections(resource, cancelToken);
             const [installedKernels, liveKernels] = await Promise.all([installedKernelsPromise, liveKernelsPromise]);
 
-            // Sorty by name.
+            // Sort by name.
             installedKernels.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
             liveKernels.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
             return [...liveKernels!, ...installedKernels!];
