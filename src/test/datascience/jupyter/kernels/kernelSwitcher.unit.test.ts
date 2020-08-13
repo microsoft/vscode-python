@@ -57,7 +57,7 @@ suite('DataScience - Kernel Switcher', () => {
         newKernelSpec = {
             kernelModel: currentKernel,
             interpreter: selectedInterpreter,
-            kind: 'pythonInterpreterLive'
+            kind: 'connectToLiveKernel'
         };
         notebook = mock(JupyterNotebookBase);
         configService = mock(ConfigurationService);

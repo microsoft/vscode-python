@@ -43,7 +43,12 @@ function getQuickPickItemForKernelSpec(
         label: kernelSpec.display_name,
         // If we have a matching interpreter, then display that path in the dropdown else path of the kernelspec.
         detail: pathUtils.getDisplayName(kernelSpec.metadata?.interpreter?.path || kernelSpec.path),
-        selection: { kernelModel: undefined, kernelSpec: kernelSpec, interpreter: undefined, kind: 'kernelSpec' }
+        selection: {
+            kernelModel: undefined,
+            kernelSpec: kernelSpec,
+            interpreter: undefined,
+            kind: 'startUsingKernelSpec'
+        }
     };
 }
 
@@ -67,7 +72,7 @@ function getQuickPickItemForActiveKernel(
             kernel.lastActivityTime.toLocaleString(),
             kernel.numberOfConnections.toString()
         ),
-        selection: { kernelModel: kernel, kernelSpec: undefined, interpreter: undefined, kind: 'live' }
+        selection: { kernelModel: kernel, kernelSpec: undefined, interpreter: undefined, kind: 'connectToLiveKernel' }
     };
 }
 
@@ -181,7 +186,7 @@ export class InterpreterKernelSelectionListProvider
                     kernelModel: undefined,
                     interpreter: item.interpreter,
                     kernelSpec: undefined,
-                    kind: 'pythonInterpreter'
+                    kind: 'startUsingPythonInterpreter'
                 }
             };
         });

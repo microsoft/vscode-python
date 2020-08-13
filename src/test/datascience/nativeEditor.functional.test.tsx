@@ -344,14 +344,25 @@ suite('DataScience Native Editor', () => {
                         // Create another notebook and connect it to the already running kernel of the other one
                         when(ioc.applicationShell.showQuickPick(anything(), anything(), anything())).thenCall(
                             async (o: IKernelSpecQuickPickItem[]) => {
-                                const existing = o.filter((s) => s.selection.kernelModel?.numberOfConnections);
+                                const existing = o.filter(
+                                    (s) =>
+                                        s.selection.kind === 'connectToLiveKernel' &&
+                                        s.selection.kernelModel.numberOfConnections
+                                );
 
                                 // Might be more than one. Get the oldest one. It has the actual activity.
-                                const sorted = existing.sort(
-                                    (a, b) =>
-                                        b.selection.kernelModel!.lastActivityTime.getTime() -
-                                        a.selection.kernelModel!.lastActivityTime.getTime()
-                                );
+                                const sorted = existing.sort((a, b) => {
+                                    if (
+                                        a.selection.kind !== 'connectToLiveKernel' ||
+                                        b.selection.kind !== 'connectToLiveKernel'
+                                    ) {
+                                        return 0;
+                                    }
+                                    return (
+                                        b.selection.kernelModel.lastActivityTime.getTime() -
+                                        a.selection.kernelModel.lastActivityTime.getTime()
+                                    );
+                                });
                                 if (sorted && sorted.length) {
                                     return sorted[0];
                                 }

@@ -1225,7 +1225,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async potentialKernelChanged(data: { identity: Uri; kernel: KernelSelection }): Promise<void> {
-        const specOrModel = data.kernel.kernelModel || data.kernel.kernelSpec;
+        const specOrModel =
+            data.kernel.kind === 'connectToLiveKernel' ? data.kernel.kernelModel : data.kernel.kernelSpec;
         if (!this._notebook && specOrModel && this.notebookIdentity.resource.toString() === data.identity.toString()) {
             // No notebook, send update to UI anyway
             this.postMessage(InteractiveWindowMessages.UpdateKernel, {

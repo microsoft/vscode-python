@@ -316,7 +316,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                       cancelToken
                   ));
 
-            const kernelInfoToUse = kernelInfo?.kernelSpec || kernelInfo?.kernelModel;
+            const kernelInfoToUse = kernelInfo?.kind === 'connectToLiveKernel' ? kernelInfo.kernelModel : kernelInfo?.kernelSpec;
             if (kernelInfoToUse) {
                 launchInfo.kernelSpec = kernelInfoToUse;
 

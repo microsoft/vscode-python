@@ -206,7 +206,7 @@ suite('DataScience - KernelSelections', () => {
                         } as any
                     },
                     kernelSpec: undefined,
-                    kind: 'live'
+                    kind: 'connectToLiveKernel'
                 },
                 detail: '<user friendly path>',
                 description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
@@ -234,7 +234,7 @@ suite('DataScience - KernelSelections', () => {
                         } as any
                     },
                     kernelSpec: undefined,
-                    kind: 'live'
+                    kind: 'connectToLiveKernel'
                 },
                 detail: '<user friendly path>',
                 description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
@@ -266,7 +266,12 @@ suite('DataScience - KernelSelections', () => {
             return {
                 label: item.display_name,
                 detail: '<user friendly path>',
-                selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item, kind: 'kernelSpec' }
+                selection: {
+                    interpreter: undefined,
+                    kernelModel: undefined,
+                    kernelSpec: item,
+                    kind: 'startUsingKernelSpec'
+                }
             };
         });
         const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map((item) => {
@@ -279,7 +284,7 @@ suite('DataScience - KernelSelections', () => {
                     kernelModel: undefined,
                     interpreter: item.interpreter,
                     kernelSpec: undefined,
-                    kind: 'pythonInterpreter'
+                    kind: 'startUsingPythonInterpreter'
                 }
             };
         });
@@ -307,7 +312,12 @@ suite('DataScience - KernelSelections', () => {
             return {
                 label: item.display_name,
                 detail: '<user friendly path>',
-                selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item, kind: 'kernelSpec' }
+                selection: {
+                    interpreter: undefined,
+                    kernelModel: undefined,
+                    kernelSpec: item,
+                    kind: 'startUsingKernelSpec'
+                }
             };
         });
         const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map((item) => {
@@ -320,7 +330,7 @@ suite('DataScience - KernelSelections', () => {
                     kernelModel: undefined,
                     interpreter: item.interpreter,
                     kernelSpec: undefined,
-                    kind: 'pythonInterpreter'
+                    kind: 'startUsingPythonInterpreter'
                 }
             };
         });

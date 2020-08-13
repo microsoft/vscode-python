@@ -47,7 +47,7 @@ export class Kernel implements IKernel {
         if (this.notebook) {
             return this.notebook.getKernelSpec();
         }
-        return this.metadata.kernelSpec || this.metadata.kernelModel;
+        return this.metadata.kind === 'connectToLiveKernel' ? this.metadata.kernelModel : this.metadata.kernelSpec;
     }
     get onStatusChanged(): Event<ServerStatus> {
         return this._onStatusChanged.event;
@@ -146,7 +146,7 @@ export class Kernel implements IKernel {
             updateNotebookMetadata(
                 metadata,
                 this.metadata.interpreter,
-                this.metadata.kernelSpec || this.metadata.kernelModel
+                this.metadata.kind === 'connectToLiveKernel' ? this.metadata.kernelModel : this.metadata.kernelSpec
             );
 
             this._notebookPromise = this.notebookProvider.getOrCreateNotebook({

@@ -71,8 +71,8 @@ export class NotebookCommands implements IDisposable {
     }
 
     private async setKernel(kernel: KernelSelection, identity: Uri, resource: Uri | undefined) {
-        const specOrModel = kernel?.kernelModel || kernel?.kernelSpec;
-        if (kernel && specOrModel) {
+        const specOrModel = kernel.kind === 'connectToLiveKernel' ? kernel.kernelModel : kernel.kernelSpec;
+        if (specOrModel) {
             const notebook = await this.notebookProvider.getOrCreateNotebook({
                 resource,
                 identity,

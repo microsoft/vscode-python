@@ -56,7 +56,7 @@ export class KernelSwitcher {
                     const potential = await this.selector.askForLocalKernel(
                         notebook.resource,
                         notebook.connection?.type || 'noConnection',
-                        kernel.kernelSpec || kernel.kernelModel
+                        kernel.kind === 'connectToLiveKernel' ? kernel.kernelModel : kernel.kernelSpec
                     );
                     if (potential && Object.keys(potential).length > 0) {
                         kernel = potential;
@@ -78,14 +78,16 @@ export class KernelSwitcher {
         const switchKernel = async (newKernel: KernelSelection) => {
             // Change the kernel. A status update should fire that changes our display
             await notebook.setKernelSpec(
-                newKernel.kernelSpec || newKernel.kernelModel!,
+                newKernel.kind === 'connectToLiveKernel' ? newKernel.kernelModel : newKernel.kernelSpec!,
                 this.configService.getSettings(notebook.resource).datascience.jupyterLaunchTimeout,
                 newKernel.interpreter
             );
         };
 
-        const kernelDisplayName = kernel.kernelSpec?.display_name || kernel.kernelModel?.display_name;
-        const kernelName = kernel.kernelSpec?.name || kernel.kernelModel?.name;
+        const modelDisplayName = kernel.kind === 'connectToLiveKernel' ? kernel.kernelModel.display_name : undefined;
+        const modelName = kernel.kind === 'connectToLiveKernel' ? kernel.kernelModel.name : undefined;
+        const kernelDisplayName = kernel.kernelSpec?.display_name || modelDisplayName;
+        const kernelName = kernel.kernelSpec?.name || modelName;
         // One of them is bound to be non-empty.
         const displayName = kernelDisplayName || kernelName || '';
         const options: ProgressOptions = {

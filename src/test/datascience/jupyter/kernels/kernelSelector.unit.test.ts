@@ -226,7 +226,12 @@ suite('DataScience - KernelSelector', () => {
             >[] = kernelModels.map((kernelModel) => {
                 return {
                     label: '',
-                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined, kind: 'live' }
+                    selection: {
+                        kernelModel,
+                        kernelSpec: undefined,
+                        interpreter: undefined,
+                        kind: 'connectToLiveKernel'
+                    }
                 };
             });
 

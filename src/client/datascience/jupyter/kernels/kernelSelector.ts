@@ -222,7 +222,7 @@ export class KernelSelector implements IKernelSelectionUsage {
                 return {
                     kernelModel: { ...session.kernel, lastActivityTime, numberOfConnections, session },
                     interpreter: interpreter,
-                    kind: 'pythonInterpreterLive'
+                    kind: 'connectToLiveKernel'
                 };
             }
         }
@@ -270,12 +270,7 @@ export class KernelSelector implements IKernelSelectionUsage {
             return {
                 kernelSpec: bestMatch,
                 interpreter: interpreter,
-                kind: 'pythonInterpreterKernelSpec'
-            };
-        } else if (interpreter) {
-            return {
-                interpreter: interpreter,
-                kind: 'pythonInterpreter'
+                kind: 'startUsingKernelSpec'
             };
         } else {
             // Unlikely scenario, we expect there to be at least one kernel spec.
@@ -303,7 +298,7 @@ export class KernelSelector implements IKernelSelectionUsage {
             );
         } else if (selection.interpreter && type === 'raw') {
             return this.useInterpreterAndDefaultKernel(selection.interpreter);
-        } else if (selection.kernelModel) {
+        } else if (selection.kind === 'connectToLiveKernel') {
             sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
                 language: this.computeLanguage(selection.kernelModel.language)
             });
@@ -314,7 +309,7 @@ export class KernelSelector implements IKernelSelectionUsage {
             return {
                 interpreter,
                 kernelModel: selection.kernelModel,
-                kind: 'pythonInterpreterLive'
+                kind: 'connectToLiveKernel'
             };
         } else if (selection.kernelSpec) {
             sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
@@ -324,7 +319,7 @@ export class KernelSelector implements IKernelSelectionUsage {
                 ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken)
                 : undefined;
             await this.kernelService.updateKernelEnvironment(interpreter, selection.kernelSpec, cancelToken);
-            return { kernelSpec: selection.kernelSpec, interpreter, kind: 'pythonInterpreterKernelSpec' };
+            return { kernelSpec: selection.kernelSpec, interpreter, kind: 'startUsingKernelSpec' };
         } else {
             return;
         }
@@ -408,11 +403,7 @@ export class KernelSelector implements IKernelSelectionUsage {
 
                 // Make sure we update the environment in the kernel before using it
                 await this.kernelService.updateKernelEnvironment(interpreter, kernelSpec, cancelToken);
-                if (interpreter) {
-                    return { kind: 'pythonInterpreterKernelSpec', interpreter, kernelSpec };
-                } else {
-                    return { kind: 'kernelSpec', kernelSpec };
-                }
+                return { kind: 'startUsingKernelSpec', interpreter, kernelSpec };
             } else if (!cancelToken?.isCancellationRequested) {
                 // No kernel info, hence prompt to use current interpreter as a kernel.
                 const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
@@ -441,9 +432,7 @@ export class KernelSelector implements IKernelSelectionUsage {
                     cancelToken
                 );
                 if (kernelSpec) {
-                    return { kind: 'pythonInterpreterKernelSpec', kernelSpec, interpreter: activeInterpreter };
-                } else {
-                    return { kind: 'pythonInterpreter', interpreter: activeInterpreter };
+                    return { kind: 'startUsingKernelSpec', kernelSpec, interpreter: activeInterpreter };
                 }
             }
         }
@@ -457,15 +446,13 @@ export class KernelSelector implements IKernelSelectionUsage {
     ): Promise<KernelSelection | undefined> {
         // First use our kernel finder to locate a kernelspec on disk
         const kernelSpec = await this.kernelFinder.findKernelSpec(resource, notebookMetadata?.kernelspec, cancelToken);
-
-        if (kernelSpec) {
-            // Locate the interpreter that matches our kernelspec
-            const interpreter = await this.kernelService.findMatchingInterpreter(kernelSpec, cancelToken);
-            if (interpreter) {
-                return { kind: 'pythonInterpreterKernelSpec', kernelSpec, interpreter };
-            } else {
-                return { kind: 'kernelSpec', kernelSpec };
-            }
+        if (!kernelSpec) {
+            return;
+        }
+        // Locate the interpreter that matches our kernelspec
+        const interpreter = await this.kernelService.findMatchingInterpreter(kernelSpec, cancelToken);
+        if (interpreter) {
+            return { kind: 'startUsingKernelSpec', kernelSpec, interpreter };
         }
     }
 
@@ -493,7 +480,7 @@ export class KernelSelector implements IKernelSelectionUsage {
     // When switching to an interpreter in raw kernel mode then just create a default kernelspec for that interpreter to use
     private async useInterpreterAndDefaultKernel(interpreter: PythonInterpreter): Promise<KernelSelection> {
         const kernelSpec = createDefaultKernelSpec(interpreter.displayName);
-        return { kernelSpec, interpreter, kind: 'pythonInterpreterKernelSpec' };
+        return { kernelSpec, interpreter, kind: 'startUsingPythonInterpreter' };
     }
 
     /**
@@ -534,7 +521,7 @@ export class KernelSelector implements IKernelSelectionUsage {
                 }
 
                 sendTelemetryEvent(Telemetry.UseInterpreterAsKernel);
-                return { kind: 'pythonInterpreterKernelSpec', kernelSpec, interpreter };
+                return { kind: 'startUsingKernelSpec', kernelSpec, interpreter };
             }
             traceInfo(`ipykernel installed in ${interpreter.path}, no matching kernel found. Will register kernel.`);
         }
@@ -564,9 +551,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         this.selectionProvider.getKernelSelectionsForLocalSession(resource, type, session, cancelToken).ignoreErrors();
 
         if (kernelSpec) {
-            return { kind: 'pythonInterpreterKernelSpec', kernelSpec, interpreter };
-        } else {
-            return { kind: 'pythonInterpreter', interpreter };
+            return { kind: 'startUsingKernelSpec', kernelSpec, interpreter };
         }
     }
 

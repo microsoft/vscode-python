@@ -259,7 +259,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                     if (kernelInterpreter) {
                                         launchInfo.interpreter = kernelInterpreter.interpreter;
                                         launchInfo.kernelSpec =
-                                            kernelInterpreter.kernelSpec || kernelInterpreter.kernelModel;
+                                            kernelInterpreter.kind === 'connectToLiveKernel'
+                                                ? kernelInterpreter.kernelModel
+                                                : kernelInterpreter.kernelSpec;
                                         continue;
                                     }
                                 }

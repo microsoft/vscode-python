@@ -105,7 +105,9 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 return true;
             }
             if (
+                preferredKernel.kind === 'connectToLiveKernel' &&
                 preferredKernel.kernelModel &&
+                item.kind === 'connectToLiveKernel' &&
                 item.kernelModel &&
                 fastDeepEqual(preferredKernel.kernelModel, item.kernelModel)
             ) {
@@ -185,7 +187,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         } else {
             updateKernelInNotebookMetadata(
                 document,
-                selection.kernelModel || selection.kernelSpec,
+                selection.kind === 'connectToLiveKernel' ? selection.kernelModel : selection.kernelSpec,
                 selection.interpreter,
                 this.notebookContentProvider
             );
