@@ -26,7 +26,6 @@ export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { s
  */
 export type LiveKernelConnectionMetadata = {
     kernelModel: LiveKernelModel;
-    kernelSpec?: undefined;
     /**
      * Python interpreter will be used for intellisense & the like.
      */

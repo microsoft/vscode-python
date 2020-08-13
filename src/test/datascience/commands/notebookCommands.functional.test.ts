@@ -67,7 +67,6 @@ suite('DataScience - Notebook Commands', () => {
         {
             label: 'foobar',
             selection: {
-                kernelSpec: undefined,
                 kernelModel: remoteKernel,
                 interpreter: undefined,
                 kind: 'connectToLiveKernel'

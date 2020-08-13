@@ -36,6 +36,7 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
+import { kernelConnectionMetadataHasKernelModel } from './helpers';
 import { KernelExecution } from './kernelExecution';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelSelection, LiveKernelModel } from './types';
 
@@ -47,7 +48,9 @@ export class Kernel implements IKernel {
         if (this.notebook) {
             return this.notebook.getKernelSpec();
         }
-        return this.metadata.kind === 'connectToLiveKernel' ? this.metadata.kernelModel : this.metadata.kernelSpec;
+        return kernelConnectionMetadataHasKernelModel(this.metadata)
+            ? this.metadata.kernelModel
+            : this.metadata.kernelSpec;
     }
     get onStatusChanged(): Event<ServerStatus> {
         return this._onStatusChanged.event;

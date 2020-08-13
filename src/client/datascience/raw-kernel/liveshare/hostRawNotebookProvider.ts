@@ -24,6 +24,7 @@ import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
+import { kernelConnectionMetadataHasKernelSpec } from '../../jupyter/kernels/helpers';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
 import { KernelSelection } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
@@ -228,7 +229,9 @@ export class HostRawNotebookProvider
             connectionInfo: this.getConnection(),
             uri: Settings.JupyterServerLocalLaunch,
             interpreter: kernelConnectionMetadata.interpreter,
-            kernelSpec: kernelConnectionMetadata.kernelSpec,
+            kernelSpec: kernelConnectionMetadataHasKernelSpec(kernelConnectionMetadata)
+                ? kernelConnectionMetadata.kernelSpec
+                : kernelConnectionMetadata.kernelModel,
             workingDir: await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs),
             purpose: Identifiers.RawPurpose
         };

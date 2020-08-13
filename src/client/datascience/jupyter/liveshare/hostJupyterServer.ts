@@ -40,6 +40,7 @@ import {
 } from '../../types';
 import { JupyterServerBase } from '../jupyterServer';
 import { computeWorkingDirectory } from '../jupyterUtils';
+import { kernelConnectionMetadataHasKernelModel } from '../kernels/helpers';
 import { KernelSelector } from '../kernels/kernelSelector';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
@@ -316,7 +317,10 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                       cancelToken
                   ));
 
-            const kernelInfoToUse = kernelInfo?.kind === 'connectToLiveKernel' ? kernelInfo.kernelModel : kernelInfo?.kernelSpec;
+            const kernelInfoToUse =
+                kernelInfo && kernelConnectionMetadataHasKernelModel(kernelInfo)
+                    ? kernelInfo.kernelModel
+                    : kernelInfo?.kernelSpec;
             if (kernelInfoToUse) {
                 launchInfo.kernelSpec = kernelInfoToUse;
 

@@ -72,7 +72,7 @@ function getQuickPickItemForActiveKernel(
             kernel.lastActivityTime.toLocaleString(),
             kernel.numberOfConnections.toString()
         ),
-        selection: { kernelModel: kernel, kernelSpec: undefined, interpreter: undefined, kind: 'connectToLiveKernel' }
+        selection: { kernelModel: kernel, interpreter: undefined, kind: 'connectToLiveKernel' }
     };
 }
 

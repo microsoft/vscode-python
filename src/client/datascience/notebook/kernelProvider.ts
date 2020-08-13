@@ -13,6 +13,7 @@ import {
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { kernelConnectionMetadataHasKernelSpec } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
@@ -98,21 +99,24 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 return true;
             }
             if (
+                kernelConnectionMetadataHasKernelSpec(preferredKernel) &&
                 preferredKernel.kernelSpec &&
+                kernelConnectionMetadataHasKernelSpec(item) &&
                 item.kernelSpec &&
                 fastDeepEqual(preferredKernel.kernelSpec, item.kernelSpec)
             ) {
                 return true;
             }
-            if (
-                preferredKernel.kind === 'connectToLiveKernel' &&
-                preferredKernel.kernelModel &&
-                item.kind === 'connectToLiveKernel' &&
-                item.kernelModel &&
-                fastDeepEqual(preferredKernel.kernelModel, item.kernelModel)
-            ) {
-                return true;
-            }
+            // TODO for Remote kernels.
+            // if (
+            //     kernelConnectionMetadataHasKernelModel(preferredKernel) &&
+            //     preferredKernel.kernelModel &&
+            //     kernelConnectionMetadataHasKernelModel(item) &&
+            //     item.kernelModel &&
+            //     fastDeepEqual(preferredKernel.kernelModel, item.kernelModel)
+            // ) {
+            //     return true;
+            // }
             return false;
         }
 

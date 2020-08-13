@@ -36,6 +36,7 @@ import {
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { createRemoteConnectionInfo, expandWorkingDir } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
+import { kernelConnectionMetadataHasKernelSpec } from './kernels/helpers';
 import { KernelSelector } from './kernels/kernelSelector';
 import { KernelSelection } from './kernels/types';
 import { NotebookStarter } from './notebookStarter';
@@ -189,7 +190,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
                     // In a remote non quest situation, figure out a kernel spec too.
-                    if (!kernelConnectionMetadata?.kernelSpec && connection && !options?.skipSearchingForKernel) {
+                    if (
+                        (!kernelConnectionMetadata ||
+                            !kernelConnectionMetadataHasKernelSpec(kernelConnectionMetadata)) &&
+                        connection &&
+                        !options?.skipSearchingForKernel
+                    ) {
                         const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(
                             IJupyterSessionManagerFactory
                         );
@@ -213,7 +219,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     const launchInfo: INotebookServerLaunchInfo = {
                         connectionInfo: connection!,
                         interpreter: kernelConnectionMetadata?.interpreter,
-                        kernelSpec: kernelConnectionMetadata?.kernelSpec,
+                        kernelSpec:
+                            kernelConnectionMetadata && kernelConnectionMetadataHasKernelSpec(kernelConnectionMetadata)
+                                ? kernelConnectionMetadata?.kernelSpec
+                                : kernelConnectionMetadata?.kernelModel,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
                         purpose: options ? options.purpose : uuid()
@@ -258,10 +267,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                     );
                                     if (kernelInterpreter) {
                                         launchInfo.interpreter = kernelInterpreter.interpreter;
-                                        launchInfo.kernelSpec =
-                                            kernelInterpreter.kind === 'connectToLiveKernel'
-                                                ? kernelInterpreter.kernelModel
-                                                : kernelInterpreter.kernelSpec;
+                                        launchInfo.kernelSpec = kernelInterpreter?.kernelSpec;
                                         continue;
                                     }
                                 }

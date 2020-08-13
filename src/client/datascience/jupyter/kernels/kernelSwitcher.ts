@@ -15,6 +15,7 @@ import { IKernelDependencyService, INotebook, KernelInterpreterDependencyRespons
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
 import { KernelSelector } from './kernelSelector';
 import { KernelSelection } from './types';
+import { kernelConnectionMetadataHasKernelModel, kernelConnectionMetadataHasKernelSpec } from './helpers';
 
 @injectable()
 export class KernelSwitcher {
@@ -84,12 +85,11 @@ export class KernelSwitcher {
             );
         };
 
-        const modelDisplayName = kernel.kind === 'connectToLiveKernel' ? kernel.kernelModel.display_name : undefined;
-        const modelName = kernel.kind === 'connectToLiveKernel' ? kernel.kernelModel.name : undefined;
-        const kernelDisplayName = kernel.kernelSpec?.display_name || modelDisplayName;
-        const kernelName = kernel.kernelSpec?.name || modelName;
+        const kernelModel = kernelConnectionMetadataHasKernelModel(kernel) ? kernel : undefined;
+        const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernel) ? kernel : undefined;
+        const kernelName = kernelSpec?.kernelSpec?.name || kernelModel?.kernelModel?.name;
         // One of them is bound to be non-empty.
-        const displayName = kernelDisplayName || kernelName || '';
+        const displayName = kernelModel?.kernelModel?.display_name || kernelName || '';
         const options: ProgressOptions = {
             location: ProgressLocation.Notification,
             cancellable: false,

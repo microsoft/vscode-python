@@ -205,7 +205,6 @@ suite('DataScience - KernelSelections', () => {
                             // tslint:disable-next-line: no-any
                         } as any
                     },
-                    kernelSpec: undefined,
                     kind: 'connectToLiveKernel'
                 },
                 detail: '<user friendly path>',
@@ -233,7 +232,6 @@ suite('DataScience - KernelSelections', () => {
                             // tslint:disable-next-line: no-any
                         } as any
                     },
-                    kernelSpec: undefined,
                     kind: 'connectToLiveKernel'
                 },
                 detail: '<user friendly path>',

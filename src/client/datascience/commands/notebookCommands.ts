@@ -8,6 +8,7 @@ import { Uri } from 'vscode';
 import { ICommandManager } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
 import { Commands } from '../constants';
+import { kernelConnectionMetadataHasKernelModel } from '../jupyter/kernels/helpers';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { KernelSelection } from '../jupyter/kernels/types';
@@ -71,7 +72,7 @@ export class NotebookCommands implements IDisposable {
     }
 
     private async setKernel(kernel: KernelSelection, identity: Uri, resource: Uri | undefined) {
-        const specOrModel = kernel.kind === 'connectToLiveKernel' ? kernel.kernelModel : kernel.kernelSpec;
+        const specOrModel = kernelConnectionMetadataHasKernelModel(kernel) ? kernel.kernelModel : kernel.kernelSpec;
         if (specOrModel) {
             const notebook = await this.notebookProvider.getOrCreateNotebook({
                 resource,
