@@ -14,7 +14,7 @@ import { RawKernelSessionStartError } from '../../raw-kernel/rawJupyterSession';
 import { IKernelDependencyService, INotebook, KernelInterpreterDependencyResponse } from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
 import { KernelSelector } from './kernelSelector';
-import { KernelSelection } from './types';
+import { KernelConnectionMetadata } from './types';
 import { kernelConnectionMetadataHasKernelModel, kernelConnectionMetadataHasKernelSpec } from './helpers';
 
 @injectable()
@@ -26,7 +26,7 @@ export class KernelSwitcher {
         @inject(KernelSelector) private readonly selector: KernelSelector
     ) {}
 
-    public async switchKernelWithRetry(notebook: INotebook, kernel: KernelSelection): Promise<void> {
+    public async switchKernelWithRetry(notebook: INotebook, kernel: KernelConnectionMetadata): Promise<void> {
         const settings = this.configService.getSettings(notebook.resource);
         const isLocalConnection =
             notebook.connection?.localLaunch ??
@@ -68,7 +68,7 @@ export class KernelSwitcher {
             }
         }
     }
-    private async switchToKernel(notebook: INotebook, kernel: KernelSelection): Promise<void> {
+    private async switchToKernel(notebook: INotebook, kernel: KernelConnectionMetadata): Promise<void> {
         if (notebook.connection?.type === 'raw' && kernel.interpreter) {
             const response = await this.kernelDependencyService.installMissingDependencies(kernel.interpreter);
             if (response === KernelInterpreterDependencyResponse.cancel) {
@@ -76,7 +76,7 @@ export class KernelSwitcher {
             }
         }
 
-        const switchKernel = async (newKernel: KernelSelection) => {
+        const switchKernel = async (newKernel: KernelConnectionMetadata) => {
             // Change the kernel. A status update should fire that changes our display
             await notebook.setKernelSpec(
                 newKernel.kind === 'connectToLiveKernel' ? newKernel.kernelModel : newKernel.kernelSpec!,

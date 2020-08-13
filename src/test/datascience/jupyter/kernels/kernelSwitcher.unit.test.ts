@@ -20,7 +20,7 @@ import { JupyterNotebookBase } from '../../../../client/datascience/jupyter/jupy
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';
-import { KernelSelection, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
+import { KernelConnectionMetadata, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
 import { IJupyterConnection, IJupyterKernelSpec, INotebook } from '../../../../client/datascience/types';
 import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { noop } from '../../../core';
@@ -36,7 +36,7 @@ suite('DataScience - Kernel Switcher', () => {
     let currentKernel: IJupyterKernelSpec | LiveKernelModel;
     let selectedInterpreter: PythonEnvironment;
     let settings: IPythonSettings;
-    let newKernelSpec: KernelSelection;
+    let newKernelSpec: KernelConnectionMetadata;
     setup(() => {
         connection = mock<IJupyterConnection>();
         settings = mock(PythonSettings);

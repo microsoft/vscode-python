@@ -76,7 +76,7 @@ import {
 } from '../jupyter/kernels/helpers';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
-import { KernelSelection, LiveKernelModel } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata, LiveKernelModel } from '../jupyter/kernels/types';
 import { CssMessages, SharedMessages } from '../messages';
 import {
     CellState,
@@ -1228,7 +1228,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 
-    private async potentialKernelChanged(data: { identity: Uri; kernel: KernelSelection }): Promise<void> {
+    private async potentialKernelChanged(data: { identity: Uri; kernel: KernelConnectionMetadata }): Promise<void> {
         const specOrModel = kernelConnectionMetadataHasKernelModel(data.kernel)
             ? data.kernel.kernelModel
             : data.kernel.kernelSpec;

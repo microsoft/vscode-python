@@ -33,7 +33,7 @@ import { KernelService } from './kernelService';
 import {
     IKernelSelectionUsage,
     IKernelSpecQuickPickItem,
-    KernelSelection,
+    KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
     LiveKernelModel,
@@ -208,7 +208,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         sessionManager?: IJupyterSessionManager,
         notebookMetadata?: INotebookMetadataLive,
         cancelToken?: CancellationToken
-    ): Promise<KernelSelection | undefined> {
+    ): Promise<KernelConnectionMetadata | undefined> {
         const [interpreter, specs, sessions] = await Promise.all([
             this.interpreterService.getActiveInterpreter(resource),
             this.kernelService.getKernelSpecs(sessionManager, cancelToken),
@@ -286,12 +286,12 @@ export class KernelSelector implements IKernelSelectionUsage {
         }
     }
     public async useSelectedKernel(
-        selection: KernelSelection,
+        selection: KernelConnectionMetadata,
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken
-    ): Promise<KernelSelection | undefined> {
+    ): Promise<KernelConnectionMetadata | undefined> {
         // Check if ipykernel is installed in this kernel.
         if (selection.interpreter && type === 'jupyter') {
             sendTelemetryEvent(Telemetry.SwitchToInterpreterAsKernel);
@@ -337,7 +337,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
-    ): Promise<KernelSelection | undefined> {
+    ): Promise<KernelConnectionMetadata | undefined> {
         const displayName = kernelSpec?.display_name || kernelSpec?.name || '';
         const message = localize.DataScience.sessionStartFailedWithKernel().format(
             displayName,
@@ -356,8 +356,8 @@ export class KernelSelector implements IKernelSelectionUsage {
         connection: INotebookProviderConnection | undefined,
         type: 'raw' | 'jupyter',
         currentKernelDisplayName: string | undefined
-    ): Promise<KernelSelection | undefined> {
-        let kernel: KernelSelection | undefined;
+    ): Promise<KernelConnectionMetadata | undefined> {
+        let kernel: KernelConnectionMetadata | undefined;
         const settings = this.configService.getSettings(resource);
         const isLocalConnection =
             connection?.localLaunch ??
@@ -375,7 +375,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
         currentKernelDisplayName: string | undefined
-    ): Promise<KernelSelection | undefined> {
+    ): Promise<KernelConnectionMetadata | undefined> {
         return this.selectLocalKernel(resource, type, new StopWatch(), undefined, undefined, currentKernelDisplayName);
     }
 
@@ -383,7 +383,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         resource: Resource,
         connInfo: IJupyterConnection,
         currentKernelDisplayName?: string
-    ): Promise<KernelSelection | undefined> {
+    ): Promise<KernelConnectionMetadata | undefined> {
         const stopWatch = new StopWatch();
         const session = await this.jupyterSessionManagerFactory.create(connInfo);
         return this.selectRemoteKernel(resource, stopWatch, session, undefined, currentKernelDisplayName);
@@ -464,7 +464,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         }
     }
 
-    private async selectKernel<T extends KernelSelection>(
+    private async selectKernel<T extends KernelConnectionMetadata>(
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
         stopWatch: StopWatch,
@@ -488,7 +488,7 @@ export class KernelSelector implements IKernelSelectionUsage {
     }
 
     // When switching to an interpreter in raw kernel mode then just create a default kernelspec for that interpreter to use
-    private async useInterpreterAndDefaultKernel(interpreter: PythonInterpreter): Promise<KernelSelection> {
+    private async useInterpreterAndDefaultKernel(interpreter: PythonInterpreter): Promise<KernelConnectionMetadata> {
         const kernelSpec = createDefaultKernelSpec(interpreter.displayName);
         return { kernelSpec, interpreter, kind: 'startUsingPythonInterpreter' };
     }

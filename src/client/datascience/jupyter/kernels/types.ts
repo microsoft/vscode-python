@@ -59,15 +59,15 @@ export type PythonKernelConnectionMetadata = {
     interpreter: PythonInterpreter;
     kind: 'startUsingPythonInterpreter';
 };
-export type KernelSelection =
+export type KernelConnectionMetadata =
     | LiveKernelConnectionMetadata
     | KernelSpecConnectionMetadata
     | PythonKernelConnectionMetadata;
 
-export interface IKernelSpecQuickPickItem<T extends KernelSelection = KernelSelection> extends QuickPickItem {
+export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata> extends QuickPickItem {
     selection: T;
 }
-export interface IKernelSelectionListProvider<T extends KernelSelection = KernelSelection> {
+export interface IKernelSelectionListProvider<T extends KernelConnectionMetadata = KernelConnectionMetadata> {
     getKernelSelections(resource: Resource, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem<T>[]>;
 }
 
@@ -77,18 +77,18 @@ export interface IKernelSelectionUsage {
      * This method will also check if required dependencies are installed or not, and will install them if required.
      */
     useSelectedKernel(
-        selection: KernelSelection,
+        selection: KernelConnectionMetadata,
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken
-    ): Promise<KernelSelection | undefined>;
+    ): Promise<KernelConnectionMetadata | undefined>;
 }
 
 export interface IKernel extends IAsyncDisposable {
     readonly uri: Uri;
     readonly kernelSpec?: IJupyterKernelSpec | LiveKernelModel;
-    readonly metadata: Readonly<KernelSelection>;
+    readonly metadata: Readonly<KernelConnectionMetadata>;
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;
     readonly onRestarted: Event<void>;
@@ -103,7 +103,7 @@ export interface IKernel extends IAsyncDisposable {
     registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
 }
 
-export type KernelOptions = { metadata: KernelSelection; waitForIdleTimeout?: number; launchingFile?: string };
+export type KernelOptions = { metadata: KernelConnectionMetadata; waitForIdleTimeout?: number; launchingFile?: string };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider {
     /**

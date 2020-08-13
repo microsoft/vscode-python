@@ -26,7 +26,7 @@ import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../const
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import { kernelConnectionMetadataHasKernelSpec } from '../../jupyter/kernels/helpers';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
-import { KernelSelection } from '../../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
@@ -224,7 +224,7 @@ export class HostRawNotebookProvider
     }
 
     // Get the notebook execution info for this raw session instance
-    private async getExecutionInfo(kernelConnectionMetadata: KernelSelection): Promise<INotebookExecutionInfo> {
+    private async getExecutionInfo(kernelConnectionMetadata: KernelConnectionMetadata): Promise<INotebookExecutionInfo> {
         return {
             connectionInfo: this.getConnection(),
             uri: Settings.JupyterServerLocalLaunch,

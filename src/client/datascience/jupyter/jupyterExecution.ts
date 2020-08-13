@@ -38,7 +38,7 @@ import { createRemoteConnectionInfo, expandWorkingDir } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { kernelConnectionMetadataHasKernelSpec } from './kernels/helpers';
 import { KernelSelector } from './kernels/kernelSelector';
-import { KernelSelection } from './kernels/types';
+import { KernelConnectionMetadata } from './kernels/types';
 import { NotebookStarter } from './notebookStarter';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
@@ -143,9 +143,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
-            let kernelConnectionMetadata: KernelSelection | undefined;
-            let kernelConnectionMetadataPromise: Promise<KernelSelection | undefined> = Promise.resolve<
-                KernelSelection | undefined
+            let kernelConnectionMetadata: KernelConnectionMetadata | undefined;
+            let kernelConnectionMetadataPromise: Promise<KernelConnectionMetadata | undefined> = Promise.resolve<
+                KernelConnectionMetadata | undefined
             >(undefined);
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
             const allowUI = !options || options.allowUI();

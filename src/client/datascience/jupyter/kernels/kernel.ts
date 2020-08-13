@@ -38,7 +38,7 @@ import {
 } from '../../types';
 import { kernelConnectionMetadataHasKernelModel } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelSelection, LiveKernelModel } from './types';
+import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata, LiveKernelModel } from './types';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -84,7 +84,7 @@ export class Kernel implements IKernel {
     private startCancellation = new CancellationTokenSource();
     constructor(
         public readonly uri: Uri,
-        public readonly metadata: Readonly<KernelSelection>,
+        public readonly metadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,

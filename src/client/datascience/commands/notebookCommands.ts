@@ -11,7 +11,7 @@ import { Commands } from '../constants';
 import { kernelConnectionMetadataHasKernelModel } from '../jupyter/kernels/helpers';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { KernelSelection } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IInteractiveWindowProvider, INotebookEditorProvider, INotebookProvider, ISwitchKernelOptions } from '../types';
 
 @injectable()
@@ -71,7 +71,7 @@ export class NotebookCommands implements IDisposable {
         }
     }
 
-    private async setKernel(kernel: KernelSelection, identity: Uri, resource: Uri | undefined) {
+    private async setKernel(kernel: KernelConnectionMetadata, identity: Uri, resource: Uri | undefined) {
         const specOrModel = kernelConnectionMetadataHasKernelModel(kernel) ? kernel.kernelModel : kernel.kernelSpec;
         if (specOrModel) {
             const notebook = await this.notebookProvider.getOrCreateNotebook({

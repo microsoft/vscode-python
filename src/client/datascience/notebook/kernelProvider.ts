@@ -17,7 +17,7 @@ import { kernelConnectionMetadataHasKernelSpec } from '../jupyter/kernels/helper
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { IKernelProvider, KernelSelection } from '../jupyter/kernels/types';
+import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebook, INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, updateKernelInNotebookMetadata } from './helpers/helpers';
@@ -30,7 +30,7 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     constructor(
         public readonly label: string,
         public readonly description: string,
-        public readonly selection: Readonly<KernelSelection>,
+        public readonly selection: Readonly<KernelConnectionMetadata>,
         public readonly isPreferred: boolean,
         private readonly kernelProvider: IKernelProvider
     ) {}
@@ -87,7 +87,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         if (token.isCancellationRequested) {
             return [];
         }
-        function isPreferredKernel(item: KernelSelection) {
+        function isPreferredKernel(item: KernelConnectionMetadata) {
             if (!preferredKernel) {
                 return false;
             }
