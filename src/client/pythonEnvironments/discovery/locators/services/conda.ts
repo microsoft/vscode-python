@@ -54,7 +54,7 @@ export async function parseCondaInfo(
             ...(details as PythonEnvironment),
             path: pythonPath,
             companyDisplayName: AnacondaCompanyName,
-            type: EnvironmentType.Conda,
+            envType: EnvironmentType.Conda,
             envPath
         };
     });

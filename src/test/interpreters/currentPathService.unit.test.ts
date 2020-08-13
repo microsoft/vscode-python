@@ -145,8 +145,8 @@ suite('Interpreters CurrentPath Service', () => {
             fileSystem.verifyAll();
 
             expect(interpreters).to.be.of.length(2);
-            expect(interpreters).to.deep.include({ version, path: 'c:/root:python', type: EnvironmentType.Unknown });
-            expect(interpreters).to.deep.include({ version, path: 'c:/python3', type: EnvironmentType.Unknown });
+            expect(interpreters).to.deep.include({ version, path: 'c:/root:python', envType: EnvironmentType.Unknown });
+            expect(interpreters).to.deep.include({ version, path: 'c:/python3', envType: EnvironmentType.Unknown });
         });
     });
 });

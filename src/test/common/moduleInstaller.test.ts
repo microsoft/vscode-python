@@ -414,7 +414,7 @@ suite('Module Installer', () => {
                             displayName: '',
                             envName: '',
                             path: pythonPath,
-                            type: EnvironmentType.Conda,
+                            envType: EnvironmentType.Conda,
                             version: new SemVer('1.0.0')
                         }
                     ])
@@ -496,7 +496,7 @@ suite('Module Installer', () => {
             const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
             mockInterpreterLocator
                 .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve([{ ...info, path: interpreterPath, type: EnvironmentType.Unknown }]));
+                .returns(() => Promise.resolve([{ ...info, path: interpreterPath, envType: EnvironmentType.Unknown }]));
             ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 mockInterpreterLocator.object,
@@ -534,7 +534,7 @@ suite('Module Installer', () => {
             interpreterService
                 .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
                 // tslint:disable-next-line:no-any
-                .returns(() => Promise.resolve({ type: EnvironmentType.Unknown } as any));
+                .returns(() => Promise.resolve({ envType: EnvironmentType.Unknown } as any));
 
             await pipInstaller.installModule(moduleName, resource);
 
@@ -550,7 +550,7 @@ suite('Module Installer', () => {
             const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
             mockInterpreterLocator
                 .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve([{ ...info, path: interpreterPath, type: EnvironmentType.Conda }]));
+                .returns(() => Promise.resolve([{ ...info, path: interpreterPath, envType: EnvironmentType.Conda }]));
             ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 mockInterpreterLocator.object,
@@ -591,7 +591,7 @@ suite('Module Installer', () => {
             mockInterpreterLocator
                 .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() =>
-                    Promise.resolve([{ ...info, path: 'interpreterPath', type: EnvironmentType.VirtualEnv }])
+                    Promise.resolve([{ ...info, path: 'interpreterPath', envType: EnvironmentType.VirtualEnv }])
                 );
             ioc.serviceManager.rebindInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,

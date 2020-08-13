@@ -128,7 +128,7 @@ suite('DataScience - KernelService', () => {
             path: 'some Path',
             displayName: 'Hello World',
             envName: 'Hello',
-            type: EnvironmentType.Conda
+            envType: EnvironmentType.Conda
             // tslint:disable-next-line: no-any
         } as any;
 
@@ -151,7 +151,7 @@ suite('DataScience - KernelService', () => {
             path: 'some Path',
             displayName: 'Hello World',
             envName: 'Hello',
-            type: EnvironmentType.Conda
+            envType: EnvironmentType.Conda
             // tslint:disable-next-line: no-any
         } as any;
 

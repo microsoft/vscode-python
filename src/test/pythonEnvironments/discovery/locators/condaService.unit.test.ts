@@ -423,27 +423,27 @@ suite('Interpreters Conda Service', () => {
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
                 companyDisplayName: 'One 1',
                 version: new SemVer('1.0.0'),
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: condaPythonExePath,
                 companyDisplayName: 'Two 2',
                 version: new SemVer('1.11.0'),
-                type: EnvironmentType.Conda
+                envType: EnvironmentType.Conda
             },
             {
                 displayName: 'Three',
                 path: path.join(environmentsPath, 'path2', 'one.exe'),
                 companyDisplayName: 'Three 3',
                 version: new SemVer('2.10.1'),
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Seven',
                 path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
                 companyDisplayName: 'Continuum Analytics, Inc.',
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             }
         ].map((item) => {
             return { ...info, ...item };
@@ -476,48 +476,48 @@ suite('Interpreters Conda Service', () => {
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
                 companyDisplayName: 'One 1',
                 version: new SemVer('1.0.0'),
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda1', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 1',
                 version: new SemVer('1.11.0'),
-                type: EnvironmentType.Conda
+                envType: EnvironmentType.Conda
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda211', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.11',
                 version: new SemVer('2.11.0'),
-                type: EnvironmentType.Conda
+                envType: EnvironmentType.Conda
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda231', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.31',
                 version: new SemVer('2.31.0'),
-                type: EnvironmentType.Conda
+                envType: EnvironmentType.Conda
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda221', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.21',
                 version: new SemVer('2.21.0'),
-                type: EnvironmentType.Conda
+                envType: EnvironmentType.Conda
             },
             {
                 displayName: 'Three',
                 path: path.join(environmentsPath, 'path2', 'one.exe'),
                 companyDisplayName: 'Three 3',
                 version: new SemVer('2.10.1'),
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Seven',
                 path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
                 companyDisplayName: 'Continuum Analytics, Inc.',
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             }
         ].map((item) => {
             return { ...info, ...item };
@@ -547,48 +547,48 @@ suite('Interpreters Conda Service', () => {
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
                 companyDisplayName: 'One 1',
                 version: new SemVer('1.0.0'),
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda1', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 1',
                 version: new SemVer('1.11.0'),
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda211', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.11',
                 version: new SemVer('2.11.0'),
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda231', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.31',
                 version: new SemVer('2.31.0'),
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda221', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.21',
                 version: new SemVer('2.21.0'),
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Three',
                 path: path.join(environmentsPath, 'path2', 'one.exe'),
                 companyDisplayName: 'Three 3',
                 version: new SemVer('2.10.1'),
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Seven',
                 path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
                 companyDisplayName: 'Continuum Analytics, Inc.',
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             }
         ].map((item) => {
             return { ...info, ...item };
@@ -869,27 +869,27 @@ suite('Interpreters Conda Service', () => {
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
                 companyDisplayName: 'One 1',
                 version: new SemVer('1.0.0'),
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: condaPythonExePath,
                 companyDisplayName: 'Two 2',
                 version: new SemVer('1.11.0'),
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Three',
                 path: path.join(environmentsPath, 'path2', 'one.exe'),
                 companyDisplayName: 'Three 3',
                 version: new SemVer('2.10.1'),
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Seven',
                 path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
                 companyDisplayName: 'Continuum Analytics, Inc.',
-                type: EnvironmentType.Unknown
+                envType: EnvironmentType.Unknown
             }
         ].map((item) => {
             return { ...info, ...item };

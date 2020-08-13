@@ -586,7 +586,7 @@ suite('Interpreters service', () => {
             hashProvider.setup((provider) => (provider as any).then).returns(() => undefined);
 
             const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonEnvironment }>>();
-            const info = { path: 'hell', type: EnvironmentType.Venv };
+            const info = { path: 'hell', envType: EnvironmentType.Venv };
             state
                 .setup((s) => s.value)
                 .returns(() => {
@@ -631,7 +631,7 @@ suite('Interpreters service', () => {
             hashProvider.setup((provider) => (provider as any).then).returns(() => undefined);
 
             const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonEnvironment }>>();
-            const info = { path: 'hell', type: EnvironmentType.Venv };
+            const info = { path: 'hell', envType: EnvironmentType.Venv };
             state
                 .setup((s) => s.value)
                 .returns(() => {

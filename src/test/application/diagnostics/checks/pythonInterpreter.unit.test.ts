@@ -153,7 +153,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             interpreterService.verifyAll();
         });
         test('Should return empty diagnostics if there are interpreters after double-checking', async () => {
-            const interpreter: PythonEnvironment = { type: EnvironmentType.Unknown } as any;
+            const interpreter: PythonEnvironment = { envType: EnvironmentType.Unknown } as any;
 
             settings
                 .setup((s) => s.disableInstallationChecks)
@@ -221,7 +221,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => {
-                    return Promise.resolve({ type: EnvironmentType.Unknown } as any);
+                    return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
                 })
                 .verifiable(typemoq.Times.once());
 

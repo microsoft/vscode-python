@@ -97,12 +97,12 @@ suite('Interpreters - selector', () => {
             );
 
             const initial: PythonEnvironment[] = [
-                { displayName: '1', path: 'c:/path1/path1', type: EnvironmentType.Unknown },
-                { displayName: '2', path: 'c:/path1/path1', type: EnvironmentType.Unknown },
-                { displayName: '2', path: 'c:/path2/path2', type: EnvironmentType.Unknown },
-                { displayName: '2 (virtualenv)', path: 'c:/path2/path2', type: EnvironmentType.VirtualEnv },
-                { displayName: '3', path: 'c:/path2/path2', type: EnvironmentType.Unknown },
-                { displayName: '4', path: 'c:/path4/path4', type: EnvironmentType.Conda }
+                { displayName: '1', path: 'c:/path1/path1', envType: EnvironmentType.Unknown },
+                { displayName: '2', path: 'c:/path1/path1', envType: EnvironmentType.Unknown },
+                { displayName: '2', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
+                { displayName: '2 (virtualenv)', path: 'c:/path2/path2', envType: EnvironmentType.VirtualEnv },
+                { displayName: '3', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
+                { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda }
             ].map((item) => {
                 return { ...info, ...item };
             });

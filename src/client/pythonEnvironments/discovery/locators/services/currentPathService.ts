@@ -83,7 +83,7 @@ export class CurrentPathService extends CacheableLocatorService {
             return {
                 ...(details as PythonEnvironment),
                 path: pythonPath,
-                type: details.envType ? details.envType : EnvironmentType.Unknown
+                envType: details.envType ? details.envType : EnvironmentType.Unknown
             };
         });
     }

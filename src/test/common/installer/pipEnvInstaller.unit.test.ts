@@ -35,7 +35,7 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Pipenv interpreter, method isSupported() returns true', async () => {
         const interpreter = {
-            type: EnvironmentType.Pipenv
+            envType: EnvironmentType.Pipenv
         };
         // tslint:disable-next-line: no-any
         const result = await pipEnvInstaller.isSupported(interpreter as any);
@@ -44,7 +44,7 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Python interpreter but not of type Pipenv, method isSupported() returns false', async () => {
         const interpreter = {
-            type: EnvironmentType.Conda
+            envType: EnvironmentType.Conda
         };
         // tslint:disable-next-line: no-any
         const result = await pipEnvInstaller.isSupported(interpreter as any);

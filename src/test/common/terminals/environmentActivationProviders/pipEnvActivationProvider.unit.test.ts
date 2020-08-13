@@ -72,7 +72,7 @@ suite('Terminals Activation - Pipenv', () => {
             });
             test('pipenv shell is returned for pipenv interpeter', async () => {
                 when(interpreterService.getActiveInterpreter(resource)).thenResolve({
-                    type: EnvironmentType.Pipenv
+                    envType: EnvironmentType.Pipenv
                 } as any);
 
                 for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {
@@ -84,7 +84,7 @@ suite('Terminals Activation - Pipenv', () => {
             test('pipenv is properly escaped', async () => {
                 pipenvExecFile = 'my pipenv';
                 when(interpreterService.getActiveInterpreter(resource)).thenResolve({
-                    type: EnvironmentType.Pipenv
+                    envType: EnvironmentType.Pipenv
                 } as any);
 
                 for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {

@@ -69,7 +69,7 @@ export class KnownPathsService extends CacheableLocatorService {
         return {
             ...(details as PythonEnvironment),
             path: interpreter,
-            type: EnvironmentType.Unknown
+            envType: EnvironmentType.Unknown
         };
     }
 

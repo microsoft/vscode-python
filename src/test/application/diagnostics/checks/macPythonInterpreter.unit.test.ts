@@ -181,7 +181,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => {
-                    return Promise.resolve({ type: EnvironmentType.Unknown } as any);
+                    return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
                 })
                 .verifiable(typemoq.Times.once());
             platformService
@@ -211,7 +211,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => {
-                    return Promise.resolve({ type: EnvironmentType.Unknown } as any);
+                    return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
                 })
                 .verifiable(typemoq.Times.once());
             platformService
@@ -242,7 +242,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => {
-                    return Promise.resolve({ type: EnvironmentType.Unknown } as any);
+                    return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
                 })
                 .verifiable(typemoq.Times.once());
             platformService
@@ -300,7 +300,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => {
-                    return Promise.resolve({ type: EnvironmentType.Unknown } as any);
+                    return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
                 })
                 .verifiable(typemoq.Times.once());
 

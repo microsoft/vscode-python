@@ -111,7 +111,7 @@ suite('Interpreters from Conda Environments', () => {
             AnacondaCompanyName,
             'Incorrect company display name for first env'
         );
-        assert.equal(interpreters[0].type, EnvironmentType.Conda, 'Environment not detected as a conda environment');
+        assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
 
         const path2 = path.join(info.envs[1], isWindows ? 'python.exe' : path.join('bin', 'python'));
         assert.equal(interpreters[1].path, path2, 'Incorrect path for first env');
@@ -120,7 +120,7 @@ suite('Interpreters from Conda Environments', () => {
             AnacondaCompanyName,
             'Incorrect company display name for first env'
         );
-        assert.equal(interpreters[1].type, EnvironmentType.Conda, 'Environment not detected as a conda environment');
+        assert.equal(interpreters[1].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
     test('Must extract display name from version info (non windows)', async () => {
         await extractDisplayNameFromVersionInfo(false);
@@ -235,7 +235,7 @@ suite('Interpreters from Conda Environments', () => {
             AnacondaCompanyName,
             'Incorrect company display name for first env'
         );
-        assert.equal(interpreters[0].type, EnvironmentType.Conda, 'Environment not detected as a conda environment');
+        assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
     test('Must use the default display name if sys.version is invalid (non windows)', async () => {
         await useDefaultNameIfSysVersionIsInvalid(false);
@@ -338,7 +338,7 @@ suite('Interpreters from Conda Environments', () => {
             AnacondaCompanyName,
             'Incorrect company display name for first env'
         );
-        assert.equal(interpreters[0].type, EnvironmentType.Conda, 'Environment not detected as a conda environment');
+        assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
 
     test('Must use the default display name if sys.version is empty (non windows)', async () => {
@@ -436,7 +436,7 @@ suite('Interpreters from Conda Environments', () => {
             AnacondaCompanyName,
             'Incorrect company display name for first env'
         );
-        assert.equal(interpreters[0].type, EnvironmentType.Conda, 'Environment not detected as a conda environment');
+        assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
     test('Must include the default_prefix into the list of interpreters (non windows)', async () => {
         await includeDefaultPrefixIntoListOfInterpreters(false);

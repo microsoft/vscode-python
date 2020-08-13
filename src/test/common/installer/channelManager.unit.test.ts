@@ -218,7 +218,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
 
     test('If active interpreter is Conda, show conda prompt', async () => {
         const activeInterpreter = {
-            type: EnvironmentType.Conda
+            envType: EnvironmentType.Conda
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         serviceContainer
@@ -243,7 +243,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
 
     test('If active interpreter is not Conda, show pip prompt', async () => {
         const activeInterpreter = {
-            type: EnvironmentType.Pipenv
+            envType: EnvironmentType.Pipenv
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         serviceContainer
@@ -293,7 +293,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
                 interpreterType === EnvironmentType.Conda ? 'Conda' : 'not Conda'
             }`, async () => {
                 const activeInterpreter = {
-                    type: interpreterType
+                    envType: interpreterType
                 };
                 const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                 const platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -331,7 +331,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
     });
     test("If 'Search for help' is not selected in error prompt, don't open URL", async () => {
         const activeInterpreter = {
-            type: EnvironmentType.Conda
+            envType: EnvironmentType.Conda
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         const platformService = TypeMoq.Mock.ofType<IPlatformService>();
