@@ -27,58 +27,43 @@ export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { s
 export type LiveKernelConnectionMetadata = {
     kernelModel: LiveKernelModel;
     kernelSpec?: undefined;
+    /**
+     * Python interpreter will be used for intellisense & the like.
+     */
     interpreter?: PythonInterpreter;
     kind: 'connectToLiveKernel';
 };
 /**
  * Connection metadata for Kernels started using kernelspec (JSON).
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
+ * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
 export type KernelSpecConnectionMetadata = {
     kernelModel?: undefined;
     kernelSpec: IJupyterKernelSpec;
+    /**
+     * Indicates the interpreter that may be used to start the kernel.
+     * If possible to start a kernel without this Python interpreter, then this Python interpreter will be used for intellisense & the like.
+     * This interpreter could also be the interpreter associated with the kernel spec that we are supposed to start.
+     */
     interpreter?: PythonInterpreter;
     kind: 'startUsingKernelSpec';
 };
 /**
  * Connection metadata for Kernels started using Python interpreter.
- * These are not necessarily raw (it could be plain old Jupyter Kernels, where we register Python interpreter as a kernel)
+ * These are not necessarily raw (it could be plain old Jupyter Kernels, where we register Python interpreter as a kernel).
+ * We can have KernelSpec information here as well, however that is totally optional.
+ * We will always start this kernel using old Jupyter style (provided we first register this intreprter as a kernel) or raw.
  */
 export type PythonKernelConnectionMetadata = {
     kernelSpec?: IJupyterKernelSpec;
     interpreter: PythonInterpreter;
     kind: 'startUsingPythonInterpreter';
 };
-// /**
-//  * Connection metadata for Kernels started using Python interpreter with Kernel spec (JSON).
-//  * Sometimes, we're unable to determine the exact interpreter associated with a kernelspec, in such cases this is a closes match.
-//  */
-
-// export type PythonKernelSpecConnectionMetadata = {
-//     kernelModel?: undefined;
-//     kernelSpec: IJupyterKernelSpec;
-//     interpreter?: PythonInterpreter;
-//     kind: 'pythonInterpreterKernelSpec';
-// };
-// /**
-//  * Connection metadata for Kernels started using kernelspec (JSON).
-//  * Note, we could be connecting/staring a kernel on a remote jupyter server.
-//  * Sometimes, we're unable to determine the exact interpreter associated with a kernelspec, in such cases this is a closes match.
-//  * E.g. when selecting a remote kernel, we do not have the remote interpreter information, we can only try to find a close match.}
-//  */
-
-// export type PythonLiveKernelConnectionMetadata = {
-//     kernelModel: LiveKernelModel;
-//     kernelSpec?: undefined;
-//     interpreter?: PythonInterpreter;
-//     kind: 'pythonInterpreterLive';
-// };
 export type KernelSelection =
     | LiveKernelConnectionMetadata
     | KernelSpecConnectionMetadata
     | PythonKernelConnectionMetadata;
-// | PythonKernelSpecConnectionMetadata
-// | PythonLiveKernelConnectionMetadata;
 
 export interface IKernelSpecQuickPickItem<T extends KernelSelection = KernelSelection> extends QuickPickItem {
     selection: T;
