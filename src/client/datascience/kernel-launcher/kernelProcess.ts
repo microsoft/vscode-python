@@ -139,7 +139,7 @@ export class KernelProcess implements IKernelProcess {
             // Make sure to dispose if we never get a heartbeat
             this.dispose().ignoreErrors();
             traceError('Timed out waiting to get a heartbeat from kernel process.');
-            throw new Error('Timed out waiting to get a heartbeat from kernel process.');
+            throw error;
         }
     }
 
