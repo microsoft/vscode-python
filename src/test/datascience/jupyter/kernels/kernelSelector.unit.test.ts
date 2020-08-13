@@ -109,7 +109,7 @@ suite('DataScience - KernelSelector', () => {
                 instance(sessionManager)
             );
 
-            assert.isEmpty(kernel);
+            assert.isUndefined(kernel);
             verify(
                 kernelSelectionProvider.getKernelSelectionsForRemoteSession(
                     anything(),
@@ -137,7 +137,7 @@ suite('DataScience - KernelSelector', () => {
                 instance(sessionManager)
             );
 
-            assert.isEmpty(kernel);
+            assert.isUndefined(kernel);
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
@@ -249,7 +249,7 @@ suite('DataScience - KernelSelector', () => {
                 instance(sessionManager)
             );
 
-            assert.isEmpty(kernel);
+            assert.isUndefined(kernel);
             verify(
                 kernelSelectionProvider.getKernelSelectionsForRemoteSession(
                     anything(),
@@ -301,7 +301,7 @@ suite('DataScience - KernelSelector', () => {
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).once();
         });
-        test('If seleted interpreter has ipykernel installed, then return matching kernelspec and interpreter', async () => {
+        test('If selected interpreter has ipykernel installed, then return matching kernelspec and interpreter', async () => {
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             when(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).thenResolve(
                 kernelSpec
@@ -349,7 +349,7 @@ suite('DataScience - KernelSelector', () => {
                 appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())
             ).never();
         });
-        test('If seleted interpreter has ipykernel installed and there is no matching kernelSpec, then register a new kernel and return the new kernelspec and interpreter', async () => {
+        test('If selected interpreter has ipykernel installed and there is no matching kernelSpec, then register a new kernel and return the new kernelspec and interpreter', async () => {
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             when(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).thenResolve();
             when(kernelService.registerKernel(interpreter, anything(), anything())).thenResolve(kernelSpec);
@@ -396,7 +396,7 @@ suite('DataScience - KernelSelector', () => {
                 appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())
             ).never();
         });
-        test('If seleted interpreter does not have ipykernel installed and there is no matching kernelspec, then register a new kernel and return the new kernelspec and interpreter', async () => {
+        test('If selected interpreter does not have ipykernel installed and there is no matching kernelspec, then register a new kernel and return the new kernelspec and interpreter', async () => {
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(false);
             when(kernelService.registerKernel(interpreter, anything(), anything())).thenResolve(kernelSpec);
             when(
