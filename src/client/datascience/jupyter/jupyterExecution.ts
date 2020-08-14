@@ -209,12 +209,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         await sessionManager.dispose();
                     }
 
-                    // If no kernel and not going to pick one, exit early
-                    // tslint:disable-next-line: no-any
-                    if (!kernelConnectionMetadata && !allowUI) {
-                        return undefined;
-                    }
-
                     // Populate the launch info that we are starting our server with
                     const launchInfo: INotebookServerLaunchInfo = {
                         connectionInfo: connection!,
