@@ -29,7 +29,7 @@ export type LiveKernelConnectionMetadata = {
     /**
      * Python interpreter will be used for intellisense & the like.
      */
-    interpreter?: PythonInterpreter;
+    interpreter?: PythonEnvironment;
     kind: 'connectToLiveKernel';
 };
 /**
@@ -45,18 +45,18 @@ export type KernelSpecConnectionMetadata = {
      * If possible to start a kernel without this Python interpreter, then this Python interpreter will be used for intellisense & the like.
      * This interpreter could also be the interpreter associated with the kernel spec that we are supposed to start.
      */
-    interpreter?: PythonInterpreter;
+    interpreter?: PythonEnvironment;
     kind: 'startUsingKernelSpec';
 };
 /**
  * Connection metadata for Kernels started using Python interpreter.
  * These are not necessarily raw (it could be plain old Jupyter Kernels, where we register Python interpreter as a kernel).
  * We can have KernelSpec information here as well, however that is totally optional.
- * We will always start this kernel using old Jupyter style (provided we first register this intreprter as a kernel) or raw.
+ * We will always start this kernel using old Jupyter style (provided we first register this intrepreter as a kernel) or raw.
  */
 export type PythonKernelConnectionMetadata = {
     kernelSpec?: IJupyterKernelSpec;
-    interpreter: PythonInterpreter;
+    interpreter: PythonEnvironment;
     kind: 'startUsingPythonInterpreter';
 };
 export type KernelConnectionMetadata =
