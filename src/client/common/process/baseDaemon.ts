@@ -39,7 +39,7 @@ export abstract class BasePythonDaemon {
     public get isAlive(): boolean {
         return this.connectionClosedMessage === '';
     }
-    protected outputObservale = new Subject<Output<string>>();
+    protected outputObservable = new Subject<Output<string>>();
     private connectionClosedMessage: string = '';
     protected get closed() {
         return this.connectionClosedDeferred.promise;
@@ -236,7 +236,7 @@ export abstract class BasePythonDaemon {
         let stdErr = '';
         this.proc.stderr.on('data', (output: string | Buffer) => (stdErr += output.toString()));
         // Wire up stdout/stderr.
-        const subscription = this.outputObservale.subscribe((out) => {
+        const subscription = this.outputObservable.subscribe((out) => {
             if (out.source === 'stderr' && options.throwOnStdErr) {
                 subject.error(new StdErrError(out.out));
             } else if (out.source === 'stderr' && options.mergeStdOutErr) {
@@ -354,7 +354,7 @@ export abstract class BasePythonDaemon {
         this.proc.on('exit', (code) => logConnectionStatus('Daemon Processed died with exit code', code));
         // Wire up stdout/stderr.
         const OuputNotification = new NotificationType<Output<string>, void>('output');
-        this.connection.onNotification(OuputNotification, (output) => this.outputObservale.next(output));
+        this.connection.onNotification(OuputNotification, (output) => this.outputObservable.next(output));
         const logNotification = new NotificationType<
             { level: 'WARN' | 'WARNING' | 'INFO' | 'DEBUG' | 'NOTSET'; msg: string; pid?: string },
             void

@@ -15,6 +15,7 @@ import {
     SpawnOptions,
     StdErrError
 } from '../../common/process/types';
+import { sendTelemetryEvent } from '../../telemetry';
 import { IPythonKernelDaemon, PythonKernelDiedError } from './types';
 
 export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKernelDaemon {
@@ -22,6 +23,8 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
     private killed?: boolean;
     private preWarmed?: boolean;
     private outputHooked?: boolean;
+    private stderrOutput: string = '';
+    private stderrTimeout?: NodeJS.Timeout;
     private readonly subject = new Subject<Output<string>>();
     constructor(
         pythonExecutionService: IPythonExecutionService,
@@ -79,10 +82,10 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
             const request = new RequestType<{ args: string[] }, ExecResponse, void, void>('start_prewarmed_kernel');
             await this.sendRequest(request, { args: [moduleName].concat(args) });
         } else {
-            // No need of the output here, we'll tap into the output coming from daemon `this.outputObservale`.
+            // No need of the output here, we'll tap into the output coming from daemon `this.outputObservable`.
             // This is required because execModule will never end.
-            // We cannot use `execModuleObservable` as that only works where the daemon is busy seeerving on request and we wait for it to finish.
-            // In this case we're never going to wait for the module to run to end. Cuz when we run `pytohn -m ipykernel`, it never ends.
+            // We cannot use `execModuleObservable` as that only works where the daemon is busy on request and we wait for it to finish.
+            // In this case we're never going to wait for the module to run to end. Cuz when we run `python -m ipykernel`, it never ends.
             // It only ends when the kernel dies, meaning the kernel process is dead.
             // What we need is to be able to run the module and keep getting a stream of stdout/stderr.
             // & also be able to execute other python code. I.e. we need a daemon.
@@ -116,11 +119,12 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
 
         // All output messages from daemon from here on are considered to be coming from the kernel.
         // This is because the kernel is a long running process and that will be the only code in the daemon
-        // sptting stuff into stdout/stderr.
-        this.outputObservale.subscribe(
+        // spitting stuff into stdout/stderr.
+        this.outputObservable.subscribe(
             (out) => {
                 if (out.source === 'stderr') {
-                    this.subject.error(new StdErrError(out.out));
+                    this.coalesceStderr(out.out);
+                    //this.subject.error(new StdErrError(out.out));
                 } else {
                     this.subject.next(out);
                 }
@@ -132,4 +136,19 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         // If the daemon dies, then kernel is also dead.
         this.closed.catch((error) => this.subject.error(new PythonKernelDiedError({ error })));
     }
+
+    // stderr is coming in line at a time, so from when we first see it come in wait a bit to collect it all
+    // before raising the error on our side
+    private coalesceStderr(output: string) {
+        // If we have not yet started our timeout, then queue it
+        if (!this.stderrTimeout) {
+            this.stderrTimeout = setTimeout(this.fireStderrError, 250);
+        }
+
+        this.stderrOutput = `${this.stderrOutput}\n${output}`;
+    }
+
+    private fireStderrError = () => {
+        this.subject.error(new StdErrError(this.stderrOutput));
+    };
 }
