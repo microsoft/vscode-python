@@ -3,9 +3,11 @@
 
 'use strict';
 
+import * as path from 'path';
 import * as semver from 'semver';
+import { IFileSystem } from '../../common/platform/types';
 import { Architecture } from '../../common/utils/platform';
-import { PythonVersion } from './pythonVersion';
+import { areSameVersion, PythonVersion } from './pythonVersion';
 
 /**
  * The supported Python environment types.
@@ -74,10 +76,26 @@ export type PythonEnvironment = InterpreterInformation & {
 };
 
 /**
+ * Python environment containing only partial info. But it will contain the environment path.
+ */
+export type PartialPythonEnvironment = Partial<Omit<PythonEnvironment, 'path'>> & { path: string };
+
+/**
+ * Standardize the given env info.
+ *
+ * @param interp = the env info to normalize
+ * @param deps - functional dependencies
+ * @prop deps.normalizePath - (like `path.normalize`)
+ */
+export function normalizeEnvironment(interp: PythonEnvironment): void {
+    interp.path = path.normalize(interp.path);
+}
+
+/**
  * Convert the Python environment type to a user-facing name.
  */
-export function getInterpreterTypeName(interpreterType: EnvironmentType) {
-    switch (interpreterType) {
+export function getInterpreterTypeName(environmentType: EnvironmentType) {
+    switch (environmentType) {
         case EnvironmentType.Conda: {
             return 'conda';
         }
@@ -97,6 +115,103 @@ export function getInterpreterTypeName(interpreterType: EnvironmentType) {
             return '';
         }
     }
+}
+
+/**
+ * Determine if the given infos correspond to the same env.
+ *
+ * @param interp1 - one of the two envs to compare
+ * @param interp2 - one of the two envs to compare
+ * @param deps - functional dependencies
+ * @prop deps.areSameVersion - determine if two versions are the same
+ * @prop deps.inSameDirectory - determine if two files are in the same directory
+ */
+export function areSameEnvironment(
+    interp1: PythonEnvironment | undefined,
+    interp2: PythonEnvironment | undefined,
+    fs: IFileSystem
+): boolean {
+    if (!interp1 || !interp2) {
+        return false;
+    }
+    if (!areSameVersion(interp1.version, interp2.version)) {
+        return false;
+    }
+    // Could be Python 3.6 with path = python.exe, and Python 3.6
+    // and path = python3.exe, so we check the parent directory.
+    if (!inSameDirectory(interp1.path, interp2.path, fs)) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Update one env info with another.
+ *
+ * @param interp - the info to update
+ * @param other - the info to copy in
+ */
+export function updateEnvironment(interp: PythonEnvironment, other: PythonEnvironment): void {
+    // Preserve type information.
+    // Possible we identified environment as unknown, but a later provider has identified env type.
+    if (interp.envType === EnvironmentType.Unknown && other.envType !== EnvironmentType.Unknown) {
+        interp.envType = other.envType;
+    }
+    const props: (keyof PythonEnvironment)[] = [
+        'envName',
+        'envPath',
+        'path',
+        'sysPrefix',
+        'architecture',
+        'sysVersion',
+        'version',
+        'pipEnvWorkspaceFolder'
+    ];
+    for (const prop of props) {
+        if (!interp[prop] && other[prop]) {
+            // tslint:disable-next-line: no-any
+            (interp as any)[prop] = other[prop];
+        }
+    }
+}
+
+/**
+ * Combine env info for matching environments.
+ *
+ * Environments are matched by path and version.
+ *
+ * @param environments - the env infos to merge
+ */
+export function mergeEnvironments(environments: PythonEnvironment[], fs: IFileSystem): PythonEnvironment[] {
+    return environments.reduce<PythonEnvironment[]>((accumulator, current) => {
+        const existingItem = accumulator.find((item) => areSameEnvironment(current, item, fs));
+        if (!existingItem) {
+            const copied: PythonEnvironment = { ...current };
+            normalizeEnvironment(copied);
+            accumulator.push(copied);
+        } else {
+            updateEnvironment(existingItem, current);
+        }
+        return accumulator;
+    }, []);
+}
+
+/**
+ * Determine if the given paths are in the same directory.
+ *
+ * @param path1 - one of the two paths to compare
+ * @param path2 - one of the two paths to compare
+ * @param deps - functional dependencies
+ * @prop deps.arePathsSame - determine if two filenames point to the same file
+ * @prop deps.getPathDirname - (like `path.dirname`)
+ */
+export function inSameDirectory(path1: string | undefined, path2: string | undefined, fs: IFileSystem): boolean {
+    if (!path1 || !path2) {
+        return false;
+    }
+    const dir1 = path.dirname(path1);
+    const dir2 = path.dirname(path2);
+    return fs.arePathsSame(dir1, dir2);
 }
 
 /**
