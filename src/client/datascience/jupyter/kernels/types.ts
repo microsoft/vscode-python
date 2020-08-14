@@ -51,6 +51,7 @@ export type KernelSpecConnectionMetadata = {
 /**
  * Connection metadata for Kernels started using default kernel.
  * Here we tell Jupyter to start a session and let it decide what kernel is to be started.
+ * (could apply to either local or remote sessions when dealing with Jupyter Servers).
  */
 export type DefaultKernelConnectionMetadata = {
     /**

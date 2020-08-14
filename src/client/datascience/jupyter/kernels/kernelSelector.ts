@@ -31,6 +31,7 @@ import { createDefaultKernelSpec } from './helpers';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import {
+    DefaultKernelConnectionMetadata,
     IKernelSelectionUsage,
     IKernelSpecQuickPickItem,
     KernelConnectionMetadata,
@@ -157,7 +158,9 @@ export class KernelSelector implements IKernelSelectionUsage {
         notebookMetadata?: nbformat.INotebookMetadata,
         disableUI?: boolean,
         cancelToken?: CancellationToken
-    ): Promise<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | undefined> {
+    ): Promise<
+        KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | DefaultKernelConnectionMetadata | undefined
+    > {
         const stopWatch = new StopWatch();
         const telemetryProps: IEventNamePropertyMapping[Telemetry.FindKernelForLocalConnection] = {
             kernelSpecFound: false,
@@ -170,7 +173,11 @@ export class KernelSelector implements IKernelSelectionUsage {
             .getKernelSelectionsForLocalSession(resource, type, sessionManager, cancelToken)
             .ignoreErrors();
 
-        let selection: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | undefined;
+        let selection:
+            | KernelSpecConnectionMetadata
+            | PythonKernelConnectionMetadata
+            | DefaultKernelConnectionMetadata
+            | undefined;
 
         if (type === 'jupyter') {
             selection = await this.getKernelForLocalJupyterConnection(
@@ -402,7 +409,9 @@ export class KernelSelector implements IKernelSelectionUsage {
         notebookMetadata?: nbformat.INotebookMetadata,
         disableUI?: boolean,
         cancelToken?: CancellationToken
-    ): Promise<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | undefined> {
+    ): Promise<
+        KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | DefaultKernelConnectionMetadata | undefined
+    > {
         if (notebookMetadata?.kernelspec) {
             const kernelSpec = await this.kernelService.findMatchingKernelSpec(
                 notebookMetadata?.kernelspec,
@@ -445,6 +454,8 @@ export class KernelSelector implements IKernelSelectionUsage {
                 );
                 if (kernelSpec) {
                     return { kind: 'startUsingKernelSpec', kernelSpec, interpreter: activeInterpreter };
+                } else {
+                    return { kind: 'startUsingDefaultKernel', interpreter: activeInterpreter };
                 }
             }
         }
