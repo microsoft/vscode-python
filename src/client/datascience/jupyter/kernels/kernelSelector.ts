@@ -282,7 +282,11 @@ export class KernelSelector implements IKernelSelectionUsage {
             };
         } else {
             // Unlikely scenario, we expect there to be at least one kernel spec.
-            return;
+            // Either way, return so that we can start using the default kernel.
+            return {
+                interpreter: interpreter,
+                kind: 'startUsingDefaultKernel'
+            };
         }
     }
     public async useSelectedKernel(

@@ -49,6 +49,22 @@ export type KernelSpecConnectionMetadata = {
     kind: 'startUsingKernelSpec';
 };
 /**
+ * Connection metadata for Kernels started using default kernel.
+ * Here we tell Jupyter to start a session and let it decide what kernel is to be started.
+ */
+export type DefaultKernelConnectionMetadata = {
+    /**
+     * This will be empty as we do not have a kernel spec.
+     * Left for type compatibility with other types that have kernel spec property.
+     */
+    kernelSpec?: IJupyterKernelSpec;
+    /**
+     * Python interpreter will be used for intellisense & the like.
+     */
+    interpreter?: PythonEnvironment;
+    kind: 'startUsingDefaultKernel';
+};
+/**
  * Connection metadata for Kernels started using Python interpreter.
  * These are not necessarily raw (it could be plain old Jupyter Kernels, where we register Python interpreter as a kernel).
  * We can have KernelSpec information here as well, however that is totally optional.
@@ -62,7 +78,8 @@ export type PythonKernelConnectionMetadata = {
 export type KernelConnectionMetadata =
     | LiveKernelConnectionMetadata
     | KernelSpecConnectionMetadata
-    | PythonKernelConnectionMetadata;
+    | PythonKernelConnectionMetadata
+    | DefaultKernelConnectionMetadata;
 
 export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata>
     extends QuickPickItem {

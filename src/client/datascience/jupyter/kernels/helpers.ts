@@ -11,6 +11,7 @@ const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import {
+    DefaultKernelConnectionMetadata,
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
@@ -29,7 +30,10 @@ export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpe
     return kernelSpec.argv.indexOf(connectionFilePlaceholder);
 }
 
-type ConnectionWithKernelSpec = KernelSpecConnectionMetadata | PythonKernelConnectionMetadata;
+type ConnectionWithKernelSpec =
+    | KernelSpecConnectionMetadata
+    | PythonKernelConnectionMetadata
+    | DefaultKernelConnectionMetadata;
 export function kernelConnectionMetadataHasKernelSpec(
     connectionMetadata: KernelConnectionMetadata
 ): connectionMetadata is ConnectionWithKernelSpec {
