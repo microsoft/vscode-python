@@ -19,7 +19,6 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     ICell,
-    IJupyterKernelSpec,
     INotebook,
     INotebookCompletion,
     INotebookExecutionInfo,
@@ -28,7 +27,7 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
-import { LiveKernelModel } from '../kernels/types';
+import { KernelConnectionMetadata } from '../kernels/types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
@@ -68,9 +67,7 @@ export class GuestJupyterNotebook
         return ServerStatus.Idle;
     }
 
-    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
-        IJupyterKernelSpec | LiveKernelModel
-    >().event;
+    public onKernelChanged = new EventEmitter<KernelConnectionMetadata>().event;
     public onKernelRestarted = new EventEmitter<void>().event;
     public onKernelInterrupted = new EventEmitter<void>().event;
     public onDisposed = new EventEmitter<void>().event;
@@ -245,11 +242,11 @@ export class GuestJupyterNotebook
         return;
     }
 
-    public getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
+    public getKernelSpec(): KernelConnectionMetadata | undefined {
         return;
     }
 
-    public setKernelSpec(_spec: IJupyterKernelSpec | LiveKernelModel, _timeout: number): Promise<void> {
+    public setKernelSpec(_spec: KernelConnectionMetadata, _timeout: number): Promise<void> {
         return Promise.resolve();
     }
     public getLoggers(): INotebookExecutionLogger[] {

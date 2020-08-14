@@ -11,6 +11,11 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
+import {
+    getInterpreterFromKernelConnectionMetadata,
+    kernelConnectionMetadataHasKernelModel,
+    kernelConnectionMetadataHasKernelSpec
+} from '../jupyter/kernels/helpers';
 import { IDataScienceFileSystem, ILocalResourceUriConverter, INotebook } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
@@ -95,13 +100,23 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         }
     }
     private getInterpreter(): Partial<PythonEnvironment> | undefined {
-        let interpreter: undefined | Partial<PythonEnvironment> = this.notebook.getMatchingInterpreter();
-        const kernel = this.notebook.getKernelSpec();
-        interpreter = kernel?.metadata?.interpreter?.path ? kernel?.metadata?.interpreter : interpreter;
+        const kernelConnection = this.notebook.getKernelSpec();
+        if (!kernelConnection) {
+            return;
+        }
+
+        const model = kernelConnectionMetadataHasKernelModel(kernelConnection)
+            ? kernelConnection.kernelModel
+            : undefined;
+        const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
+            ? kernelConnection.kernelSpec
+            : undefined;
+        const kernelPath = model?.path || kernelSpec?.path;
+        let interpreter = getInterpreterFromKernelConnectionMetadata(this.notebook.getKernelSpec());
 
         // If we still do not have the interpreter, then check if we have the path to the kernel.
-        if (!interpreter && kernel?.path) {
-            interpreter = { path: kernel.path };
+        if (!interpreter && kernelPath) {
+            interpreter = { path: kernelPath };
         }
 
         if (!interpreter || !interpreter.path) {

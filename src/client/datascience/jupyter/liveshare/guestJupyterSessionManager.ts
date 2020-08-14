@@ -13,7 +13,7 @@ import {
     IJupyterSession,
     IJupyterSessionManager
 } from '../../types';
-import { LiveKernelModel } from '../kernels/types';
+import { KernelConnectionMetadata } from '../kernels/types';
 
 export class GuestJupyterSessionManager implements IJupyterSessionManager {
     private connInfo: IJupyterConnection | undefined;
@@ -33,11 +33,11 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
         return this.restartSessionUsedEvent.event;
     }
     public startNew(
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterSession> {
-        return this.realSessionManager.startNew(kernelSpec, workingDirectory, cancelToken);
+        return this.realSessionManager.startNew(kernelConnection, workingDirectory, cancelToken);
     }
 
     public async getKernelSpecs(): Promise<IJupyterKernelSpec[]> {

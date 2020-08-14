@@ -6,13 +6,12 @@ import { inject, injectable } from 'inversify';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
-
 import { IProcessServiceFactory } from '../../common/process/types';
 import { Resource } from '../../common/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { IDataScienceFileSystem, IJupyterKernelSpec } from '../types';
+import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import { IDataScienceFileSystem } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelProcess } from './kernelProcess';
 import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
@@ -33,20 +32,18 @@ export class KernelLauncher implements IKernelLauncher {
 
     @captureTelemetry(Telemetry.KernelLauncherPerf)
     public async launch(
-        kernelSpec: IJupyterKernelSpec,
+        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         resource: Resource,
-        workingDirectory: string,
-        interpreter?: PythonEnvironment
+        workingDirectory: string
     ): Promise<IKernelProcess> {
         const connection = await this.getKernelConnection();
         const kernelProcess = new KernelProcess(
             this.processExecutionFactory,
             this.daemonPool,
             connection,
-            kernelSpec,
+            kernelConnectionMetadata,
             this.fs,
-            resource,
-            interpreter
+            resource
         );
         await kernelProcess.launch(workingDirectory);
         return kernelProcess;

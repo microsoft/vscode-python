@@ -3,6 +3,8 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../../common/application/types';
 import '../../../common/extensions';
@@ -27,7 +29,7 @@ import {
     INotebookMetadataLive,
     INotebookProviderConnection
 } from '../../types';
-import { createDefaultKernelSpec } from './helpers';
+import { createDefaultKernelSpec, getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import {
@@ -37,9 +39,37 @@ import {
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
-    LiveKernelModel,
     PythonKernelConnectionMetadata
 } from './types';
+
+// tslint:disable-next-line:no-any
+type PromiseFunctionReturningKernelConnection = (...any: any[]) => Promise<any | undefined>;
+
+/**
+ * All KernelConnections returned by the KernelSelector can be used in a number of ways and can get updated.
+ * We need to ensure changes downstream do not change the values we stored internally in this class.
+ * E.g. when returning a kernel connection with a kernel spec, its possible some metadata or the interpreter will get updated later on.
+ * Such changes should not result in changes to the data returned from this class.
+ */
+function cloneReturnedKernelConnection() {
+    return function (
+        _target: Object,
+        _propertyName: string,
+        descriptor: TypedPropertyDescriptor<PromiseFunctionReturningKernelConnection>
+    ) {
+        // tslint:disable-next-line: no-any
+        const originalMethod = descriptor.value! as any;
+        // tslint:disable-next-line:no-any no-function-expression
+        (descriptor as any).value = async function (...args: any[]) {
+            // tslint:disable-next-line: no-invalid-this
+            return originalMethod.apply(this, args).then((kernelConnection: KernelConnectionMetadata) => {
+                return kernelConnection && typeof kernelConnection.kind === 'string'
+                    ? cloneDeep(kernelConnection)
+                    : undefined;
+            });
+        };
+    };
+}
 
 @injectable()
 export class KernelSelector implements IKernelSelectionUsage {
@@ -94,6 +124,7 @@ export class KernelSelector implements IKernelSelectionUsage {
     /**
      * Selects a kernel from a remote session.
      */
+    @cloneReturnedKernelConnection()
     public async selectRemoteKernel(
         resource: Resource,
         stopWatch: StopWatch,
@@ -121,6 +152,7 @@ export class KernelSelector implements IKernelSelectionUsage {
     /**
      * Select a kernel from a local session.
      */
+    @cloneReturnedKernelConnection()
     public async selectLocalKernel(
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
@@ -151,6 +183,7 @@ export class KernelSelector implements IKernelSelectionUsage {
      * (will attempt to find the best matching kernel, or prompt user to use current interpreter or select one).
      */
     @reportAction(ReportableAction.KernelsGetKernelForLocalConnection)
+    @cloneReturnedKernelConnection()
     public async getKernelForLocalConnection(
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
@@ -210,6 +243,7 @@ export class KernelSelector implements IKernelSelectionUsage {
      */
     // tslint:disable-next-line: cyclomatic-complexity
     @reportAction(ReportableAction.KernelsGetKernelForRemoteConnection)
+    @cloneReturnedKernelConnection()
     public async getKernelForRemoteConnection(
         resource: Resource,
         sessionManager?: IJupyterSessionManager,
@@ -296,6 +330,7 @@ export class KernelSelector implements IKernelSelectionUsage {
             };
         }
     }
+    @cloneReturnedKernelConnection()
     public async useSelectedKernel(
         selection: KernelConnectionMetadata,
         resource: Resource,
@@ -343,13 +378,13 @@ export class KernelSelector implements IKernelSelectionUsage {
             return;
         }
     }
-
+    @cloneReturnedKernelConnection()
     public async askForLocalKernel(
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
+        kernelConnection?: KernelConnectionMetadata
     ): Promise<KernelConnectionMetadata | undefined> {
-        const displayName = kernelSpec?.display_name || kernelSpec?.name || '';
+        const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
         const message = localize.DataScience.sessionStartFailedWithKernel().format(
             displayName,
             Commands.ViewJupyterOutput
@@ -358,10 +393,10 @@ export class KernelSelector implements IKernelSelectionUsage {
         const cancel = localize.Common.cancel();
         const selection = await this.applicationShell.showErrorMessage(message, selectKernel, cancel);
         if (selection === selectKernel) {
-            return this.selectLocalJupyterKernel(resource, type, kernelSpec?.display_name || kernelSpec?.name);
+            return this.selectLocalJupyterKernel(resource, type, displayName);
         }
     }
-
+    @cloneReturnedKernelConnection()
     public async selectJupyterKernel(
         resource: Resource,
         connection: INotebookProviderConnection | undefined,

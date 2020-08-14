@@ -10,6 +10,8 @@ const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp
 
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { PYTHON_LANGUAGE } from '../../../common/constants';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
     DefaultKernelConnectionMetadata,
     KernelConnectionMetadata,
@@ -43,6 +45,74 @@ export function kernelConnectionMetadataHasKernelModel(
     connectionMetadata: KernelConnectionMetadata
 ): connectionMetadata is LiveKernelConnectionMetadata {
     return connectionMetadata.kind === 'connectToLiveKernel';
+}
+export function getDisplayNameOrNameOfKernelConnection(
+    kernelConnection: KernelConnectionMetadata | undefined,
+    defaultValue: string = ''
+) {
+    if (!kernelConnection) {
+        return defaultValue;
+    }
+    const displayName =
+        kernelConnection.kind === 'connectToLiveKernel'
+            ? kernelConnection.kernelModel.display_name
+            : kernelConnection.kernelSpec?.display_name;
+    const name =
+        kernelConnection.kind === 'connectToLiveKernel'
+            ? kernelConnection.kernelModel.name
+            : kernelConnection.kernelSpec?.name;
+    return displayName || name || defaultValue;
+}
+
+export function getNameOfKernelConnection(
+    kernelConnection: KernelConnectionMetadata | undefined,
+    defaultValue: string = ''
+) {
+    if (!kernelConnection) {
+        return defaultValue;
+    }
+    return kernelConnection.kind === 'connectToLiveKernel'
+        ? kernelConnection.kernelModel.name
+        : kernelConnection.kernelSpec?.name;
+}
+
+export function getInterpreterFromKernelConnectionMetadata(
+    kernelConnection?: KernelConnectionMetadata
+): Partial<PythonEnvironment> | undefined {
+    if (!kernelConnection) {
+        return;
+    }
+    if (kernelConnection.interpreter) {
+        return kernelConnection.interpreter;
+    }
+    const model = kernelConnectionMetadataHasKernelModel(kernelConnection) ? kernelConnection.kernelModel : undefined;
+    if (model?.metadata?.interpreter) {
+        return model.metadata.interpreter;
+    }
+    const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
+        ? kernelConnection.kernelSpec
+        : undefined;
+    return kernelSpec?.metadata?.interpreter;
+}
+export function isPythonKernelConnection(kernelConnection?: KernelConnectionMetadata): boolean {
+    if (!kernelConnection) {
+        return false;
+    }
+    const model = kernelConnectionMetadataHasKernelModel(kernelConnection) ? kernelConnection.kernelModel : undefined;
+    const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
+        ? kernelConnection.kernelSpec
+        : undefined;
+    return model?.language === PYTHON_LANGUAGE || kernelSpec?.language === PYTHON_LANGUAGE;
+}
+export function getKernelConnectionLanguage(kernelConnection?: KernelConnectionMetadata): string | undefined {
+    if (!kernelConnection) {
+        return;
+    }
+    const model = kernelConnectionMetadataHasKernelModel(kernelConnection) ? kernelConnection.kernelModel : undefined;
+    const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
+        ? kernelConnection.kernelSpec
+        : undefined;
+    return model?.language || kernelSpec?.language;
 }
 // Create a default kernelspec with the given display name
 export function createDefaultKernelSpec(displayName?: string): IJupyterKernelSpec {

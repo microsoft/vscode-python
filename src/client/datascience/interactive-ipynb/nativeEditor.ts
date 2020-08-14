@@ -37,7 +37,6 @@ import {
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
@@ -61,7 +60,6 @@ import {
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
-    IJupyterKernelSpec,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditor,
@@ -88,7 +86,7 @@ import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
-import { LiveKernelModel } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
@@ -321,15 +319,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.model.metadata;
     }
 
-    public async updateNotebookOptions(
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel,
-        interpreter: PythonEnvironment | undefined
-    ): Promise<void> {
+    public async updateNotebookOptions(kernelConnection: KernelConnectionMetadata): Promise<void> {
         if (this.model) {
             const change: NotebookModelChange = {
                 kind: 'version',
-                kernelSpec,
-                interpreter,
+                kernelConnection,
                 oldDirty: this.model.isDirty,
                 newDirty: true,
                 source: 'user'
@@ -505,15 +499,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Tell storage about our notebook object
         const notebook = this.getNotebook();
         if (notebook && this.model) {
-            const interpreter = notebook.getMatchingInterpreter();
-            const kernelSpec = notebook.getKernelSpec();
+            const kernelConnection = notebook.getKernelSpec();
             this.model.update({
                 source: 'user',
                 kind: 'version',
                 oldDirty: this.model.isDirty,
                 newDirty: this.model.isDirty,
-                interpreter,
-                kernelSpec
+                kernelConnection
             });
         }
 

@@ -6,20 +6,23 @@ import { ChildProcess } from 'child_process';
 import * as tcpPortUsed from 'tcp-port-used';
 import * as tmp from 'tmp';
 import { Event, EventEmitter } from 'vscode';
-import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop, swallowExceptions } from '../../common/utils/misc';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { cleanEnvironment, findIndexOfConnectionFile } from '../jupyter/kernels/helpers';
-import { IDataScienceFileSystem, IJupyterKernelSpec } from '../types';
+import {
+    cleanEnvironment,
+    findIndexOfConnectionFile,
+    isPythonKernelConnection,
+    kernelConnectionMetadataHasKernelSpec
+} from '../jupyter/kernels/helpers';
+import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import { IDataScienceFileSystem } from '../types';
+import { KernelDaemonPool } from './kernelDaemonPool';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
 import { IKernelConnection, IKernelProcess, IPythonKernelDaemon, PythonKernelDiedError } from './types';
-
-import { KernelDaemonPool } from './kernelDaemonPool';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -27,14 +30,14 @@ export class KernelProcess implements IKernelProcess {
     public get exited(): Event<{ exitCode?: number; reason?: string }> {
         return this.exitEvent.event;
     }
-    public get kernelSpec(): Readonly<IJupyterKernelSpec> {
+    public get kernelSpec(): Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata> {
         return this.originalKernelSpec;
     }
     public get connection(): Readonly<IKernelConnection> {
         return this._connection;
     }
     private get isPythonKernel(): boolean {
-        return this.kernelSpec.language.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
+        return isPythonKernelConnection(this.kernelSpec);
     }
     private _process?: ChildProcess;
     private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
@@ -42,20 +45,19 @@ export class KernelProcess implements IKernelProcess {
     private launchedOnce?: boolean;
     private disposed?: boolean;
     private kernelDaemon?: IPythonKernelDaemon;
-    private readonly _kernelSpec: IJupyterKernelSpec;
-    private readonly originalKernelSpec: IJupyterKernelSpec;
+    private readonly _kernelSpec: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata;
+    private readonly originalKernelSpec: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata;
     private connectionFile?: string;
     constructor(
         private readonly processExecutionFactory: IProcessServiceFactory,
         private readonly daemonPool: KernelDaemonPool,
         private readonly _connection: IKernelConnection,
-        kernelSpec: IJupyterKernelSpec,
+        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         private readonly fs: IDataScienceFileSystem,
-        private readonly resource: Resource,
-        private readonly interpreter?: PythonEnvironment
+        private readonly resource: Resource
     ) {
-        this.originalKernelSpec = kernelSpec;
-        this._kernelSpec = cleanEnvironment(kernelSpec);
+        this.originalKernelSpec = kernelConnectionMetadata;
+        this._kernelSpec = cleanEnvironment(kernelConnectionMetadata);
     }
     public async interrupt(): Promise<void> {
         if (this.kernelDaemon) {
@@ -142,31 +144,36 @@ export class KernelProcess implements IKernelProcess {
             throw new Error('Timed out waiting to get a heartbeat from kernel process.');
         }
     }
-
+    private get kernelSpecArgv(): string[] {
+        return this._kernelSpec.kernelSpec?.argv || ([] as string[]);
+    }
     // Instead of having to use a connection file update our local copy of the kernelspec to launch
     // directly with command line arguments
     private async updateConnectionArgs() {
         // First check to see if we have a kernelspec that expects a connection file,
         // Error if we don't have one. We expect '-f', '{connectionfile}' in our launch args
-        const indexOfConnectionFile = findIndexOfConnectionFile(this._kernelSpec);
+        const kernelSpec = kernelConnectionMetadataHasKernelSpec(this._kernelSpec)
+            ? this._kernelSpec.kernelSpec
+            : undefined;
+        const indexOfConnectionFile = kernelSpec ? findIndexOfConnectionFile(kernelSpec) : -1;
         if (indexOfConnectionFile === -1) {
-            throw new Error(`Connection file not found in kernelspec json args, ${this._kernelSpec.argv.join(' ')}`);
+            throw new Error(`Connection file not found in kernelspec json args, ${this.kernelSpecArgv.join(' ')}`);
         }
         if (
             this.isPythonKernel &&
             indexOfConnectionFile === 0 &&
-            this._kernelSpec.argv[indexOfConnectionFile - 1] !== '-f'
+            this.kernelSpecArgv[indexOfConnectionFile - 1] !== '-f'
         ) {
-            throw new Error(`Connection file not found in kernelspec json args, ${this._kernelSpec.argv.join(' ')}`);
+            throw new Error(`Connection file not found in kernelspec json args, ${this.kernelSpecArgv.join(' ')}`);
         }
 
         // Python kernels are special. Handle the extra arguments.
         if (this.isPythonKernel) {
             // Slice out -f and the connection file from the args
-            this._kernelSpec.argv.splice(indexOfConnectionFile - 1, 2);
+            this.kernelSpecArgv.splice(indexOfConnectionFile - 1, 2);
 
             // Add in our connection command line args
-            this._kernelSpec.argv.push(...this.addPythonConnectionArgs());
+            this.kernelSpecArgv.push(...this.addPythonConnectionArgs());
         } else {
             // For other kernels, just write to the connection file.
             // Note: We have to dispose the temp file and recreate it because otherwise the file
@@ -178,7 +185,7 @@ export class KernelProcess implements IKernelProcess {
             await this.fs.writeLocalFile(this.connectionFile, JSON.stringify(this._connection));
 
             // Then replace the connection file argument with this file
-            this._kernelSpec.argv[indexOfConnectionFile] = this.connectionFile;
+            this.kernelSpecArgv[indexOfConnectionFile] = this.connectionFile;
         }
     }
 
@@ -217,8 +224,8 @@ export class KernelProcess implements IKernelProcess {
             const kernelDaemonLaunch = await this.pythonKernelLauncher.launch(
                 this.resource,
                 workingDirectory,
-                this._kernelSpec,
-                this.interpreter
+                this._kernelSpec.kernelSpec!,
+                this._kernelSpec.interpreter
             );
 
             this.kernelDaemon = kernelDaemonLaunch.daemon;
@@ -228,10 +235,10 @@ export class KernelProcess implements IKernelProcess {
         // If we are not python just use the ProcessExecutionFactory
         if (!exeObs) {
             // First part of argument is always the executable.
-            const executable = this._kernelSpec.argv[0];
+            const executable = this.kernelSpecArgv[0];
             const executionService = await this.processExecutionFactory.create(this.resource);
-            exeObs = executionService.execObservable(executable, this._kernelSpec.argv.slice(1), {
-                env: this._kernelSpec.env,
+            exeObs = executionService.execObservable(executable, this.kernelSpecArgv.slice(1), {
+                env: this._kernelSpec.kernelSpec?.env,
                 cwd: workingDirectory
             });
         }

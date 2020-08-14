@@ -21,11 +21,11 @@ import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { JupyterSession } from '../../../client/datascience/jupyter/jupyterSession';
-import { LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
+import { KernelConnectionMetadata, LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
 import { IJupyterConnection, IJupyterKernelSpec } from '../../../client/datascience/types';
 import { MockOutputChannel } from '../../mockClasses';
 
-// tslint:disable: max-func-body-length
+// tslint:disable: max-func-body-length no-any
 suite('DataScience - JupyterSession', () => {
     type ISession = Session.ISession & {
         /**
@@ -51,7 +51,7 @@ suite('DataScience - JupyterSession', () => {
     let restartSessionUsedEvent: Deferred<void>;
     let connection: IJupyterConnection;
     let serverSettings: typemoq.IMock<ServerConnection.ISettings>;
-    let kernelSpec: typemoq.IMock<IJupyterKernelSpec | LiveKernelModel>;
+    let mockKernelSpec: typemoq.IMock<KernelConnectionMetadata>;
     let sessionManager: SessionManager;
     let contentsManager: ContentsManager;
     let session: ISession;
@@ -64,7 +64,7 @@ suite('DataScience - JupyterSession', () => {
         restartSessionUsedEvent = createDeferred();
         connection = mock<IJupyterConnection>();
         serverSettings = typemoq.Mock.ofType<ServerConnection.ISettings>();
-        kernelSpec = typemoq.Mock.ofType<IJupyterKernelSpec | LiveKernelModel>();
+        mockKernelSpec = typemoq.Mock.ofType<KernelConnectionMetadata>();
         session = mock(DefaultSession);
         kernel = mock(DefaultKernel);
         when(session.kernel).thenReturn(instance(kernel));
@@ -83,7 +83,7 @@ suite('DataScience - JupyterSession', () => {
         jupyterSession = new JupyterSession(
             instance(connection),
             serverSettings.object,
-            kernelSpec.object,
+            mockKernelSpec.object,
             instance(sessionManager),
             instance(contentsManager),
             channel,
@@ -105,8 +105,9 @@ suite('DataScience - JupyterSession', () => {
         when(contentsManager.rename(anything(), anything())).thenResolve({ path: nbFile } as any);
         when(contentsManager.delete(anything())).thenResolve();
         when(sessionManager.startNew(anything())).thenResolve(instance(session));
-        kernelSpec.setup((k) => k.name).returns(() => 'some name');
-        kernelSpec.setup((k) => k.id).returns(() => undefined);
+        const specOrModel = { name: 'some name', id: undefined } as any;
+        (mockKernelSpec as any).setup((k: any) => k.kernelModel).returns(() => specOrModel);
+        (mockKernelSpec as any).setup((k: any) => k.kernelSpec).returns(() => specOrModel);
 
         await jupyterSession.connect(100);
     }
@@ -240,7 +241,10 @@ suite('DataScience - JupyterSession', () => {
                     );
 
                     assert.isFalse(remoteSessionInstance.isRemoteSession);
-                    await jupyterSession.changeKernel(newActiveRemoteKernel, 10000);
+                    await jupyterSession.changeKernel(
+                        { kernelModel: newActiveRemoteKernel, kind: 'connectToLiveKernel' },
+                        10000
+                    );
                 });
                 test('Will shutdown to old session', async () => {
                     verify(session.shutdown()).once();
@@ -311,7 +315,7 @@ suite('DataScience - JupyterSession', () => {
                     env: undefined
                 };
 
-                await jupyterSession.changeKernel(newKernel, 10000);
+                await jupyterSession.changeKernel({ kernelSpec: newKernel, kind: 'startUsingKernelSpec' }, 10000);
 
                 // Wait untill a new session has been started.
                 await newSessionCreated.promise;

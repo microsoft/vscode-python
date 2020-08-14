@@ -33,17 +33,21 @@ suite('DataScience - Notebook Storage', () => {
     }
 
     function updateModelKernel(model: BaseNotebookModel, id: string) {
+        const kernelModel = {
+            name: 'foo',
+            // tslint:disable-next-line: no-any
+            session: {} as any,
+            lastActivityTime: new Date(),
+            numberOfConnections: 1,
+            id
+        };
         const change: NotebookModelChange = {
             kind: 'version',
-            kernelSpec: {
-                name: 'foo',
-                // tslint:disable-next-line: no-any
-                session: {} as any,
-                lastActivityTime: new Date(),
-                numberOfConnections: 1,
-                id
+            kernelConnection: {
+                kernelModel,
+                interpreter: undefined,
+                kind: 'connectToLiveKernel'
             },
-            interpreter: undefined,
             oldDirty: false,
             newDirty: true,
             source: 'user'

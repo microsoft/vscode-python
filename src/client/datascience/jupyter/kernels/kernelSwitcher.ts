@@ -57,7 +57,7 @@ export class KernelSwitcher {
                     const potential = await this.selector.askForLocalKernel(
                         notebook.resource,
                         notebook.connection?.type || 'noConnection',
-                        kernelConnectionMetadataHasKernelModel(kernel) ? kernel.kernelModel : kernel.kernelSpec
+                        kernel
                     );
                     if (potential && Object.keys(potential).length > 0) {
                         kernel = potential;
@@ -79,9 +79,8 @@ export class KernelSwitcher {
         const switchKernel = async (newKernel: KernelConnectionMetadata) => {
             // Change the kernel. A status update should fire that changes our display
             await notebook.setKernelSpec(
-                newKernel.kind === 'connectToLiveKernel' ? newKernel.kernelModel : newKernel.kernelSpec!,
-                this.configService.getSettings(notebook.resource).datascience.jupyterLaunchTimeout,
-                newKernel.interpreter
+                newKernel,
+                this.configService.getSettings(notebook.resource).datascience.jupyterLaunchTimeout
             );
         };
 

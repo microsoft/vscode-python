@@ -177,12 +177,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                         if (notebook.disposed) {
                             return;
                         }
-                        updateKernelInNotebookMetadata(
-                            document,
-                            e,
-                            notebook.getMatchingInterpreter(),
-                            this.notebookContentProvider
-                        );
+                        updateKernelInNotebookMetadata(document, e, this.notebookContentProvider);
                     },
                     this,
                     this.disposables
@@ -190,12 +185,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             }
             this.kernelSwitcher.switchKernelWithRetry(notebook, selection).catch(noop);
         } else {
-            updateKernelInNotebookMetadata(
-                document,
-                selection.kind === 'connectToLiveKernel' ? selection.kernelModel : selection.kernelSpec,
-                selection.interpreter,
-                this.notebookContentProvider
-            );
+            updateKernelInNotebookMetadata(document, selection, this.notebookContentProvider);
         }
     }
 }

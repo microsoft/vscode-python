@@ -17,7 +17,7 @@ import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
-import { CodeSnippits, Identifiers } from '../constants';
+import { CodeSnippets, Identifiers } from '../constants';
 import {
     CellState,
     ICell,
@@ -149,9 +149,9 @@ export class JupyterExporter implements INotebookExporter {
         const changeDirectory = await this.calculateDirectoryChange(file, cells);
 
         if (changeDirectory) {
-            const exportChangeDirectory = CodeSnippits.ChangeDirectory.join(os.EOL).format(
+            const exportChangeDirectory = CodeSnippets.ChangeDirectory.join(os.EOL).format(
                 localize.DataScience.exportChangeDirectoryComment(),
-                CodeSnippits.ChangeDirectoryCommentIdentifier,
+                CodeSnippets.ChangeDirectoryCommentIdentifier,
                 changeDirectory
             );
 
@@ -192,7 +192,7 @@ export class JupyterExporter implements INotebookExporter {
         // Make sure we don't already have a cell with a ChangeDirectory comment in it.
         let directoryChange: string | undefined;
         const haveChangeAlready = cells.find((c) =>
-            concatMultilineString(c.data.source).includes(CodeSnippits.ChangeDirectoryCommentIdentifier)
+            concatMultilineString(c.data.source).includes(CodeSnippets.ChangeDirectoryCommentIdentifier)
         );
         if (!haveChangeAlready) {
             const notebookFilePath = path.dirname(notebookFile);

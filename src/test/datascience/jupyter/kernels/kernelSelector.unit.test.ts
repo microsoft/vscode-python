@@ -167,8 +167,8 @@ suite('DataScience - KernelSelector', () => {
                 instance(sessionManager)
             );
 
-            assert.isOk((kernel as any)?.kernelSpec === kernelSpec);
-            assert.isOk(kernel?.interpreter === interpreter);
+            assert.deepEqual((kernel as any)?.kernelSpec, kernelSpec);
+            assert.deepEqual(kernel?.interpreter, interpreter);
             verify(
                 kernelSelectionProvider.getKernelSelectionsForRemoteSession(
                     anything(),
@@ -285,8 +285,8 @@ suite('DataScience - KernelSelector', () => {
                 instance(sessionManager)
             );
 
-            assert.isOk(kernel?.kernelSpec === kernelSpec);
-            assert.isOk(kernel?.interpreter === interpreter);
+            assert.deepEqual((kernel as any)?.kernelSpec, kernelSpec);
+            assert.deepEqual(kernel?.interpreter, interpreter);
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
@@ -325,7 +325,7 @@ suite('DataScience - KernelSelector', () => {
                 instance(sessionManager)
             );
 
-            assert.isOk(kernel?.kernelSpec === kernelSpec);
+            assert.deepEqual((kernel as any)?.kernelSpec, kernelSpec);
             verify(dependencyService.areDependenciesInstalled(interpreter, anything())).once();
             verify(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).once();
             verify(
@@ -371,8 +371,8 @@ suite('DataScience - KernelSelector', () => {
                 instance(sessionManager)
             );
 
-            assert.isOk(kernel?.kernelSpec === kernelSpec);
-            assert.isOk(kernel?.interpreter === interpreter);
+            assert.deepEqual((kernel as any)?.kernelSpec, kernelSpec);
+            assert.deepEqual(kernel?.interpreter, interpreter);
             verify(dependencyService.areDependenciesInstalled(interpreter, anything())).once();
             verify(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).once();
             verify(
@@ -416,7 +416,7 @@ suite('DataScience - KernelSelector', () => {
                 instance(sessionManager)
             );
 
-            assert.isOk(kernel?.kernelSpec === kernelSpec);
+            assert.deepEqual((kernel as any)?.kernelSpec, kernelSpec);
             verify(dependencyService.areDependenciesInstalled(interpreter, anything())).once();
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
@@ -448,9 +448,11 @@ suite('DataScience - KernelSelector', () => {
 
             const kernel = await kernelSelector.selectLocalKernel(undefined, 'raw', new StopWatch());
 
-            assert.isOk(kernel?.interpreter === interpreter);
-            expect(kernel?.kernelSpec, 'Should have kernelspec').to.not.be.undefined;
-            expect(kernel!.kernelSpec!.name, 'Spec should have default name').to.include(defaultKernelSpecName);
+            assert.deepEqual(kernel?.interpreter, interpreter);
+            expect((kernel as any)?.kernelSpec, 'Should have kernelspec').to.not.be.undefined;
+            expect((kernel as any)?.kernelSpec!.name, 'Spec should have default name').to.include(
+                defaultKernelSpecName
+            );
         });
         test('For a raw connection, if a kernel spec is selected return it with the interpreter', async () => {
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
@@ -462,8 +464,8 @@ suite('DataScience - KernelSelector', () => {
                 selection: { interpreter: undefined, kernelSpec }
             } as any);
             const kernel = await kernelSelector.selectLocalKernel(undefined, 'raw', new StopWatch());
-            expect(kernel?.kernelSpec).to.equal(kernelSpec);
-            expect(kernel!.interpreter).to.equal(interpreter);
+            assert.deepEqual((kernel as any)?.kernelSpec, kernelSpec);
+            assert.deepEqual(kernel?.interpreter, interpreter);
         });
     });
     // tslint:disable-next-line: max-func-body-length
@@ -509,8 +511,8 @@ suite('DataScience - KernelSelector', () => {
 
             const kernel = await kernelSelector.getKernelForLocalConnection(anything(), 'raw', undefined, nbMetadata);
 
-            assert.isOk(kernel?.kernelSpec === kernelSpec);
-            assert.isOk(kernel?.interpreter === interpreter);
+            assert.deepEqual((kernel as any).kernelSpec, kernelSpec);
+            assert.deepEqual(kernel?.interpreter, interpreter);
         });
         test('If metadata contains kernel information, then return a matching kernel and a matching interpreter', async () => {
             when(
@@ -533,8 +535,8 @@ suite('DataScience - KernelSelector', () => {
                 nbMetadata
             );
 
-            assert.isOk(kernel?.kernelSpec === kernelSpec);
-            assert.isOk(kernel?.interpreter === interpreter);
+            assert.deepEqual((kernel as any).kernelSpec, kernelSpec);
+            assert.deepEqual(kernel?.interpreter, interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
@@ -564,7 +566,7 @@ suite('DataScience - KernelSelector', () => {
                 nbMetadata
             );
 
-            assert.isOk(kernel?.kernelSpec === kernelSpec);
+            assert.deepEqual((kernel as any).kernelSpec, kernelSpec);
             assert.isUndefined(kernel?.interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(
@@ -607,8 +609,8 @@ suite('DataScience - KernelSelector', () => {
                 nbMetadata
             );
 
-            assert.isOk(kernel?.kernelSpec === kernelSpec);
-            assert.isOk(kernel?.interpreter === interpreter);
+            assert.deepEqual((kernel as any)?.kernelSpec, kernelSpec);
+            assert.deepEqual(kernel?.interpreter, interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
@@ -653,8 +655,8 @@ suite('DataScience - KernelSelector', () => {
                 undefined
             );
 
-            assert.isOk(kernel?.kernelSpec === kernelSpec);
-            assert.isOk(kernel?.interpreter === interpreter);
+            assert.deepEqual(kernel?.kernelSpec, kernelSpec);
+            assert.deepEqual(kernel?.interpreter, interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             verify(kernelService.searchAndRegisterKernel(interpreter, anything(), anything())).once();
@@ -700,8 +702,9 @@ suite('DataScience - KernelSelector', () => {
                 undefined
             );
 
+            assert.ok((kernel as any)?.kernelSpec, 'No kernel spec found for remote');
             assert.equal((kernel as any)?.kernelSpec?.display_name, 'foo', 'Did not find the python kernel spec');
-            assert.isOk(kernel?.interpreter === interpreter);
+            assert.deepEqual(kernel?.interpreter, interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             verify(kernelService.searchAndRegisterKernel(interpreter, anything(), anything())).never();
@@ -760,7 +763,7 @@ suite('DataScience - KernelSelector', () => {
                 'foo',
                 'Did not find the preferred python kernel spec'
             );
-            assert.isOk(kernel?.interpreter === interpreter);
+            assert.deepEqual(kernel?.interpreter, interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             verify(kernelService.searchAndRegisterKernel(interpreter, anything())).never();
@@ -819,7 +822,7 @@ suite('DataScience - KernelSelector', () => {
                 'foo',
                 'Did not find the preferred python kernel spec'
             );
-            assert.isOk((kernel as any)?.interpreter === interpreter);
+            assert.deepEqual(kernel?.interpreter, interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             verify(kernelService.searchAndRegisterKernel(interpreter, anything())).never();

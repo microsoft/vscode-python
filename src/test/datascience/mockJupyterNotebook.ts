@@ -7,11 +7,10 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { Resource } from '../../client/common/types';
 import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
-import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
     ICellHashProvider,
-    IJupyterKernelSpec,
     INotebook,
     INotebookCompletion,
     INotebookExecutionLogger,
@@ -48,9 +47,7 @@ export class MockJupyterNotebook implements INotebook {
         return this.kernelInterrupted.event;
     }
     public kernelSocket = new Observable<KernelSocketInformation | undefined>();
-    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
-        IJupyterKernelSpec | LiveKernelModel
-    >().event;
+    public onKernelChanged = new EventEmitter<KernelConnectionMetadata>().event;
     public onDisposed = new EventEmitter<void>().event;
     public onKernelRestarted = new EventEmitter<void>().event;
     public readonly disposed: boolean = false;
@@ -132,11 +129,11 @@ export class MockJupyterNotebook implements INotebook {
         noop();
     }
 
-    public getKernelSpec(): IJupyterKernelSpec | undefined {
+    public getKernelSpec(): KernelConnectionMetadata | undefined {
         return;
     }
 
-    public setKernelSpec(_spec: IJupyterKernelSpec | LiveKernelModel, _timeout: number): Promise<void> {
+    public setKernelSpec(_spec: KernelConnectionMetadata, _timeout: number): Promise<void> {
         return Promise.resolve();
     }
 
