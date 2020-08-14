@@ -15,7 +15,6 @@ import {
     SpawnOptions,
     StdErrError
 } from '../../common/process/types';
-import { sendTelemetryEvent } from '../../telemetry';
 import { IPythonKernelDaemon, PythonKernelDiedError } from './types';
 
 export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKernelDaemon {
@@ -149,6 +148,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
     }
 
     private fireStderrError = () => {
+        // TELEMETRY HERE?
         this.subject.error(new StdErrError(this.stderrOutput));
     };
 }

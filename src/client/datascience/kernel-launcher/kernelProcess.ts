@@ -12,7 +12,7 @@ import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/
 import { Resource } from '../../common/types';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { cleanEnvironment, findIndexOfConnectionFile } from '../jupyter/kernels/helpers';
 import { IDataScienceFileSystem, IJupyterKernelSpec } from '../types';
