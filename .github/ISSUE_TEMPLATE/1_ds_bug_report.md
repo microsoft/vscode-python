@@ -39,12 +39,11 @@ _Please provide as much info as you readily know_
 -   **OS:** Windows | Mac | Linux (distro):
 -   **Virtual environment:** conda | venv | virtualenv | N/A | ...
 
-## Developer Tools Console Output
+## Python Output
 
 <!-----------------------------------------------------------------------------------------------
-Copy/paste the output in the "Console" tab in the "Developer Tools" panel (Help >
-Toggle Developer Tools). For better details, run the "Enable source map support for
-extension debugging" command in VS Code at least once beforehand.
+Please set this setting: ```"python.logging.logLevel": "debug"```
+Then restart VS code, reproduce your problem, and copy the output of the 'Python' output tab into this issue.
 ------------------------------------------------------------------------------------------------->
 
 Microsoft Data Science for VS Code Engineering Team: @rchiodo, @IanMatthewHuff, @DavidKutu, @DonJayamanne, @greazer, @joyceerhl
