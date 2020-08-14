@@ -9,23 +9,22 @@ import { ImportMock } from 'ts-mock-imports';
 import { ExecutionResult } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import * as ExternalDep from '../../../client/pythonEnvironments/common/externalDependencies';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import {
     EnvironmentInfoService,
-    EnvironmentInfoServiceQueuePriority,
-    EnvironmentType,
-    IEnvironmentInfo,
-    InterpreterType
+    EnvironmentInfoServiceQueuePriority
 } from '../../../client/pythonEnvironments/info/environmentInfoService';
 
 suite('Environment Info Service', () => {
     let stubShellExec: sinon.SinonStub;
 
-    function createExpectedEnvInfo(path: string) {
+    function createExpectedEnvInfo(path: string): PythonEnvironment {
         return {
+            path,
             architecture: Architecture.x64,
-            interpreterPath: path,
-            interpreterType: InterpreterType.cpython,
-            environmentType: EnvironmentType.Unknown,
+            sysVersion: undefined,
+            sysPrefix: 'path',
+            pipEnvWorkspaceFolder: undefined,
             version: {
                 build: [],
                 major: 3,
@@ -33,7 +32,13 @@ suite('Environment Info Service', () => {
                 patch: 3,
                 prerelease: ['final'],
                 raw: '3.8.3-final'
-            }
+            },
+            companyDisplayName: '',
+            displayName: '',
+            envType: EnvironmentType.Unknown,
+            envName: '',
+            envPath: '',
+            cachedEntry: false
         };
     }
 
@@ -54,8 +59,8 @@ suite('Environment Info Service', () => {
     });
     test('Add items to queue and get results', async () => {
         const envService = new EnvironmentInfoService();
-        const promises: Promise<IEnvironmentInfo | undefined>[] = [];
-        const expected: IEnvironmentInfo[] = [];
+        const promises: Promise<PythonEnvironment | undefined>[] = [];
+        const expected: PythonEnvironment[] = [];
         for (let i: number = 0; i < 10; i = i + 1) {
             const path = `any-path${i}`;
             if (i < 5) {
@@ -77,8 +82,8 @@ suite('Environment Info Service', () => {
 
     test('Add same item to queue', async () => {
         const envService = new EnvironmentInfoService();
-        const promises: Promise<IEnvironmentInfo | undefined>[] = [];
-        const expected: IEnvironmentInfo[] = [];
+        const promises: Promise<PythonEnvironment | undefined>[] = [];
+        const expected: PythonEnvironment[] = [];
 
         const path = 'any-path';
         // Clear call counts
