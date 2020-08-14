@@ -27,7 +27,7 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPathUtils) private pathUtils: IPathUtils
-    ) { }
+    ) {}
     public async buildConfiguration(input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         const program = await this.getManagePyPath(state.folder);
         let manuallyEnteredAValue: boolean | undefined;

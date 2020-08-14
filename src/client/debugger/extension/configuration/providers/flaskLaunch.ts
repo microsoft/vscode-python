@@ -17,7 +17,7 @@ import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationPro
 
 @injectable()
 export class FlaskLaunchDebugConfigurationProvider implements IDebugConfigurationProvider {
-    constructor(@inject(IFileSystem) private fs: IFileSystem) { }
+    constructor(@inject(IFileSystem) private fs: IFileSystem) {}
     public isSupported(debugConfigurationType: DebugConfigurationType): boolean {
         return debugConfigurationType === DebugConfigurationType.launchFlask;
     }
