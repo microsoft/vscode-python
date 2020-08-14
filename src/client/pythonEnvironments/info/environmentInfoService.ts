@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '.';
 import { shellExecute } from '../common/externalDependencies';
 import { buildPythonExecInfo } from '../exec';
@@ -14,6 +15,7 @@ export enum EnvironmentInfoServiceQueuePriority {
     High
 }
 
+export const IEnvironmentInfoService = Symbol('IEnvironmentInfoService');
 export interface IEnvironmentInfoService {
     getEnvironmentInfo(
         interpreterPath: string,
@@ -21,6 +23,7 @@ export interface IEnvironmentInfoService {
     ): Promise<PythonEnvironment | undefined>;
 }
 
+@injectable()
 export class EnvironmentInfoService implements IEnvironmentInfoService {
     private readonly cache: Map<string, PythonEnvironment>;
     public constructor(private readonly workerPool?: IWorkerPool<string, PythonEnvironment | undefined>) {

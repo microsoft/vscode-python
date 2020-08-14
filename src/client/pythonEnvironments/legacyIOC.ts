@@ -47,6 +47,7 @@ import {
     WorkspaceVirtualEnvService
 } from './discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
+import { EnvironmentInfoService, IEnvironmentInfoService } from './info/environmentInfoService';
 
 export function registerForIOC(serviceManager: IServiceManager, serviceContainer: IServiceContainer) {
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
@@ -130,5 +131,6 @@ export function registerForIOC(serviceManager: IServiceManager, serviceContainer
     );
     serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
 
+    serviceManager.addSingletonInstance<IEnvironmentInfoService>(IEnvironmentInfoService, new EnvironmentInfoService());
     initializeExternalDependencies(serviceContainer);
 }

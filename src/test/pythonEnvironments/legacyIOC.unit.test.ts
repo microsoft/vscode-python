@@ -5,7 +5,7 @@
 
 // tslint:disable: no-any
 
-import { instance, mock, verify } from 'ts-mockito';
+import { anything, instance, mock, verify } from 'ts-mockito';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -58,6 +58,7 @@ import {
     WorkspaceVirtualEnvService
 } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvWatcherService';
+import { IEnvironmentInfoService } from '../../client/pythonEnvironments/info/environmentInfoService';
 import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 
 suite('Interpreters - Service Registry', () => {
@@ -103,6 +104,9 @@ suite('Interpreters - Service Registry', () => {
                 WorkspaceVirtualEnvWatcherService,
                 WORKSPACE_VIRTUAL_ENV_SERVICE
             )
+        ).once();
+        verify(
+            serviceManager.addSingletonInstance<IEnvironmentInfoService>(IEnvironmentInfoService, anything())
         ).once();
     });
 });
