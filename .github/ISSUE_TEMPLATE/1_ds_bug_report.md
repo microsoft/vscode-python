@@ -42,7 +42,7 @@ _Please provide as much info as you readily know_
 ## Python Output
 
 <!-----------------------------------------------------------------------------------------------
-Please set this setting: ```"python.logging.logLevel": "debug"```
+Please set this setting: ```"python.logging.level": "debug"```
 Then restart VS code, reproduce your problem, and copy the output of the 'Python' output tab into this issue.
 ------------------------------------------------------------------------------------------------->
 
