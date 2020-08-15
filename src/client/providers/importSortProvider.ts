@@ -5,9 +5,9 @@ import { CancellationToken, CancellationTokenSource, TextDocument, Uri, Workspac
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { Commands, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { traceError } from '../common/logger';
+import { ExecutionInfo } from '../common/types';
 import * as internalScripts from '../common/process/internal/scripts';
 import {
-    // IProcessServiceFactory,
     IPythonExecutionFactory,
     IPythonToolExecutionService,
     ObservableExecutionResult
@@ -27,7 +27,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         string,
         { deferred: Deferred<WorkspaceEdit | undefined>; tokenSource: CancellationTokenSource }
     >();
-    // private readonly processServiceFactory: IProcessServiceFactory;
     private readonly pythonExecutionFactory: IPythonExecutionFactory;
     private readonly shell: IApplicationShell;
     private readonly documentManager: IDocumentManager;
@@ -40,7 +39,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.pythonExecutionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        // this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.editorUtils = serviceContainer.get<IEditorUtils>(IEditorUtils);
         this.pythonToolExecutionService = serviceContainer.get<IPythonToolExecutionService>(
             IPythonToolExecutionService
@@ -148,6 +146,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         // configuration. We do that by setting the working directory to the
         // directory which contains the file.
         const filename = '-';
+        const args = getIsortArgs(filename, isortArgs);
 
         const spawnOptions = {
             token,
@@ -155,41 +154,20 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             cwd: path.dirname(uri.fsPath)
         };
 
-        // const promise = this.pythonToolExecutionService
-        //     .exec(executionInfo, spawnOptions, document.uri)
-        //     .then((output) => output.stdout)
-        //     .then((data) => {
-        //         if (this.checkCancellation(document.fileName, tempFile, token)) {
-        //             return [] as vscode.TextEdit[];
-        //         }
-        //         return getTextEditsFromPatch(document.getText(), data);
-        //     })
-        //     .catch((error) => {
-        //         if (this.checkCancellation(document.fileName, tempFile, token)) {
-        //             return [] as vscode.TextEdit[];
-        //         }
-        //         // tslint:disable-next-line:no-empty
-        //         this.handleError(this.Id, error, document.uri).catch(() => {});
-        //         return [] as vscode.TextEdit[];
-        //     })
-        //     .then((edits) => {
-        //         this.deleteTempFile(document.fileName, tempFile).ignoreErrors();
-        //         return edits;
-        //     });
-        const args = getIsortArgs(filename, isortArgs);
-        let moduleName: string | undefined;
-        if (path.basename(_isort) === isort) {
-            moduleName = isort;
-        }
+        // let moduleName: string | undefined;
+        // if (path.basename(_isort) === isort) {
+        //     moduleName = isort;
+        // }
 
-        const executionInfo = {
-            execPath: isort,
-            moduleName,
-            args,
-            product: Product.isort
-        };
+        // const executionInfo = {
+        //     execPath: isort,
+        //     moduleName,
+        //     args,
+        //     product: Product.isort
+        // };
 
         if (isort) {
+            const executionInfo = getExecutionInfo(isort, args);
             // const procService = await this.processServiceFactory.create(document.uri);
             // Use isort directly instead of the internal script.
             return async (documentText: string) => {
@@ -250,4 +228,11 @@ function getIsortArgs(filename: string, extraArgs?: string[]): string[] {
         args.push(...extraArgs);
     }
     return args;
+}
+
+function getExecutionInfo(isortPath: string, args: string[]): ExecutionInfo {
+    let moduleName: string | undefined;
+    if (path.basename(isortPath) === isortPath) moduleName = isortPath;
+
+    return { execPath: isortPath, moduleName, args, product: Product.isort };
 }

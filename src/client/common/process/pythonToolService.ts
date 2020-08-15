@@ -25,7 +25,6 @@ export class PythonToolExecutionService implements IPythonToolExecutionService {
         if (options.env) {
             throw new Error('Environment variables are not supported');
         }
-        console.log('PythonToolExecutionService execObservable', executionInfo);
         if (executionInfo.moduleName && executionInfo.moduleName.length > 0) {
             const pythonExecutionService = await this.serviceContainer
                 .get<IPythonExecutionFactory>(IPythonExecutionFactory)
@@ -46,7 +45,6 @@ export class PythonToolExecutionService implements IPythonToolExecutionService {
         if (options.env) {
             throw new Error('Environment variables are not supported');
         }
-        console.log('PythonToolExecutionService exec', executionInfo);
         if (executionInfo.moduleName && executionInfo.moduleName.length > 0) {
             const pythonExecutionService = await this.serviceContainer
                 .get<IPythonExecutionFactory>(IPythonExecutionFactory)
