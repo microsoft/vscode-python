@@ -42,7 +42,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected get session(): ISessionWithSocket | undefined {
         return this._session;
     }
-    protected kernelSpec?: KernelConnectionMetadata;
+    protected kernelConnectionMetadata?: KernelConnectionMetadata;
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket;
     }
@@ -124,16 +124,19 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         let newSession: ISessionWithSocket | undefined;
 
         // If we are already using this kernel in an active session just return back
-        const currentKernelSpec =
-            this.kernelSpec && kernelConnectionMetadataHasKernelSpec(this.kernelSpec)
-                ? this.kernelSpec.kernelSpec
+        const currentKernelConnection =
+            this.kernelConnectionMetadata && kernelConnectionMetadataHasKernelSpec(this.kernelConnectionMetadata)
+                ? this.kernelConnectionMetadata.kernelSpec
                 : undefined;
-        const kernelSpecToUse = kernelConnectionMetadataHasKernelSpec(kernelConnection)
+        const kernelConnectionToUse = kernelConnectionMetadataHasKernelSpec(kernelConnection)
             ? kernelConnection.kernelSpec
             : undefined;
-        if (this.session && currentKernelSpec && kernelSpecToUse) {
+        if (this.session && currentKernelConnection && kernelConnectionToUse) {
             // Name and id have to match (id is only for active sessions)
-            if (currentKernelSpec.name === kernelSpecToUse.name && currentKernelSpec.id === kernelSpecToUse.id) {
+            if (
+                currentKernelConnection.name === kernelConnectionToUse.name &&
+                currentKernelConnection.id === kernelConnectionToUse.id
+            ) {
                 return;
             }
         }
@@ -147,7 +150,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
 
         // Update our kernel spec and interpreter
-        this.kernelSpec = kernelConnection;
+        this.kernelConnectionMetadata = kernelConnection;
 
         // Save the new session
         this.setSession(newSession);
@@ -190,7 +193,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
-            this.restartSessionPromise = this.createRestartSession(this.kernelSpec!, oldSession);
+            this.restartSessionPromise = this.createRestartSession(this.kernelConnectionMetadata!, oldSession);
             traceInfo('Started new restart session');
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);

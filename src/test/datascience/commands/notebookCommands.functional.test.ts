@@ -174,9 +174,9 @@ suite('DataScience - Notebook Commands', () => {
                 return obj;
             }
             function verifyCallToSetKernelSpec(notebook: JupyterNotebookBase) {
-                verify(notebook.setKernelSpec(anything(), anything())).once();
+                verify(notebook.setKernelConnection(anything(), anything())).once();
 
-                const kernelConnection = capture(notebook.setKernelSpec).first()[0];
+                const kernelConnection = capture(notebook.setKernelConnection).first()[0];
                 if (isLocalConnection) {
                     assert.equal(kernelConnection.kind, 'startUsingKernelSpec');
                     const kernelSpec =

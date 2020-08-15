@@ -39,7 +39,7 @@ export class JupyterSession extends BaseJupyterSession {
         readonly workingDirectory: string
     ) {
         super(restartSessionUsed, workingDirectory);
-        this.kernelSpec = kernelSpec;
+        this.kernelConnectionMetadata = kernelSpec;
     }
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
@@ -55,7 +55,7 @@ export class JupyterSession extends BaseJupyterSession {
         }
 
         // Start a new session
-        this.setSession(await this.createNewKernelSession(this.kernelSpec, timeoutMs, cancelToken));
+        this.setSession(await this.createNewKernelSession(this.kernelConnectionMetadata, timeoutMs, cancelToken));
 
         // Listen for session status changes
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
@@ -141,7 +141,7 @@ export class JupyterSession extends BaseJupyterSession {
 
     protected startRestartSession() {
         if (!this.restartSessionPromise && this.session && this.contentsManager) {
-            this.restartSessionPromise = this.createRestartSession(this.kernelSpec, this.session);
+            this.restartSessionPromise = this.createRestartSession(this.kernelConnectionMetadata, this.session);
         }
     }
 

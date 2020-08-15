@@ -1115,7 +1115,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             currentKernelDisplayName:
                 this.notebookMetadata?.kernelspec?.display_name ||
                 this.notebookMetadata?.kernelspec?.name ||
-                getDisplayNameOrNameOfKernelConnection(this._notebook?.getKernelSpec())
+                getDisplayNameOrNameOfKernelConnection(this._notebook?.getKernelConnection())
         });
     }
 
@@ -1180,7 +1180,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private async listenToNotebookEvents(notebook: INotebook): Promise<void> {
         const statusChangeHandler = async (status: ServerStatus) => {
-            const connectionMetadata = notebook.getKernelSpec();
+            const connectionMetadata = notebook.getKernelConnection();
             const name = getDisplayNameOrNameOfKernelConnection(connectionMetadata);
 
             await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
@@ -1226,24 +1226,26 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 
-    private async potentialKernelChanged(data: { identity: Uri; kernel: KernelConnectionMetadata }): Promise<void> {
-        const specOrModel = kernelConnectionMetadataHasKernelModel(data.kernel)
-            ? data.kernel.kernelModel
-            : data.kernel.kernelSpec;
+    private async potentialKernelChanged(data: {
+        identity: Uri;
+        kernelConnection: KernelConnectionMetadata;
+    }): Promise<void> {
+        const specOrModel = kernelConnectionMetadataHasKernelModel(data.kernelConnection)
+            ? data.kernelConnection.kernelModel
+            : data.kernelConnection.kernelSpec;
         if (!this._notebook && specOrModel && this.notebookIdentity.resource.toString() === data.identity.toString()) {
-            const kernelSpecLanguage = kernelConnectionMetadataHasKernelSpec(data.kernel)
-                ? data.kernel.kernelSpec?.language
-                : undefined;
             // No notebook, send update to UI anyway
             this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: ServerStatus.NotStarted,
                 localizedUri: '',
                 displayName: specOrModel?.display_name || specOrModel?.name || '',
-                language: translateKernelLanguageToMonaco(kernelSpecLanguage ?? PYTHON_LANGUAGE)
+                language: translateKernelLanguageToMonaco(
+                    getKernelConnectionLanguage(data.kernelConnection) || PYTHON_LANGUAGE
+                )
             }).ignoreErrors();
 
             // Update our model
-            this.updateNotebookOptions(data.kernel).ignoreErrors();
+            this.updateNotebookOptions(data.kernelConnection).ignoreErrors();
         }
     }
 

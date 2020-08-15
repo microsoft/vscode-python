@@ -242,11 +242,11 @@ export class GuestJupyterNotebook
         return;
     }
 
-    public getKernelSpec(): KernelConnectionMetadata | undefined {
+    public getKernelConnection(): KernelConnectionMetadata | undefined {
         return;
     }
 
-    public setKernelSpec(_spec: KernelConnectionMetadata, _timeout: number): Promise<void> {
+    public setKernelConnection(_spec: KernelConnectionMetadata, _timeout: number): Promise<void> {
         return Promise.resolve();
     }
     public getLoggers(): INotebookExecutionLogger[] {

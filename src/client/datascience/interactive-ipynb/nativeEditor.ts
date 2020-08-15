@@ -499,7 +499,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Tell storage about our notebook object
         const notebook = this.getNotebook();
         if (notebook && this.model) {
-            const kernelConnection = notebook.getKernelSpec();
+            const kernelConnection = notebook.getKernelConnection();
             this.model.update({
                 source: 'user',
                 kind: 'version',

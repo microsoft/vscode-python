@@ -621,14 +621,14 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public getMatchingInterpreter(): PythonEnvironment | undefined {
-        return getInterpreterFromKernelConnectionMetadata(this.getKernelSpec()) as PythonEnvironment | undefined;
+        return getInterpreterFromKernelConnectionMetadata(this.getKernelConnection()) as PythonEnvironment | undefined;
     }
 
-    public getKernelSpec(): KernelConnectionMetadata | undefined {
+    public getKernelConnection(): KernelConnectionMetadata | undefined {
         return this._executionInfo.kernelConnectionMetadata;
     }
 
-    public async setKernelSpec(connectionMetadata: KernelConnectionMetadata, timeoutMS: number): Promise<void> {
+    public async setKernelConnection(connectionMetadata: KernelConnectionMetadata, timeoutMS: number): Promise<void> {
         // We need to start a new session with the new kernel spec
         if (this.session) {
             // Turn off setup

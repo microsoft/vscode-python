@@ -117,10 +117,10 @@ export class RawJupyterSession extends BaseJupyterSession {
                 this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
 
                 // Update kernelspec and interpreter
-                this.kernelSpec = newSession.kernelProcess?.kernelSpec;
+                this.kernelConnectionMetadata = newSession.kernelProcess?.kernelSpec;
 
                 this.outputChannel.appendLine(
-                    localize.DataScience.kernelStarted().format(getDisplayNameOrNameOfKernelConnection(this.kernelSpec))
+                    localize.DataScience.kernelStarted().format(getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata))
                 );
             }
         } catch (error) {
@@ -191,7 +191,7 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     protected startRestartSession() {
         if (!this.restartSessionPromise && this.session) {
-            this.restartSessionPromise = this.createRestartSession(this.kernelSpec, this.session);
+            this.restartSessionPromise = this.createRestartSession(this.kernelConnectionMetadata, this.session);
         }
     }
     protected async createRestartSession(

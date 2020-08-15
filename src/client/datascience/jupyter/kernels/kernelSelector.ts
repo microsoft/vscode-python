@@ -403,18 +403,18 @@ export class KernelSelector implements IKernelSelectionUsage {
         type: 'raw' | 'jupyter',
         currentKernelDisplayName: string | undefined
     ): Promise<KernelConnectionMetadata | undefined> {
-        let kernel: KernelConnectionMetadata | undefined;
+        let kernelConnection: KernelConnectionMetadata | undefined;
         const settings = this.configService.getSettings(resource);
         const isLocalConnection =
             connection?.localLaunch ??
             settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
 
         if (isLocalConnection) {
-            kernel = await this.selectLocalJupyterKernel(resource, connection?.type || type, currentKernelDisplayName);
+            kernelConnection = await this.selectLocalJupyterKernel(resource, connection?.type || type, currentKernelDisplayName);
         } else if (connection && connection.type === 'jupyter') {
-            kernel = await this.selectRemoteJupyterKernel(resource, connection, currentKernelDisplayName);
+            kernelConnection = await this.selectRemoteJupyterKernel(resource, connection, currentKernelDisplayName);
         }
-        return kernel;
+        return kernelConnection;
     }
 
     private async selectLocalJupyterKernel(

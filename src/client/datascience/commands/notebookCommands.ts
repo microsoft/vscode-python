@@ -53,7 +53,7 @@ export class NotebookCommands implements IDisposable {
                       identity: this.interactiveWindowProvider.activeWindow?.identity,
                       resource: this.interactiveWindowProvider.activeWindow?.owner,
                       currentKernelDisplayName: getDisplayNameOrNameOfKernelConnection(
-                          this.interactiveWindowProvider.activeWindow?.notebook?.getKernelSpec()
+                          this.interactiveWindowProvider.activeWindow?.notebook?.getKernelConnection()
                       )
                   };
         }

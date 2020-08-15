@@ -100,7 +100,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         }
     }
     private getInterpreter(): Partial<PythonEnvironment> | undefined {
-        const kernelConnection = this.notebook.getKernelSpec();
+        const kernelConnection = this.notebook.getKernelConnection();
         if (!kernelConnection) {
             return;
         }
@@ -112,7 +112,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
             ? kernelConnection.kernelSpec
             : undefined;
         const kernelPath = model?.path || kernelSpec?.path;
-        let interpreter = getInterpreterFromKernelConnectionMetadata(this.notebook.getKernelSpec());
+        let interpreter = getInterpreterFromKernelConnectionMetadata(this.notebook.getKernelConnection());
 
         // If we still do not have the interpreter, then check if we have the path to the kernel.
         if (!interpreter && kernelPath) {

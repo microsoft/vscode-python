@@ -106,7 +106,7 @@ export interface IKernelSelectionUsage {
 
 export interface IKernel extends IAsyncDisposable {
     readonly uri: Uri;
-    readonly kernelSpec?: KernelConnectionMetadata;
+    readonly kernelConnection?: KernelConnectionMetadata;
     readonly metadata: Readonly<KernelConnectionMetadata>;
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;

@@ -3,6 +3,7 @@
 'use strict';
 
 import type { Kernel } from '@jupyterlab/services';
+import * as fastDeepEqual from 'fast-deep-equal';
 import { IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -131,6 +132,37 @@ export function createDefaultKernelSpec(displayName?: string): IJupyterKernelSpe
     return new JupyterKernelSpec(defaultSpec);
 }
 
+export function areKernelConnectionsEqual(
+    connection1?: KernelConnectionMetadata,
+    connection2?: KernelConnectionMetadata
+) {
+    if (!connection1 && !connection2) {
+        return true;
+    }
+    if (!connection1 && connection2) {
+        return false;
+    }
+    if (connection1 && !connection2) {
+        return false;
+    }
+    if (connection1?.kind !== connection2?.kind) {
+        return false;
+    }
+    if (connection1?.interpreter?.path !== connection2?.interpreter?.path) {
+        return false;
+    }
+    if (connection1?.kind === 'connectToLiveKernel' && connection2?.kind === 'connectToLiveKernel') {
+        return fastDeepEqual(connection1.kernelModel, connection2.kernelModel);
+    } else if (
+        connection1 &&
+        connection1.kind !== 'connectToLiveKernel' &&
+        connection2 &&
+        connection2.kind !== 'connectToLiveKernel'
+    ) {
+        return fastDeepEqual(connection1?.kernelSpec || {}, connection2?.kernelSpec || {});
+    }
+    return false;
+}
 // Check if a name is a default python kernel name and pull the version
 export function detectDefaultKernelName(name: string) {
     const regEx = NamedRegexp('python\\s*(?<version>(\\d+))', 'g');

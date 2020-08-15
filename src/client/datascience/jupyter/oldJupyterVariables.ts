@@ -238,7 +238,7 @@ export class OldJupyterVariables implements IJupyterVariables {
 
     private getParser(notebook: INotebook) {
         // Figure out kernel language
-        const language = getKernelConnectionLanguage(notebook?.getKernelSpec()) || PYTHON_LANGUAGE;
+        const language = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
 
         // We may have cached this information
         let result = this.languageToQueryMap.get(language);
@@ -431,7 +431,7 @@ export class OldJupyterVariables implements IJupyterVariables {
             result.type &&
             result.count &&
             !result.shape &&
-            isPythonKernelConnection(notebook.getKernelSpec()) &&
+            isPythonKernelConnection(notebook.getKernelConnection()) &&
             result.supportsDataExplorer &&
             result.type !== 'list' // List count is good enough
         ) {

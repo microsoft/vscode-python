@@ -129,11 +129,11 @@ export class MockJupyterNotebook implements INotebook {
         noop();
     }
 
-    public getKernelSpec(): KernelConnectionMetadata | undefined {
+    public getKernelConnection(): KernelConnectionMetadata | undefined {
         return;
     }
 
-    public setKernelSpec(_spec: KernelConnectionMetadata, _timeout: number): Promise<void> {
+    public setKernelConnection(_spec: KernelConnectionMetadata, _timeout: number): Promise<void> {
         return Promise.resolve();
     }
 

@@ -201,8 +201,8 @@ export interface INotebook extends IAsyncDisposable {
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     getMatchingInterpreter(): PythonEnvironment | undefined;
-    getKernelSpec(): KernelConnectionMetadata | undefined;
-    setKernelSpec(connectionMetadata: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
+    getKernelConnection(): KernelConnectionMetadata | undefined;
+    setKernelConnection(connectionMetadata: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     getLoggers(): INotebookExecutionLogger[];
     registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
     registerCommTarget(
@@ -1153,7 +1153,7 @@ export interface INotebookProvider {
     /**
      * Fired when a kernel would have been changed if a notebook had existed.
      */
-    onPotentialKernelChanged: Event<{ identity: Uri; kernel: KernelConnectionMetadata }>;
+    onPotentialKernelChanged: Event<{ identity: Uri; kernelConnection: KernelConnectionMetadata }>;
 
     /**
      * List of all notebooks (active and ones that are being constructed).

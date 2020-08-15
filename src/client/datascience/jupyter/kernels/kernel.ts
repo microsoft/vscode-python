@@ -42,8 +42,8 @@ export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
         return this.notebook?.connection;
     }
-    get kernelSpec(): KernelConnectionMetadata | undefined {
-        return this.notebook ? this.notebook.getKernelSpec() : this.metadata;
+    get kernelConnection(): KernelConnectionMetadata | undefined {
+        return this.notebook ? this.notebook.getKernelConnection() : this.metadata;
     }
     get onStatusChanged(): Event<ServerStatus> {
         return this._onStatusChanged.event;
