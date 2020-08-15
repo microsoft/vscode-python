@@ -154,25 +154,10 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             cwd: path.dirname(uri.fsPath)
         };
 
-        // let moduleName: string | undefined;
-        // if (path.basename(_isort) === isort) {
-        //     moduleName = isort;
-        // }
-
-        // const executionInfo = {
-        //     execPath: isort,
-        //     moduleName,
-        //     args,
-        //     product: Product.isort
-        // };
-
         if (isort) {
-            const executionInfo = getExecutionInfo(isort, args);
-            // const procService = await this.processServiceFactory.create(document.uri);
             // Use isort directly instead of the internal script.
+            const executionInfo = getExecutionInfo(isort, args);
             return async (documentText: string) => {
-                // const args = getIsortArgs(filename, isortArgs);
-                // const result = procService.execObservable(isort, args, spawnOptions);
                 const result = await this.pythonToolExecutionService.execObservable(
                     executionInfo,
                     spawnOptions,
