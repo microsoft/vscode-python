@@ -191,7 +191,7 @@ export interface IPythonSettings {
     readonly logging: ILoggingSettings;
 }
 export interface ISortImportSettings {
-    readonly path: string;
+    path: string;
     readonly args: string[];
 }
 

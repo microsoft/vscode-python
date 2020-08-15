@@ -291,6 +291,8 @@ export class PythonSettings implements IPythonSettings {
         } else {
             this.sortImports = sortImportSettings;
         }
+        this.sortImports.path = getAbsolutePath(systemVariables.resolveAny(this.sortImports.path), workspaceRoot);
+
         // Support for travis.
         this.sortImports = this.sortImports ? this.sortImports : { path: '', args: [] };
         // Support for travis.
@@ -396,6 +398,7 @@ export class PythonSettings implements IPythonSettings {
             systemVariables.resolveAny(this.formatting.blackPath),
             workspaceRoot
         );
+        console.log('configSettings', this.formatting);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const autoCompleteSettings = systemVariables.resolveAny(

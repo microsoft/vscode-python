@@ -6,7 +6,12 @@ import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/
 import { Commands, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { traceError } from '../common/logger';
 import * as internalScripts from '../common/process/internal/scripts';
-import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
+import {
+    // IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonToolExecutionService,
+    ObservableExecutionResult
+} from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IEditorUtils, IOutputChannel } from '../common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc';
@@ -14,6 +19,7 @@ import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { ISortImportsEditingProvider } from './types';
+import { Product } from '../common/installer/productInstaller';
 
 @injectable()
 export class SortImportsEditingProvider implements ISortImportsEditingProvider {
@@ -21,20 +27,24 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         string,
         { deferred: Deferred<WorkspaceEdit | undefined>; tokenSource: CancellationTokenSource }
     >();
-    private readonly processServiceFactory: IProcessServiceFactory;
+    // private readonly processServiceFactory: IProcessServiceFactory;
     private readonly pythonExecutionFactory: IPythonExecutionFactory;
     private readonly shell: IApplicationShell;
     private readonly documentManager: IDocumentManager;
     private readonly configurationService: IConfigurationService;
     private readonly editorUtils: IEditorUtils;
+    private readonly pythonToolExecutionService: IPythonToolExecutionService;
 
     public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.shell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.pythonExecutionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+        // this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.editorUtils = serviceContainer.get<IEditorUtils>(IEditorUtils);
+        this.pythonToolExecutionService = serviceContainer.get<IPythonToolExecutionService>(
+            IPythonToolExecutionService
+        );
     }
 
     @captureTelemetry(EventName.FORMAT_SORT_IMPORTS)
@@ -145,12 +155,51 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             cwd: path.dirname(uri.fsPath)
         };
 
+        // const promise = this.pythonToolExecutionService
+        //     .exec(executionInfo, spawnOptions, document.uri)
+        //     .then((output) => output.stdout)
+        //     .then((data) => {
+        //         if (this.checkCancellation(document.fileName, tempFile, token)) {
+        //             return [] as vscode.TextEdit[];
+        //         }
+        //         return getTextEditsFromPatch(document.getText(), data);
+        //     })
+        //     .catch((error) => {
+        //         if (this.checkCancellation(document.fileName, tempFile, token)) {
+        //             return [] as vscode.TextEdit[];
+        //         }
+        //         // tslint:disable-next-line:no-empty
+        //         this.handleError(this.Id, error, document.uri).catch(() => {});
+        //         return [] as vscode.TextEdit[];
+        //     })
+        //     .then((edits) => {
+        //         this.deleteTempFile(document.fileName, tempFile).ignoreErrors();
+        //         return edits;
+        //     });
+        const args = getIsortArgs(filename, isortArgs);
+        let moduleName: string | undefined;
+        if (path.basename(_isort) === isort) {
+            moduleName = isort;
+        }
+
+        const executionInfo = {
+            execPath: isort,
+            moduleName,
+            args,
+            product: Product.isort
+        };
+
         if (isort) {
-            const procService = await this.processServiceFactory.create(document.uri);
+            // const procService = await this.processServiceFactory.create(document.uri);
             // Use isort directly instead of the internal script.
             return async (documentText: string) => {
-                const args = getIsortArgs(filename, isortArgs);
-                const result = procService.execObservable(isort, args, spawnOptions);
+                // const args = getIsortArgs(filename, isortArgs);
+                // const result = procService.execObservable(isort, args, spawnOptions);
+                const result = await this.pythonToolExecutionService.execObservable(
+                    executionInfo,
+                    spawnOptions,
+                    document.uri
+                );
                 return this.communicateWithIsortProcess(result, documentText);
             };
         } else {
