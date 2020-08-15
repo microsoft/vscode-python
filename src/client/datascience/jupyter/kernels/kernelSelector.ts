@@ -410,7 +410,11 @@ export class KernelSelector implements IKernelSelectionUsage {
             settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
 
         if (isLocalConnection) {
-            kernelConnection = await this.selectLocalJupyterKernel(resource, connection?.type || type, currentKernelDisplayName);
+            kernelConnection = await this.selectLocalJupyterKernel(
+                resource,
+                connection?.type || type,
+                currentKernelDisplayName
+            );
         } else if (connection && connection.type === 'jupyter') {
             kernelConnection = await this.selectRemoteJupyterKernel(resource, connection, currentKernelDisplayName);
         }

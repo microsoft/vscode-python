@@ -120,7 +120,9 @@ export class RawJupyterSession extends BaseJupyterSession {
                 this.kernelConnectionMetadata = newSession.kernelProcess?.kernelSpec;
 
                 this.outputChannel.appendLine(
-                    localize.DataScience.kernelStarted().format(getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata))
+                    localize.DataScience.kernelStarted().format(
+                        getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+                    )
                 );
             }
         } catch (error) {

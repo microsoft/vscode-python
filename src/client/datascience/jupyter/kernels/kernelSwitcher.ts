@@ -70,7 +70,9 @@ export class KernelSwitcher {
     }
     private async switchToKernel(notebook: INotebook, kernelConnection: KernelConnectionMetadata): Promise<void> {
         if (notebook.connection?.type === 'raw' && kernelConnection.interpreter) {
-            const response = await this.kernelDependencyService.installMissingDependencies(kernelConnection.interpreter);
+            const response = await this.kernelDependencyService.installMissingDependencies(
+                kernelConnection.interpreter
+            );
             if (response === KernelInterpreterDependencyResponse.cancel) {
                 return;
             }
