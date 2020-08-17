@@ -3,6 +3,8 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../../common/application/types';
 import '../../../common/extensions';
@@ -39,8 +41,6 @@ import {
     LiveKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from './types';
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
 
 /**
  * All KernelConnections returned (as return values of methods) by the KernelSelector can be used in a number of ways.
