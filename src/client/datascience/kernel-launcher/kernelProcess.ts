@@ -145,7 +145,17 @@ export class KernelProcess implements IKernelProcess {
         }
     }
     private get kernelSpecArgv(): string[] {
-        return this._kernelSpec.kernelSpec?.argv || ([] as string[]);
+        // We always expect a kernel spec, even when launching a Python process, cuz we generate a dummy `kernelSpec`.
+        const kernelSpec = this._kernelSpec.kernelSpec;
+        if (!kernelSpec) {
+            throw new Error('KernelSpec cannot be empty in KernelProcess.ts');
+        }
+        if (!Array.isArray(kernelSpec.argv)) {
+            traceError('KernelSpec.argv in KernelPrcess is undefined');
+            // tslint:disable-next-line: no-any
+            (kernelSpec as any).argv = [];
+        }
+        return kernelSpec.argv;
     }
     // Instead of having to use a connection file update our local copy of the kernelspec to launch
     // directly with command line arguments
