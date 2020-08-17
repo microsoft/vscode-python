@@ -91,19 +91,19 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         if (interpreter?.sysPrefix) {
             return interpreter?.sysPrefix;
         }
-        if (!interpreter?.path) {
-            return;
-        }
         if (!isPythonKernelConnection(kernelConnectionMetadata)) {
             return;
         }
-        const kernelPath = getKernelPathFromKernelConnection(kernelConnectionMetadata);
-        if (!kernelPath) {
+        const interpreterOrKernelPath =
+            interpreter?.path || getKernelPathFromKernelConnection(kernelConnectionMetadata);
+        if (!interpreterOrKernelPath) {
             return;
         }
         const interpreterInfo = await this.interpreterService
-            .getInterpreterDetails(kernelPath)
-            .catch(traceError.bind(`Failed to get interpreter details for Kernel/Interpreter ${interpreter.path}`));
+            .getInterpreterDetails(interpreterOrKernelPath)
+            .catch(
+                traceError.bind(`Failed to get interpreter details for Kernel/Interpreter ${interpreterOrKernelPath}`)
+            );
 
         if (interpreterInfo) {
             return interpreterInfo?.sysPrefix;
