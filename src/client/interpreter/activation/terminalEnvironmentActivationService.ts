@@ -11,7 +11,7 @@ import * as internalScripts from '../../common/process/internal/scripts';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IEnvironmentActivationService } from './types';
@@ -42,7 +42,7 @@ export class TerminalEnvironmentActivationService implements IEnvironmentActivat
     )
     public async getActivatedEnvironmentVariables(
         resource: Resource,
-        interpreter?: PythonInterpreter | undefined,
+        interpreter?: PythonEnvironment | undefined,
         _allowExceptions?: boolean | undefined
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const env = (await this.envVarsProvider.getCustomEnvironmentVariables(resource)) as

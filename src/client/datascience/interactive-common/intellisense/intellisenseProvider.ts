@@ -32,7 +32,7 @@ import { createDeferred, Deferred, sleep, waitForPromise } from '../../../common
 import { noop } from '../../../common/utils/misc';
 import { HiddenFileFormatString } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryWhenDone } from '../../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../../constants';
 import {
@@ -103,7 +103,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private sentOpenDocument: boolean = false;
     private languageServer: ILanguageServer | undefined;
     private resource: Resource;
-    private interpreter: PythonInterpreter | undefined;
+    private interpreter: PythonEnvironment | undefined;
 
     constructor(
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,

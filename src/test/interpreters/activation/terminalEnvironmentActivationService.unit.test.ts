@@ -16,7 +16,7 @@ import { EnvironmentVariablesProvider } from '../../../client/common/variables/e
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { TerminalEnvironmentActivationService } from '../../../client/interpreter/activation/terminalEnvironmentActivationService';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { noop } from '../../core';
 
 // tslint:disable-next-line: max-func-body-length
@@ -27,12 +27,12 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
     let envVarsProvider: IEnvironmentVariablesProvider;
     const jsonFile = path.join('hello', 'output.json');
     let terminal: ITerminalService;
-    const mockInterpreter: PythonInterpreter = {
+    const mockInterpreter: PythonEnvironment = {
         architecture: Architecture.Unknown,
         path: '',
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Conda
+        envType: EnvironmentType.Conda
     };
     setup(() => {
         terminalFactory = mock(TerminalServiceFactory);

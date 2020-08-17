@@ -12,7 +12,7 @@ import {
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { AnacondaCompanyName } from '../../../../client/pythonEnvironments/discovery/locators/services/conda';
 import { CondaEnvFileService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaEnvFileService';
-import { InterpreterType } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { MockState } from '../../../interpreters/mocks';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
@@ -126,7 +126,7 @@ suite('Interpreters from Conda Environments Text File', () => {
         assert.equal(interpreters[0].companyDisplayName, AnacondaCompanyName, 'Incorrect display name');
         assert.equal(interpreters[0].path, expectedPythonPath, 'Incorrect path');
         assert.equal(interpreters[0].envPath, validPaths[0], 'Incorrect envpath');
-        assert.equal(interpreters[0].type, InterpreterType.Conda, 'Incorrect type');
+        assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Incorrect type');
     }
     test('Must filter files in the list and return valid items (non windows)', async () => {
         await filterFilesInEnvironmentsFileAndReturnValidItems(false);

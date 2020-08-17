@@ -23,7 +23,7 @@ import {
 
 import { Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
-import { PythonInterpreter } from '../pythonEnvironments/info';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { ILanguageServerActivator, LanguageServerType } from './types';
 
 export class RefCountedLanguageServer implements ILanguageServerActivator {
@@ -49,7 +49,7 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
         }
     }
 
-    public start(_resource: Resource, _interpreter: PythonInterpreter | undefined): Promise<void> {
+    public start(_resource: Resource, _interpreter: PythonEnvironment | undefined): Promise<void> {
         throw new Error('Server should have already been started. Do not start the wrapper.');
     }
 

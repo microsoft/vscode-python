@@ -5,6 +5,7 @@ import * as uuid from 'uuid/v4';
 import { isTestExecution } from '../../common/constants';
 import { IDisposable } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/misc';
+import { getNameOfKernelConnection } from '../jupyter/kernels/helpers';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { IWebSocketLike } from '../kernelSocketWrapper';
 import { IKernelSocket } from '../types';
@@ -261,7 +262,7 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string)
     }
     const realKernel = new nonSerializingKernel.DefaultKernel(
         {
-            name: kernelProcess.kernelSpec.name,
+            name: getNameOfKernelConnection(kernelProcess.kernelConnectionMetadata),
             serverSettings: settings,
             clientId,
             handleComms: true

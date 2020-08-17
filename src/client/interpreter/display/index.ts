@@ -6,7 +6,7 @@ import '../../common/extensions';
 import { IDisposableRegistry, IOutputChannel, IPathUtils, Resource } from '../../common/types';
 import { Interpreters } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IInterpreterAutoSelectionService } from '../autoSelection/types';
 import {
     IInterpreterDisplay,
@@ -77,7 +77,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         }
         await this.updateDisplay(resource);
     }
-    private onDidChangeInterpreterInformation(info: PythonInterpreter) {
+    private onDidChangeInterpreterInformation(info: PythonEnvironment) {
         if (!this.currentlySelectedInterpreterPath || this.currentlySelectedInterpreterPath === info.path) {
             this.updateDisplay(this.currentlySelectedWorkspaceFolder).ignoreErrors();
         }

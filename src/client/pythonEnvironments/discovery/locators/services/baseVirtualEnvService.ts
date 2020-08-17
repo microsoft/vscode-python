@@ -1,5 +1,6 @@
 // tslint:disable:no-unnecessary-callback-wrapper no-require-imports no-var-requires
 
+import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
@@ -7,20 +8,21 @@ import { IFileSystem, IPlatformService } from '../../../../common/platform/types
 import { IInterpreterHelper, IVirtualEnvironmentsSearchPathProvider } from '../../../../interpreter/contracts';
 import { IVirtualEnvironmentManager } from '../../../../interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../../../ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
+@injectable()
 export class BaseVirtualEnvService extends CacheableLocatorService {
     private readonly virtualEnvMgr: IVirtualEnvironmentManager;
     private readonly helper: IInterpreterHelper;
     private readonly fileSystem: IFileSystem;
     public constructor(
-        private searchPathsProvider: IVirtualEnvironmentsSearchPathProvider,
-        serviceContainer: IServiceContainer,
-        name: string,
-        cachePerWorkspace: boolean = false
+        @unmanaged() private searchPathsProvider: IVirtualEnvironmentsSearchPathProvider,
+        @unmanaged() serviceContainer: IServiceContainer,
+        @unmanaged() name: string,
+        @unmanaged() cachePerWorkspace: boolean = false
     ) {
         super(name, serviceContainer, cachePerWorkspace);
         this.virtualEnvMgr = serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
@@ -29,7 +31,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
     }
     // tslint:disable-next-line:no-empty
     public dispose() {}
-    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+    protected getInterpretersImplementation(resource?: Uri): Promise<PythonEnvironment[]> {
         return this.suggestionsFromKnownVenvs(resource);
     }
     private async suggestionsFromKnownVenvs(resource?: Uri) {
@@ -54,7 +56,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             .catch((err) => {
                 traceError('Python Extension (lookForInterpretersInVenvs):', err);
                 // Ignore exceptions.
-                return [] as PythonInterpreter[];
+                return [] as PythonEnvironment[];
             });
     }
     private getProspectiveDirectoriesForLookup(subDirs: string[]) {
@@ -77,7 +79,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
                 })
         );
     }
-    private async getVirtualEnvDetails(interpreter: string, resource?: Uri): Promise<PythonInterpreter | undefined> {
+    private async getVirtualEnvDetails(interpreter: string, resource?: Uri): Promise<PythonEnvironment | undefined> {
         return Promise.all([
             this.helper.getInterpreterInformation(interpreter),
             this.virtualEnvMgr.getEnvironmentName(interpreter, resource),
@@ -88,9 +90,9 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             }
             this._hasInterpreters.resolve(true);
             return {
-                ...(details as PythonInterpreter),
+                ...(details as PythonEnvironment),
                 envName: virtualEnvName,
-                type: type! as InterpreterType
+                type: type! as EnvironmentType
             };
         });
     }

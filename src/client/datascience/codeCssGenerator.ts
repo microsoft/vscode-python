@@ -364,8 +364,8 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
             let tokenColors: JSONArray = [];
 
             if (typeof theme.tokenColors === 'string') {
-                const style = await this.fs.readLocalData(theme.tokenColors);
-                tokenColors = JSON.parse(style.toString());
+                const style = await this.fs.readLocalFile(theme.tokenColors);
+                tokenColors = JSON.parse(style);
             } else {
                 tokenColors = theme.tokenColors as JSONArray;
             }

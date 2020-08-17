@@ -9,14 +9,14 @@ import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/ke
 import { PythonKernelLauncherDaemon } from '../../../client/datascience/kernel-launcher/kernelLauncherDaemon';
 import { IPythonKernelDaemon } from '../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
-import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { createPythonInterpreter } from '../../utils/interpreters';
 
 // tslint:disable: max-func-body-length no-any
 suite('DataScience - Kernel Launcher Daemon', () => {
     let launcher: PythonKernelLauncherDaemon;
     let daemonPool: KernelDaemonPool;
-    let interpreter: PythonInterpreter;
+    let interpreter: PythonEnvironment;
     let kernelSpec: ReadWrite<IJupyterKernelSpec>;
     let kernelDaemon: IPythonKernelDaemon;
     let observableOutputForDaemon: ObservableExecutionResult<string>;
@@ -66,8 +66,6 @@ suite('DataScience - Kernel Launcher Daemon', () => {
         when(
             executionService.execModuleObservable('ipkernel_launcher', deepEqual(['-f', 'file.json']), anything())
         ).thenReturn(instance(observableOutputForDaemon));
-        // Make sure that it doesn't have a start function. Normally the proxy will pretend to have a start function, which we are checking for non-existance
-        when((executionService as any).start).thenReturn(false);
         // Else ts-mockit doesn't allow us to return an instance of a mock as a return value from an async function.
         (instance(executionService) as any).then = undefined;
         when(daemonPool.get(anything(), anything(), anything())).thenResolve(instance(executionService) as any);

@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { InterpreterType } from '../../../pythonEnvironments/info';
+import { EnvironmentType } from '../../../pythonEnvironments/info';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
 @injectable()
@@ -22,7 +22,7 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
         const interpreter = await this.serviceContainer
             .get<IInterpreterService>(IInterpreterService)
             .getActiveInterpreter(resource);
-        if (!interpreter || interpreter.type !== InterpreterType.Pyenv || !interpreter.envName) {
+        if (!interpreter || interpreter.envType !== EnvironmentType.Pyenv || !interpreter.envName) {
             return;
         }
 
@@ -36,7 +36,7 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
         const interpreter = await this.serviceContainer
             .get<IInterpreterService>(IInterpreterService)
             .getInterpreterDetails(pythonPath);
-        if (!interpreter || interpreter.type !== InterpreterType.Pyenv || !interpreter.envName) {
+        if (!interpreter || interpreter.envType !== EnvironmentType.Pyenv || !interpreter.envName) {
             return;
         }
 

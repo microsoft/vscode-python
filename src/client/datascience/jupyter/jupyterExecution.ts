@@ -15,7 +15,7 @@ import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Identifiers, Telemetry } from '../constants';
@@ -36,13 +36,15 @@ import {
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { createRemoteConnectionInfo, expandWorkingDir } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import { KernelSelector, KernelSpecInterpreter } from './kernels/kernelSelector';
+import { getDisplayNameOrNameOfKernelConnection, kernelConnectionMetadataHasKernelSpec } from './kernels/helpers';
+import { KernelSelector } from './kernels/kernelSelector';
+import { KernelConnectionMetadata } from './kernels/types';
 import { NotebookStarter } from './notebookStarter';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
 export class JupyterExecutionBase implements IJupyterExecution {
-    private usablePythonInterpreter: PythonInterpreter | undefined;
+    private usablePythonInterpreter: PythonEnvironment | undefined;
     private startedEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
     private disposed: boolean = false;
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
@@ -109,7 +111,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported();
     }
 
-    public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
+    public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined> {
         // Only try to compute this once.
         if (!this.usablePythonInterpreter && !this.disposed) {
             this.usablePythonInterpreter = await Cancellation.race(
@@ -141,8 +143,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
-            let kernelSpecInterpreter: KernelSpecInterpreter | undefined;
-            let kernelSpecInterpreterPromise: Promise<KernelSpecInterpreter> = Promise.resolve({});
+            let kernelConnectionMetadata: KernelConnectionMetadata | undefined;
+            let kernelConnectionMetadataPromise: Promise<KernelConnectionMetadata | undefined> = Promise.resolve<
+                KernelConnectionMetadata | undefined
+            >(undefined);
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
             const allowUI = !options || options.allowUI();
             const kernelSpecCancelSource = new CancellationTokenSource();
@@ -157,7 +161,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 // Get hold of the kernelspec and corresponding (matching) interpreter that'll be used as the spec.
                 // We can do this in parallel, while starting the server (faster).
                 traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
-                kernelSpecInterpreterPromise = this.kernelSelector.getKernelForLocalConnection(
+                kernelConnectionMetadataPromise = this.kernelSelector.getKernelForLocalConnection(
                     undefined,
                     'jupyter',
                     undefined,
@@ -174,9 +178,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
             while (tryCount <= maxTries && !this.disposed) {
                 try {
                     // Start or connect to the process
-                    [connection, kernelSpecInterpreter] = await Promise.all([
+                    [connection, kernelConnectionMetadata] = await Promise.all([
                         this.startOrConnect(options, cancelToken),
-                        kernelSpecInterpreterPromise
+                        kernelConnectionMetadataPromise
                     ]);
 
                     if (!connection.localLaunch && LocalHosts.includes(connection.hostName.toLowerCase())) {
@@ -186,12 +190,17 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
                     // In a remote non quest situation, figure out a kernel spec too.
-                    if (!kernelSpecInterpreter.kernelSpec && connection && !options?.skipSearchingForKernel) {
+                    if (
+                        (!kernelConnectionMetadata ||
+                            !kernelConnectionMetadataHasKernelSpec(kernelConnectionMetadata)) &&
+                        connection &&
+                        !options?.skipSearchingForKernel
+                    ) {
                         const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(
                             IJupyterSessionManagerFactory
                         );
                         const sessionManager = await sessionManagerFactory.create(connection);
-                        kernelSpecInterpreter = await this.kernelSelector.getKernelForRemoteConnection(
+                        kernelConnectionMetadata = await this.kernelSelector.getKernelForRemoteConnection(
                             undefined,
                             sessionManager,
                             options?.metadata,
@@ -200,16 +209,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         await sessionManager.dispose();
                     }
 
-                    // If no kernel and not going to pick one, exit early
-                    if (!Object.keys(kernelSpecInterpreter) && !allowUI) {
-                        return undefined;
-                    }
-
                     // Populate the launch info that we are starting our server with
                     const launchInfo: INotebookServerLaunchInfo = {
                         connectionInfo: connection!,
-                        interpreter: kernelSpecInterpreter.interpreter,
-                        kernelSpec: kernelSpecInterpreter.kernelSpec,
+                        kernelConnectionMetadata,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
                         purpose: options ? options.purpose : uuid()
@@ -233,7 +236,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 // Sometimes if a bad kernel is selected, starting a session can fail.
                                 // In such cases we need to let the user know about this and prompt them to select another kernel.
                                 const message = localize.DataScience.sessionStartFailedWithKernel().format(
-                                    launchInfo.kernelSpec?.display_name || launchInfo.kernelSpec?.name || '',
+                                    getDisplayNameOrNameOfKernelConnection(launchInfo.kernelConnectionMetadata),
                                     Commands.ViewJupyterOutput
                                 );
                                 const selectKernel = localize.DataScience.selectDifferentKernel();
@@ -250,12 +253,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                         new StopWatch(),
                                         sessionManager,
                                         cancelToken,
-                                        launchInfo.kernelSpec?.display_name || launchInfo.kernelSpec?.name
+                                        getDisplayNameOrNameOfKernelConnection(launchInfo.kernelConnectionMetadata)
                                     );
-                                    if (Object.keys(kernelInterpreter).length > 0) {
-                                        launchInfo.interpreter = kernelInterpreter.interpreter;
-                                        launchInfo.kernelSpec =
-                                            kernelInterpreter.kernelSpec || kernelInterpreter.kernelModel;
+                                    if (kernelInterpreter) {
+                                        launchInfo.kernelConnectionMetadata = kernelInterpreter;
                                         continue;
                                     }
                                 }

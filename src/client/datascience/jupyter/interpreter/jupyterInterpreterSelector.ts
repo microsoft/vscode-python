@@ -11,7 +11,7 @@ import { Cancellation } from '../../../common/cancellation';
 import { IPathUtils } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 
 /**
@@ -33,10 +33,10 @@ export class JupyterInterpreterSelector {
      * Displays interpreter selector and returns the selection.
      *
      * @param {CancellationToken} [token]
-     * @returns {(Promise<PythonInterpreter | undefined>)}
+     * @returns {(Promise<PythonEnvironment | undefined>)}
      * @memberof JupyterInterpreterSelector
      */
-    public async selectInterpreter(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
+    public async selectInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
         const workspace = this.workspace.getWorkspaceFolder(undefined);
         const currentPythonPath = this.interpreterSelectionState.selectedPythonPath
             ? this.pathUtils.getDisplayName(this.interpreterSelectionState.selectedPythonPath, workspace?.uri.fsPath)

@@ -3,19 +3,21 @@
 
 'use strict';
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import { traceDecorators } from '../../../../common/logger';
 import { createDeferred } from '../../../../common/utils/async';
 import {
     IInterpreterWatcher,
-    IInterpreterWatcherRegistry,
+    IInterpreterWatcherBuilder,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
+import { WorkspaceVirtualEnvWatcherService } from './workspaceVirtualEnvWatcherService';
 
-export class InterpreterWatcherBuilder {
+@injectable()
+export class InterpreterWatcherBuilder implements IInterpreterWatcherBuilder {
     private readonly watchersByResource = new Map<string, Promise<IInterpreterWatcher>>();
     /**
      * Creates an instance of InterpreterWatcherBuilder.
@@ -35,8 +37,8 @@ export class InterpreterWatcherBuilder {
         if (!this.watchersByResource.has(key)) {
             const deferred = createDeferred<IInterpreterWatcher>();
             this.watchersByResource.set(key, deferred.promise);
-            const watcher = this.serviceContainer.get<IInterpreterWatcherRegistry>(
-                IInterpreterWatcherRegistry,
+            const watcher = this.serviceContainer.get<WorkspaceVirtualEnvWatcherService>(
+                IInterpreterWatcher,
                 WORKSPACE_VIRTUAL_ENV_SERVICE
             );
             await watcher.register(resource);

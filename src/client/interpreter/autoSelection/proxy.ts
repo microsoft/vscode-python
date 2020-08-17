@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IAsyncDisposableRegistry, IDisposableRegistry, Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IInterpreterAutoSeletionProxyService } from './types';
 
 @injectable()
@@ -23,10 +23,10 @@ export class InterpreterAutoSeletionProxyService implements IInterpreterAutoSele
     public get onDidChangeAutoSelectedInterpreter(): Event<void> {
         return this.didAutoSelectedInterpreterEmitter.event;
     }
-    public getAutoSelectedInterpreter(resource: Resource): PythonInterpreter | undefined {
+    public getAutoSelectedInterpreter(resource: Resource): PythonEnvironment | undefined {
         return this.instance ? this.instance.getAutoSelectedInterpreter(resource) : undefined;
     }
-    public async setWorkspaceInterpreter(resource: Uri, interpreter: PythonInterpreter | undefined): Promise<void> {
+    public async setWorkspaceInterpreter(resource: Uri, interpreter: PythonEnvironment | undefined): Promise<void> {
         return this.instance ? this.instance.setWorkspaceInterpreter(resource, interpreter) : undefined;
     }
 }

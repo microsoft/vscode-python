@@ -90,7 +90,6 @@ export type IMainState = {
     loaded: boolean;
     kernel: IServerState;
     isNotebookTrusted: boolean;
-    shouldShowTrustMessage: boolean;
 };
 
 export type SelectionAndFocusedInfo = {
@@ -198,8 +197,7 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
             jupyterServerStatus: ServerStatus.NotStarted,
             language: PYTHON_LANGUAGE
         },
-        isNotebookTrusted: true,
-        shouldShowTrustMessage: true
+        isNotebookTrusted: true
     };
 }
 

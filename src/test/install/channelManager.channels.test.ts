@@ -19,16 +19,16 @@ import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../client/interpr
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
-const info: PythonInterpreter = {
+const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
     displayName: '',
     envName: '',
     path: '',
-    type: InterpreterType.Unknown,
+    envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''
@@ -86,10 +86,10 @@ suite('Installation - installation channels', () => {
         mockInstaller(true, '3');
         const pipenvInstaller = mockInstaller(true, 'pipenv', 10);
 
-        const interpreter: PythonInterpreter = {
+        const interpreter: PythonEnvironment = {
             ...info,
             path: 'pipenv',
-            type: InterpreterType.VirtualEnv
+            envType: EnvironmentType.VirtualEnv
         };
         pipEnv.setup((x) => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([interpreter]));
 

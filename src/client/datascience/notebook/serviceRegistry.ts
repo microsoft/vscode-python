@@ -6,18 +6,17 @@
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
+import { IKernelProvider } from '../jupyter/kernels/types';
 import { NotebookContentProvider } from './contentProvider';
-import { NotebookExecutionService } from './executionService';
 import { NotebookIntegration } from './integration';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { NotebookOutputRenderer } from './renderer';
 import { NotebookSurveyBanner, NotebookSurveyDataLogger } from './survey';
-import { INotebookContentProvider, INotebookExecutionService } from './types';
+import { INotebookContentProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<INotebookContentProvider>(INotebookContentProvider, NotebookContentProvider);
-    serviceManager.addSingleton<INotebookExecutionService>(INotebookExecutionService, NotebookExecutionService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookIntegration
@@ -27,7 +26,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         NotebookDisposeService
     );
     serviceManager.addSingleton<NotebookIntegration>(NotebookIntegration, NotebookIntegration);
-    serviceManager.addSingleton<KernelProvider>(KernelProvider, KernelProvider);
+    serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
     serviceManager.addSingleton<NotebookOutputRenderer>(NotebookOutputRenderer, NotebookOutputRenderer);
     serviceManager.addSingleton<NotebookSurveyBanner>(NotebookSurveyBanner, NotebookSurveyBanner);
     serviceManager.addSingleton<VSCodeKernelPickerProvider>(VSCodeKernelPickerProvider, VSCodeKernelPickerProvider);

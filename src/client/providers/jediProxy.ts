@@ -19,7 +19,7 @@ import { swallowExceptions } from '../common/utils/decorators';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
-import { PythonInterpreter } from '../pythonEnvironments/info';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { traceError, traceWarning } from './../common/logger';
@@ -156,7 +156,7 @@ export class JediProxy implements Disposable {
 
     public constructor(
         workspacePath: string,
-        interpreter: PythonInterpreter | undefined,
+        interpreter: PythonEnvironment | undefined,
         private serviceContainer: IServiceContainer
     ) {
         this.workspacePath = workspacePath;

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, Uri } from 'vscode';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { Product, ProductType, Resource } from '../types';
 
-export type InterpreterUri = Resource | PythonInterpreter;
+export type InterpreterUri = Resource | PythonEnvironment;
 
 export const IModuleInstaller = Symbol('IModuleInstaller');
 export interface IModuleInstaller {

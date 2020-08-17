@@ -21,7 +21,6 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
     protected vscfs: FileSystem;
     private globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>;
     private fsPathUtils: IFileSystemPathUtils;
-
     constructor() {
         this.globFiles = promisify(glob);
         this.fsPathUtils = FileSystemPathUtils.withDefaults();
@@ -117,9 +116,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
 
     public async readLocalFile(filename: string): Promise<string> {
         const uri = Uri.file(filename);
-        const result = await this.vscfs.readFile(uri);
-        const data = Buffer.from(result);
-        return data.toString(ENCODING);
+        return this.readFile(uri);
     }
 
     public async searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
@@ -138,8 +135,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
 
     public async writeLocalFile(filename: string, text: string | Buffer): Promise<void> {
         const uri = Uri.file(filename);
-        const data = typeof text === 'string' ? Buffer.from(text) : text;
-        await this.vscfs.writeFile(uri, data);
+        return this.writeFile(uri, text);
     }
 
     // URI-based filesystem functions for interacting with files provided by VS Code
@@ -175,7 +171,7 @@ export class DataScienceFileSystem implements IDataScienceFileSystem {
 
     public async writeFile(uri: Uri, text: string | Buffer): Promise<void> {
         const data = typeof text === 'string' ? Buffer.from(text) : text;
-        await this.vscfs.writeFile(uri, data);
+        return this.vscfs.writeFile(uri, data);
     }
 
     private async lstat(filename: string): Promise<FileStat> {

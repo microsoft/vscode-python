@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
 import * as assert from 'assert';
@@ -21,9 +22,10 @@ const pythoFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'py
 // Mocked out python tool execution (all we need is mocked linter return values).
 class MockPythonToolExecService extends PythonToolExecutionService {
     // Mocked samples of linter messages from flake8 and pylint:
-    public flake8Msg: string =
+    public flake8Msg =
         '1,1,W,W391:blank line at end of file\ns:142:13), <anonymous>:1\n1,7,E,E999:SyntaxError: invalid syntax\n';
-    public pylintMsg: string =
+
+    public pylintMsg =
         "************* Module print\ns:142:13), <anonymous>:1\n1,0,error,syntax-error:Missing parentheses in call to 'print'. Did you mean print(x)? (<unknown>, line 1)\n";
 
     // Depending on moduleName being exec'd, return the appropriate sample.
@@ -88,16 +90,16 @@ suite('Linting - Multiple Linters Enabled Test', () => {
         return `linting.${linterManager.getLinterInfo(product).enabledSettingName}` as PythonSettingKeys;
     }
 
-    test('Multiple linters', async function () {
-        // This test is failing in the CI. See this issue here:
-        // https://github.com/microsoft/vscode-python/issues/13345
-        // tslint:disable-next-line: no-invalid-this
-        this.skip();
-
+    test('Multiple linters', async () => {
         await closeActiveWindows();
         const document = await workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
         await window.showTextDocument(document);
-        await configService.updateSetting('languageServer', LanguageServerType.Jedi, workspaceUri);
+        await configService.updateSetting(
+            'languageServer',
+            LanguageServerType.Jedi,
+            undefined,
+            ConfigurationTarget.Workspace
+        );
         await configService.updateSetting('linting.enabled', true, workspaceUri);
         await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
         await configService.updateSetting('linting.pylintEnabled', true, workspaceUri);

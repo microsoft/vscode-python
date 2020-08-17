@@ -10,7 +10,7 @@ import { createPromiseFromCancellation } from '../../../common/cancellation';
 import '../../../common/extensions';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { JupyterInstallError } from '../jupyterInstallError';
@@ -24,10 +24,10 @@ import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 
 @injectable()
 export class JupyterInterpreterService {
-    private _selectedInterpreter?: PythonInterpreter;
-    private _onDidChangeInterpreter = new EventEmitter<PythonInterpreter>();
-    private getInitialInterpreterPromise: Promise<PythonInterpreter | undefined> | undefined;
-    public get onDidChangeInterpreter(): Event<PythonInterpreter> {
+    private _selectedInterpreter?: PythonEnvironment;
+    private _onDidChangeInterpreter = new EventEmitter<PythonEnvironment>();
+    private getInitialInterpreterPromise: Promise<PythonEnvironment | undefined> | undefined;
+    public get onDidChangeInterpreter(): Event<PythonEnvironment> {
         return this._onDidChangeInterpreter.event;
     }
 
@@ -44,10 +44,10 @@ export class JupyterInterpreterService {
      * Gets the selected interpreter configured to run Jupyter.
      *
      * @param {CancellationToken} [token]
-     * @returns {(Promise<PythonInterpreter | undefined>)}
+     * @returns {(Promise<PythonEnvironment | undefined>)}
      * @memberof JupyterInterpreterService
      */
-    public async getSelectedInterpreter(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
+    public async getSelectedInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
         // Before we return _selected interpreter make sure that we have run our initial set interpreter once
         // because _selectedInterpreter can be changed by other function and at other times, this promise
         // is cached to only run once
@@ -58,7 +58,7 @@ export class JupyterInterpreterService {
 
     // To be run one initial time. Check our saved locations and then current interpreter to try to start off
     // with a valid jupyter interpreter
-    public async setInitialInterpreter(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
+    public async setInitialInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
         if (!this.getInitialInterpreterPromise) {
             this.getInitialInterpreterPromise = this.getInitialInterpreterImpl(token).then((result) => {
                 // Set ourselves as a valid interpreter if we found something
@@ -78,10 +78,10 @@ export class JupyterInterpreterService {
      * Once completed, the interpreter is stored in settings, else user can select another interpreter.
      *
      * @param {CancellationToken} [token]
-     * @returns {(Promise<PythonInterpreter | undefined>)}
+     * @returns {(Promise<PythonEnvironment | undefined>)}
      * @memberof JupyterInterpreterService
      */
-    public async selectInterpreter(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
+    public async selectInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
         const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({
             cancelAction: 'resolve',
             defaultValue: undefined,
@@ -142,7 +142,7 @@ export class JupyterInterpreterService {
 
     // Set the specified interpreter as our current selected interpreter. Public so can
     // be set by the test code.
-    public async setAsSelectedInterpreter(interpreter: PythonInterpreter): Promise<void> {
+    public async setAsSelectedInterpreter(interpreter: PythonEnvironment): Promise<void> {
         // Make sure that our initial set has happened before we allow a set so that
         // calculation of the initial interpreter doesn't clobber the existing one
         await this.setInitialInterpreter();
@@ -162,7 +162,7 @@ export class JupyterInterpreterService {
         return pythonPath;
     }
 
-    private changeSelectedInterpreterProperty(interpreter: PythonInterpreter) {
+    private changeSelectedInterpreterProperty(interpreter: PythonEnvironment) {
         this._selectedInterpreter = interpreter;
         this._onDidChangeInterpreter.fire(interpreter);
         this.interpreterSelectionState.updateSelectedPythonPath(interpreter.path);
@@ -174,7 +174,7 @@ export class JupyterInterpreterService {
     private async validateInterpreterPath(
         pythonPath: string,
         token?: CancellationToken
-    ): Promise<PythonInterpreter | undefined> {
+    ): Promise<PythonEnvironment | undefined> {
         try {
             const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({
                 cancelAction: 'resolve',
@@ -200,8 +200,8 @@ export class JupyterInterpreterService {
         return undefined;
     }
 
-    private async getInitialInterpreterImpl(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
-        let interpreter: PythonInterpreter | undefined;
+    private async getInitialInterpreterImpl(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
+        let interpreter: PythonEnvironment | undefined;
 
         // Check the old version location first, we will clear it if we find it here
         const oldVersionPythonPath = this.getInterpreterFromChangeOfOlderVersionOfExtension();

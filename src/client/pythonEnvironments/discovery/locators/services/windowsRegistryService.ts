@@ -1,6 +1,6 @@
 // tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
@@ -10,10 +10,11 @@ import { Architecture } from '../../../../common/utils/platform';
 import { IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { parsePythonVersion } from '../../../info/pythonVersion';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
+import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 // tslint:disable-next-line:variable-name
@@ -31,6 +32,7 @@ type CompanyInterpreter = {
     arch?: Architecture;
 };
 
+@injectable()
 export class WindowsRegistryService extends CacheableLocatorService {
     private readonly pathUtils: IPathUtils;
     private readonly fs: IFileSystem;
@@ -38,7 +40,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
         @inject(IRegistry) private registry: IRegistry,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
+        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
     ) {
         super('WindowsRegistryService', serviceContainer);
         this.pathUtils = serviceContainer.get<IPathUtils>(IPathUtils);
@@ -46,8 +48,13 @@ export class WindowsRegistryService extends CacheableLocatorService {
     }
     // tslint:disable-next-line:no-empty
     public dispose() {}
-    protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
-        return this.platform.isWindows ? this.getInterpretersFromRegistry() : [];
+    protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
+        return this.platform.isWindows
+            ? this.getInterpretersFromRegistry().catch((ex) => {
+                  traceError('Fetching interpreters from registry failed with error', ex);
+                  return [];
+              })
+            : [];
     }
     private async getInterpretersFromRegistry() {
         // https://github.com/python/peps/blob/master/pep-0514.txt#L357
@@ -75,7 +82,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                 .filter((item) => item !== undefined && item !== null)
                 // tslint:disable-next-line:no-non-null-assertion
                 .map((item) => item!)
-                .reduce<PythonInterpreter[]>((prev, current) => {
+                .reduce<PythonEnvironment[]>((prev, current) => {
                     if (prev.findIndex((item) => item.path.toUpperCase() === current.path.toUpperCase()) === -1) {
                         prev.push(current);
                     }
@@ -105,7 +112,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
         companyKey: string,
         hive: RegistryHive,
         arch?: Architecture
-    ): Promise<PythonInterpreter | undefined | null> {
+    ): Promise<PythonEnvironment | undefined | null> {
         const key = `${tagKey}\\InstallPath`;
         type InterpreterInformation =
             | null
@@ -170,16 +177,16 @@ export class WindowsRegistryService extends CacheableLocatorService {
                 this._hasInterpreters.resolve(true);
                 // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
                 return {
-                    ...(details as PythonInterpreter),
+                    ...(details as PythonEnvironment),
                     path: executablePath,
                     // Do not use version info from registry, this doesn't contain the release level.
                     // Give preference to what we have retrieved from getInterpreterInformation.
                     version: details.version || parsePythonVersion(version),
                     companyDisplayName: interpreterInfo.companyDisplayName,
-                    type: this.windowsStoreInterpreter.isWindowsStoreInterpreter(executablePath)
-                        ? InterpreterType.WindowsStore
-                        : InterpreterType.Unknown
-                } as PythonInterpreter;
+                    envType: this.windowsStoreInterpreter.isWindowsStoreInterpreter(executablePath)
+                        ? EnvironmentType.WindowsStore
+                        : EnvironmentType.Unknown
+                } as PythonEnvironment;
             })
             .then((interpreter) =>
                 interpreter

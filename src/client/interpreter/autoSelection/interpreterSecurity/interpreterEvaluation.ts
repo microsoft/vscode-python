@@ -8,7 +8,7 @@ import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { IBrowserService, Resource } from '../../../common/types';
 import { Common, Interpreters } from '../../../common/utils/localize';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IInterpreterHelper } from '../../contracts';
@@ -33,7 +33,7 @@ export class InterpreterEvaluation implements IInterpreterEvaluation {
         @inject(IInterpreterSecurityStorage) private readonly interpreterSecurityStorage: IInterpreterSecurityStorage
     ) {}
 
-    public async evaluateIfInterpreterIsSafe(interpreter: PythonInterpreter, resource: Resource): Promise<boolean> {
+    public async evaluateIfInterpreterIsSafe(interpreter: PythonEnvironment, resource: Resource): Promise<boolean> {
         const activeWorkspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource)?.folderUri;
         if (!activeWorkspaceUri) {
             return true;
@@ -42,7 +42,7 @@ export class InterpreterEvaluation implements IInterpreterEvaluation {
         return isSafe !== undefined ? isSafe : this._inferValueUsingPrompt(activeWorkspaceUri);
     }
 
-    public inferValueUsingCurrentState(interpreter: PythonInterpreter, resource: Resource) {
+    public inferValueUsingCurrentState(interpreter: PythonEnvironment, resource: Resource) {
         const activeWorkspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource)?.folderUri;
         if (!activeWorkspaceUri) {
             return true;

@@ -3,18 +3,19 @@
 
 'use strict';
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter } from 'vscode';
 import { traceDecorators } from '../../../common/logger';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferredFrom, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
-import { IInterpreterLocatorService } from '../../../interpreter/contracts';
+import { IInterpreterLocatorProgressService, IInterpreterLocatorService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { PythonInterpreter } from '../../info';
+import { PythonEnvironment } from '../../info';
 
-export class InterpreterLocatorProgressService {
-    private deferreds: Deferred<PythonInterpreter[]>[] = [];
+@injectable()
+export class InterpreterLocatorProgressService implements IInterpreterLocatorProgressService {
+    private deferreds: Deferred<PythonEnvironment[]>[] = [];
     private readonly refreshing = new EventEmitter<void>();
     private readonly refreshed = new EventEmitter<void>();
     private readonly locators: IInterpreterLocatorService[] = [];
@@ -37,7 +38,7 @@ export class InterpreterLocatorProgressService {
         });
     }
     @traceDecorators.verbose('Detected refreshing of Interpreters')
-    private handleProgress(promise: Promise<PythonInterpreter[]>) {
+    private handleProgress(promise: Promise<PythonEnvironment[]>) {
         this.deferreds.push(createDeferredFrom(promise));
         this.notifyRefreshing();
         this.checkProgress();

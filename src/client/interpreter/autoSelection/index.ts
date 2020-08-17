@@ -11,7 +11,7 @@ import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterHelper } from '../contracts';
@@ -30,8 +30,8 @@ const workspacePathNameForGlobalWorkspaces = '';
 export class InterpreterAutoSelectionService implements IInterpreterAutoSelectionService {
     protected readonly autoSelectedWorkspacePromises = new Map<string, Deferred<void>>();
     private readonly didAutoSelectedInterpreterEmitter = new EventEmitter<void>();
-    private readonly autoSelectedInterpreterByWorkspace = new Map<string, PythonInterpreter | undefined>();
-    private globallyPreferredInterpreter!: IPersistentState<PythonInterpreter | undefined>;
+    private readonly autoSelectedInterpreterByWorkspace = new Map<string, PythonEnvironment | undefined>();
+    private globallyPreferredInterpreter!: IPersistentState<PythonEnvironment | undefined>;
     private readonly rules: IInterpreterAutoSelectionRule[] = [];
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -113,7 +113,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     public get onDidChangeAutoSelectedInterpreter(): Event<void> {
         return this.didAutoSelectedInterpreterEmitter.event;
     }
-    public getAutoSelectedInterpreter(resource: Resource): PythonInterpreter | undefined {
+    public getAutoSelectedInterpreter(resource: Resource): PythonEnvironment | undefined {
         // Do not execute anycode other than fetching fromm a property.
         // This method gets invoked from settings class, and this class in turn uses classes that relies on settings.
         // I.e. we can end up in a recursive loop.
@@ -122,7 +122,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         return interpreter && this.interpreterSecurityService.isSafe(interpreter) === false ? undefined : interpreter;
     }
 
-    public _getAutoSelectedInterpreter(resource: Resource): PythonInterpreter | undefined {
+    public _getAutoSelectedInterpreter(resource: Resource): PythonEnvironment | undefined {
         const workspaceState = this.getWorkspaceState(resource);
         if (workspaceState && workspaceState.value) {
             return workspaceState.value;
@@ -135,10 +135,10 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
 
         return this.globallyPreferredInterpreter.value;
     }
-    public async setWorkspaceInterpreter(resource: Uri, interpreter: PythonInterpreter | undefined) {
+    public async setWorkspaceInterpreter(resource: Uri, interpreter: PythonEnvironment | undefined) {
         await this.storeAutoSelectedInterpreter(resource, interpreter);
     }
-    public async setGlobalInterpreter(interpreter: PythonInterpreter) {
+    public async setGlobalInterpreter(interpreter: PythonEnvironment) {
         await this.storeAutoSelectedInterpreter(undefined, interpreter);
     }
     protected async clearWorkspaceStoreIfInvalid(resource: Resource) {
@@ -148,7 +148,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
             await stateStore.updateValue(undefined);
         }
     }
-    protected async storeAutoSelectedInterpreter(resource: Resource, interpreter: PythonInterpreter | undefined) {
+    protected async storeAutoSelectedInterpreter(resource: Resource, interpreter: PythonEnvironment | undefined) {
         const workspaceFolderPath = this.getWorkspacePathKey(resource);
         if (workspaceFolderPath === workspacePathNameForGlobalWorkspaces) {
             // Update store only if this version is better.
@@ -185,7 +185,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     }
     private async clearStoreIfFileIsInvalid() {
         this.globallyPreferredInterpreter = this.stateFactory.createGlobalPersistentState<
-            PythonInterpreter | undefined
+            PythonEnvironment | undefined
         >(preferredGlobalInterpreter, undefined);
         if (
             this.globallyPreferredInterpreter.value &&
@@ -197,7 +197,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     private getWorkspacePathKey(resource: Resource): string {
         return this.workspaceService.getWorkspaceFolderIdentifier(resource, workspacePathNameForGlobalWorkspaces);
     }
-    private getWorkspaceState(resource: Resource): undefined | IPersistentState<PythonInterpreter | undefined> {
+    private getWorkspaceState(resource: Resource): undefined | IPersistentState<PythonEnvironment | undefined> {
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
         if (!workspaceUri) {
             return;

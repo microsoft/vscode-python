@@ -9,7 +9,7 @@ import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { Common, Interpreters } from '../../common/utils/localize';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IPythonPathUpdaterServiceManager } from '../configuration/types';
@@ -58,7 +58,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         }
         await this.notifyUser(interpreter, resource);
     }
-    protected async notifyUser(interpreter: PythonInterpreter, resource: Uri): Promise<void> {
+    protected async notifyUser(interpreter: PythonEnvironment, resource: Uri): Promise<void> {
         const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(
             doNotDisplayPromptStateKey,
             true

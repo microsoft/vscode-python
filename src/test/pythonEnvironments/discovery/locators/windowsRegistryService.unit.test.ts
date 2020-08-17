@@ -9,7 +9,7 @@ import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { WindowsRegistryService } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryService';
-import { InterpreterType } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { MockRegistry, MockState } from '../../../interpreters/mocks';
 
@@ -288,7 +288,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters[0].companyDisplayName, 'Company One', 'Incorrect company name');
         assert.equal(interpreters[0].path, path.join(environmentsPath, 'path1', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[0].version!.raw, '9.9.9-final', 'Incorrect version');
-        assert.equal(interpreters[0].type, InterpreterType.Unknown, 'Incorrect type');
+        assert.equal(interpreters[0].envType, EnvironmentType.Unknown, 'Incorrect type');
     });
     test('Must return a single entry with a type of WindowsStore', async () => {
         platformService.setup((p) => p.isWindows).returns(() => true);
@@ -339,7 +339,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const interpreters = await winRegistry.getInterpreters();
 
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
-        assert.equal(interpreters[0].type, InterpreterType.WindowsStore, 'Incorrect type');
+        assert.equal(interpreters[0].envType, EnvironmentType.WindowsStore, 'Incorrect type');
         windowsStoreInterpreter.verifyAll();
     });
     test('Must not return any interpreters (must ignore internal windows store intrepreters)', async () => {

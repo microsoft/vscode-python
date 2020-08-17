@@ -202,7 +202,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     if (!useVSCodeNotebookAPI) {
         serviceManager.add<INotebookEditor>(INotebookEditor, usingCustomEditor ? NativeEditor : NativeEditorOldWebView);
         // These are never going to be required for new VSC NB.
-        serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
+        if (!usingCustomEditor) {
+            serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
+        }
         serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
     }
 

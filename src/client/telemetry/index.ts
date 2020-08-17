@@ -26,7 +26,7 @@ import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { LinterId } from '../linters/types';
-import { InterpreterType } from '../pythonEnvironments/info';
+import { EnvironmentType } from '../pythonEnvironments/info';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger, TestTool } from './types';
@@ -676,7 +676,7 @@ export interface IEventNamePropertyMapping {
         /**
          * The type of interpreter (conda, virtualenv, pipenv etc.)
          */
-        interpreterType: InterpreterType | undefined;
+        interpreterType: EnvironmentType | undefined;
         /**
          * The type of terminal shell created: powershell, cmd, zsh, bash etc.
          *
@@ -1022,9 +1022,9 @@ export interface IEventNamePropertyMapping {
         /**
          * The type of the interpreter used
          *
-         * @type {InterpreterType}
+         * @type {EnvironmentType}
          */
-        interpreterType: InterpreterType;
+        interpreterType: EnvironmentType;
     };
     /**
      * Telemetry event sent when getting activation commands for terminal when interpreter is not specified
@@ -1057,9 +1057,9 @@ export interface IEventNamePropertyMapping {
         /**
          * The type of the interpreter used
          *
-         * @type {InterpreterType}
+         * @type {EnvironmentType}
          */
-        interpreterType: InterpreterType;
+        interpreterType: EnvironmentType;
     };
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: {
         /**
@@ -1509,9 +1509,9 @@ export interface IEventNamePropertyMapping {
         /**
          * The Python interpreter type: Conda, Virtualenv, Venv, Pipenv etc.
          *
-         * @type {InterpreterType}
+         * @type {EnvironmentType}
          */
-        interpreterType?: InterpreterType;
+        interpreterType?: EnvironmentType;
     };
     /**
      * Telemetry event sent with details about discovering tests

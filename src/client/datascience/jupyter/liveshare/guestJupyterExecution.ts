@@ -16,7 +16,7 @@ import {
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import { IDataScienceFileSystem, IJupyterConnection, INotebookServer, INotebookServerOptions } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
@@ -134,7 +134,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
         throw new Error(localize.DataScience.liveShareCannotSpawnNotebooks());
     }
 
-    public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
+    public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined> {
         const service = await this.waitForService();
         if (service) {
             return service.request(LiveShareCommands.getUsableJupyterPython, [], cancelToken);

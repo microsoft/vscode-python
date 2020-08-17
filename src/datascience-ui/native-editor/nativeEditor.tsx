@@ -126,12 +126,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         setTimeout(() => this.props.insertAboveFirst(), 1);
     }
     private renderToolbarPanel() {
-        return (
-            <ToolbarComponent
-                shouldShowTrustMessage={this.props.shouldShowTrustMessage}
-                isNotebookTrusted={this.props.isNotebookTrusted}
-            ></ToolbarComponent>
-        );
+        return <ToolbarComponent isNotebookTrusted={this.props.isNotebookTrusted}></ToolbarComponent>;
     }
 
     private renderVariablePanel(baseTheme: string) {
@@ -223,10 +218,15 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: How to have this work for when the keyboard shortcuts are changed?
             case 's': {
-                if ((event.ctrlKey && getOSType() !== OSType.OSX) || (event.metaKey && getOSType() === OSType.OSX)) {
-                    // This is save, save our cells
-                    this.props.save();
-                    this.props.sendCommand(NativeKeyboardCommandTelemetry.Save);
+                if (!this.props.settings?.extraSettings.useCustomEditorApi) {
+                    if (
+                        (event.ctrlKey && getOSType() !== OSType.OSX) ||
+                        (event.metaKey && getOSType() === OSType.OSX)
+                    ) {
+                        // This is save, save our cells
+                        this.props.save();
+                        this.props.sendCommand(NativeKeyboardCommandTelemetry.Save);
+                    }
                 }
                 break;
             }

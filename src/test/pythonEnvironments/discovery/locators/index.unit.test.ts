@@ -27,7 +27,7 @@ import {
 } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { PythonInterpreterLocatorService } from '../../../../client/pythonEnvironments/discovery/locators';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Locators Index', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -71,13 +71,13 @@ suite('Interpreters - Locators Index', () => {
                 locatorsTypes.push(CURRENT_PATH_SERVICE);
 
                 const locatorsWithInterpreters = locatorsTypes.map((typeName) => {
-                    const interpreter: PythonInterpreter = {
+                    const interpreter: PythonEnvironment = {
                         architecture: Architecture.Unknown,
                         displayName: typeName,
                         path: typeName,
                         sysPrefix: typeName,
                         sysVersion: typeName,
-                        type: InterpreterType.Unknown,
+                        envType: EnvironmentType.Unknown,
                         version: new SemVer('0.0.0-alpha')
                     };
 
@@ -134,13 +134,13 @@ suite('Interpreters - Locators Index', () => {
                 locatorsTypes.push(CURRENT_PATH_SERVICE);
 
                 const locatorsWithInterpreters = locatorsTypes.map((typeName) => {
-                    const interpreter: PythonInterpreter = {
+                    const interpreter: PythonEnvironment = {
                         architecture: Architecture.Unknown,
                         displayName: typeName,
                         path: typeName,
                         sysPrefix: typeName,
                         sysVersion: typeName,
-                        type: InterpreterType.Unknown,
+                        envType: EnvironmentType.Unknown,
                         version: new SemVer('0.0.0-alpha')
                     };
 
@@ -200,13 +200,13 @@ suite('Interpreters - Locators Index', () => {
                 locatorsTypes.push(CURRENT_PATH_SERVICE);
 
                 const locatorsWithInterpreters = locatorsTypes.map((typeName) => {
-                    const interpreter: PythonInterpreter = {
+                    const interpreter: PythonEnvironment = {
                         architecture: Architecture.Unknown,
                         displayName: typeName,
                         path: typeName,
                         sysPrefix: typeName,
                         sysVersion: typeName,
-                        type: InterpreterType.Unknown,
+                        envType: EnvironmentType.Unknown,
                         version: new SemVer('0.0.0-alpha')
                     };
 

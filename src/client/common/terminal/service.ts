@@ -110,7 +110,7 @@ export class TerminalService implements ITerminalService, Disposable {
                 .get<IInterpreterService>(IInterpreterService)
                 .getInterpreterDetails(pythonPath));
         const pythonVersion = interpreterInfo && interpreterInfo.version ? interpreterInfo.version.raw : undefined;
-        const interpreterType = interpreterInfo ? interpreterInfo.type : undefined;
+        const interpreterType = interpreterInfo ? interpreterInfo.envType : undefined;
         captureTelemetry(EventName.TERMINAL_CREATE, {
             terminal: this.terminalShellType,
             pythonVersion,

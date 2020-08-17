@@ -14,6 +14,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { Disposable } from 'vscode';
 import { LocalZMQKernel } from '../../../client/common/experiments/groups';
+import { sleep } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { retryIfFail as retryIfFailOriginal } from '../../common';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
@@ -169,6 +170,9 @@ use(chaiAsPromised);
         }
         async function verifySliderWidgetIsAvailableAfterExecution(notebookUI: NotebookEditorUI) {
             await notebookUI.executeCell(0);
+
+            // Slider output could take a bit. Wait some
+            await sleep(2000);
 
             await retryIfFail(async () => {
                 await assert.eventually.isTrue(notebookUI.cellHasOutput(0));

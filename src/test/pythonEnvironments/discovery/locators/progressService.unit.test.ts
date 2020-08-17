@@ -13,7 +13,7 @@ import { noop } from '../../../../client/common/utils/misc';
 import { IInterpreterLocatorService } from '../../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../../client/ioc/container';
 import { InterpreterLocatorProgressService } from '../../../../client/pythonEnvironments/discovery/locators/progressService';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { sleep } from '../../../core';
 
 suite('Interpreters - Locator Progress', () => {
@@ -21,16 +21,16 @@ suite('Interpreters - Locator Progress', () => {
         public get hasInterpreters(): Promise<boolean> {
             return Promise.resolve(true);
         }
-        public locatingCallback?: (e: Promise<PythonInterpreter[]>) => any;
+        public locatingCallback?: (e: Promise<PythonEnvironment[]>) => any;
         public onLocating(
-            listener: (e: Promise<PythonInterpreter[]>) => any,
+            listener: (e: Promise<PythonEnvironment[]>) => any,
             _thisArgs?: any,
             _disposables?: Disposable[]
         ): Disposable {
             this.locatingCallback = listener;
             return { dispose: noop };
         }
-        public getInterpreters(_resource?: Uri): Promise<PythonInterpreter[]> {
+        public getInterpreters(_resource?: Uri): Promise<PythonEnvironment[]> {
             return Promise.resolve([]);
         }
         public dispose() {
@@ -50,7 +50,7 @@ suite('Interpreters - Locator Progress', () => {
         let refreshedInvoked = false;
         progress.onRefreshed(() => (refreshedInvoked = true));
 
-        const locatingDeferred = createDeferred<PythonInterpreter[]>();
+        const locatingDeferred = createDeferred<PythonEnvironment[]>();
         locator.locatingCallback!.bind(progress)(locatingDeferred.promise);
         expect(refreshingInvoked).to.be.equal(true, 'Refreshing Not invoked');
         expect(refreshedInvoked).to.be.equal(false, 'Refreshed invoked');
@@ -67,7 +67,7 @@ suite('Interpreters - Locator Progress', () => {
         let refreshedInvoked = false;
         progress.onRefreshed(() => (refreshedInvoked = true));
 
-        const locatingDeferred = createDeferred<PythonInterpreter[]>();
+        const locatingDeferred = createDeferred<PythonEnvironment[]>();
         locator.locatingCallback!.bind(progress)(locatingDeferred.promise);
         locatingDeferred.resolve();
 
@@ -89,13 +89,13 @@ suite('Interpreters - Locator Progress', () => {
         let refreshedInvoked = false;
         progress.onRefreshed(() => (refreshedInvoked = true));
 
-        const locatingDeferred1 = createDeferred<PythonInterpreter[]>();
+        const locatingDeferred1 = createDeferred<PythonEnvironment[]>();
         locator1.locatingCallback!.bind(progress)(locatingDeferred1.promise);
 
-        const locatingDeferred2 = createDeferred<PythonInterpreter[]>();
+        const locatingDeferred2 = createDeferred<PythonEnvironment[]>();
         locator2.locatingCallback!.bind(progress)(locatingDeferred2.promise);
 
-        const locatingDeferred3 = createDeferred<PythonInterpreter[]>();
+        const locatingDeferred3 = createDeferred<PythonEnvironment[]>();
         locator3.locatingCallback!.bind(progress)(locatingDeferred3.promise);
 
         locatingDeferred1.resolve();

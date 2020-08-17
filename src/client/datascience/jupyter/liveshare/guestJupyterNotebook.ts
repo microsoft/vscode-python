@@ -15,11 +15,10 @@ import { IConfigurationService, IDisposableRegistry, Resource } from '../../../c
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     ICell,
-    IJupyterKernelSpec,
     INotebook,
     INotebookCompletion,
     INotebookExecutionInfo,
@@ -28,7 +27,7 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
-import { LiveKernelModel } from '../kernels/types';
+import { KernelConnectionMetadata } from '../kernels/types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
@@ -68,9 +67,7 @@ export class GuestJupyterNotebook
         return ServerStatus.Idle;
     }
 
-    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
-        IJupyterKernelSpec | LiveKernelModel
-    >().event;
+    public onKernelChanged = new EventEmitter<KernelConnectionMetadata>().event;
     public onKernelRestarted = new EventEmitter<void>().event;
     public onKernelInterrupted = new EventEmitter<void>().event;
     public onDisposed = new EventEmitter<void>().event;
@@ -241,15 +238,15 @@ export class GuestJupyterNotebook
         }
     }
 
-    public getMatchingInterpreter(): PythonInterpreter | undefined {
+    public getMatchingInterpreter(): PythonEnvironment | undefined {
         return;
     }
 
-    public getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
+    public getKernelConnection(): KernelConnectionMetadata | undefined {
         return;
     }
 
-    public setKernelSpec(_spec: IJupyterKernelSpec | LiveKernelModel, _timeout: number): Promise<void> {
+    public setKernelConnection(_spec: KernelConnectionMetadata, _timeout: number): Promise<void> {
         return Promise.resolve();
     }
     public getLoggers(): INotebookExecutionLogger[] {

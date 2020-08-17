@@ -7,11 +7,10 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { Resource } from '../../client/common/types';
 import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
-import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
     ICellHashProvider,
-    IJupyterKernelSpec,
     INotebook,
     INotebookCompletion,
     INotebookExecutionLogger,
@@ -19,7 +18,7 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../client/datascience/types';
-import { PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { noop } from '../core';
 
@@ -48,9 +47,7 @@ export class MockJupyterNotebook implements INotebook {
         return this.kernelInterrupted.event;
     }
     public kernelSocket = new Observable<KernelSocketInformation | undefined>();
-    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
-        IJupyterKernelSpec | LiveKernelModel
-    >().event;
+    public onKernelChanged = new EventEmitter<KernelConnectionMetadata>().event;
     public onDisposed = new EventEmitter<void>().event;
     public onKernelRestarted = new EventEmitter<void>().event;
     public readonly disposed: boolean = false;
@@ -124,19 +121,19 @@ export class MockJupyterNotebook implements INotebook {
         return Promise.resolve();
     }
 
-    public getMatchingInterpreter(): PythonInterpreter | undefined {
+    public getMatchingInterpreter(): PythonEnvironment | undefined {
         return;
     }
 
-    public setInterpreter(_inter: PythonInterpreter) {
+    public setInterpreter(_inter: PythonEnvironment) {
         noop();
     }
 
-    public getKernelSpec(): IJupyterKernelSpec | undefined {
+    public getKernelConnection(): KernelConnectionMetadata | undefined {
         return;
     }
 
-    public setKernelSpec(_spec: IJupyterKernelSpec | LiveKernelModel, _timeout: number): Promise<void> {
+    public setKernelConnection(_spec: KernelConnectionMetadata, _timeout: number): Promise<void> {
         return Promise.resolve();
     }
 

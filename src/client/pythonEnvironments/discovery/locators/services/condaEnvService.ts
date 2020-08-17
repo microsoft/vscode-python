@@ -1,19 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
 import { ICondaService, IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
-import { PythonInterpreter } from '../../../info';
+import { PythonEnvironment } from '../../../info';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { parseCondaInfo } from './conda';
 
 /**
  * Locates conda env interpreters based on the conda service's info.
  */
+@injectable()
 export class CondaEnvService extends CacheableLocatorService {
     constructor(
         @inject(ICondaService) private condaService: ICondaService,
@@ -37,14 +38,14 @@ export class CondaEnvService extends CacheableLocatorService {
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
+    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
         return this.getSuggestionsFromConda();
     }
 
     /**
      * Return the list of interpreters for all the conda envs.
      */
-    private async getSuggestionsFromConda(): Promise<PythonInterpreter[]> {
+    private async getSuggestionsFromConda(): Promise<PythonEnvironment[]> {
         try {
             const info = await this.condaService.getCondaInfo();
             if (!info) {

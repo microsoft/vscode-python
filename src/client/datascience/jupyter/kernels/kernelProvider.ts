@@ -6,20 +6,31 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+import { ICommandManager } from '../../../common/application/types';
 import { traceWarning } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
-import { INotebookProvider } from '../../types';
+import { IInterpreterService } from '../../../interpreter/contracts';
+import { INotebookContentProvider } from '../../notebook/types';
+import { IDataScienceErrorHandler, INotebookEditorProvider, INotebookProvider } from '../../types';
 import { Kernel } from './kernel';
-import { IKernel, KernelOptions } from './types';
+import { KernelSelector } from './kernelSelector';
+import { IKernel, IKernelProvider, IKernelSelectionUsage, KernelOptions } from './types';
 
 @injectable()
-export class KernelProvider {
+export class KernelProvider implements IKernelProvider {
     private readonly kernelsByUri = new Map<string, { options: KernelOptions; kernel: IKernel }>();
     constructor(
         @inject(IAsyncDisposableRegistry) private asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
-        @inject(IConfigurationService) private configService: IConfigurationService
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
+        @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider,
+        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
+
+        @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage
     ) {}
     public get(uri: Uri): IKernel | undefined {
         return this.kernelsByUri.get(uri.toString())?.kernel;
@@ -40,7 +51,14 @@ export class KernelProvider {
             this.notebookProvider,
             this.disposables,
             waitForIdleTimeout,
-            options.launchingFile
+            options.launchingFile,
+            this.commandManager,
+            this.interpreterService,
+            this.errorHandler,
+            this.contentProvider,
+            this.editorProvider,
+            this,
+            this.kernelSelectionUsage
         );
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });
@@ -51,15 +69,7 @@ export class KernelProvider {
      * If a kernel has been disposed, then remove the mapping of Uri + Kernel.
      */
     private deleteMappingIfKernelIsDisposed(uri: Uri, kernel: IKernel) {
-        kernel.onDisposed(
-            () => {
-                if (this.get(uri) === kernel) {
-                    this.kernelsByUri.delete(uri.toString());
-                }
-            },
-            this,
-            this.disposables
-        );
+        kernel.onDisposed(() => this.kernelsByUri.delete(uri.toString()), this, this.disposables);
     }
     private disposeOldKernel(uri: Uri) {
         this.kernelsByUri

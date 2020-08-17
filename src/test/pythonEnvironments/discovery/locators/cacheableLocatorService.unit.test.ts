@@ -17,7 +17,7 @@ import { IInterpreterWatcher } from '../../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../../client/ioc/container';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { CacheableLocatorService } from '../../../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Cacheable Locator Service', () => {
     suite('Caching', () => {
@@ -28,13 +28,13 @@ suite('Interpreters - Cacheable Locator Service', () => {
             public dispose() {
                 noop();
             }
-            protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
+            protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
                 return this.mockLocator.getInterpretersImplementation();
             }
-            protected getCachedInterpreters(_resource?: Uri): PythonInterpreter[] | undefined {
+            protected getCachedInterpreters(_resource?: Uri): PythonEnvironment[] | undefined {
                 return this.mockLocator.getCachedInterpreters();
             }
-            protected async cacheInterpreters(_interpreters: PythonInterpreter[], _resource?: Uri) {
+            protected async cacheInterpreters(_interpreters: PythonEnvironment[], _resource?: Uri) {
                 return this.mockLocator.cacheInterpreters();
             }
             protected getCacheKey(_resource?: Uri) {
@@ -42,10 +42,10 @@ suite('Interpreters - Cacheable Locator Service', () => {
             }
         }
         class MockLocator {
-            public async getInterpretersImplementation(): Promise<PythonInterpreter[]> {
+            public async getInterpretersImplementation(): Promise<PythonEnvironment[]> {
                 return [];
             }
-            public getCachedInterpreters(): PythonInterpreter[] | undefined {
+            public getCachedInterpreters(): PythonEnvironment[] | undefined {
                 return;
             }
             public async cacheInterpreters() {
@@ -199,13 +199,13 @@ suite('Interpreters - Cacheable Locator Service', () => {
             public getCacheKey(resource?: Uri) {
                 return super.getCacheKey(resource);
             }
-            protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
+            protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
                 return [];
             }
-            protected getCachedInterpreters(_resource?: Uri): PythonInterpreter[] | undefined {
+            protected getCachedInterpreters(_resource?: Uri): PythonEnvironment[] | undefined {
                 return [];
             }
-            protected async cacheInterpreters(_interpreters: PythonInterpreter[], _resource?: Uri) {
+            protected async cacheInterpreters(_interpreters: PythonEnvironment[], _resource?: Uri) {
                 noop();
             }
         }

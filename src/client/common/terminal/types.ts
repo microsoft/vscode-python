@@ -4,7 +4,7 @@
 'use strict';
 
 import { CancellationToken, Event, Terminal, Uri } from 'vscode';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IEventNamePropertyMapping } from '../../telemetry/index';
 import { IDisposable, Resource } from '../types';
 
@@ -75,9 +75,9 @@ export type TerminalCreationOptions = {
     /**
      * Associated Python Interpreter.
      *
-     * @type {PythonInterpreter}
+     * @type {PythonEnvironment}
      */
-    interpreter?: PythonInterpreter;
+    interpreter?: PythonEnvironment;
     /**
      * Whether hidden.
      *
@@ -117,12 +117,12 @@ export interface ITerminalHelper {
     getEnvironmentActivationCommands(
         terminalShellType: TerminalShellType,
         resource?: Uri,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonEnvironment
     ): Promise<string[] | undefined>;
     getEnvironmentActivationShellCommands(
         resource: Resource,
         shell: TerminalShellType,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonEnvironment
     ): Promise<string[] | undefined>;
 }
 
@@ -130,7 +130,7 @@ export const ITerminalActivator = Symbol('ITerminalActivator');
 export type TerminalActivationOptions = {
     resource?: Resource;
     preserveFocus?: boolean;
-    interpreter?: PythonInterpreter;
+    interpreter?: PythonEnvironment;
     /**
      * When sending commands to the terminal, do not display the terminal.
      *

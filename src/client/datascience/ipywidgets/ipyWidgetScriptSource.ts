@@ -21,7 +21,7 @@ import {
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import {
@@ -67,7 +67,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
     private jupyterLab?: typeof jupyterlabService;
     private scriptProvider?: IPyWidgetScriptSourceProvider;
     private disposables: IDisposable[] = [];
-    private interpreterForWhichWidgetSourcesWereFetched?: PythonInterpreter;
+    private interpreterForWhichWidgetSourcesWereFetched?: PythonEnvironment;
     /**
      * Key value pair of widget modules along with the version that needs to be loaded.
      */

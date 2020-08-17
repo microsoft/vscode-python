@@ -18,11 +18,11 @@ import { JupyterSessionStartError } from '../../../../client/datascience/baseJup
 import { NotebookProvider } from '../../../../client/datascience/interactive-common/notebookProvider';
 import { JupyterNotebookBase } from '../../../../client/datascience/jupyter/jupyterNotebook';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
-import { KernelSelector, KernelSpecInterpreter } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
+import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';
-import { LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
+import { KernelConnectionMetadata, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
 import { IJupyterConnection, IJupyterKernelSpec, INotebook } from '../../../../client/datascience/types';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { noop } from '../../../core';
 
 // tslint:disable: max-func-body-length no-any
@@ -34,9 +34,9 @@ suite('DataScience - Kernel Switcher', () => {
     let notebook: INotebook;
     let connection: IJupyterConnection;
     let currentKernel: IJupyterKernelSpec | LiveKernelModel;
-    let selectedInterpreter: PythonInterpreter;
+    let selectedInterpreter: PythonEnvironment;
     let settings: IPythonSettings;
-    let newKernelSpec: KernelSpecInterpreter;
+    let newKernelConnection: KernelConnectionMetadata;
     setup(() => {
         connection = mock<IJupyterConnection>();
         settings = mock(PythonSettings);
@@ -49,14 +49,15 @@ suite('DataScience - Kernel Switcher', () => {
         };
         selectedInterpreter = {
             path: '',
-            type: InterpreterType.Conda,
+            envType: EnvironmentType.Conda,
             architecture: Architecture.Unknown,
             sysPrefix: '',
             sysVersion: ''
         };
-        newKernelSpec = {
+        newKernelConnection = {
             kernelModel: currentKernel,
-            interpreter: selectedInterpreter
+            interpreter: selectedInterpreter,
+            kind: 'connectToLiveKernel'
         };
         notebook = mock(JupyterNotebookBase);
         configService = mock(ConfigurationService);
@@ -113,16 +114,19 @@ suite('DataScience - Kernel Switcher', () => {
             ].forEach((currentKernelInfo) => {
                 suite(currentKernelInfo.title, () => {
                     setup(() => {
-                        when(notebook.getKernelSpec()).thenReturn(currentKernelInfo.currentKernel);
+                        when(notebook.getKernelConnection()).thenReturn({
+                            kernelSpec: currentKernelInfo.currentKernel as any,
+                            kind: 'startUsingKernelSpec'
+                        });
                     });
 
                     test('Switch to new kernel', async () => {
-                        await kernelSwitcher.switchKernelWithRetry(instance(notebook), newKernelSpec);
-                        verify(notebook.setKernelSpec(anything(), anything(), anything())).once();
+                        await kernelSwitcher.switchKernelWithRetry(instance(notebook), newKernelConnection);
+                        verify(notebook.setKernelConnection(anything(), anything())).once();
                     });
                     test('Switch to new kernel with error', async () => {
                         const ex = new JupyterSessionStartError(new Error('Kaboom'));
-                        when(notebook.setKernelSpec(anything(), anything(), anything())).thenReject(ex);
+                        when(notebook.setKernelConnection(anything(), anything())).thenReject(ex);
                         when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(
                             // tslint:disable-next-line: no-any
                             Common.cancel() as any
@@ -131,7 +135,7 @@ suite('DataScience - Kernel Switcher', () => {
                         // This wouldn't normally fail for remote because sessions should always start if
                         // the remote server is up but both should throw
                         try {
-                            await kernelSwitcher.switchKernelWithRetry(instance(notebook), newKernelSpec);
+                            await kernelSwitcher.switchKernelWithRetry(instance(notebook), newKernelConnection);
                             assert.fail('Should throw exception');
                         } catch {
                             // This is expected

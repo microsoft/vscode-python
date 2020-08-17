@@ -1,5 +1,6 @@
 import { injectable } from 'inversify';
 import { Options } from 'winreg';
+import { traceError } from '../logger';
 import { Architecture } from '../utils/platform';
 import { IRegistry, RegistryHive } from './types';
 
@@ -11,10 +12,18 @@ enum RegistryArchitectures {
 @injectable()
 export class RegistryImplementation implements IRegistry {
     public async getKeys(key: string, hive: RegistryHive, arch?: Architecture) {
-        return getRegistryKeys({ hive: translateHive(hive)!, arch: translateArchitecture(arch), key });
+        return getRegistryKeys({ hive: translateHive(hive)!, arch: translateArchitecture(arch), key }).catch((ex) => {
+            traceError('Fetching keys from windows registry resulted in an error', ex);
+            return [];
+        });
     }
     public async getValue(key: string, hive: RegistryHive, arch?: Architecture, name: string = '') {
-        return getRegistryValue({ hive: translateHive(hive)!, arch: translateArchitecture(arch), key }, name);
+        return getRegistryValue({ hive: translateHive(hive)!, arch: translateArchitecture(arch), key }, name).catch(
+            (ex) => {
+                traceError('Fetching key value from windows registry resulted in an error', ex);
+                return undefined;
+            }
+        );
     }
 }
 

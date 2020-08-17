@@ -1,4 +1,4 @@
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonEnvironment } from '../../../info';
 
 // tslint:disable-next-line:variable-name
 export const AnacondaCompanyNames = ['Anaconda, Inc.', 'Continuum Analytics, Inc.'];
@@ -30,7 +30,7 @@ export async function parseCondaInfo(
     info: CondaInfo,
     getPythonPath: (condaEnv: string) => string,
     fileExists: (filename: string) => Promise<boolean>,
-    getPythonInfo: (python: string) => Promise<Partial<PythonInterpreter> | undefined>
+    getPythonInfo: (python: string) => Promise<Partial<PythonEnvironment> | undefined>
 ) {
     // The root of the conda environment is itself a Python interpreter
     // envs reported as e.g.: /Users/bob/miniconda3/envs/someEnv.
@@ -51,10 +51,10 @@ export async function parseCondaInfo(
         }
 
         return {
-            ...(details as PythonInterpreter),
+            ...(details as PythonEnvironment),
             path: pythonPath,
             companyDisplayName: AnacondaCompanyName,
-            type: InterpreterType.Conda,
+            envType: EnvironmentType.Conda,
             envPath
         };
     });

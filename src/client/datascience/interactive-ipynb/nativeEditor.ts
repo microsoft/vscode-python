@@ -37,7 +37,6 @@ import {
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
@@ -61,7 +60,6 @@ import {
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
-    IJupyterKernelSpec,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditor,
@@ -84,12 +82,11 @@ import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { EnableTrustedNotebooks } from '../../common/experiments/groups';
 import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
-import { LiveKernelModel } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
@@ -181,7 +178,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private trustService: ITrustService,
-        private expService: IExperimentService,
+        expService: IExperimentService,
         private _model: INotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector
@@ -225,7 +222,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             selector
         );
         asyncRegistry.push(this);
-
         asyncRegistry.push(this.trustService.onDidSetNotebookTrust(this.monitorChangesToTrust, this));
         this.synchronizer.subscribeToUserActions(this, this.postMessage.bind(this));
 
@@ -323,15 +319,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.model.metadata;
     }
 
-    public async updateNotebookOptions(
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel,
-        interpreter: PythonInterpreter | undefined
-    ): Promise<void> {
+    public async updateNotebookOptions(kernelConnection: KernelConnectionMetadata): Promise<void> {
         if (this.model) {
             const change: NotebookModelChange = {
                 kind: 'version',
-                kernelSpec,
-                interpreter,
+                kernelConnection,
                 oldDirty: this.model.isDirty,
                 newDirty: true,
                 source: 'user'
@@ -507,15 +499,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Tell storage about our notebook object
         const notebook = this.getNotebook();
         if (notebook && this.model) {
-            const interpreter = notebook.getMatchingInterpreter();
-            const kernelSpec = notebook.getKernelSpec();
+            const kernelConnection = notebook.getKernelConnection();
             this.model.update({
                 source: 'user',
                 kind: 'version',
                 oldDirty: this.model.isDirty,
                 newDirty: this.model.isDirty,
-                interpreter,
-                kernelSpec
+                kernelConnection
             });
         }
 
@@ -564,12 +554,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     protected saveAll() {
-        // Ask user for a save as dialog if no title
-        if (this.isUntitled) {
-            this.commandManager.executeCommand('workbench.action.files.saveAs', this.file);
-        } else {
-            this.commandManager.executeCommand('workbench.action.files.save', this.file);
-        }
+        this.commandManager.executeCommand('workbench.action.files.save', this.file);
     }
 
     private async modelChanged(change: NotebookModelChange) {
@@ -704,11 +689,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private async sendInitialCellsToWebView(cells: ICell[], isNotebookTrusted: boolean): Promise<void> {
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: cells.length });
 
-        const shouldShowTrustMessage = await this.expService.inExperiment(EnableTrustedNotebooks.experiment);
         return this.postMessage(InteractiveWindowMessages.LoadAllCells, {
             cells,
-            isNotebookTrusted,
-            shouldShowTrustMessage
+            isNotebookTrusted
         });
     }
 

@@ -3,6 +3,7 @@
 
 // tslint:disable:no-any
 
+import { injectable, unmanaged } from 'inversify';
 import * as md5 from 'md5';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
@@ -15,7 +16,7 @@ import { IInterpreterLocatorService, IInterpreterWatcher } from '../../../../int
 import { IServiceContainer } from '../../../../ioc/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
-import { PythonInterpreter } from '../../../info';
+import { PythonEnvironment } from '../../../info';
 import { GetInterpreterLocatorOptions } from '../types';
 
 /**
@@ -26,8 +27,8 @@ import { GetInterpreterLocatorOptions } from '../types';
  */
 export class CacheableLocatorPromiseCache {
     private static useStatic = false;
-    private static staticMap = new Map<string, Deferred<PythonInterpreter[]>>();
-    private normalMap = new Map<string, Deferred<PythonInterpreter[]>>();
+    private static staticMap = new Map<string, Deferred<PythonEnvironment[]>>();
+    private normalMap = new Map<string, Deferred<PythonEnvironment[]>>();
 
     public static forceUseStatic() {
         CacheableLocatorPromiseCache.useStatic = true;
@@ -35,14 +36,14 @@ export class CacheableLocatorPromiseCache {
     public static forceUseNormal() {
         CacheableLocatorPromiseCache.useStatic = false;
     }
-    public get(key: string): Deferred<PythonInterpreter[]> | undefined {
+    public get(key: string): Deferred<PythonEnvironment[]> | undefined {
         if (CacheableLocatorPromiseCache.useStatic) {
             return CacheableLocatorPromiseCache.staticMap.get(key);
         }
         return this.normalMap.get(key);
     }
 
-    public set(key: string, value: Deferred<PythonInterpreter[]>) {
+    public set(key: string, value: Deferred<PythonEnvironment[]>) {
         if (CacheableLocatorPromiseCache.useStatic) {
             CacheableLocatorPromiseCache.staticMap.set(key, value);
         } else {
@@ -59,18 +60,19 @@ export class CacheableLocatorPromiseCache {
     }
 }
 
+@injectable()
 export abstract class CacheableLocatorService implements IInterpreterLocatorService {
     protected readonly _hasInterpreters: Deferred<boolean>;
     private readonly promisesPerResource = new CacheableLocatorPromiseCache();
     private readonly handlersAddedToResource = new Set<string>();
     private readonly cacheKeyPrefix: string;
-    private readonly locating = new EventEmitter<Promise<PythonInterpreter[]>>();
+    private readonly locating = new EventEmitter<Promise<PythonEnvironment[]>>();
     private _didTriggerInterpreterSuggestions: boolean;
 
     constructor(
-        private readonly name: string,
-        protected readonly serviceContainer: IServiceContainer,
-        private cachePerWorkspace: boolean = false
+        @unmanaged() private readonly name: string,
+        @unmanaged() protected readonly serviceContainer: IServiceContainer,
+        @unmanaged() private cachePerWorkspace: boolean = false
     ) {
         this._hasInterpreters = createDeferred<boolean>();
         this.cacheKeyPrefix = `INTERPRETERS_CACHE_v3_${name}`;
@@ -85,7 +87,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         this._didTriggerInterpreterSuggestions = value;
     }
 
-    public get onLocating(): Event<Promise<PythonInterpreter[]>> {
+    public get onLocating(): Event<Promise<PythonEnvironment[]>> {
         return this.locating.event;
     }
     public get hasInterpreters(): Promise<boolean> {
@@ -93,11 +95,11 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     }
     public abstract dispose(): void;
     @traceDecorators.verbose('Get Interpreters in CacheableLocatorService')
-    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]> {
+    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]> {
         const cacheKey = this.getCacheKey(resource);
         let deferred = this.promisesPerResource.get(cacheKey);
         if (!deferred || options?.ignoreCache) {
-            deferred = createDeferred<PythonInterpreter[]>();
+            deferred = createDeferred<PythonEnvironment[]>();
             this.promisesPerResource.set(cacheKey, deferred);
 
             this.addHandlersForInterpreterWatchers(cacheKey, resource).ignoreErrors();
@@ -162,17 +164,17 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         return [];
     }
 
-    protected abstract getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]>;
+    protected abstract getInterpretersImplementation(resource?: Uri): Promise<PythonEnvironment[]>;
     protected createPersistenceStore(resource?: Uri) {
         const cacheKey = this.getCacheKey(resource);
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         if (this.cachePerWorkspace) {
-            return persistentFactory.createWorkspacePersistentState<PythonInterpreter[]>(cacheKey, undefined as any);
+            return persistentFactory.createWorkspacePersistentState<PythonEnvironment[]>(cacheKey, undefined as any);
         } else {
-            return persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(cacheKey, undefined as any);
+            return persistentFactory.createGlobalPersistentState<PythonEnvironment[]>(cacheKey, undefined as any);
         }
     }
-    protected getCachedInterpreters(resource?: Uri): PythonInterpreter[] | undefined {
+    protected getCachedInterpreters(resource?: Uri): PythonEnvironment[] | undefined {
         const persistence = this.createPersistenceStore(resource);
         if (!Array.isArray(persistence.value)) {
             return;
@@ -184,7 +186,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             };
         });
     }
-    protected async cacheInterpreters(interpreters: PythonInterpreter[], resource?: Uri) {
+    protected async cacheInterpreters(interpreters: PythonEnvironment[], resource?: Uri) {
         const persistence = this.createPersistenceStore(resource);
         await persistence.updateValue(interpreters);
     }

@@ -76,7 +76,9 @@ export class NativeEditorStorage implements INotebookStorage {
     public generateBackupId(model: INotebookModel): string {
         return `${path.basename(model.file.fsPath)}-${uuid()}`;
     }
-
+    public get(_file: Uri): INotebookModel | undefined {
+        return undefined;
+    }
     public getOrCreateModel(
         file: Uri,
         possibleContents?: string,

@@ -9,7 +9,7 @@ import { Telemetry } from '../../datascience/constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
@@ -365,7 +365,7 @@ export class DataScienceInstaller extends BaseInstaller {
         }
 
         // At this point we know that `interpreterUri` is of type PythonInterpreter
-        const interpreter = interpreterUri as PythonInterpreter;
+        const interpreter = interpreterUri as PythonEnvironment;
 
         // Get a list of known installation channels, pip, conda, etc.
         const channels: IModuleInstaller[] = await this.serviceContainer
@@ -374,7 +374,7 @@ export class DataScienceInstaller extends BaseInstaller {
 
         // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
         let installerModule;
-        if (interpreter.type === 'Conda') {
+        if (interpreter.envType === 'Conda') {
             installerModule = channels.find((v) => v.name === 'Conda');
         } else {
             installerModule = channels.find((v) => v.name === 'Pip');

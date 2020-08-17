@@ -9,7 +9,7 @@ import { traceDecorators } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageServerAnalysisOptions, ILanguageServerOutputChannel } from '../types';
 
 @injectable()
@@ -26,7 +26,7 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
         this.output = lsOutputChannel.channel;
     }
 
-    public async initialize(_resource: Resource, _interpreter: PythonInterpreter | undefined) {
+    public async initialize(_resource: Resource, _interpreter: PythonEnvironment | undefined) {
         const disposable = this.envVarsProvider.onDidEnvironmentVariablesChange(this.onEnvVarChange, this);
         this.disposables.push(disposable);
     }

@@ -3,14 +3,14 @@
 'use strict';
 
 import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 
 // For a given IJupyterKernelSpec return the interpreter associated with it or error
 export async function getKernelInterpreter(
     kernelSpec: IJupyterKernelSpec,
     interpreterService: IInterpreterService
-): Promise<PythonInterpreter> {
+): Promise<PythonEnvironment> {
     // First part of argument is always the executable.
     const args = [...kernelSpec.argv];
     const pythonPath = kernelSpec.metadata?.interpreter?.path || args[0];

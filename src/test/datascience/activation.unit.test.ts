@@ -21,7 +21,7 @@ import {
     INotebookEditor,
     INotebookEditorProvider
 } from '../../client/datascience/types';
-import { PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { FakeClock } from '../common';
 import { createPythonInterpreter } from '../utils/interpreters';
 
@@ -31,7 +31,7 @@ suite('DataScience - Activation', () => {
     let jupyterInterpreterService: JupyterInterpreterService;
     let executionFactory: IPythonExecutionFactory;
     let openedEventEmitter: EventEmitter<INotebookEditor>;
-    let interpreterEventEmitter: EventEmitter<PythonInterpreter>;
+    let interpreterEventEmitter: EventEmitter<PythonEnvironment>;
     let contextService: ActiveEditorContextService;
     let fakeTimer: FakeClock;
     const interpreter = createPythonInterpreter();
@@ -39,7 +39,7 @@ suite('DataScience - Activation', () => {
     setup(async () => {
         fakeTimer = new FakeClock();
         openedEventEmitter = new EventEmitter<INotebookEditor>();
-        interpreterEventEmitter = new EventEmitter<PythonInterpreter>();
+        interpreterEventEmitter = new EventEmitter<PythonEnvironment>();
         const tracker = mock<INotebookAndInteractiveWindowUsageTracker>();
 
         notebookEditorProvider = mock(NativeEditorProvider);

@@ -17,19 +17,19 @@ import { Architecture } from '../../../../client/common/utils/platform';
 import { IInterpreterLocatorService, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { CondaService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { MockState } from '../../../interpreters/mocks';
 
 const untildify: (value: string) => string = require('untildify');
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
-const info: PythonInterpreter = {
+const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
     displayName: '',
     envName: '',
     path: '',
-    type: InterpreterType.Unknown,
+    envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''
@@ -417,33 +417,33 @@ suite('Interpreters Conda Service', () => {
 
     test('Must use Conda env from Registry to locate conda.exe', async () => {
         const condaPythonExePath = path.join('dumyPath', 'environments', 'conda', 'Scripts', 'python.exe');
-        const registryInterpreters: PythonInterpreter[] = [
+        const registryInterpreters: PythonEnvironment[] = [
             {
                 displayName: 'One',
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
                 companyDisplayName: 'One 1',
                 version: new SemVer('1.0.0'),
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: condaPythonExePath,
                 companyDisplayName: 'Two 2',
                 version: new SemVer('1.11.0'),
-                type: InterpreterType.Conda
+                envType: EnvironmentType.Conda
             },
             {
                 displayName: 'Three',
                 path: path.join(environmentsPath, 'path2', 'one.exe'),
                 companyDisplayName: 'Three 3',
                 version: new SemVer('2.10.1'),
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Seven',
                 path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
                 companyDisplayName: 'Continuum Analytics, Inc.',
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             }
         ].map((item) => {
             return { ...info, ...item };
@@ -470,54 +470,54 @@ suite('Interpreters Conda Service', () => {
 
     test('Must use Conda env from Registry to latest version of locate conda.exe', async () => {
         const condaPythonExePath = path.join('dumyPath', 'environments');
-        const registryInterpreters: PythonInterpreter[] = [
+        const registryInterpreters: PythonEnvironment[] = [
             {
                 displayName: 'One',
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
                 companyDisplayName: 'One 1',
                 version: new SemVer('1.0.0'),
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda1', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 1',
                 version: new SemVer('1.11.0'),
-                type: InterpreterType.Conda
+                envType: EnvironmentType.Conda
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda211', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.11',
                 version: new SemVer('2.11.0'),
-                type: InterpreterType.Conda
+                envType: EnvironmentType.Conda
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda231', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.31',
                 version: new SemVer('2.31.0'),
-                type: InterpreterType.Conda
+                envType: EnvironmentType.Conda
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda221', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.21',
                 version: new SemVer('2.21.0'),
-                type: InterpreterType.Conda
+                envType: EnvironmentType.Conda
             },
             {
                 displayName: 'Three',
                 path: path.join(environmentsPath, 'path2', 'one.exe'),
                 companyDisplayName: 'Three 3',
                 version: new SemVer('2.10.1'),
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Seven',
                 path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
                 companyDisplayName: 'Continuum Analytics, Inc.',
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             }
         ].map((item) => {
             return { ...info, ...item };
@@ -541,54 +541,54 @@ suite('Interpreters Conda Service', () => {
 
     test("Must use 'conda' if conda.exe cannot be located using registry entries", async () => {
         const condaPythonExePath = path.join('dumyPath', 'environments');
-        const registryInterpreters: PythonInterpreter[] = [
+        const registryInterpreters: PythonEnvironment[] = [
             {
                 displayName: 'One',
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
                 companyDisplayName: 'One 1',
                 version: new SemVer('1.0.0'),
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda1', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 1',
                 version: new SemVer('1.11.0'),
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda211', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.11',
                 version: new SemVer('2.11.0'),
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda231', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.31',
                 version: new SemVer('2.31.0'),
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda221', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.21',
                 version: new SemVer('2.21.0'),
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Three',
                 path: path.join(environmentsPath, 'path2', 'one.exe'),
                 companyDisplayName: 'Three 3',
                 version: new SemVer('2.10.1'),
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Seven',
                 path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
                 companyDisplayName: 'Continuum Analytics, Inc.',
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             }
         ].map((item) => {
             return { ...info, ...item };
@@ -863,33 +863,33 @@ suite('Interpreters Conda Service', () => {
             'Scripts',
             'python.exe'
         );
-        const registryInterpreters: PythonInterpreter[] = [
+        const registryInterpreters: PythonEnvironment[] = [
             {
                 displayName: 'One',
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
                 companyDisplayName: 'One 1',
                 version: new SemVer('1.0.0'),
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: condaPythonExePath,
                 companyDisplayName: 'Two 2',
                 version: new SemVer('1.11.0'),
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Three',
                 path: path.join(environmentsPath, 'path2', 'one.exe'),
                 companyDisplayName: 'Three 3',
                 version: new SemVer('2.10.1'),
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             },
             {
                 displayName: 'Seven',
                 path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
                 companyDisplayName: 'Continuum Analytics, Inc.',
-                type: InterpreterType.Unknown
+                envType: EnvironmentType.Unknown
             }
         ].map((item) => {
             return { ...info, ...item };

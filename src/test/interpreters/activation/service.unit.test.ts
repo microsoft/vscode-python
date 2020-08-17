@@ -27,7 +27,7 @@ import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const defaultShells = {
@@ -50,12 +50,12 @@ suite('Interpreters Activation - Python Environment Variables', () => {
     let interpreterService: IInterpreterService;
     let onDidChangeEnvVariables: EventEmitter<Uri | undefined>;
     let onDidChangeInterpreter: EventEmitter<void>;
-    const pythonInterpreter: PythonInterpreter = {
+    const pythonInterpreter: PythonEnvironment = {
         path: '/foo/bar/python.exe',
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
-        type: InterpreterType.Unknown,
+        envType: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 
@@ -83,7 +83,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
         );
     }
 
-    function title(resource?: Uri, interpreter?: PythonInterpreter) {
+    function title(resource?: Uri, interpreter?: PythonEnvironment) {
         return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
     }
 

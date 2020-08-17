@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../../common/application/types';
@@ -15,12 +15,13 @@ import { IPipEnvServiceHelper } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { GetInterpreterLocatorOptions } from '../types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
 const pipEnvFileNameVariable = 'PIPENV_PIPFILE';
 
+@injectable()
 export class PipEnvService extends CacheableLocatorService implements IPipEnvService {
     private readonly helper: IInterpreterHelper;
     private readonly processServiceFactory: IProcessServiceFactory;
@@ -59,7 +60,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         return this.didTriggerInterpreterSuggestions ? this.configService.getSettings().pipenvPath : '';
     }
 
-    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]> {
+    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]> {
         if (!this.didTriggerInterpreterSuggestions) {
             return [];
         }
@@ -75,7 +76,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         return interpreters;
     }
 
-    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+    protected getInterpretersImplementation(resource?: Uri): Promise<PythonEnvironment[]> {
         if (!this.didTriggerInterpreterSuggestions) {
             return Promise.resolve([]);
         }
@@ -90,7 +91,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             .catch(() => []);
     }
 
-    private async getInterpreterFromPipenv(pipenvCwd: string): Promise<PythonInterpreter | undefined> {
+    private async getInterpreterFromPipenv(pipenvCwd: string): Promise<PythonEnvironment | undefined> {
         const interpreterPath = await this.getInterpreterPathFromPipenv(pipenvCwd);
         if (!interpreterPath) {
             return;
@@ -103,9 +104,9 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         this._hasInterpreters.resolve(true);
         await this.pipEnvServiceHelper.trackWorkspaceFolder(interpreterPath, Uri.file(pipenvCwd));
         return {
-            ...(details as PythonInterpreter),
+            ...(details as PythonEnvironment),
             path: interpreterPath,
-            type: InterpreterType.Pipenv,
+            envType: EnvironmentType.Pipenv,
             pipEnvWorkspaceFolder: pipenvCwd
         };
     }

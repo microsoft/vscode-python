@@ -1,5 +1,5 @@
 // tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation no-unnecessary-callback-wrapper
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { traceError, traceInfo } from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
@@ -10,7 +10,7 @@ import { OSType } from '../../../../common/utils/platform';
 import { IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IPythonInPathCommandProvider } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
 /**
@@ -19,6 +19,7 @@ import { CacheableLocatorService } from './cacheableLocatorService';
  * If no interpreter is configured then it falls back to the system
  * Python (3 then 2).
  */
+@injectable()
 export class CurrentPathService extends CacheableLocatorService {
     private readonly fs: IFileSystem;
 
@@ -45,7 +46,7 @@ export class CurrentPathService extends CacheableLocatorService {
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+    protected getInterpretersImplementation(resource?: Uri): Promise<PythonEnvironment[]> {
         return this.suggestionsFromKnownPaths(resource);
     }
 
@@ -73,16 +74,16 @@ export class CurrentPathService extends CacheableLocatorService {
     /**
      * Return the information about the identified interpreter binary.
      */
-    private async getInterpreterDetails(pythonPath: string): Promise<PythonInterpreter | undefined> {
+    private async getInterpreterDetails(pythonPath: string): Promise<PythonEnvironment | undefined> {
         return this.helper.getInterpreterInformation(pythonPath).then((details) => {
             if (!details) {
                 return;
             }
             this._hasInterpreters.resolve(true);
             return {
-                ...(details as PythonInterpreter),
+                ...(details as PythonEnvironment),
                 path: pythonPath,
-                type: details.type ? details.type : InterpreterType.Unknown
+                envType: details.envType ? details.envType : EnvironmentType.Unknown
             };
         });
     }
@@ -124,7 +125,8 @@ export class CurrentPathService extends CacheableLocatorService {
     }
 }
 
-export class PythonInPathCommandProvider {
+@injectable()
+export class PythonInPathCommandProvider implements IPythonInPathCommandProvider {
     constructor(@inject(IPlatformService) private readonly platform: IPlatformService) {}
     public getCommands(): { command: string; args?: string[] }[] {
         const paths = ['python3.7', 'python3.6', 'python3', 'python2', 'python'].map((item) => {

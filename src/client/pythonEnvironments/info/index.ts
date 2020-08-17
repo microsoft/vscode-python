@@ -10,14 +10,18 @@ import { PythonVersion } from './pythonVersion';
 /**
  * The supported Python environment types.
  */
-export enum InterpreterType {
+export enum EnvironmentType {
     Unknown = 'Unknown',
     Conda = 'Conda',
     VirtualEnv = 'VirtualEnv',
     Pipenv = 'PipEnv',
     Pyenv = 'Pyenv',
     Venv = 'Venv',
-    WindowsStore = 'WindowsStore'
+    WindowsStore = 'WindowsStore',
+    Poetry = 'Poetry',
+    VirtualEnvWrapper = 'VirtualEnvWrapper',
+    Global = 'Global',
+    System = 'System'
 }
 
 type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
@@ -60,10 +64,10 @@ export type InterpreterInformation = {
  */
 // Note that "cachedEntry" is specific to the caching machinery
 // and doesn't really belong here.
-export type PythonInterpreter = InterpreterInformation & {
+export type PythonEnvironment = InterpreterInformation & {
     companyDisplayName?: string;
     displayName?: string;
-    type: InterpreterType;
+    envType: EnvironmentType;
     envName?: string;
     envPath?: string;
     cachedEntry?: boolean;
@@ -72,21 +76,21 @@ export type PythonInterpreter = InterpreterInformation & {
 /**
  * Convert the Python environment type to a user-facing name.
  */
-export function getInterpreterTypeName(interpreterType: InterpreterType) {
+export function getInterpreterTypeName(interpreterType: EnvironmentType) {
     switch (interpreterType) {
-        case InterpreterType.Conda: {
+        case EnvironmentType.Conda: {
             return 'conda';
         }
-        case InterpreterType.Pipenv: {
+        case EnvironmentType.Pipenv: {
             return 'pipenv';
         }
-        case InterpreterType.Pyenv: {
+        case EnvironmentType.Pyenv: {
             return 'pyenv';
         }
-        case InterpreterType.Venv: {
+        case EnvironmentType.Venv: {
             return 'venv';
         }
-        case InterpreterType.VirtualEnv: {
+        case EnvironmentType.VirtualEnv: {
             return 'virtualenv';
         }
         default: {
@@ -98,7 +102,7 @@ export function getInterpreterTypeName(interpreterType: InterpreterType) {
 /**
  * Build a version-sorted list from the given one, with lowest first.
  */
-export function sortInterpreters(interpreters: PythonInterpreter[]): PythonInterpreter[] {
+export function sortInterpreters(interpreters: PythonEnvironment[]): PythonEnvironment[] {
     if (interpreters.length === 0) {
         return [];
     }

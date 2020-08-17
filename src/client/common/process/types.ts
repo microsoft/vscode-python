@@ -7,7 +7,7 @@ import { CancellationToken, Uri } from 'vscode';
 
 import { Newable } from '../../ioc/types';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
-import { InterpreterInformation, PythonInterpreter } from '../../pythonEnvironments/info';
+import { InterpreterInformation, PythonEnvironment } from '../../pythonEnvironments/info';
 import { ExecutionInfo, IDisposable } from '../types';
 import { EnvironmentVariables } from '../variables/types';
 
@@ -130,7 +130,7 @@ export type DaemonExecutionFactoryCreationOptions =
     | DedicatedDaemonExecutionFactoryCreationOptions;
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
-    interpreter?: PythonInterpreter;
+    interpreter?: PythonEnvironment;
     allowEnvironmentFetchExceptions?: boolean;
     /**
      * Ignore running `conda run` when running code.
@@ -154,7 +154,7 @@ export interface IPythonExecutionFactory {
      */
     createDaemon<T extends IPythonDaemonExecutionService | IDisposable>(
         options: DaemonExecutionFactoryCreationOptions
-    ): Promise<T>;
+    ): Promise<T | IPythonExecutionService>;
     createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
     createCondaExecutionService(
         pythonPath: string,

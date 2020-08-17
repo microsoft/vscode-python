@@ -6,7 +6,7 @@ import { Uri } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
 
 import { ILanguageServerProxy } from '../../client/activation/types';
-import { PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { MockLanguageClient } from './mockLanguageClient';
 
 // tslint:disable:no-any unified-signatures
@@ -23,7 +23,7 @@ export class MockLanguageServerProxy implements ILanguageServerProxy {
 
     public start(
         _resource: Uri | undefined,
-        _interpreter: PythonInterpreter | undefined,
+        _interpreter: PythonEnvironment | undefined,
         _options: LanguageClientOptions
     ): Promise<void> {
         if (!this.mockLanguageClient) {

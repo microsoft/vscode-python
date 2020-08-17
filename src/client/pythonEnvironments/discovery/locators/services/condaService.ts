@@ -1,4 +1,4 @@
-import { inject, named, optional } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import * as path from 'path';
 import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
@@ -9,8 +9,8 @@ import { IFileSystem, IPlatformService } from '../../../../common/platform/types
 import { IProcessServiceFactory } from '../../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
-import { IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE } from '../../../../interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { ICondaService, IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE } from '../../../../interpreter/contracts';
+import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { CondaEnvironmentInfo, CondaInfo } from './conda';
 import { parseCondaEnvFileContents } from './condaHelper';
 
@@ -48,7 +48,8 @@ export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
 /**
  * A wrapper around a conda installation.
  */
-export class CondaService {
+@injectable()
+export class CondaService implements ICondaService {
     private condaFile?: Promise<string | undefined>;
     private isAvailable: boolean | undefined;
 
@@ -320,9 +321,9 @@ export class CondaService {
     /**
      * Is the given interpreter from conda?
      */
-    private detectCondaEnvironment(interpreter: PythonInterpreter) {
+    private detectCondaEnvironment(interpreter: PythonEnvironment) {
         return (
-            interpreter.type === InterpreterType.Conda ||
+            interpreter.envType === EnvironmentType.Conda ||
             (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
             (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('ANACONDA') >=
                 0 ||
@@ -334,7 +335,7 @@ export class CondaService {
     /**
      * Return the highest Python version from the given list.
      */
-    private getLatestVersion(interpreters: PythonInterpreter[]) {
+    private getLatestVersion(interpreters: PythonEnvironment[]) {
         const sortedInterpreters = interpreters.slice();
         // tslint:disable-next-line:no-non-null-assertion
         sortedInterpreters.sort((a, b) => (a.version && b.version ? compare(a.version.raw, b.version.raw) : 0));

@@ -68,6 +68,7 @@ suite('Sorting', () => {
         const edit = (await sorter.provideDocumentSortImportsEdits(textDocument.uri))!;
         expect(edit.entries()).to.be.lengthOf(1);
         const edits = edit.entries()[0][1];
+        expect(edits.length).to.equal(4);
         assert.equal(
             edits.filter((value) => value.newText === EOL && value.range.isEqual(new Range(2, 0, 2, 0))).length,
             1,
@@ -81,15 +82,14 @@ suite('Sorting', () => {
         assert.equal(
             edits.filter(
                 (value) =>
-                    value.newText ===
-                        `from rope.base import libutils${EOL}from rope.refactor.extract import ExtractMethod, ExtractVariable${EOL}from rope.refactor.rename import Rename${EOL}` &&
-                    value.range.isEqual(new Range(6, 0, 6, 0))
+                    value.newText === `from rope.refactor.extract import ExtractMethod, ExtractVariable${EOL}` &&
+                    value.range.isEqual(new Range(15, 0, 15, 0))
             ).length,
             1,
             'Text not found'
         );
         assert.equal(
-            edits.filter((value) => value.newText === '' && value.range.isEqual(new Range(13, 0, 18, 0))).length,
+            edits.filter((value) => value.newText === '' && value.range.isEqual(new Range(16, 0, 18, 0))).length,
             1,
             '"" not found'
         );
@@ -129,7 +129,7 @@ suite('Sorting', () => {
     test('With Changes and Config in Args', async () => {
         await updateSetting(
             'sortImports.args',
-            ['-sp', path.join(sortingPath, 'withconfig')],
+            ['--sp', path.join(sortingPath, 'withconfig')],
             Uri.file(sortingPath),
             ConfigurationTarget.Workspace
         );
@@ -146,7 +146,7 @@ suite('Sorting', () => {
     test('With Changes and Config in Args (via Command)', async () => {
         await updateSetting(
             'sortImports.args',
-            ['-sp', path.join(sortingPath, 'withconfig')],
+            ['--sp', path.join(sortingPath, 'withconfig')],
             Uri.file(sortingPath),
             configTarget
         );

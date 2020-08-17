@@ -20,7 +20,7 @@ import { DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, JupyterDaemonModule, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
@@ -108,7 +108,7 @@ export class JupyterInterpreterSubCommandExecutionService
 
         return getMessageForLibrariesNotInstalled(productsNotInstalled, interpreter.displayName);
     }
-    public async getSelectedInterpreter(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
+    public async getSelectedInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
         return this.jupyterInterpreter.getSelectedInterpreter(token);
     }
     public async startNotebook(
@@ -264,7 +264,7 @@ export class JupyterInterpreterSubCommandExecutionService
         await this.jupyterInterpreter.installMissingDependencies(err);
     }
 
-    private async getSelectedInterpreterAndThrowIfNotAvailable(token?: CancellationToken): Promise<PythonInterpreter> {
+    private async getSelectedInterpreterAndThrowIfNotAvailable(token?: CancellationToken): Promise<PythonEnvironment> {
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {
             const reason = await this.getReasonForJupyterNotebookNotBeingSupported();

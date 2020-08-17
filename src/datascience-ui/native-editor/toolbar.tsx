@@ -47,7 +47,6 @@ export type INativeEditorToolbarProps = INativeEditorDataProps & {
     selectServer: typeof actionCreators.selectServer;
     launchNotebookTrustPrompt: typeof actionCreators.launchNotebookTrustPrompt;
     isNotebookTrusted: boolean;
-    shouldShowTrustMessage: boolean;
 };
 
 function mapStateToProps(state: IStore): INativeEditorDataProps {
@@ -264,7 +263,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                         kernel={this.props.kernel}
                         selectServer={selectServer}
                         selectKernel={selectKernel}
-                        shouldShowTrustMessage={this.props.shouldShowTrustMessage}
+                        shouldShowTrustMessage={true}
                         isNotebookTrusted={this.props.isNotebookTrusted}
                         launchNotebookTrustPrompt={launchNotebookTrustPrompt}
                     />

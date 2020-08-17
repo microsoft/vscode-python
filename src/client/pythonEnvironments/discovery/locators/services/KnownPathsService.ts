@@ -1,12 +1,12 @@
 // tslint:disable:no-require-imports no-var-requires no-unnecessary-callback-wrapper
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { ICurrentProcess, IPathUtils } from '../../../../common/types';
 import { IInterpreterHelper, IKnownSearchPathsForInterpreters } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
@@ -14,6 +14,7 @@ const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 /**
  * Locates "known" paths.
  */
+@injectable()
 export class KnownPathsService extends CacheableLocatorService {
     public constructor(
         @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: IKnownSearchPathsForInterpreters,
@@ -36,7 +37,7 @@ export class KnownPathsService extends CacheableLocatorService {
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
+    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
         return this.suggestionsFromKnownPaths();
     }
 
@@ -66,9 +67,9 @@ export class KnownPathsService extends CacheableLocatorService {
         }
         this._hasInterpreters.resolve(true);
         return {
-            ...(details as PythonInterpreter),
+            ...(details as PythonEnvironment),
             path: interpreter,
-            type: InterpreterType.Unknown
+            envType: EnvironmentType.Unknown
         };
     }
 
@@ -83,7 +84,8 @@ export class KnownPathsService extends CacheableLocatorService {
     }
 }
 
-export class KnownSearchPathsForInterpreters {
+@injectable()
+export class KnownSearchPathsForInterpreters implements IKnownSearchPathsForInterpreters {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
     /**
      * Return the paths where Python interpreters might be found.

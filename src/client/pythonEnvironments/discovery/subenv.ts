@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { InterpreterType } from '../info';
+import { EnvironmentType } from '../info';
 import { getPyenvTypeFinder } from './globalenv';
 
 type ExecFunc = (cmd: string, args: string[]) => Promise<{ stdout: string }>;
 
 type NameFinderFunc = (python: string) => Promise<string>;
-type TypeFinderFunc = (python: string) => Promise<InterpreterType | undefined>;
+type TypeFinderFunc = (python: string) => Promise<EnvironmentType | undefined>;
 type ExecutableFinderFunc = (python: string) => Promise<string | undefined>;
 
 /**
@@ -32,10 +32,10 @@ export async function getName(python: string, finders: NameFinderFunc[]): Promis
  * @param python - the executable to inspect
  * @param finders - the functions specific to different Python environment types
  */
-export async function getType(python: string, finders: TypeFinderFunc[]): Promise<InterpreterType | undefined> {
+export async function getType(python: string, finders: TypeFinderFunc[]): Promise<EnvironmentType | undefined> {
     for (const find of finders) {
         const found = await find(python);
-        if (found && found !== InterpreterType.Unknown) {
+        if (found && found !== EnvironmentType.Unknown) {
             return found;
         }
     }
@@ -135,7 +135,7 @@ export function getVenvTypeFinder(
         const cfgFiles = VENVFILES.map((file) => pathJoin(dir, file));
         for (const file of cfgFiles) {
             if (await fileExists(file)) {
-                return InterpreterType.Venv;
+                return EnvironmentType.Venv;
             }
         }
         return undefined;
@@ -193,7 +193,7 @@ export function getVirtualenvTypeFinder(
     const find = getVenvExecutableFinder(scripts, pathDirname, pathJoin, fileExists);
     return async (python: string) => {
         const found = await find(python);
-        return found !== undefined ? InterpreterType.VirtualEnv : undefined;
+        return found !== undefined ? EnvironmentType.VirtualEnv : undefined;
     };
 }
 
@@ -212,7 +212,7 @@ export function getPipenvTypeFinder(
     return async (python: string) => {
         const curDir = await getCurDir();
         if (curDir && (await isPipenvRoot(curDir, python))) {
-            return InterpreterType.Pipenv;
+            return EnvironmentType.Pipenv;
         }
         return undefined;
     };

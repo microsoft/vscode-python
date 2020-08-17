@@ -7,18 +7,19 @@ import { IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { isMacDefaultPythonPath } from '../pythonEnvironments/discovery';
+import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import {
+    EnvironmentType,
     getInterpreterTypeName,
     InterpreterInformation,
-    InterpreterType,
-    PythonInterpreter,
+    PythonEnvironment,
     sortInterpreters
 } from '../pythonEnvironments/info';
 import { IInterpreterHelper } from './contracts';
 import { IInterpreterHashProviderFactory } from './locators/types';
 
 const EXPITY_DURATION = 24 * 60 * 60 * 1000;
-type CachedPythonInterpreter = Partial<PythonInterpreter> & { fileHash: string };
+type CachedPythonInterpreter = Partial<PythonEnvironment> & { fileHash: string };
 
 export type WorkspacePythonPath = {
     folderUri: Uri;
@@ -36,7 +37,7 @@ export function getFirstNonEmptyLineFromMultilineString(stdout: string) {
     return lines.length > 0 ? lines[0] : '';
 }
 
-export function isInterpreterLocatedInWorkspace(interpreter: PythonInterpreter, activeWorkspaceUri: Uri) {
+export function isInterpreterLocatedInWorkspace(interpreter: PythonEnvironment, activeWorkspaceUri: Uri) {
     const fileSystemPaths = FileSystemPaths.withDefaults();
     const interpreterPath = fileSystemPaths.normCase(interpreter.path);
     const resourcePath = fileSystemPaths.normCase(activeWorkspaceUri.fsPath);
@@ -48,7 +49,7 @@ export class InterpreterHelper implements IInterpreterHelper {
     private readonly persistentFactory: IPersistentStateFactory;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IInterpreterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory
+        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory
     ) {
         this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
@@ -76,7 +77,7 @@ export class InterpreterHelper implements IInterpreterHelper {
             }
         }
     }
-    public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>> {
+    public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
         const fileHash = await this.hashProviderFactory
             .create({ pythonPath })
             .then((provider) => provider.getInterpreterHash(pythonPath))
@@ -117,10 +118,10 @@ export class InterpreterHelper implements IInterpreterHelper {
     public isMacDefaultPythonPath(pythonPath: string) {
         return isMacDefaultPythonPath(pythonPath);
     }
-    public getInterpreterTypeDisplayName(interpreterType: InterpreterType) {
+    public getInterpreterTypeDisplayName(interpreterType: EnvironmentType) {
         return getInterpreterTypeName(interpreterType);
     }
-    public getBestInterpreter(interpreters?: PythonInterpreter[]): PythonInterpreter | undefined {
+    public getBestInterpreter(interpreters?: PythonEnvironment[]): PythonEnvironment | undefined {
         if (!Array.isArray(interpreters) || interpreters.length === 0) {
             return;
         }

@@ -8,6 +8,7 @@ import { CellState } from '../../client/datascience/types';
 import { InteractiveCellComponent } from '../../datascience-ui/history-react/interactiveCell';
 import { IInteractivePanelProps, InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { CursorPos, DebugState, ServerStatus } from '../../datascience-ui/interactive-common/mainState';
+import { TrustMessage } from '../../datascience-ui/interactive-common/trustMessage';
 import { noop } from '../core';
 import { mountComponent } from './testHelpers';
 
@@ -116,8 +117,7 @@ suite('DataScience Interactive Panel', () => {
             setVariableExplorerHeight: noopAny,
             editorOptions: {},
             settings: { showCellInputCode: true, allowInput: true, extraSettings: { editor: {} } } as any,
-            isNotebookTrusted: true,
-            shouldShowTrustMessage: false
+            isNotebookTrusted: true
         };
     });
     test('Input Cell is displayed', () => {
@@ -133,5 +133,10 @@ suite('DataScience Interactive Panel', () => {
         const wrapper = mountComponent('interactive', <InteractivePanel {...props}></InteractivePanel>);
 
         assert.equal(wrapper.find(InteractiveCellComponent).length, 0);
+    });
+    test('Trust message is not displayed', () => {
+        const wrapper = mountComponent('interactive', <InteractivePanel {...props}></InteractivePanel>);
+
+        assert.equal(wrapper.find(TrustMessage).length, 0);
     });
 });

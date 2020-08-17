@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { InterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/proxy';
 import { IInterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/types';
-import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Auto Selection Proxy', () => {
     class InstanceClass implements IInterpreterAutoSeletionProxyService {
@@ -18,12 +18,12 @@ suite('Interpreters - Auto Selection Proxy', () => {
         public get onDidChangeAutoSelectedInterpreter(): Event<void> {
             return this.eventEmitter.event;
         }
-        public getAutoSelectedInterpreter(_resource: Uri): PythonInterpreter {
+        public getAutoSelectedInterpreter(_resource: Uri): PythonEnvironment {
             return { path: this.pythonPath } as any;
         }
         public async setWorkspaceInterpreter(
             _resource: Uri,
-            _interpreter: PythonInterpreter | undefined
+            _interpreter: PythonEnvironment | undefined
         ): Promise<void> {
             return;
         }
