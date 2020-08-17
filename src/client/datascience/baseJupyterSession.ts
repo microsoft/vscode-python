@@ -124,19 +124,16 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         let newSession: ISessionWithSocket | undefined;
 
         // If we are already using this kernel in an active session just return back
-        const currentKernelConnection =
+        const currentKernelSpec =
             this.kernelConnectionMetadata && kernelConnectionMetadataHasKernelSpec(this.kernelConnectionMetadata)
                 ? this.kernelConnectionMetadata.kernelSpec
                 : undefined;
-        const kernelConnectionToUse = kernelConnectionMetadataHasKernelSpec(kernelConnection)
+        const kernelSpecToUse = kernelConnectionMetadataHasKernelSpec(kernelConnection)
             ? kernelConnection.kernelSpec
             : undefined;
-        if (this.session && currentKernelConnection && kernelConnectionToUse) {
+        if (this.session && currentKernelSpec && kernelSpecToUse) {
             // Name and id have to match (id is only for active sessions)
-            if (
-                currentKernelConnection.name === kernelConnectionToUse.name &&
-                currentKernelConnection.id === kernelConnectionToUse.id
-            ) {
+            if (currentKernelSpec.name === kernelSpecToUse.name && currentKernelSpec.id === kernelSpecToUse.id) {
                 return;
             }
         }
@@ -149,7 +146,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined)).ignoreErrors(); // NOSONAR
         }
 
-        // Update our kernel spec and interpreter
+        // Update our kernel connection metadata.
         this.kernelConnectionMetadata = kernelConnection;
 
         // Save the new session

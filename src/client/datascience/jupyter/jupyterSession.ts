@@ -24,6 +24,7 @@ import { ReportableAction } from '../progress/types';
 import { IJupyterConnection, ISessionWithSocket } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWebSockets } from './jupyterWebSocket';
+import { getNameOfKernelConnection } from './kernels/helpers';
 import { KernelConnectionMetadata } from './kernels/types';
 
 export class JupyterSession extends BaseJupyterSession {
@@ -171,16 +172,9 @@ export class JupyterSession extends BaseJupyterSession {
         );
 
         // Create our session options using this temporary notebook and our connection info
-        let nameToUse: string | undefined;
-        if (kernelConnection) {
-            nameToUse =
-                kernelConnection.kind === 'connectToLiveKernel'
-                    ? kernelConnection.kernelModel.name
-                    : kernelConnection.kernelSpec?.name;
-        }
         const options: Session.IOptions = {
             path: backingFile.path,
-            kernelName: nameToUse || '',
+            kernelName: getNameOfKernelConnection(kernelConnection) || '',
             name: uuid(), // This is crucial to distinguish this session from any other.
             serverSettings: serverSettings
         };

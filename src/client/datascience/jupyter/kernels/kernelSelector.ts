@@ -46,10 +46,10 @@ import {
 type PromiseFunctionReturningKernelConnection = (...any: any[]) => Promise<any | undefined>;
 
 /**
- * All KernelConnections returned by the KernelSelector can be used in a number of ways and can get updated.
- * We need to ensure changes downstream do not change the values we stored internally in this class.
- * E.g. when returning a kernel connection with a kernel spec, its possible some metadata or the interpreter will get updated later on.
- * Such changes should not result in changes to the data returned from this class.
+ * All KernelConnections returned (as return values of methods) by the KernelSelector can be used in a number of ways.
+ * E.g. some part of the code update the `interpreter` property in the `KernelConnectionMetadata` object.
+ * We need to ensure such changes (i.e. updates to the `KernelConnectionMetadata`) downstream do not change the original `KernelConnectionMetadata`.
+ * Hence always clone the `KernelConnectionMetadata` returned by the `kernelSelector`.
  */
 function cloneReturnedKernelConnection() {
     return function (
