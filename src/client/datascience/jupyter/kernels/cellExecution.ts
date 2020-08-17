@@ -246,7 +246,10 @@ export class CellExecution {
         // Create our initial request
         const request = session.requestExecute(
             {
-                code: this.cell.document.getText()
+                code: this.cell.document.getText(),
+                stop_on_error: false,
+                allow_stdin: true,
+                store_history: false
             },
             false,
             metadata
@@ -377,8 +380,8 @@ export class CellExecution {
             clearState.update(false);
         }
 
-        // Append to the data.
-        this.cell.outputs.push(converted);
+        // Append to the data (we would push here but VS code requires a recreation of the array)
+        this.cell.outputs = [...this.cell.outputs, converted];
     }
 
     private handleInputRequest(session: IJupyterSession, msg: KernelMessage.IStdinMessage) {
@@ -484,6 +487,7 @@ export class CellExecution {
             originalTextLength = originalText.length;
             existing.text = trimFunc(originalText);
             trimmedTextLength = existing.text.length;
+            this.cell.outputs = [...this.cell.outputs]; // This is necessary to get VS code to update (for now)
         } else {
             const originalText = formatStreamText(concatMultilineString(msg.content.text));
             originalTextLength = originalText.length;
@@ -493,7 +497,7 @@ export class CellExecution {
                 name: msg.content.name,
                 text: trimFunc(originalText)
             };
-            this.cell.outputs.push(cellOutputToVSCCellOutput(output));
+            this.cell.outputs = [...this.cell.outputs, cellOutputToVSCCellOutput(output)];
             trimmedTextLength = output.text.length;
         }
 
