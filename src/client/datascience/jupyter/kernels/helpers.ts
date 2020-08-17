@@ -77,6 +77,16 @@ export function getNameOfKernelConnection(
         : kernelConnection.kernelSpec?.name;
 }
 
+export function getKernelPathFromKernelConnection(kernelConnection?: KernelConnectionMetadata): string | undefined {
+    if (!kernelConnection) {
+        return;
+    }
+    const model = kernelConnectionMetadataHasKernelModel(kernelConnection) ? kernelConnection.kernelModel : undefined;
+    const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
+        ? kernelConnection.kernelSpec
+        : undefined;
+    return model?.path || kernelSpec?.path;
+}
 export function getInterpreterFromKernelConnectionMetadata(
     kernelConnection?: KernelConnectionMetadata
 ): Partial<PythonEnvironment> | undefined {

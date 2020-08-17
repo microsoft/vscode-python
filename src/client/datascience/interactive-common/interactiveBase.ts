@@ -1238,7 +1238,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: ServerStatus.NotStarted,
                 localizedUri: '',
-                displayName: specOrModel?.display_name || specOrModel?.name || '',
+                displayName: getDisplayNameOrNameOfKernelConnection(data.kernelConnection),
                 language: translateKernelLanguageToMonaco(
                     getKernelConnectionLanguage(data.kernelConnection) || PYTHON_LANGUAGE
                 )
