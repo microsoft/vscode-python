@@ -12,6 +12,7 @@ import {
     ICell,
     ICellHashProvider,
     IJupyterKernelSpec,
+    IJupyterSession,
     INotebook,
     INotebookCompletion,
     INotebookExecutionLogger,
@@ -39,6 +40,9 @@ export class MockJupyterNotebook implements INotebook {
 
     public get status(): ServerStatus {
         return ServerStatus.Idle;
+    }
+    public get session(): IJupyterSession {
+        throw new Error('Method not implemented');
     }
 
     public get resource(): Resource {

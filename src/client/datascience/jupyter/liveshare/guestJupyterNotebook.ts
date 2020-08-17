@@ -20,6 +20,7 @@ import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     ICell,
     IJupyterKernelSpec,
+    IJupyterSession,
     INotebook,
     INotebookCompletion,
     INotebookExecutionInfo,
@@ -66,6 +67,10 @@ export class GuestJupyterNotebook
 
     public get status(): ServerStatus {
         return ServerStatus.Idle;
+    }
+
+    public get session(): IJupyterSession {
+        throw new Error('Method not implemented');
     }
 
     public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<

@@ -6,7 +6,7 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { ICommandManager } from '../../../common/application/types';
+import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { traceWarning } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
@@ -30,7 +30,8 @@ export class KernelProvider implements IKernelProvider {
         @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider,
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
 
-        @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage
+        @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}
     public get(uri: Uri): IKernel | undefined {
         return this.kernelsByUri.get(uri.toString())?.kernel;
@@ -58,7 +59,9 @@ export class KernelProvider implements IKernelProvider {
             this.contentProvider,
             this.editorProvider,
             this,
-            this.kernelSelectionUsage
+            this.kernelSelectionUsage,
+            this.appShell,
+            this.configService
         );
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });
