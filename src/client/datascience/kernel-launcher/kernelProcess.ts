@@ -13,7 +13,6 @@ import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import {
-    cleanEnvironment,
     findIndexOfConnectionFile,
     isPythonKernelConnection,
     kernelConnectionMetadataHasKernelSpec
@@ -30,14 +29,14 @@ export class KernelProcess implements IKernelProcess {
     public get exited(): Event<{ exitCode?: number; reason?: string }> {
         return this.exitEvent.event;
     }
-    public get kernelSpec(): Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata> {
-        return this.originalKernelSpec;
+    public get kernelConnectionMetadata(): Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata> {
+        return this._kernelConnectionMetadata;
     }
     public get connection(): Readonly<IKernelConnection> {
         return this._connection;
     }
     private get isPythonKernel(): boolean {
-        return isPythonKernelConnection(this.kernelSpec);
+        return isPythonKernelConnection(this.kernelConnectionMetadata);
     }
     private _process?: ChildProcess;
     private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
@@ -45,20 +44,15 @@ export class KernelProcess implements IKernelProcess {
     private launchedOnce?: boolean;
     private disposed?: boolean;
     private kernelDaemon?: IPythonKernelDaemon;
-    private readonly _kernelSpec: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata;
-    private readonly originalKernelSpec: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata;
     private connectionFile?: string;
     constructor(
         private readonly processExecutionFactory: IProcessServiceFactory,
         private readonly daemonPool: KernelDaemonPool,
         private readonly _connection: IKernelConnection,
-        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
+        private readonly _kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         private readonly fs: IDataScienceFileSystem,
         private readonly resource: Resource
-    ) {
-        this.originalKernelSpec = kernelConnectionMetadata;
-        this._kernelSpec = cleanEnvironment(kernelConnectionMetadata);
-    }
+    ) {}
     public async interrupt(): Promise<void> {
         if (this.kernelDaemon) {
             await this.kernelDaemon?.interrupt();
@@ -146,7 +140,7 @@ export class KernelProcess implements IKernelProcess {
     }
     private get kernelSpecArgv(): string[] {
         // We always expect a kernel spec, even when launching a Python process, cuz we generate a dummy `kernelSpec`.
-        const kernelSpec = this._kernelSpec.kernelSpec;
+        const kernelSpec = this._kernelConnectionMetadata.kernelSpec;
         if (!kernelSpec) {
             throw new Error('KernelSpec cannot be empty in KernelProcess.ts');
         }
@@ -162,8 +156,8 @@ export class KernelProcess implements IKernelProcess {
     private async updateConnectionArgs() {
         // First check to see if we have a kernelspec that expects a connection file,
         // Error if we don't have one. We expect '-f', '{connectionfile}' in our launch args
-        const kernelSpec = kernelConnectionMetadataHasKernelSpec(this._kernelSpec)
-            ? this._kernelSpec.kernelSpec
+        const kernelSpec = kernelConnectionMetadataHasKernelSpec(this._kernelConnectionMetadata)
+            ? this._kernelConnectionMetadata.kernelSpec
             : undefined;
         const indexOfConnectionFile = kernelSpec ? findIndexOfConnectionFile(kernelSpec) : -1;
         if (indexOfConnectionFile === -1) {
@@ -234,8 +228,8 @@ export class KernelProcess implements IKernelProcess {
             const kernelDaemonLaunch = await this.pythonKernelLauncher.launch(
                 this.resource,
                 workingDirectory,
-                this._kernelSpec.kernelSpec!,
-                this._kernelSpec.interpreter
+                this._kernelConnectionMetadata.kernelSpec!,
+                this._kernelConnectionMetadata.interpreter
             );
 
             this.kernelDaemon = kernelDaemonLaunch.daemon;
@@ -248,7 +242,7 @@ export class KernelProcess implements IKernelProcess {
             const executable = this.kernelSpecArgv[0];
             const executionService = await this.processExecutionFactory.create(this.resource);
             exeObs = executionService.execObservable(executable, this.kernelSpecArgv.slice(1), {
-                env: this._kernelSpec.kernelSpec?.env,
+                env: this._kernelConnectionMetadata.kernelSpec?.env,
                 cwd: workingDirectory
             });
         }

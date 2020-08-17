@@ -262,7 +262,7 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string)
     }
     const realKernel = new nonSerializingKernel.DefaultKernel(
         {
-            name: getNameOfKernelConnection(kernelProcess.kernelSpec),
+            name: getNameOfKernelConnection(kernelProcess.kernelConnectionMetadata),
             serverSettings: settings,
             clientId,
             handleComms: true

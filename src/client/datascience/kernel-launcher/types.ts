@@ -35,7 +35,7 @@ export interface IKernelConnection {
 
 export interface IKernelProcess extends IAsyncDisposable {
     readonly connection: Readonly<IKernelConnection>;
-    readonly kernelSpec: Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
+    readonly kernelConnectionMetadata: Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
     /**
      * This event is triggered if the process is exited
      */

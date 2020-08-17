@@ -117,7 +117,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                 this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
 
                 // Update kernelspec and interpreter
-                this.kernelConnectionMetadata = newSession.kernelProcess?.kernelSpec;
+                this.kernelConnectionMetadata = newSession.kernelProcess?.kernelConnectionMetadata;
 
                 this.outputChannel.appendLine(
                     localize.DataScience.kernelStarted().format(
@@ -134,7 +134,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
 
         this.connected = true;
-        return (newSession as RawSession).kernelProcess.kernelSpec;
+        return (newSession as RawSession).kernelProcess.kernelConnectionMetadata;
     }
 
     public async createNewKernelSession(
