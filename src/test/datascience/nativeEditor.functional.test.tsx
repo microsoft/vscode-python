@@ -2445,6 +2445,144 @@ df.head()`;
                     }
                 };
 
+                suite('Stop On Error', () => {
+                    const stopOnErrorFile = `
+{
+ "metadata": {
+  "file_extension": ".py",
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.4"
+  },
+  "mimetype": "text/x-python",
+  "name": "python",
+  "npconvert_exporter": "python",
+  "pygments_lexer": "ipython3",
+  "version": 3
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2,
+ "cells": [
+    {
+     "cell_type": "code",
+     "execution_count": null,
+     "metadata": {
+      "tags": []
+     },
+     "outputs": [],
+     "source": [
+      "print('hello')"
+     ]
+    },
+    {
+     "cell_type": "code",
+     "execution_count": null,
+     "metadata": {},
+     "outputs": [],
+     "source": [
+      "raise Exception('stop')"
+     ]
+    },
+    {
+     "cell_type": "code",
+     "execution_count": null,
+     "metadata": {
+      "tags": []
+     },
+     "outputs": [],
+     "source": [
+      "print('hello again 2')"
+     ]
+    }
+   ]
+}`;
+                    setup(async function () {
+                        await initIoc();
+                        // tslint:disable-next-line: no-invalid-this
+                        //await setupFunction.call(this, JSON.stringify(stopOnErrorFile));
+                    });
+
+                    test('IANHU Stop On Error On', async () => {
+                        addMockData(ioc, 'print("hello")', 'hello');
+                        addMockData(ioc, 'raise Exception("stop")', undefined, undefined, 'error');
+                        addMockData(ioc, 'print("world")', 'world');
+
+                        const errorFile = [
+                            { id: 'NotebookImport#0', data: { source: 'print("hello")' } },
+                            { id: 'NotebookImport#1', data: { source: 'raise Exception("stop")' } },
+                            { id: 'NotebookImport#2', data: { source: 'print("world")' } }
+                        ];
+                        const runAllCells = errorFile.map((cell) => {
+                            return createFileCell(cell, cell.data);
+                        });
+                        const notebook = await ioc
+                            .get<INotebookExporter>(INotebookExporter)
+                            .translateToNotebook(runAllCells, undefined);
+                        const ne = await openEditor(ioc, JSON.stringify(notebook));
+
+                        const runAllButton = findButton(ne.mount.wrapper, NativeEditor, 0);
+                        // The render method needs to be executed 3 times for three cells.
+                        const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
+                            numberOfTimes: 3
+                        });
+                        runAllButton!.simulate('click');
+                        await threeCellsUpdated;
+
+                        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `hello`, 0);
+                        // There should be no output on the third cell as it's blocked by the exception on the second cell
+                        assert.throws(() => verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `world`, 2));
+                    });
+
+                    test('IANHU Stop On Error Off', async () => {
+                        addMockData(ioc, 'print("hello")', 'hello');
+                        addMockData(ioc, 'raise Exception("stop")', undefined, undefined, 'error');
+                        addMockData(ioc, 'print("world")', 'world');
+
+                        const errorFile = [
+                            { id: 'NotebookImport#0', data: { source: 'print("hello")' } },
+                            { id: 'NotebookImport#1', data: { source: 'raise Exception("stop")' } },
+                            { id: 'NotebookImport#2', data: { source: 'print("world")' } }
+                        ];
+                        const runAllCells = errorFile.map((cell) => {
+                            return createFileCell(cell, cell.data);
+                        });
+                        const notebook = await ioc
+                            .get<INotebookExporter>(INotebookExporter)
+                            .translateToNotebook(runAllCells, undefined);
+                        const ne = await openEditor(ioc, JSON.stringify(notebook));
+
+                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
+                            ...ioc.getSettings().datascience,
+                            stopOnError: false
+                        });
+
+                        const runAllButton = findButton(ne.mount.wrapper, NativeEditor, 0);
+                        // The render method needs to be executed 3 times for three cells.
+                        const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
+                            numberOfTimes: 3
+                        });
+                        runAllButton!.simulate('click');
+                        await threeCellsUpdated;
+
+                        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `hello`, 0);
+                        // There should be output on the third cell, even with an error on the second
+                        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `world`, 2);
+                    });
+                });
+
                 suite('Update Metadata', () => {
                     setup(async function () {
                         await initIoc();

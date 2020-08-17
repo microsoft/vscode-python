@@ -286,6 +286,7 @@
                 "--recursive",
                 "--colors",
                 // "--grep", "<suite>",
+                "--grep", "IANHU",
                 "--timeout=300000",
                 "--exit"
             ],
