@@ -2470,7 +2470,7 @@ df.head()`;
                         notebookEditor = await openEditor(ioc, JSON.stringify(notebook));
                     });
 
-                    test('IANHU Stop On Error On', async () => {
+                    test('Stop On Error On', async () => {
                         const ne = notebookEditor;
 
                         const runAllButton = findButton(ne.mount.wrapper, NativeEditor, 0);
@@ -2486,9 +2486,10 @@ df.head()`;
                         assert.throws(() => verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `world`, 2));
                     });
 
-                    test('IANHU Stop On Error Off', async () => {
+                    test('Stop On Error Off', async () => {
                         const ne = notebookEditor;
 
+                        // Force our settings to not stop on error
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
                             ...ioc.getSettings().datascience,
                             stopOnError: false
