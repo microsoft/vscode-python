@@ -3,13 +3,27 @@
 
 'use strict';
 
-import { CancellationToken, NotebookCell, NotebookCellRunState } from 'vscode';
+import { nbformat } from '@jupyterlab/coreutils';
+import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
+import { CancellationToken, CellOutputKind, CellStreamOutput, NotebookCell, NotebookCellRunState } from 'vscode';
+import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
+import { IApplicationShell } from '../../../common/application/types';
+import { traceInfo, traceWarning } from '../../../common/logger';
+import { RefBool } from '../../../common/refBool';
+import { IConfigurationService } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
+import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { updateCellWithErrorStatus } from '../../notebook/helpers/executionHelpers';
 import {
+    handleUpdateDisplayDataMessage,
+    updateCellExecutionCount,
+    updateCellRunningState,
+    updateCellWithErrorStatus
+} from '../../notebook/helpers/executionHelpers';
+import {
+    cellOutputToVSCCellOutput,
     clearCellForExecution,
     getCellStatusMessageBasedOnFirstCellErrorOutput,
     updateCellExecutionTimes
@@ -17,7 +31,13 @@ import {
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
 import { NotebookEditor } from '../../notebook/notebookEditor';
 import { INotebookContentProvider } from '../../notebook/types';
-import { IDataScienceErrorHandler, INotebookEditorProvider } from '../../types';
+import {
+    IDataScienceErrorHandler,
+    IJupyterSession,
+    INotebook,
+    INotebookEditorProvider,
+    INotebookExecutionLogger
+} from '../../types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -25,12 +45,21 @@ export class CellExecutionFactory {
     constructor(
         private readonly contentProvider: INotebookContentProvider,
         private readonly errorHandler: IDataScienceErrorHandler,
-        private readonly editorProvider: INotebookEditorProvider
+        private readonly editorProvider: INotebookEditorProvider,
+        private readonly appShell: IApplicationShell,
+        private readonly configService: IConfigurationService
     ) {}
 
     public create(cell: NotebookCell) {
         // tslint:disable-next-line: no-use-before-declare
-        return CellExecution.fromCell(cell, this.contentProvider, this.errorHandler, this.editorProvider);
+        return CellExecution.fromCell(
+            cell,
+            this.contentProvider,
+            this.errorHandler,
+            this.editorProvider,
+            this.appShell,
+            this.configService
+        );
     }
 }
 /**
@@ -68,7 +97,9 @@ export class CellExecution {
         public readonly cell: NotebookCell,
         private readonly contentProvider: INotebookContentProvider,
         private readonly errorHandler: IDataScienceErrorHandler,
-        private readonly editorProvider: INotebookEditorProvider
+        private readonly editorProvider: INotebookEditorProvider,
+        private readonly applicationService: IApplicationShell,
+        private readonly configService: IConfigurationService
     ) {
         this.oldCellRunState = cell.metadata.runState;
         this.enqueue();
@@ -78,12 +109,14 @@ export class CellExecution {
         cell: NotebookCell,
         contentProvider: INotebookContentProvider,
         errorHandler: IDataScienceErrorHandler,
-        editorProvider: INotebookEditorProvider
+        editorProvider: INotebookEditorProvider,
+        appService: IApplicationShell,
+        configService: IConfigurationService
     ) {
-        return new CellExecution(cell, contentProvider, errorHandler, editorProvider);
+        return new CellExecution(cell, contentProvider, errorHandler, editorProvider, appService, configService);
     }
 
-    public start() {
+    public start(notebook: INotebook) {
         this.started = true;
         // Ensure we clear the cell state and trigger a change.
         clearCellForExecution(this.cell);
@@ -92,6 +125,9 @@ export class CellExecution {
         // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
         this.notifyCellExecution();
+
+        // Begin the request that will modify our cell.
+        this.execute(notebook.session, notebook.getLoggers());
     }
 
     /**
@@ -111,7 +147,7 @@ export class CellExecution {
         this._result.resolve(this.cell.metadata.runState);
     }
 
-    public completedWithErrors(error: Partial<Error>) {
+    private completedWithErrors(error: Partial<Error>) {
         this.sendPerceivedCellExecute();
         this.cell.metadata.lastRunDuration = this.stopWatch.elapsedTime;
         updateCellWithErrorStatus(this.cell, error);
@@ -124,7 +160,7 @@ export class CellExecution {
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
     }
 
-    public completedSuccessfully() {
+    private completedSuccessfully() {
         this.sendPerceivedCellExecute();
         // If we requested a cancellation, then assume it did not even run.
         // If it did, then we'd get an interrupt error in the output.
@@ -197,6 +233,342 @@ export class CellExecution {
             sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatch.elapsedTime, props);
         } else {
             sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, this.stopWatch.elapsedTime, props);
+        }
+    }
+
+    private execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
+        // Generate metadata from our cell (some kernels expect this.)
+        const metadata = {
+            ...this.cell.metadata,
+            ...{ cellId: this.cell.uri.toString() }
+        };
+
+        // Create our initial request
+        const request = session.requestExecute(
+            {
+                code: this.cell.document.getText()
+            },
+            false,
+            metadata
+        );
+
+        // Listen to messages and update our cell execution state appropriately
+
+        // Keep track of our clear state
+        const clearState = new RefBool(false);
+
+        // Listen to the reponse messages and update state as we go
+        if (request) {
+            // Stop handling the request if the subscriber is canceled.
+            const cancelDisposable = this.token.onCancellationRequested(() => {
+                request.onIOPub = noop;
+                request.onStdin = noop;
+                request.onReply = noop;
+            });
+
+            // Listen to messages.
+            request.onIOPub = this.handleIOPub.bind(this, clearState, loggers);
+            request.onStdin = this.handleInputRequest.bind(this, session);
+            request.onReply = this.handleReply.bind(this, clearState);
+
+            // When the request finishes we are done
+            request.done
+                .then(() => this.completedSuccessfully())
+                .catch((e) => {
+                    // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
+                    // Such an error must be ignored.
+                    if (e && e instanceof Error && e.message === 'Canceled') {
+                        this.completedSuccessfully();
+                    } else {
+                        this.completedWithErrors(e);
+                    }
+                })
+                .finally(() => {
+                    cancelDisposable.dispose();
+                })
+                .ignoreErrors();
+        } else {
+            this.completedWithErrors(new Error('Session cannot generate requrests'));
+        }
+    }
+
+    private handleIOPub(
+        clearState: RefBool,
+        loggers: INotebookExecutionLogger[],
+        msg: KernelMessage.IIOPubMessage
+        // tslint:disable-next-line: no-any
+    ) {
+        // Let our loggers get a first crack at the message. They may change it
+        loggers.forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
+
+        // tslint:disable-next-line:no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+        // Create a trimming function. Only trim user output. Silent output requires the full thing
+        const trimFunc = this.trimOutput.bind(this);
+        let shouldUpdate = true;
+        try {
+            if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState, trimFunc);
+            } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
+                this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
+            } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
+                // If there is no change in the status, then there's no need to update the subscriber.
+                // Else we end up sending a number of messages unnecessarily uptream.
+                const statusMsg = msg as KernelMessage.IStatusMsg;
+                shouldUpdate = updateCellRunningState(this.cell, statusMsg.content.execution_state);
+                this.handleStatusMessage(statusMsg, clearState);
+            } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState, trimFunc);
+            } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+                this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
+            } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
+                // No new data to update UI, hence do not send updates.
+                handleUpdateDisplayDataMessage(msg, this.cell.notebook);
+                shouldUpdate = false;
+            } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
+                this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);
+            } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+                this.handleError(msg as KernelMessage.IErrorMsg, clearState);
+            } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
+                // No new data to update UI, hence do not send updates.
+                shouldUpdate = false;
+            } else if (jupyterLab.KernelMessage.isCommMsgMsg(msg)) {
+                // No new data to update UI, hence do not send updates.
+                shouldUpdate = false;
+            } else if (jupyterLab.KernelMessage.isCommCloseMsg(msg)) {
+                // No new data to update UI, hence do not send updates.
+                shouldUpdate = false;
+            } else {
+                traceWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+            }
+
+            // Set execution count, all messages should have it
+            if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
+                if (updateCellExecutionCount(this.cell, msg.content.execution_count)) {
+                    shouldUpdate = true;
+                }
+            }
+
+            // Show our update if any new output.
+            if (shouldUpdate) {
+                this.contentProvider.notifyChangesToDocument(this.cell.notebook);
+            }
+        } catch (err) {
+            // If not a restart error, then tell the subscriber
+            this.completedWithErrors(err);
+        }
+    }
+
+    private addToCellData(
+        output:
+            | nbformat.IUnrecognizedOutput
+            | nbformat.IExecuteResult
+            | nbformat.IDisplayData
+            | nbformat.IStream
+            | nbformat.IError,
+        clearState: RefBool
+    ) {
+        const converted = cellOutputToVSCCellOutput(output);
+
+        // Clear if necessary
+        if (clearState.value) {
+            this.cell.outputs = [];
+            clearState.update(false);
+        }
+
+        // Append to the data.
+        this.cell.outputs.push(converted);
+    }
+
+    private handleInputRequest(session: IJupyterSession, msg: KernelMessage.IStdinMessage) {
+        // Ask the user for input
+        if (msg.content && 'prompt' in msg.content) {
+            const hasPassword = msg.content.password !== null && (msg.content.password as boolean);
+            this.applicationService
+                .showInputBox({
+                    prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
+                    ignoreFocusOut: true,
+                    password: hasPassword
+                })
+                .then((v) => {
+                    session.sendInputReply(v || '');
+                });
+        }
+    }
+
+    // See this for docs on the messages:
+    // https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter
+    private handleExecuteResult(
+        msg: KernelMessage.IExecuteResultMsg,
+        clearState: RefBool,
+        trimFunc: (str: string) => string
+    ) {
+        // Check our length on text output
+        if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
+            msg.content.data['text/plain'] = trimFunc(msg.content.data['text/plain'] as string);
+        }
+
+        this.addToCellData(
+            {
+                output_type: 'execute_result',
+                data: msg.content.data,
+                metadata: msg.content.metadata,
+                // tslint:disable-next-line: no-any
+                transient: msg.content.transient as any, // NOSONAR
+                execution_count: msg.content.execution_count
+            },
+            clearState
+        );
+    }
+
+    private handleExecuteReply(
+        msg: KernelMessage.IExecuteReplyMsg,
+        clearState: RefBool,
+        trimFunc: (str: string) => string
+    ) {
+        const reply = msg.content as KernelMessage.IExecuteReply;
+        if (reply.payload) {
+            reply.payload.forEach((o) => {
+                if (o.data && o.data.hasOwnProperty('text/plain')) {
+                    // tslint:disable-next-line: no-any
+                    const str = (o.data as any)['text/plain'].toString();
+                    const data = trimFunc(str) as string;
+                    this.addToCellData(
+                        {
+                            // Mark as stream output so the text is formatted because it likely has ansi codes in it.
+                            output_type: 'stream',
+                            text: data,
+                            metadata: {},
+                            execution_count: reply.execution_count
+                        },
+                        clearState
+                    );
+                }
+            });
+        }
+    }
+
+    private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
+        if (msg.content.execution_count !== null) {
+            updateCellExecutionCount(this.cell, msg.content.execution_count);
+        }
+    }
+
+    private handleStatusMessage(msg: KernelMessage.IStatusMsg, _clearState: RefBool) {
+        traceInfo(`Kernel switching to ${msg.content.execution_state}`);
+    }
+
+    private handleStreamMesssage(
+        msg: KernelMessage.IStreamMsg,
+        clearState: RefBool,
+        trimFunc: (str: string) => string
+    ) {
+        let originalTextLength = 0;
+        let trimmedTextLength = 0;
+
+        // Clear output if waiting for a clear
+        if (clearState.value) {
+            this.cell.outputs = [];
+            clearState.update(false);
+        }
+
+        // Might already have a stream message. If so, just add on to it.
+        const lastOutput = this.cell.outputs.length > 0 ? this.cell.outputs[this.cell.outputs.length - 1] : undefined;
+        const existing: CellStreamOutput | undefined =
+            lastOutput && lastOutput.outputKind === CellOutputKind.Text ? lastOutput : undefined;
+        if (existing) {
+            // tslint:disable-next-line:restrict-plus-operands
+            existing.text = existing.text + msg.content.text;
+            const originalText = formatStreamText(concatMultilineString(existing.text));
+            originalTextLength = originalText.length;
+            existing.text = trimFunc(originalText);
+            trimmedTextLength = existing.text.length;
+        } else {
+            const originalText = formatStreamText(concatMultilineString(msg.content.text));
+            originalTextLength = originalText.length;
+            // Create a new stream entry
+            const output: nbformat.IStream = {
+                output_type: 'stream',
+                name: msg.content.name,
+                text: trimFunc(originalText)
+            };
+            this.cell.outputs.push(cellOutputToVSCCellOutput(output));
+            trimmedTextLength = output.text.length;
+        }
+
+        // If the output was trimmed, we add the 'outputPrepend' metadata tag.
+        // Later, the react side will display a message letting the user know
+        // the output is trimmed and what setting changes that.
+        if (trimmedTextLength < originalTextLength) {
+            let tags: string[] = this.cell.metadata.custom?.tags || [];
+            tags = tags.filter((t) => t !== 'outputPrepend');
+            tags.push('outputPrepend');
+            this.cell.metadata.custom = { ...this.cell.metadata.custom, tags };
+        }
+    }
+
+    private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool) {
+        const output: nbformat.IDisplayData = {
+            output_type: 'display_data',
+            data: msg.content.data,
+            metadata: msg.content.metadata,
+            // tslint:disable-next-line: no-any
+            transient: msg.content.transient as any // NOSONAR
+        };
+        this.addToCellData(output, clearState);
+    }
+
+    private handleClearOutput(msg: KernelMessage.IClearOutputMsg, clearState: RefBool) {
+        // If the message says wait, add every message type to our clear state. This will
+        // make us wait for this type of output before we clear it.
+        if (msg && msg.content.wait) {
+            clearState.update(true);
+        } else {
+            // Clear all outputs and start over again.
+            this.cell.outputs = [];
+        }
+    }
+
+    private handleError(msg: KernelMessage.IErrorMsg, clearState: RefBool) {
+        const output: nbformat.IError = {
+            output_type: 'error',
+            ename: msg.content.ename,
+            evalue: msg.content.evalue,
+            traceback: msg.content.traceback
+        };
+        this.addToCellData(output, clearState);
+    }
+
+    // We have a set limit for the number of output text characters that we display by default
+    // trim down strings to that limit, assuming at this point we have compressed down to a single string
+    private trimOutput(outputString: string): string {
+        const outputLimit = this.configService.getSettings(this.cell.document.uri).datascience.textOutputLimit;
+
+        if (!outputLimit || outputLimit === 0 || outputString.length <= outputLimit) {
+            return outputString;
+        }
+
+        return outputString.substr(outputString.length - outputLimit);
+    }
+
+    private handleReply(clearState: RefBool, msg: KernelMessage.IShellControlMessage) {
+        // tslint:disable-next-line:no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+        // Create a trimming function. Only trim user output. Silent output requires the full thing
+        const trimFunc = this.trimOutput.bind(this);
+
+        if (jupyterLab.KernelMessage.isExecuteReplyMsg(msg)) {
+            this.handleExecuteReply(msg, clearState, trimFunc);
+
+            // Set execution count, all messages should have it
+            if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
+                updateCellExecutionCount(this.cell, msg.content.execution_count);
+            }
+
+            // Send this event.
+            this.contentProvider.notifyChangesToDocument(this.cell.notebook);
         }
     }
 }

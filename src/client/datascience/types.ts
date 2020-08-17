@@ -184,6 +184,7 @@ export interface INotebook extends IAsyncDisposable {
     readonly identity: Uri;
     readonly status: ServerStatus;
     readonly disposed: boolean;
+    readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
     onSessionStatusChanged: Event<ServerStatus>;
     onDisposed: Event<void>;
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;

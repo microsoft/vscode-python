@@ -4,7 +4,7 @@
 'use strict';
 
 import type { nbformat } from '@jupyterlab/coreutils';
-import type { KernelMessage } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
@@ -89,6 +89,22 @@ export function updateCellExecutionCount(vscCell: NotebookCell, executionCount: 
     if (vscCell.metadata.executionOrder !== executionCount) {
         vscCell.metadata.executionOrder = executionCount;
         return true;
+    }
+    return false;
+}
+
+export function updateCellRunningState(vscCell: NotebookCell, status: Kernel.Status): boolean {
+    switch (status) {
+        // Busy is the only matching state. Notebook cell running state is controlled by
+        // execution and not responses from the kernel.
+        case 'busy':
+            if (vscCell.metadata.runState !== NotebookCellRunState.Running) {
+                vscCell.metadata.runState = NotebookCellRunState.Running;
+                return true;
+            }
+            break;
+        default:
+            break;
     }
     return false;
 }

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import type { KernelMessage, Session } from '@jupyterlab/services';
+import type { Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type { CancellationToken, Event, QuickPickItem, Uri } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../../types/vscode-proposed';
@@ -119,7 +119,6 @@ export interface IKernel extends IAsyncDisposable {
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<void>;
     executeAllCells(document: NotebookDocument): Promise<void>;
-    registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
 }
 
 export type KernelOptions = { metadata: KernelConnectionMetadata; waitForIdleTimeout?: number; launchingFile?: string };

@@ -3,21 +3,13 @@
 
 'use strict';
 
-import { nbformat } from '@jupyterlab/coreutils';
-import { Subscription } from 'rxjs';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
-import { ICommandManager } from '../../../common/application/types';
-import { IDisposable } from '../../../common/types';
+import { IApplicationShell, ICommandManager } from '../../../common/application/types';
+import { IConfigurationService, IDisposable } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { captureTelemetry } from '../../../telemetry';
 import { Commands, Telemetry, VSCodeNativeTelemetry } from '../../constants';
-import {
-    handleUpdateDisplayDataMessage,
-    hasTransientOutputForAnotherCell,
-    updateCellExecutionCount,
-    updateCellOutput
-} from '../../notebook/helpers/executionHelpers';
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
 import { INotebookContentProvider } from '../../notebook/types';
 import { IDataScienceErrorHandler, INotebook, INotebookEditorProvider } from '../../types';
@@ -32,8 +24,6 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  */
 export class KernelExecution implements IDisposable {
     public notebook?: INotebook;
-
-    private readonly registeredIOPubListeners = new WeakSet<IKernel>();
 
     private readonly cellExecutions = new WeakMap<NotebookCell, CellExecution>();
 
@@ -50,9 +40,17 @@ export class KernelExecution implements IDisposable {
         errorHandler: IDataScienceErrorHandler,
         private readonly contentProvider: INotebookContentProvider,
         editorProvider: INotebookEditorProvider,
-        readonly kernelSelectionUsage: IKernelSelectionUsage
+        readonly kernelSelectionUsage: IKernelSelectionUsage,
+        readonly appShell: IApplicationShell,
+        readonly configService: IConfigurationService
     ) {
-        this.executionFactory = new CellExecutionFactory(this.contentProvider, errorHandler, editorProvider);
+        this.executionFactory = new CellExecutionFactory(
+            this.contentProvider,
+            errorHandler,
+            editorProvider,
+            appShell,
+            configService
+        );
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
@@ -178,13 +176,10 @@ export class KernelExecution implements IDisposable {
         if (cellExecution.token.isCancellationRequested) {
             return;
         }
-        const kernel = await kernelPromise;
+        await kernelPromise;
         if (cellExecution.token.isCancellationRequested) {
             return;
         }
-        const document = cellExecution.cell.notebook;
-        this.handleDisplayDataMessages(document, kernel);
-
         cellExecution.token.onCancellationRequested(
             () => {
                 if (cellExecution.completed) {
@@ -198,51 +193,8 @@ export class KernelExecution implements IDisposable {
             this.disposables
         );
 
-        let subscription: Subscription | undefined;
-        try {
-            cellExecution.start();
-            const cellId = cellExecution.cell.uri.toString();
-            this.notebook.clear(cellId);
-            const observable = this.notebook.executeObservable(
-                cellExecution.cell.document.getText(),
-                document.fileName,
-                0,
-                cellId,
-                false
-            );
-            subscription = observable?.subscribe(
-                (cells) => {
-                    const rawCellOutput = cells
-                        .filter((item) => item.id === cellId)
-                        .flatMap((item) => (item.data.outputs as unknown) as nbformat.IOutput[])
-                        .filter((output) => !hasTransientOutputForAnotherCell(output));
-
-                    // Set execution count, all messages should have it
-                    if (
-                        cells.length &&
-                        'execution_count' in cells[0].data &&
-                        typeof cells[0].data.execution_count === 'number'
-                    ) {
-                        const executionCount = cells[0].data.execution_count as number;
-                        if (updateCellExecutionCount(cellExecution.cell, executionCount)) {
-                            this.contentProvider.notifyChangesToDocument(document);
-                        }
-                    }
-
-                    if (updateCellOutput(cellExecution.cell, rawCellOutput)) {
-                        this.contentProvider.notifyChangesToDocument(document);
-                    }
-                },
-                (error: Partial<Error>) => cellExecution.completedWithErrors(error),
-                () => cellExecution.completedSuccessfully()
-            );
-            await cellExecution.result;
-        } catch (ex) {
-            cellExecution.completedWithErrors(ex);
-        } finally {
-            subscription?.unsubscribe(); // NOSONAR
-        }
-        return cellExecution.cell.metadata.runState;
+        cellExecution.start(this.notebook);
+        return cellExecution.result;
     }
 
     private async validateKernel(document: NotebookDocument): Promise<void> {
@@ -268,24 +220,5 @@ export class KernelExecution implements IDisposable {
             this.kernelValidated.set(document, { kernel, promise });
         }
         await this.kernelValidated.get(document)!.promise;
-    }
-
-    /**
-     * Ensure we handle display data messages that can result in updates to other cells.
-     */
-    private handleDisplayDataMessages(document: NotebookDocument, kernel: IKernel) {
-        if (!this.registeredIOPubListeners.has(kernel)) {
-            this.registeredIOPubListeners.add(kernel);
-            // tslint:disable-next-line:no-require-imports
-            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-            kernel.registerIOPubListener((msg) => {
-                if (
-                    jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg) &&
-                    handleUpdateDisplayDataMessage(msg, document)
-                ) {
-                    this.contentProvider.notifyChangesToDocument(document);
-                }
-            });
-        }
     }
 }

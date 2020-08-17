@@ -4,7 +4,6 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import type { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import {
@@ -17,9 +16,9 @@ import {
     Uri
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
-import { ICommandManager } from '../../../common/application/types';
+import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
-import { IDisposableRegistry } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
@@ -101,7 +100,9 @@ export class Kernel implements IKernel {
         contentProvider: INotebookContentProvider,
         editorProvider: INotebookEditorProvider,
         private readonly kernelProvider: IKernelProvider,
-        private readonly kernelSelectionUsage: IKernelSelectionUsage
+        private readonly kernelSelectionUsage: IKernelSelectionUsage,
+        appShell: IApplicationShell,
+        configService: IConfigurationService
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -110,7 +111,9 @@ export class Kernel implements IKernel {
             errorHandler,
             contentProvider,
             editorProvider,
-            kernelSelectionUsage
+            kernelSelectionUsage,
+            appShell,
+            configService
         );
     }
     public executeObservable(
@@ -214,12 +217,6 @@ export class Kernel implements IKernel {
                 this.restarting = undefined;
             }
         }
-    }
-    public registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void {
-        if (!this.notebook) {
-            throw new Error('Notebook not defined');
-        }
-        this.notebook.registerIOPubListener(listener);
     }
     private async validate(uri: Uri): Promise<void> {
         const kernel = this.kernelProvider.get(uri);
