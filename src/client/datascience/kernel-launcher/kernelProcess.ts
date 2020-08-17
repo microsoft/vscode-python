@@ -45,14 +45,18 @@ export class KernelProcess implements IKernelProcess {
     private disposed?: boolean;
     private kernelDaemon?: IPythonKernelDaemon;
     private connectionFile?: string;
+    private _kernelArgv?: string[];
+    private readonly _kernelConnectionMetadata: Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
     constructor(
         private readonly processExecutionFactory: IProcessServiceFactory,
         private readonly daemonPool: KernelDaemonPool,
         private readonly _connection: IKernelConnection,
-        private readonly _kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
+        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         private readonly fs: IDataScienceFileSystem,
         private readonly resource: Resource
-    ) {}
+    ) {
+        this._kernelConnectionMetadata = kernelConnectionMetadata;
+    }
     public async interrupt(): Promise<void> {
         if (this.kernelDaemon) {
             await this.kernelDaemon?.interrupt();
@@ -139,6 +143,9 @@ export class KernelProcess implements IKernelProcess {
         }
     }
     private get kernelSpecArgv(): string[] {
+        if (this._kernelArgv) {
+            return this._kernelArgv;
+        }
         // We always expect a kernel spec, even when launching a Python process, cuz we generate a dummy `kernelSpec`.
         const kernelSpec = this._kernelConnectionMetadata.kernelSpec;
         if (!kernelSpec) {
@@ -147,9 +154,11 @@ export class KernelProcess implements IKernelProcess {
         if (!Array.isArray(kernelSpec.argv)) {
             traceError('KernelSpec.argv in KernelPrcess is undefined');
             // tslint:disable-next-line: no-any
-            (kernelSpec as any).argv = [];
+            this._kernelArgv = [];
+        } else {
+            this._kernelArgv = [...kernelSpec.argv];
         }
-        return kernelSpec.argv;
+        return this._kernelArgv!;
     }
     // Instead of having to use a connection file update our local copy of the kernelspec to launch
     // directly with command line arguments
