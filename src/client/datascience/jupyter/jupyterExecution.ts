@@ -36,7 +36,7 @@ import {
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { createRemoteConnectionInfo, expandWorkingDir } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import { kernelConnectionMetadataHasKernelSpec } from './kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection, kernelConnectionMetadataHasKernelSpec } from './kernels/helpers';
 import { KernelSelector } from './kernels/kernelSelector';
 import { KernelConnectionMetadata } from './kernels/types';
 import { NotebookStarter } from './notebookStarter';
@@ -212,11 +212,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Populate the launch info that we are starting our server with
                     const launchInfo: INotebookServerLaunchInfo = {
                         connectionInfo: connection!,
-                        interpreter: kernelConnectionMetadata?.interpreter,
-                        kernelSpec:
-                            kernelConnectionMetadata && kernelConnectionMetadataHasKernelSpec(kernelConnectionMetadata)
-                                ? kernelConnectionMetadata?.kernelSpec
-                                : kernelConnectionMetadata?.kernelModel,
+                        kernelConnectionMetadata,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
                         purpose: options ? options.purpose : uuid()
@@ -240,7 +236,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 // Sometimes if a bad kernel is selected, starting a session can fail.
                                 // In such cases we need to let the user know about this and prompt them to select another kernel.
                                 const message = localize.DataScience.sessionStartFailedWithKernel().format(
-                                    launchInfo.kernelSpec?.display_name || launchInfo.kernelSpec?.name || '',
+                                    getDisplayNameOrNameOfKernelConnection(launchInfo.kernelConnectionMetadata),
                                     Commands.ViewJupyterOutput
                                 );
                                 const selectKernel = localize.DataScience.selectDifferentKernel();
@@ -257,11 +253,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                         new StopWatch(),
                                         sessionManager,
                                         cancelToken,
-                                        launchInfo.kernelSpec?.display_name || launchInfo.kernelSpec?.name
+                                        getDisplayNameOrNameOfKernelConnection(launchInfo.kernelConnectionMetadata)
                                     );
                                     if (kernelInterpreter) {
-                                        launchInfo.interpreter = kernelInterpreter.interpreter;
-                                        launchInfo.kernelSpec = kernelInterpreter?.kernelSpec;
+                                        launchInfo.kernelConnectionMetadata = kernelInterpreter;
                                         continue;
                                     }
                                 }

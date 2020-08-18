@@ -27,7 +27,6 @@ import {
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
@@ -41,6 +40,7 @@ import {
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import {
     ICell,
     ICodeCssGenerator,
@@ -52,7 +52,6 @@ import {
     IInteractiveWindowLoadable,
     IInteractiveWindowProvider,
     IJupyterDebugger,
-    IJupyterKernelSpec,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookExporter,
@@ -387,10 +386,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return undefined;
     }
 
-    protected async updateNotebookOptions(
-        _kernelSpec: IJupyterKernelSpec,
-        _interpreter: PythonEnvironment | undefined
-    ): Promise<void> {
+    protected async updateNotebookOptions(_kernelConnection: KernelConnectionMetadata): Promise<void> {
         // Do nothing as this data isn't stored in our options.
     }
 

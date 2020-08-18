@@ -4,11 +4,14 @@
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { Event, EventEmitter, Memento, Uri } from 'vscode';
 import { ICryptoUtils } from '../../common/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { pruneCell } from '../common';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
-import { LiveKernelModel } from '../jupyter/kernels/types';
-import { ICell, IJupyterKernelSpec, INotebookMetadataLive, INotebookModel } from '../types';
+import {
+    getInterpreterFromKernelConnectionMetadata,
+    kernelConnectionMetadataHasKernelModel
+} from '../jupyter/kernels/helpers';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { ICell, INotebookMetadataLive, INotebookModel } from '../types';
 import { isUntitled } from './nativeEditorStorage';
 
 export const ActiveKernelIdList = `Active_Kernel_Id_List`;
@@ -22,12 +25,12 @@ type KernelIdListEntry = {
 // tslint:disable-next-line: cyclomatic-complexity
 export function updateNotebookMetadata(
     metadata: nbformat.INotebookMetadata | undefined,
-    interpreter: PythonEnvironment | undefined,
-    kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
+    kernelConnection?: KernelConnectionMetadata
 ) {
     let changed = false;
     let kernelId: string | undefined;
     // Get our kernel_info and language_info from the current notebook
+    const interpreter = getInterpreterFromKernelConnectionMetadata(kernelConnection);
     if (
         interpreter &&
         interpreter.version &&
@@ -44,27 +47,31 @@ export function updateNotebookMetadata(
         changed = true;
     }
 
-    if (kernelSpec && metadata && !metadata.kernelspec) {
+    const kernelSpecOrModel =
+        kernelConnection && kernelConnectionMetadataHasKernelModel(kernelConnection)
+            ? kernelConnection.kernelModel
+            : kernelConnection?.kernelSpec;
+    if (kernelSpecOrModel && metadata && !metadata.kernelspec) {
         // Add a new spec in this case
         metadata.kernelspec = {
-            name: kernelSpec.name || kernelSpec.display_name || '',
-            display_name: kernelSpec.display_name || kernelSpec.name || ''
+            name: kernelSpecOrModel.name || kernelSpecOrModel.display_name || '',
+            display_name: kernelSpecOrModel.display_name || kernelSpecOrModel.name || ''
         };
-        kernelId = kernelSpec.id;
+        kernelId = kernelSpecOrModel.id;
         changed = true;
-    } else if (kernelSpec && metadata && metadata.kernelspec) {
+    } else if (kernelSpecOrModel && metadata && metadata.kernelspec) {
         // Spec exists, just update name and display_name
-        const name = kernelSpec.name || kernelSpec.display_name || '';
-        const displayName = kernelSpec.display_name || kernelSpec.name || '';
+        const name = kernelSpecOrModel.name || kernelSpecOrModel.display_name || '';
+        const displayName = kernelSpecOrModel.display_name || kernelSpecOrModel.name || '';
         if (
             metadata.kernelspec.name !== name ||
             metadata.kernelspec.display_name !== displayName ||
-            kernelId !== kernelSpec.id
+            kernelId !== kernelSpecOrModel.id
         ) {
             changed = true;
             metadata.kernelspec.name = name;
             metadata.kernelspec.display_name = displayName;
-            kernelId = kernelSpec.id;
+            kernelId = kernelSpecOrModel.id;
         }
     }
     return { changed, kernelId };
@@ -175,7 +182,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
         let changed = false;
         switch (change.kind) {
             case 'version':
-                changed = this.updateVersionInfo(change.interpreter, change.kernelSpec);
+                changed = this.updateVersionInfo(change.kernelConnection);
                 break;
             default:
                 break;
@@ -219,16 +226,13 @@ export abstract class BaseNotebookModel implements INotebookModel {
         }
     }
     // tslint:disable-next-line: cyclomatic-complexity
-    private updateVersionInfo(
-        interpreter: PythonEnvironment | undefined,
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
-    ): boolean {
-        const { changed, kernelId } = updateNotebookMetadata(this.notebookJson.metadata, interpreter, kernelSpec);
+    private updateVersionInfo(kernelConnection: KernelConnectionMetadata | undefined): boolean {
+        const { changed, kernelId } = updateNotebookMetadata(this.notebookJson.metadata, kernelConnection);
         if (kernelId) {
             this.kernelId = kernelId;
         }
         // Update our kernel id in our global storage too
-        this.setStoredKernelId(kernelSpec?.id);
+        this.setStoredKernelId(kernelId);
 
         return changed;
     }

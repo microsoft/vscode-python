@@ -37,7 +37,7 @@ import { NotebookModelChange } from './interactive-common/interactiveWindowTypes
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import { JupyterKernelSpec } from './jupyter/kernels/jupyterKernelSpec';
-import { KernelConnectionMetadata, LiveKernelModel } from './jupyter/kernels/types';
+import { KernelConnectionMetadata } from './jupyter/kernels/types';
 
 // tslint:disable-next-line:no-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
@@ -91,12 +91,8 @@ export interface INotebookExecutionInfo {
     // Connection to what has provided our notebook, such as a jupyter
     // server or a raw ZMQ kernel
     connectionInfo: INotebookProviderConnection;
-    /**
-     * The python interpreter associated with the kernel.
-     */
-    interpreter: PythonEnvironment | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
-    kernelSpec: IJupyterKernelSpec | undefined | LiveKernelModel;
+    kernelConnectionMetadata?: KernelConnectionMetadata;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
 }
@@ -106,15 +102,8 @@ export interface INotebookExecutionInfo {
 // Information used to launch a notebook server
 export interface INotebookServerLaunchInfo {
     connectionInfo: IJupyterConnection;
-    /**
-     * The python interpreter associated with the kernel.
-     *
-     * @type {(PythonEnvironment | undefined)}
-     * @memberof INotebookServerLaunchInfo
-     */
-    interpreter: PythonEnvironment | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
-    kernelSpec: IJupyterKernelSpec | undefined | LiveKernelModel;
+    kernelConnectionMetadata?: KernelConnectionMetadata;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
 }
@@ -187,7 +176,7 @@ export interface INotebook extends IAsyncDisposable {
     readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
     onSessionStatusChanged: Event<ServerStatus>;
     onDisposed: Event<void>;
-    onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
+    onKernelChanged: Event<KernelConnectionMetadata>;
     onKernelRestarted: Event<void>;
     onKernelInterrupted: Event<void>;
     clear(id: string): void;
@@ -213,12 +202,15 @@ export interface INotebook extends IAsyncDisposable {
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     getMatchingInterpreter(): PythonEnvironment | undefined;
-    getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined;
-    setKernelSpec(
-        spec: IJupyterKernelSpec | LiveKernelModel,
-        timeoutMS: number,
-        interpreter: PythonEnvironment | undefined
-    ): Promise<void>;
+    /**
+     * Gets the metadata that's used to start/connect to a Kernel.
+     */
+    getKernelConnection(): KernelConnectionMetadata | undefined;
+    /**
+     * Sets the metadata that's used to start/connect to a Kernel.
+     * Doing so results in a new kernel being started (i.e. a change in the kernel).
+     */
+    setKernelConnection(connectionMetadata: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     getLoggers(): INotebookExecutionLogger[];
     registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
     registerCommTarget(
@@ -344,11 +336,7 @@ export interface IJupyterSession extends IAsyncDisposable {
         content: KernelMessage.IInspectRequestMsg['content']
     ): Promise<KernelMessage.IInspectReplyMsg | undefined>;
     sendInputReply(content: string): void;
-    changeKernel(
-        kernel: IJupyterKernelSpec | LiveKernelModel,
-        timeoutMS: number,
-        interpreter?: PythonEnvironment
-    ): Promise<void>;
+    changeKernel(kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
@@ -390,7 +378,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
     readonly onRestartSessionCreated: Event<Kernel.IKernelConnection>;
     readonly onRestartSessionUsed: Event<Kernel.IKernelConnection>;
     startNew(
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterSession>;
@@ -1174,7 +1162,7 @@ export interface INotebookProvider {
     /**
      * Fired when a kernel would have been changed if a notebook had existed.
      */
-    onPotentialKernelChanged: Event<{ identity: Uri; kernel: KernelConnectionMetadata }>;
+    onPotentialKernelChanged: Event<{ identity: Uri; kernelConnection: KernelConnectionMetadata }>;
 
     /**
      * List of all notebooks (active and ones that are being constructed).

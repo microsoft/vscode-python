@@ -8,16 +8,15 @@ import { CancellationToken, Event } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
     launch(
-        kernelSpec: IJupyterKernelSpec,
+        kernelConnectionMetadata: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         resource: Resource,
-        workingDirectory: string,
-        interpreter?: PythonEnvironment
+        workingDirectory: string
     ): Promise<IKernelProcess>;
 }
 
@@ -36,7 +35,7 @@ export interface IKernelConnection {
 
 export interface IKernelProcess extends IAsyncDisposable {
     readonly connection: Readonly<IKernelConnection>;
-    readonly kernelSpec: Readonly<IJupyterKernelSpec>;
+    readonly kernelConnectionMetadata: Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
     /**
      * This event is triggered if the process is exited
      */

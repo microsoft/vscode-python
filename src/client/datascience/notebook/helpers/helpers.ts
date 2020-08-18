@@ -21,14 +21,13 @@ import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { CellState, ICell, IJupyterKernelSpec, INotebookModel } from '../../types';
+import { CellState, ICell, INotebookModel } from '../../types';
 import { JupyterNotebookView } from '../constants';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { LiveKernelModel } from '../../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
 import { INotebookContentProvider } from '../types';
@@ -61,8 +60,7 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
 }
 export function updateKernelInNotebookMetadata(
     document: NotebookDocument,
-    kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
-    interpreter: PythonEnvironment | undefined,
+    kernelConnection: KernelConnectionMetadata | undefined,
     notebookContentProvider: INotebookContentProvider
 ) {
     // tslint:disable-next-line: no-any
@@ -71,7 +69,7 @@ export function updateKernelInNotebookMetadata(
         traceError('VSCode Notebook does not have custom metadata', notebookContent);
         throw new Error('VSCode Notebook does not have custom metadata');
     }
-    const info = updateNotebookMetadata(notebookContent.metadata, interpreter, kernelSpec);
+    const info = updateNotebookMetadata(notebookContent.metadata, kernelConnection);
 
     if (info.changed) {
         notebookContentProvider.notifyChangesToDocument(document);

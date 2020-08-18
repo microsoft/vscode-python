@@ -37,7 +37,6 @@ import {
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
@@ -61,7 +60,6 @@ import {
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
-    IJupyterKernelSpec,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditor,
@@ -88,7 +86,7 @@ import { translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
-import { LiveKernelModel } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
@@ -321,15 +319,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.model.metadata;
     }
 
-    public async updateNotebookOptions(
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel,
-        interpreter: PythonEnvironment | undefined
-    ): Promise<void> {
+    public async updateNotebookOptions(kernelConnection: KernelConnectionMetadata): Promise<void> {
         if (this.model) {
             const change: NotebookModelChange = {
                 kind: 'version',
-                kernelSpec,
-                interpreter,
+                kernelConnection,
                 oldDirty: this.model.isDirty,
                 newDirty: true,
                 source: 'user'
@@ -440,6 +434,28 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 cellsExecuting.add(cell);
                 await this.reexecuteCell(cell, tokenSource.token);
                 cellsExecuting.delete(cell);
+
+                // Check the new state of our cell
+                const resultCell = this.model.cells.find((item) => item.id === cell.id);
+
+                // Bail on the rest of our cells if one comes back with an error
+                if (
+                    this.configuration.getSettings(this.owningResource).datascience.stopOnError &&
+                    resultCell &&
+                    resultCell.state === CellState.error
+                ) {
+                    // Set the remaining cells as finished and break out
+                    if (i < info.cellIds.length) {
+                        const unExecutedCellIds = info.cellIds.slice(i + 1, info.cellIds.length);
+                        unExecutedCellIds.forEach((cellId) => {
+                            const unexecutedCell = this.model.cells.find((item) => item.id === cellId);
+                            if (unexecutedCell) {
+                                this.finishCell(unexecutedCell);
+                            }
+                        });
+                    }
+                    break;
+                }
             }
         } catch (exc) {
             // Tell the other side we restarted the kernel. This will stop all executions
@@ -505,15 +521,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Tell storage about our notebook object
         const notebook = this.getNotebook();
         if (notebook && this.model) {
-            const interpreter = notebook.getMatchingInterpreter();
-            const kernelSpec = notebook.getKernelSpec();
+            const kernelConnection = notebook.getKernelConnection();
             this.model.update({
                 source: 'user',
                 kind: 'version',
                 oldDirty: this.model.isDirty,
                 newDirty: this.model.isDirty,
-                interpreter,
-                kernelSpec
+                kernelConnection
             });
         }
 

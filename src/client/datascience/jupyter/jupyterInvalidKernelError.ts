@@ -4,16 +4,16 @@
 import * as localize from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { IJupyterKernelSpec } from '../types';
-import { LiveKernelModel } from './kernels/types';
+import { getDisplayNameOrNameOfKernelConnection } from './kernels/helpers';
+import { KernelConnectionMetadata } from './kernels/types';
 
 export class JupyterInvalidKernelError extends Error {
-    constructor(private _kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined) {
-        super(localize.DataScience.kernelInvalid().format(_kernelSpec?.display_name || _kernelSpec?.name || ''));
+    constructor(public readonly kernelConnectionMetadata: KernelConnectionMetadata | undefined) {
+        super(
+            localize.DataScience.kernelInvalid().format(
+                getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata)
+            )
+        );
         sendTelemetryEvent(Telemetry.KernelInvalid);
-    }
-
-    public get kernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
-        return this._kernelSpec;
     }
 }

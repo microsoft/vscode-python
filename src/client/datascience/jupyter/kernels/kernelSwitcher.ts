@@ -57,7 +57,7 @@ export class KernelSwitcher {
                     const potential = await this.selector.askForLocalKernel(
                         notebook.resource,
                         notebook.connection?.type || 'noConnection',
-                        kernelConnectionMetadataHasKernelModel(kernel) ? kernel.kernelModel : kernel.kernelSpec
+                        kernel
                     );
                     if (potential && Object.keys(potential).length > 0) {
                         kernel = potential;
@@ -68,25 +68,26 @@ export class KernelSwitcher {
             }
         }
     }
-    private async switchToKernel(notebook: INotebook, kernel: KernelConnectionMetadata): Promise<void> {
-        if (notebook.connection?.type === 'raw' && kernel.interpreter) {
-            const response = await this.kernelDependencyService.installMissingDependencies(kernel.interpreter);
+    private async switchToKernel(notebook: INotebook, kernelConnection: KernelConnectionMetadata): Promise<void> {
+        if (notebook.connection?.type === 'raw' && kernelConnection.interpreter) {
+            const response = await this.kernelDependencyService.installMissingDependencies(
+                kernelConnection.interpreter
+            );
             if (response === KernelInterpreterDependencyResponse.cancel) {
                 return;
             }
         }
 
-        const switchKernel = async (newKernel: KernelConnectionMetadata) => {
+        const switchKernel = async (newKernelConnection: KernelConnectionMetadata) => {
             // Change the kernel. A status update should fire that changes our display
-            await notebook.setKernelSpec(
-                newKernel.kind === 'connectToLiveKernel' ? newKernel.kernelModel : newKernel.kernelSpec!,
-                this.configService.getSettings(notebook.resource).datascience.jupyterLaunchTimeout,
-                newKernel.interpreter
+            await notebook.setKernelConnection(
+                newKernelConnection,
+                this.configService.getSettings(notebook.resource).datascience.jupyterLaunchTimeout
             );
         };
 
-        const kernelModel = kernelConnectionMetadataHasKernelModel(kernel) ? kernel : undefined;
-        const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernel) ? kernel : undefined;
+        const kernelModel = kernelConnectionMetadataHasKernelModel(kernelConnection) ? kernelConnection : undefined;
+        const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection) ? kernelConnection : undefined;
         const kernelName = kernelSpec?.kernelSpec?.name || kernelModel?.kernelModel?.name;
         // One of them is bound to be non-empty.
         const displayName = kernelModel?.kernelModel?.display_name || kernelName || '';
@@ -95,6 +96,6 @@ export class KernelSwitcher {
             cancellable: false,
             title: DataScience.switchingKernelProgress().format(displayName)
         };
-        await this.appShell.withProgress(options, async (_, __) => switchKernel(kernel!));
+        await this.appShell.withProgress(options, async (_, __) => switchKernel(kernelConnection!));
     }
 }

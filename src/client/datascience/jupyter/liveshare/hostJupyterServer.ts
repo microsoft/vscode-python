@@ -3,17 +3,13 @@
 'use strict';
 import '../../../common/extensions';
 
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { isTestExecution } from '../../../common/constants';
 import { traceInfo } from '../../../common/logger';
-
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -25,7 +21,6 @@ import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import {
     IDataScienceFileSystem,
@@ -40,13 +35,10 @@ import {
 } from '../../types';
 import { JupyterServerBase } from '../jupyterServer';
 import { computeWorkingDirectory } from '../jupyterUtils';
-import { kernelConnectionMetadataHasKernelModel } from '../kernels/helpers';
 import { KernelSelector } from '../kernels/kernelSelector';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
-
-// tslint:disable-next-line: no-require-imports
 // tslint:disable:no-any
 
 export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
@@ -210,9 +202,9 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             );
 
             // If we switched kernels, try switching the possible session
-            if (changedKernel && possibleSession && info.kernelSpec) {
+            if (changedKernel && possibleSession && info.kernelConnectionMetadata) {
                 await possibleSession.changeKernel(
-                    info.kernelSpec,
+                    info.kernelConnectionMetadata,
                     this.configService.getSettings(resource).datascience.jupyterLaunchTimeout
                 );
             }
@@ -224,7 +216,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             const session =
                 possibleSession && this.fs.areLocalPathsSame(possibleSession.workingDirectory, workingDirectory)
                     ? possibleSession
-                    : await sessionManager.startNew(info.kernelSpec, workingDirectory, cancelToken);
+                    : await sessionManager.startNew(info.kernelConnectionMetadata, workingDirectory, cancelToken);
             traceInfo(`Started session ${this.id}`);
             return { info, session };
         };
@@ -299,7 +291,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         if (
             notebookMetadata?.kernelspec ||
             notebookMetadata?.id ||
-            resourceInterpreter?.displayName !== launchInfo.interpreter?.displayName
+            resourceInterpreter?.displayName !== launchInfo.kernelConnectionMetadata?.interpreter?.displayName
         ) {
             const kernelInfo = await (launchInfo.connectionInfo.localLaunch
                 ? this.kernelSelector.getKernelForLocalConnection(
@@ -317,17 +309,12 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                       cancelToken
                   ));
 
-            const kernelInfoToUse =
-                kernelInfo && kernelConnectionMetadataHasKernelModel(kernelInfo)
-                    ? kernelInfo.kernelModel
-                    : kernelInfo?.kernelSpec;
-            if (kernelInfoToUse) {
-                launchInfo.kernelSpec = kernelInfoToUse;
+            if (kernelInfo) {
+                launchInfo.kernelConnectionMetadata = kernelInfo;
 
                 // For the interpreter, make sure to select the one matching the kernel.
-                launchInfo.interpreter = kernelInfoToUse.metadata?.interpreter?.path
-                    ? (cloneDeep(kernelInfoToUse.metadata.interpreter) as PythonEnvironment)
-                    : resourceInterpreter;
+                launchInfo.kernelConnectionMetadata.interpreter =
+                    launchInfo.kernelConnectionMetadata.interpreter || resourceInterpreter;
                 changedKernel = true;
             }
         }

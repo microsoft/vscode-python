@@ -16,22 +16,22 @@ import { Cancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
 import { Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
-import { IJupyterConnection, IJupyterKernelSpec, ISessionWithSocket } from '../types';
+import { IJupyterConnection, ISessionWithSocket } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWebSockets } from './jupyterWebSocket';
-import { LiveKernelModel } from './kernels/types';
+import { getNameOfKernelConnection } from './kernels/helpers';
+import { KernelConnectionMetadata } from './kernels/types';
 
 export class JupyterSession extends BaseJupyterSession {
     constructor(
         private connInfo: IJupyterConnection,
         private serverSettings: ServerConnection.ISettings,
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        kernelSpec: KernelConnectionMetadata | undefined,
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager,
         private readonly outputChannel: IOutputChannel,
@@ -40,7 +40,7 @@ export class JupyterSession extends BaseJupyterSession {
         readonly workingDirectory: string
     ) {
         super(restartSessionUsed, workingDirectory);
-        this.kernelSpec = kernelSpec;
+        this.kernelConnectionMetadata = kernelSpec;
     }
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
@@ -56,7 +56,7 @@ export class JupyterSession extends BaseJupyterSession {
         }
 
         // Start a new session
-        this.setSession(await this.createNewKernelSession(this.kernelSpec, timeoutMs, undefined, cancelToken));
+        this.setSession(await this.createNewKernelSession(this.kernelConnectionMetadata, timeoutMs, cancelToken));
 
         // Listen for session status changes
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
@@ -66,21 +66,29 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     public async createNewKernelSession(
-        kernel: IJupyterKernelSpec | LiveKernelModel | undefined,
+        kernelConnection: KernelConnectionMetadata | undefined,
         timeoutMS: number,
-        _pythonInterpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         let newSession: ISessionWithSocket | undefined;
 
         try {
             // Don't immediately assume this kernel is valid. Try creating a session with it first.
-            if (kernel && kernel.id && 'session' in kernel) {
+            if (
+                kernelConnection &&
+                kernelConnection.kind === 'connectToLiveKernel' &&
+                kernelConnection.kernelModel.id
+            ) {
                 // Remote case.
-                newSession = this.sessionManager.connectTo(kernel.session);
+                newSession = this.sessionManager.connectTo(kernelConnection.kernelModel.session);
                 newSession.isRemoteSession = true;
             } else {
-                newSession = await this.createSession(this.serverSettings, kernel, this.contentsManager, cancelToken);
+                newSession = await this.createSession(
+                    this.serverSettings,
+                    kernelConnection,
+                    this.contentsManager,
+                    cancelToken
+                );
             }
 
             // Make sure it is idle before we return
@@ -88,16 +96,15 @@ export class JupyterSession extends BaseJupyterSession {
         } catch (exc) {
             traceError('Failed to change kernel', exc);
             // Throw a new exception indicating we cannot change.
-            throw new JupyterInvalidKernelError(kernel);
+            throw new JupyterInvalidKernelError(kernelConnection);
         }
 
         return newSession;
     }
 
     protected async createRestartSession(
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        kernelConnection: KernelConnectionMetadata | undefined,
         session: ISessionWithSocket,
-        _interpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         // We need all of the above to create a restart session
@@ -113,7 +120,7 @@ export class JupyterSession extends BaseJupyterSession {
             try {
                 result = await this.createSession(
                     session.serverSettings,
-                    kernelSpec,
+                    kernelConnection,
                     this.contentsManager,
                     cancelToken
                 );
@@ -135,13 +142,13 @@ export class JupyterSession extends BaseJupyterSession {
 
     protected startRestartSession() {
         if (!this.restartSessionPromise && this.session && this.contentsManager) {
-            this.restartSessionPromise = this.createRestartSession(this.kernelSpec, this.session);
+            this.restartSessionPromise = this.createRestartSession(this.kernelConnectionMetadata, this.session);
         }
     }
 
     private async createSession(
         serverSettings: ServerConnection.ISettings,
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        kernelConnection: KernelConnectionMetadata | undefined,
         contentsManager: ContentsManager,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
@@ -167,7 +174,7 @@ export class JupyterSession extends BaseJupyterSession {
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
             path: backingFile.path,
-            kernelName: kernelSpec ? kernelSpec.name : '',
+            kernelName: getNameOfKernelConnection(kernelConnection) || '',
             name: uuid(), // This is crucial to distinguish this session from any other.
             serverSettings: serverSettings
         };

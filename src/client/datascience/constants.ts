@@ -521,7 +521,7 @@ export namespace Identifiers {
     export const REMOTE_URI_HANDLE_PARAM = 'uriHandle';
 }
 
-export namespace CodeSnippits {
+export namespace CodeSnippets {
     export const ChangeDirectory = [
         '{0}',
         '{1}',

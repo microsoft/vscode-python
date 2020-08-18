@@ -8,7 +8,10 @@ import { Uri } from 'vscode';
 import { ICommandManager } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
 import { Commands } from '../constants';
-import { kernelConnectionMetadataHasKernelModel } from '../jupyter/kernels/helpers';
+import {
+    getDisplayNameOrNameOfKernelConnection,
+    kernelConnectionMetadataHasKernelModel
+} from '../jupyter/kernels/helpers';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -49,9 +52,9 @@ export class NotebookCommands implements IDisposable {
                 : {
                       identity: this.interactiveWindowProvider.activeWindow?.identity,
                       resource: this.interactiveWindowProvider.activeWindow?.owner,
-                      currentKernelDisplayName:
-                          this.interactiveWindowProvider.activeWindow?.notebook?.getKernelSpec()?.display_name ||
-                          this.interactiveWindowProvider.activeWindow?.notebook?.getKernelSpec()?.name
+                      currentKernelDisplayName: getDisplayNameOrNameOfKernelConnection(
+                          this.interactiveWindowProvider.activeWindow?.notebook?.getKernelConnection()
+                      )
                   };
         }
         if (options.identity) {

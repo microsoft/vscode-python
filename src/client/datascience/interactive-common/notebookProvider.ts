@@ -28,7 +28,7 @@ export class NotebookProvider implements INotebookProvider {
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
     private readonly _onSessionStatusChanged = new EventEmitter<{ status: ServerStatus; notebook: INotebook }>();
     private _connectionMade = new EventEmitter<void>();
-    private _potentialKernelChanged = new EventEmitter<{ identity: Uri; kernel: KernelConnectionMetadata }>();
+    private _potentialKernelChanged = new EventEmitter<{ identity: Uri; kernelConnection: KernelConnectionMetadata }>();
     private _type: 'jupyter' | 'raw' = 'jupyter';
     public get activeNotebooks() {
         return [...this.notebooks.values()];
@@ -155,7 +155,7 @@ export class NotebookProvider implements INotebookProvider {
     // This method is here so that the kernel selector can pick a kernel and not have
     // to know about any of the UI that's active.
     public firePotentialKernelChanged(identity: Uri, kernel: KernelConnectionMetadata) {
-        this._potentialKernelChanged.fire({ identity, kernel });
+        this._potentialKernelChanged.fire({ identity, kernelConnection: kernel });
     }
 
     private fireConnectionMade() {

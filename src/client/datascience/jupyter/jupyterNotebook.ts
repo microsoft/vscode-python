@@ -19,16 +19,14 @@ import { createDeferred, Deferred, waitForPromise } from '../../common/utils/asy
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { CodeSnippits, Identifiers, Telemetry } from '../constants';
+import { CodeSnippets, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
     ICell,
     IDataScienceFileSystem,
-    IJupyterKernelSpec,
     IJupyterSession,
     INotebook,
     INotebookCompletion,
@@ -38,13 +36,14 @@ import {
     KernelSocketInformation
 } from '../types';
 import { expandWorkingDir } from './jupyterUtils';
-import { LiveKernelModel } from './kernels/types';
+import { KernelConnectionMetadata } from './kernels/types';
 
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, formatStreamText } from '../../../datascience-ui/common';
-import { PYTHON_LANGUAGE } from '../../common/constants';
 import { RefBool } from '../../common/refBool';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { getInterpreterFromKernelConnectionMetadata, isPythonKernelConnection } from './kernels/helpers';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -157,13 +156,13 @@ export class JupyterNotebookBase implements INotebook {
     public get onDisposed(): Event<void> {
         return this.disposedEvent.event;
     }
-    public get onKernelChanged(): Event<IJupyterKernelSpec | LiveKernelModel> {
+    public get onKernelChanged(): Event<KernelConnectionMetadata> {
         return this.kernelChanged.event;
     }
     public get disposed() {
         return this._disposed;
     }
-    private kernelChanged = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>();
+    private kernelChanged = new EventEmitter<KernelConnectionMetadata>();
     public get onKernelRestarted(): Event<void> {
         return this.kernelRestarted.event;
     }
@@ -287,7 +286,7 @@ export class JupyterNotebookBase implements INotebook {
             } else {
                 this.initializedMatplotlib = false;
                 const configInit =
-                    !settings || settings.enablePlotViewer ? CodeSnippits.ConfigSvg : CodeSnippits.ConfigPng;
+                    !settings || settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
                 traceInfo(`Initialize config for plots for ${this.identity.toString()}`);
                 await this.executeSilently(configInit, cancelToken);
             }
@@ -624,46 +623,34 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public getMatchingInterpreter(): PythonEnvironment | undefined {
-        return (
-            this._executionInfo.interpreter ||
-            (this._executionInfo.kernelSpec?.metadata?.interpreter as PythonEnvironment)
-        );
+        return getInterpreterFromKernelConnectionMetadata(this.getKernelConnection()) as PythonEnvironment | undefined;
     }
 
-    public getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
-        return this._executionInfo.kernelSpec;
+    public getKernelConnection(): KernelConnectionMetadata | undefined {
+        return this._executionInfo.kernelConnectionMetadata;
     }
 
-    public async setKernelSpec(
-        spec: IJupyterKernelSpec | LiveKernelModel,
-        timeoutMS: number,
-        interpreter: PythonEnvironment | undefined
-    ): Promise<void> {
+    public async setKernelConnection(connectionMetadata: KernelConnectionMetadata, timeoutMS: number): Promise<void> {
         // We need to start a new session with the new kernel spec
         if (this.session) {
             // Turn off setup
             this.ranInitialSetup = false;
 
             // Change the kernel on the session
-            await this.session.changeKernel(spec, timeoutMS, interpreter);
+            await this.session.changeKernel(connectionMetadata, timeoutMS);
 
             // Change our own kernel spec
             // Only after session was successfully created.
-            this._executionInfo.kernelSpec = spec;
+            this._executionInfo.kernelConnectionMetadata = connectionMetadata;
 
             // Rerun our initial setup
             await this.initialize();
         } else {
             // Change our own kernel spec
-            this._executionInfo.kernelSpec = spec;
+            this._executionInfo.kernelConnectionMetadata = connectionMetadata;
         }
 
-        this.kernelChanged.fire(spec);
-
-        // If our new kernelspec has an interpreter, set that as our interpreter too
-        if (interpreter) {
-            this._executionInfo.interpreter = interpreter;
-        }
+        this.kernelChanged.fire(connectionMetadata);
     }
 
     public getLoggers(): INotebookExecutionLogger[] {
@@ -738,8 +725,8 @@ export class JupyterNotebookBase implements INotebook {
         if (settings && settings.themeMatplotlibPlots) {
             const matplobInit =
                 !settings || settings.enablePlotViewer
-                    ? CodeSnippits.MatplotLibInitSvg
-                    : CodeSnippits.MatplotLibInitPng;
+                    ? CodeSnippets.MatplotLibInitSvg
+                    : CodeSnippets.MatplotLibInitPng;
 
             traceInfo(`Initialize matplotlib for ${this.identity.toString()}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
@@ -953,10 +940,10 @@ export class JupyterNotebookBase implements INotebook {
         if (
             this._executionInfo &&
             this._executionInfo.connectionInfo.localLaunch &&
-            this._executionInfo.kernelSpec?.language === PYTHON_LANGUAGE &&
+            isPythonKernelConnection(this._executionInfo.kernelConnectionMetadata) &&
             (await this.fs.localDirectoryExists(directory))
         ) {
-            await this.executeSilently(CodeSnippits.UpdateCWDAndPath.format(directory));
+            await this.executeSilently(CodeSnippets.UpdateCWDAndPath.format(directory));
         }
     };
 

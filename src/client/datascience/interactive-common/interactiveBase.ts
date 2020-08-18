@@ -47,7 +47,6 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
@@ -71,12 +70,14 @@ import {
 } from '../interactive-common/interactiveWindowTypes';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import {
+    getDisplayNameOrNameOfKernelConnection,
+    getKernelConnectionLanguage,
     kernelConnectionMetadataHasKernelModel,
     kernelConnectionMetadataHasKernelSpec
 } from '../jupyter/kernels/helpers';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
-import { KernelConnectionMetadata, LiveKernelModel } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { CssMessages, SharedMessages } from '../messages';
 import {
     CellState,
@@ -88,7 +89,6 @@ import {
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
-    IJupyterKernelSpec,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IJupyterVariablesRequest,
@@ -501,7 +501,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     protected onViewStateChanged(args: WebViewViewChangeEventArgs) {
         // Only activate if the active editor is empty. This means that
         // vscode thinks we are actually supposed to have focus. It would be
-        // nice if they would more accurrately tell us this, but this works for now.
+        // nice if they would more accurately tell us this, but this works for now.
         // Essentially the problem is the webPanel.active state doesn't track
         // if the focus is supposed to be in the webPanel or not. It only tracks if
         // it's been activated. However if there's no active text editor and we're active, we
@@ -518,7 +518,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     protected async activating() {
         // Only activate if the active editor is empty. This means that
         // vscode thinks we are actually supposed to have focus. It would be
-        // nice if they would more accurrately tell us this, but this works for now.
+        // nice if they would more accurately tell us this, but this works for now.
         // Essentially the problem is the webPanel.active state doesn't track
         // if the focus is supposed to be in the webPanel or not. It only tracks if
         // it's been activated. However if there's no active text editor and we're active, we
@@ -545,10 +545,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     protected abstract closeBecauseOfFailure(exc: Error): Promise<void>;
 
-    protected abstract updateNotebookOptions(
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel,
-        interpreter: PythonEnvironment | undefined
-    ): Promise<void>;
+    protected abstract updateNotebookOptions(kernelConnection: KernelConnectionMetadata): Promise<void>;
 
     protected async clearResult(id: string): Promise<void> {
         await this.ensureConnectionAndNotebook();
@@ -1118,8 +1115,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             currentKernelDisplayName:
                 this.notebookMetadata?.kernelspec?.display_name ||
                 this.notebookMetadata?.kernelspec?.name ||
-                this._notebook?.getKernelSpec()?.display_name ||
-                this._notebook?.getKernelSpec()?.name
+                getDisplayNameOrNameOfKernelConnection(this._notebook?.getKernelConnection())
         });
     }
 
@@ -1146,7 +1142,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     const newKernel = await this.selector.askForLocalKernel(
                         this.owningResource,
                         serverConnection.type,
-                        e.kernelSpec
+                        e.kernelConnectionMetadata
                     );
                     if (newKernel && kernelConnectionMetadataHasKernelSpec(newKernel) && newKernel.kernelSpec) {
                         this.commandManager.executeCommand(
@@ -1184,14 +1180,16 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private async listenToNotebookEvents(notebook: INotebook): Promise<void> {
         const statusChangeHandler = async (status: ServerStatus) => {
-            const kernelSpec = notebook.getKernelSpec();
-            const name = kernelSpec?.display_name || kernelSpec?.name || '';
+            const connectionMetadata = notebook.getKernelConnection();
+            const name = getDisplayNameOrNameOfKernelConnection(connectionMetadata);
 
             await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: status,
                 localizedUri: this.getServerUri(notebook.connection),
                 displayName: name,
-                language: translateKernelLanguageToMonaco(kernelSpec?.language ?? PYTHON_LANGUAGE)
+                language: translateKernelLanguageToMonaco(
+                    getKernelConnectionLanguage(connectionMetadata) || PYTHON_LANGUAGE
+                )
             });
         };
         notebook.onSessionStatusChanged(statusChangeHandler);
@@ -1228,24 +1226,26 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 
-    private async potentialKernelChanged(data: { identity: Uri; kernel: KernelConnectionMetadata }): Promise<void> {
-        const specOrModel = kernelConnectionMetadataHasKernelModel(data.kernel)
-            ? data.kernel.kernelModel
-            : data.kernel.kernelSpec;
+    private async potentialKernelChanged(data: {
+        identity: Uri;
+        kernelConnection: KernelConnectionMetadata;
+    }): Promise<void> {
+        const specOrModel = kernelConnectionMetadataHasKernelModel(data.kernelConnection)
+            ? data.kernelConnection.kernelModel
+            : data.kernelConnection.kernelSpec;
         if (!this._notebook && specOrModel && this.notebookIdentity.resource.toString() === data.identity.toString()) {
-            const kernelSpecLanguage = kernelConnectionMetadataHasKernelSpec(data.kernel)
-                ? data.kernel.kernelSpec?.language
-                : undefined;
             // No notebook, send update to UI anyway
             this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: ServerStatus.NotStarted,
                 localizedUri: '',
-                displayName: specOrModel?.display_name || specOrModel?.name || '',
-                language: translateKernelLanguageToMonaco(kernelSpecLanguage ?? PYTHON_LANGUAGE)
+                displayName: getDisplayNameOrNameOfKernelConnection(data.kernelConnection),
+                language: translateKernelLanguageToMonaco(
+                    getKernelConnectionLanguage(data.kernelConnection) || PYTHON_LANGUAGE
+                )
             }).ignoreErrors();
 
             // Update our model
-            this.updateNotebookOptions(specOrModel, data.kernel.interpreter).ignoreErrors();
+            this.updateNotebookOptions(data.kernelConnection).ignoreErrors();
         }
     }
 
@@ -1445,7 +1445,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             }
             // Storing an object that looks like
             //  { "fully qualified Path to 1.ipynb": 1234,
-            //    "fully qualifieid path to 2.ipynb": 1234 }
+            //    "fully qualified path to 2.ipynb": 1234 }
 
             // tslint:disable-next-line: no-any
             const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
@@ -1460,7 +1460,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const uri = this.owningResource; // Get file name
 
         if (!uri || isUntitledFile(uri)) {
-            return; // don't resotre height of untitled notebooks
+            return; // don't restore height of untitled notebooks
         }
 
         // tslint:disable-next-line: no-any
@@ -1519,14 +1519,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async selectServer() {
         await this.commandManager.executeCommand(Commands.SelectJupyterURI);
     }
-    private async kernelChangeHandler(kernel: IJupyterKernelSpec | LiveKernelModel) {
+    private async kernelChangeHandler(kernelConnection: KernelConnectionMetadata) {
         // Check if we are changing to LiveKernelModel
-        if (kernel.hasOwnProperty('numberOfConnections')) {
+        if (kernelConnection.kind === 'connectToLiveKernel') {
             await this.addSysInfo(SysInfoReason.Connect);
         } else {
             await this.addSysInfo(SysInfoReason.New);
         }
-        return this.updateNotebookOptions(kernel, this._notebook?.getMatchingInterpreter());
+        return this.updateNotebookOptions(kernelConnection);
     }
 
     private openSettings(setting: string | undefined) {

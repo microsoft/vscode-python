@@ -28,7 +28,8 @@ import { IConfigurationService, IInstaller, Product } from '../../client/common/
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
-import { CodeSnippits, Identifiers } from '../../client/datascience/constants';
+import { CodeSnippets, Identifiers } from '../../client/datascience/constants';
+import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
     IJupyterConnection,
@@ -147,18 +148,18 @@ export class MockJupyterManager implements IJupyterSessionManager {
         });
 
         // Setup our default cells that happen for everything
-        this.addCell(CodeSnippits.MatplotLibInitSvg);
-        this.addCell(CodeSnippits.MatplotLibInitPng);
-        this.addCell(CodeSnippits.ConfigSvg);
-        this.addCell(CodeSnippits.ConfigPng);
-        this.addCell(CodeSnippits.UpdateCWDAndPath.format(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')));
+        this.addCell(CodeSnippets.MatplotLibInitSvg);
+        this.addCell(CodeSnippets.MatplotLibInitPng);
+        this.addCell(CodeSnippets.ConfigSvg);
+        this.addCell(CodeSnippets.ConfigPng);
+        this.addCell(CodeSnippets.UpdateCWDAndPath.format(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')));
         this.addCell(
-            CodeSnippits.UpdateCWDAndPath.format(
+            CodeSnippets.UpdateCWDAndPath.format(
                 Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')).fsPath
             )
         );
         tmp.file((_e, p, _fd, cleanup) => {
-            this.addCell(CodeSnippits.UpdateCWDAndPath.format(path.dirname(p)));
+            this.addCell(CodeSnippets.UpdateCWDAndPath.format(path.dirname(p)));
             this.cleanTemp = cleanup;
         });
         this.addCell(`import sys\r\nsys.path.append('undefined')\r\nsys.path`);
@@ -425,7 +426,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public startNew(
-        _kernelSpec: IJupyterKernelSpec,
+        _kernelConnection: KernelConnectionMetadata | undefined,
         _workingDirectory: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterSession> {
@@ -445,7 +446,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public changeWorkingDirectory(workingDir: string) {
-        this.addCell(CodeSnippits.UpdateCWDAndPath.format(workingDir));
+        this.addCell(CodeSnippets.UpdateCWDAndPath.format(workingDir));
         this.addCell('import os\nos.getcwd()', path.join(workingDir));
         this.addCell('import sys\nsys.path[0]', path.join(workingDir));
     }

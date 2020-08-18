@@ -27,7 +27,6 @@ import { INotebookContentProvider } from '../../notebook/types';
 import { getDefaultNotebookContent, updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import {
     IDataScienceErrorHandler,
-    IJupyterKernelSpec,
     INotebook,
     INotebookEditorProvider,
     INotebookProvider,
@@ -35,27 +34,12 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
-import { kernelConnectionMetadataHasKernelModel } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import type {
-    IKernel,
-    IKernelProvider,
-    IKernelSelectionUsage,
-    KernelConnectionMetadata,
-    LiveKernelModel
-} from './types';
+import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
         return this.notebook?.connection;
-    }
-    get kernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
-        if (this.notebook) {
-            return this.notebook.getKernelSpec();
-        }
-        return kernelConnectionMetadataHasKernelModel(this.metadata)
-            ? this.metadata.kernelModel
-            : this.metadata.kernelSpec;
     }
     get onStatusChanged(): Event<ServerStatus> {
         return this._onStatusChanged.event;
@@ -149,11 +133,7 @@ export class Kernel implements IKernel {
             const metadata = ((getDefaultNotebookContent().metadata || {}) as unknown) as nbformat.INotebookMetadata;
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: Just pass the `this.metadata` into the func.
-            updateNotebookMetadata(
-                metadata,
-                this.metadata.interpreter,
-                this.metadata.kind === 'connectToLiveKernel' ? this.metadata.kernelModel : this.metadata.kernelSpec
-            );
+            updateNotebookMetadata(metadata, this.metadata);
 
             this._notebookPromise = this.notebookProvider.getOrCreateNotebook({
                 identity: this.uri,
@@ -164,9 +144,11 @@ export class Kernel implements IKernel {
                 token: options?.token
             });
 
-            this._notebookPromise
-                .then((nb) => (this.kernelExecution.setNotebook(this.notebook = nb))
-                .catch((ex) => traceError('failed to create INotebook in kernel', ex));
+            this._notebookPromise.then((nb) =>
+                this.kernelExecution
+                    .setNotebook((this.notebook = nb))
+                    .catch((ex) => traceError('failed to create INotebook in kernel', ex))
+            );
             await this._notebookPromise;
             await this.initializeAfterStart();
         }

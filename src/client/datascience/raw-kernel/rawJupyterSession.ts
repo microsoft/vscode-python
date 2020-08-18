@@ -10,21 +10,25 @@ import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
-import { LiveKernelModel } from '../jupyter/kernels/types';
+import { getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
-import { IJupyterKernelSpec, ISessionWithSocket } from '../types';
+import { ISessionWithSocket } from '../types';
 
 // Error thrown when we are unable to start a raw kernel session
 export class RawKernelSessionStartError extends Error {
-    constructor(kernelTitle: string) {
-        super(localize.DataScience.rawKernelSessionFailed().format(kernelTitle));
+    constructor(kernelConnection: KernelConnectionMetadata) {
+        super(
+            localize.DataScience.rawKernelSessionFailed().format(
+                getDisplayNameOrNameOfKernelConnection(kernelConnection)
+            )
+        );
     }
 }
 
@@ -74,11 +78,10 @@ export class RawJupyterSession extends BaseJupyterSession {
     @captureTelemetry(Telemetry.RawKernelSessionConnect, undefined, true)
     @reportAction(ReportableAction.RawKernelConnecting)
     public async connect(
-        kernelSpec: IJupyterKernelSpec,
+        kernelConnection: KernelConnectionMetadata,
         timeout: number,
-        interpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
-    ): Promise<IJupyterKernelSpec | undefined> {
+    ): Promise<KernelConnectionMetadata | undefined> {
         // Save the resource that we connect with
         let newSession: RawSession | null | CancellationError = null;
         try {
@@ -86,7 +89,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             // Notebook Provider level will handle the thrown error
             newSession = await waitForPromise(
                 Promise.race([
-                    this.startRawSession(kernelSpec, interpreter, cancelToken),
+                    this.startRawSession(kernelConnection, cancelToken),
                     createPromiseFromCancellation({
                         cancelAction: 'reject',
                         defaultValue: new CancellationError(),
@@ -104,7 +107,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             } else if (newSession === null) {
                 sendTelemetryEvent(Telemetry.RawKernelSessionStartTimeout);
                 traceError('Raw session failed to start in given timeout');
-                throw new RawKernelSessionStartError(kernelSpec.display_name || kernelSpec.name);
+                throw new RawKernelSessionStartError(kernelConnection);
             } else {
                 sendTelemetryEvent(Telemetry.RawKernelSessionStartSuccess);
                 traceInfo('Raw session started and connected');
@@ -114,11 +117,12 @@ export class RawJupyterSession extends BaseJupyterSession {
                 this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
 
                 // Update kernelspec and interpreter
-                this.kernelSpec = newSession.kernelProcess?.kernelSpec;
-                this.interpreter = interpreter;
+                this.kernelConnectionMetadata = newSession.kernelProcess?.kernelConnectionMetadata;
 
                 this.outputChannel.appendLine(
-                    localize.DataScience.kernelStarted().format(this.kernelSpec.display_name || this.kernelSpec.name)
+                    localize.DataScience.kernelStarted().format(
+                        getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+                    )
                 );
             }
         } catch (error) {
@@ -130,26 +134,26 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
 
         this.connected = true;
-        return (newSession as RawSession).kernelProcess.kernelSpec;
+        return (newSession as RawSession).kernelProcess.kernelConnectionMetadata;
     }
 
     public async createNewKernelSession(
-        kernel: IJupyterKernelSpec | LiveKernelModel,
+        kernelConnection: KernelConnectionMetadata,
         timeoutMS: number,
-        interpreter?: PythonEnvironment,
         _cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
-        if (!kernel || 'session' in kernel) {
+        if (!kernelConnection || 'session' in kernelConnection) {
             // Don't allow for connecting to a LiveKernelModel
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
-        this.outputChannel.appendLine(localize.DataScience.kernelStarted().format(kernel.display_name || kernel.name));
+        const displayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
+        this.outputChannel.appendLine(localize.DataScience.kernelStarted().format(displayName));
 
-        const newSession = await waitForPromise(this.startRawSession(kernel, interpreter), timeoutMS);
+        const newSession = await waitForPromise(this.startRawSession(kernelConnection), timeoutMS);
 
         if (!newSession) {
-            throw new RawKernelSessionStartError(kernel.display_name || kernel.name);
+            throw new RawKernelSessionStartError(kernelConnection);
         }
 
         return newSession;
@@ -189,20 +193,19 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     protected startRestartSession() {
         if (!this.restartSessionPromise && this.session) {
-            this.restartSessionPromise = this.createRestartSession(this.kernelSpec, this.session, this.interpreter);
+            this.restartSessionPromise = this.createRestartSession(this.kernelConnectionMetadata, this.session);
         }
     }
     protected async createRestartSession(
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        kernelConnection: KernelConnectionMetadata | undefined,
         _session: ISessionWithSocket,
-        interpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
-        if (!kernelSpec || 'session' in kernelSpec) {
+        if (!kernelConnection || kernelConnection.kind === 'connectToLiveKernel') {
             // Need to have connected before restarting and can't use a LiveKernelModel
             throw new Error(localize.DataScience.sessionDisposed());
         }
-        const startPromise = this.startRawSession(kernelSpec, interpreter, cancelToken);
+        const startPromise = this.startRawSession(kernelConnection, cancelToken);
         return startPromise.then((session) => {
             this.restartSessionCreated(session.kernel);
             return session;
@@ -211,10 +214,15 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
     private async startRawSession(
-        kernelSpec: IJupyterKernelSpec,
-        interpreter?: PythonEnvironment,
+        kernelConnection: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<RawSession> {
+        if (
+            kernelConnection.kind !== 'startUsingKernelSpec' &&
+            kernelConnection.kind !== 'startUsingPythonInterpreter'
+        ) {
+            throw new Error(`Unable to start Raw Kernels for Kernel Connection of type ${kernelConnection.kind}`);
+        }
         const cancellationPromise = createPromiseFromCancellation({
             cancelAction: 'reject',
             defaultValue: undefined,
@@ -223,7 +231,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         cancellationPromise.catch(noop);
 
         const process = await Promise.race([
-            this.kernelLauncher.launch(kernelSpec, this.resource, this.workingDirectory, interpreter),
+            this.kernelLauncher.launch(kernelConnection, this.resource, this.workingDirectory),
             cancellationPromise
         ]);
 

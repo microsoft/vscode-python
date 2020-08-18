@@ -8,9 +8,13 @@ import { Uri } from 'vscode';
 import { traceError } from '../../common/logger';
 
 import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
+import {
+    getInterpreterFromKernelConnectionMetadata,
+    getKernelPathFromKernelConnection,
+    isPythonKernelConnection
+} from '../jupyter/kernels/helpers';
 import { IDataScienceFileSystem, ILocalResourceUriConverter, INotebook } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
@@ -79,35 +83,30 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         return Promise.all(mappedFiles as any);
     }
     private async getSysPrefixOfKernel() {
-        const interpreter = this.getInterpreter();
+        const kernelConnectionMetadata = this.notebook.getKernelConnection();
+        if (!kernelConnectionMetadata) {
+            return;
+        }
+        const interpreter = getInterpreterFromKernelConnectionMetadata(kernelConnectionMetadata);
         if (interpreter?.sysPrefix) {
             return interpreter?.sysPrefix;
         }
-        if (!interpreter?.path) {
+        if (!isPythonKernelConnection(kernelConnectionMetadata)) {
+            return;
+        }
+        const interpreterOrKernelPath =
+            interpreter?.path || getKernelPathFromKernelConnection(kernelConnectionMetadata);
+        if (!interpreterOrKernelPath) {
             return;
         }
         const interpreterInfo = await this.interpreterService
-            .getInterpreterDetails(interpreter.path)
-            .catch(traceError.bind(`Failed to get interpreter details for Kernel/Interpreter ${interpreter.path}`));
+            .getInterpreterDetails(interpreterOrKernelPath)
+            .catch(
+                traceError.bind(`Failed to get interpreter details for Kernel/Interpreter ${interpreterOrKernelPath}`)
+            );
 
         if (interpreterInfo) {
             return interpreterInfo?.sysPrefix;
         }
-    }
-    private getInterpreter(): Partial<PythonEnvironment> | undefined {
-        let interpreter: undefined | Partial<PythonEnvironment> = this.notebook.getMatchingInterpreter();
-        const kernel = this.notebook.getKernelSpec();
-        interpreter = kernel?.metadata?.interpreter?.path ? kernel?.metadata?.interpreter : interpreter;
-
-        // If we still do not have the interpreter, then check if we have the path to the kernel.
-        if (!interpreter && kernel?.path) {
-            interpreter = { path: kernel.path };
-        }
-
-        if (!interpreter || !interpreter.path) {
-            return;
-        }
-        const pythonPath = interpreter.path;
-        return { ...interpreter, path: pythonPath };
     }
 }
