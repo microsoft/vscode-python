@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import {
@@ -13,7 +12,7 @@ import {
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { areKernelConnectionsEqual, kernelConnectionMetadataHasKernelSpec } from '../jupyter/kernels/helpers';
+import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
@@ -74,51 +73,11 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         token: CancellationToken
     ): Promise<VSCodeNotebookKernelMetadata[]> {
         const [preferredKernel, kernels] = await Promise.all([
-            this.kernelSelector.getKernelForLocalConnection(
-                document.uri,
-                'raw',
-                undefined,
-                getNotebookMetadata(document),
-                true,
-                token
-            ),
+            this.getPreferredKernel(document, token),
             this.kernelSelectionProvider.getKernelSelectionsForLocalSession(document.uri, 'raw', undefined, token)
         ]);
         if (token.isCancellationRequested) {
             return [];
-        }
-        function isPreferredKernel(item: KernelConnectionMetadata) {
-            if (!preferredKernel) {
-                return false;
-            }
-            if (
-                preferredKernel.interpreter &&
-                item.interpreter &&
-                preferredKernel.interpreter.path === item.interpreter.path
-            ) {
-                return true;
-            }
-            if (
-                kernelConnectionMetadataHasKernelSpec(preferredKernel) &&
-                preferredKernel.kernelSpec &&
-                kernelConnectionMetadataHasKernelSpec(item) &&
-                item.kernelSpec &&
-                fastDeepEqual(preferredKernel.kernelSpec, item.kernelSpec)
-            ) {
-                return true;
-            }
-            // tslint:disable-next-line: no-suspicious-comment
-            // TODO for Remote kernels.
-            // if (
-            //     kernelConnectionMetadataHasKernelModel(preferredKernel) &&
-            //     preferredKernel.kernelModel &&
-            //     kernelConnectionMetadataHasKernelModel(item) &&
-            //     item.kernelModel &&
-            //     fastDeepEqual(preferredKernel.kernelModel, item.kernelModel)
-            // ) {
-            //     return true;
-            // }
-            return false;
         }
 
         return kernels.map((kernel) => {
@@ -126,10 +85,25 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 kernel.label,
                 kernel.description || kernel.detail || '',
                 kernel.selection,
-                isPreferredKernel(kernel.selection),
+                areKernelConnectionsEqual(kernel.selection, preferredKernel),
                 this.kernelProvider
             );
         });
+    }
+    private async getPreferredKernel(document: NotebookDocument, token: CancellationToken) {
+        // If we already have a kernel selected, then return that.
+        const editor = this.notebook.notebookEditors.find((e) => e.document === document);
+        if (editor && editor.kernel && editor.kernel instanceof VSCodeNotebookKernelMetadata) {
+            return editor.kernel.selection;
+        }
+        return this.kernelSelector.getKernelForLocalConnection(
+            document.uri,
+            'raw',
+            undefined,
+            getNotebookMetadata(document),
+            true,
+            token
+        );
     }
     private async onDidChangeActiveNotebookKernel({
         document,
