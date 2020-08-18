@@ -183,6 +183,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         kernelConnectionMetadataPromise
                     ]);
 
+                    if (!connection) {
+                        return undefined;
+                    }
+
                     if (!connection.localLaunch && LocalHosts.includes(connection.hostName.toLowerCase())) {
                         sendTelemetryEvent(Telemetry.ConnectRemoteJupyterViaLocalHost);
                     }

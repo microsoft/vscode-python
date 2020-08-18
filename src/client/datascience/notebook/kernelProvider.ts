@@ -84,7 +84,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             ),
             this.kernelSelectionProvider.getKernelSelectionsForLocalSession(document.uri, 'raw', undefined, token)
         ]);
-        if (token.isCancellationRequested) {
+        if (token.isCancellationRequested || !kernels) {
             return [];
         }
         function isPreferredKernel(item: KernelConnectionMetadata) {
