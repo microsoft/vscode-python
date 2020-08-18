@@ -12,13 +12,9 @@ import { Resource } from '../../common/types';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import {
-    findIndexOfConnectionFile,
-    isPythonKernelConnection,
-    kernelConnectionMetadataHasKernelSpec
-} from '../jupyter/kernels/helpers';
+import { findIndexOfConnectionFile, isPythonKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IDataScienceFileSystem } from '../types';
+import { IDataScienceFileSystem, IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
 import { IKernelConnection, IKernelProcess, IPythonKernelDaemon, PythonKernelDiedError } from './types';
@@ -45,7 +41,7 @@ export class KernelProcess implements IKernelProcess {
     private disposed?: boolean;
     private kernelDaemon?: IPythonKernelDaemon;
     private connectionFile?: string;
-    private _kernelArgv?: string[];
+    private _launchKernelSpec?: IJupyterKernelSpec;
     private readonly _kernelConnectionMetadata: Readonly<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
     constructor(
         private readonly processExecutionFactory: IProcessServiceFactory,
@@ -142,11 +138,13 @@ export class KernelProcess implements IKernelProcess {
             throw new Error('Timed out waiting to get a heartbeat from kernel process.');
         }
     }
-    private get kernelSpecArgv(): string[] {
-        if (this._kernelArgv) {
-            return this._kernelArgv;
+
+    private get launchKernelSpec(): IJupyterKernelSpec {
+        if (this._launchKernelSpec) {
+            return this._launchKernelSpec;
         }
-        // We always expect a kernel spec, even when launching a Python process, cuz we generate a dummy `kernelSpec`.
+
+        // We always expect a kernel spec, even when launching a Python process, because we generate a dummy `kernelSpec`.
         const kernelSpec = this._kernelConnectionMetadata.kernelSpec;
         if (!kernelSpec) {
             throw new Error('KernelSpec cannot be empty in KernelProcess.ts');
@@ -154,39 +152,45 @@ export class KernelProcess implements IKernelProcess {
         if (!Array.isArray(kernelSpec.argv)) {
             traceError('KernelSpec.argv in KernelPrcess is undefined');
             // tslint:disable-next-line: no-any
-            this._kernelArgv = [];
+            this._launchKernelSpec = undefined;
         } else {
-            this._kernelArgv = [...kernelSpec.argv];
+            // Copy our kernelspec and assign a new argv array
+            this._launchKernelSpec = { ...kernelSpec, argv: [...kernelSpec.argv] };
         }
-        return this._kernelArgv!;
+        return this._launchKernelSpec!;
     }
+
     // Instead of having to use a connection file update our local copy of the kernelspec to launch
     // directly with command line arguments
     private async updateConnectionArgs() {
         // First check to see if we have a kernelspec that expects a connection file,
         // Error if we don't have one. We expect '-f', '{connectionfile}' in our launch args
-        const kernelSpec = kernelConnectionMetadataHasKernelSpec(this._kernelConnectionMetadata)
-            ? this._kernelConnectionMetadata.kernelSpec
-            : undefined;
-        const indexOfConnectionFile = kernelSpec ? findIndexOfConnectionFile(kernelSpec) : -1;
+        const indexOfConnectionFile = findIndexOfConnectionFile(this.launchKernelSpec);
+
+        // Technically if we don't have a kernelspec then index should already be -1, but the check here lets us avoid ? on the type
         if (indexOfConnectionFile === -1) {
-            throw new Error(`Connection file not found in kernelspec json args, ${this.kernelSpecArgv.join(' ')}`);
+            throw new Error(
+                `Connection file not found in kernelspec json args, ${this.launchKernelSpec.argv.join(' ')}`
+            );
         }
+
         if (
             this.isPythonKernel &&
             indexOfConnectionFile === 0 &&
-            this.kernelSpecArgv[indexOfConnectionFile - 1] !== '-f'
+            this.launchKernelSpec.argv[indexOfConnectionFile - 1] !== '-f'
         ) {
-            throw new Error(`Connection file not found in kernelspec json args, ${this.kernelSpecArgv.join(' ')}`);
+            throw new Error(
+                `Connection file not found in kernelspec json args, ${this.launchKernelSpec.argv.join(' ')}`
+            );
         }
 
         // Python kernels are special. Handle the extra arguments.
         if (this.isPythonKernel) {
             // Slice out -f and the connection file from the args
-            this.kernelSpecArgv.splice(indexOfConnectionFile - 1, 2);
+            this.launchKernelSpec.argv.splice(indexOfConnectionFile - 1, 2);
 
             // Add in our connection command line args
-            this.kernelSpecArgv.push(...this.addPythonConnectionArgs());
+            this.launchKernelSpec.argv.push(...this.addPythonConnectionArgs());
         } else {
             // For other kernels, just write to the connection file.
             // Note: We have to dispose the temp file and recreate it because otherwise the file
@@ -198,7 +202,7 @@ export class KernelProcess implements IKernelProcess {
             await this.fs.writeLocalFile(this.connectionFile, JSON.stringify(this._connection));
 
             // Then replace the connection file argument with this file
-            this.kernelSpecArgv[indexOfConnectionFile] = this.connectionFile;
+            this.launchKernelSpec.argv[indexOfConnectionFile] = this.connectionFile;
         }
     }
 
@@ -237,7 +241,7 @@ export class KernelProcess implements IKernelProcess {
             const kernelDaemonLaunch = await this.pythonKernelLauncher.launch(
                 this.resource,
                 workingDirectory,
-                this._kernelConnectionMetadata.kernelSpec!,
+                this.launchKernelSpec,
                 this._kernelConnectionMetadata.interpreter
             );
 
@@ -248,9 +252,9 @@ export class KernelProcess implements IKernelProcess {
         // If we are not python just use the ProcessExecutionFactory
         if (!exeObs) {
             // First part of argument is always the executable.
-            const executable = this.kernelSpecArgv[0];
+            const executable = this.launchKernelSpec.argv[0];
             const executionService = await this.processExecutionFactory.create(this.resource);
-            exeObs = executionService.execObservable(executable, this.kernelSpecArgv.slice(1), {
+            exeObs = executionService.execObservable(executable, this.launchKernelSpec.argv.slice(1), {
                 env: this._kernelConnectionMetadata.kernelSpec?.env,
                 cwd: workingDirectory
             });
