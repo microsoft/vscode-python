@@ -165,12 +165,12 @@ export function updateEnvironment(environment: PartialPythonEnvironment, other: 
         'version',
         'pipEnvWorkspaceFolder'
     ];
-    for (const prop of props) {
+    props.forEach((prop) => {
         if (!environment[prop] && other[prop]) {
             // tslint:disable-next-line: no-any
             (environment as any)[prop] = other[prop];
         }
-    }
+    });
 }
 
 /**
