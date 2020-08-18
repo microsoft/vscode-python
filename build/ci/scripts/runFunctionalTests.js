@@ -50,8 +50,6 @@ async function main() {
                     '--reporter-option=configFile=build/.mocha-multi-reporters.config',
                     '--ui=tdd',
                     '--recursive',
-                    '--grep',
-                    'Simple text',
                     '--colors',
                     '--exit',
                     '--timeout=180000'
