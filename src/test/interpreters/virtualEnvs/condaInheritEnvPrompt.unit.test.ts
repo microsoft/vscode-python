@@ -19,7 +19,7 @@ import {
     CondaInheritEnvPrompt,
     condaInheritEnvPromptKey
 } from '../../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
-import { InterpreterType } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable:no-any
 
@@ -93,7 +93,7 @@ suite('Conda Inherit Env Prompt', async () => {
         });
         test('Returns false if active interpreter is not of type Conda', async () => {
             const interpreter = {
-                type: InterpreterType.Pipenv
+                envType: EnvironmentType.Pipenv
             };
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             platformService
@@ -134,7 +134,7 @@ suite('Conda Inherit Env Prompt', async () => {
         });
         test('Returns false if settings returned is `undefined`', async () => {
             const interpreter = {
-                type: InterpreterType.Conda
+                envType: EnvironmentType.Conda
             };
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             platformService
@@ -186,7 +186,7 @@ suite('Conda Inherit Env Prompt', async () => {
         ].forEach((testParams) => {
             test(testParams.name, async () => {
                 const interpreter = {
-                    type: InterpreterType.Conda
+                    envType: EnvironmentType.Conda
                 };
                 const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
                 platformService
@@ -212,7 +212,7 @@ suite('Conda Inherit Env Prompt', async () => {
         });
         test('Returns true otherwise', async () => {
             const interpreter = {
-                type: InterpreterType.Conda
+                envType: EnvironmentType.Conda
             };
             const settings = {
                 globalValue: undefined,

@@ -9,7 +9,7 @@ import { traceDecorators } from '../../common/logger';
 import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IServiceContainer } from '../../ioc/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { Commands } from '../commands';
@@ -26,7 +26,7 @@ import {
 export class NodeLanguageServerManager implements ILanguageServerManager {
     private languageServerProxy?: ILanguageServerProxy;
     private resource!: Resource;
-    private interpreter: PythonInterpreter | undefined;
+    private interpreter: PythonEnvironment | undefined;
     private middleware: LanguageClientMiddleware | undefined;
     private disposables: IDisposable[] = [];
     private connected: boolean = false;
@@ -68,7 +68,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     }
 
     @traceDecorators.error('Failed to start language server')
-    public async start(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void> {
+    public async start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void> {
         if (this.languageProxy) {
             throw new Error('Language server already started');
         }

@@ -8,7 +8,7 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } f
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageClientFactory, ILanguageServerFolderService } from '../types';
 import { FileBasedCancellationStrategy } from './cancellationUtils';
 
@@ -24,7 +24,7 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
 
     public async createLanguageClient(
         resource: Resource,
-        _interpreter: PythonInterpreter | undefined,
+        _interpreter: PythonEnvironment | undefined,
         clientOptions: LanguageClientOptions
     ): Promise<LanguageClient> {
         // this must exist for node language client

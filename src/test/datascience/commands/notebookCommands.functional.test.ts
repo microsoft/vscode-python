@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import type { Kernel } from '@jupyterlab/services/lib/kernel/kernel';
+import { assert } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import { EventEmitter, Uri } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
@@ -30,7 +30,7 @@ import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { IInteractiveWindowProvider, INotebookEditorProvider } from '../../../client/datascience/types';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { InterpreterType } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable: max-func-body-length no-any
 suite('DataScience - Notebook Commands', () => {
@@ -58,7 +58,7 @@ suite('DataScience - Notebook Commands', () => {
     };
     const selectedInterpreter = {
         path: '',
-        type: InterpreterType.Conda,
+        envType: EnvironmentType.Conda,
         architecture: Architecture.Unknown,
         sysPrefix: '',
         sysVersion: ''
@@ -67,10 +67,9 @@ suite('DataScience - Notebook Commands', () => {
         {
             label: 'foobar',
             selection: {
-                kernelSpec: undefined,
                 kernelModel: remoteKernel,
                 interpreter: undefined,
-                kind: 'live'
+                kind: 'connectToLiveKernel'
             }
         }
     ];
@@ -81,16 +80,15 @@ suite('DataScience - Notebook Commands', () => {
                 kernelSpec: localKernel,
                 kernelModel: undefined,
                 interpreter: undefined,
-                kind: 'kernelSpec'
+                kind: 'startUsingKernelSpec'
             }
         },
         {
             label: 'foobaz',
             selection: {
                 kernelSpec: undefined,
-                kernelModel: undefined,
                 interpreter: selectedInterpreter,
-                kind: 'pythonInterpreter'
+                kind: 'startUsingPythonInterpreter'
             }
         }
     ];
@@ -170,29 +168,28 @@ suite('DataScience - Notebook Commands', () => {
                 );
             });
 
-            class FunctionMatcher extends Matcher {
-                private func: (obj: any) => boolean;
-                constructor(func: (obj: any) => boolean) {
-                    super();
-                    this.func = func;
-                }
-                public match(value: Object): boolean {
-                    return this.func(value);
-                }
-                public toString(): string {
-                    return 'FunctionMatcher';
-                }
-            }
-
-            function argThat(func: (obj: any) => boolean): any {
-                return new FunctionMatcher(func);
-            }
-
             function createNotebookMock() {
                 const obj = mock(JupyterNotebookBase);
                 when((obj as any).then).thenReturn(undefined);
                 return obj;
             }
+            function verifyCallToSetKernelSpec(notebook: JupyterNotebookBase) {
+                verify(notebook.setKernelConnection(anything(), anything())).once();
+
+                const kernelConnection = capture(notebook.setKernelConnection).first()[0];
+                if (isLocalConnection) {
+                    assert.equal(kernelConnection.kind, 'startUsingKernelSpec');
+                    const kernelSpec =
+                        kernelConnection.kind !== 'connectToLiveKernel' ? kernelConnection.kernelSpec : undefined;
+                    assert.equal(kernelSpec?.name, localKernel.name);
+                } else {
+                    assert.equal(kernelConnection.kind, 'connectToLiveKernel');
+                    const kernelModel =
+                        kernelConnection.kind === 'connectToLiveKernel' ? kernelConnection.kernelModel : undefined;
+                    assert.equal(kernelModel?.name, remoteKernel.name);
+                }
+            }
+
             test('Register Command', () => {
                 notebookCommands.register();
 
@@ -220,7 +217,7 @@ suite('DataScience - Notebook Commands', () => {
                         )
                     ).never();
                 });
-                test('Should switch kernel using the provided notebook', async () => {
+                test('Should switch kernel using the provided notebookxxx', async () => {
                     const notebook = createNotebookMock();
                     when((notebook as any).then).thenReturn(undefined);
                     const uri = Uri.file('test.ipynb');
@@ -229,17 +226,8 @@ suite('DataScience - Notebook Commands', () => {
                     });
 
                     await commandHandler.bind(notebookCommands)({ identity: uri });
-                    verify(
-                        notebook.setKernelSpec(
-                            argThat((o) => {
-                                return isLocalConnection
-                                    ? o.name === localKernel.name
-                                    : o.name === remoteKernel.name && o.lastActivityTime;
-                            }),
-                            anything(),
-                            anything()
-                        )
-                    ).once();
+
+                    verifyCallToSetKernelSpec(notebook);
                 });
                 test('Should switch kernel using the active Native Editor', async () => {
                     const nativeEditor = createNotebookMock();
@@ -253,17 +241,7 @@ suite('DataScience - Notebook Commands', () => {
 
                     await commandHandler.bind(notebookCommands)();
 
-                    verify(
-                        nativeEditor.setKernelSpec(
-                            argThat((o) => {
-                                return isLocalConnection
-                                    ? o.name === localKernel.name
-                                    : o.name === remoteKernel.name && o.lastActivityTime;
-                            }),
-                            anything(),
-                            anything()
-                        )
-                    ).once();
+                    verifyCallToSetKernelSpec(nativeEditor);
                 });
                 test('Should switch kernel using the active Interactive Window', async () => {
                     const interactiveWindow = createNotebookMock();
@@ -276,17 +254,7 @@ suite('DataScience - Notebook Commands', () => {
 
                     await commandHandler.bind(notebookCommands)();
 
-                    verify(
-                        interactiveWindow.setKernelSpec(
-                            argThat((o) => {
-                                return isLocalConnection
-                                    ? o.name === localKernel.name
-                                    : o.name === remoteKernel.name && o.lastActivityTime;
-                            }),
-                            anything(),
-                            anything()
-                        )
-                    ).once();
+                    verifyCallToSetKernelSpec(interactiveWindow);
                 });
                 test('Should switch kernel using the active Native editor even if an Interactive Window is available', async () => {
                     const uri1 = Uri.parse('history://foobar');
@@ -307,17 +275,7 @@ suite('DataScience - Notebook Commands', () => {
 
                     await commandHandler.bind(notebookCommands)();
 
-                    verify(
-                        nativeEditor.setKernelSpec(
-                            argThat((o) => {
-                                return isLocalConnection
-                                    ? o.name === localKernel.name
-                                    : o.name === remoteKernel.name && o.lastActivityTime;
-                            }),
-                            anything(),
-                            anything()
-                        )
-                    ).once();
+                    verifyCallToSetKernelSpec(nativeEditor);
                 });
                 test('With no notebook, should still fire change', async () => {
                     when(notebookProvider.getOrCreateNotebook(anything())).thenResolve(undefined);

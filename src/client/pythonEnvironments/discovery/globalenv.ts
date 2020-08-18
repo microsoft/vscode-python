@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { logVerbose } from '../../logging';
-import { InterpreterType } from '../info';
+import { EnvironmentType } from '../info';
 
 type ExecFunc = (cmd: string, args: string[]) => Promise<{ stdout: string }>;
 
-type TypeFinderFunc = (python: string) => Promise<InterpreterType | undefined>;
+type TypeFinderFunc = (python: string) => Promise<EnvironmentType | undefined>;
 type RootFinderFunc = () => Promise<string | undefined>;
 
 /**
@@ -31,7 +31,7 @@ export function getPyenvTypeFinder(
     return async (python) => {
         const root = await find();
         if (root && python.startsWith(`${root}${pathSep}`)) {
-            return InterpreterType.Pyenv;
+            return EnvironmentType.Pyenv;
         }
         return undefined;
     };

@@ -15,7 +15,7 @@ import { traceError } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
 import { ICondaService, IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName } from './conda';
 
@@ -46,14 +46,14 @@ export class CondaEnvFileService extends CacheableLocatorService {
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
+    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
         return this.getSuggestionsFromConda();
     }
 
     /**
      * Return the list of interpreters identified by the "conda environments file".
      */
-    private async getSuggestionsFromConda(): Promise<PythonInterpreter[]> {
+    private async getSuggestionsFromConda(): Promise<PythonEnvironment[]> {
         if (!this.condaService.condaEnvironmentsFile) {
             return [];
         }
@@ -98,14 +98,14 @@ export class CondaEnvFileService extends CacheableLocatorService {
         } catch (err) {
             traceError('Python Extension (getEnvironmentsFromFile.readFile):', err);
             // Ignore errors in reading the file.
-            return [] as PythonInterpreter[];
+            return [] as PythonEnvironment[];
         }
     }
 
     /**
      * Return the interpreter info for the given anaconda environment.
      */
-    private async getInterpreterDetails(environmentPath: string): Promise<PythonInterpreter | undefined> {
+    private async getInterpreterDetails(environmentPath: string): Promise<PythonEnvironment | undefined> {
         const interpreter = this.condaService.getInterpreterPath(environmentPath);
         if (!interpreter || !(await this.fileSystem.fileExists(interpreter))) {
             return;
@@ -118,10 +118,10 @@ export class CondaEnvFileService extends CacheableLocatorService {
         const envName = details.envName ? details.envName : path.basename(environmentPath);
         this._hasInterpreters.resolve(true);
         return {
-            ...(details as PythonInterpreter),
+            ...(details as PythonEnvironment),
             path: interpreter,
             companyDisplayName: AnacondaCompanyName,
-            type: InterpreterType.Conda,
+            envType: EnvironmentType.Conda,
             envPath: environmentPath,
             envName
         };

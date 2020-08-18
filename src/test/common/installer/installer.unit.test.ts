@@ -56,7 +56,7 @@ import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { sleep } from '../../common';
 
 use(chaiAsPromised);
@@ -132,7 +132,7 @@ suite('Module Installer only', () => {
                         .setup((p) => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
                         .returns(() => true);
                     interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-                    const pythonInterpreter = TypeMoq.Mock.ofType<PythonInterpreter>();
+                    const pythonInterpreter = TypeMoq.Mock.ofType<PythonEnvironment>();
                     // tslint:disable-next-line:no-any
                     pythonInterpreter.setup((i) => (i as any).then).returns(() => undefined);
                     interpreterService

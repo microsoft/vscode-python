@@ -21,18 +21,18 @@ import { IInterpreterAutoSelectionService } from '../../../../client/interpreter
 import { IInterpreterHelper, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
     let rule: SystemWideInterpretersAutoSelectionRuleTest;
     let stateFactory: IPersistentStateFactory;
     let fs: IFileSystem;
-    let state: PersistentState<PythonInterpreter | undefined>;
+    let state: PersistentState<PythonEnvironment | undefined>;
     let interpreterService: IInterpreterService;
     let helper: IInterpreterHelper;
     class SystemWideInterpretersAutoSelectionRuleTest extends SystemWideInterpretersAutoSelectionRule {
         public async setGlobalInterpreter(
-            interpreter?: PythonInterpreter,
+            interpreter?: PythonEnvironment,
             manager?: IInterpreterAutoSelectionService
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
@@ -51,7 +51,7 @@ suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
         helper = mock(InterpreterHelper);
         interpreterService = mock(InterpreterService);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
+        when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
             instance(state)
         );
         rule = new SystemWideInterpretersAutoSelectionRuleTest(

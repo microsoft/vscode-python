@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { InterpreterType } from '../../pythonEnvironments/info';
+import { EnvironmentType } from '../../pythonEnvironments/info';
 import { ExecutionInfo } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
@@ -36,7 +36,7 @@ export class PipEnvInstaller extends ModuleInstaller {
             const interpreters = await this.pipenv.getInterpreters(resource);
             return interpreters.length > 0;
         } else {
-            return resource.type === InterpreterType.Pipenv;
+            return resource.envType === EnvironmentType.Pipenv;
         }
     }
     protected async getExecutionInfo(moduleName: string, _resource?: InterpreterUri): Promise<ExecutionInfo> {

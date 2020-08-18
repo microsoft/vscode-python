@@ -10,7 +10,7 @@ import { OSType } from '../../../../common/utils/platform';
 import { IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IPythonInPathCommandProvider } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../info';
+import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
 /**
@@ -46,7 +46,7 @@ export class CurrentPathService extends CacheableLocatorService {
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+    protected getInterpretersImplementation(resource?: Uri): Promise<PythonEnvironment[]> {
         return this.suggestionsFromKnownPaths(resource);
     }
 
@@ -74,16 +74,16 @@ export class CurrentPathService extends CacheableLocatorService {
     /**
      * Return the information about the identified interpreter binary.
      */
-    private async getInterpreterDetails(pythonPath: string): Promise<PythonInterpreter | undefined> {
+    private async getInterpreterDetails(pythonPath: string): Promise<PythonEnvironment | undefined> {
         return this.helper.getInterpreterInformation(pythonPath).then((details) => {
             if (!details) {
                 return;
             }
             this._hasInterpreters.resolve(true);
             return {
-                ...(details as PythonInterpreter),
+                ...(details as PythonEnvironment),
                 path: pythonPath,
-                type: details.type ? details.type : InterpreterType.Unknown
+                envType: details.envType ? details.envType : EnvironmentType.Unknown
             };
         });
     }

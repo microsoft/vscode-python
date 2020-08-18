@@ -24,13 +24,13 @@ import {
 } from '../../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Auto Selection - Cached Rule', () => {
     let rule: CachedInterpretersAutoSelectionRuleTest;
     let stateFactory: IPersistentStateFactory;
     let fs: IFileSystem;
-    let state: PersistentState<PythonInterpreter | undefined>;
+    let state: PersistentState<PythonEnvironment | undefined>;
     let systemInterpreter: IInterpreterAutoSelectionRule;
     let currentPathInterpreter: IInterpreterAutoSelectionRule;
     let winRegInterpreter: IInterpreterAutoSelectionRule;
@@ -38,7 +38,7 @@ suite('Interpreters - Auto Selection - Cached Rule', () => {
     class CachedInterpretersAutoSelectionRuleTest extends CachedInterpretersAutoSelectionRule {
         public readonly rules!: IInterpreterAutoSelectionRule[];
         public async setGlobalInterpreter(
-            interpreter?: PythonInterpreter,
+            interpreter?: PythonEnvironment,
             manager?: IInterpreterAutoSelectionService
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
@@ -59,7 +59,7 @@ suite('Interpreters - Auto Selection - Cached Rule', () => {
         currentPathInterpreter = mock(SystemWideInterpretersAutoSelectionRule);
         winRegInterpreter = mock(SystemWideInterpretersAutoSelectionRule);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
+        when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
             instance(state)
         );
         rule = new CachedInterpretersAutoSelectionRuleTest(

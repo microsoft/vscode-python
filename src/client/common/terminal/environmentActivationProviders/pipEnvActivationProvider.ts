@@ -12,7 +12,7 @@ import {
     IPipEnvService,
     PIPENV_SERVICE
 } from '../../../interpreter/contracts';
-import { InterpreterType } from '../../../pythonEnvironments/info';
+import { EnvironmentType } from '../../../pythonEnvironments/info';
 import { IWorkspaceService } from '../../application/types';
 import { IFileSystem } from '../../platform/types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
@@ -34,7 +34,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
 
     public async getActivationCommands(resource: Uri | undefined, _: TerminalShellType): Promise<string[] | undefined> {
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-        if (!interpreter || interpreter.type !== InterpreterType.Pipenv) {
+        if (!interpreter || interpreter.envType !== EnvironmentType.Pipenv) {
             return;
         }
         // Activate using `pipenv shell` only if the current folder relates pipenv environment.
@@ -55,7 +55,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         _targetShell: TerminalShellType
     ): Promise<string[] | undefined> {
         const interpreter = await this.interpreterService.getInterpreterDetails(pythonPath);
-        if (!interpreter || interpreter.type !== InterpreterType.Pipenv) {
+        if (!interpreter || interpreter.envType !== EnvironmentType.Pipenv) {
             return;
         }
 

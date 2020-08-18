@@ -21,7 +21,7 @@ import {
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
@@ -50,7 +50,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.didChangeInterpreterEmitter.event;
     }
 
-    public get onDidChangeInterpreterInformation(): Event<PythonInterpreter> {
+    public get onDidChangeInterpreterInformation(): Event<PythonEnvironment> {
         return this.didChangeInterpreterInformation.event;
     }
     public get onDidChangeInterpreterConfiguration(): Event<Uri | undefined> {
@@ -64,7 +64,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private readonly interpreterPathService: IInterpreterPathService;
     private readonly experiments: IExperimentsManager;
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
-    private readonly didChangeInterpreterInformation = new EventEmitter<PythonInterpreter>();
+    private readonly didChangeInterpreterInformation = new EventEmitter<PythonEnvironment>();
     private readonly inMemoryCacheOfDisplayNames = new Map<string, string>();
     private readonly updatedInterpreters = new Set<string>();
 
@@ -121,7 +121,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     @captureTelemetry(EventName.PYTHON_INTERPRETER_DISCOVERY, { locator: 'all' }, true)
-    public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonInterpreter[]> {
+    public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]> {
         const interpreters = await this.locator.getInterpreters(resource, options);
         await Promise.all(
             interpreters
@@ -143,7 +143,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.didChangeInterpreterInformation.dispose();
     }
 
-    public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
+    public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         // During shutdown we might not be able to get items out of the service container.
         const pythonExecutionFactory = this.serviceContainer.tryGet<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecutionService = pythonExecutionFactory
@@ -159,7 +159,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
         return this.getInterpreterDetails(fullyQualifiedPath, resource);
     }
-    public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<PythonInterpreter | undefined> {
+    public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<PythonEnvironment | undefined> {
         // If we don't have the fully qualified path, then get it.
         if (path.basename(pythonPath) === pythonPath) {
             const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
@@ -219,12 +219,12 @@ export class InterpreterService implements Disposable, IInterpreterService {
      * Gets the display name of an interpreter.
      * The format is `Python <Version> <bitness> (<env name>: <env type>)`
      * E.g. `Python 3.5.1 32-bit (myenv2: virtualenv)`
-     * @param {Partial<PythonInterpreter>} info
+     * @param {Partial<PythonEnvironment>} info
      * @param {Uri} [resource]
      * @returns {string}
      * @memberof InterpreterService
      */
-    public async getDisplayName(info: Partial<PythonInterpreter>, resource?: Uri): Promise<string> {
+    public async getDisplayName(info: Partial<PythonEnvironment>, resource?: Uri): Promise<string> {
         // faster than calculating file has agian and again, only when deailing with cached items.
         if (!info.cachedEntry && info.path && this.inMemoryCacheOfDisplayNames.has(info.path)) {
             return this.inMemoryCacheOfDisplayNames.get(info.path)!;
@@ -254,11 +254,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
     public async getInterpreterCache(
         pythonPath: string
-    ): Promise<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>> {
+    ): Promise<IPersistentState<{ fileHash: string; info?: PythonEnvironment }>> {
         const fileHash = (pythonPath ? await this.getInterepreterFileHash(pythonPath).catch(() => '') : '') || '';
         const store = this.persistentStateFactory.createGlobalPersistentState<{
             fileHash: string;
-            info?: PythonInterpreter;
+            info?: PythonEnvironment;
         }>(`${pythonPath}.interpreter.Details.v7`, undefined, EXPITY_DURATION);
         if (!store.value || store.value.fileHash !== fileHash) {
             await store.updateValue({ fileHash });
@@ -281,7 +281,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             .create({ pythonPath })
             .then((provider) => provider.getInterpreterHash(pythonPath));
     }
-    protected async updateCachedInterpreterInformation(info: PythonInterpreter, resource: Resource): Promise<void> {
+    protected async updateCachedInterpreterInformation(info: PythonEnvironment, resource: Resource): Promise<void> {
         const key = JSON.stringify(info);
         if (this.updatedInterpreters.has(key)) {
             return;
@@ -297,7 +297,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         await state.updateValue({ fileHash: state.value.fileHash, info });
         this.didChangeInterpreterInformation.fire(info);
     }
-    protected async buildInterpreterDisplayName(info: Partial<PythonInterpreter>, resource?: Uri): Promise<string> {
+    protected async buildInterpreterDisplayName(info: Partial<PythonEnvironment>, resource?: Uri): Promise<string> {
         const displayNameParts: string[] = ['Python'];
         const envSuffixParts: string[] = [];
 
@@ -307,7 +307,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (info.architecture) {
             displayNameParts.push(getArchitectureDisplayName(info.architecture));
         }
-        if (!info.envName && info.path && info.type && info.type === InterpreterType.Pipenv) {
+        if (!info.envName && info.path && info.envType && info.envType === EnvironmentType.Pipenv) {
             // If we do not have the name of the environment, then try to get it again.
             // This can happen based on the context (i.e. resource).
             // I.e. we can determine if an environment is PipEnv only when giving it the right workspacec path (i.e. resource).
@@ -317,9 +317,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (info.envName && info.envName.length > 0) {
             envSuffixParts.push(`'${info.envName}'`);
         }
-        if (info.type) {
+        if (info.envType) {
             const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
-            const name = interpreterHelper.getInterpreterTypeDisplayName(info.type);
+            const name = interpreterHelper.getInterpreterTypeDisplayName(info.envType);
             if (name) {
                 envSuffixParts.push(name);
             }
@@ -338,18 +338,18 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (!info) {
             return;
         }
-        const details: Partial<PythonInterpreter> = {
-            ...(info as PythonInterpreter),
+        const details: Partial<PythonEnvironment> = {
+            ...(info as PythonEnvironment),
             path: pythonPath,
-            type: type
+            envType: type
         };
 
         const envName =
-            type === InterpreterType.Unknown
+            type === EnvironmentType.Unknown
                 ? undefined
                 : await virtualEnvManager.getEnvironmentName(pythonPath, resource);
         const pthonInfo = {
-            ...(details as PythonInterpreter),
+            ...(details as PythonEnvironment),
             envName
         };
         pthonInfo.displayName = await this.getDisplayName(pthonInfo, resource);

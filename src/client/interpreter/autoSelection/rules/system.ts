@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { traceVerbose } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPersistentStateFactory, Resource } from '../../../common/types';
-import { InterpreterType } from '../../../pythonEnvironments/info';
+import { EnvironmentType } from '../../../pythonEnvironments/info';
 import { IInterpreterHelper, IInterpreterService } from '../../contracts';
 import { AutoSelectionRule, IInterpreterAutoSelectionService } from '../types';
 import { BaseRuleService, NextAction } from './baseRule';
@@ -30,9 +30,9 @@ export class SystemWideInterpretersAutoSelectionRule extends BaseRuleService {
         // Exclude non-local interpreters.
         const filteredInterpreters = interpreters.filter(
             (int) =>
-                int.type !== InterpreterType.VirtualEnv &&
-                int.type !== InterpreterType.Venv &&
-                int.type !== InterpreterType.Pipenv
+                int.envType !== EnvironmentType.VirtualEnv &&
+                int.envType !== EnvironmentType.Venv &&
+                int.envType !== EnvironmentType.Pipenv
         );
         const bestInterpreter = this.helper.getBestInterpreter(filteredInterpreters);
         traceVerbose(

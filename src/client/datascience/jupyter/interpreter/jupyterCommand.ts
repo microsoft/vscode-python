@@ -17,7 +17,7 @@ import {
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { JupyterCommands, JupyterDaemonModule } from '../../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../../types';
 
@@ -27,7 +27,7 @@ class ProcessJupyterCommand implements IJupyterCommand {
     private exe: string;
     private requiredArgs: string[];
     private launcherPromise: Promise<IProcessService>;
-    private interpreterPromise: Promise<PythonInterpreter | undefined>;
+    private interpreterPromise: Promise<PythonEnvironment | undefined>;
     private activationHelper: IEnvironmentActivationService;
 
     constructor(
@@ -44,7 +44,7 @@ class ProcessJupyterCommand implements IJupyterCommand {
         this.interpreterPromise = interpreterService.getInterpreterDetails(this.exe).catch((_e) => undefined);
     }
 
-    public interpreter(): Promise<PythonInterpreter | undefined> {
+    public interpreter(): Promise<PythonEnvironment | undefined> {
         return this.interpreterPromise;
     }
 
@@ -74,14 +74,14 @@ class ProcessJupyterCommand implements IJupyterCommand {
 }
 
 class InterpreterJupyterCommand implements IJupyterCommand {
-    protected interpreterPromise: Promise<PythonInterpreter | undefined>;
+    protected interpreterPromise: Promise<PythonEnvironment | undefined>;
     private pythonLauncher: Promise<IPythonExecutionService>;
 
     constructor(
         protected readonly moduleName: string,
         protected args: string[],
         protected readonly pythonExecutionFactory: IPythonExecutionFactory,
-        private readonly _interpreter: PythonInterpreter,
+        private readonly _interpreter: PythonEnvironment,
         isActiveInterpreter: boolean
     ) {
         this.interpreterPromise = Promise.resolve(this._interpreter);
@@ -126,7 +126,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
             });
         });
     }
-    public interpreter(): Promise<PythonInterpreter | undefined> {
+    public interpreter(): Promise<PythonEnvironment | undefined> {
         return this.interpreterPromise;
     }
 
@@ -163,7 +163,7 @@ export class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand
         moduleName: string,
         args: string[],
         pythonExecutionFactory: IPythonExecutionFactory,
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         isActiveInterpreter: boolean
     ) {
         super(moduleName, args, pythonExecutionFactory, interpreter, isActiveInterpreter);
@@ -183,7 +183,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         moduleName: string,
         args: string[],
         pythonExecutionFactory: IPythonExecutionFactory,
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         isActiveInterpreter: boolean
     ) {
         super(moduleName, args, pythonExecutionFactory, interpreter, isActiveInterpreter);
@@ -259,7 +259,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         return defaultAction();
     }
 
-    private async getKernelSpecList(interpreter: PythonInterpreter, options: SpawnOptions) {
+    private async getKernelSpecList(interpreter: PythonEnvironment, options: SpawnOptions) {
         // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
         const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({
             interpreter,
@@ -270,7 +270,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
             { ...options, throwOnStdErr: true }
         );
     }
-    private async getKernelSpecVersion(interpreter: PythonInterpreter, options: SpawnOptions) {
+    private async getKernelSpecVersion(interpreter: PythonEnvironment, options: SpawnOptions) {
         // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
         const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({
             interpreter,
@@ -304,7 +304,7 @@ export class JupyterCommandFactory implements IJupyterCommandFactory {
         command: JupyterCommands,
         moduleName: string,
         args: string[],
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         isActiveInterpreter: boolean
     ): IJupyterCommand {
         if (command === JupyterCommands.NotebookCommand) {

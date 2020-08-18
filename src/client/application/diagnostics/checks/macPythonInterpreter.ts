@@ -19,7 +19,7 @@ import {
 } from '../../../common/types';
 import { IInterpreterHelper, IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { InterpreterType } from '../../../pythonEnvironments/info';
+import { EnvironmentType } from '../../../pythonEnvironments/info';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
 import { DiagnosticCodes } from '../constants';
@@ -98,7 +98,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         if (!this.helper.isMacDefaultPythonPath(settings.pythonPath)) {
             return [];
         }
-        if (!currentInterpreter || currentInterpreter.type !== InterpreterType.Unknown) {
+        if (!currentInterpreter || currentInterpreter.envType !== EnvironmentType.Unknown) {
             return [];
         }
 

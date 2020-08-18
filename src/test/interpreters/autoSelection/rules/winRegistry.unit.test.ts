@@ -24,19 +24,19 @@ import { IInterpreterAutoSelectionService } from '../../../../client/interpreter
 import { IInterpreterHelper, IInterpreterLocatorService } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { WindowsRegistryService } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryService';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
     let rule: WindowsRegistryInterpretersAutoSelectionRuleTest;
     let stateFactory: IPersistentStateFactory;
     let fs: IFileSystem;
-    let state: PersistentState<PythonInterpreter | undefined>;
+    let state: PersistentState<PythonEnvironment | undefined>;
     let locator: IInterpreterLocatorService;
     let platform: IPlatformService;
     let helper: IInterpreterHelper;
     class WindowsRegistryInterpretersAutoSelectionRuleTest extends WindowsRegistryInterpretersAutoSelectionRule {
         public async setGlobalInterpreter(
-            interpreter?: PythonInterpreter,
+            interpreter?: PythonEnvironment,
             manager?: IInterpreterAutoSelectionService
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
@@ -56,7 +56,7 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
         locator = mock(WindowsRegistryService);
         platform = mock(PlatformService);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
+        when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
             instance(state)
         );
         rule = new WindowsRegistryInterpretersAutoSelectionRuleTest(

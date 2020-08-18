@@ -24,7 +24,7 @@ import {
 } from '../../../../client/datascience/types';
 import { InterpreterSelector } from '../../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
-import { InterpreterType } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 
 // tslint:disable-next-line: max-func-body-length
 suite('DataScience - KernelSelections', () => {
@@ -97,7 +97,7 @@ suite('DataScience - KernelSelections', () => {
                 path: 'p1',
                 sysPrefix: '',
                 sysVersion: '',
-                type: InterpreterType.Conda,
+                envType: EnvironmentType.Conda,
                 displayName: 'Hello1'
             },
             path: 'p1',
@@ -111,7 +111,7 @@ suite('DataScience - KernelSelections', () => {
                 path: 'p2',
                 sysPrefix: '',
                 sysVersion: '',
-                type: InterpreterType.Conda,
+                envType: EnvironmentType.Conda,
                 displayName: 'Hello2'
             },
             path: 'p1',
@@ -125,7 +125,7 @@ suite('DataScience - KernelSelections', () => {
                 path: 'p3',
                 sysPrefix: '',
                 sysVersion: '',
-                type: InterpreterType.Conda,
+                envType: EnvironmentType.Conda,
                 displayName: 'Hello3'
             },
             path: 'p1',
@@ -205,8 +205,7 @@ suite('DataScience - KernelSelections', () => {
                             // tslint:disable-next-line: no-any
                         } as any
                     },
-                    kernelSpec: undefined,
-                    kind: 'live'
+                    kind: 'connectToLiveKernel'
                 },
                 detail: '<user friendly path>',
                 description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
@@ -233,8 +232,7 @@ suite('DataScience - KernelSelections', () => {
                             // tslint:disable-next-line: no-any
                         } as any
                     },
-                    kernelSpec: undefined,
-                    kind: 'live'
+                    kind: 'connectToLiveKernel'
                 },
                 detail: '<user friendly path>',
                 description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
@@ -266,7 +264,12 @@ suite('DataScience - KernelSelections', () => {
             return {
                 label: item.display_name,
                 detail: '<user friendly path>',
-                selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item, kind: 'kernelSpec' }
+                selection: {
+                    interpreter: undefined,
+                    kernelModel: undefined,
+                    kernelSpec: item,
+                    kind: 'startUsingKernelSpec'
+                }
             };
         });
         const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map((item) => {
@@ -279,7 +282,7 @@ suite('DataScience - KernelSelections', () => {
                     kernelModel: undefined,
                     interpreter: item.interpreter,
                     kernelSpec: undefined,
-                    kind: 'pythonInterpreter'
+                    kind: 'startUsingPythonInterpreter'
                 }
             };
         });
@@ -307,7 +310,12 @@ suite('DataScience - KernelSelections', () => {
             return {
                 label: item.display_name,
                 detail: '<user friendly path>',
-                selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item, kind: 'kernelSpec' }
+                selection: {
+                    interpreter: undefined,
+                    kernelModel: undefined,
+                    kernelSpec: item,
+                    kind: 'startUsingKernelSpec'
+                }
             };
         });
         const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map((item) => {
@@ -320,7 +328,7 @@ suite('DataScience - KernelSelections', () => {
                     kernelModel: undefined,
                     interpreter: item.interpreter,
                     kernelSpec: undefined,
-                    kind: 'pythonInterpreter'
+                    kind: 'startUsingPythonInterpreter'
                 }
             };
         });

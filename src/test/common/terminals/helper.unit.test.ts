@@ -30,7 +30,7 @@ import { Architecture, OSType } from '../../../client/common/utils/platform';
 import { ICondaService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable:max-func-body-length no-any
 
@@ -48,12 +48,12 @@ suite('Terminal Service helpers', () => {
     let pythonSettings: PythonSettings;
     let shellDetectorIdentifyTerminalShell: sinon.SinonStub<[(Terminal | undefined)?], TerminalShellType>;
     let mockDetector: IShellDetector;
-    const pythonInterpreter: PythonInterpreter = {
+    const pythonInterpreter: PythonEnvironment = {
         path: '/foo/bar/python.exe',
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
-        type: InterpreterType.Unknown,
+        envType: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 
@@ -171,7 +171,7 @@ suite('Terminal Service helpers', () => {
         });
     });
 
-    function title(resource?: Uri, interpreter?: PythonInterpreter) {
+    function title(resource?: Uri, interpreter?: PythonEnvironment) {
         return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
     }
 

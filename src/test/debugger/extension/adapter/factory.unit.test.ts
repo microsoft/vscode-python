@@ -22,7 +22,7 @@ import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/exten
 import { IDebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { InterpreterType } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { clearTelemetryReporter } from '../../../../client/telemetry';
 import { EventName } from '../../../../client/telemetry/constants';
 
@@ -42,7 +42,7 @@ suite('Debugging - Adapter Factory', () => {
         path: pythonPath,
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Unknown,
+        envType: EnvironmentType.Unknown,
         version: new SemVer('3.7.4-test')
     };
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;

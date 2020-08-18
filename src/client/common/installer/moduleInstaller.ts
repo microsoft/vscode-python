@@ -6,7 +6,7 @@ import * as path from 'path';
 import { CancellationToken, OutputChannel, ProgressLocation, ProgressOptions } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { InterpreterType } from '../../pythonEnvironments/info';
+import { EnvironmentType } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell } from '../application/types';
@@ -47,7 +47,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                     : resource;
                 const pythonPath = isResource(resource) ? settings.pythonPath : resource.path;
                 const args = internalPython.execModule(executionInfo.moduleName, executionInfoArgs);
-                if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
+                if (!interpreter || interpreter.envType !== EnvironmentType.Unknown) {
                     await terminalService.sendCommand(pythonPath, args, token);
                 } else if (settings.globalModuleInstallation) {
                     const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);

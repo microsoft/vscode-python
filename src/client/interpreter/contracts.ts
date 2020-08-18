@@ -3,7 +3,7 @@ import { CodeLensProvider, Disposable, Event, TextDocument, Uri } from 'vscode';
 import { Resource } from '../common/types';
 import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/discovery/locators/services/conda';
 import { GetInterpreterLocatorOptions } from '../pythonEnvironments/discovery/locators/types';
-import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { WorkspacePythonPath } from './helpers';
 import { GetInterpreterOptions } from './interpreterService';
 
@@ -34,10 +34,10 @@ export interface IVirtualEnvironmentsSearchPathProvider {
 export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
 
 export interface IInterpreterLocatorService extends Disposable {
-    readonly onLocating: Event<Promise<PythonInterpreter[]>>;
+    readonly onLocating: Event<Promise<PythonEnvironment[]>>;
     readonly hasInterpreters: Promise<boolean>;
     didTriggerInterpreterSuggestions?: boolean;
-    getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]>;
+    getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]>;
 }
 
 export const ICondaService = Symbol('ICondaService');
@@ -59,14 +59,14 @@ export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
     onDidChangeInterpreterConfiguration: Event<Uri | undefined>;
     onDidChangeInterpreter: Event<void>;
-    onDidChangeInterpreterInformation: Event<PythonInterpreter>;
+    onDidChangeInterpreterInformation: Event<PythonEnvironment>;
     hasInterpreters: Promise<boolean>;
-    getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonInterpreter[]>;
-    getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;
-    getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonInterpreter>;
+    getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
+    getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
+    getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonEnvironment>;
     refresh(resource: Resource): Promise<void>;
     initialize(): void;
-    getDisplayName(interpreter: Partial<PythonInterpreter>): Promise<string>;
+    getDisplayName(interpreter: Partial<PythonEnvironment>): Promise<string>;
 }
 
 export const IInterpreterDisplay = Symbol('IInterpreterDisplay');
@@ -82,10 +82,10 @@ export interface IShebangCodeLensProvider extends CodeLensProvider {
 export const IInterpreterHelper = Symbol('IInterpreterHelper');
 export interface IInterpreterHelper {
     getActiveWorkspaceUri(resource: Resource): WorkspacePythonPath | undefined;
-    getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>>;
+    getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
     isMacDefaultPythonPath(pythonPath: string): Boolean;
-    getInterpreterTypeDisplayName(interpreterType: InterpreterType): string | undefined;
-    getBestInterpreter(interpreters?: PythonInterpreter[]): PythonInterpreter | undefined;
+    getInterpreterTypeDisplayName(interpreterType: EnvironmentType): string | undefined;
+    getBestInterpreter(interpreters?: PythonEnvironment[]): PythonEnvironment | undefined;
 }
 
 export const IPipEnvService = Symbol('IPipEnvService');
@@ -96,7 +96,7 @@ export interface IPipEnvService extends IInterpreterLocatorService {
 
 export const IInterpreterLocatorHelper = Symbol('IInterpreterLocatorHelper');
 export interface IInterpreterLocatorHelper {
-    mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]>;
+    mergeInterpreters(interpreters: PythonEnvironment[]): Promise<PythonEnvironment[]>;
 }
 
 export const IInterpreterWatcher = Symbol('IInterpreterWatcher');

@@ -20,7 +20,7 @@ import { sleep } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { getRealPath } from '../../common';
 import { Telemetry } from '../../constants';
@@ -46,14 +46,14 @@ const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp
  * (basically avoiding the need to case using `as`).
  * We cannot use `xx in` as jupyter uses `JSONObject` which is too broad and captures anything and everything.
  *
- * @param {(nbformat.IKernelspecMetadata | PythonInterpreter)} item
- * @returns {item is PythonInterpreter}
+ * @param {(nbformat.IKernelspecMetadata | PythonEnvironment)} item
+ * @returns {item is PythonEnvironment}
  */
-function isInterpreter(item: nbformat.IKernelspecMetadata | PythonInterpreter): item is PythonInterpreter {
+function isInterpreter(item: nbformat.IKernelspecMetadata | PythonEnvironment): item is PythonEnvironment {
     // Interpreters will not have a `display_name` property, but have `path` and `type` properties.
     return (
-        !!(item as PythonInterpreter).path &&
-        !!(item as PythonInterpreter).type &&
+        !!(item as PythonEnvironment).path &&
+        !!(item as PythonEnvironment).envType &&
         !(item as nbformat.IKernelspecMetadata).display_name
     );
 }
@@ -92,19 +92,19 @@ export class KernelService {
     /**
      * Finds a kernel spec from a given session or jupyter process that matches a given interpreter.
      *
-     * @param {PythonInterpreter} interpreter The interpreter (criteria) to be used when searching for a kernel.
+     * @param {PythonEnvironment} interpreter The interpreter (criteria) to be used when searching for a kernel.
      * @param {(IJupyterSessionManager | undefined)} sessionManager If not provided search against the jupyter process.
      * @param {CancellationToken} [cancelToken]
      * @returns {(Promise<IJupyterKernelSpec | undefined>)}
      * @memberof KernelService
      */
     public async findMatchingKernelSpec(
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         sessionManager?: IJupyterSessionManager | undefined,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined>;
     public async findMatchingKernelSpec(
-        option: nbformat.IKernelspecMetadata | PythonInterpreter,
+        option: nbformat.IKernelspecMetadata | PythonEnvironment,
         sessionManager: IJupyterSessionManager | undefined,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
@@ -130,14 +130,14 @@ export class KernelService {
      *
      * @param {IJupyterKernelSpec} kernelSpec
      * @param {CancellationToken} [cancelToken]
-     * @returns {(Promise<PythonInterpreter | undefined>)}
+     * @returns {(Promise<PythonEnvironment | undefined>)}
      * @memberof KernelService
      */
     // tslint:disable-next-line: cyclomatic-complexity
     public async findMatchingInterpreter(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel,
         cancelToken?: CancellationToken
-    ): Promise<PythonInterpreter | undefined> {
+    ): Promise<PythonEnvironment | undefined> {
         const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(undefined);
         const allInterpretersPromise = this.interpreterService.getInterpreters(undefined);
         // Ensure we handle errors if any (this is required to ensure we do not exit this function without using this promise).
@@ -251,7 +251,7 @@ export class KernelService {
         }
     }
     public async searchAndRegisterKernel(
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         disableUI?: boolean,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
@@ -277,7 +277,7 @@ export class KernelService {
      * - metadata.interperter = Interpreter information (useful in finding a kernel that matches a given interpreter)
      * - env = Will have environment variables of the activated environment.
      *
-     * @param {PythonInterpreter} interpreter
+     * @param {PythonEnvironment} interpreter
      * @param {boolean} [disableUI]
      * @param {CancellationToken} [cancelToken]
      * @returns {Promise<IJupyterKernelSpec>}
@@ -290,7 +290,7 @@ export class KernelService {
     @reportAction(ReportableAction.KernelsRegisterKernel)
     // tslint:disable-next-line:max-func-body-length
     public async registerKernel(
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         disableUI?: boolean,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
@@ -394,7 +394,7 @@ export class KernelService {
         return kernel;
     }
     public async updateKernelEnvironment(
-        interpreter: PythonInterpreter | undefined,
+        interpreter: PythonEnvironment | undefined,
         kernel: IJupyterKernelSpec,
         cancelToken?: CancellationToken,
         forceWrite?: boolean
@@ -504,10 +504,10 @@ export class KernelService {
      * Algorithm = <displayname - invalid characters> + <hash of path>
      *
      * @private
-     * @param {PythonInterpreter} interpreter
+     * @param {PythonEnvironment} interpreter
      * @memberof KernelService
      */
-    private generateKernelNameForIntepreter(interpreter: PythonInterpreter): string {
+    private generateKernelNameForIntepreter(interpreter: PythonEnvironment): string {
         return `${interpreter.displayName || ''}${uuid()}`.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
     }
 

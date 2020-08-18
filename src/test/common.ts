@@ -14,7 +14,7 @@ import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
 import { IDisposable, IPythonSettings, Resource } from '../client/common/types';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
-import { PythonInterpreter } from '../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
 
@@ -167,12 +167,12 @@ export function getExtensionSettings(resource: Uri | undefined): IPythonSettings
         public autoSelectInterpreter(_resource: Resource): Promise<void> {
             return Promise.resolve();
         }
-        public getAutoSelectedInterpreter(_resource: Resource): PythonInterpreter | undefined {
+        public getAutoSelectedInterpreter(_resource: Resource): PythonEnvironment | undefined {
             return;
         }
         public async setWorkspaceInterpreter(
             _resource: Uri,
-            _interpreter: PythonInterpreter | undefined
+            _interpreter: PythonEnvironment | undefined
         ): Promise<void> {
             return;
         }

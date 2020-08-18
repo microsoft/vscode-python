@@ -18,7 +18,7 @@ import { IPipEnvServiceHelper } from '../../../../client/interpreter/locators/ty
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { InterpreterLocatorHelper } from '../../../../client/pythonEnvironments/discovery/locators/helpers';
 import { PipEnvServiceHelper } from '../../../../client/pythonEnvironments/discovery/locators/services/pipEnvServiceHelper';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 enum OS {
     Windows = 'Windows',
@@ -58,7 +58,7 @@ suite('Interpreters - Locators Helper', () => {
             .returns(() => false)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
-        const interpreters: PythonInterpreter[] = [];
+        const interpreters: PythonEnvironment[] = [];
         ['conda', 'virtualenv', 'mac', 'pyenv'].forEach((name) => {
             const interpreter = {
                 architecture: Architecture.Unknown,
@@ -66,7 +66,7 @@ suite('Interpreters - Locators Helper', () => {
                 path: path.join('users', 'python', 'bin', name),
                 sysPrefix: name,
                 sysVersion: name,
-                type: InterpreterType.Unknown,
+                envType: EnvironmentType.Unknown,
                 version: new SemVer('0.0.0-alpha')
             };
             interpreters.push(interpreter);
@@ -99,8 +99,8 @@ suite('Interpreters - Locators Helper', () => {
                 .returns((a, b) => a === b)
                 .verifiable(TypeMoq.Times.atLeastOnce());
 
-            const interpreters: PythonInterpreter[] = [];
-            const expectedInterpreters: PythonInterpreter[] = [];
+            const interpreters: PythonEnvironment[] = [];
+            const expectedInterpreters: PythonEnvironment[] = [];
             // Unique python paths and versions.
             ['3.6', '3.6', '2.7', '2.7'].forEach((name, index) => {
                 const interpreter = {
@@ -109,7 +109,7 @@ suite('Interpreters - Locators Helper', () => {
                     path: path.join('users', `python${name}${index}`, 'bin', name + index.toString()),
                     sysPrefix: name,
                     sysVersion: name,
-                    type: InterpreterType.Unknown,
+                    envType: EnvironmentType.Unknown,
                     version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
                 };
                 interpreters.push(interpreter);
@@ -123,7 +123,7 @@ suite('Interpreters - Locators Helper', () => {
                     path: path.join('users', 'python', 'bin', 'python.exe'),
                     sysPrefix: name,
                     sysVersion: name,
-                    type: InterpreterType.Unknown,
+                    envType: EnvironmentType.Unknown,
                     version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
                 };
 
@@ -133,7 +133,7 @@ suite('Interpreters - Locators Helper', () => {
                     path: path.join('users', 'python', 'bin', `python${name}.exe`),
                     sysPrefix: name,
                     sysVersion: name,
-                    type: InterpreterType.Unknown,
+                    envType: EnvironmentType.Unknown,
                     version: new SemVer(interpreter.version.raw)
                 };
 
@@ -164,19 +164,19 @@ suite('Interpreters - Locators Helper', () => {
                 .returns((a, b) => a === b && a === path.join('users', 'python', 'bin'))
                 .verifiable(TypeMoq.Times.atLeastOnce());
 
-            const interpreters: PythonInterpreter[] = [];
-            const expectedInterpreters: PythonInterpreter[] = [];
+            const interpreters: PythonEnvironment[] = [];
+            const expectedInterpreters: PythonEnvironment[] = [];
             ['3.6', '3.6'].forEach((name, index) => {
                 // Ensure the type in the first item is 'Unknown',
                 // and type in second item is known (e.g. Conda).
-                const type = index === 0 ? InterpreterType.Unknown : InterpreterType.Pipenv;
+                const type = index === 0 ? EnvironmentType.Unknown : EnvironmentType.Pipenv;
                 const interpreter = {
                     architecture: Architecture.Unknown,
                     displayName: name,
                     path: path.join('users', 'python', 'bin', 'python.exe'),
                     sysPrefix: name,
                     sysVersion: name,
-                    type,
+                    envType: type,
                     version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
                 };
                 interpreters.push(interpreter);

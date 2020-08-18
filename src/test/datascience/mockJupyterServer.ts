@@ -4,6 +4,7 @@ import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { TemporaryFile } from '../../client/common/platform/types';
 import { noop } from '../../client/common/utils/misc';
+import { getNameOfKernelConnection } from '../../client/datascience/jupyter/kernels/helpers';
 import {
     IJupyterConnection,
     INotebook,
@@ -21,15 +22,12 @@ export class MockJupyterServer implements INotebookServer {
         return this._id;
     }
     public connect(launchInfo: INotebookServerLaunchInfo): Promise<void> {
-        if (launchInfo && launchInfo.connectionInfo && launchInfo.kernelSpec) {
+        if (launchInfo && launchInfo.connectionInfo && launchInfo.kernelConnectionMetadata) {
             this.launchInfo = launchInfo;
 
             // Validate connection info and kernel spec
-            if (
-                launchInfo.connectionInfo.baseUrl &&
-                launchInfo.kernelSpec.name &&
-                /[a-z,A-Z,0-9,-,.,_]+/.test(launchInfo.kernelSpec.name)
-            ) {
+            const name = getNameOfKernelConnection(launchInfo.kernelConnectionMetadata);
+            if (launchInfo.connectionInfo.baseUrl && name && /[a-z,A-Z,0-9,-,.,_]+/.test(name)) {
                 return Promise.resolve();
             }
         }

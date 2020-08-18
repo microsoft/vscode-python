@@ -35,14 +35,14 @@ import { IInterpreterAutoSelectionService } from '../../../../client/interpreter
 import { IInterpreterHelper, IInterpreterLocatorService } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { KnownPathsService } from '../../../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     type PythonPathInConfig = { workspaceFolderValue: string; workspaceValue: string };
     let rule: WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest;
     let stateFactory: IPersistentStateFactory;
     let fs: IFileSystem;
-    let state: PersistentState<PythonInterpreter | undefined>;
+    let state: PersistentState<PythonEnvironment | undefined>;
     let helper: IInterpreterHelper;
     let platform: IPlatformService;
     let virtualEnvLocator: IInterpreterLocatorService;
@@ -51,7 +51,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     let interpreterPathService: IInterpreterPathService;
     class WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest extends WorkspaceVirtualEnvInterpretersAutoSelectionRule {
         public async setGlobalInterpreter(
-            interpreter?: PythonInterpreter,
+            interpreter?: PythonEnvironment,
             manager?: IInterpreterAutoSelectionService
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
@@ -59,10 +59,10 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         public async next(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<void> {
             return super.next(resource, manager);
         }
-        public async cacheSelectedInterpreter(resource: Resource, interpreter: PythonInterpreter | undefined) {
+        public async cacheSelectedInterpreter(resource: Resource, interpreter: PythonEnvironment | undefined) {
             return super.cacheSelectedInterpreter(resource, interpreter);
         }
-        public async getWorkspaceVirtualEnvInterpreters(resource: Resource): Promise<PythonInterpreter[] | undefined> {
+        public async getWorkspaceVirtualEnvInterpreters(resource: Resource): Promise<PythonEnvironment[] | undefined> {
             return super.getWorkspaceVirtualEnvInterpreters(resource);
         }
     }
@@ -77,7 +77,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         experimentsManager = mock(ExperimentsManager);
         interpreterPathService = mock(InterpreterPathService);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
+        when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
             instance(state)
         );
         rule = new WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest(

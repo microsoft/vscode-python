@@ -28,7 +28,6 @@ import { getDefaultNotebookContent, updateNotebookMetadata } from '../../noteboo
 import {
     ICell,
     IDataScienceErrorHandler,
-    IJupyterKernelSpec,
     INotebook,
     INotebookEditorProvider,
     INotebookProvider,
@@ -37,17 +36,11 @@ import {
     KernelSocketInformation
 } from '../../types';
 import { KernelExecution } from './kernelExecution';
-import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelSelection, LiveKernelModel } from './types';
+import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
         return this.notebook?.connection;
-    }
-    get kernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
-        if (this.notebook) {
-            return this.notebook.getKernelSpec();
-        }
-        return this.metadata.kernelSpec || this.metadata.kernelModel;
     }
     get onStatusChanged(): Event<ServerStatus> {
         return this._onStatusChanged.event;
@@ -81,7 +74,7 @@ export class Kernel implements IKernel {
     private startCancellation = new CancellationTokenSource();
     constructor(
         public readonly uri: Uri,
-        public readonly metadata: Readonly<KernelSelection>,
+        public readonly metadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,
@@ -143,11 +136,9 @@ export class Kernel implements IKernel {
         } else {
             await this.validate(this.uri);
             const metadata = ((getDefaultNotebookContent().metadata || {}) as unknown) as nbformat.INotebookMetadata;
-            updateNotebookMetadata(
-                metadata,
-                this.metadata.interpreter,
-                this.metadata.kernelSpec || this.metadata.kernelModel
-            );
+            // tslint:disable-next-line: no-suspicious-comment
+            // TODO: Just pass the `this.metadata` into the func.
+            updateNotebookMetadata(metadata, this.metadata);
 
             this._notebookPromise = this.notebookProvider.getOrCreateNotebook({
                 identity: this.uri,

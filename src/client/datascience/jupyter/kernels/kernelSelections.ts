@@ -43,7 +43,12 @@ function getQuickPickItemForKernelSpec(
         label: kernelSpec.display_name,
         // If we have a matching interpreter, then display that path in the dropdown else path of the kernelspec.
         detail: pathUtils.getDisplayName(kernelSpec.metadata?.interpreter?.path || kernelSpec.path),
-        selection: { kernelModel: undefined, kernelSpec: kernelSpec, interpreter: undefined, kind: 'kernelSpec' }
+        selection: {
+            kernelModel: undefined,
+            kernelSpec: kernelSpec,
+            interpreter: undefined,
+            kind: 'startUsingKernelSpec'
+        }
     };
 }
 
@@ -67,7 +72,7 @@ function getQuickPickItemForActiveKernel(
             kernel.lastActivityTime.toLocaleString(),
             kernel.numberOfConnections.toString()
         ),
-        selection: { kernelModel: kernel, kernelSpec: undefined, interpreter: undefined, kind: 'live' }
+        selection: { kernelModel: kernel, interpreter: undefined, kind: 'connectToLiveKernel' }
     };
 }
 
@@ -181,7 +186,7 @@ export class InterpreterKernelSelectionListProvider
                     kernelModel: undefined,
                     interpreter: item.interpreter,
                     kernelSpec: undefined,
-                    kind: 'pythonInterpreter'
+                    kind: 'startUsingPythonInterpreter'
                 }
             };
         });
@@ -239,7 +244,7 @@ export class KernelSelectionProvider {
             ).getKernelSelections(resource, cancelToken);
             const [installedKernels, liveKernels] = await Promise.all([installedKernelsPromise, liveKernelsPromise]);
 
-            // Sorty by name.
+            // Sort by name.
             installedKernels.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
             liveKernels.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
             return [...liveKernels!, ...installedKernels!];

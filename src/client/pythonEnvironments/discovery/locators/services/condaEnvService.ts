@@ -7,7 +7,7 @@ import { traceError } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
 import { ICondaService, IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
-import { PythonInterpreter } from '../../../info';
+import { PythonEnvironment } from '../../../info';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { parseCondaInfo } from './conda';
 
@@ -38,14 +38,14 @@ export class CondaEnvService extends CacheableLocatorService {
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
+    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
         return this.getSuggestionsFromConda();
     }
 
     /**
      * Return the list of interpreters for all the conda envs.
      */
-    private async getSuggestionsFromConda(): Promise<PythonInterpreter[]> {
+    private async getSuggestionsFromConda(): Promise<PythonEnvironment[]> {
         try {
             const info = await this.condaService.getCondaInfo();
             if (!info) {

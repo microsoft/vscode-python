@@ -45,7 +45,7 @@ import {
     InterruptResult
 } from '../../client/datascience/types';
 import { IInterpreterService, IKnownSearchPathsForInterpreters } from '../../client/interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
@@ -575,22 +575,22 @@ suite('DataScience notebook tests', () => {
                             return { dispose: noop };
                         }
                         public onDidChangeInterpreterInformation(
-                            _listener: (e: PythonInterpreter) => any,
+                            _listener: (e: PythonEnvironment) => any,
                             _thisArgs?: any,
                             _disposables?: Disposable[]
                         ): Disposable {
                             return { dispose: noop };
                         }
-                        public getInterpreters(_resource?: Uri): Promise<PythonInterpreter[]> {
+                        public getInterpreters(_resource?: Uri): Promise<PythonEnvironment[]> {
                             return Promise.resolve([]);
                         }
                         public autoSetInterpreter(): Promise<void> {
                             throw new Error('Method not implemented');
                         }
-                        public getActiveInterpreter(_resource?: Uri): Promise<PythonInterpreter | undefined> {
+                        public getActiveInterpreter(_resource?: Uri): Promise<PythonEnvironment | undefined> {
                             return Promise.resolve(undefined);
                         }
-                        public getInterpreterDetails(_pythonPath: string, _resoure?: Uri): Promise<PythonInterpreter> {
+                        public getInterpreterDetails(_pythonPath: string, _resoure?: Uri): Promise<PythonEnvironment> {
                             throw new Error('Method not implemented');
                         }
                         public refresh(_resource: Uri): Promise<void> {
@@ -599,7 +599,7 @@ suite('DataScience notebook tests', () => {
                         public initialize(): void {
                             throw new Error('Method not implemented');
                         }
-                        public getDisplayName(_interpreter: Partial<PythonInterpreter>): Promise<string> {
+                        public getDisplayName(_interpreter: Partial<PythonEnvironment>): Promise<string> {
                             throw new Error('Method not implemented');
                         }
                         public shouldAutoSetInterpreter(): Promise<boolean> {
@@ -707,12 +707,12 @@ suite('DataScience notebook tests', () => {
                     assert.ok(server == server2, 'With no settings changed we should return the cached server');
 
                     // Create a new mock interpreter with a different path
-                    const newPython: PythonInterpreter = {
+                    const newPython: PythonEnvironment = {
                         path: '/foo/bar/baz/python.exe',
                         version: new SemVer('3.6.6-final'),
                         sysVersion: '1.0.0.0',
                         sysPrefix: 'Python',
-                        type: InterpreterType.Unknown,
+                        envType: EnvironmentType.Unknown,
                         architecture: Architecture.x64
                     };
 

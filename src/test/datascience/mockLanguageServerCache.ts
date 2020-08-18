@@ -5,7 +5,7 @@ import { injectable } from 'inversify';
 import { Uri } from 'vscode';
 
 import { ILanguageServer, ILanguageServerCache } from '../../client/activation/types';
-import { PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { MockLanguageServer } from './mockLanguageServer';
 
 // tslint:disable:no-any unified-signatures
@@ -13,7 +13,7 @@ import { MockLanguageServer } from './mockLanguageServer';
 export class MockLanguageServerCache implements ILanguageServerCache {
     private mockLanguageServer = new MockLanguageServer();
 
-    public get(_resource: Uri | undefined, _interpreter?: PythonInterpreter | undefined): Promise<ILanguageServer> {
+    public get(_resource: Uri | undefined, _interpreter?: PythonEnvironment | undefined): Promise<ILanguageServer> {
         return Promise.resolve(this.mockLanguageServer);
     }
 

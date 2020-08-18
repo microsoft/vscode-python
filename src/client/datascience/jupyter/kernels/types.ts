@@ -9,7 +9,7 @@ import type { CancellationToken, Event, QuickPickItem, Uri } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../../types/vscode-proposed';
 import type { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import type { IAsyncDisposable, Resource } from '../../../common/types';
-import type { PythonInterpreter } from '../../../pythonEnvironments/info';
+import type { PythonEnvironment } from '../../../pythonEnvironments/info';
 import type {
     IJupyterKernel,
     IJupyterKernelSpec,
@@ -17,7 +17,6 @@ import type {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
-import type { KernelSpecInterpreter } from './kernelSelector';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
@@ -27,65 +26,67 @@ export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { s
  */
 export type LiveKernelConnectionMetadata = {
     kernelModel: LiveKernelModel;
-    kernelSpec: undefined;
-    interpreter: undefined;
-    kind: 'live';
+    /**
+     * Python interpreter will be used for intellisense & the like.
+     */
+    interpreter?: PythonEnvironment;
+    kind: 'connectToLiveKernel';
 };
 /**
  * Connection metadata for Kernels started using kernelspec (JSON).
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
+ * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
 export type KernelSpecConnectionMetadata = {
-    kernelModel: undefined;
+    kernelModel?: undefined;
     kernelSpec: IJupyterKernelSpec;
-    interpreter: undefined;
-    kind: 'kernelSpec';
+    /**
+     * Indicates the interpreter that may be used to start the kernel.
+     * If possible to start a kernel without this Python interpreter, then this Python interpreter will be used for intellisense & the like.
+     * This interpreter could also be the interpreter associated with the kernel spec that we are supposed to start.
+     */
+    interpreter?: PythonEnvironment;
+    kind: 'startUsingKernelSpec';
+};
+/**
+ * Connection metadata for Kernels started using default kernel.
+ * Here we tell Jupyter to start a session and let it decide what kernel is to be started.
+ * (could apply to either local or remote sessions when dealing with Jupyter Servers).
+ */
+export type DefaultKernelConnectionMetadata = {
+    /**
+     * This will be empty as we do not have a kernel spec.
+     * Left for type compatibility with other types that have kernel spec property.
+     */
+    kernelSpec?: IJupyterKernelSpec;
+    /**
+     * Python interpreter will be used for intellisense & the like.
+     */
+    interpreter?: PythonEnvironment;
+    kind: 'startUsingDefaultKernel';
 };
 /**
  * Connection metadata for Kernels started using Python interpreter.
- * These are not necessarily raw (it could be plain old Jupyter Kernels, where we register Python interpreter as a kernel)
+ * These are not necessarily raw (it could be plain old Jupyter Kernels, where we register Python interpreter as a kernel).
+ * We can have KernelSpec information here as well, however that is totally optional.
+ * We will always start this kernel using old Jupyter style (provided we first register this intrepreter as a kernel) or raw.
  */
 export type PythonKernelConnectionMetadata = {
-    kernelModel: undefined;
-    kernelSpec: undefined;
-    interpreter: PythonInterpreter;
-    kind: 'pythonInterpreter';
+    kernelSpec?: IJupyterKernelSpec;
+    interpreter: PythonEnvironment;
+    kind: 'startUsingPythonInterpreter';
 };
-// /**
-//  * Connection metadata for Kernels started using Python interpreter with Kernel spec (JSON).
-//  * Sometimes, we're unable to determine the exact interpreter associated with a kernelspec, in such cases this is a closes match.
-//  */
-
-// export type PythonKernelSpecConnectionMetadata = {
-//     kernelModel: undefined;
-//     kernelSpec: IJupyterKernelSpec;
-//     interpreter: PythonInterpreter;
-//     kind: 'pythonInterpreterKernelSpec';
-// };
-// /**
-//  * Connection metadata for Kernels started using kernelspec (JSON).
-//  * Note, we could be connecting/staring a kernel on a remote jupyter server.
-//  * Sometimes, we're unable to determine the exact interpreter associated with a kernelspec, in such cases this is a closes match.
-//  * E.g. when selecting a remote kernel, we do not have the remote interpreter information, we can only try to find a close match.}
-//  */
-
-// export type PythonLiveKernelConnectionMetadata = {
-//     kernelModel: undefined;
-//     kernelSpec: IJupyterKernelSpec;
-//     interpreter: PythonInterpreter;
-//     kind: 'pythonInterpreterLive';
-// };
-export type KernelSelection =
+export type KernelConnectionMetadata =
     | LiveKernelConnectionMetadata
     | KernelSpecConnectionMetadata
-    | PythonKernelConnectionMetadata;
-// | PythonKernelSpecConnectionMetadata
-// | PythonLiveKernelConnectionMetadata;
+    | PythonKernelConnectionMetadata
+    | DefaultKernelConnectionMetadata;
 
-export interface IKernelSpecQuickPickItem<T extends KernelSelection = KernelSelection> extends QuickPickItem {
+export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata>
+    extends QuickPickItem {
     selection: T;
 }
-export interface IKernelSelectionListProvider<T extends KernelSelection = KernelSelection> {
+export interface IKernelSelectionListProvider<T extends KernelConnectionMetadata = KernelConnectionMetadata> {
     getKernelSelections(resource: Resource, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem<T>[]>;
 }
 
@@ -95,18 +96,17 @@ export interface IKernelSelectionUsage {
      * This method will also check if required dependencies are installed or not, and will install them if required.
      */
     useSelectedKernel(
-        selection: KernelSelection,
+        selection: KernelConnectionMetadata,
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken
-    ): Promise<KernelSpecInterpreter | {}>;
+    ): Promise<KernelConnectionMetadata | undefined>;
 }
 
 export interface IKernel extends IAsyncDisposable {
     readonly uri: Uri;
-    readonly kernelSpec?: IJupyterKernelSpec | LiveKernelModel;
-    readonly metadata: Readonly<KernelSelection>;
+    readonly metadata: Readonly<KernelConnectionMetadata>;
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;
     readonly onRestarted: Event<void>;
@@ -121,7 +121,7 @@ export interface IKernel extends IAsyncDisposable {
     registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
 }
 
-export type KernelOptions = { metadata: KernelSelection; waitForIdleTimeout?: number; launchingFile?: string };
+export type KernelOptions = { metadata: KernelConnectionMetadata; waitForIdleTimeout?: number; launchingFile?: string };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider {
     /**

@@ -27,7 +27,7 @@ import {
     CurrentPathService,
     PythonInPathCommandProvider
 } from '../../client/pythonEnvironments/discovery/locators/services/currentPathService';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
@@ -40,7 +40,7 @@ suite('Interpreters CurrentPath Service', () => {
     let interpreterHelper: TypeMoq.IMock<InterpreterHelper>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let currentPathService: CurrentPathService;
-    let persistentState: TypeMoq.IMock<IPersistentState<PythonInterpreter[]>>;
+    let persistentState: TypeMoq.IMock<IPersistentState<PythonEnvironment[]>>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let pythonInPathCommandProvider: IPythonInPathCommandProvider;
     setup(async () => {
@@ -51,7 +51,7 @@ suite('Interpreters CurrentPath Service', () => {
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         const persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
-        persistentState = TypeMoq.Mock.ofType<IPersistentState<PythonInterpreter[]>>();
+        persistentState = TypeMoq.Mock.ofType<IPersistentState<PythonEnvironment[]>>();
         processService.setup((x: any) => x.then).returns(() => undefined);
         persistentState.setup((p) => p.value).returns(() => undefined as any);
         persistentState.setup((p) => p.updateValue(TypeMoq.It.isAny())).returns(() => Promise.resolve());
@@ -145,8 +145,8 @@ suite('Interpreters CurrentPath Service', () => {
             fileSystem.verifyAll();
 
             expect(interpreters).to.be.of.length(2);
-            expect(interpreters).to.deep.include({ version, path: 'c:/root:python', type: InterpreterType.Unknown });
-            expect(interpreters).to.deep.include({ version, path: 'c:/python3', type: InterpreterType.Unknown });
+            expect(interpreters).to.deep.include({ version, path: 'c:/root:python', envType: EnvironmentType.Unknown });
+            expect(interpreters).to.deep.include({ version, path: 'c:/python3', envType: EnvironmentType.Unknown });
         });
     });
 });

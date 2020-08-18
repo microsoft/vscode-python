@@ -16,7 +16,7 @@ import {
     IKernelDependencyService
 } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { sleep } from '../../core';
 import { createPythonInterpreter } from '../../utils/interpreters';
 
@@ -41,7 +41,7 @@ suite('DataScience - Kernel Daemon Pool', () => {
     let fs: IDataScienceFileSystem;
     let interpeterService: IInterpreterService;
     let kernelSpec: ReadWrite<IJupyterKernelSpec>;
-    let interpretersPerWorkspace: Map<string | undefined, PythonInterpreter>;
+    let interpretersPerWorkspace: Map<string | undefined, PythonEnvironment>;
 
     setup(() => {
         didEnvVarsChange = new EventEmitter<Resource>();
@@ -55,7 +55,7 @@ suite('DataScience - Kernel Daemon Pool', () => {
         envVars = mock<IEnvironmentVariablesProvider>();
         fs = mock<IDataScienceFileSystem>();
         interpeterService = mock<IInterpreterService>();
-        interpretersPerWorkspace = new Map<string | undefined, PythonInterpreter>();
+        interpretersPerWorkspace = new Map<string | undefined, PythonEnvironment>();
         interpretersPerWorkspace.set(workspace1.fsPath, interpreter1);
         interpretersPerWorkspace.set(workspace2.fsPath, interpreter2);
         interpretersPerWorkspace.set(workspace3.fsPath, interpreter3);

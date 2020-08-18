@@ -28,7 +28,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageServerActivator, ILanguageServerManager } from '../types';
 
 /**
@@ -49,7 +49,7 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
     ) {}
 
     @traceDecorators.error('Failed to activate language server')
-    public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {
+    public async start(resource: Resource, interpreter?: PythonEnvironment): Promise<void> {
         if (!resource) {
             resource = this.workspace.hasWorkspaceFolders ? this.workspace.workspaceFolders![0].uri : undefined;
         }

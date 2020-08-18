@@ -61,7 +61,10 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                 this.vscNotebook.registerNotebookContentProvider(JupyterNotebookView, this.notebookContentProvider)
             );
             this.disposables.push(
-                this.vscNotebook.registerNotebookKernelProvider({ filenamePattern: '**/*.ipynb' }, this.kernelProvider)
+                this.vscNotebook.registerNotebookKernelProvider(
+                    { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },
+                    this.kernelProvider
+                )
             );
             this.disposables.push(
                 this.vscNotebook.registerNotebookOutputRenderer(

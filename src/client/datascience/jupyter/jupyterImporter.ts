@@ -14,7 +14,7 @@ import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { CodeSnippits, Identifiers } from '../constants';
+import { CodeSnippets, Identifiers } from '../constants';
 import {
     IDataScienceFileSystem,
     IJupyterExecution,
@@ -98,13 +98,13 @@ export class JupyterImporter implements INotebookImporter {
     }
 
     private addIPythonImport = (pythonOutput: string): string => {
-        return CodeSnippits.ImportIPython.format(this.defaultCellMarker, pythonOutput);
+        return CodeSnippets.ImportIPython.format(this.defaultCellMarker, pythonOutput);
     };
 
     private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {
-        const newCode = CodeSnippits.ChangeDirectory.join(os.EOL).format(
+        const newCode = CodeSnippets.ChangeDirectory.join(os.EOL).format(
             localize.DataScience.importChangeDirectoryComment().format(this.defaultCellMarker),
-            CodeSnippits.ChangeDirectoryCommentIdentifier,
+            CodeSnippets.ChangeDirectoryCommentIdentifier,
             directoryChange
         );
         return newCode.concat(pythonOutput);
@@ -116,7 +116,7 @@ export class JupyterImporter implements INotebookImporter {
         try {
             // Make sure we don't already have an import/export comment in the file
             const contents = await this.fs.readFile(notebookFile);
-            const haveChangeAlready = contents.includes(CodeSnippits.ChangeDirectoryCommentIdentifier);
+            const haveChangeAlready = contents.includes(CodeSnippets.ChangeDirectoryCommentIdentifier);
 
             if (!haveChangeAlready) {
                 const notebookFilePath = path.dirname(notebookFile.fsPath);

@@ -20,7 +20,7 @@ import { Architecture, OSType } from '../../../client/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { isOs, isPythonVersion, PYTHON_PATH } from '../../common';
@@ -36,13 +36,13 @@ suite('Terminal - Code Execution Helper', () => {
     let editor: TypeMoq.IMock<TextEditor>;
     let processService: TypeMoq.IMock<IProcessService>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
-    const workingPython: PythonInterpreter = {
+    const workingPython: PythonEnvironment = {
         path: PYTHON_PATH,
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         displayName: 'Python',
-        type: InterpreterType.Unknown,
+        envType: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 

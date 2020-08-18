@@ -16,7 +16,7 @@ import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IInterpreterService, IPipEnvService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { InterpreterType } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 
 // tslint:disable:no-any
 
@@ -55,8 +55,8 @@ suite('Terminals Activation - Pipenv', () => {
                 }
             });
             test('No commands for an interpreter that is not Pipenv', async () => {
-                const nonPipInterpreterTypes = getNamesAndValues<InterpreterType>(InterpreterType).filter(
-                    (t) => t.value !== InterpreterType.Pipenv
+                const nonPipInterpreterTypes = getNamesAndValues<EnvironmentType>(EnvironmentType).filter(
+                    (t) => t.value !== EnvironmentType.Pipenv
                 );
                 for (const interpreterType of nonPipInterpreterTypes) {
                     when(interpreterService.getActiveInterpreter(resource)).thenResolve({
@@ -72,7 +72,7 @@ suite('Terminals Activation - Pipenv', () => {
             });
             test('pipenv shell is returned for pipenv interpeter', async () => {
                 when(interpreterService.getActiveInterpreter(resource)).thenResolve({
-                    type: InterpreterType.Pipenv
+                    envType: EnvironmentType.Pipenv
                 } as any);
 
                 for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {
@@ -84,7 +84,7 @@ suite('Terminals Activation - Pipenv', () => {
             test('pipenv is properly escaped', async () => {
                 pipenvExecFile = 'my pipenv';
                 when(interpreterService.getActiveInterpreter(resource)).thenResolve({
-                    type: InterpreterType.Pipenv
+                    envType: EnvironmentType.Pipenv
                 } as any);
 
                 for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {

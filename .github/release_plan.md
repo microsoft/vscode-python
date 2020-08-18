@@ -5,46 +5,44 @@
 
 # Release candidate (Monday, XXX XX)
 
--   [ ] Announce the code freeze (not just to team but also to debugger and language server)
+-   [ ] Announce the code freeze on both Teams and e-mail, leave enough time for teams to surface any last minute issues that need to get in before freeze. Make sure debugger and Language Server teams are looped in as well.
 -   [ ] Update master for the release
     -   [ ] Create a branch against `master` for a pull request
     -   [ ] Change the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) from a `-dev` suffix to `-rc` (🤖)
     -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date (🤖)
     -   [ ] Extension will pick up latest version of `debugpy`. If you need to pin to a particular version see `install_debugpy.py`.
-    -   [ ] Update `languageServerVersion` in `package.json` to point to the latest version of the [Language Server](https://github.com/Microsoft/python-language-server).
+    -   [ ] Update `languageServerVersion` in `package.json` to point to the latest version of the [Language Server](https://github.com/Microsoft/python-language-server). Check with the language server team if this needs updating.
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md) (🤖)
         -   [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) (typically `python news --final --update CHANGELOG.md | code-insiders -`)
-        -   [ ] Copy over the "Thanks" section from the previous release
+        -   [ ] Copy over the "Thanks" section from the previous release into the "Thanks" section for the new release
         -   [ ] Make sure the "Thanks" section is up-to-date (e.g. compare to versions in [`requirements.txt`](https://github.com/microsoft/vscode-python/blob/master/requirements.txt))
         -   [ ] Touch up news entries (e.g. add missing periods)
         -   [ ] Check the Markdown rendering to make sure everything looks good
         -   [ ] Add any relevant news entries for `debugpy` and the language server if they were updated
-    -   [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by using https://tools.opensource.microsoft.com/notice (see team notes)
-    -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) as appropriate
+    -   [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by using https://tools.opensource.microsoft.com/notice (Notes for this process are in the Team OneNote under Python VS Code -> Dev Process -> Third-Party Notices / TPN file)
+    -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
     -   [ ] Create a pull request against `master` (🤖)
     -   [ ] Merge pull request into `master`
 -   [ ] Update the [`release` branch](https://github.com/microsoft/vscode-python/branches)
-    -   [ ] Delete the `release` branch in the repo
-    -   [ ] Create a new `release` branch from `master`
-    -   (alternately, force-push the master branch to the GitHub "release" branch)
-    -   [ ] (if necessary) Request that the branch be set anew as "protected"
+    -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time
+    -   [ ] Create a new `release-YYYY.MM` branch from `master`
 -   [ ] Update master post-release (🤖)
-    -   [ ] Bump the version number to the next monthly ("YYYY.M.0-dev") release in the `master` branch
+    -   [ ] Bump the version number to the next monthly ("YYYY.MM.0-dev") release in the `master` branch
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
     -   [ ] Create a pull request against `master`
     -   [ ] Merge pull request into `master`
--   [ ] Announce the code freeze is over
--   [ ] Update [Component Governance](https://dev.azure.com/ms/vscode-python/_componentGovernance) (Click on "microsoft/vscode-python" on that page)
+-   [ ] Announce the code freeze is over on the same channels
+-   [ ] Update [Component Governance](https://dev.azure.com/ms/vscode-python/_componentGovernance) (Click on "microsoft/vscode-python" on that page). Notes are in the OneNote under Python VS Code -> Dev Process -> Component Governance.
     -   [ ] Provide details for any automatically detected npm dependencies
     -   [ ] Manually add any repository dependencies
--   [ ] GDPR bookkeeping (@brettcannon) (🤖; see team notes)
+-   [ ] GDPR bookkeeping (@brettcannon) (🤖; Notes in OneNote under Python VS Code -> Dev Process -> GDPR)
 -   [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
     -   new features
     -   settings changes
     -   etc. (ask the team)
--   [ ] Schedule a bug bash
--   [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post
+-   [ ] Schedule a bug bash. Aim for close after freeze so there is still time to fix release bugs before release. Ask teams before bash for specific areas that need testing.
+-   [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post. Contact the PM team for this.
 -   [ ] Ask CTI to test the release candidate
 
 # Final (Monday, XXX XX)
@@ -52,33 +50,36 @@
 ## Preparation
 
 -   [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the [documentation](https://code.visualstudio.com/docs/python/python-tutorial) -- including the [WOW](https://code.visualstudio.com/docs/languages/python) page -- are ready
--   [ ] final updates to the `release` branch
-    -   [ ] Create a branch against `release` for a pull request
-    -   [ ] Update the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) (🤖)
+-   [ ] Final updates to the `release-YYYY.MM` branch
+    -   [ ] Create a branch against `release-YYYY.MM` for a pull request
+    -   [ ] Update the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) to remove the `-rc` (🤖)
     -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date (the only update should be the version number if `package-lock.json` has been kept up-to-date) (🤖)
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md) (🤖)
         -   [ ] Update version and date for the release section
         -   [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) and copy-and-paste new entries (typically `python news --final | code-insiders -`; quite possibly nothing new to add)
     -   [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by using https://tools.opensource.microsoft.com/notice (🤖; see team notes)
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) manually if necessary
-    -   [ ] Create pull request against `release` (🤖)
-    -   [ ] Merge pull request into `release`
+    -   [ ] Create pull request against `release-YYYY.MM` (🤖)
+    -   [ ] Merge pull request into `release-YYYY.MM`
 -   [ ] Make sure component governance is happy
 
 ## Release
 
 -   [ ] Publish the release via Azure DevOps
-    -   [ ] Make sure [CI](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md) is passing
-    -   [ ] Make sure the "Upload" stage on the release page succeeded
+    -   [ ] Make sure [CI](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md) is passing. Try a re-run on any failing CI test stages. If tests still won't pass contact the owning team. 
+    -   [ ] On Azure DevOps on the page for the CI run after it succeeds there will now be a "Releases" tab which is populated with a release entry. Click that entry to go to the release page, which shows the "Upload" and "Publish" stages 
+    -   [ ] Click the deploy button on the "Upload" stage and make sure that it succeeds
     -   [ ] Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
-    -   [ ] Deploy the "Publish" stage
+    -   [ ] Click the deploy button on the "Publish" stage, this will push out the release to the public
+    -   [ ] From a VSCode instance uninstall the python extension. After the publish see if the new version is available from the extensions tab. Download it and quick sanity check to make sure the extension loads.
 -   [ ] Create a [GitHub release](https://github.com/microsoft/vscode-python/releases)
-    -   [ ] Have tag match the released version
-    -   [ ] Copy the changelog entry for the release as the description
+    -   [ ] The previous publish step should have created a release here, but it needs to be edited
+    -   [ ] Edit the tag to match the version of the released extension
+    -   [ ] Copy the changelog entry into the release as the description
 -   [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
 -   [ ] Publish the [blog](http://aka.ms/pythonblog) post
 -   [ ] Determine if a hotfix is needed
--   [ ] Merge `release` back into `master` (🤖)
+-   [ ] Merge `release-YYYY.MM` back into `master`. Don't overwrite the master `-dev` version in package.json. (🤖)
 
 ## Clean up after _this_ release
 

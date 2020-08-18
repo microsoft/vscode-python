@@ -8,7 +8,7 @@ import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceInfo } from '../../../common/logger';
 
 import { IPythonExecutionFactory } from '../../../common/process/types';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { getRealPath } from '../../common';
 import { IDataScienceFileSystem, IJupyterKernelSpec } from '../../types';
 
@@ -22,7 +22,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public argv: string[];
 
     // tslint:disable-next-line: no-any
-    public metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
+    public metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment> };
     constructor(specModel: Kernel.ISpecModel, file?: string) {
         this.name = specModel.name;
         this.argv = specModel.argv;

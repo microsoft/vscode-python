@@ -9,14 +9,14 @@ import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/ke
 import { PythonKernelLauncherDaemon } from '../../../client/datascience/kernel-launcher/kernelLauncherDaemon';
 import { IPythonKernelDaemon } from '../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
-import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { createPythonInterpreter } from '../../utils/interpreters';
 
 // tslint:disable: max-func-body-length no-any
 suite('DataScience - Kernel Launcher Daemon', () => {
     let launcher: PythonKernelLauncherDaemon;
     let daemonPool: KernelDaemonPool;
-    let interpreter: PythonInterpreter;
+    let interpreter: PythonEnvironment;
     let kernelSpec: ReadWrite<IJupyterKernelSpec>;
     let kernelDaemon: IPythonKernelDaemon;
     let observableOutputForDaemon: ObservableExecutionResult<string>;

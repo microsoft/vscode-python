@@ -24,7 +24,8 @@ import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
-import { KernelSelector, KernelSpecInterpreter } from '../../jupyter/kernels/kernelSelector';
+import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
+import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
@@ -156,7 +157,7 @@ export class HostRawNotebookProvider
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
 
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
-            const kernelSpecInterpreter = await this.kernelSelector.getKernelForLocalConnection(
+            const kernelConnectionMetadata = await this.kernelSelector.getKernelForLocalConnection(
                 resource,
                 'raw',
                 undefined,
@@ -166,18 +167,13 @@ export class HostRawNotebookProvider
             );
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch
-            if (!kernelSpecInterpreter.kernelSpec) {
+            if (!kernelConnectionMetadata?.kernelSpec) {
                 notebookPromise.reject('Failed to find a kernelspec to use for ipykernel launch');
             } else {
-                await rawSession.connect(
-                    kernelSpecInterpreter.kernelSpec,
-                    launchTimeout,
-                    kernelSpecInterpreter.interpreter,
-                    cancelToken
-                );
+                await rawSession.connect(kernelConnectionMetadata, launchTimeout, cancelToken);
 
                 // Get the execution info for our notebook
-                const info = await this.getExecutionInfo(kernelSpecInterpreter);
+                const info = await this.getExecutionInfo(kernelConnectionMetadata);
 
                 if (rawSession.isConnected) {
                     // Create our notebook
@@ -222,12 +218,13 @@ export class HostRawNotebookProvider
     }
 
     // Get the notebook execution info for this raw session instance
-    private async getExecutionInfo(kernelSpecInterpreter: KernelSpecInterpreter): Promise<INotebookExecutionInfo> {
+    private async getExecutionInfo(
+        kernelConnectionMetadata: KernelConnectionMetadata
+    ): Promise<INotebookExecutionInfo> {
         return {
             connectionInfo: this.getConnection(),
             uri: Settings.JupyterServerLocalLaunch,
-            interpreter: kernelSpecInterpreter.interpreter,
-            kernelSpec: kernelSpecInterpreter.kernelSpec,
+            kernelConnectionMetadata,
             workingDir: await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs),
             purpose: Identifiers.RawPurpose
         };

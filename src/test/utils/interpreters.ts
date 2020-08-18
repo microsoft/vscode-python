@@ -4,17 +4,17 @@
 'use strict';
 
 import { Architecture } from '../../client/common/utils/platform';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 /**
  * Creates a PythonInterpreter object for testing purposes, with unique name, version and path.
  * If required a custom name, version and the like can be provided.
  *
  * @export
- * @param {Partial<PythonInterpreter>} [info]
- * @returns {PythonInterpreter}
+ * @param {Partial<PythonEnvironment>} [info]
+ * @returns {PythonEnvironment}
  */
-export function createPythonInterpreter(info?: Partial<PythonInterpreter>): PythonInterpreter {
+export function createPythonInterpreter(info?: Partial<PythonEnvironment>): PythonEnvironment {
     const rnd = new Date().getTime().toString();
     return {
         displayName: `Something${rnd}`,
@@ -22,7 +22,7 @@ export function createPythonInterpreter(info?: Partial<PythonInterpreter>): Pyth
         path: `somePath${rnd}`,
         sysPrefix: `someSysPrefix${rnd}`,
         sysVersion: `1.1.1`,
-        type: InterpreterType.Unknown,
+        envType: EnvironmentType.Unknown,
         ...(info || {})
     };
 }

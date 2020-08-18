@@ -14,15 +14,15 @@ import { IInterpreterSecurityService } from '../../../client/interpreter/autoSel
 import { InterpreterSelector } from '../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterComparer, IInterpreterQuickPickItem } from '../../../client/interpreter/configuration/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
-const info: PythonInterpreter = {
+const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
     displayName: '',
     envName: '',
     path: '',
-    type: InterpreterType.Unknown,
+    envType: EnvironmentType.Unknown,
     version: new SemVer('1.0.0-alpha'),
     sysPrefix: '',
     sysVersion: ''
@@ -53,7 +53,7 @@ suite('Interpreters - selector', () => {
     class TestInterpreterSelector extends InterpreterSelector {
         // tslint:disable-next-line:no-unnecessary-override
         public async suggestionToQuickPickItem(
-            suggestion: PythonInterpreter,
+            suggestion: PythonEnvironment,
             workspaceUri?: Uri
         ): Promise<IInterpreterQuickPickItem> {
             return super.suggestionToQuickPickItem(suggestion, workspaceUri);
@@ -96,13 +96,13 @@ suite('Interpreters - selector', () => {
                 new PathUtils(isWindows)
             );
 
-            const initial: PythonInterpreter[] = [
-                { displayName: '1', path: 'c:/path1/path1', type: InterpreterType.Unknown },
-                { displayName: '2', path: 'c:/path1/path1', type: InterpreterType.Unknown },
-                { displayName: '2', path: 'c:/path2/path2', type: InterpreterType.Unknown },
-                { displayName: '2 (virtualenv)', path: 'c:/path2/path2', type: InterpreterType.VirtualEnv },
-                { displayName: '3', path: 'c:/path2/path2', type: InterpreterType.Unknown },
-                { displayName: '4', path: 'c:/path4/path4', type: InterpreterType.Conda }
+            const initial: PythonEnvironment[] = [
+                { displayName: '1', path: 'c:/path1/path1', envType: EnvironmentType.Unknown },
+                { displayName: '2', path: 'c:/path1/path1', envType: EnvironmentType.Unknown },
+                { displayName: '2', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
+                { displayName: '2 (virtualenv)', path: 'c:/path2/path2', envType: EnvironmentType.VirtualEnv },
+                { displayName: '3', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
+                { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda }
             ].map((item) => {
                 return { ...info, ...item };
             });

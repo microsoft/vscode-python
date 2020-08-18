@@ -25,6 +25,7 @@ import {
     INotebook
 } from '../types';
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
+import { getKernelConnectionLanguage, isPythonKernelConnection } from './kernels/helpers';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 
@@ -237,11 +238,7 @@ export class OldJupyterVariables implements IJupyterVariables {
 
     private getParser(notebook: INotebook) {
         // Figure out kernel language
-        let language = PYTHON_LANGUAGE;
-        if (notebook) {
-            const kernel = notebook.getKernelSpec();
-            language = kernel && kernel.language ? kernel.language : PYTHON_LANGUAGE;
-        }
+        const language = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
 
         // We may have cached this information
         let result = this.languageToQueryMap.get(language);
@@ -434,7 +431,7 @@ export class OldJupyterVariables implements IJupyterVariables {
             result.type &&
             result.count &&
             !result.shape &&
-            notebook.getKernelSpec()?.language === 'python' &&
+            isPythonKernelConnection(notebook.getKernelConnection()) &&
             result.supportsDataExplorer &&
             result.type !== 'list' // List count is good enough
         ) {
