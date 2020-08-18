@@ -6,7 +6,9 @@
 import * as path from 'path';
 import * as semver from 'semver';
 import { IFileSystem } from '../../common/platform/types';
+import { Resource } from '../../common/types';
 import { Architecture } from '../../common/utils/platform';
+import { resolvePossibleSymlinkToRealPath } from '../utils';
 import { areSameVersion, PythonVersion } from './pythonVersion';
 
 /**
@@ -73,6 +75,7 @@ export type PythonEnvironment = InterpreterInformation & {
     envName?: string;
     envPath?: string;
     cachedEntry?: boolean;
+    resource?: Resource;
 };
 
 /**
@@ -129,7 +132,12 @@ export function areSameEnvironment(
     if (!environment1 || !environment2) {
         return false;
     }
-    if (fs.arePathsSame(environment1.path, environment2.path)) {
+    if (
+        fs.arePathsSame(
+            resolvePossibleSymlinkToRealPath(environment1.path),
+            resolvePossibleSymlinkToRealPath(environment2.path)
+        )
+    ) {
         return true;
     }
     if (!areSameVersion(environment1.version, environment2.version)) {
