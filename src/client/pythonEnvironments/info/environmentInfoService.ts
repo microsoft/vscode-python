@@ -3,10 +3,10 @@
 
 import { injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '.';
+import { createWorkerPool, IWorkerPool, QueuePosition } from '../../common/utils/workerPool';
 import { shellExecute } from '../common/externalDependencies';
 import { buildPythonExecInfo } from '../exec';
 import { getInterpreterInfo } from './interpreter';
-import { createWorkerPool, IWorkerPool, QueuePosition } from './workerPool';
 
 export enum EnvironmentInfoServiceQueuePriority {
     Default,
