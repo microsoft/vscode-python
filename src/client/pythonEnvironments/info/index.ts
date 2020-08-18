@@ -129,6 +129,9 @@ export function areSameEnvironment(
     if (!environment1 || !environment2) {
         return false;
     }
+    if (fs.arePathsSame(environment1.path, environment2.path)) {
+        return true;
+    }
     if (!areSameVersion(environment1.version, environment2.version)) {
         return false;
     }
@@ -149,7 +152,7 @@ export function areSameEnvironment(
 export function updateEnvironment(environment: PythonEnvironment, other: PythonEnvironment): void {
     // Preserve type information.
     // Possible we identified environment as unknown, but a later provider has identified env type.
-    if (environment.envType === EnvironmentType.Unknown && other.envType !== EnvironmentType.Unknown) {
+    if (environment.envType === EnvironmentType.Unknown && other.envType && other.envType !== EnvironmentType.Unknown) {
         environment.envType = other.envType;
     }
     const props: (keyof PythonEnvironment)[] = [
