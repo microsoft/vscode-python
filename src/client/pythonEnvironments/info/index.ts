@@ -85,7 +85,7 @@ export type PartialPythonEnvironment = Partial<Omit<PythonEnvironment, 'path'>> 
  *
  * @param environment = the env info to normalize
  */
-export function normalizeEnvironment(environment: PythonEnvironment): void {
+export function normalizeEnvironment(environment: PartialPythonEnvironment): void {
     environment.path = path.normalize(environment.path);
 }
 
@@ -122,8 +122,8 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType) {
  * @param environment2 - one of the two envs to compare
  */
 export function areSameEnvironment(
-    environment1: PythonEnvironment | undefined,
-    environment2: PythonEnvironment | undefined,
+    environment1: PartialPythonEnvironment | undefined,
+    environment2: PartialPythonEnvironment | undefined,
     fs: IFileSystem
 ): boolean {
     if (!environment1 || !environment2) {
@@ -149,7 +149,7 @@ export function areSameEnvironment(
  * @param environment - the info to update
  * @param other - the info to copy in
  */
-export function updateEnvironment(environment: PythonEnvironment, other: PythonEnvironment): void {
+export function updateEnvironment(environment: PartialPythonEnvironment, other: PartialPythonEnvironment): void {
     // Preserve type information.
     // Possible we identified environment as unknown, but a later provider has identified env type.
     if (environment.envType === EnvironmentType.Unknown && other.envType && other.envType !== EnvironmentType.Unknown) {
@@ -180,11 +180,14 @@ export function updateEnvironment(environment: PythonEnvironment, other: PythonE
  *
  * @param environments - the env infos to merge
  */
-export function mergeEnvironments(environments: PythonEnvironment[], fs: IFileSystem): PythonEnvironment[] {
-    return environments.reduce<PythonEnvironment[]>((accumulator, current) => {
+export function mergeEnvironments(
+    environments: PartialPythonEnvironment[],
+    fs: IFileSystem
+): PartialPythonEnvironment[] {
+    return environments.reduce<PartialPythonEnvironment[]>((accumulator, current) => {
         const existingItem = accumulator.find((item) => areSameEnvironment(current, item, fs));
         if (!existingItem) {
-            const copied: PythonEnvironment = { ...current };
+            const copied: PartialPythonEnvironment = { ...current };
             normalizeEnvironment(copied);
             accumulator.push(copied);
         } else {
