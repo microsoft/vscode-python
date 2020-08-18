@@ -135,7 +135,10 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
         // This way other parts of extension have access to this kernel immediately after event is handled.
-        this.kernelProvider.getOrCreate(document.uri, { metadata: selectedKernelConnectionMetadata });
+        this.kernelProvider.getOrCreate(document.uri, {
+            metadata: selectedKernelConnectionMetadata,
+            launchingFile: document.uri.fsPath
+        });
 
         // Change kernel and update metadata.
         const notebook = await this.notebookProvider.getOrCreateNotebook({

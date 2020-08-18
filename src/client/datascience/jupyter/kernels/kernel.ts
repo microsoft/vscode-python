@@ -81,7 +81,7 @@ export class Kernel implements IKernel {
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,
-        private readonly launchingFile: string | undefined,
+        private readonly launchingFile: string,
         commandManager: ICommandManager,
         interpreterService: IInterpreterService,
         errorHandler: IDataScienceErrorHandler,
