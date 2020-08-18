@@ -392,8 +392,8 @@ steps:
   #
   # Example command line (windows pwsh):
   # > node build/ci/scripts/runFunctionalTests.js
-  - bash: |
-      node build/ci/scripts/runFunctionalTests.js
+  - script: |
+      npm run test:functional:split
     displayName: 'Run functional tests using Node'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testFunctional'))
     env:
