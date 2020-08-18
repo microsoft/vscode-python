@@ -4,6 +4,7 @@
 'use strict';
 
 import { expect } from 'chai';
+import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 import { Extension } from 'vscode';
 import { LanguageServerType } from '../../../client/activation/types';
@@ -24,6 +25,8 @@ import {
     ProposeLSStateKeys,
     ProposePylanceBanner
 } from '../../../client/languageServices/proposeLanguageServerBanner';
+import * as Telemetry from '../../../client/telemetry';
+import { EventName } from '../../../client/telemetry/constants';
 
 interface IExperimentLsCombination {
     inExperiment: boolean;
@@ -46,6 +49,8 @@ suite('Propose Pylance Banner', () => {
     let appShell: typemoq.IMock<IApplicationShell>;
     let appEnv: typemoq.IMock<IApplicationEnvironment>;
     let settings: typemoq.IMock<IPythonSettings>;
+    let sendTelemetryStub: sinon.SinonStub;
+    let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
 
     const message = Pylance.proposePylanceMessage();
     const yes = Pylance.tryItNow();
@@ -59,6 +64,18 @@ suite('Propose Pylance Banner', () => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         appEnv = typemoq.Mock.ofType<IApplicationEnvironment>();
         appEnv.setup((x) => x.uriScheme).returns(() => 'scheme');
+
+        const mockSendTelemetryEvent = (
+            eventName: EventName,
+            _: number | undefined,
+            { hasCustomEnvPath }: { hasCustomEnvPath: boolean }
+        ) => {
+            telemetryEvent = {
+                eventName,
+                hasCustomEnvPath
+            };
+        };
+        sendTelemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
     });
     testData.forEach((t) => {
         test(`${t.inExperiment ? 'In' : 'Not in'} experiment and "python.languageServer": "${t.lsType}" should ${

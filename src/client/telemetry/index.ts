@@ -1295,6 +1295,18 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: any;
     /**
+     * Telemetry sent when user chooses 'Later' on switch to Pylance prompt.
+     */
+    [EventName.PYLANCE_LANGUAGE_SERVER_SWITCH_YES]: any;
+    /**
+     * Telemetry sent when user chooses 'Later' on switch to Pylance prompt.
+     */
+    [EventName.PYLANCE_LANGUAGE_SERVER_SWITCH_NO]: any;
+    /**
+     * Telemetry sent when user chooses 'Later' on switch to Pylance prompt.
+     */
+    [EventName.PYLANCE_LANGUAGE_SERVER_SWITCH_LATER]: any;
+    /**
      * Telemetry event sent with details when inExperiment() API is called
      */
     [EventName.PYTHON_EXPERIMENTS]: {
