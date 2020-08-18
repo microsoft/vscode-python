@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { IConfigurationService, IDisposable } from '../../../common/types';
@@ -10,6 +11,7 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { captureTelemetry } from '../../../telemetry';
 import { Commands, Telemetry, VSCodeNativeTelemetry } from '../../constants';
+import { handleUpdateDisplayDataMessage } from '../../notebook/helpers/executionHelpers';
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
 import { INotebookContentProvider } from '../../notebook/types';
 import { IDataScienceErrorHandler, INotebook, INotebookEditorProvider } from '../../types';
@@ -166,6 +168,14 @@ export class KernelExecution implements IDisposable {
         return kernel;
     }
 
+    private onIoPubMessage(document: NotebookDocument, msg: KernelMessage.IIOPubMessage) {
+        // tslint:disable-next-line:no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+        if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg) && handleUpdateDisplayDataMessage(msg, document)) {
+            this.contentProvider.notifyChangesToDocument(document);
+        }
+    }
+
     private async executeIndividualCell(
         kernelPromise: Promise<IKernel>,
         cellExecution: CellExecution
@@ -173,15 +183,14 @@ export class KernelExecution implements IDisposable {
         if (!this.notebook) {
             throw new Error('No notebook object');
         }
-        if (cellExecution.token.isCancellationRequested) {
-            return;
-        }
-        await kernelPromise;
-        if (cellExecution.token.isCancellationRequested) {
-            return;
-        }
+
+        // Register for IO pub messages
+        const ioRegistration = this.notebook.session.onIoPubMessage(
+            this.onIoPubMessage.bind(this, cellExecution.cell.notebook)
+        );
         cellExecution.token.onCancellationRequested(
             () => {
+                ioRegistration.dispose();
                 if (cellExecution.completed) {
                     return;
                 }
@@ -193,8 +202,15 @@ export class KernelExecution implements IDisposable {
             this.disposables
         );
 
-        cellExecution.start(this.notebook);
-        return cellExecution.result;
+        // Start execution
+        cellExecution.start(kernelPromise, this.notebook);
+
+        // The result promise will resolve when complete.
+        try {
+            return await cellExecution.result;
+        } finally {
+            ioRegistration.dispose();
+        }
     }
 
     private async validateKernel(document: NotebookDocument): Promise<void> {

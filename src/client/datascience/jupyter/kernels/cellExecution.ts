@@ -19,7 +19,6 @@ import { Telemetry } from '../../constants';
 import {
     handleUpdateDisplayDataMessage,
     updateCellExecutionCount,
-    updateCellRunningState,
     updateCellWithErrorStatus
 } from '../../notebook/helpers/executionHelpers';
 import {
@@ -38,6 +37,7 @@ import {
     INotebookEditorProvider,
     INotebookExecutionLogger
 } from '../../types';
+import { IKernel } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -116,7 +116,7 @@ export class CellExecution {
         return new CellExecution(cell, contentProvider, errorHandler, editorProvider, appService, configService);
     }
 
-    public start(notebook: INotebook) {
+    public start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
         this.started = true;
         // Ensure we clear the cell state and trigger a change.
         clearCellForExecution(this.cell);
@@ -127,7 +127,13 @@ export class CellExecution {
         this.notifyCellExecution();
 
         // Begin the request that will modify our cell.
-        this.execute(notebook.session, notebook.getLoggers());
+        kernelPromise
+            .then((_k) => {
+                this.execute(notebook.session, notebook.getLoggers());
+            })
+            .catch((e) => {
+                this.completedWithErrors(e);
+            });
     }
 
     /**
@@ -316,10 +322,10 @@ export class CellExecution {
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                 this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
-                // If there is no change in the status, then there's no need to update the subscriber.
-                // Else we end up sending a number of messages unnecessarily uptream.
+                // Status is handled by the result promise. While it is running we are active. Otherwise we're stopped.
+                // So ignore status messages.
                 const statusMsg = msg as KernelMessage.IStatusMsg;
-                shouldUpdate = updateCellRunningState(this.cell, statusMsg.content.execution_state);
+                shouldUpdate = false;
                 this.handleStatusMessage(statusMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
                 this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState, trimFunc);
@@ -327,7 +333,6 @@ export class CellExecution {
                 this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
                 // No new data to update UI, hence do not send updates.
-                handleUpdateDisplayDataMessage(msg, this.cell.notebook);
                 shouldUpdate = false;
             } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
                 this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);

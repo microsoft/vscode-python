@@ -12,6 +12,7 @@ import {
     Event,
     EventEmitter,
     NotebookCell,
+    NotebookCellRunState,
     NotebookDocument,
     Uri
 } from 'vscode';
@@ -25,7 +26,6 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { INotebookContentProvider } from '../../notebook/types';
 import { getDefaultNotebookContent, updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import {
-    ICell,
     IDataScienceErrorHandler,
     IJupyterKernelSpec,
     INotebook,
@@ -97,7 +97,7 @@ export class Kernel implements IKernel {
         commandManager: ICommandManager,
         interpreterService: IInterpreterService,
         errorHandler: IDataScienceErrorHandler,
-        contentProvider: INotebookContentProvider,
+        private readonly contentProvider: INotebookContentProvider,
         editorProvider: INotebookEditorProvider,
         private readonly kernelProvider: IKernelProvider,
         private readonly kernelSelectionUsage: IKernelSelectionUsage,
@@ -116,20 +116,12 @@ export class Kernel implements IKernel {
             configService
         );
     }
-    public executeObservable(
-        code: string,
-        file: string,
-        line: number,
-        id: string,
-        silent: boolean
-    ): Observable<ICell[]> {
-        if (!this.notebook) {
-            throw new Error('executeObservable cannot be called if kernel has not been started!');
-        }
-        this.notebook.clear(id);
-        return this.notebook.executeObservable(code, file, line, id, silent);
-    }
     public async executeCell(cell: NotebookCell): Promise<void> {
+        // Update cell to running state.
+        cell.metadata.runState = NotebookCellRunState.Running;
+        this.contentProvider.notifyChangesToDocument(cell.notebook);
+
+        // Then actually start.
         await this.start({ disableUI: false, token: this.startCancellation.token });
         await this.kernelExecution.executeCell(cell);
     }
@@ -173,7 +165,7 @@ export class Kernel implements IKernel {
             });
 
             this._notebookPromise
-                .then((nb) => (this.kernelExecution.notebook = this.notebook = nb))
+                .then((nb) => (this.kernelExecution.setNotebook(this.notebook = nb))
                 .catch((ex) => traceError('failed to create INotebook in kernel', ex));
             await this._notebookPromise;
             await this.initializeAfterStart();
