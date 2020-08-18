@@ -144,11 +144,9 @@ export class Kernel implements IKernel {
                 token: options?.token
             });
 
-            this._notebookPromise.then((nb) =>
-                this.kernelExecution
-                    .setNotebook((this.notebook = nb))
-                    .catch((ex) => traceError('failed to create INotebook in kernel', ex))
-            );
+            this._notebookPromise
+                .then((nb) => (this.kernelExecution.notebook = this.notebook = nb))
+                .catch((ex) => traceError('failed to create INotebook in kernel', ex));
             await this._notebookPromise;
             await this.initializeAfterStart();
         }

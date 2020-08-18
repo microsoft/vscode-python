@@ -16,11 +16,7 @@ import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import {
-    handleUpdateDisplayDataMessage,
-    updateCellExecutionCount,
-    updateCellWithErrorStatus
-} from '../../notebook/helpers/executionHelpers';
+import { updateCellExecutionCount, updateCellWithErrorStatus } from '../../notebook/helpers/executionHelpers';
 import {
     cellOutputToVSCCellOutput,
     clearCellForExecution,

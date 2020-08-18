@@ -396,17 +396,25 @@ cellOutputMappers.set('stream', translateStreamOutput as any);
 cellOutputMappers.set('update_display_data', translateDisplayDataOutput as any);
 export function cellOutputToVSCCellOutput(output: nbformat.IOutput): CellOutput {
     const fn = cellOutputMappers.get(output.output_type as nbformat.OutputType);
+    let result: CellOutput;
     if (fn) {
-        return fn(output, (output.output_type as unknown) as nbformat.OutputType);
+        result = fn(output, (output.output_type as unknown) as nbformat.OutputType);
     } else {
         traceWarning(`Unable to translate cell from ${output.output_type} to NotebookCellData for VS Code.`);
-        return {
+        result = {
             outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
             // tslint:disable-next-line: no-any
             data: output.data as any,
             metadata: { custom: { vscode: { outputType: output.output_type } } }
         };
     }
+
+    // Add on transient data if we have any
+    if (output.transient && result) {
+        // tslint:disable-next-line: no-any
+        (result as any).transient = { ...(output.transient as any) };
+    }
+    return result;
 }
 
 export function vscCellOutputToCellOutput(output: CellOutput): nbformat.IOutput | undefined {
@@ -476,63 +484,83 @@ function getSanitizedCellMetadata(metadata?: { [key: string]: any }) {
     }
     return cloned;
 }
-function translateCellDisplayOutput(
-    output: CellDisplayOutput
-):
-    | nbformat.IStream
-    | nbformat.IDisplayData
-    | nbformat.IDisplayUpdate
+
+type JupyterOutput =
+    | nbformat.IUnrecognizedOutput
     | nbformat.IExecuteResult
-    | nbformat.IUnrecognizedOutput {
+    | nbformat.IDisplayData
+    | nbformat.IStream
+    | nbformat.IError;
+
+function translateCellDisplayOutput(output: CellDisplayOutput): JupyterOutput {
     const outputType: nbformat.OutputType = output.metadata?.custom?.vscode?.outputType;
+    let result: JupyterOutput;
     switch (outputType) {
-        case 'stream': {
-            return {
-                output_type: 'stream',
-                name: output.metadata?.custom?.vscode?.name,
-                text: splitMultilineString(output.data['text/plain'])
-            };
-        }
-        case 'display_data': {
-            const metadata = getSanitizedCellMetadata(output.metadata?.custom);
-            return {
-                output_type: 'display_data',
-                data: output.data,
-                metadata
-            };
-        }
-        case 'execute_result': {
-            const metadata = getSanitizedCellMetadata(output.metadata?.custom);
-            return {
-                output_type: 'execute_result',
-                data: output.data,
-                metadata,
-                execution_count: output.metadata?.custom?.vscode?.execution_count
-            };
-        }
-        case 'update_display_data': {
-            const metadata = getSanitizedCellMetadata(output.metadata?.custom);
-            return {
-                output_type: 'update_display_data',
-                data: output.data,
-                metadata
-            };
-        }
-        default: {
-            sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
-                isErrorOutput: outputType === 'error'
-            });
-            const metadata = getSanitizedCellMetadata(output.metadata?.custom);
-            const unknownOutput: nbformat.IUnrecognizedOutput = { output_type: outputType };
-            if (Object.keys(metadata).length > 0) {
-                unknownOutput.metadata = metadata;
+        case 'stream':
+            {
+                result = {
+                    output_type: 'stream',
+                    name: output.metadata?.custom?.vscode?.name,
+                    text: splitMultilineString(output.data['text/plain'])
+                };
             }
-            if (Object.keys(output.data).length > 0) {
-                unknownOutput.data = output.data;
+            break;
+        case 'display_data':
+            {
+                const metadata = getSanitizedCellMetadata(output.metadata?.custom);
+                result = {
+                    output_type: 'display_data',
+                    data: output.data,
+                    metadata
+                };
             }
-            return unknownOutput;
-        }
+            break;
+        case 'execute_result':
+            {
+                const metadata = getSanitizedCellMetadata(output.metadata?.custom);
+                result = {
+                    output_type: 'execute_result',
+                    data: output.data,
+                    metadata,
+                    execution_count: output.metadata?.custom?.vscode?.execution_count
+                };
+            }
+            break;
+        case 'update_display_data':
+            {
+                const metadata = getSanitizedCellMetadata(output.metadata?.custom);
+                result = {
+                    output_type: 'update_display_data',
+                    data: output.data,
+                    metadata
+                };
+            }
+            break;
+        default:
+            {
+                sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
+                    isErrorOutput: outputType === 'error'
+                });
+                const metadata = getSanitizedCellMetadata(output.metadata?.custom);
+                const unknownOutput: nbformat.IUnrecognizedOutput = { output_type: outputType };
+                if (Object.keys(metadata).length > 0) {
+                    unknownOutput.metadata = metadata;
+                }
+                if (Object.keys(output.data).length > 0) {
+                    unknownOutput.data = output.data;
+                }
+                result = unknownOutput;
+            }
+            break;
     }
+
+    // Account for transient data as well
+    // tslint:disable-next-line: no-any
+    if (result && (output as any).transient) {
+        // tslint:disable-next-line: no-any
+        result.transient = { ...(output as any).transient };
+    }
+    return result;
 }
 
 /**
