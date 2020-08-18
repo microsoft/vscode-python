@@ -173,14 +173,19 @@ def fix_fileid(
 @contextlib.contextmanager
 def hide_stdio():
     """Swallow stdout and stderr."""
+    stdout_fd = sys.stdout.fileno()
     ignored = StdioStream()
     sys.stdout = ignored
     sys.stderr = ignored
-    try:
-        yield ignored
-    finally:
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
+    with os.fdopen(os.dup(stdout_fd), "w") as old_stdout:
+        with open(os.devnull, "w") as devnull:
+            os.dup2(devnull.fileno(), stdout_fd)
+        try:
+            yield ignored
+        finally:
+            os.dup2(old_stdout.fileno(), stdout_fd)
+            sys.stdout = os.fdopen(stdout_fd, "w")
+            sys.stderr = sys.__stderr__
 
 
 if sys.version_info < (3,):
