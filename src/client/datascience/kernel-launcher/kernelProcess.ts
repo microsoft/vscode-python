@@ -154,7 +154,8 @@ export class KernelProcess implements IKernelProcess {
             // tslint:disable-next-line: no-any
             this._launchKernelSpec = undefined;
         } else {
-            this._launchKernelSpec = { ...kernelSpec };
+            // Copy our kernelspec and assign a new argv array
+            this._launchKernelSpec = { ...kernelSpec, argv: [...kernelSpec.argv] };
         }
         return this._launchKernelSpec!;
     }
@@ -240,7 +241,7 @@ export class KernelProcess implements IKernelProcess {
             const kernelDaemonLaunch = await this.pythonKernelLauncher.launch(
                 this.resource,
                 workingDirectory,
-                this._kernelConnectionMetadata.kernelSpec!,
+                this.launchKernelSpec,
                 this._kernelConnectionMetadata.interpreter
             );
 
