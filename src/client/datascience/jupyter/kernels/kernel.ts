@@ -7,6 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
+import * as uuid from 'uuid/v4';
 import {
     CancellationToken,
     CancellationTokenSource,
@@ -18,11 +19,13 @@ import {
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { ICommandManager } from '../../../common/application/types';
+import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError } from '../../../common/logger';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
+import { CodeSnippets } from '../../constants';
 import { INotebookContentProvider } from '../../notebook/types';
 import { getDefaultNotebookContent, updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import {
@@ -231,6 +234,7 @@ export class Kernel implements IKernel {
         if (!this.notebook) {
             return;
         }
+        this.disableJedi();
         if (!this.hookedNotebookForEvents.has(this.notebook)) {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
@@ -247,5 +251,13 @@ export class Kernel implements IKernel {
             await this.notebook.setLaunchingFile(this.launchingFile);
         }
         await this.notebook.waitForIdle(this.launchTimeout);
+    }
+
+    private disableJedi() {
+        const metadata = ((getDefaultNotebookContent().metadata || {}) as unknown) as nbformat.INotebookMetadata;
+
+        if (this.launchingFile && metadata.language_info && metadata.language_info.name === PYTHON_LANGUAGE) {
+            this.executeObservable(CodeSnippets.disableJedi, this.launchingFile, 0, uuid(), true);
+        }
     }
 }

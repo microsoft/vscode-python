@@ -3,17 +3,15 @@
 
 'use strict';
 
-import * as uuid from 'uuid/v4';
 import { CellKind, ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
 import type { NotebookDocument } from 'vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
-import { CodeSnippits, Telemetry } from '../constants';
+import { Telemetry } from '../constants';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
@@ -83,8 +81,6 @@ export class NotebookEditor implements INotebookEditor {
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry
     ) {
-        this.disableJedi();
-
         disposables.push(model.onDidEdit(() => this._modified.fire(this)));
         disposables.push(
             model.changed((e) => {
@@ -240,7 +236,6 @@ export class NotebookEditor implements INotebookEditor {
             this.restartingKernel = false;
             // Restore previous state.
             [this.document.metadata.cellRunnable, this.document.metadata.runnable] = [cellRunnable, runnable];
-            this.disableJedi();
         }
     }
     private async shouldAskForRestart(): Promise<boolean> {
@@ -255,13 +250,6 @@ export class NotebookEditor implements INotebookEditor {
             this.configurationService
                 .updateSetting('dataScience.askForKernelRestart', false, undefined, ConfigurationTarget.Global)
                 .ignoreErrors();
-        }
-    }
-
-    private disableJedi() {
-        const kernel = this.kernelProvider.get(this.file);
-        if (kernel && kernel.kernelSpec && kernel.kernelSpec.language === PYTHON_LANGUAGE) {
-            kernel.executeObservable(CodeSnippits.disableJedi, this.file.fsPath, 0, uuid(), true);
         }
     }
 }
