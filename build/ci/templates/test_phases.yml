@@ -390,6 +390,9 @@ steps:
   #
   # This task only runs if the string 'testFunctional' exists in variable `TestsToRun`.
   #
+  # Note it is crucial this uses npm to start the runFunctionalTests.js. Otherwise the
+  # environment will be messed up.
+  #
   # Example command line (windows pwsh):
   # > node build/ci/scripts/runFunctionalTests.js
   - script: |
