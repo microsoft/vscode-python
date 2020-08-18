@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { traceError } from '../../common/logger';
+import { traceError } from '../logger';
+import { createDeferred, Deferred } from './async';
 
 interface IWorker {
     stop(): void;
@@ -11,11 +12,6 @@ interface IWorker {
 type NextFunc<T> = () => Promise<T>;
 type WorkFunc<T, R> = (item: T) => Promise<R>;
 type PostResult<T, R> = (item: T, result?: R, err?: Error) => void;
-
-interface IResultHolder<R> {
-    resolve(result?: R | PromiseLike<R>): void;
-    reject(reason?: Error): void;
-}
 
 interface IWorkItem<T> {
     item: T;
@@ -47,10 +43,8 @@ export interface IWorkerPool<T, R> {
      * Stops any further processing of items. Each works is expected to finish
      * whatever it is working on and exit.
      * @method addToQueue
-     * @param {boolean} rejectAllPending : Default 'true'. When true all pending items
-     * are rejected.
      */
-    stop(rejectAllPending: boolean): void;
+    stop(): void;
 }
 
 class Worker<T, R> implements IWorker {
@@ -87,7 +81,7 @@ class Worker<T, R> implements IWorker {
 
 class WorkQueue<T, R> implements IWorkQueue<T, R> {
     private items: IWorkItem<T>[] = [];
-    private results: Map<IWorkItem<T>, IResultHolder<R>> = new Map();
+    private results: Map<IWorkItem<T>, Deferred<R>> = new Map();
     public constructor(private readonly onAddedCallback: () => void) {}
     public add(item: T, position?: QueuePosition): Promise<R> {
         // Wrap the user provided item in a wrapper object. This will allow us to track multiple
@@ -106,14 +100,12 @@ class WorkQueue<T, R> implements IWorkQueue<T, R> {
         // This is the promise that will be resolved when the work
         // item is complete. We save this in a map to resolve when
         // the worker finishes and posts the result.
-        // tslint:disable-next-line: promise-must-complete
-        const promise = new Promise<R>((resolve, reject) => {
-            this.results.set(workItem, { resolve, reject });
-        });
+        const deferred = createDeferred<R>();
+        this.results.set(workItem, deferred);
 
         this.onAddedCallback();
 
-        return promise;
+        return deferred.promise;
     }
 
     public completed(workItem: IWorkItem<T>, result?: R, error?: Error): void {
@@ -132,7 +124,7 @@ class WorkQueue<T, R> implements IWorkQueue<T, R> {
     }
 
     public clear(): void {
-        this.results.forEach((v: IResultHolder<R>, k: IWorkItem<T>, map: Map<IWorkItem<T>, IResultHolder<R>>) => {
+        this.results.forEach((v: Deferred<R>, k: IWorkItem<T>, map: Map<IWorkItem<T>, Deferred<R>>) => {
             v.reject(Error('Queue stopped processing'));
             map.delete(k);
         });

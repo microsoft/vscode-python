@@ -2,13 +2,11 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import { createWorkerPool, IWorkerPool, QueuePosition } from '../../../client/pythonEnvironments/info/workerPool';
+import { createWorkerPool, IWorkerPool, QueuePosition } from '../../../client/common/utils/workerPool';
 
 suite('Process Queue', () => {
     test('Run two workers to calculate square', async () => {
-        const workerPool: IWorkerPool<number, number> = createWorkerPool(async (i) => {
-            return Promise.resolve(i * i);
-        });
+        const workerPool: IWorkerPool<number, number> = createWorkerPool(async (i) => Promise.resolve(i * i));
         const promises: Promise<number>[] = [];
         const results: number[] = [];
         [2, 3, 4, 5, 6, 7, 8, 9].forEach((i) => promises.push(workerPool.addToQueue(i)));
@@ -39,7 +37,7 @@ suite('Process Queue', () => {
     test('Run two workers and stop in between', async () => {
         const workerPool: IWorkerPool<number, number> = createWorkerPool(async (i) => {
             if (i === 4) {
-                workerPool.stop(true);
+                workerPool.stop();
             }
             return Promise.resolve(i * i);
         });
@@ -64,7 +62,7 @@ suite('Process Queue', () => {
 
     test('Add to a stopped queue', async () => {
         const workerPool: IWorkerPool<number, number> = createWorkerPool((i) => Promise.resolve(i * i));
-        workerPool.stop(true);
+        workerPool.stop();
         const reasons: Error[] = [];
         try {
             await workerPool.addToQueue(2);
