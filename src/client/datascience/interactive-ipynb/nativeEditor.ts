@@ -434,6 +434,28 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 cellsExecuting.add(cell);
                 await this.reexecuteCell(cell, tokenSource.token);
                 cellsExecuting.delete(cell);
+
+                // Check the new state of our cell
+                const resultCell = this.model.cells.find((item) => item.id === cell.id);
+
+                // Bail on the rest of our cells if one comes back with an error
+                if (
+                    this.configuration.getSettings(this.owningResource).datascience.stopOnError &&
+                    resultCell &&
+                    resultCell.state === CellState.error
+                ) {
+                    // Set the remaining cells as finished and break out
+                    if (i < info.cellIds.length) {
+                        const unExecutedCellIds = info.cellIds.slice(i + 1, info.cellIds.length);
+                        unExecutedCellIds.forEach((cellId) => {
+                            const unexecutedCell = this.model.cells.find((item) => item.id === cellId);
+                            if (unexecutedCell) {
+                                this.finishCell(unexecutedCell);
+                            }
+                        });
+                    }
+                    break;
+                }
             }
         } catch (exc) {
             // Tell the other side we restarted the kernel. This will stop all executions

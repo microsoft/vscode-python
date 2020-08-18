@@ -13,7 +13,7 @@ import {
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { kernelConnectionMetadataHasKernelSpec } from '../jupyter/kernels/helpers';
+import { areKernelConnectionsEqual, kernelConnectionMetadataHasKernelSpec } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
@@ -131,35 +131,37 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             );
         });
     }
-    private async onDidChangeActiveNotebookKernel(newKernelInfo: {
+    private async onDidChangeActiveNotebookKernel({
+        document,
+        kernel
+    }: {
         document: NotebookDocument;
         kernel: VSCNotebookKernel | undefined;
     }) {
-        if (!newKernelInfo.kernel || !(newKernelInfo.kernel instanceof VSCodeNotebookKernelMetadata)) {
+        // We're only interested in our Jupyter Notebooks & our kernels.
+        if (!kernel || !(kernel instanceof VSCodeNotebookKernelMetadata) || !isJupyterNotebook(document)) {
             return;
         }
-
-        const document = newKernelInfo.document;
-        if (!isJupyterNotebook(document)) {
-            return;
-        }
-        const selection = newKernelInfo.kernel.selection;
+        const selectedKernelConnectionMetadata = kernel.selection;
 
         const model = this.storageProvider.get(document.uri);
         if (!model || !model.isTrusted) {
+            // tslint:disable-next-line: no-suspicious-comment
+            // TODO: https://github.com/microsoft/vscode-python/issues/13476
             // If a model is not trusted, we cannot change the kernel (this results in changes to notebook metadata).
             // This is because we store selected kernel in the notebook metadata.
             return;
         }
 
-        // Check what the existing kernel is.
         const existingKernel = this.kernelProvider.get(document.uri);
-        if (existingKernel && fastDeepEqual(existingKernel.metadata, newKernelInfo.kernel.selection)) {
+        if (existingKernel && areKernelConnectionsEqual(existingKernel.metadata, selectedKernelConnectionMetadata)) {
             return;
         }
 
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
-        this.kernelProvider.getOrCreate(document.uri, { metadata: newKernelInfo.kernel.selection });
+        // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
+        // This way other parts of extension have access to this kernel immediately after event is handled.
+        this.kernelProvider.getOrCreate(document.uri, { metadata: selectedKernelConnectionMetadata });
 
         // Change kernel and update metadata.
         const notebook = await this.notebookProvider.getOrCreateNotebook({
@@ -183,9 +185,9 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                     this.disposables
                 );
             }
-            this.kernelSwitcher.switchKernelWithRetry(notebook, selection).catch(noop);
+            this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
         } else {
-            updateKernelInNotebookMetadata(document, selection, this.notebookContentProvider);
+            updateKernelInNotebookMetadata(document, selectedKernelConnectionMetadata, this.notebookContentProvider);
         }
     }
 }

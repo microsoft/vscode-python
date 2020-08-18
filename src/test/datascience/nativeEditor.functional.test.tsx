@@ -32,6 +32,7 @@ import {
     ICell,
     IDataScienceErrorHandler,
     IJupyterExecution,
+    INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
     ITrustService
@@ -2444,6 +2445,69 @@ df.head()`;
                         }
                     }
                 };
+
+                suite('Stop On Error', () => {
+                    let notebookEditor: { editor: INotebookEditor; mount: IMountedWebView };
+                    setup(async () => {
+                        await initIoc();
+
+                        // Set up a file where the second cell throws an exception
+                        addMockData(ioc, 'print("hello")', 'hello');
+                        addMockData(ioc, 'raise Exception("stop")', undefined, undefined, 'error');
+                        addMockData(ioc, 'print("world")', 'world');
+
+                        const errorFile = [
+                            { id: 'NotebookImport#0', data: { source: 'print("hello")' } },
+                            { id: 'NotebookImport#1', data: { source: 'raise Exception("stop")' } },
+                            { id: 'NotebookImport#2', data: { source: 'print("world")' } }
+                        ];
+                        const runAllCells = errorFile.map((cell) => {
+                            return createFileCell(cell, cell.data);
+                        });
+                        const notebook = await ioc
+                            .get<INotebookExporter>(INotebookExporter)
+                            .translateToNotebook(runAllCells, undefined);
+                        notebookEditor = await openEditor(ioc, JSON.stringify(notebook));
+                    });
+
+                    test('Stop On Error On', async () => {
+                        const ne = notebookEditor;
+
+                        const runAllButton = findButton(ne.mount.wrapper, NativeEditor, 0);
+                        // The render method needs to be executed 3 times for three cells.
+                        const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
+                            numberOfTimes: 3
+                        });
+                        runAllButton!.simulate('click');
+                        await threeCellsUpdated;
+
+                        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `hello`, 0);
+                        // There should be no output on the third cell as it's blocked by the exception on the second cell
+                        assert.throws(() => verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `world`, 2));
+                    });
+
+                    test('Stop On Error Off', async () => {
+                        const ne = notebookEditor;
+
+                        // Force our settings to not stop on error
+                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
+                            ...ioc.getSettings().datascience,
+                            stopOnError: false
+                        });
+
+                        const runAllButton = findButton(ne.mount.wrapper, NativeEditor, 0);
+                        // The render method needs to be executed 3 times for three cells.
+                        const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
+                            numberOfTimes: 3
+                        });
+                        runAllButton!.simulate('click');
+                        await threeCellsUpdated;
+
+                        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `hello`, 0);
+                        // There should be output on the third cell, even with an error on the second
+                        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `world`, 2);
+                    });
+                });
 
                 suite('Update Metadata', () => {
                     setup(async function () {

@@ -201,7 +201,14 @@ export interface INotebook extends IAsyncDisposable {
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     getMatchingInterpreter(): PythonEnvironment | undefined;
+    /**
+     * Gets the metadata that's used to start/connect to a Kernel.
+     */
     getKernelConnection(): KernelConnectionMetadata | undefined;
+    /**
+     * Sets the metadata that's used to start/connect to a Kernel.
+     * Doing so results in a new kernel being started (i.e. a change in the kernel).
+     */
     setKernelConnection(connectionMetadata: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     getLoggers(): INotebookExecutionLogger[];
     registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
