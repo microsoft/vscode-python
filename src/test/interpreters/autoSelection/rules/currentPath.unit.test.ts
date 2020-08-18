@@ -21,18 +21,18 @@ import { IInterpreterAutoSelectionService } from '../../../../client/interpreter
 import { IInterpreterHelper, IInterpreterLocatorService } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { KnownPathsService } from '../../../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Auto Selection - Current Path Rule', () => {
     let rule: CurrentPathInterpretersAutoSelectionRuleTest;
     let stateFactory: IPersistentStateFactory;
     let fs: IFileSystem;
-    let state: PersistentState<PythonInterpreter | undefined>;
+    let state: PersistentState<PythonEnvironment | undefined>;
     let locator: IInterpreterLocatorService;
     let helper: IInterpreterHelper;
     class CurrentPathInterpretersAutoSelectionRuleTest extends CurrentPathInterpretersAutoSelectionRule {
         public async setGlobalInterpreter(
-            interpreter?: PythonInterpreter,
+            interpreter?: PythonEnvironment,
             manager?: IInterpreterAutoSelectionService
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
@@ -51,7 +51,7 @@ suite('Interpreters - Auto Selection - Current Path Rule', () => {
         helper = mock(InterpreterHelper);
         locator = mock(KnownPathsService);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
+        when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
             instance(state)
         );
         rule = new CurrentPathInterpretersAutoSelectionRuleTest(

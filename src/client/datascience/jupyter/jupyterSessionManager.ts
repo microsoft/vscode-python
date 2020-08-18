@@ -26,7 +26,7 @@ import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
 import { createDefaultKernelSpec } from './kernels/helpers';
 import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
-import { LiveKernelModel } from './kernels/types';
+import { KernelConnectionMetadata } from './kernels/types';
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
@@ -165,7 +165,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     public async startNew(
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        kernelConnection: KernelConnectionMetadata | undefined,
+        workingDirectory: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterSession> {
         if (!this.connInfo || !this.sessionManager || !this.contentsManager || !this.serverSettings) {
@@ -175,12 +176,13 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         const session = new JupyterSession(
             this.connInfo,
             this.serverSettings,
-            kernelSpec,
+            kernelConnection,
             this.sessionManager,
             this.contentsManager,
             this.outputChannel,
             this.restartSessionCreatedEvent.fire.bind(this.restartSessionCreatedEvent),
-            this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent)
+            this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent),
+            workingDirectory
         );
         try {
             await session.connect(this.configService.getSettings().datascience.jupyterLaunchTimeout, cancelToken);

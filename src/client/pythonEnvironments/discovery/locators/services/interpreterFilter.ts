@@ -3,10 +3,10 @@
 
 'use strict';
 
-import { PythonInterpreter } from '../../../info';
+import { PythonEnvironment } from '../../../info';
 import { isRestrictedWindowsStoreInterpreterPath } from './windowsStoreInterpreter';
 
-export function isHiddenInterpreter(interpreter: PythonInterpreter): boolean {
+export function isHiddenInterpreter(interpreter: PythonEnvironment): boolean {
     // Any set of rules to hide interpreters should go here
     return isRestrictedWindowsStoreInterpreterPath(interpreter.path);
 }

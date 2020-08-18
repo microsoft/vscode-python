@@ -10,7 +10,7 @@ import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../
 import { ProductNames } from '../../../common/installer/productNames';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
 /**
@@ -28,7 +28,7 @@ export class KernelDependencyService implements IKernelDependencyService {
      * If user opts not to install they can opt to select another interpreter.
      */
     public async installMissingDependencies(
-        interpreter: PythonInterpreter,
+        interpreter: PythonEnvironment,
         token?: CancellationToken
     ): Promise<KernelInterpreterDependencyResponse> {
         if (await this.areDependenciesInstalled(interpreter, token)) {
@@ -71,7 +71,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
         return KernelInterpreterDependencyResponse.cancel;
     }
-    public areDependenciesInstalled(interpreter: PythonInterpreter, _token?: CancellationToken): Promise<boolean> {
+    public areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
         return this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true);
     }
 }

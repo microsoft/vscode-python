@@ -4,12 +4,13 @@
 'use strict';
 
 import { ChildProcess } from 'child_process';
+import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
-import { IPythonExecutionService, ObservableExecutionResult } from '../../common/process/types';
+import { ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { IPythonKernelDaemon } from './types';
@@ -25,10 +26,14 @@ export class PythonKernelLauncherDaemon implements IDisposable {
     constructor(@inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool) {}
     public async launch(
         resource: Resource,
+        workingDirectory: string,
         kernelSpec: IJupyterKernelSpec,
-        interpreter?: PythonInterpreter
+        interpreter?: PythonEnvironment
     ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon | undefined }> {
-        const daemon = await this.daemonPool.get(resource, kernelSpec, interpreter);
+        const [daemon, wdExists] = await Promise.all([
+            this.daemonPool.get(resource, kernelSpec, interpreter),
+            fs.pathExists(workingDirectory)
+        ]);
 
         // Check to see if we have the type of kernelspec that we expect
         const args = kernelSpec.argv.slice();
@@ -46,19 +51,17 @@ export class PythonKernelLauncherDaemon implements IDisposable {
 
         // The daemon pool can return back a non-IPythonKernelDaemon if daemon service is not supported or for Python 2.
         // Use a check for the daemon.start function here before we call it.
-        if (!daemon.start) {
+        if (!('start' in daemon)) {
             // If we don't have a KernelDaemon here then we have an execution service and should use that to launch
-            // Typing is a bit funk here, as createDaemon can return an execution service instead of the requested
-            // daemon class
-            // tslint:disable-next-line:no-any
-            const executionService = (daemon as any) as IPythonExecutionService;
-
-            const observableOutput = executionService.execModuleObservable(moduleName, moduleArgs, { env });
+            const observableOutput = daemon.execModuleObservable(moduleName, moduleArgs, {
+                env,
+                cwd: wdExists ? workingDirectory : process.cwd()
+            });
 
             return { observableOutput, daemon: undefined };
         } else {
             // In the case that we do have a kernel deamon, just return it
-            const observableOutput = await daemon.start(moduleName, moduleArgs, { env });
+            const observableOutput = await daemon.start(moduleName, moduleArgs, { env, cwd: workingDirectory });
             if (observableOutput.proc) {
                 this.processesToDispose.push(observableOutput.proc);
             }

@@ -126,6 +126,6 @@ suite(`DataScience JupyterServerUriProvider tests`, () => {
         authHeader = server?.getConnectionInfo()?.getAuthHeader?.call(undefined);
 
         // Auth header should have updated
-        assert.deepEqual(authHeader, { Bearer: '2' }, 'Bearer token did not update');
+        assert.notEqual(authHeader.Bearer, '1', 'Bearer token did not update');
     });
 });

@@ -15,7 +15,7 @@ import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
-import { IApplicationShell } from '../../client/common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { LocalZMQKernel } from '../../client/common/experiments/groups';
@@ -45,8 +45,8 @@ import {
     InterruptResult
 } from '../../client/datascience/types';
 import { IInterpreterService, IKnownSearchPathsForInterpreters } from '../../client/interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
-import { concatMultilineStringInput } from '../../datascience-ui/common';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { concatMultilineString } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -222,7 +222,7 @@ suite('DataScience notebook tests', () => {
                 } else if (cellType === 'markdown') {
                     assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
                     const cell = cells[0].data as nbformat.IMarkdownCell;
-                    const outputSource = concatMultilineStringInput(cell.source);
+                    const outputSource = concatMultilineString(cell.source);
                     verifyValue(outputSource);
                 } else if (cellType === 'error') {
                     const cell = cells[0].data as nbformat.ICodeCell;
@@ -403,7 +403,7 @@ suite('DataScience notebook tests', () => {
                 async () => {
                     const pythonService = await createPythonService(ioc);
 
-                    if (pythonService) {
+                    if (pythonService && !useRawKernel) {
                         const configFile = path.join(
                             EXTENSION_ROOT_DIR,
                             'src',
@@ -443,7 +443,7 @@ suite('DataScience notebook tests', () => {
 
                     const pythonService = await createPythonService(ioc);
 
-                    if (pythonService) {
+                    if (pythonService && !useRawKernel) {
                         const configFile = path.join(
                             EXTENSION_ROOT_DIR,
                             'src',
@@ -509,7 +509,7 @@ suite('DataScience notebook tests', () => {
             runTest('Remote', async () => {
                 const pythonService = await createPythonService(ioc);
 
-                if (pythonService) {
+                if (pythonService && !useRawKernel) {
                     const configFile = path.join(
                         EXTENSION_ROOT_DIR,
                         'src',
@@ -575,22 +575,22 @@ suite('DataScience notebook tests', () => {
                             return { dispose: noop };
                         }
                         public onDidChangeInterpreterInformation(
-                            _listener: (e: PythonInterpreter) => any,
+                            _listener: (e: PythonEnvironment) => any,
                             _thisArgs?: any,
                             _disposables?: Disposable[]
                         ): Disposable {
                             return { dispose: noop };
                         }
-                        public getInterpreters(_resource?: Uri): Promise<PythonInterpreter[]> {
+                        public getInterpreters(_resource?: Uri): Promise<PythonEnvironment[]> {
                             return Promise.resolve([]);
                         }
                         public autoSetInterpreter(): Promise<void> {
                             throw new Error('Method not implemented');
                         }
-                        public getActiveInterpreter(_resource?: Uri): Promise<PythonInterpreter | undefined> {
+                        public getActiveInterpreter(_resource?: Uri): Promise<PythonEnvironment | undefined> {
                             return Promise.resolve(undefined);
                         }
-                        public getInterpreterDetails(_pythonPath: string, _resoure?: Uri): Promise<PythonInterpreter> {
+                        public getInterpreterDetails(_pythonPath: string, _resoure?: Uri): Promise<PythonEnvironment> {
                             throw new Error('Method not implemented');
                         }
                         public refresh(_resource: Uri): Promise<void> {
@@ -599,7 +599,7 @@ suite('DataScience notebook tests', () => {
                         public initialize(): void {
                             throw new Error('Method not implemented');
                         }
-                        public getDisplayName(_interpreter: Partial<PythonInterpreter>): Promise<string> {
+                        public getDisplayName(_interpreter: Partial<PythonEnvironment>): Promise<string> {
                             throw new Error('Method not implemented');
                         }
                         public shouldAutoSetInterpreter(): Promise<boolean> {
@@ -707,12 +707,12 @@ suite('DataScience notebook tests', () => {
                     assert.ok(server == server2, 'With no settings changed we should return the cached server');
 
                     // Create a new mock interpreter with a different path
-                    const newPython: PythonInterpreter = {
+                    const newPython: PythonEnvironment = {
                         path: '/foo/bar/baz/python.exe',
                         version: new SemVer('3.6.6-final'),
                         sysVersion: '1.0.0.0',
                         sysPrefix: 'Python',
-                        type: InterpreterType.Unknown,
+                        envType: EnvironmentType.Unknown,
                         architecture: Architecture.x64
                     };
 
@@ -1322,7 +1322,7 @@ plt.show()`,
                     }
                     public async preExecute(cell: ICell, silent: boolean): Promise<void> {
                         if (!silent) {
-                            cellInputs.push(concatMultilineStringInput(cell.data.source));
+                            cellInputs.push(concatMultilineString(cell.data.source));
                         }
                     }
                     public async postExecute(cell: ICell, silent: boolean): Promise<void> {
@@ -1463,6 +1463,18 @@ plt.show()`,
 
                 await verifySimple(notebook, `a`, 1);
                 await verifySimple(notebook, `b`, 2);
+            });
+            runTest('Current directory', async () => {
+                const rootFolder = ioc.get<IWorkspaceService>(IWorkspaceService).rootPath!;
+                const escapedPath = `'${rootFolder.replace(/\\/g, '\\\\')}'`;
+                addMockData(`import os\nos.getcwd()`, escapedPath);
+                const notebook = await notebookProvider.getOrCreateNotebook({
+                    identity: getDefaultInteractiveIdentity(),
+                    resource: Uri.file(path.join(rootFolder, 'foo.ipynb'))
+                });
+
+                assert.ok(notebook, 'did not create notebook');
+                await verifySimple(notebook, `import os\nos.getcwd()`, escapedPath);
             });
         });
     });

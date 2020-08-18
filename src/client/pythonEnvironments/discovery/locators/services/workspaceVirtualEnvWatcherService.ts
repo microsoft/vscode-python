@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
@@ -12,11 +12,13 @@ import { traceDecorators, traceVerbose } from '../../../../common/logger';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../../common/process/types';
 import { IDisposableRegistry, Resource } from '../../../../common/types';
+import { IInterpreterWatcher } from '../../../../interpreter/contracts';
 
 const maxTimeToWaitForEnvCreation = 60_000;
 const timeToPollForEnvCreation = 2_000;
 
-export class WorkspaceVirtualEnvWatcherService {
+@injectable()
+export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, Disposable {
     private readonly didCreate: EventEmitter<Resource>;
     private timers = new Map<string, { timer: NodeJS.Timer | number; counter: number }>();
     private fsWatchers: FileSystemWatcher[] = [];

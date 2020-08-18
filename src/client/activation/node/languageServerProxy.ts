@@ -17,7 +17,7 @@ import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
@@ -83,7 +83,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
     )
     public async start(
         resource: Resource,
-        interpreter: PythonInterpreter | undefined,
+        interpreter: PythonEnvironment | undefined,
         options: LanguageClientOptions
     ): Promise<void> {
         if (!this.languageClient) {

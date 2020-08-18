@@ -3,7 +3,6 @@
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as os from 'os';
-import * as path from 'path';
 import { Memento, Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { traceError, traceInfo } from '../common/logger';
@@ -133,7 +132,12 @@ export function translateKernelLanguageToMonaco(kernelLanguage: string): string 
     return kernelLanguage.toLowerCase();
 }
 
-export function generateNewNotebookUri(counter: number, title?: string, forVSCodeNotebooks?: boolean): Uri {
+export function generateNewNotebookUri(
+    counter: number,
+    rootFolder: string | undefined,
+    title?: string,
+    forVSCodeNotebooks?: boolean
+): Uri {
     // However if there are files already on disk, we should be able to overwrite them because
     // they will only ever be used by 'open' editors. So just use the current counter for our untitled count.
     const fileName = title ? `${title}-${counter}.ipynb` : `${DataScience.untitledNotebookFileName()}-${counter}.ipynb`;
@@ -141,13 +145,9 @@ export function generateNewNotebookUri(counter: number, title?: string, forVSCod
     if (forVSCodeNotebooks) {
         return Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
     } else {
-        // Because of this bug here:
-        // https://github.com/microsoft/vscode/issues/93441
-        // We can't create 'untitled' files anymore. The untitled scheme will just be ignored.
-        // Instead we need to create untitled files in the temp folder and force a saveas whenever they're
-        // saved.
-        const filePath = Uri.file(path.join(os.tmpdir(), fileName));
-        return filePath.with({ scheme: 'untitled', path: filePath.fsPath });
+        return Uri.joinPath(rootFolder ? Uri.file(rootFolder) : Uri.file(os.tmpdir()), fileName).with({
+            scheme: 'untitled'
+        });
     }
 }
 

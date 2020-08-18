@@ -77,6 +77,8 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.MoveCellsDown, this.moveCellsDown);
         this.registerCommand(Commands.ChangeCellToMarkdown, this.changeCellToMarkdown);
         this.registerCommand(Commands.ChangeCellToCode, this.changeCellToCode);
+        this.registerCommand(Commands.GotoNextCellInFile, this.gotoNextCellInFile);
+        this.registerCommand(Commands.GotoPrevCellInFile, this.gotoPrevCellInFile);
         this.registerCommand(Commands.RunAllCellsAbovePalette, this.runAllCellsAboveFromCursor);
         this.registerCommand(Commands.RunCellAndAllBelowPalette, this.runCellAndAllBelowFromCursor);
         this.registerCommand(Commands.RunToLine, this.runToLine);
@@ -366,6 +368,14 @@ export class CommandRegistry implements IDisposable {
         this.getCurrentCodeWatcher()?.changeCellToCode();
     }
 
+    private async gotoNextCellInFile(): Promise<void> {
+        this.getCurrentCodeWatcher()?.gotoNextCell();
+    }
+
+    private async gotoPrevCellInFile(): Promise<void> {
+        this.getCurrentCodeWatcher()?.gotoPreviousCell();
+    }
+
     private async runAllCellsAboveFromCursor(): Promise<void> {
         const currentCodeLens = this.getCurrentCodeLens();
         if (currentCodeLens) {
@@ -450,7 +460,7 @@ export class CommandRegistry implements IDisposable {
 
     private reportGatherQuality(val: string) {
         sendTelemetryEvent(Telemetry.GatherQualityReport, undefined, { result: val[0] === 'no' ? 'no' : 'yes' });
-        env.openExternal(Uri.parse(`https://aka.ms/gathersurvey?succeed=${val[0]}`));
+        env.openExternal(Uri.parse(`https://aka.ms/gatherfeedback?succeed=${val[0]}`));
     }
 
     private openPythonExtensionPage() {

@@ -27,6 +27,7 @@ import {
     IMemento,
     WORKSPACE_MEMENTO
 } from '../../common/types';
+import { createDeferred } from '../../common/utils/async';
 import { isNotebookCell, noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { Commands, Identifiers } from '../constants';
@@ -235,6 +236,19 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
         this.openedEditor(editor);
         return editor;
+    }
+
+    protected async loadNotebookEditor(resource: Uri, panel?: WebviewPanel) {
+        const result = await super.loadNotebookEditor(resource, panel);
+
+        // Wait for monaco ready (it's not really useable until it has a language)
+        const readyPromise = createDeferred();
+        const disposable = result.ready(() => readyPromise.resolve());
+        await result.show();
+        await readyPromise.promise;
+        disposable.dispose();
+
+        return result;
     }
 
     private autoSaveNotebookInHotExitFile(model: INotebookModel) {

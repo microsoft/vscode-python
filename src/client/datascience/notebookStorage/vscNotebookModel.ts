@@ -41,7 +41,9 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         return this.document?.isDirty === true;
     }
     public get cells(): ICell[] {
-        return this.document
+        // When a notebook is not trusted, return original cells.
+        // This is because the VSCode NotebookDocument object will not have any output in the cells.
+        return this.document && this.isTrusted
             ? this.document.cells.map((cell) => createCellFromVSCNotebookCell(cell, this))
             : this._cells;
     }
@@ -82,13 +84,28 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     }
     protected generateNotebookJson() {
         const json = super.generateNotebookJson();
-        if (this.document) {
+        if (this.document && this.isTrusted) {
             // The metadata will be in the notebook document.
             const metadata = getNotebookMetadata(this.document);
             if (metadata) {
                 json.metadata = metadata;
             }
         }
+        if (this.document && !this.isTrusted && Array.isArray(json.cells)) {
+            // The output can contain custom metadata, we need to remove that.
+            json.cells = json.cells.map((cell) => {
+                const metadata = { ...cell.metadata };
+                if ('vscode' in metadata) {
+                    delete metadata.vscode;
+                }
+                return {
+                    ...cell,
+                    metadata
+                    // tslint:disable-next-line: no-any (because ts-node sucks).
+                } as any;
+            });
+        }
+
         // https://github.com/microsoft/vscode-python/issues/13155
         // Object keys in metadata, cells and the like need to be sorted alphabetically.
         // Jupyter (Python) seems to sort them alphabetically.

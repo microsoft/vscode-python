@@ -13,6 +13,7 @@ import { CellErrorOutput, Uri } from 'vscode';
 import { CellDisplayOutput } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
+import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
@@ -49,7 +50,28 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
     });
     teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
+    test('Verify Notebook Json', async () => {
+        const storageProvider = api.serviceContainer.get<INotebookStorageProvider>(INotebookStorageProvider);
+        const file = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'datascience',
+            'notebook',
+            'testJsonContents.ipynb'
+        );
+        const model = await storageProvider.getOrCreateModel(Uri.file(file));
+        disposables.push(model);
+        model.trust();
+        const jsonStr = fs.readFileSync(file, { encoding: 'utf8' });
 
+        // JSON should be identical, before and after trusting a notebook.
+        assert.deepEqual(JSON.parse(jsonStr), JSON.parse(model.getContent()));
+
+        model.trust();
+
+        assert.deepEqual(JSON.parse(jsonStr), JSON.parse(model.getContent()));
+    });
     test('Verify cells (content, metadata & output)', async () => {
         const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);

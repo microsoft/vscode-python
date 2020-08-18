@@ -30,6 +30,7 @@ import {
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../types';
+import { getDisplayNameOrNameOfKernelConnection } from './kernels/helpers';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -59,7 +60,10 @@ export class JupyterServerBase implements INotebookServer {
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
         traceInfo(
-            `Connecting server ${this.id} kernelSpec ${launchInfo.kernelSpec ? launchInfo.kernelSpec.name : 'unknown'}`
+            `Connecting server ${this.id} kernelSpec ${getDisplayNameOrNameOfKernelConnection(
+                launchInfo.kernelConnectionMetadata,
+                'unknown'
+            )}`
         );
 
         // Save our launch info
@@ -86,10 +90,15 @@ export class JupyterServerBase implements INotebookServer {
 
         // Create our session manager
         this.sessionManager = await this.sessionManagerFactory.create(launchInfo.connectionInfo);
+
         // Try creating a session just to ensure we're connected. Callers of this function check to make sure jupyter
         // is running and connectable.
         let session: IJupyterSession | undefined;
-        session = await this.sessionManager.startNew(launchInfo.kernelSpec, cancelToken);
+        session = await this.sessionManager.startNew(
+            launchInfo.kernelConnectionMetadata,
+            launchInfo.connectionInfo.rootDirectory,
+            cancelToken
+        );
         const idleTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
         // The wait for idle should throw if we can't connect.
         await session.waitForIdle(idleTimeout);
@@ -256,7 +265,7 @@ export class JupyterServerBase implements INotebookServer {
 
     private async destroyKernelSpec() {
         if (this.launchInfo) {
-            this.launchInfo.kernelSpec = undefined;
+            this.launchInfo.kernelConnectionMetadata = undefined;
         }
     }
 

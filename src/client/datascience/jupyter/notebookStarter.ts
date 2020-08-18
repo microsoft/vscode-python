@@ -60,6 +60,7 @@ export class NotebookStarter implements Disposable {
     public async start(
         useDefaultConfig: boolean,
         customCommandLine: string[],
+        workingDirectory: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterConnection> {
         traceInfo('Starting Notebook');
@@ -71,7 +72,12 @@ export class NotebookStarter implements Disposable {
             const tempDirPromise = this.generateTempDir();
             tempDirPromise.then((dir) => this.disposables.push(dir)).ignoreErrors();
             // Before starting the notebook process, make sure we generate a kernel spec
-            const args = await this.generateArguments(useDefaultConfig, customCommandLine, tempDirPromise);
+            const args = await this.generateArguments(
+                useDefaultConfig,
+                customCommandLine,
+                tempDirPromise,
+                workingDirectory
+            );
 
             // Make sure we haven't canceled already.
             if (cancelToken && cancelToken.isCancellationRequested) {
@@ -108,6 +114,7 @@ export class NotebookStarter implements Disposable {
             starter = new JupyterConnectionWaiter(
                 launchResult,
                 tempDir.path,
+                workingDirectory,
                 this.jupyterInterpreterService.getRunningJupyterServers.bind(this.jupyterInterpreterService),
                 this.serviceContainer,
                 cancelToken
@@ -159,12 +166,13 @@ export class NotebookStarter implements Disposable {
 
     private async generateDefaultArguments(
         useDefaultConfig: boolean,
-        tempDirPromise: Promise<TemporaryDirectory>
+        tempDirPromise: Promise<TemporaryDirectory>,
+        workingDirectory: string
     ): Promise<string[]> {
         // Parallelize as much as possible.
         const promisedArgs: Promise<string>[] = [];
         promisedArgs.push(Promise.resolve('--no-browser'));
-        promisedArgs.push(this.getNotebookDirArgument(tempDirPromise));
+        promisedArgs.push(Promise.resolve(this.getNotebookDirArgument(workingDirectory)));
         if (useDefaultConfig) {
             promisedArgs.push(this.getConfigArgument(tempDirPromise));
         }
@@ -192,10 +200,11 @@ export class NotebookStarter implements Disposable {
     private async generateArguments(
         useDefaultConfig: boolean,
         customCommandLine: string[],
-        tempDirPromise: Promise<TemporaryDirectory>
+        tempDirPromise: Promise<TemporaryDirectory>,
+        workingDirectory: string
     ): Promise<string[]> {
         if (!customCommandLine || customCommandLine.length === 0) {
-            return this.generateDefaultArguments(useDefaultConfig, tempDirPromise);
+            return this.generateDefaultArguments(useDefaultConfig, tempDirPromise, workingDirectory);
         }
         return this.generateCustomArguments(customCommandLine);
     }
@@ -208,9 +217,9 @@ export class NotebookStarter implements Disposable {
      * @returns {Promise<void>}
      * @memberof NotebookStarter
      */
-    private async getNotebookDirArgument(tempDirectory: Promise<TemporaryDirectory>): Promise<string> {
-        const tempDir = await tempDirectory;
-        return `--notebook-dir=${tempDir.path}`;
+    private getNotebookDirArgument(workingDirectory: string): string {
+        // Escape the result so Jupyter can actually read it.
+        return `--notebook-dir="${workingDirectory.replace(/\\/g, '\\\\')}"`;
     }
 
     /**

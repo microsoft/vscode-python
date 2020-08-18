@@ -5,6 +5,7 @@
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
+import * as fastDeepEqual from 'fast-deep-equal';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import { createIOutputFromCellOutputs, createVSCCellOutputsFromOutputs, translateErrorOutput } from './helpers';
@@ -106,7 +107,7 @@ export function updateCellOutput(vscCell: NotebookCell, outputs: nbformat.IOutpu
     }
     // Compare outputs (at the end of the day everything is serializable).
     // Hence this is a safe comparison.
-    if (vscCell.outputs.length === newOutput.length && JSON.stringify(vscCell.outputs) === JSON.stringify(newOutput)) {
+    if (vscCell.outputs.length === newOutput.length && fastDeepEqual(vscCell.outputs, newOutput)) {
         return;
     }
     vscCell.outputs = newOutput;

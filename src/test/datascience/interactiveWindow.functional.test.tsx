@@ -23,7 +23,7 @@ import { InteractiveWindow } from '../../client/datascience/interactive-window/i
 import { AskedForPerFileSettingKey } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
-import { concatMultilineStringInput } from '../../datascience-ui/common';
+import { concatMultilineString } from '../../datascience-ui/common';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
@@ -577,35 +577,41 @@ for i in range(0, 100):
 
     runTest(
         'Interrupt double',
-        async () => {
-            let interruptedKernel = false;
-            const { window, mount } = await getOrCreateInteractiveWindow(ioc);
-            window.notebook?.onKernelInterrupted(() => (interruptedKernel = true));
+        async (context: Mocha.Context) => {
+            if (ioc.mockJupyter) {
+                let interruptedKernel = false;
+                const { window, mount } = await getOrCreateInteractiveWindow(ioc);
+                window.notebook?.onKernelInterrupted(() => (interruptedKernel = true));
 
-            let timerCount = 0;
-            addContinuousMockData(ioc, interruptCode, async (_c) => {
-                timerCount += 1;
-                await sleep(0.5);
-                return Promise.resolve({ result: '', haveMore: timerCount < 100 });
-            });
+                let timerCount = 0;
+                addContinuousMockData(ioc, interruptCode, async (_c) => {
+                    timerCount += 1;
+                    await sleep(0.5);
+                    return Promise.resolve({ result: '', haveMore: timerCount < 100 });
+                });
 
-            addMockData(ioc, interruptCode, undefined, 'text/plain');
+                addMockData(ioc, interruptCode, undefined, 'text/plain');
 
-            // Run the interrupt code and then interrupt it twice to make sure we can interrupt twice
-            const waitForAdd = addCode(ioc, interruptCode);
+                // Run the interrupt code and then interrupt it twice to make sure we can interrupt twice
+                const waitForAdd = addCode(ioc, interruptCode);
 
-            // 'Click' the button in the react control. We need to verify we can
-            // click it more than once.
-            const interrupt = findButton(mount.wrapper, InteractivePanel, 4);
-            interrupt?.simulate('click');
-            await sleep(0.1);
-            interrupt?.simulate('click');
+                // 'Click' the button in the react control. We need to verify we can
+                // click it more than once.
+                const interrupt = findButton(mount.wrapper, InteractivePanel, 4);
+                interrupt?.simulate('click');
+                await sleep(0.1);
+                interrupt?.simulate('click');
 
-            // We should get out of the wait for add
-            await waitForAdd;
+                // We should get out of the wait for add
+                await waitForAdd;
 
-            // We should have also fired an interrupt
-            assert.ok(interruptedKernel, 'Kernel was not interrupted');
+                // We should have also fired an interrupt
+                assert.ok(interruptedKernel, 'Kernel was not interrupted');
+            } else {
+                // Timing is too iffy for real jupyter. However we really just
+                // want to make sure double interrupt is supported so keep the test.
+                context.skip();
+            }
         },
         () => {
             return ioc;
@@ -995,10 +1001,10 @@ for i in range(0, 100):
                 assert.equal(cells.length, 2, 'Not enough cells generated');
 
                 // Run the first cell
-                await addCode(ioc, concatMultilineStringInput(cells[0].data.source));
+                await addCode(ioc, concatMultilineString(cells[0].data.source));
 
                 // Last cell should generate a series of updates. Verify we end up with a single image
-                await addCode(ioc, concatMultilineStringInput(cells[1].data.source));
+                await addCode(ioc, concatMultilineString(cells[1].data.source));
                 const cell = getLastOutputCell(ioc.getInteractiveWebPanel(undefined).wrapper, 'InteractiveCell');
 
                 const output = cell!.find('div.cell-output');

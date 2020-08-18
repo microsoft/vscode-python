@@ -8,20 +8,20 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, Memento } from 'vscode';
 import { JupyterInterpreterService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterInterpreterStateStore } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterStateStore';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { MockMemento } from '../../../mocks/mementos';
 
 suite('DataScience - Jupyter Interpreter State', () => {
     let selected: JupyterInterpreterStateStore;
     let memento: Memento;
     let interpreterService: JupyterInterpreterService;
-    let interpreterSelectedEventEmitter: EventEmitter<PythonInterpreter>;
+    let interpreterSelectedEventEmitter: EventEmitter<PythonEnvironment>;
 
     setup(() => {
         memento = mock(MockMemento);
         interpreterService = mock(JupyterInterpreterService);
         when(memento.update(anything(), anything())).thenResolve();
-        interpreterSelectedEventEmitter = new EventEmitter<PythonInterpreter>();
+        interpreterSelectedEventEmitter = new EventEmitter<PythonEnvironment>();
         when(interpreterService.onDidChangeInterpreter).thenReturn(interpreterSelectedEventEmitter.event);
         selected = new JupyterInterpreterStateStore(instance(memento));
     });

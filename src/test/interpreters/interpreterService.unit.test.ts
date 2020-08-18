@@ -47,7 +47,7 @@ import { IInterpreterHashProvider, IInterpreterHashProviderFactory } from '../..
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
@@ -355,7 +355,7 @@ suite('Interpreters service', () => {
                     .verifiable(TypeMoq.Times.once());
                 virtualEnvMgr
                     .setup((v) => v.getEnvironmentType(TypeMoq.It.isValue(pythonPath)))
-                    .returns(() => Promise.resolve(InterpreterType.Unknown))
+                    .returns(() => Promise.resolve(EnvironmentType.Unknown))
                     .verifiable(TypeMoq.Times.once());
                 pythonExecutionService
                     .setup((p) => p.getExecutablePath())
@@ -380,7 +380,7 @@ suite('Interpreters service', () => {
         });
         test('Return cached display name', async () => {
             const pythonPath = '1234';
-            const interpreterInfo: Partial<PythonInterpreter> = { path: pythonPath };
+            const interpreterInfo: Partial<PythonEnvironment> = { path: pythonPath };
             const hash = `-${md5(JSON.stringify({ ...interpreterInfo, displayName: '' }))}`;
             const expectedDisplayName = 'Formatted display name';
             persistentStateFactory
@@ -402,7 +402,7 @@ suite('Interpreters service', () => {
         });
         test('Cached display name is not used if file hashes differ', async () => {
             const pythonPath = '1234';
-            const interpreterInfo: Partial<PythonInterpreter> = { path: pythonPath };
+            const interpreterInfo: Partial<PythonEnvironment> = { path: pythonPath };
             const fileHash = 'File_Hash';
             const hashProvider = TypeMoq.Mock.ofType<IInterpreterHashProvider>();
             hashProviderFactory
@@ -451,8 +451,8 @@ suite('Interpreters service', () => {
                     .forEach((arch) => {
                         [undefined, path.join('a', 'b', 'c', 'd', 'bin', 'python')].forEach((pythonPath) => {
                             // Forced cast to ignore TS warnings.
-                            (EnumEx.getNamesAndValues<InterpreterType>(InterpreterType) as (
-                                | { name: string; value: InterpreterType }
+                            (EnumEx.getNamesAndValues<EnvironmentType>(EnvironmentType) as (
+                                | { name: string; value: EnvironmentType }
                                 | undefined
                             )[])
                                 .concat(undefined)
@@ -474,18 +474,18 @@ suite('Interpreters service', () => {
                                             ].join(', ');
 
                                             test(testName, async () => {
-                                                const interpreterInfo: Partial<PythonInterpreter> = {
+                                                const interpreterInfo: Partial<PythonEnvironment> = {
                                                     version,
                                                     architecture: arch ? arch.value : undefined,
                                                     envName,
-                                                    type: interpreterType ? interpreterType.value : undefined,
+                                                    envType: interpreterType ? interpreterType.value : undefined,
                                                     path: pythonPath
                                                 };
 
                                                 if (
                                                     interpreterInfo.path &&
                                                     interpreterType &&
-                                                    interpreterType.value === InterpreterType.Pipenv
+                                                    interpreterType.value === EnvironmentType.Pipenv
                                                 ) {
                                                     virtualEnvMgr
                                                         .setup((v) =>
@@ -519,7 +519,7 @@ suite('Interpreters service', () => {
                                                 expect(displayName).to.equal(expectedDisplayName);
                                             });
 
-                                            function buildDisplayName(interpreterInfo: Partial<PythonInterpreter>) {
+                                            function buildDisplayName(interpreterInfo: Partial<PythonEnvironment>) {
                                                 const displayNameParts: string[] = ['Python'];
                                                 const envSuffixParts: string[] = [];
 
@@ -536,8 +536,8 @@ suite('Interpreters service', () => {
                                                 if (
                                                     !interpreterInfo.envName &&
                                                     interpreterInfo.path &&
-                                                    interpreterInfo.type &&
-                                                    interpreterInfo.type === InterpreterType.Pipenv &&
+                                                    interpreterInfo.envType &&
+                                                    interpreterInfo.envType === EnvironmentType.Pipenv &&
                                                     pipEnvName
                                                 ) {
                                                     // If we do not have the name of the environment, then try to get it again.
@@ -548,7 +548,7 @@ suite('Interpreters service', () => {
                                                 if (interpreterInfo.envName && interpreterInfo.envName.length > 0) {
                                                     envSuffixParts.push(`'${interpreterInfo.envName}'`);
                                                 }
-                                                if (interpreterInfo.type) {
+                                                if (interpreterInfo.envType) {
                                                     envSuffixParts.push(`${interpreterType!.name}_display`);
                                                 }
 
@@ -585,8 +585,8 @@ suite('Interpreters service', () => {
                 .verifiable(TypeMoq.Times.once());
             hashProvider.setup((provider) => (provider as any).then).returns(() => undefined);
 
-            const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>>();
-            const info = { path: 'hell', type: InterpreterType.Venv };
+            const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonEnvironment }>>();
+            const info = { path: 'hell', envType: EnvironmentType.Venv };
             state
                 .setup((s) => s.value)
                 .returns(() => {
@@ -630,8 +630,8 @@ suite('Interpreters service', () => {
                 .verifiable(TypeMoq.Times.once());
             hashProvider.setup((provider) => (provider as any).then).returns(() => undefined);
 
-            const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>>();
-            const info = { path: 'hell', type: InterpreterType.Venv };
+            const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonEnvironment }>>();
+            const info = { path: 'hell', envType: EnvironmentType.Venv };
             state
                 .setup((s) => s.value)
                 .returns(() => {

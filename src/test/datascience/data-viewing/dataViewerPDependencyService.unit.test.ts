@@ -16,14 +16,14 @@ import { IInstaller, Product } from '../../../client/common/types';
 import { Common, DataScience } from '../../../client/common/utils/localize';
 import { Architecture } from '../../../client/common/utils/platform';
 import { DataViewerDependencyService } from '../../../client/datascience/data-viewing/dataViewerDependencyService';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('DataScience - DataViewerDependencyService', () => {
     let dependencyService: DataViewerDependencyService;
     let appShell: IApplicationShell;
     let pythonExecFactory: IPythonExecutionFactory;
     let installer: IInstaller;
-    let interpreter: PythonInterpreter;
+    let interpreter: PythonEnvironment;
     let pythonExecService: IPythonExecutionService;
     setup(async () => {
         interpreter = {
@@ -32,7 +32,7 @@ suite('DataScience - DataViewerDependencyService', () => {
             path: path.join('users', 'python', 'bin', 'python.exe'),
             sysPrefix: '',
             sysVersion: '',
-            type: InterpreterType.Unknown,
+            envType: EnvironmentType.Unknown,
             version: new SemVer('3.3.3')
         };
         pythonExecService = mock<IPythonExecutionService>();

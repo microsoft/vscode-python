@@ -31,7 +31,7 @@ import { EnvironmentActivationService } from '../../../../client/interpreter/act
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { FakeClock } from '../../../common';
 
 // tslint:disable-next-line: max-func-body-length
@@ -124,11 +124,11 @@ suite('DataScience - KernelService', () => {
             }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
-        const interpreter: PythonInterpreter = {
+        const interpreter: PythonEnvironment = {
             path: 'some Path',
             displayName: 'Hello World',
             envName: 'Hello',
-            type: InterpreterType.Conda
+            envType: EnvironmentType.Conda
             // tslint:disable-next-line: no-any
         } as any;
 
@@ -147,11 +147,11 @@ suite('DataScience - KernelService', () => {
     test('Should not return a matching spec from a jupyter process for a given interpreter', async () => {
         when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve([]);
 
-        const interpreter: PythonInterpreter = {
+        const interpreter: PythonEnvironment = {
             path: 'some Path',
             displayName: 'Hello World',
             envName: 'Hello',
-            type: InterpreterType.Conda
+            envType: EnvironmentType.Conda
             // tslint:disable-next-line: no-any
         } as any;
 
@@ -226,11 +226,11 @@ suite('DataScience - KernelService', () => {
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
         when(fs.areLocalPathsSame('myPath2', 'myPath2')).thenReturn(true);
-        const interpreter: PythonInterpreter = {
+        const interpreter: PythonEnvironment = {
             displayName: 'Disp2',
             path: 'myPath2',
             sysPrefix: 'xyz',
-            type: InterpreterType.Conda,
+            envType: EnvironmentType.Conda,
             sysVersion: '',
             architecture: Architecture.Unknown
         };
@@ -311,11 +311,11 @@ suite('DataScience - KernelService', () => {
         when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve(kernelSpecs);
         when(fs.areLocalPathsSame('Some Path2', 'Some Path2')).thenReturn(true);
         when(fs.localFileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
-        const interpreter: PythonInterpreter = {
+        const interpreter: PythonEnvironment = {
             displayName: 'disp2',
             path: 'Some Path2',
             sysPrefix: 'xyz',
-            type: InterpreterType.Conda,
+            envType: EnvironmentType.Conda,
             sysVersion: '',
             architecture: Architecture.Unknown
         };
@@ -333,16 +333,16 @@ suite('DataScience - KernelService', () => {
     // tslint:disable-next-line: max-func-body-length
     suite('Registering Interpreters as Kernels', () => {
         let findMatchingKernelSpecStub: sinon.SinonStub<
-            [PythonInterpreter, IJupyterSessionManager?, (CancellationToken | undefined)?],
+            [PythonEnvironment, IJupyterSessionManager?, (CancellationToken | undefined)?],
             Promise<IJupyterKernelSpec | undefined>
         >;
         let fakeTimer: FakeClock;
-        const interpreter: PythonInterpreter = {
+        const interpreter: PythonEnvironment = {
             architecture: Architecture.Unknown,
             path: path.join('interpreter', 'python'),
             sysPrefix: '',
             sysVersion: '',
-            type: InterpreterType.Conda,
+            envType: EnvironmentType.Conda,
             displayName: 'Hello'
         };
         // Marked as readonly, to ensure we do not update this in tests.
@@ -357,7 +357,7 @@ suite('DataScience - KernelService', () => {
                 something: '1',
                 interpreter: {
                     path: interpreter.path,
-                    type: interpreter.type
+                    type: interpreter.envType
                 }
             }
         };
@@ -383,12 +383,12 @@ suite('DataScience - KernelService', () => {
         teardown(() => fakeTimer.uninstall());
 
         test('Fail if interpreter does not have a display name', async () => {
-            const invalidInterpreter: PythonInterpreter = {
+            const invalidInterpreter: PythonEnvironment = {
                 architecture: Architecture.Unknown,
                 path: '',
                 sysPrefix: '',
                 sysVersion: '',
-                type: InterpreterType.Conda
+                envType: EnvironmentType.Conda
             };
 
             const promise = kernelService.registerKernel(invalidInterpreter);

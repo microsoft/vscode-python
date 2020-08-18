@@ -69,9 +69,6 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         if (options.mergeStdOutErr) {
             throw new Error("'mergeStdOutErr' not supported in spawnOptions for KernelDaemon.start");
         }
-        if (options.cwd) {
-            throw new Error("'cwd' not supported in spawnOptions for KernelDaemon.start");
-        }
         if (this.started) {
             throw new Error('Kernel has already been started in daemon');
         }

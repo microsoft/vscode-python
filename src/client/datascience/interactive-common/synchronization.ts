@@ -129,6 +129,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.FocusedCellEditor]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.GatherCode]: MessageType.other,
     [InteractiveWindowMessages.GatherCodeToScript]: MessageType.other,
+    [InteractiveWindowMessages.Gathering]: MessageType.other,
     [InteractiveWindowMessages.GetAllCells]: MessageType.other,
     [InteractiveWindowMessages.ForceVariableRefresh]: MessageType.other,
     [InteractiveWindowMessages.GetVariablesRequest]: MessageType.other,

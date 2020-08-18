@@ -51,7 +51,8 @@ export enum ImageName {
     Python,
     PythonColor,
     OpenFolder,
-    RunByLine
+    RunByLine,
+    Sync
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
@@ -226,6 +227,10 @@ const images: { [key: string]: { light: string; dark: string } } = {
     RunByLine: {
         light: require('./images/RunByLine/runbyline_light.svg'),
         dark: require('./images/RunByLine/runbyline_dark.svg')
+    },
+    Sync: {
+        light: require('./images/Sync/sync.svg'),
+        dark: require('./images/Sync/sync-inverse.svg')
     }
 };
 

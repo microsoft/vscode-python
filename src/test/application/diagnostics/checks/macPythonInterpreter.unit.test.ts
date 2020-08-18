@@ -44,7 +44,7 @@ import { sleep } from '../../../../client/common/utils/async';
 import { noop } from '../../../../client/common/utils/misc';
 import { IInterpreterHelper, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { InterpreterType } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 
 suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
     let diagnosticService: IDiagnosticsService;
@@ -181,7 +181,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => {
-                    return Promise.resolve({ type: InterpreterType.Unknown } as any);
+                    return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
                 })
                 .verifiable(typemoq.Times.once());
             platformService
@@ -211,7 +211,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => {
-                    return Promise.resolve({ type: InterpreterType.Unknown } as any);
+                    return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
                 })
                 .verifiable(typemoq.Times.once());
             platformService
@@ -242,7 +242,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => {
-                    return Promise.resolve({ type: InterpreterType.Unknown } as any);
+                    return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
                 })
                 .verifiable(typemoq.Times.once());
             platformService
@@ -300,7 +300,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => {
-                    return Promise.resolve({ type: InterpreterType.Unknown } as any);
+                    return Promise.resolve({ envType: EnvironmentType.Unknown } as any);
                 })
                 .verifiable(typemoq.Times.once());
 

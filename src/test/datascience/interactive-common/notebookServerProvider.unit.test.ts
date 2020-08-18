@@ -11,7 +11,7 @@ import { NotebookServerProvider } from '../../../client/datascience/interactive-
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { IJupyterExecution, INotebookServer } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable:no-any
 function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
@@ -33,12 +33,12 @@ suite('DataScience - NotebookServerProvider', () => {
     let interpreterService: IInterpreterService;
     let pythonSettings: IPythonSettings;
     let dataScienceSettings: IDataScienceSettings;
-    const workingPython: PythonInterpreter = {
+    const workingPython: PythonEnvironment = {
         path: '/foo/bar/python.exe',
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
-        type: InterpreterType.Unknown,
+        envType: EnvironmentType.Unknown,
         architecture: Architecture.x64
     };
 

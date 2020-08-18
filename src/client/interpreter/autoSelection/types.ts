@@ -6,7 +6,7 @@
 import { Event, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IPersistentState, Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 
 export const IInterpreterAutoSeletionProxyService = Symbol('IInterpreterAutoSeletionProxyService');
 /**
@@ -21,17 +21,17 @@ export const IInterpreterAutoSeletionProxyService = Symbol('IInterpreterAutoSele
  */
 export interface IInterpreterAutoSeletionProxyService {
     readonly onDidChangeAutoSelectedInterpreter: Event<void>;
-    getAutoSelectedInterpreter(resource: Resource): PythonInterpreter | undefined;
+    getAutoSelectedInterpreter(resource: Resource): PythonEnvironment | undefined;
     registerInstance?(instance: IInterpreterAutoSeletionProxyService): void;
-    setWorkspaceInterpreter(resource: Uri, interpreter: PythonInterpreter | undefined): Promise<void>;
+    setWorkspaceInterpreter(resource: Uri, interpreter: PythonEnvironment | undefined): Promise<void>;
 }
 
 export const IInterpreterAutoSelectionService = Symbol('IInterpreterAutoSelectionService');
 export interface IInterpreterAutoSelectionService extends IInterpreterAutoSeletionProxyService {
     readonly onDidChangeAutoSelectedInterpreter: Event<void>;
     autoSelectInterpreter(resource: Resource): Promise<void>;
-    getAutoSelectedInterpreter(resource: Resource): PythonInterpreter | undefined;
-    setGlobalInterpreter(interpreter: PythonInterpreter | undefined): Promise<void>;
+    getAutoSelectedInterpreter(resource: Resource): PythonEnvironment | undefined;
+    setGlobalInterpreter(interpreter: PythonEnvironment | undefined): Promise<void>;
 }
 
 export enum AutoSelectionRule {
@@ -48,14 +48,14 @@ export const IInterpreterAutoSelectionRule = Symbol('IInterpreterAutoSelectionRu
 export interface IInterpreterAutoSelectionRule {
     setNextRule(rule: IInterpreterAutoSelectionRule): void;
     autoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<void>;
-    getPreviouslyAutoSelectedInterpreter(resource: Resource): PythonInterpreter | undefined;
+    getPreviouslyAutoSelectedInterpreter(resource: Resource): PythonEnvironment | undefined;
 }
 
 export const IInterpreterSecurityService = Symbol('IInterpreterSecurityService');
 export interface IInterpreterSecurityService {
     readonly onDidChangeSafeInterpreters: Event<void>;
-    evaluateAndRecordInterpreterSafety(interpreter: PythonInterpreter, resource: Resource): Promise<void>;
-    isSafe(interpreter: PythonInterpreter, resource?: Resource): boolean | undefined;
+    evaluateAndRecordInterpreterSafety(interpreter: PythonEnvironment, resource: Resource): Promise<void>;
+    isSafe(interpreter: PythonEnvironment, resource?: Resource): boolean | undefined;
 }
 
 export const IInterpreterSecurityStorage = Symbol('IInterpreterSecurityStorage');
@@ -69,6 +69,6 @@ export interface IInterpreterSecurityStorage extends IExtensionSingleActivationS
 
 export const IInterpreterEvaluation = Symbol('IInterpreterEvaluation');
 export interface IInterpreterEvaluation {
-    evaluateIfInterpreterIsSafe(interpreter: PythonInterpreter, resource: Resource): Promise<boolean>;
-    inferValueUsingCurrentState(interpreter: PythonInterpreter, resource: Resource): boolean | undefined;
+    evaluateIfInterpreterIsSafe(interpreter: PythonEnvironment, resource: Resource): Promise<boolean>;
+    inferValueUsingCurrentState(interpreter: PythonEnvironment, resource: Resource): boolean | undefined;
 }

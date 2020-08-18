@@ -74,10 +74,18 @@ export class GatherListener implements IInteractiveWindowListener {
                 break;
 
             case InteractiveWindowMessages.GatherCode:
+                this.postEmitter.fire({
+                    message: InteractiveWindowMessages.Gathering,
+                    payload: { cellId: payload.id, gathering: true }
+                });
                 this.handleMessage(message, payload, this.doGather);
                 break;
 
             case InteractiveWindowMessages.GatherCodeToScript:
+                this.postEmitter.fire({
+                    message: InteractiveWindowMessages.Gathering,
+                    payload: { cellId: payload.id, gathering: true }
+                });
                 this.handleMessage(message, payload, this.doGatherToScript);
                 break;
 
@@ -142,18 +150,32 @@ export class GatherListener implements IInteractiveWindowListener {
         }
     }
 
-    private doGather(payload: ICell): void {
-        this.gatherCodeInternal(payload).catch((err) => {
-            traceError(`Gather to Notebook error: ${err}`);
-            this.applicationShell.showErrorMessage(err);
-        });
+    private doGather(payload: ICell): Promise<void> {
+        return this.gatherCodeInternal(payload)
+            .catch((err) => {
+                traceError(`Gather to Notebook error: ${err}`);
+                this.applicationShell.showErrorMessage(err);
+            })
+            .finally(() =>
+                this.postEmitter.fire({
+                    message: InteractiveWindowMessages.Gathering,
+                    payload: { cellId: payload.id, gathering: false }
+                })
+            );
     }
 
-    private doGatherToScript(payload: ICell): void {
-        this.gatherCodeInternal(payload, true).catch((err) => {
-            traceError(`Gather to Script error: ${err}`);
-            this.applicationShell.showErrorMessage(err);
-        });
+    private doGatherToScript(payload: ICell): Promise<void> {
+        return this.gatherCodeInternal(payload, true)
+            .catch((err) => {
+                traceError(`Gather to Script error: ${err}`);
+                this.applicationShell.showErrorMessage(err);
+            })
+            .finally(() =>
+                this.postEmitter.fire({
+                    message: InteractiveWindowMessages.Gathering,
+                    payload: { cellId: payload.id, gathering: false }
+                })
+            );
     }
 
     private gatherCodeInternal = async (cell: ICell, toScript: boolean = false) => {

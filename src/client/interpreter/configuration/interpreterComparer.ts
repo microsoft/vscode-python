@@ -5,14 +5,14 @@
 
 import { inject, injectable } from 'inversify';
 import { getArchitectureDisplayName } from '../../common/platform/registry';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IInterpreterHelper } from '../contracts';
 import { IInterpreterComparer } from './types';
 
 @injectable()
 export class InterpreterComparer implements IInterpreterComparer {
     constructor(@inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper) {}
-    public compare(a: PythonInterpreter, b: PythonInterpreter): number {
+    public compare(a: PythonEnvironment, b: PythonEnvironment): number {
         const nameA = this.getSortName(a);
         const nameB = this.getSortName(b);
         if (nameA === nameB) {
@@ -20,7 +20,7 @@ export class InterpreterComparer implements IInterpreterComparer {
         }
         return nameA > nameB ? 1 : -1;
     }
-    private getSortName(info: PythonInterpreter): string {
+    private getSortName(info: PythonEnvironment): string {
         const sortNameParts: string[] = [];
         const envSuffixParts: string[] = [];
 
@@ -41,8 +41,8 @@ export class InterpreterComparer implements IInterpreterComparer {
             sortNameParts.push('Python');
         }
 
-        if (info.type) {
-            const name = this.interpreterHelper.getInterpreterTypeDisplayName(info.type);
+        if (info.envType) {
+            const name = this.interpreterHelper.getInterpreterTypeDisplayName(info.envType);
             if (name) {
                 envSuffixParts.push(name);
             }

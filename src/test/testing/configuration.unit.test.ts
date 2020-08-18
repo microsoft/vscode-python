@@ -245,7 +245,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 expect(selectedItem).to.be.equal(product);
                 appShell.verifyAll();
             });
-            test('Ensure undefined is returned when nothing is seleted', async () => {
+            test('Ensure undefined is returned when nothing is selected', async () => {
                 const placeHolder = 'Some message';
                 appShell
                     .setup((s) => s.showQuickPick(typeMoq.It.isAny(), typeMoq.It.isObjectWith({ placeHolder })))

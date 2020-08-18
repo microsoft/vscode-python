@@ -10,22 +10,21 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import {
     CommonActionType,
     IAddCellAction,
+    IChangeGatherStatus,
     ILoadIPyWidgetClassFailureAction,
     IVariableExplorerHeight,
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../constants';
 import { WidgetScriptSource } from '../ipywidgets/types';
-import { LiveKernelModel } from '../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest, SharedMessages } from '../messages';
 import { IGetMonacoThemeResponse } from '../monacoMessages';
 import {
     ICell,
     IInteractiveWindowInfo,
-    IJupyterKernelSpec,
     IJupyterVariable,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
@@ -98,6 +97,7 @@ export enum InteractiveWindowMessages {
     StopDebugging = 'stop_debugging',
     GatherCode = 'gather_code',
     GatherCodeToScript = 'gather_code_to_script',
+    Gathering = 'gathering',
     LaunchNotebookTrustPrompt = 'launch_notebook_trust_prompt',
     TrustNotebookComplete = 'trust_notebook_complete',
     LoadAllCells = 'load_all_cells',
@@ -341,7 +341,6 @@ export interface IRefreshVariablesRequest {
 export interface ILoadAllCells {
     cells: ICell[];
     isNotebookTrusted?: boolean;
-    shouldShowTrustMessage?: boolean;
 }
 
 export interface IScrollToCell {
@@ -504,8 +503,7 @@ export interface INotebookModelEditChange extends INotebookModelChange {
 
 export interface INotebookModelVersionChange extends INotebookModelChange {
     kind: 'version';
-    interpreter: PythonInterpreter | undefined;
-    kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined;
+    kernelConnection?: KernelConnectionMetadata;
 }
 
 export type NotebookModelChange =
@@ -630,6 +628,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.StopDebugging]: never | undefined;
     public [InteractiveWindowMessages.GatherCode]: ICell;
     public [InteractiveWindowMessages.GatherCodeToScript]: ICell;
+    public [InteractiveWindowMessages.Gathering]: IChangeGatherStatus;
     public [InteractiveWindowMessages.LaunchNotebookTrustPrompt]: never | undefined;
     public [InteractiveWindowMessages.TrustNotebookComplete]: never | undefined;
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;

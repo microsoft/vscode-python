@@ -7,7 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
-import { concatMultilineStringInput } from '../common';
+import { concatMultilineString } from '../common';
 import { IKeyboardEvent } from '../react-common/event';
 import { IMonacoModelContentChangeEvent } from '../react-common/monacoHelpers';
 import { Code } from './code';
@@ -134,7 +134,7 @@ export class CellInput extends React.Component<ICellInputProps> {
 
     private renderMarkdownInputs = () => {
         if (this.shouldRenderMarkdownEditor()) {
-            const source = concatMultilineStringInput(this.getMarkdownCell().source);
+            const source = concatMultilineString(this.getMarkdownCell().source);
             return (
                 <div className="cell-input">
                     <Markdown

@@ -32,11 +32,12 @@ import {
     ICell,
     IDataScienceErrorHandler,
     IJupyterExecution,
+    INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
     ITrustService
 } from '../../client/datascience/types';
-import { concatMultilineStringInput } from '../../datascience-ui/common';
+import { concatMultilineString } from '../../datascience-ui/common';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
 import { ExecutionCount } from '../../datascience-ui/interactive-common/executionCount';
 import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
@@ -271,7 +272,7 @@ suite('DataScience Native Editor', () => {
 
                         // Force an update to the editor so that it has a new kernel
                         const editor = (ne.editor as any) as NativeEditorWebView;
-                        await editor.updateNotebookOptions(invalidKernel, undefined);
+                        await editor.updateNotebookOptions({ kernelSpec: invalidKernel, kind: 'startUsingKernelSpec' });
 
                         // Run the first cell. Should fail but then ask for another
                         await addCell(ne.mount, 'a=1\na');
@@ -317,6 +318,9 @@ suite('DataScience Native Editor', () => {
                 });
 
                 runMountedTest('Remote kernel can be switched and remembered', async () => {
+                    // Turn off raw kernel for this test as it's testing remote
+                    ioc.setExperimentState(LocalZMQKernel.experiment, false);
+
                     const pythonService = await createPythonService(ioc, 2);
 
                     // Skip test for older python and raw kernel and mac
@@ -341,9 +345,27 @@ suite('DataScience Native Editor', () => {
                         // Create another notebook and connect it to the already running kernel of the other one
                         when(ioc.applicationShell.showQuickPick(anything(), anything(), anything())).thenCall(
                             async (o: IKernelSpecQuickPickItem[]) => {
-                                const existing = o.find((s) => s.selection.kernelModel?.numberOfConnections);
-                                if (existing) {
-                                    return existing;
+                                const existing = o.filter(
+                                    (s) =>
+                                        s.selection.kind === 'connectToLiveKernel' &&
+                                        s.selection.kernelModel.numberOfConnections
+                                );
+
+                                // Might be more than one. Get the oldest one. It has the actual activity.
+                                const sorted = existing.sort((a, b) => {
+                                    if (
+                                        a.selection.kind !== 'connectToLiveKernel' ||
+                                        b.selection.kind !== 'connectToLiveKernel'
+                                    ) {
+                                        return 0;
+                                    }
+                                    return (
+                                        b.selection.kernelModel.lastActivityTime.getTime() -
+                                        a.selection.kernelModel.lastActivityTime.getTime()
+                                    );
+                                });
+                                if (sorted && sorted.length) {
+                                    return sorted[0];
                                 }
                             }
                         );
@@ -521,7 +543,7 @@ df.head()`;
 
                     // ioc.datascience.setup(ds => ds.selectLocalJupyterKernel()).returns(() => {
                     //     selectorCalled = true;
-                    //     const spec: KernelSpecInterpreter = {};
+                    //     const spec: kernelConnectionMetadata = {};
                     //     return Promise.resolve(spec);
                     // });
 
@@ -1380,7 +1402,7 @@ df.head()`;
 
                         // 3. Validate the edit received by the extension from the react side.
                         await modelEditsInExtension.promise;
-                        assert.equal(concatMultilineStringInput(model?.cells[3].data.source!), stringToType);
+                        assert.equal(concatMultilineString(model?.cells[3].data.source!), stringToType);
 
                         // Now hit escape.
                         let update = waitForMessage(ioc, InteractiveWindowMessages.UnfocusedCellEditor);
@@ -1405,7 +1427,7 @@ df.head()`;
                         // Verify the cell type.
                         assert.equal(model?.cells[3].data.cell_type, 'markdown');
                         // Verify that changing cell type didn't result in a loss of data.
-                        assert.equal(concatMultilineStringInput(model?.cells[3].data.source!), stringToType);
+                        assert.equal(concatMultilineString(model?.cells[3].data.source!), stringToType);
                     });
                 });
 
@@ -1731,7 +1753,7 @@ df.head()`;
                             const expectedActiveCell = model?.cells[index + 1];
                             // The editor has focus, confirm the value in the active element/editor is the code.
                             const codeInActiveElement = ((document.activeElement as any).value as string).trim();
-                            const expectedCode = concatMultilineStringInput(expectedActiveCell!.data.source!).trim();
+                            const expectedCode = concatMultilineString(expectedActiveCell!.data.source!).trim();
                             assert.equal(codeInActiveElement, expectedCode);
                         }
                     });
@@ -2423,6 +2445,69 @@ df.head()`;
                         }
                     }
                 };
+
+                suite('Stop On Error', () => {
+                    let notebookEditor: { editor: INotebookEditor; mount: IMountedWebView };
+                    setup(async () => {
+                        await initIoc();
+
+                        // Set up a file where the second cell throws an exception
+                        addMockData(ioc, 'print("hello")', 'hello');
+                        addMockData(ioc, 'raise Exception("stop")', undefined, undefined, 'error');
+                        addMockData(ioc, 'print("world")', 'world');
+
+                        const errorFile = [
+                            { id: 'NotebookImport#0', data: { source: 'print("hello")' } },
+                            { id: 'NotebookImport#1', data: { source: 'raise Exception("stop")' } },
+                            { id: 'NotebookImport#2', data: { source: 'print("world")' } }
+                        ];
+                        const runAllCells = errorFile.map((cell) => {
+                            return createFileCell(cell, cell.data);
+                        });
+                        const notebook = await ioc
+                            .get<INotebookExporter>(INotebookExporter)
+                            .translateToNotebook(runAllCells, undefined);
+                        notebookEditor = await openEditor(ioc, JSON.stringify(notebook));
+                    });
+
+                    test('Stop On Error On', async () => {
+                        const ne = notebookEditor;
+
+                        const runAllButton = findButton(ne.mount.wrapper, NativeEditor, 0);
+                        // The render method needs to be executed 3 times for three cells.
+                        const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
+                            numberOfTimes: 3
+                        });
+                        runAllButton!.simulate('click');
+                        await threeCellsUpdated;
+
+                        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `hello`, 0);
+                        // There should be no output on the third cell as it's blocked by the exception on the second cell
+                        assert.throws(() => verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `world`, 2));
+                    });
+
+                    test('Stop On Error Off', async () => {
+                        const ne = notebookEditor;
+
+                        // Force our settings to not stop on error
+                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
+                            ...ioc.getSettings().datascience,
+                            stopOnError: false
+                        });
+
+                        const runAllButton = findButton(ne.mount.wrapper, NativeEditor, 0);
+                        // The render method needs to be executed 3 times for three cells.
+                        const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
+                            numberOfTimes: 3
+                        });
+                        runAllButton!.simulate('click');
+                        await threeCellsUpdated;
+
+                        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `hello`, 0);
+                        // There should be output on the third cell, even with an error on the second
+                        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `world`, 2);
+                    });
+                });
 
                 suite('Update Metadata', () => {
                     setup(async function () {

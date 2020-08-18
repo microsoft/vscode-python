@@ -20,7 +20,7 @@ import {
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
 import { NugetPackage } from '../common/nuget/types';
 import { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
-import { PythonInterpreter } from '../pythonEnvironments/info';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
 /**
@@ -99,14 +99,14 @@ export interface ILanguageServer
 
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
 export interface ILanguageServerActivator extends ILanguageServer {
-    start(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void>;
+    start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void>;
     activate(): void;
     deactivate(): void;
 }
 
 export const ILanguageServerCache = Symbol('ILanguageServerCache');
 export interface ILanguageServerCache {
-    get(resource: Resource, interpreter?: PythonInterpreter): Promise<ILanguageServer>;
+    get(resource: Resource, interpreter?: PythonEnvironment): Promise<ILanguageServer>;
 }
 
 export type FolderVersionPair = { path: string; version: SemVer };
@@ -150,7 +150,7 @@ export const ILanguageClientFactory = Symbol('ILanguageClientFactory');
 export interface ILanguageClientFactory {
     createLanguageClient(
         resource: Resource,
-        interpreter: PythonInterpreter | undefined,
+        interpreter: PythonEnvironment | undefined,
         clientOptions: LanguageClientOptions,
         env?: NodeJS.ProcessEnv
     ): Promise<LanguageClient>;
@@ -158,13 +158,13 @@ export interface ILanguageClientFactory {
 export const ILanguageServerAnalysisOptions = Symbol('ILanguageServerAnalysisOptions');
 export interface ILanguageServerAnalysisOptions extends IDisposable {
     readonly onDidChange: Event<void>;
-    initialize(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void>;
+    initialize(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void>;
     getAnalysisOptions(): Promise<LanguageClientOptions>;
 }
 export const ILanguageServerManager = Symbol('ILanguageServerManager');
 export interface ILanguageServerManager extends IDisposable {
     readonly languageProxy: ILanguageServerProxy | undefined;
-    start(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void>;
+    start(resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void>;
     connect(): void;
     disconnect(): void;
 }
@@ -182,7 +182,7 @@ export interface ILanguageServerProxy extends IDisposable {
     languageClient: LanguageClient | undefined;
     start(
         resource: Resource,
-        interpreter: PythonInterpreter | undefined,
+        interpreter: PythonEnvironment | undefined,
         options: LanguageClientOptions
     ): Promise<void>;
     /**

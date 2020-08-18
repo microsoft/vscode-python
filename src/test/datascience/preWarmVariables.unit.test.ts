@@ -12,24 +12,24 @@ import { JupyterInterpreterService } from '../../client/datascience/jupyter/inte
 import { PreWarmActivatedJupyterEnvironmentVariables } from '../../client/datascience/preWarmVariables';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { sleep } from '../core';
 
 suite('DataScience - PreWarm Env Vars', () => {
     let activationService: IExtensionSingleActivationService;
     let envActivationService: IEnvironmentActivationService;
     let jupyterInterpreter: JupyterInterpreterService;
-    let onDidChangeInterpreter: EventEmitter<PythonInterpreter>;
-    let interpreter: PythonInterpreter;
+    let onDidChangeInterpreter: EventEmitter<PythonEnvironment>;
+    let interpreter: PythonEnvironment;
     setup(() => {
         interpreter = {
             architecture: Architecture.Unknown,
             path: '',
             sysPrefix: '',
             sysVersion: '',
-            type: InterpreterType.Conda
+            envType: EnvironmentType.Conda
         };
-        onDidChangeInterpreter = new EventEmitter<PythonInterpreter>();
+        onDidChangeInterpreter = new EventEmitter<PythonEnvironment>();
         envActivationService = mock(EnvironmentActivationService);
         jupyterInterpreter = mock(JupyterInterpreterService);
         when(jupyterInterpreter.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);

@@ -196,16 +196,7 @@ export async function startJupyter() {
 
     const disposables: IDisposable[] = [];
     try {
-        const templateIPynb = path.join(
-            EXTENSION_ROOT_DIR_FOR_TESTS,
-            'src',
-            'test',
-            'datascience',
-            'notebook',
-            'empty.ipynb'
-        );
-        const tempIPynb = await createTemporaryNotebook(templateIPynb, disposables);
-        await editorProvider.open(Uri.file(tempIPynb));
+        await editorProvider.createNew();
         await insertPythonCell('print("Hello World")', 0);
         const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
         await executeActiveDocument();

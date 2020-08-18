@@ -9,7 +9,7 @@ import { Uri } from 'vscode';
 import { PipEnvInstaller } from '../../../client/common/installer/pipEnvInstaller';
 import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable-next-line: max-func-body-length
 suite('PipEnv installer', async () => {
@@ -35,7 +35,7 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Pipenv interpreter, method isSupported() returns true', async () => {
         const interpreter = {
-            type: InterpreterType.Pipenv
+            envType: EnvironmentType.Pipenv
         };
         // tslint:disable-next-line: no-any
         const result = await pipEnvInstaller.isSupported(interpreter as any);
@@ -44,7 +44,7 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Python interpreter but not of type Pipenv, method isSupported() returns false', async () => {
         const interpreter = {
-            type: InterpreterType.Conda
+            envType: EnvironmentType.Conda
         };
         // tslint:disable-next-line: no-any
         const result = await pipEnvInstaller.isSupported(interpreter as any);
@@ -57,8 +57,8 @@ suite('PipEnv installer', async () => {
             .setup((p) => p.getInterpreters(resource))
             .returns(() =>
                 Promise.resolve([
-                    TypeMoq.Mock.ofType<PythonInterpreter>().object,
-                    TypeMoq.Mock.ofType<PythonInterpreter>().object
+                    TypeMoq.Mock.ofType<PythonEnvironment>().object,
+                    TypeMoq.Mock.ofType<PythonEnvironment>().object
                 ])
             );
         const result = await pipEnvInstaller.isSupported(resource);

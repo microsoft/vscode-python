@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
+import { IWorkspaceService } from '../../common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { generateNewNotebookUri } from '../common';
 import { INotebookModel, INotebookStorage } from '../types';
@@ -26,11 +27,13 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     private static untitledCounter = 1;
     private readonly _savedAs = new EventEmitter<{ new: Uri; old: Uri }>();
     private readonly storageAndModels = new Map<string, Promise<INotebookModel>>();
+    private readonly resolvedStorageAndModels = new Map<string, INotebookModel>();
     private models = new Set<INotebookModel>();
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(INotebookStorage) private readonly storage: INotebookStorage,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         disposables.push(this);
     }
@@ -59,6 +62,10 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     public deleteBackup(model: INotebookModel, backupId?: string) {
         return this.storage.deleteBackup(model, backupId);
     }
+    public get(file: Uri): INotebookModel | undefined {
+        return this.resolvedStorageAndModels.get(file.toString());
+    }
+
     public getOrCreateModel(
         file: Uri,
         contents?: string,
@@ -107,17 +114,24 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     }
 
     private getNextNewNotebookUri(forVSCodeNotebooks?: boolean): Uri {
-        return generateNewNotebookUri(NotebookStorageProvider.untitledCounter, undefined, forVSCodeNotebooks);
+        return generateNewNotebookUri(
+            NotebookStorageProvider.untitledCounter,
+            this.workspace.rootPath,
+            undefined,
+            forVSCodeNotebooks
+        );
     }
 
     private trackModel(model: INotebookModel): INotebookModel {
         this.disposables.push(model);
         this.models.add(model);
+        this.resolvedStorageAndModels.set(model.file.toString(), model);
         // When a model is no longer used, ensure we remove it from the cache.
         model.onDidDispose(
             () => {
                 this.models.delete(model);
                 this.storageAndModels.delete(model.file.toString());
+                this.resolvedStorageAndModels.delete(model.file.toString());
             },
             this,
             this.disposables

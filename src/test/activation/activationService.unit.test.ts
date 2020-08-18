@@ -32,7 +32,7 @@ import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 // tslint:disable:max-func-body-length no-any
 
@@ -334,21 +334,21 @@ suite('Language Server Activation - ActivationService', () => {
                     cmdManager.verifyAll();
                 });
                 test('More than one LS is created for multiple interpreters if LS is "Microsoft"', async () => {
-                    const interpreter1: PythonInterpreter = {
+                    const interpreter1: PythonEnvironment = {
                         path: '/foo/bar/python',
                         sysPrefix: '1',
                         envName: '1',
                         sysVersion: '3.1.1.1',
                         architecture: Architecture.x64,
-                        type: InterpreterType.Unknown
+                        envType: EnvironmentType.Unknown
                     };
-                    const interpreter2: PythonInterpreter = {
+                    const interpreter2: PythonEnvironment = {
                         path: '/foo/baz/python',
                         sysPrefix: '1',
                         envName: '2',
                         sysVersion: '3.1.1.1',
                         architecture: Architecture.x64,
-                        type: InterpreterType.Unknown
+                        envType: EnvironmentType.Unknown
                     };
                     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
@@ -393,21 +393,21 @@ suite('Language Server Activation - ActivationService', () => {
                     activator.verifyAll();
                 });
                 test('Changing interpreter will activate a new LS if it is "Microsoft"', async () => {
-                    const interpreter1: PythonInterpreter = {
+                    const interpreter1: PythonEnvironment = {
                         path: '/foo/bar/python',
                         sysPrefix: '1',
                         envName: '1',
                         sysVersion: '3.1.1.1',
                         architecture: Architecture.x64,
-                        type: InterpreterType.Unknown
+                        envType: EnvironmentType.Unknown
                     };
-                    const interpreter2: PythonInterpreter = {
+                    const interpreter2: PythonEnvironment = {
                         path: '/foo/baz/python',
                         sysPrefix: '1',
                         envName: '2',
                         sysVersion: '3.1.1.1',
                         architecture: Architecture.x64,
-                        type: InterpreterType.Unknown
+                        envType: EnvironmentType.Unknown
                     };
                     let getActiveCount = 0;
                     interpreterService

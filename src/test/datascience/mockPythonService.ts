@@ -8,14 +8,14 @@ import {
     SpawnOptions
 } from '../../client/common/process/types';
 import { buildPythonExecInfo } from '../../client/pythonEnvironments/exec';
-import { InterpreterInformation, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { InterpreterInformation, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { MockProcessService } from './mockProcessService';
 
 export class MockPythonService implements IPythonExecutionService {
-    private interpreter: PythonInterpreter;
+    private interpreter: PythonEnvironment;
     private procService: MockProcessService = new MockProcessService();
 
-    constructor(interpreter: PythonInterpreter) {
+    constructor(interpreter: PythonEnvironment) {
         this.interpreter = interpreter;
     }
 

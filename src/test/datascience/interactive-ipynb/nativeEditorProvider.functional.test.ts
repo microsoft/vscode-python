@@ -10,7 +10,7 @@ import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-languageclient/node';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { INotebookEditorProvider, INotebookModel } from '../../../client/datascience/types';
-import { concatMultilineStringInput } from '../../../datascience-ui/common';
+import { concatMultilineString } from '../../../datascience-ui/common';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { TestNativeEditorProvider } from '../testNativeEditorProvider';
@@ -80,7 +80,7 @@ suite('DataScience - Native Editor Provider', () => {
         const n2 = await provider.open(uri);
         cells = n2.model!.cells;
         expect(cells).to.be.lengthOf(2);
-        expect(concatMultilineStringInput(cells[0].data.source)).to.be.eq('a=1');
+        expect(concatMultilineString(cells[0].data.source)).to.be.eq('a=1');
 
         // Act like another reboot but create a new file
         provider = createNotebookProvider();

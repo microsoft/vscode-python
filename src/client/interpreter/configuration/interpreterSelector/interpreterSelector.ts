@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Uri } from 'vscode';
 import { DeprecatePythonPath } from '../../../common/experiments/groups';
 import { IExperimentsManager, IPathUtils, Resource } from '../../../common/types';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { IInterpreterSecurityService } from '../../autoSelection/types';
 import { IInterpreterService } from '../../contracts';
 import { IInterpreterComparer, IInterpreterQuickPickItem, IInterpreterSelector } from '../types';
@@ -30,7 +30,9 @@ export class InterpreterSelector implements IInterpreterSelector {
     public async getSuggestions(resource: Resource) {
         let interpreters = await this.interpreterManager.getInterpreters(resource, { onSuggestion: true });
         if (this.experimentsManager.inExperiment(DeprecatePythonPath.experiment)) {
-            interpreters = interpreters.filter((item) => this.interpreterSecurityService.isSafe(item) !== false);
+            interpreters = interpreters
+                ? interpreters.filter((item) => this.interpreterSecurityService.isSafe(item) !== false)
+                : [];
         }
         this.experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         interpreters.sort(this.interpreterComparer.compare.bind(this.interpreterComparer));
@@ -38,7 +40,7 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 
     protected async suggestionToQuickPickItem(
-        suggestion: PythonInterpreter,
+        suggestion: PythonEnvironment,
         workspaceUri?: Uri
     ): Promise<IInterpreterQuickPickItem> {
         const detail = this.pathUtils.getDisplayName(suggestion.path, workspaceUri ? workspaceUri.fsPath : undefined);

@@ -1,4 +1,5 @@
-body, html {
+body,
+html {
     height: 100%;
     margin: 0;
 }
@@ -15,10 +16,10 @@ body, html {
     grid-template-rows: auto auto 1fr auto;
     grid-template-columns: 1fr;
     grid-template-areas:
-    "toolbar"
-    "variable"
-    "content"
-    "footer";
+        'toolbar'
+        'variable'
+        'content'
+        'footer';
     height: 100%;
     width: 100%;
     position: absolute;
@@ -58,7 +59,7 @@ body, html {
 }
 
 .edit-panel {
-    min-height:50px;
+    min-height: 50px;
     padding: 10px 0px 10px 0px;
     width: 100%;
     border-top-color: var(--override-badge-background, var(--vscode-badge-background));
@@ -67,7 +68,7 @@ body, html {
 }
 
 .edit-panel-colorized {
-    min-height:50px;
+    min-height: 50px;
     padding: 10px 0px 10px 0px;
     width: 100%;
     border-top-color: var(--override-badge-background, var(--vscode-badge-background));
@@ -85,7 +86,7 @@ body, html {
 
 .cell-wrapper:focus {
     outline-width: 0px;
-    outline-color:var(--override-selection-background, var(--vscode-editor-selectionBackground));
+    outline-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
 }
 
 .cell-wrapper-preview {
@@ -99,7 +100,7 @@ body, html {
 }
 
 .cell-wrapper:after {
-    content: "";
+    content: '';
     clear: both;
     display: block;
 }
@@ -112,18 +113,18 @@ body, html {
 }
 
 .cell-outer {
-    display:grid;
+    display: grid;
     grid-template-columns: auto 1fr;
     grid-column-gap: 3px;
     width: 100%;
 }
 
 .cell-outer-editable {
-    display:grid;
+    display: grid;
     grid-template-columns: auto 1fr;
     grid-column-gap: 3px;
     width: 100%;
-    margin-top:16px;
+    margin-top: 16px;
 }
 
 .content-div {
@@ -147,7 +148,7 @@ body, html {
     margin: 0;
 }
 
-.cell-input pre{
+.cell-input pre {
     margin: 0px;
     padding: 0px;
 }
@@ -181,13 +182,13 @@ body, html {
 }
 
 .cell-output-plot-background {
-    background:white;
+    background: white;
     display: inline-block;
     margin: 3px;
 }
 
 .cell-output-ipywidget-background {
-    background:white !important;
+    background: white !important;
 }
 
 .cell-output-plot-background * {
@@ -213,25 +214,28 @@ body, html {
 .cell-output tr,
 .cell-output th,
 .cell-output td {
-  text-align: right;
-  vertical-align: middle;
-  padding: 0.5em 0.5em;
-  line-height: normal;
-  white-space: normal;
-  max-width: none;
-  border: none;
+    text-align: right;
+    vertical-align: middle;
+    padding: 0.5em 0.5em;
+    line-height: normal;
+    white-space: normal;
+    max-width: none;
+    border: none;
 }
 .cell-output th {
-  font-weight: bold;
+    font-weight: bold;
 }
 .cell-output tbody tr:nth-child(even) {
-  background: var(--override-background, var(--vscode-editor-background)); /* Force to white because the default color for output is gray */
+    background: var(
+        --override-background,
+        var(--vscode-editor-background)
+    ); /* Force to white because the default color for output is gray */
 }
 .cell-output tbody tr:hover {
-  background: var(--override-selection-background, var(--vscode-editor-selectionBackground));
+    background: var(--override-selection-background, var(--vscode-editor-selectionBackground));
 }
 .cell-output * + table {
-  margin-top: 1em;
+    margin-top: 1em;
 }
 
 .center-img {
@@ -257,8 +261,8 @@ body, html {
 /* Code */
 .code-area {
     position: relative;
-    width:100%;
-    margin-bottom:16px;
+    width: 100%;
+    margin-bottom: 16px;
     top: -2px; /* Account for spacing removed from the monaco editor */
 }
 
@@ -300,9 +304,9 @@ body, html {
 }
 
 .remove-style {
-    background-color:transparent;
-    border:transparent;
-    font:inherit;
+    background-color: transparent;
+    border: transparent;
+    font: inherit;
 }
 
 .inputLabel {
@@ -320,12 +324,16 @@ body, html {
 
 .flash {
     animation-name: flash-animation;
-    animation-duration: 1.0s;
+    animation-duration: 1s;
 }
 
 @keyframes flash-animation {
-    from { background: var(--override-peek-background, var(--vscode-peekViewEditor-background));; }
-    to   { background: default; }
+    from {
+        background: var(--override-peek-background, var(--vscode-peekViewEditor-background));
+    }
+    to {
+        background: default;
+    }
 }
 
 .messages-wrapper {
@@ -398,7 +406,7 @@ body, html {
     justify-content: end;
 }
 .variable-explorer-label {
-    margin-right:auto;
+    margin-right: auto;
 }
 .variable-explorer-close-button {
     justify-self: end;
@@ -407,27 +415,31 @@ body, html {
 .execution-count {
     grid-column: 1;
     font-weight: bold;
-    display:flex;
+    display: flex;
     color: var(--vscode-descriptionForeground);
     font-family: var(--code-font-family);
- }
+}
 
- .execution-count-busy-outer {
+.execution-count-busy-outer {
     grid-column: 1;
     font-weight: bold;
     color: var(--code-comment-color);
-    display:block;
+    display: block;
     width: 8px;
     height: 8px;
     white-space: nowrap;
 }
 
 @keyframes execution-spin {
-    from { transform: rotate(0); }
-    to   { transform: rotate(360deg); }
+    from {
+        transform: rotate(0);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
- .execution-count-busy-svg {
+.execution-count-busy-svg {
     animation: execution-spin 4s linear infinite;
 }
 
@@ -437,12 +449,12 @@ body, html {
     stroke-width: 1;
 }
 
- @keyframes spin {
+@keyframes spin {
     from {
-        transform:rotate(0deg);
+        transform: rotate(0deg);
     }
     to {
-        transform:rotate(360deg);
+        transform: rotate(360deg);
     }
 }
 
@@ -484,7 +496,6 @@ body, html {
     background-color: var(--override-badge-background, var(--vscode-badge-background));
 }
 
-
 .kernel-status {
     display: flex;
     margin-left: auto;
@@ -499,7 +510,7 @@ body, html {
 
 .kernel-status-section-hoverable:hover {
     background-color: var(--override-badge-background, var(--vscode-badge-background));
-    cursor:pointer;
+    cursor: pointer;
 }
 
 .kernel-status-divider {
@@ -560,4 +571,8 @@ body, html {
 
 .image-button:focus {
     outline: none;
+}
+
+.rotate {
+    animation: spin 2s infinite linear;
 }

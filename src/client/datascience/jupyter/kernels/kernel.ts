@@ -7,32 +7,40 @@ import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
-import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
+import {
+    CancellationToken,
+    CancellationTokenSource,
+    Event,
+    EventEmitter,
+    NotebookCell,
+    NotebookDocument,
+    Uri
+} from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
+import { ICommandManager } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
+import { noop } from '../../../common/utils/misc';
+import { IInterpreterService } from '../../../interpreter/contracts';
+import { INotebookContentProvider } from '../../notebook/types';
 import { getDefaultNotebookContent, updateNotebookMetadata } from '../../notebookStorage/baseModel';
-import type {
+import {
     ICell,
-    IJupyterKernelSpec,
+    IDataScienceErrorHandler,
     INotebook,
+    INotebookEditorProvider,
     INotebookProvider,
     INotebookProviderConnection,
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
-import type { IKernel, KernelSelection, LiveKernelModel } from './types';
+import { KernelExecution } from './kernelExecution';
+import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
-        return this._notebook?.connection;
-    }
-    get kernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
-        if (this._notebook) {
-            return this._notebook.getKernelSpec();
-        }
-        return this._metadata.kernelSpec || this._metadata.kernelModel;
+        return this.notebook?.connection;
     }
     get onStatusChanged(): Event<ServerStatus> {
         return this._onStatusChanged.event;
@@ -44,31 +52,51 @@ export class Kernel implements IKernel {
         return this._onDisposed.event;
     }
     get status(): ServerStatus {
-        return this._notebook?.status ?? ServerStatus.NotStarted;
+        return this.notebook?.status ?? ServerStatus.NotStarted;
     }
     get disposed(): boolean {
-        return this._disposed === true || this._notebook?.disposed === true;
+        return this._disposed === true || this.notebook?.disposed === true;
     }
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
+    private notebook?: INotebook;
     private _disposed?: boolean;
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
-    private _notebook?: INotebook;
     private _notebookPromise?: Promise<INotebook | undefined>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
     private restarting?: Deferred<void>;
+    private readonly kernelValidated = new Map<string, { kernel: IKernel; promise: Promise<void> }>();
+    private readonly kernelExecution: KernelExecution;
+    private startCancellation = new CancellationTokenSource();
     constructor(
         public readonly uri: Uri,
-        private readonly _metadata: KernelSelection,
+        public readonly metadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
-        private readonly waitForIdleTimeoutMs: number,
-        private readonly launchingFile?: string
-    ) {}
+        private readonly launchTimeout: number,
+        private readonly launchingFile: string | undefined,
+        commandManager: ICommandManager,
+        interpreterService: IInterpreterService,
+        errorHandler: IDataScienceErrorHandler,
+        contentProvider: INotebookContentProvider,
+        editorProvider: INotebookEditorProvider,
+        private readonly kernelProvider: IKernelProvider,
+        private readonly kernelSelectionUsage: IKernelSelectionUsage
+    ) {
+        this.kernelExecution = new KernelExecution(
+            kernelProvider,
+            commandManager,
+            interpreterService,
+            errorHandler,
+            contentProvider,
+            editorProvider,
+            kernelSelectionUsage
+        );
+    }
     public executeObservable(
         code: string,
         file: string,
@@ -76,11 +104,27 @@ export class Kernel implements IKernel {
         id: string,
         silent: boolean
     ): Observable<ICell[]> {
-        if (!this._notebook) {
+        if (!this.notebook) {
             throw new Error('executeObservable cannot be called if kernel has not been started!');
         }
-        this._notebook.clear(id);
-        return this._notebook.executeObservable(code, file, line, id, silent);
+        this.notebook.clear(id);
+        return this.notebook.executeObservable(code, file, line, id, silent);
+    }
+    public async executeCell(cell: NotebookCell): Promise<void> {
+        await this.start({ disableUI: false, token: this.startCancellation.token });
+        await this.kernelExecution.executeCell(cell);
+    }
+    public async executeAllCells(document: NotebookDocument): Promise<void> {
+        await this.start({ disableUI: false, token: this.startCancellation.token });
+        await this.kernelExecution.executeAllCells(document);
+    }
+    public cancelCell(cell: NotebookCell) {
+        this.startCancellation.cancel();
+        this.kernelExecution.cancelCell(cell);
+    }
+    public cancelAllCells(document: NotebookDocument) {
+        this.startCancellation.cancel();
+        this.kernelExecution.cancelAllCells(document);
     }
     public async start(options?: { disableUI?: boolean; token?: CancellationToken }): Promise<void> {
         if (this.restarting) {
@@ -90,12 +134,11 @@ export class Kernel implements IKernel {
             await this._notebookPromise;
             return;
         } else {
+            await this.validate(this.uri);
             const metadata = ((getDefaultNotebookContent().metadata || {}) as unknown) as nbformat.INotebookMetadata;
-            updateNotebookMetadata(
-                metadata,
-                this._metadata.interpreter,
-                this._metadata.kernelSpec || this._metadata.kernelModel
-            );
+            // tslint:disable-next-line: no-suspicious-comment
+            // TODO: Just pass the `this.metadata` into the func.
+            updateNotebookMetadata(metadata, this.metadata);
 
             this._notebookPromise = this.notebookProvider.getOrCreateNotebook({
                 identity: this.uri,
@@ -107,39 +150,42 @@ export class Kernel implements IKernel {
             });
 
             this._notebookPromise
-                .then((nb) => (this._notebook = nb))
+                .then((nb) => (this.kernelExecution.notebook = this.notebook = nb))
                 .catch((ex) => traceError('failed to create INotebook in kernel', ex));
             await this._notebookPromise;
             await this.initializeAfterStart();
         }
     }
-    public async interrupt(timeoutInMs: number): Promise<InterruptResult> {
+    public async interrupt(): Promise<InterruptResult> {
         if (this.restarting) {
             await this.restarting.promise;
         }
-        if (!this._notebook) {
+        if (!this.notebook) {
             throw new Error('No notebook to interrupt');
         }
-        return this._notebook.interruptKernel(timeoutInMs);
+        return this.notebook.interruptKernel(this.launchTimeout);
     }
     public async dispose(): Promise<void> {
         this.restarting = undefined;
-        if (this._notebook) {
-            await this._notebook.dispose();
+        this._notebookPromise = undefined;
+        if (this.notebook) {
+            await this.notebook.dispose();
             this._disposed = true;
             this._onDisposed.fire();
             this._onStatusChanged.fire(ServerStatus.Dead);
-            this._notebook = undefined;
+            this.notebook = undefined;
+            this.kernelExecution.notebook = undefined;
         }
+        this.kernelExecution.dispose();
     }
-    public async restart(timeoutInMs: number): Promise<void> {
+    public async restart(): Promise<void> {
         if (this.restarting) {
             return this.restarting.promise;
         }
-        if (this._notebook) {
+        if (this.notebook) {
             this.restarting = createDeferred<void>();
             try {
-                await this._notebook.restartKernel(timeoutInMs);
+                await this.notebook.restartKernel(this.launchTimeout);
                 await this.initializeAfterStart();
                 this.restarting.resolve();
             } catch (ex) {
@@ -150,29 +196,56 @@ export class Kernel implements IKernel {
         }
     }
     public registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void {
-        if (!this._notebook) {
+        if (!this.notebook) {
             throw new Error('Notebook not defined');
         }
-        this._notebook.registerIOPubListener(listener);
+        this.notebook.registerIOPubListener(listener);
     }
-    private async initializeAfterStart() {
-        if (!this._notebook) {
+    private async validate(uri: Uri): Promise<void> {
+        const kernel = this.kernelProvider.get(uri);
+        if (!kernel) {
             return;
         }
-        if (!this.hookedNotebookForEvents.has(this._notebook)) {
-            this.hookedNotebookForEvents.add(this._notebook);
-            this._notebook.kernelSocket.subscribe(this._kernelSocket);
-            this._notebook.onDisposed(() => {
+        const key = uri.toString();
+        if (!this.kernelValidated.get(key)) {
+            const promise = new Promise<void>((resolve) =>
+                this.kernelSelectionUsage
+                    .useSelectedKernel(kernel?.metadata, uri, 'raw')
+                    .finally(() => {
+                        // If still using the same promise, then remove the exception information.
+                        // Basically if there's an exception, then we cannot use the kernel and a message would have been displayed.
+                        // We don't want to cache such a promise, as its possible the user later installs the dependencies.
+                        if (this.kernelValidated.get(key)?.kernel === kernel) {
+                            this.kernelValidated.delete(key);
+                        }
+                    })
+                    .finally(resolve)
+                    .catch(noop)
+            );
+
+            this.kernelValidated.set(key, { kernel, promise });
+        }
+        await this.kernelValidated.get(key)!.promise;
+    }
+    private async initializeAfterStart() {
+        if (!this.notebook) {
+            return;
+        }
+        if (!this.hookedNotebookForEvents.has(this.notebook)) {
+            this.hookedNotebookForEvents.add(this.notebook);
+            this.notebook.kernelSocket.subscribe(this._kernelSocket);
+            this.notebook.onDisposed(() => {
+                this._notebookPromise = undefined;
                 this._onDisposed.fire();
             });
-            this._notebook.onKernelRestarted(() => {
+            this.notebook.onKernelRestarted(() => {
                 this._onRestarted.fire();
             });
-            this._notebook.onSessionStatusChanged((e) => this._onStatusChanged.fire(e), this, this.disposables);
+            this.notebook.onSessionStatusChanged((e) => this._onStatusChanged.fire(e), this, this.disposables);
         }
         if (this.launchingFile) {
-            await this._notebook.setLaunchingFile(this.launchingFile);
+            await this.notebook.setLaunchingFile(this.launchingFile);
         }
-        await this._notebook.waitForIdle(this.waitForIdleTimeoutMs);
+        await this.notebook.waitForIdle(this.launchTimeout);
     }
 }

@@ -17,7 +17,7 @@ import { JupyterInterpreterService } from '../../../../client/datascience/jupyte
 import { JupyterInterpreterStateStore } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterStateStore';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import { MockMemento } from '../../../mocks/mementos';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 
@@ -28,24 +28,24 @@ suite('DataScience - Jupyter Interpreter Service', () => {
     let interpreterSelector: JupyterInterpreterSelector;
     let interpreterConfiguration: JupyterInterpreterDependencyService;
     let interpreterService: IInterpreterService;
-    let selectedInterpreterEventArgs: PythonInterpreter | undefined;
+    let selectedInterpreterEventArgs: PythonEnvironment | undefined;
     let memento: Memento;
     let interpreterSelectionState: JupyterInterpreterStateStore;
     let oldVersionCacheStateStore: JupyterInterpreterOldCacheStateStore;
     const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
-    const pythonInterpreter: PythonInterpreter = {
+    const pythonInterpreter: PythonEnvironment = {
         path: 'some path',
         architecture: Architecture.Unknown,
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Unknown
+        envType: EnvironmentType.Unknown
     };
-    const secondPythonInterpreter: PythonInterpreter = {
+    const secondPythonInterpreter: PythonEnvironment = {
         path: 'second interpreter path',
         architecture: Architecture.Unknown,
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Unknown
+        envType: EnvironmentType.Unknown
     };
 
     setup(() => {

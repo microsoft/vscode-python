@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import * as sut from '../../../client/pythonEnvironments/discovery/subenv';
-import { InterpreterType } from '../../../client/pythonEnvironments/info';
+import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 
 suite('getName()', () => {
     // We will pull tests over from src/test/interpreters/virtualEnvs/index.unit.test.ts at some point.
@@ -12,10 +12,10 @@ suite('getName()', () => {
 
 suite('getType()', () => {
     interface IFinders {
-        venv(python: string): Promise<InterpreterType | undefined>;
-        pyenv(python: string): Promise<InterpreterType | undefined>;
-        pipenv(python: string): Promise<InterpreterType | undefined>;
-        virtualenv(python: string): Promise<InterpreterType | undefined>;
+        venv(python: string): Promise<EnvironmentType | undefined>;
+        pyenv(python: string): Promise<EnvironmentType | undefined>;
+        pipenv(python: string): Promise<EnvironmentType | undefined>;
+        virtualenv(python: string): Promise<EnvironmentType | undefined>;
     }
     let finders: TypeMoq.IMock<IFinders>;
     setup(() => {
@@ -30,7 +30,7 @@ suite('getType()', () => {
         finders
             .setup((f) => f.venv(python))
             // found
-            .returns(() => Promise.resolve(InterpreterType.Venv));
+            .returns(() => Promise.resolve(EnvironmentType.Venv));
 
         const result = await sut.getType(python, [
             (p: string) => finders.object.venv(p),
@@ -39,7 +39,7 @@ suite('getType()', () => {
             (p: string) => finders.object.virtualenv(p)
         ]);
 
-        expect(result).to.equal(InterpreterType.Venv, 'broken');
+        expect(result).to.equal(EnvironmentType.Venv, 'broken');
         verifyAll();
     });
 
@@ -52,7 +52,7 @@ suite('getType()', () => {
         finders
             .setup((f) => f.pyenv(python))
             // found
-            .returns(() => Promise.resolve(InterpreterType.Pyenv));
+            .returns(() => Promise.resolve(EnvironmentType.Pyenv));
 
         const result = await sut.getType(python, [
             (p: string) => finders.object.venv(p),
@@ -61,7 +61,7 @@ suite('getType()', () => {
             (p: string) => finders.object.virtualenv(p)
         ]);
 
-        expect(result).to.equal(InterpreterType.Pyenv, 'broken');
+        expect(result).to.equal(EnvironmentType.Pyenv, 'broken');
         verifyAll();
     });
 

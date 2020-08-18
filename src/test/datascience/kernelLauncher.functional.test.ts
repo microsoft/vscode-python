@@ -14,7 +14,7 @@ import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelL
 import { IKernelConnection, IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
 import { IDataScienceFileSystem, IJupyterKernelSpec } from '../../client/datascience/types';
-import { PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
@@ -24,7 +24,7 @@ import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 suite('DataScience - Kernel Launcher', () => {
     let ioc: DataScienceIocContainer;
     let kernelLauncher: KernelLauncher;
-    let pythonInterpreter: PythonInterpreter | undefined;
+    let pythonInterpreter: PythonEnvironment | undefined;
     let kernelSpec: IJupyterKernelSpec;
     let kernelFinder: MockKernelFinder;
     // tslint:disable-next-line: no-any
@@ -37,10 +37,10 @@ suite('DataScience - Kernel Launcher', () => {
     setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-        kernelFinder = new MockKernelFinder(ioc.serviceContainer.get<IKernelFinder>(IKernelFinder));
-        const processServiceFactory = ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
-        const daemonPool = ioc.serviceContainer.get<KernelDaemonPool>(KernelDaemonPool);
-        const fileSystem = ioc.serviceContainer.get<IDataScienceFileSystem>(IDataScienceFileSystem);
+        kernelFinder = new MockKernelFinder(ioc.get<IKernelFinder>(IKernelFinder));
+        const processServiceFactory = ioc.get<IProcessServiceFactory>(IProcessServiceFactory);
+        const daemonPool = ioc.get<KernelDaemonPool>(KernelDaemonPool);
+        const fileSystem = ioc.get<IDataScienceFileSystem>(IDataScienceFileSystem);
         kernelLauncher = new KernelLauncher(processServiceFactory, fileSystem, daemonPool);
         await ioc.activate();
         if (!ioc.mockJupyter) {
@@ -67,7 +67,11 @@ suite('DataScience - Kernel Launcher', () => {
         } else {
             let exitExpected = false;
             const deferred = createDeferred<boolean>();
-            const kernel = await kernelLauncher.launch(kernelSpec, undefined);
+            const kernel = await kernelLauncher.launch(
+                { kernelSpec, kind: 'startUsingKernelSpec' },
+                undefined,
+                process.cwd()
+            );
             kernel.exited(() => {
                 if (exitExpected) {
                     deferred.resolve(true);
@@ -109,7 +113,11 @@ suite('DataScience - Kernel Launcher', () => {
             };
             kernelFinder.addKernelSpec(pythonInterpreter.path, spec);
 
-            const kernel = await kernelLauncher.launch(spec, undefined);
+            const kernel = await kernelLauncher.launch(
+                { kernelSpec: spec, kind: 'startUsingKernelSpec' },
+                undefined,
+                process.cwd()
+            );
             const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
 
             assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
@@ -139,7 +147,11 @@ suite('DataScience - Kernel Launcher', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
-            const kernel = await kernelLauncher.launch(kernelSpec, undefined);
+            const kernel = await kernelLauncher.launch(
+                { kernelSpec, kind: 'startUsingKernelSpec' },
+                undefined,
+                process.cwd()
+            );
 
             try {
                 const zmq = await import('zeromq');

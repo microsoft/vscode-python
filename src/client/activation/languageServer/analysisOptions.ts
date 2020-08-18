@@ -10,14 +10,14 @@ import { traceDecorators, traceError } from '../../common/logger';
 import { IConfigurationService, IExtensionContext, IPathUtils, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
 import { ILanguageServerFolderService, ILanguageServerOutputChannel } from '../types';
 
 @injectable()
 export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
     private resource: Resource;
-    private interpreter: PythonInterpreter | undefined;
+    private interpreter: PythonEnvironment | undefined;
     private languageServerFolder: string = '';
     private excludedFiles: string[] = [];
     private typeshedPaths: string[] = [];
@@ -34,7 +34,7 @@ export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisO
         super(envVarsProvider, lsOutputChannel);
     }
 
-    public async initialize(resource: Resource, interpreter: PythonInterpreter | undefined) {
+    public async initialize(resource: Resource, interpreter: PythonEnvironment | undefined) {
         await super.initialize(resource, interpreter);
 
         this.resource = resource;

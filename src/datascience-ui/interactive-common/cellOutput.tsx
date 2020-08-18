@@ -26,7 +26,7 @@ const cloneDeep = require('lodash/cloneDeep');
 import { Widget } from '@phosphor/widgets';
 import { noop } from '../../client/common/utils/misc';
 import { WIDGET_MIMETYPE } from '../../client/datascience/ipywidgets/constants';
-import { concatMultilineStringInput, concatMultilineStringOutput } from '../common';
+import { concatMultilineString } from '../common';
 import { TrimmedOutputMessage } from './trimmedOutputLink';
 
 interface ICellOutputProps {
@@ -291,7 +291,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private renderMarkdownOutputs = () => {
         const markdown = this.getMarkdownCell();
         // React-markdown expects that the source is a string
-        const source = fixMarkdown(concatMultilineStringInput(markdown.source));
+        const source = fixMarkdown(concatMultilineString(markdown.source));
         const Transform = getTransform('text/markdown');
         const MarkdownClassName = 'markdown-cell-output';
 
@@ -323,7 +323,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             renderWithScrollbars = true;
             // Sonar is wrong, TS won't compile without this AS
             const stream = output as nbformat.IStream; // NOSONAR
-            const formatted = concatMultilineStringOutput(stream.text);
+            const formatted = concatMultilineString(stream.text);
             input = {
                 'text/html': formatted.includes('<') ? `<xmp>${formatted}</xmp>` : `<div>${formatted}</div>`
             };
@@ -374,12 +374,12 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         // we want to concat those so we don't display a bunch of weird commas as we expect
         // Single strings in our output
         if (Array.isArray(data)) {
-            data = concatMultilineStringOutput(data as nbformat.MultilineString);
+            data = concatMultilineString(data as nbformat.MultilineString, true);
         }
 
         // Fixup latex to make sure it has the requisite $$ around it
         if (mimeType === 'text/latex') {
-            data = fixMarkdown(concatMultilineStringOutput(data as nbformat.MultilineString), true);
+            data = fixMarkdown(concatMultilineString(data as nbformat.MultilineString, true), true);
         }
 
         return {

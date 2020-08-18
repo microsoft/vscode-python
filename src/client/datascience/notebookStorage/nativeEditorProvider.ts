@@ -135,18 +135,15 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     }
     public async saveCustomDocument(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
         const model = await this.loadModel(document.uri);
-        // 1 second timeout on save so don't wait. Just write and forget
-        this.storage.save(model, cancellation).ignoreErrors();
+        return this.storage.save(model, cancellation);
     }
     public async saveCustomDocumentAs(document: CustomDocument, targetResource: Uri): Promise<void> {
         const model = await this.loadModel(document.uri);
-        // 1 second timeout on save so don't wait. Just write and forget
-        this.storage.saveAs(model, targetResource).ignoreErrors();
+        return this.storage.saveAs(model, targetResource);
     }
     public async revertCustomDocument(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
         const model = await this.loadModel(document.uri);
-        // 1 second time limit on this so don't wait.
-        this.storage.revert(model, cancellation).ignoreErrors();
+        return this.storage.revert(model, cancellation);
     }
     public async backupCustomDocument(
         document: CustomDocument,
@@ -274,15 +271,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             const model = await this.loadModel(resource);
 
             // Load it (should already be visible)
-            const result = this.createNotebookEditor(model, panel);
-
-            // Wait for monaco ready (it's not really useable until it has a language)
-            const readyPromise = createDeferred();
-            const disposable = result.ready(() => readyPromise.resolve());
-            await result.show();
-            await readyPromise.promise;
-            disposable.dispose();
-            return result;
+            return this.createNotebookEditor(model, panel);
         } catch (exc) {
             // Send telemetry indicating a failure
             sendTelemetryEvent(Telemetry.OpenNotebookFailure);
@@ -333,6 +322,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     }
 
     private getNextNewNotebookUri(title?: string): Uri {
-        return generateNewNotebookUri(this.untitledCounter, title);
+        return generateNewNotebookUri(this.untitledCounter, this.workspace.rootPath, title);
     }
 }

@@ -14,7 +14,7 @@ import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
 import { IDisposable, IPythonSettings, Resource } from '../client/common/types';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
-import { PythonInterpreter } from '../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
 
@@ -78,15 +78,9 @@ export async function updateSetting(
     resource: Uri | undefined,
     configTarget: ConfigurationTarget
 ) {
-    // The hooks and tests which use this method often timeout especially in case of multiroot workspaces.
-    // I am suspecting this is because the configTarget is ConfigurationTarget.WorkspaceFolder
-    // and updates in that configTarget take longer time. Logging to see if there's any truth to this.
-    console.log(`Starting diagnosis for configuration: ${configTarget}`);
-    console.time('Update setting diagnosis');
     const vscode = require('vscode') as typeof import('vscode');
     const settings = vscode.workspace.getConfiguration('python', resource || null);
     const currentValue = settings.inspect(setting);
-    console.timeLog('Update setting diagnosis');
     if (
         currentValue !== undefined &&
         ((configTarget === vscode.ConfigurationTarget.Global && currentValue.globalValue === value) ||
@@ -95,12 +89,9 @@ export async function updateSetting(
                 currentValue.workspaceFolderValue === value))
     ) {
         await disposePythonSettings();
-        console.timeEnd('Update setting diagnosis');
         return;
     }
-    console.timeLog('Update setting diagnosis');
     await settings.update(setting, value, configTarget);
-    console.timeLog('Update setting diagnosis');
 
     // We've experienced trouble with .update in the past, where VSC returns stale data even
     // after invoking the update method. This issue has regressed a few times as well. This
@@ -110,8 +101,6 @@ export async function updateSetting(
     // ... please see issue #2356 and PR #2332 for a discussion on the matter
 
     await disposePythonSettings();
-    console.timeEnd('Update setting diagnosis');
-    console.log('Ending diagnosis');
 }
 
 export async function clearPythonPathInWorkspaceFolder(resource: string | Uri) {
@@ -178,12 +167,12 @@ export function getExtensionSettings(resource: Uri | undefined): IPythonSettings
         public autoSelectInterpreter(_resource: Resource): Promise<void> {
             return Promise.resolve();
         }
-        public getAutoSelectedInterpreter(_resource: Resource): PythonInterpreter | undefined {
+        public getAutoSelectedInterpreter(_resource: Resource): PythonEnvironment | undefined {
             return;
         }
         public async setWorkspaceInterpreter(
             _resource: Uri,
-            _interpreter: PythonInterpreter | undefined
+            _interpreter: PythonEnvironment | undefined
         ): Promise<void> {
             return;
         }

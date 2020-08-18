@@ -22,7 +22,7 @@ import {
 } from 'vscode';
 import { isTestExecution } from '../../common/constants';
 import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner, Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageServerActivator } from '../types';
 
 /**
@@ -39,7 +39,7 @@ export class NoLanguageServerExtensionActivator implements ILanguageServerActiva
         @named(BANNER_NAME_PROPOSE_LS)
         private proposePylancePopup: IPythonExtensionBanner
     ) {}
-    public async start(_resource: Resource, _interpreter?: PythonInterpreter): Promise<void> {
+    public async start(_resource: Resource, _interpreter?: PythonEnvironment): Promise<void> {
         if (!isTestExecution()) {
             this.proposePylancePopup.showBanner().ignoreErrors();
         }

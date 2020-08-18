@@ -5,7 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as uuid from 'uuid/v4';
 import { Memento, Uri } from 'vscode';
-import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
+import { concatMultilineString, splitMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { ICryptoUtils } from '../../common/types';
 import { Identifiers } from '../constants';
@@ -156,7 +156,7 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
         const index = this.cells.findIndex((c) => c.id === id);
         if (index >= 0) {
             // This is an actual edit.
-            const contents = concatMultilineStringInput(this.cells[index].data.source);
+            const contents = concatMultilineString(this.cells[index].data.source);
             const before = contents.substr(0, change.rangeOffset);
             const after = contents.substr(change.rangeOffset + change.rangeLength);
             const newContents = `${before}${normalized}${after}`;

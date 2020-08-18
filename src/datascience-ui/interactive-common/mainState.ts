@@ -14,7 +14,7 @@ import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { Identifiers } from '../../client/datascience/constants';
 import { IEditorPosition } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState, ICell, IDataScienceExtraSettings, IMessageCell } from '../../client/datascience/types';
-import { concatMultilineStringInput, splitMultilineString } from '../common';
+import { concatMultilineString, splitMultilineString } from '../common';
 import { createCodeCell } from '../common/cellFactory';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
 
@@ -56,6 +56,7 @@ export interface ICellViewModel {
     uiSideError?: string;
     runningByLine: DebugState;
     currentStack?: DebugProtocol.StackFrame[];
+    gathering: boolean;
 }
 
 export type IMainState = {
@@ -89,7 +90,6 @@ export type IMainState = {
     loaded: boolean;
     kernel: IServerState;
     isNotebookTrusted: boolean;
-    shouldShowTrustMessage: boolean;
 };
 
 export type SelectionAndFocusedInfo = {
@@ -197,8 +197,7 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
             jupyterServerStatus: ServerStatus.NotStarted,
             language: PYTHON_LANGUAGE
         },
-        isNotebookTrusted: true,
-        shouldShowTrustMessage: true
+        isNotebookTrusted: true
     };
 }
 
@@ -227,7 +226,8 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         cursorPos: CursorPos.Current,
         hasBeenRun: false,
         scrollCount: 0,
-        runningByLine: DebugState.Design
+        runningByLine: DebugState.Design,
+        gathering: false
     };
 }
 
@@ -259,7 +259,7 @@ export function extractInputText(inputCellVM: ICellViewModel, settings: IDataSci
         }
     }
 
-    return concatMultilineStringInput(source);
+    return concatMultilineString(source);
 }
 
 export function createCellVM(
@@ -281,7 +281,8 @@ export function createCellVM(
         hasBeenRun: false,
         scrollCount: 0,
         runDuringDebug,
-        runningByLine: DebugState.Design
+        runningByLine: DebugState.Design,
+        gathering: false
     };
 
     // Update the input text
@@ -292,7 +293,7 @@ export function createCellVM(
         inputCell.data.cell_type === 'code'
             ? extractInputText(vm, settings)
             : inputCell.data.cell_type === 'markdown'
-            ? concatMultilineStringInput(vm.cell.data.source)
+            ? concatMultilineString(vm.cell.data.source)
             : '';
     if (inputText) {
         inputLinesCount = inputText.split('\n').length;

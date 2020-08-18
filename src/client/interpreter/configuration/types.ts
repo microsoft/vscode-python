@@ -1,6 +1,6 @@
 import { ConfigurationTarget, Disposable, QuickPickItem, Uri } from 'vscode';
 import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 
 export interface IPythonPathUpdaterService {
     updatePythonPath(pythonPath: string | undefined): Promise<void>;
@@ -33,13 +33,13 @@ export interface IInterpreterQuickPickItem extends QuickPickItem {
     /**
      * The interpreter related to this quickpick item.
      *
-     * @type {PythonInterpreter}
+     * @type {PythonEnvironment}
      * @memberof IInterpreterQuickPickItem
      */
-    interpreter: PythonInterpreter;
+    interpreter: PythonEnvironment;
 }
 
 export const IInterpreterComparer = Symbol('IInterpreterComparer');
 export interface IInterpreterComparer {
-    compare(a: PythonInterpreter, b: PythonInterpreter): number;
+    compare(a: PythonEnvironment, b: PythonEnvironment): number;
 }

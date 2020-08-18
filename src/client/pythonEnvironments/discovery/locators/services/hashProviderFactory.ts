@@ -3,21 +3,24 @@
 
 'use strict';
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IConfigurationService } from '../../../../common/types';
 import {
     IInterpreterHashProvider,
-    IWindowsStoreHashProvider,
+    IInterpreterHashProviderFactory,
     IWindowsStoreInterpreter
 } from '../../../../interpreter/locators/types';
+import { InterpreterHashProvider } from './hashProvider';
+import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
 
-export class InterpreterHashProviderFactory {
+@injectable()
+export class InterpeterHashProviderFactory implements IInterpreterHashProviderFactory {
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
-        @inject(IWindowsStoreHashProvider) private readonly windowsStoreHashProvider: IWindowsStoreHashProvider,
-        @inject(IInterpreterHashProvider) private readonly hashProvider: IInterpreterHashProvider
+        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
+        @inject(WindowsStoreInterpreter) private readonly windowsStoreHashProvider: IInterpreterHashProvider,
+        @inject(InterpreterHashProvider) private readonly hashProvider: IInterpreterHashProvider
     ) {}
 
     public async create(options: { pythonPath: string } | { resource: Uri }): Promise<IInterpreterHashProvider> {

@@ -12,7 +12,7 @@ import { traceWarning } from '../../common/logger';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../../common/types';
 import { Common, DataScience } from '../../common/utils/localize';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 
@@ -34,7 +34,7 @@ export class DataViewerDependencyService {
     ) {}
 
     public async checkAndInstallMissingDependencies(
-        interpreter?: PythonInterpreter,
+        interpreter?: PythonEnvironment,
         token?: CancellationToken
     ): Promise<void> {
         const pandasVersion = await this.getVersionOfPandas(interpreter, token);
@@ -57,7 +57,7 @@ export class DataViewerDependencyService {
     }
 
     private async installMissingDependencies(
-        interpreter?: PythonInterpreter,
+        interpreter?: PythonEnvironment,
         token?: CancellationToken
     ): Promise<void> {
         const selection = await this.applicationShell.showErrorMessage(
@@ -90,7 +90,7 @@ export class DataViewerDependencyService {
     }
 
     private async getVersionOfPandas(
-        interpreter?: PythonInterpreter,
+        interpreter?: PythonEnvironment,
         token?: CancellationToken
     ): Promise<SemVer | undefined> {
         const launcher = await this.pythonFactory.createActivatedEnvironment({

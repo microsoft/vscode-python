@@ -23,9 +23,9 @@ import { IConfigurationService } from '../../../client/common/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
+import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { registerForIOC } from '../../../client/pythonEnvironments/legacyIOC';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { UnitTestDiagnosticService } from '../../../client/testing/common/services/unitTestDiagnosticService';
@@ -394,7 +394,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
             @inject(IConfigurationService) private readonly _configService: IConfigurationService,
             @inject(ICondaService) condaService: ICondaService,
-            @inject(IWindowsStoreInterpreter) windowsStoreInterpreter: IWindowsStoreInterpreter,
+            @inject(WindowsStoreInterpreter) windowsStoreInterpreter: WindowsStoreInterpreter,
             @inject(IBufferDecoder) decoder: IBufferDecoder,
             @inject(IPlatformService) platformService: IPlatformService
         ) {

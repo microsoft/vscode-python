@@ -80,12 +80,11 @@ suite('DataScience raw kernel tests', () => {
             ioc.get<IProcessServiceFactory>(IProcessServiceFactory),
             ioc.get<KernelDaemonPool>(KernelDaemonPool),
             connectionInfo as any,
-            kernelSpec,
+            { kernelSpec, interpreter, kind: 'startUsingKernelSpec' },
             ioc.get<IDataScienceFileSystem>(IDataScienceFileSystem),
-            undefined,
-            interpreter
+            undefined
         );
-        await kernelProcess.launch();
+        await kernelProcess.launch(process.cwd());
         return createRawKernel(kernelProcess, uuid());
     }
 

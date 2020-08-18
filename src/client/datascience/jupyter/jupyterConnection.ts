@@ -46,6 +46,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     constructor(
         private readonly launchResult: ObservableExecutionResult<string>,
         private readonly notebookDir: string,
+        private readonly rootDir: string,
         private readonly getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>,
         serviceContainer: IServiceContainer,
         private cancelToken?: CancellationToken
@@ -105,7 +106,7 @@ export class JupyterConnectionWaiter implements IDisposable {
 
     private createConnection(baseUrl: string, token: string, hostName: string, processDisposable: Disposable) {
         // tslint:disable-next-line: no-use-before-declare
-        return new JupyterConnection(baseUrl, token, hostName, processDisposable, this.launchResult.proc);
+        return new JupyterConnection(baseUrl, token, hostName, this.rootDir, processDisposable, this.launchResult.proc);
     }
 
     // tslint:disable-next-line:no-any
@@ -230,6 +231,7 @@ class JupyterConnection implements IJupyterConnection {
         public readonly baseUrl: string,
         public readonly token: string,
         public readonly hostName: string,
+        public readonly rootDirectory: string,
         private readonly disposable: Disposable,
         childProc: ChildProcess | undefined
     ) {

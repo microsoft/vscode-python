@@ -29,7 +29,7 @@ import { LanguageService } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
-import { PythonInterpreter } from '../pythonEnvironments/info';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { Commands } from './commands';
@@ -119,7 +119,7 @@ export class LanguageServerExtensionActivationService
         this.activatedServer.server.activate();
     }
 
-    public async get(resource: Resource, interpreter?: PythonInterpreter): Promise<RefCountedLanguageServer> {
+    public async get(resource: Resource, interpreter?: PythonEnvironment): Promise<RefCountedLanguageServer> {
         // See if we already have it or not
         const key = await this.getKey(resource, interpreter);
         let result: Promise<RefCountedLanguageServer> | undefined = this.cache.get(key);
@@ -212,7 +212,7 @@ export class LanguageServerExtensionActivationService
 
     private async createRefCountedServer(
         resource: Resource,
-        interpreter: PythonInterpreter | undefined,
+        interpreter: PythonEnvironment | undefined,
         key: string
     ): Promise<RefCountedLanguageServer> {
         let serverType = this.getCurrentLanguageServerType();
@@ -293,7 +293,7 @@ export class LanguageServerExtensionActivationService
         }
     }
 
-    private async getKey(resource: Resource, interpreter?: PythonInterpreter): Promise<string> {
+    private async getKey(resource: Resource, interpreter?: PythonEnvironment): Promise<string> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const serverType = configurationService.getSettings(this.resource).languageServer;
         if (serverType === LanguageServerType.Node) {

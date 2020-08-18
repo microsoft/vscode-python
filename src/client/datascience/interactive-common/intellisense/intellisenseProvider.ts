@@ -21,7 +21,7 @@ import {
 } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
-import { concatMultilineStringInput } from '../../../../datascience-ui/common';
+import { concatMultilineString } from '../../../../datascience-ui/common';
 import { ILanguageServer, ILanguageServerCache } from '../../../activation/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
@@ -32,7 +32,7 @@ import { createDeferred, Deferred, sleep, waitForPromise } from '../../../common
 import { noop } from '../../../common/utils/misc';
 import { HiddenFileFormatString } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonInterpreter } from '../../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryWhenDone } from '../../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../../constants';
 import {
@@ -103,7 +103,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private sentOpenDocument: boolean = false;
     private languageServer: ILanguageServer | undefined;
     private resource: Resource;
-    private interpreter: PythonInterpreter | undefined;
+    private interpreter: PythonEnvironment | undefined;
 
     constructor(
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
@@ -793,7 +793,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         return cells
             .filter((c) => c.data.cell_type === 'code')
             .map((c) => {
-                return { code: concatMultilineStringInput(c.data.source), id: c.id };
+                return { code: concatMultilineString(c.data.source), id: c.id };
             });
     }
 
@@ -817,7 +817,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             case 'remove':
                 changes = document.insertCell(
                     request.cell.id,
-                    concatMultilineStringInput(request.cell.data.source),
+                    concatMultilineString(request.cell.data.source),
                     request.index
                 );
                 break;
@@ -853,7 +853,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             case 'insert':
                 changes = document.insertCell(
                     request.cell.id,
-                    concatMultilineStringInput(request.cell.data.source),
+                    concatMultilineString(request.cell.data.source),
                     request.codeCellAboveId || request.index
                 );
                 break;
@@ -887,7 +887,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                     .filter((c) => c.data.cell_type === 'code')
                     .map((cell) => {
                         return {
-                            code: concatMultilineStringInput(cell.data.source),
+                            code: concatMultilineString(cell.data.source),
                             id: cell.id
                         };
                     }),

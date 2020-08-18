@@ -21,22 +21,22 @@ import {
     AutoSelectionRule,
     IInterpreterAutoSelectionService
 } from '../../../../client/interpreter/autoSelection/types';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Auto Selection - Base Rule', () => {
     let rule: BaseRuleServiceTest;
     let stateFactory: IPersistentStateFactory;
     let fs: IFileSystem;
-    let state: PersistentState<PythonInterpreter | undefined>;
+    let state: PersistentState<PythonEnvironment | undefined>;
     class BaseRuleServiceTest extends BaseRuleService {
         public async next(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<void> {
             return super.next(resource, manager);
         }
-        public async cacheSelectedInterpreter(resource: Resource, interpreter: PythonInterpreter | undefined) {
+        public async cacheSelectedInterpreter(resource: Resource, interpreter: PythonEnvironment | undefined) {
             return super.cacheSelectedInterpreter(resource, interpreter);
         }
         public async setGlobalInterpreter(
-            interpreter?: PythonInterpreter,
+            interpreter?: PythonEnvironment,
             manager?: IInterpreterAutoSelectionService
         ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
@@ -52,7 +52,7 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
         stateFactory = mock(PersistentStateFactory);
         state = mock(PersistentState);
         fs = mock(FileSystem);
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
+        when(stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(anything(), undefined)).thenReturn(
             instance(state)
         );
         rule = new BaseRuleServiceTest(AutoSelectionRule.cachedInterpreters, instance(fs), instance(stateFactory));

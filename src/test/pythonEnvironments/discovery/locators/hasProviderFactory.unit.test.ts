@@ -13,7 +13,7 @@ import { ConfigurationService } from '../../../../client/common/configuration/se
 import { IConfigurationService } from '../../../../client/common/types';
 import { IInterpreterHashProvider } from '../../../../client/interpreter/locators/types';
 import { InterpreterHashProvider } from '../../../../client/pythonEnvironments/discovery/locators/services/hashProvider';
-import { InterpreterHashProviderFactory } from '../../../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
+import { InterpeterHashProviderFactory } from '../../../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import { WindowsStoreInterpreter } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
 use(chaiAsPromised);
@@ -22,14 +22,14 @@ suite('Interpretersx - Interpreter Hash Provider Factory', () => {
     let configService: IConfigurationService;
     let windowsStoreInterpreter: WindowsStoreInterpreter;
     let standardHashProvider: IInterpreterHashProvider;
-    let factory: InterpreterHashProviderFactory;
+    let factory: InterpeterHashProviderFactory;
     setup(() => {
         configService = mock(ConfigurationService);
         windowsStoreInterpreter = mock(WindowsStoreInterpreter);
         standardHashProvider = mock(InterpreterHashProvider);
         const windowsStoreInstance = instance(windowsStoreInterpreter);
         (windowsStoreInstance as any).then = undefined;
-        factory = new InterpreterHashProviderFactory(
+        factory = new InterpeterHashProviderFactory(
             instance(configService),
             windowsStoreInstance,
             windowsStoreInstance,

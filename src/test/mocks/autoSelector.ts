@@ -10,15 +10,15 @@ import {
     IInterpreterAutoSelectionService,
     IInterpreterAutoSeletionProxyService
 } from '../../client/interpreter/autoSelection/types';
-import { PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 @injectable()
 export class MockAutoSelectionService
     implements IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService {
-    public async setWorkspaceInterpreter(_resource: Resource, _interpreter: PythonInterpreter): Promise<void> {
+    public async setWorkspaceInterpreter(_resource: Resource, _interpreter: PythonEnvironment): Promise<void> {
         return Promise.resolve();
     }
-    public async setGlobalInterpreter(_interpreter: PythonInterpreter): Promise<void> {
+    public async setGlobalInterpreter(_interpreter: PythonEnvironment): Promise<void> {
         return;
     }
     get onDidChangeAutoSelectedInterpreter(): Event<void> {
@@ -27,7 +27,7 @@ export class MockAutoSelectionService
     public autoSelectInterpreter(_resource: Resource): Promise<void> {
         return Promise.resolve();
     }
-    public getAutoSelectedInterpreter(_resource: Resource): PythonInterpreter | undefined {
+    public getAutoSelectedInterpreter(_resource: Resource): PythonEnvironment | undefined {
         return;
     }
     public registerInstance(_instance: IInterpreterAutoSeletionProxyService): void {

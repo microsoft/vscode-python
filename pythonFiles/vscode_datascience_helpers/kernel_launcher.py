@@ -7,7 +7,9 @@
 
 import os
 import sys
-from subprocess import Popen, PIPE
+
+# See comment at the point of our use of Popen
+from subprocess import Popen, PIPE  # nosec
 
 from ipython_genutils.encoding import getdefaultencoding
 from ipython_genutils.py3compat import cast_bytes_py2
@@ -151,7 +153,9 @@ def launch_kernel(
             env["JPY_PARENT_PID"] = str(os.getpid())
 
     try:
-        proc = Popen(cmd, **kwargs)
+        # Popen with shell=False (which is the default) is our safest way to launch a process here
+        # this cmd does come from the jupyter kernelspec argv, but this is consistent with how jupyter works
+        proc = Popen(cmd, **kwargs)  # nosec
     except Exception as exc:
         msg = (
             "Failed to run command:\n{}\n" "    PATH={!r}\n" "    with kwargs:\n{!r}\n"

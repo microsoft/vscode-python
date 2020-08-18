@@ -39,7 +39,7 @@ import { PythonReferenceProvider } from '../providers/referenceProvider';
 import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { JediSymbolProvider } from '../providers/symbolProvider';
-import { PythonInterpreter } from '../pythonEnvironments/info';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { ITestManagementService } from '../testing/types';
 import { BlockFormatProviders } from '../typeFormatters/blockFormatProvider';
 import { OnTypeFormattingDispatcher } from '../typeFormatters/dispatcher';
@@ -69,7 +69,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         this.documentSelector = PYTHON;
     }
 
-    public async start(_resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void> {
+    public async start(_resource: Resource, interpreter: PythonEnvironment | undefined): Promise<void> {
         if (this.jediFactory) {
             throw new Error('Jedi already started');
         }

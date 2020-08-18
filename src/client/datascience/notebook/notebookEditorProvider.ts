@@ -14,7 +14,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, setSharedProperty } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
-import { KernelProvider } from '../jupyter/kernels/kernelProvider';
+import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import {
@@ -27,7 +27,6 @@ import {
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
-import { INotebookExecutionService } from './types';
 
 /**
  * Notebook Editor provider used by other parts of DS code.
@@ -152,13 +151,11 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         let editor = this.notebookEditorsByUri.get(uri.toString());
         if (!editor) {
             const notebookProvider = this.serviceContainer.get<INotebookProvider>(INotebookProvider);
-            const kernelProvider = this.serviceContainer.get<KernelProvider>(KernelProvider);
-            const executionService = this.serviceContainer.get<INotebookExecutionService>(INotebookExecutionService);
+            const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
             editor = new NotebookEditor(
                 model,
                 doc,
                 this.vscodeNotebook,
-                executionService,
                 this.commandManager,
                 notebookProvider,
                 kernelProvider,

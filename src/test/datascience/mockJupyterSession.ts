@@ -10,8 +10,8 @@ import { noop } from '../../client/common/utils/misc';
 import { JupyterInvalidKernelError } from '../../client/datascience/jupyter/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../../client/datascience/jupyter/jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
-import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
-import { ICell, IJupyterKernelSpec, IJupyterSession, KernelSocketInformation } from '../../client/datascience/types';
+import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
+import { ICell, IJupyterSession, KernelSocketInformation } from '../../client/datascience/types';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
@@ -20,6 +20,7 @@ const LineFeedRegEx = /(\r\n|\n)/g;
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 export class MockJupyterSession implements IJupyterSession {
+    public readonly workingDirectory = '';
     public readonly kernelSocket = new Observable<KernelSocketInformation | undefined>();
     private dict: Record<string, ICell>;
     private restartedEvent: EventEmitter<void> = new EventEmitter<void>();
@@ -191,10 +192,10 @@ export class MockJupyterSession implements IJupyterSession {
         this.completionTimeout = timeout;
     }
 
-    public changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, _timeoutMS: number): Promise<void> {
+    public changeKernel(kernelConnection: KernelConnectionMetadata, _timeoutMS: number): Promise<void> {
         if (this.pendingKernelChangeFailure) {
             this.pendingKernelChangeFailure = false;
-            return Promise.reject(new JupyterInvalidKernelError(kernel));
+            return Promise.reject(new JupyterInvalidKernelError(kernelConnection));
         }
         return Promise.resolve();
     }

@@ -7,7 +7,7 @@ import * as uuid from 'uuid/v4';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState, ICell } from '../../../../client/datascience/types';
-import { concatMultilineStringInput } from '../../../common';
+import { concatMultilineString } from '../../../common';
 import { createCellFrom } from '../../../common/cellFactory';
 import {
     CursorPos,
@@ -44,7 +44,7 @@ export namespace Execution {
             }
             const orig = prevState.cellVMs[index];
             // noop if the submitted code is just a cell marker
-            if (orig.cell.data.cell_type === 'code' && concatMultilineStringInput(orig.cell.data.source)) {
+            if (orig.cell.data.cell_type === 'code' && concatMultilineString(orig.cell.data.source)) {
                 // When cloning cells, preserve the metadata (hence deep clone).
                 const clonedCell = cloneDeep(orig.cell.data);
                 // Update our input cell to be in progress again and clear outputs
