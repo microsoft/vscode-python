@@ -149,47 +149,37 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
         // This way other parts of extension have access to this kernel immediately after event is handled.
         this.kernelProvider.getOrCreate(document.uri, { metadata: selectedKernelConnectionMetadata });
-        try {
-            // Change kernel and update metadata.
-            const notebook = await this.notebookProvider.getOrCreateNotebook({
-                resource: document.uri,
-                identity: document.uri,
-                getOnly: true
-            });
 
-            // If we have a notebook, change its kernel now
-            if (notebook) {
-                if (!this.notebookKernelChangeHandled.has(notebook)) {
-                    this.notebookKernelChangeHandled.add(notebook);
-                    notebook.onKernelChanged(
-                        (e) => {
-                            if (notebook.disposed) {
-                                return;
-                            }
-                            updateKernelInNotebookMetadata(document, e, this.notebookContentProvider);
-                        },
-                        this,
-                        this.disposables
-                    );
-                }
-                // tslint:disable-next-line: no-suspicious-comment
-                // TODO: https://github.com/microsoft/vscode-python/issues/13514
-                // We need to handle these exceptions in `siwthKernelWithRetry`.
-                // We shouldn't handle them here, as we're already handling some errors in the `siwthKernelWithRetry` method.
-                // Adding comment here, so we have context for the requirement.
-                this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
-            } else {
-                updateKernelInNotebookMetadata(
-                    document,
-                    selectedKernelConnectionMetadata,
-                    this.notebookContentProvider
+        // Change kernel and update metadata.
+        const notebook = await this.notebookProvider.getOrCreateNotebook({
+            resource: document.uri,
+            identity: document.uri,
+            getOnly: true
+        });
+
+        // If we have a notebook, change its kernel now
+        if (notebook) {
+            if (!this.notebookKernelChangeHandled.has(notebook)) {
+                this.notebookKernelChangeHandled.add(notebook);
+                notebook.onKernelChanged(
+                    (e) => {
+                        if (notebook.disposed) {
+                            return;
+                        }
+                        updateKernelInNotebookMetadata(document, e, this.notebookContentProvider);
+                    },
+                    this,
+                    this.disposables
                 );
             }
-        } catch (ex) {
-            traceError(
-                `Failed to change the kernel for ${document.uri.toString()}, to ${JSON.stringify(kernel.selection)}`,
-                ex
-            );
+            // tslint:disable-next-line: no-suspicious-comment
+            // TODO: https://github.com/microsoft/vscode-python/issues/13514
+            // We need to handle these exceptions in `siwthKernelWithRetry`.
+            // We shouldn't handle them here, as we're already handling some errors in the `siwthKernelWithRetry` method.
+            // Adding comment here, so we have context for the requirement.
+            this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
+        } else {
+            updateKernelInNotebookMetadata(document, selectedKernelConnectionMetadata, this.notebookContentProvider);
         }
     }
 }
