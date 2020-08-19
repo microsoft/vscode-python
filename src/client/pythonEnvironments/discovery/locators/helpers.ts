@@ -21,7 +21,7 @@ export async function lookForInterpretersInDirectory(pathToCheck: string, _: IFi
             .map((filename) => path.join(pathToCheck, filename))
             .filter((fileName) => CheckPythonInterpreterRegEx.test(path.basename(fileName)));
     } catch (err) {
-        traceError('Python Extension (lookForInterpretersInDirectory.fs.listdir):', err);
+        traceError('Python Extension (lookForInterpretersInDirectory.fs.readdir):', err);
         return [] as string[];
     }
 }
