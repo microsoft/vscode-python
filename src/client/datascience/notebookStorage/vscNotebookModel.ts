@@ -4,6 +4,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { Memento, Uri } from 'vscode';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
+import { IVSCodeNotebook } from '../../common/application/types';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
@@ -41,12 +42,29 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         return this.document?.isDirty === true;
     }
     public get cells(): ICell[] {
+        // Possible the document has been closed/disposed
+        if (this.isDisposed) {
+            return [];
+        }
+
         // When a notebook is not trusted, return original cells.
         // This is because the VSCode NotebookDocument object will not have any output in the cells.
         return this.document && this.isTrusted
             ? this.document.cells.map((cell) => createCellFromVSCNotebookCell(cell, this))
             : this._cells;
     }
+    public get isDisposed() {
+        // Possible the document has been closed/disposed
+        if (
+            this.document &&
+            this.vscodeNotebook &&
+            !this.vscodeNotebook?.notebookDocuments.find((doc) => doc === this.document)
+        ) {
+            return true;
+        }
+        return this._isDisposed === true;
+    }
+
     private document?: NotebookDocument;
     public get notebookContentWithoutCells(): Partial<nbformat.INotebookContent> {
         return {
@@ -63,7 +81,8 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         crypto: ICryptoUtils,
         json: Partial<nbformat.INotebookContent> = {},
         indentAmount: string = ' ',
-        pythonNumber: number = 3
+        pythonNumber: number = 3,
+        private readonly vscodeNotebook?: IVSCodeNotebook
     ) {
         super(isTrusted, file, cells, globalMemento, crypto, json, indentAmount, pythonNumber);
     }
