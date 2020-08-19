@@ -165,6 +165,10 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         return `${LiveShare.JupyterServerSharedService}${launchInfo.purpose}`;
     }
 
+    protected get isDisposed() {
+        return this.disposed;
+    }
+
     protected async createNotebookInstance(
         resource: Resource,
         identity: vscode.Uri,
