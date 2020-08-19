@@ -120,7 +120,7 @@ export interface IKernel extends IAsyncDisposable {
     executeAllCells(document: NotebookDocument): Promise<void>;
 }
 
-export type KernelOptions = { metadata: KernelConnectionMetadata; waitForIdleTimeout?: number; launchingFile?: string };
+export type KernelOptions = { metadata: KernelConnectionMetadata };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider {
     /**

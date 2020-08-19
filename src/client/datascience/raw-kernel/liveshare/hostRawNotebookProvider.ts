@@ -157,7 +157,7 @@ export class HostRawNotebookProvider
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
 
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
-            const kernelConnectionMetadata = await this.kernelSelector.getKernelForLocalConnection(
+            const kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForLocalConnection(
                 resource,
                 'raw',
                 undefined,

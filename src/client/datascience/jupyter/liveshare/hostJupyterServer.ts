@@ -294,7 +294,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             resourceInterpreter?.displayName !== launchInfo.kernelConnectionMetadata?.interpreter?.displayName
         ) {
             const kernelInfo = await (launchInfo.connectionInfo.localLaunch
-                ? this.kernelSelector.getKernelForLocalConnection(
+                ? this.kernelSelector.getPreferredKernelForLocalConnection(
                       resource,
                       'jupyter',
                       sessionManager,
@@ -302,7 +302,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                       isTestExecution(),
                       cancelToken
                   )
-                : this.kernelSelector.getKernelForRemoteConnection(
+                : this.kernelSelector.getPreferredKernelForRemoteConnection(
                       resource,
                       sessionManager,
                       notebookMetadata,

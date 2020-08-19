@@ -10,7 +10,7 @@ import { isMacDefaultPythonPath } from '../pythonEnvironments/discovery';
 import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import {
     EnvironmentType,
-    getInterpreterTypeName,
+    getEnvironmentTypeName,
     InterpreterInformation,
     PythonEnvironment,
     sortInterpreters
@@ -119,7 +119,7 @@ export class InterpreterHelper implements IInterpreterHelper {
         return isMacDefaultPythonPath(pythonPath);
     }
     public getInterpreterTypeDisplayName(interpreterType: EnvironmentType) {
-        return getInterpreterTypeName(interpreterType);
+        return getEnvironmentTypeName(interpreterType);
     }
     public getBestInterpreter(interpreters?: PythonEnvironment[]): PythonEnvironment | undefined {
         if (!Array.isArray(interpreters) || interpreters.length === 0) {

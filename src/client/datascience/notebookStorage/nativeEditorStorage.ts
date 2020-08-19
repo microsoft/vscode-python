@@ -348,9 +348,11 @@ export class NativeEditorStorage implements INotebookStorage {
             };
         });
 
-        // Make sure at least one
-        if (remapped.length === 0) {
-            remapped.splice(0, 0, this.createEmptyCell(uuid()));
+        if (!forVSCodeNotebook) {
+            // Make sure at least one
+            if (remapped.length === 0) {
+                remapped.splice(0, 0, this.createEmptyCell(uuid()));
+            }
         }
         const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
 

@@ -6,6 +6,7 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
+import * as uuid from 'uuid/v4';
 import {
     CancellationToken,
     CancellationTokenSource,
@@ -23,6 +24,7 @@ import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
+import { CodeSnippets } from '../../constants';
 import { INotebookContentProvider } from '../../notebook/types';
 import { getDefaultNotebookContent, updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import {
@@ -34,6 +36,7 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
+import { isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 
@@ -77,7 +80,6 @@ export class Kernel implements IKernel {
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,
-        private readonly launchingFile: string | undefined,
         commandManager: ICommandManager,
         interpreterService: IInterpreterService,
         errorHandler: IDataScienceErrorHandler,
@@ -131,8 +133,6 @@ export class Kernel implements IKernel {
         } else {
             await this.validate(this.uri);
             const metadata = ((getDefaultNotebookContent().metadata || {}) as unknown) as nbformat.INotebookMetadata;
-            // tslint:disable-next-line: no-suspicious-comment
-            // TODO: Just pass the `this.metadata` into the func.
             updateNotebookMetadata(metadata, this.metadata);
 
             this._notebookPromise = this.notebookProvider.getOrCreateNotebook({
@@ -220,6 +220,7 @@ export class Kernel implements IKernel {
         if (!this.notebook) {
             return;
         }
+        this.disableJedi();
         if (!this.hookedNotebookForEvents.has(this.notebook)) {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
@@ -232,9 +233,15 @@ export class Kernel implements IKernel {
             });
             this.notebook.onSessionStatusChanged((e) => this._onStatusChanged.fire(e), this, this.disposables);
         }
-        if (this.launchingFile) {
-            await this.notebook.setLaunchingFile(this.launchingFile);
+        if (isPythonKernelConnection(this.metadata)) {
+            await this.notebook.setLaunchingFile(this.uri.fsPath);
         }
         await this.notebook.waitForIdle(this.launchTimeout);
+    }
+
+    private disableJedi() {
+        if (isPythonKernelConnection(this.metadata)) {
+            this.executeObservable(CodeSnippets.disableJedi, this.uri.fsPath, 0, uuid(), true);
+        }
     }
 }

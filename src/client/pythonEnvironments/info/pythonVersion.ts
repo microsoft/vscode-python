@@ -74,6 +74,19 @@ export function parsePythonVersion(raw: string): PythonVersion | undefined {
     return new SemVer(rawVersion);
 }
 
+/**
+ * Determine if the given versions are the same.
+ *
+ * @param version1 - one of the two versions to compare
+ * @param version2 - one of the two versions to compare
+ */
+export function areSameVersion(version1?: PythonVersion, version2?: PythonVersion): boolean {
+    if (!version1 || !version2) {
+        return false;
+    }
+    return version1.raw === version2.raw;
+}
+
 type ExecResult = {
     stdout: string;
 };
