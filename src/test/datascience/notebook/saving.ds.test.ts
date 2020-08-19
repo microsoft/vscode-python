@@ -49,7 +49,7 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         if (!(await canRunTests())) {
             return this.skip();
         }
-        await startJupyter();
+        await startJupyter(true);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     });

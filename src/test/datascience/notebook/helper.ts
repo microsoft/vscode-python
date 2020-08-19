@@ -190,7 +190,7 @@ export async function trustAllNotebooks() {
     }
     dsSettings.alwaysTrustNotebooks = true;
 }
-export async function startJupyter() {
+export async function startJupyter(close: boolean) {
     const { editorProvider, vscodeNotebook } = await getServices();
     await closeActiveWindows();
 
@@ -201,9 +201,13 @@ export async function startJupyter() {
         const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
         await executeActiveDocument();
         // Wait for Jupyter to start.
-        await waitForCondition(async () => cell.outputs.length > 0, 30_000, 'Cell not executed');
+        await waitForCondition(async () => cell.outputs.length > 0, 60_000, 'Cell not executed');
 
-        await closeActiveWindows();
+        if (close) {
+            await closeActiveWindows();
+        } else {
+            await deleteCell(0);
+        }
     } finally {
         disposables.forEach((d) => d.dispose());
     }
@@ -233,20 +237,16 @@ export async function waitForExecutionOrderInVSCCell(cell: NotebookCell, executi
         `Execution count not '${executionOrder}' for Cell ${cell.notebook.cells.indexOf(cell) + 1}`
     );
 }
-export async function waitForExecutionOrderInCell(
-    cell: ICell,
-    executionOrder: number | undefined,
-    model: INotebookModel
-) {
+export async function waitForExecutionOrderInCell(cell: NotebookCell, executionOrder: number | undefined) {
     await waitForCondition(
         async () => {
             if (executionOrder === undefined || executionOrder === null) {
-                return cell.data.execution_count === null;
+                return cell.metadata.executionOrder === undefined;
             }
-            return cell.data.execution_count === executionOrder;
+            return cell.metadata.executionOrder === executionOrder;
         },
-        1_000,
-        `Execution count not '${executionOrder}' for ICell ${model.cells.indexOf(cell) + 1}`
+        15_000,
+        `Execution count not '${executionOrder}' for Cell ${cell.notebook.cells.indexOf(cell)}`
     );
 }
 export function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {

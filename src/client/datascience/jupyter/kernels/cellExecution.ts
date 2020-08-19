@@ -245,10 +245,11 @@ export class CellExecution {
             ...{ cellId: this.cell.uri.toString() }
         };
 
-        // Create our initial request
+        // Create our initial request (code separated out for debugging)
+        const code = this.cell.document.getText();
         const request = session.requestExecute(
             {
-                code: this.cell.document.getText(),
+                code,
                 stop_on_error: false,
                 allow_stdin: true,
                 store_history: false
