@@ -427,6 +427,7 @@ export function createNotebookDocument(
         isDirty: false,
         languages: [],
         uri: model.file,
+        isUntitled: false,
         viewType,
         metadata: {
             cellEditable: model.isTrusted,

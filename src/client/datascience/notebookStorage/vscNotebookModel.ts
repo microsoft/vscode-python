@@ -54,6 +54,9 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             cells: []
         };
     }
+    public get isUntitled(): boolean {
+        return this.document ? this.document.isUntitled : super.isUntitled;
+    }
 
     constructor(
         isTrusted: boolean,

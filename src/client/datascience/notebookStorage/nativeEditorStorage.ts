@@ -30,7 +30,7 @@ const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
 
 export function isUntitled(model?: INotebookModel): boolean {
-    return isUntitledFile(model?.file);
+    return model?.isUntitled === true;
 }
 
 export function getNextUntitledCounter(file: Uri | undefined, currentValue: number): number {
