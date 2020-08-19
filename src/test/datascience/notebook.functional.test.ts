@@ -1474,7 +1474,7 @@ plt.show()`,
                 });
 
                 assert.ok(notebook, 'did not create notebook');
-                await verifySimple(notebook, `import os\nos.getcwd()`, escapedPath);
+                await verifySimple(notebook, `import os\nos.getcwd()`, escapedPath, true);
             });
         });
     });
