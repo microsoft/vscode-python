@@ -256,7 +256,7 @@ export class Kernel implements IKernel {
         if (this.uri.fsPath && isPythonKernelConnection(this.metadata)) {
             this.executeObservable(
                 CodeSnippets.disableJedi,
-                this.kernelExecution.notebook?.resource?.fsPath,
+                this.uri.fsPath,
                 0,
                 uuid(),
                 true
