@@ -29,10 +29,6 @@ import { VSCodeNotebookModel } from './vscNotebookModel';
 const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
 
-export function isUntitled(model?: INotebookModel): boolean {
-    return model?.isUntitled === true;
-}
-
 export function getNextUntitledCounter(file: Uri | undefined, currentValue: number): number {
     if (file && isUntitledFile(file)) {
         const basename = path.basename(file.fsPath, 'ipynb');

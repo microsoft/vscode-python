@@ -4,6 +4,7 @@
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { Event, EventEmitter, Memento, Uri } from 'vscode';
 import { ICryptoUtils } from '../../common/types';
+import { isUntitledFile } from '../../common/utils/misc';
 import { pruneCell } from '../common';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
@@ -12,7 +13,6 @@ import {
 } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ICell, INotebookMetadataLive, INotebookModel } from '../types';
-import { isUntitled } from './nativeEditorStorage';
 
 export const ActiveKernelIdList = `Active_Kernel_Id_List`;
 // This is the number of kernel ids that will be remembered between opening and closing VS code
@@ -121,7 +121,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
     }
 
     public get isUntitled(): boolean {
-        return isUntitled(this);
+        return isUntitledFile(this.file);
     }
     public get cells(): ICell[] {
         return this._cells;
