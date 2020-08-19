@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
-
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 import { Extension } from 'vscode';
@@ -50,7 +49,7 @@ suite('Propose Pylance Banner', () => {
     let appEnv: typemoq.IMock<IApplicationEnvironment>;
     let settings: typemoq.IMock<IPythonSettings>;
     let sendTelemetryStub: sinon.SinonStub;
-    let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
+    let telemetryEvent: { eventName: EventName } | undefined;
 
     const message = Pylance.proposePylanceMessage();
     const yes = Pylance.tryItNow();
@@ -65,18 +64,19 @@ suite('Propose Pylance Banner', () => {
         appEnv = typemoq.Mock.ofType<IApplicationEnvironment>();
         appEnv.setup((x) => x.uriScheme).returns(() => 'scheme');
 
-        const mockSendTelemetryEvent = (
-            eventName: EventName,
-            _: number | undefined,
-            { hasCustomEnvPath }: { hasCustomEnvPath: boolean }
-        ) => {
+        const mockSendTelemetryEvent = (eventName: EventName) => {
             telemetryEvent = {
-                eventName,
-                hasCustomEnvPath
+                eventName
             };
         };
         sendTelemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
     });
+
+    teardown(() => {
+        telemetryEvent = undefined;
+        sinon.restore();
+    });
+
     testData.forEach((t) => {
         test(`${t.inExperiment ? 'In' : 'Not in'} experiment and "python.languageServer": "${t.lsType}" should ${
             t.shouldShowBanner ? 'show' : 'not show'
@@ -126,8 +126,12 @@ suite('Propose Pylance Banner', () => {
 
         const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
         await testBanner.showBanner();
+
         expect(testBanner.enabled).to.be.equal(false, 'Banner should be permanently disabled when user clicked No');
         appShell.verifyAll();
+
+        sinon.assert.calledOnce(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, { eventName: EventName.PYLANCE_LANGUAGE_SERVER_SWITCH_NO });
     });
     test('Clicking Later should disable banner in session', async () => {
         appShell
@@ -145,11 +149,15 @@ suite('Propose Pylance Banner', () => {
 
         const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
         await testBanner.showBanner();
+
         expect(testBanner.enabled).to.be.equal(
             true,
             'Banner should not be permanently disabled when user clicked Later'
         );
         appShell.verifyAll();
+
+        sinon.assert.calledOnce(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, { eventName: EventName.PYLANCE_LANGUAGE_SERVER_SWITCH_LATER });
     });
     test('Clicking Yes opens the extension marketplace entry', async () => {
         appShell
@@ -167,8 +175,12 @@ suite('Propose Pylance Banner', () => {
 
         const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
         await testBanner.showBanner();
+
         expect(testBanner.enabled).to.be.equal(false, 'Banner should be permanently disabled after opening store URL');
         appShell.verifyAll();
+
+        sinon.assert.calledOnce(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, { eventName: EventName.PYLANCE_LANGUAGE_SERVER_SWITCH_YES });
     });
 });
 
