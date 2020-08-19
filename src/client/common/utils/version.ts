@@ -5,6 +5,24 @@
 
 import * as semver from 'semver';
 
+/**
+ * basic version information
+ */
+export type VersionInfo = {
+    major: number;
+    minor: number;
+    micro: number;
+};
+
+/**
+ * basic version information
+ *
+ * @prop raw - the unparsed version string, if any
+ */
+export type Version = VersionInfo & {
+    raw?: string;
+};
+
 export function parseVersion(raw: string): semver.SemVer {
     raw = raw.replace(/\.00*(?=[1-9]|0\.)/, '.');
     const ver = semver.coerce(raw);
