@@ -550,6 +550,7 @@ suite('DataScience - KernelSelector', () => {
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
             ).thenResolve(kernelSpec);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve();
+            when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
@@ -567,7 +568,7 @@ suite('DataScience - KernelSelector', () => {
             );
 
             assert.deepEqual((kernel as any).kernelSpec, kernelSpec);
-            assert.isUndefined(kernel?.interpreter);
+            assert.isOk(kernel?.interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())

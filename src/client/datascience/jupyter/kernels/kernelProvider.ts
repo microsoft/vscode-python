@@ -7,7 +7,7 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { ICommandManager } from '../../../common/application/types';
-import { traceWarning } from '../../../common/logger';
+import { traceInfo, traceWarning } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { INotebookContentProvider } from '../../notebook/types';
@@ -43,15 +43,13 @@ export class KernelProvider implements IKernelProvider {
 
         this.disposeOldKernel(uri);
 
-        const waitForIdleTimeout =
-            options?.waitForIdleTimeout ?? this.configService.getSettings(uri).datascience.jupyterLaunchTimeout;
+        const waitForIdleTimeout = this.configService.getSettings(uri).datascience.jupyterLaunchTimeout;
         const kernel = new Kernel(
             uri,
             options.metadata,
             this.notebookProvider,
             this.disposables,
             waitForIdleTimeout,
-            options.launchingFile,
             this.commandManager,
             this.interpreterService,
             this.errorHandler,
@@ -69,7 +67,20 @@ export class KernelProvider implements IKernelProvider {
      * If a kernel has been disposed, then remove the mapping of Uri + Kernel.
      */
     private deleteMappingIfKernelIsDisposed(uri: Uri, kernel: IKernel) {
-        kernel.onDisposed(() => this.kernelsByUri.delete(uri.toString()), this, this.disposables);
+        kernel.onDisposed(
+            () => {
+                // If the same kernel is associated with this document & it was disposed, then delete it.
+                if (this.kernelsByUri.get(uri.toString())?.kernel === kernel) {
+                    this.kernelsByUri.delete(uri.toString());
+                    traceInfo(
+                        `Kernel got disposed, hence there is no longer a kernel associated with ${uri.toString()}`,
+                        kernel
+                    );
+                }
+            },
+            this,
+            this.disposables
+        );
     }
     private disposeOldKernel(uri: Uri) {
         this.kernelsByUri
