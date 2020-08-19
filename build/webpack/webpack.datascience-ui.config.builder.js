@@ -18,18 +18,24 @@ const configFileName = 'tsconfig.datascience-ui.json';
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 // Any build on the CI is considered production mode.
-const isProdBuild = constants.isCI || process.argv.includes('--mode');
+const isProdBuild = true;
 
 function getEntry(bundle) {
     switch (bundle) {
         case 'notebook':
             return {
-                nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
-                interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`]
+                // myipywidgets: ['babel-polyfill', `./src/datascience-ui/ipywidgets/main.tsx`],
+                nativeEditor: [`./src/datascience-ui/native-editor/index.tsx`]
+                // interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`]
+            };
+        case 'myipywidgets':
+            return {
+                myipywidgets: [`./src/datascience-ui/ipywidgets/main.tsx`]
             };
         case 'renderers':
             return {
-                renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`]
+                // renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`],
+                ipywidgets: ['babel-polyfill', `./src/datascience-ui/renderers/ipywidgets/index.tsx`]
             };
         case 'viewers':
             return {
@@ -67,13 +73,21 @@ function getPlugins(bundle) {
                 }),
                 new HtmlWebpackPlugin({
                     template: 'src/datascience-ui/native-editor/index.html',
-                    chunks: ['monaco', 'commons', 'nativeEditor'],
+                    // chunks: ['monaco', 'commons', 'nativeEditor'],
                     filename: 'index.nativeEditor.html'
                 }),
                 new HtmlWebpackPlugin({
                     template: 'src/datascience-ui/history-react/index.html',
                     chunks: ['monaco', 'commons', 'interactiveWindow'],
                     filename: 'index.interactiveWindow.html'
+                })
+            );
+            break;
+        case 'myipywidgets':
+            plugins.push(
+                new HtmlWebpackPlugin({
+                    template: 'src/datascience-ui/native-editor/index.html',
+                    filename: 'index.myipywidgets.html'
                 })
             );
             break;
@@ -331,9 +345,13 @@ function buildConfiguration(bundle) {
     if (bundle === 'renderers') {
         delete config.optimization;
     }
+    if (bundle === 'myipywidgets') {
+        delete config.optimization;
+    }
     return config;
 }
 
 exports.notebooks = buildConfiguration('notebook');
+exports.myipywidgets = buildConfiguration('myipywidgets');
 exports.viewers = buildConfiguration('viewers');
 exports.renderers = buildConfiguration('renderers');

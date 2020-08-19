@@ -9,6 +9,7 @@ import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { NotebookContentProvider } from './contentProvider';
 import { NotebookIntegration } from './integration';
+import { IPyWidgetNotebookOutputRenderer } from './ipyWidgetRenderer';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { NotebookOutputRenderer } from './renderer';
@@ -28,6 +29,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<NotebookIntegration>(NotebookIntegration, NotebookIntegration);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
     serviceManager.addSingleton<NotebookOutputRenderer>(NotebookOutputRenderer, NotebookOutputRenderer);
+    serviceManager.addSingleton<IPyWidgetNotebookOutputRenderer>(
+        IPyWidgetNotebookOutputRenderer,
+        IPyWidgetNotebookOutputRenderer
+    );
     serviceManager.addSingleton<NotebookSurveyBanner>(NotebookSurveyBanner, NotebookSurveyBanner);
     serviceManager.addSingleton<VSCodeKernelPickerProvider>(VSCodeKernelPickerProvider, VSCodeKernelPickerProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(

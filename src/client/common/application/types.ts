@@ -72,7 +72,6 @@ import type {
     NotebookOutputSelector
 } from 'vscode-proposed';
 import * as vsls from 'vsls/vscode';
-
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
 

@@ -177,6 +177,8 @@ export class WebPanel implements IWebPanel {
             <body>
                 <noscript>You need to enable JavaScript to run this app.</noscript>
                 <div id="root"></div>
+                <div id="rootWidget"></div>
+                <div id="widgetContainer"></div>
                 <script type="text/javascript">
                     // Public path that will be used by webpack.
                     window.__PVSC_Public_Path = "${rootPath}/";

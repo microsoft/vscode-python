@@ -171,6 +171,8 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             );
         }
         if (this.notebook.connection && this.notebook.connection.localLaunch) {
+            // tslint:disable-next-line: no-console
+            console.log(scriptProviders);
             scriptProviders.push(
                 new LocalWidgetScriptSourceProvider(
                     this.notebook,

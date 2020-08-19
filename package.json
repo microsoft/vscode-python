@@ -3391,8 +3391,8 @@
         },
         "notebookOutputRenderer": [
             {
-                "viewType": "jupyter-notebook-renderer",
-                "displayName": "Jupyter Notebook Renderer",
+                "viewType": "xjupyter-notebook-rendererx",
+                "displayName": "Jupyter Notebook Rendererx",
                 "mimeTypes": [
                     "application/geo+json",
                     "application/vdom.v1+json",
@@ -3412,6 +3412,13 @@
                     "image/jpeg",
                     "text/latex",
                     "text/vnd.plotly.v1+html"
+                ]
+            },
+            {
+                "viewType": "jupyter-ipywidget-renderer",
+                "displayName": "Jupyter IPyWidget Renderer",
+                "mimeTypes": [
+                    "application/vnd.jupyter.widget-view+json"
                 ]
             }
         ],
@@ -3433,7 +3440,7 @@
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
-        "compile-webviews-watch": "gulp compile-ipywidgets && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
+        "compile-webviews-watch": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
         "compile-webviews-watchd": "deemon npm run compile-webviews-watch",
         "kill-compile-webviews-watchd": "deemon --kill npm run compile-webviews-watch",
         "build-ipywidgets": "npm run build-ipywidgets-clean && npm run build-ipywidgets-compile && npm run build-ipywidgets-webpack",

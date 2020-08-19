@@ -7,7 +7,7 @@
 async function requirePromise(pkg: string | string[]): Promise<any> {
     return new Promise((resolve, reject) => {
         // tslint:disable-next-line: no-any
-        const requirejs = (window as any).requirejs;
+        const requirejs = (window as any).require;
         if (requirejs === undefined) {
             reject('Requirejs is needed, please ensure it is loaded on the page.');
         } else {

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { nbformat } from '@jupyterlab/coreutils';
-import { JSONObject } from '@phosphor/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
+import type { JSONObject } from '@phosphor/coreutils';
 import ansiRegex from 'ansi-regex';
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
@@ -10,7 +10,7 @@ import '../../client/common/extensions';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState } from '../../client/datascience/types';
 import { ClassType } from '../../client/ioc/types';
-import { WidgetManager } from '../ipywidgets';
+import type { WidgetManager } from '../ipywidgets';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
@@ -568,7 +568,8 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private async getWidgetManager() {
         if (!this.widgetManager) {
             const wm: WidgetManager | undefined = await new Promise((resolve) =>
-                WidgetManager.instance.subscribe(resolve)
+                // tslint:disable-next-line: no-any
+                (window as any).MyWidgetManager.instance.subscribe(resolve)
             );
             this.widgetManager = wm;
             if (wm) {

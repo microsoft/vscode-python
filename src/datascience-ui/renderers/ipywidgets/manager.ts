@@ -12,21 +12,22 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import 'rxjs/add/operator/concatMap';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { createDeferred, Deferred } from '../../client/common/utils/async';
-import {
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages,
-    IPyWidgetMessages
-} from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { WIDGET_MIMETYPE } from '../../client/datascience/ipywidgets/constants';
-import { KernelSocketOptions } from '../../client/datascience/types';
-import { IMessageHandler, PostOffice } from '../react-common/postOffice';
+import { createDeferred, Deferred, sleep } from '../../../client/common/utils/async';
+import { IPyWidgetMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { WIDGET_MIMETYPE } from '../../../client/datascience/ipywidgets/constants';
 import { create as createKernel } from './kernel';
-import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor } from './types';
+import {
+    IDisposable,
+    IIPyWidgetManager,
+    IJupyterLabWidgetManager,
+    IJupyterLabWidgetManagerCtor,
+    IPyWidgetsPostOffice,
+    KernelSocketOptions
+} from './types';
 
 // tslint:disable: no-any
 
-export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
+export class WidgetManager implements IIPyWidgetManager {
     public static get instance(): Observable<WidgetManager | undefined> {
         return WidgetManager._instance;
     }
@@ -45,9 +46,10 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
      * @memberof WidgetManager
      */
     private modelIdsToBeDisplayed = new Map<string, Deferred<void>>();
+    private disposables: IDisposable[] = [];
     constructor(
         private readonly widgetContainer: HTMLElement,
-        private readonly postOffice: PostOffice,
+        private readonly postOffice: IPyWidgetsPostOffice,
         private readonly scriptLoader: {
             readonly widgetsRegisteredInRequireJs: Readonly<Set<string>>;
             // tslint:disable-next-line: no-any
@@ -56,24 +58,31 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             successHandler(className: string, moduleName: string, moduleVersion: string): void;
         }
     ) {
+        // tslint:disable-next-line: no-console
+        console.error('Bound');
         // tslint:disable-next-line: no-any
-        this.postOffice.addHandler(this);
+        this.postOffice.onDidReceiveKernelMessage(this.handleMessage, this, this.disposables);
 
         // Handshake.
-        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_Ready);
+        this.postOffice.onReady();
+        this.postOffice.postKernelMessage(IPyWidgetMessages.IPyWidgets_Ready, undefined);
     }
     public dispose(): void {
         this.proxyKernel?.dispose(); // NOSONAR
-        this.postOffice.removeHandler(this);
+        this.disposables.forEach((d) => d.dispose());
         this.clear().ignoreErrors();
     }
     public async clear(): Promise<void> {
         await this.manager?.clear_state();
     }
-    public handleMessage(message: string, payload?: any) {
-        if (message === IPyWidgetMessages.IPyWidgets_kernelOptions) {
+    public handleMessage(msg: { type: string; payload?: any }) {
+        // tslint:disable-next-line: no-console
+        // console.error('handleMessage in manager.ts', msg);
+        const { type, payload } = msg;
+        // console.error('handleMessage in manager.ts', msg);
+        if (type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
             this.initializeKernelAndWidgetManager(payload);
-        } else if (message === IPyWidgetMessages.IPyWidgets_onRestartKernel) {
+        } else if (type === IPyWidgetMessages.IPyWidgets_onRestartKernel) {
             // Kernel was restarted.
             this.manager?.dispose(); // NOSONAR
             this.manager = undefined;
@@ -81,7 +90,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             this.proxyKernel = undefined;
             WidgetManager._instance.next(undefined);
         } else if (!this.proxyKernel) {
-            this.pendingMessages.push({ message, payload });
+            this.pendingMessages.push({ message: type, payload });
         }
         return true;
     }
@@ -108,7 +117,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         }
 
         if (!data || data.version_major !== 2) {
-            console.warn('Widget data not avaialble to render an ipywidget');
+            console.warn('Widget data not available to render an ipywidget');
             return undefined;
         }
 
@@ -119,15 +128,15 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             this.modelIdsToBeDisplayed.set(modelId, createDeferred());
         }
         // Wait until it is flagged as ready to be processed.
-        // This widget manager must have recieved this message and performed all operations before this.
-        // Once all messages prior to this have been processed in sequence and this message is receievd,
+        // This widget manager must have received this message and performed all operations before this.
+        // Once all messages prior to this have been processed in sequence and this message is received,
         // then, and only then are we ready to render the widget.
-        // I.e. this is a way of synchronzing the render with the processing of the messages.
+        // I.e. this is a way of synchronizing the render with the processing of the messages.
         await this.modelIdsToBeDisplayed.get(modelId)!.promise;
 
         const modelPromise = this.manager.get_model(data.model_id);
         if (!modelPromise) {
-            console.warn('Widget model not avaialble to render an ipywidget');
+            console.warn('Widget model not available to render an ipywidget');
             return undefined;
         }
 
@@ -135,10 +144,21 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         // ipywidgets have a promise, as the model may get created by a 3rd party library.
         // That 3rd party library may not be available and may have to be downloaded.
         // Hence the promise to wait until it has been created.
-        const model = await modelPromise;
-        const view = await this.manager.create_view(model, { el: ele });
-        // tslint:disable-next-line: no-any
-        return this.manager.display_view(data, view, { node: ele });
+        try {
+            // tslint:disable: no-console
+            console.log('Render Widget in manager1.ts');
+            await sleep(1_000);
+            const model = await modelPromise;
+            console.log('Render Widget in manager2.ts');
+            const view = await this.manager.create_view(model, { el: ele });
+            console.log('Render Widget in manager2.ts');
+            // tslint:disable-next-line: no-any
+            return this.manager.display_view(data, view, { node: ele });
+        } catch (ex) {
+            // tslint:disable-next-line: no-console
+            console.error('Kaboom', ex);
+            throw ex;
+        }
     }
     private initializeKernelAndWidgetManager(options: KernelSocketOptions) {
         if (this.proxyKernel && fastDeepEqual(options, this.options)) {
@@ -155,7 +175,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             // tslint:disable-next-line: no-any
             const JupyterLabWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IJupyterLabWidgetManagerCtor;
             if (!JupyterLabWidgetManager) {
-                throw new Error('JupyterLabWidgetManadger not defined. Please include/check ipywidgets.js file');
+                throw new Error('JupyterLabWidgetManager not defined. Please include/check ipywidgets.js file');
             }
             // Create the real manager and point it at our proxy kernel.
             this.manager = new JupyterLabWidgetManager(this.proxyKernel, this.widgetContainer, this.scriptLoader);
@@ -164,7 +184,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
 
             // Listen for unhandled IO pub so we can forward to the extension
-            this.manager.onUnhandledIOPubMessage.connect(this.handleUnhanldedIOPubMessage.bind(this));
+            this.manager.onUnhandledIOPubMessage.connect(this.handleUnhandledIOPubMessage.bind(this));
 
             // Tell the observable about our new manager
             WidgetManager._instance.next(this);
@@ -206,13 +226,10 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         }
     }
 
-    private handleUnhanldedIOPubMessage(_manager: any, msg: KernelMessage.IIOPubMessage) {
+    private handleUnhandledIOPubMessage(_manager: any, msg: KernelMessage.IIOPubMessage) {
         // Send this to the other side
-        this.postOffice.sendMessage<IInteractiveWindowMapping>(
-            InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage,
-            msg
-        );
+        if (this.postOffice.onUnhandledKernelMessage) {
+            this.postOffice.onUnhandledKernelMessage(msg);
+        }
     }
 }
-
-(window as any).MyWidgetManager = WidgetManager;

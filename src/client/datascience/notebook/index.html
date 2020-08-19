@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no" />
+        <meta name="theme-color" content="#000000" />
+        <title>IPyWidgets</title>
+    </head>
+    <body>
+        <div id="root"></div>
+        <!-- Assumption is we'll be using a browser to load the UI, if this is the case we're debugging. Socket.io is used to push/pull messages to/from extension (post office) -->
+        <script src="/socket.io/socket.io.js"></script>
+        <script type="text/javascript">
+            function resolvePath(relativePath) {
+                if (relativePath && relativePath[0] == '.' && relativePath[1] != '.') {
+                    return '<%= htmlWebpackPlugin.options.imageBaseUrl %>' + relativePath.substring(1);
+                }
+
+                return '<%= htmlWebpackPlugin.options.imageBaseUrl %>' + relativePath;
+            }
+            function getInitialSettings() {
+                return {
+                    allowInput: true,
+                    showCellInputCode: true,
+                    extraSettings: { editorCursor: 'block', editorCursorBlink: 'blink' }
+                };
+            }
+            // Assume that we're always using socket.io and running this in a browser.
+            if (io) {
+                var socket = io();
+                var messageHandler = undefined;
+                let messagesReceived = [];
+                socket.on('fromServer', function(msg) {
+                    if (messageHandler) {
+                        if (messagesReceived.length > 0) {
+                            while (messagesReceived.length) {
+                                const data = messagesReceived.shift();
+                                messageHandler({ data: data });
+                            }
+                        }
+                        messageHandler({ data: msg });
+                    } else {
+                        messagesReceived.push(msg);
+                    }
+                });
+                function acquireVsCodeApi() {
+                    return {
+                        postMessage: function(message) {
+                            socket.emit('fromClient', message);
+                        },
+                        handleMessage: function(handler) {
+                            messageHandler = handler;
+                        }
+                    };
+                }
+            }
+        </script>
+        <script type="text/javascript" src="require.js"></script>
+        <script type="text/javascript" src="ipywidgets.js"></script>
+    </body>
+</html>

@@ -1,13 +1,13 @@
 // Place your settings in this file to overwrite default and user settings.
 {
     "files.exclude": {
-        "out": true, // set this to true to hide the "out" folder with the compiled JS files
+        "out": false, // set this to true to hide the "out" folder with the compiled JS files
         "**/*.pyc": true,
         ".nyc_output": true,
         "obj": true,
         "bin": true,
         "**/__pycache__": true,
-        "**/node_modules": true,
+        "**/node_modules": false,
         ".vscode-test": false,
         ".vscode test": false,
         "**/.mypy_cache/**": true,

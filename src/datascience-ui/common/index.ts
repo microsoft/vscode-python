@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
+import type { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { noop } from '../../client/common/utils/misc';
 
 const SingleQuoteMultiline = "'''";

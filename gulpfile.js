@@ -117,13 +117,12 @@ gulp.task('compile-ipywidgets', () => buildIPyWidgets());
 
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
-
 async function buildIPyWidgets() {
     // if the output ipywidgest file exists, then no need to re-build.
     // Barely changes. If making changes, then re-build manually.
-    if (!isCI && fs.existsSync(path.join(__dirname, 'out/ipywidgets/dist/ipywidgets.js'))) {
-        return;
-    }
+    // if (!isCI && fs.existsSync(path.join(__dirname, 'out/ipywidgets/dist/ipywidgets.js'))) {
+    //     return;
+    // }
     await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
 }
 gulp.task('compile-notebooks', async () => {
@@ -138,7 +137,7 @@ gulp.task('compile-viewers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
 });
 
-gulp.task('compile-webviews', gulp.series('compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
+gulp.task('compile-webviews', gulp.series('compile-notebooks'));
 
 gulp.task(
     'check-datascience-dependencies',
@@ -165,7 +164,7 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
     if (configNameForProductionBuilds) {
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
     } else {
-        await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'production'], webpackEnv);
+        await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);
     }
 }
 gulp.task('webpack', async () => {
@@ -224,7 +223,7 @@ async function buildWebPack(webpackConfigName, args, env) {
     const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName).map((item) => item.toLowerCase());
     const stdOut = await spawnAsync(
         'npm',
-        ['run', 'webpack', '--', ...args, ...['--mode', 'production', '--devtool', 'source-map']],
+        ['run', 'webpack', '--', ...args, ...['--mode', 'development', '--devtool', 'source-map']],
         env
     );
     const stdOutLines = stdOut

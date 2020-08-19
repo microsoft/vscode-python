@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
 import '../../client/common/extensions';

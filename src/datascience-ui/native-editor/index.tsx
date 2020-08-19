@@ -6,6 +6,7 @@
 import '../common/main';
 // This must be on top, do not change. Required by webpack.
 
+// tslint:disable
 // tslint:disable-next-line: ordered-imports
 import '../common/index.css';
 
@@ -13,7 +14,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
-import { WidgetManagerComponent } from '../ipywidgets/container';
+// import { WidgetManagerComponent } from '../ipywidgets/container';
 import { IVsCodeApi, PostOffice } from '../react-common/postOffice';
 import { detectBaseTheme } from '../react-common/themeDetector';
 import { getConnectedNativeEditor } from './nativeEditor';
@@ -33,12 +34,13 @@ const store = createStore(skipDefault, baseTheme, testMode, postOffice);
 
 // Wire up a connected react control for our NativeEditor
 const ConnectedNativeEditor = getConnectedNativeEditor();
-
+console.log((window as any).initializeIPYWidgets);
+(window as any).initializeIPYWidgets('rootWidget', document.getElementById('widgetContainer'), postOffice, store);
 // Stick them all together
 ReactDOM.render(
     <Provider store={store}>
         <ConnectedNativeEditor />
-        <WidgetManagerComponent postOffice={postOffice} widgetContainerId={'rootWidget'} store={store} />
+        {/* <WidgetManagerComponent postOffice={postOffice} widgetContainerId={'rootWidget'} store={store} /> */}
     </Provider>,
     document.getElementById('root') as HTMLElement
 );

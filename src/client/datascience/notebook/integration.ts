@@ -17,6 +17,7 @@ import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook } from './helpers/helpers';
+import { IPyWidgetNotebookOutputRenderer } from './ipyWidgetRenderer';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookOutputRenderer } from './renderer';
 import { INotebookContentProvider } from './types';
@@ -37,6 +38,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
         @inject(VSCodeKernelPickerProvider) private readonly kernelProvider: VSCodeKernelPickerProvider,
         @inject(NotebookOutputRenderer) private readonly renderer: NotebookOutputRenderer,
+        @inject(IPyWidgetNotebookOutputRenderer) private readonly ipyWidgetRenderer: IPyWidgetNotebookOutputRenderer,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -66,6 +68,9 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                     this.kernelProvider
                 )
             );
+            // tslint:disable-next-line: no-any
+            // const kernel = new NotebookKernel('Jupyter', 'Jupyter', true, {} as any, this.execution);
+            // this.disposables.push(this.vscNotebook.registerNotebookKernel(JupyterNotebookView, ['**/*.ipynb'], kernel));
             this.disposables.push(
                 this.vscNotebook.registerNotebookOutputRenderer(
                     'jupyter-notebook-renderer',
@@ -92,6 +97,15 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                         ]
                     },
                     this.renderer
+                )
+            );
+            this.disposables.push(
+                this.vscNotebook.registerNotebookOutputRenderer(
+                    'jupyter-ipywidget-renderer',
+                    {
+                        mimeTypes: ['application/vnd.jupyter.widget-view+json']
+                    },
+                    this.ipyWidgetRenderer
                 )
             );
         } catch (ex) {
