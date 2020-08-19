@@ -8,7 +8,7 @@ try:
 except ImportError:  # 2.7
     from StringIO import StringIO
 from os import name as OS_NAME
-from os import path
+from os import path, remove, rmdir
 import sys
 import tempfile
 import unittest
@@ -339,22 +339,21 @@ class DiscoverTests(unittest.TestCase):
 
         # to simulate stdio behavior including methods like .fileno(),
         # use actual files (rather than StringIO)
-        with tempfile.TemporaryDirectory() as td:
-            stdio_mock = path.join(td, "stdio_mock")
-            with open(stdio_mock, "w") as mock:
-                sys.stdout = mock
-                try:
-                    discover(
-                        [],
-                        hidestdio=True,
-                        _pytest_main=fake_pytest_main,
-                        _plugin=plugin,
-                    )
-                finally:
-                    sys.stdout = sys.__stdout__
+        td = tempfile.mkdtemp()
+        stdio_mock = path.join(td, "stdio_mock")
+        with open(stdio_mock, "w") as mock:
+            sys.stdout = mock
+            try:
+                discover(
+                    [], hidestdio=True, _pytest_main=fake_pytest_main, _plugin=plugin,
+                )
+            finally:
+                sys.stdout = sys.__stdout__
 
-            with open(stdio_mock, "r") as mock:
-                captured = mock.read()
+        with open(stdio_mock, "r") as mock:
+            captured = mock.read()
+        remove(stdio_mock)
+        rmdir(td)
 
         self.assertEqual(captured, "")
         self.assertEqual(stub.calls, calls)
