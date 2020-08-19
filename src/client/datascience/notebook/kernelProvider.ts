@@ -172,6 +172,11 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                         this.disposables
                     );
                 }
+                // tslint:disable-next-line: no-suspicious-comment
+                // TODO: https://github.com/microsoft/vscode-python/issues/13514
+                // We need to handle these exceptions in `siwthKernelWithRetry`.
+                // We shouldn't handle them here, as we're already handling some errors in the `siwthKernelWithRetry` method.
+                // Adding comment here, so we have context for the requirement.
                 this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
             } else {
                 updateKernelInNotebookMetadata(
