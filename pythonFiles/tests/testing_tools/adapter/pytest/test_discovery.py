@@ -8,7 +8,9 @@ try:
 except ImportError:  # 2.7
     from StringIO import StringIO
 from os import name as OS_NAME
+from os import path
 import sys
+import tempfile
 import unittest
 
 import pytest
@@ -335,14 +337,19 @@ class DiscoverTests(unittest.TestCase):
         if PYTHON_38_OR_LATER:
             calls.insert(3, ("discovered.__len__", None, None))
 
-        buf = StringIO()
-
-        sys.stdout = buf
-        try:
-            discover([], hidestdio=True, _pytest_main=fake_pytest_main, _plugin=plugin)
-        finally:
-            sys.stdout = sys.__stdout__
-        captured = buf.getvalue()
+        # to simulate stdio behavior including methods like .fileno(),
+        # use actual files (rather than StringIO)
+        with tempfile.TemporaryDirectory() as td:
+            stdio_mock = path.join(td, "stdio_mock")
+            with open(stdio_mock, "w") as mock:
+                sys.stdout = mock
+                try:
+                    discover([], hidestdio=True, _pytest_main=fake_pytest_main, _plugin=plugin)
+                finally:
+                    sys.stdout = sys.__stdout__
+            
+            with open(stdio_mock, "r") as mock:
+                captured = mock.read()
 
         self.assertEqual(captured, "")
         self.assertEqual(stub.calls, calls)
