@@ -240,8 +240,8 @@ export class Kernel implements IKernel {
     }
 
     private disableJedi() {
-        if (isPythonKernelConnection(this.metadata)) {
-            this.executeObservable(CodeSnippets.disableJedi, this.uri.fsPath, 0, uuid(), true);
+        if (isPythonKernelConnection(this.metadata) && this.notebook) {
+            this.notebook.executeObservable(CodeSnippets.disableJedi, this.uri.fsPath, 0, uuid(), true);
         }
     }
 }
