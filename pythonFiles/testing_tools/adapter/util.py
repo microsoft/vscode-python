@@ -196,9 +196,9 @@ def hide_buffer(attr, ignored):
 def hide_stdio(_hide_buffer=hide_buffer):
     """Swallow stdout and stderr."""
     ignored = StdioStream()
-    with _hide_buffer("stdout", ignored):
+    with _hide_buffer("stdout", ignored) as stdout:
         with _hide_buffer("stderr", ignored):
-            yield
+            yield stdout
 
 
 if sys.version_info < (3,):
