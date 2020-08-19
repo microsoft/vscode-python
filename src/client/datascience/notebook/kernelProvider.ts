@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import {
     NotebookCell,
@@ -10,8 +12,10 @@ import {
     NotebookKernelProvider
 } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
+import { traceError } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
@@ -34,10 +38,10 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly kernelProvider: IKernelProvider
     ) {}
     public executeCell(_: NotebookDocument, cell: NotebookCell) {
-        this.kernelProvider.get(cell.notebook.uri)?.executeCell(cell); // NOSONAR
+        this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection })?.executeCell(cell); // NOSONAR
     }
     public executeAllCells(document: NotebookDocument) {
-        this.kernelProvider.get(document.uri)?.executeAllCells(document); // NOSONAR
+        this.kernelProvider.getOrCreate(document.uri, { metadata: this.selection })?.executeAllCells(document); // NOSONAR
     }
     public cancelCellExecution(_: NotebookDocument, cell: NotebookCell) {
         this.kernelProvider.get(cell.notebook.uri)?.interrupt(); // NOSONAR
@@ -63,7 +67,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
         @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
         this.kernelSelectionProvider.SelectionsChanged(() => this._onDidChangeKernels.fire(), this, disposables);
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
@@ -72,27 +77,35 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         document: NotebookDocument,
         token: CancellationToken
     ): Promise<VSCodeNotebookKernelMetadata[]> {
-        const [preferredKernel, kernels] = await Promise.all([
+        const [preferredKernel, kernels, activeInterpreter] = await Promise.all([
             this.getPreferredKernel(document, token),
-            this.kernelSelectionProvider.getKernelSelectionsForLocalSession(document.uri, 'raw', undefined, token)
+            this.kernelSelectionProvider.getKernelSelectionsForLocalSession(document.uri, 'raw', undefined, token),
+            this.interpreterService.getActiveInterpreter(document.uri)
         ]);
         if (token.isCancellationRequested) {
             return [];
         }
 
+        // Default the interpreter to the local interpreter (if none is provided).
         return kernels.map((kernel) => {
+            const selection = cloneDeep(kernel.selection); // Always clone, so we can make changes to this.
+            selection.interpreter = selection.interpreter || activeInterpreter;
             return new VSCodeNotebookKernelMetadata(
                 kernel.label,
                 kernel.description || kernel.detail || '',
-                kernel.selection,
-                areKernelConnectionsEqual(kernel.selection, preferredKernel),
+                selection,
+                areKernelConnectionsEqual(selection, preferredKernel),
                 this.kernelProvider
             );
         });
     }
     private async getPreferredKernel(document: NotebookDocument, token: CancellationToken) {
         // If we already have a kernel selected, then return that.
-        const editor = this.notebook.notebookEditors.find((e) => e.document === document);
+        const editor =
+            this.notebook.notebookEditors.find((e) => e.document === document) ||
+            (this.notebook.activeNotebookEditor?.document === document
+                ? this.notebook.activeNotebookEditor
+                : undefined);
         if (editor && editor.kernel && editor.kernel instanceof VSCodeNotebookKernelMetadata) {
             return editor.kernel.selection;
         }
@@ -136,32 +149,42 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
         // This way other parts of extension have access to this kernel immediately after event is handled.
         this.kernelProvider.getOrCreate(document.uri, { metadata: selectedKernelConnectionMetadata });
+        try {
+            // Change kernel and update metadata.
+            const notebook = await this.notebookProvider.getOrCreateNotebook({
+                resource: document.uri,
+                identity: document.uri,
+                getOnly: true
+            });
 
-        // Change kernel and update metadata.
-        const notebook = await this.notebookProvider.getOrCreateNotebook({
-            resource: document.uri,
-            identity: document.uri,
-            getOnly: true
-        });
-
-        // If we have a notebook, change its kernel now
-        if (notebook) {
-            if (!this.notebookKernelChangeHandled.has(notebook)) {
-                this.notebookKernelChangeHandled.add(notebook);
-                notebook.onKernelChanged(
-                    (e) => {
-                        if (notebook.disposed) {
-                            return;
-                        }
-                        updateKernelInNotebookMetadata(document, e, this.notebookContentProvider);
-                    },
-                    this,
-                    this.disposables
+            // If we have a notebook, change its kernel now
+            if (notebook) {
+                if (!this.notebookKernelChangeHandled.has(notebook)) {
+                    this.notebookKernelChangeHandled.add(notebook);
+                    notebook.onKernelChanged(
+                        (e) => {
+                            if (notebook.disposed) {
+                                return;
+                            }
+                            updateKernelInNotebookMetadata(document, e, this.notebookContentProvider);
+                        },
+                        this,
+                        this.disposables
+                    );
+                }
+                this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
+            } else {
+                updateKernelInNotebookMetadata(
+                    document,
+                    selectedKernelConnectionMetadata,
+                    this.notebookContentProvider
                 );
             }
-            this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
-        } else {
-            updateKernelInNotebookMetadata(document, selectedKernelConnectionMetadata, this.notebookContentProvider);
+        } catch (ex) {
+            traceError(
+                `Failed to change the kernel for ${document.uri.toString()}, to ${JSON.stringify(kernel.selection)}`,
+                ex
+            );
         }
     }
 }

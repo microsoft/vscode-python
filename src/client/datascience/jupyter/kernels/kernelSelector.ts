@@ -210,7 +210,12 @@ export class KernelSelector implements IKernelSelectionUsage {
         telemetryProps.kernelSpecFound = !!selection?.kernelSpec;
         telemetryProps.interpreterFound = !!selection?.interpreter;
         sendTelemetryEvent(Telemetry.FindKernelForLocalConnection, stopWatch.elapsedTime, telemetryProps);
-        return cloneDeep(selection);
+        const itemToReturn = cloneDeep(selection);
+        if (itemToReturn) {
+            itemToReturn.interpreter =
+                itemToReturn.interpreter || (await this.interpreterService.getActiveInterpreter(resource));
+        }
+        return itemToReturn;
     }
 
     /**
