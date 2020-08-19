@@ -186,3 +186,18 @@ async function* chainRaw<T, R>(
         }
     }
 }
+
+/**
+ * Get everything yielded by the iterator.
+ */
+export async function flattenIterator<T>(iterator: AsyncIterator<T, void>): Promise<T[]> {
+    const results: T[] = [];
+    // We are dealing with an iterator, not an iterable, so we have
+    // to iterate manually rather that with a for-await loop.
+    let result = await iterator.next();
+    while (!result.done) {
+        results.push(result.value);
+        result = await iterator.next();
+    }
+    return results;
+}

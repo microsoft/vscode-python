@@ -4,7 +4,7 @@
 'use strict';
 
 import * as assert from 'assert';
-import { chain, createDeferred } from '../../../client/common/utils/async';
+import { chain, createDeferred, flattenIterator } from '../../../client/common/utils/async';
 
 suite('Deferred', () => {
     test('Resolve', (done) => {
@@ -55,15 +55,7 @@ suite('Deferred', () => {
 });
 
 suite('chain async iterators', () => {
-    async function flatten<T>(iterator: AsyncIterator<T, void>): Promise<T[]> {
-        const results: T[] = [];
-        let result = await iterator.next();
-        while (!result.done) {
-            results.push(result.value);
-            result = await iterator.next();
-        }
-        return results;
-    }
+    const flatten = flattenIterator;
 
     test('no iterators', async () => {
         const expected: string[] = [];
