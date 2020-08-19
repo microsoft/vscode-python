@@ -3,7 +3,8 @@
 
 'use strict';
 
-import { CancellationToken, NotebookCell, NotebookCellRunState } from 'vscode';
+import { CancellationToken } from 'vscode';
+import { NotebookCell, NotebookCellRunState } from '../../../../../types/vscode-proposed';
 import { createDeferred } from '../../../common/utils/async';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
