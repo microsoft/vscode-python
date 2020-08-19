@@ -38,7 +38,7 @@ async function main() {
         for (var index = 0; index < files.length; index += 1) {
             // Each run with a file will expect a $MOCHA_FILE$ variable. Generate one for each
             // Note: this index is used as a pattern when setting mocha file in the test_phases.yml
-            var subMochaFile = `${mochaBaseFile}${index}${mochaFileExt}`;
+            var subMochaFile = `${mochaBaseFile}_${index}_${path.basename(files[index])}${mochaFileExt}`;
             process.env['MOCHA_FILE'] = subMochaFile;
             var exitCode = await new Promise((resolve) => {
                 // Spawn the sub node process
