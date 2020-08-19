@@ -60,8 +60,7 @@ export class KernelProvider implements IKernelProvider {
             this.editorProvider,
             this,
             this.kernelSelectionUsage,
-            this.appShell,
-            this.configService
+            this.appShell
         );
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });

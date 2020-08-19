@@ -55,7 +55,15 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
 
 export function getNotebookMetadata(document: NotebookDocument): nbformat.INotebookMetadata | undefined {
     // tslint:disable-next-line: no-any
-    const notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
+    let notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
+
+    // If language isn't specified in the metadata, at least specify that
+    if (!notebookContent?.metadata?.language_info?.name) {
+        const content = notebookContent || {};
+        const metadata = content.metadata || { orig_nbformat: 3, language_info: {} };
+        const language_info = { ...metadata.language_info, name: document.languages[0] };
+        notebookContent = { ...content, metadata: { ...metadata, language_info } };
+    }
     return notebookContent?.metadata;
 }
 export function updateKernelInNotebookMetadata(
@@ -409,10 +417,15 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): CellOutput 
         };
     }
 
-    // Add on transient data if we have any
-    if (output.transient && result) {
+    // Add on transient data if we have any. This should be removed by our save functions elsewhere.
+    if (
+        output.transient &&
+        result &&
+        result.outputKind === vscodeNotebookEnums.CellOutputKind.Rich &&
+        result.metadata
+    ) {
         // tslint:disable-next-line: no-any
-        (result as any).transient = { ...(output.transient as any) };
+        result.metadata.custom = { ...result.metadata.custom, transient: output.transient };
     }
     return result;
 }
@@ -452,8 +465,8 @@ function translateDisplayDataOutput(
     // tslint:disable-next-line: no-any
     const metadata = output.metadata ? ({ custom: output.metadata } as any) : { custom: {} };
     metadata.custom.vscode = { outputType };
-    if (outputType === 'execute_result') {
-        metadata.custom.vscode.execution_count = (output as nbformat.IExecuteResult).execution_count;
+    if (output.execution_count) {
+        metadata.execution_order = output.execution_count;
     }
     return {
         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
@@ -555,10 +568,8 @@ function translateCellDisplayOutput(output: CellDisplayOutput): JupyterOutput {
     }
 
     // Account for transient data as well
-    // tslint:disable-next-line: no-any
-    if (result && (output as any).transient) {
-        // tslint:disable-next-line: no-any
-        result.transient = { ...(output as any).transient };
+    if (result && output.metadata && output.metadata.custom?.transient) {
+        result.transient = { ...output.metadata.custom?.transient };
     }
     return result;
 }

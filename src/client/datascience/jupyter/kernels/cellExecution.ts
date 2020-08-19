@@ -10,7 +10,6 @@ import { concatMultilineString, formatStreamText } from '../../../../datascience
 import { IApplicationShell } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
-import { IConfigurationService } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -42,8 +41,7 @@ export class CellExecutionFactory {
         private readonly contentProvider: INotebookContentProvider,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
-        private readonly appShell: IApplicationShell,
-        private readonly configService: IConfigurationService
+        private readonly appShell: IApplicationShell
     ) {}
 
     public create(cell: NotebookCell) {
@@ -53,8 +51,7 @@ export class CellExecutionFactory {
             this.contentProvider,
             this.errorHandler,
             this.editorProvider,
-            this.appShell,
-            this.configService
+            this.appShell
         );
     }
 }
@@ -94,8 +91,7 @@ export class CellExecution {
         private readonly contentProvider: INotebookContentProvider,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
-        private readonly applicationService: IApplicationShell,
-        private readonly configService: IConfigurationService
+        private readonly applicationService: IApplicationShell
     ) {
         this.oldCellRunState = cell.metadata.runState;
         this.enqueue();
@@ -106,10 +102,9 @@ export class CellExecution {
         contentProvider: INotebookContentProvider,
         errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
-        appService: IApplicationShell,
-        configService: IConfigurationService
+        appService: IApplicationShell
     ) {
-        return new CellExecution(cell, contentProvider, errorHandler, editorProvider, appService, configService);
+        return new CellExecution(cell, contentProvider, errorHandler, editorProvider, appService);
     }
 
     public start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
@@ -245,56 +240,63 @@ export class CellExecution {
             ...{ cellId: this.cell.uri.toString() }
         };
 
-        // Create our initial request (code separated out for debugging)
+        // Create our initial request
         const code = this.cell.document.getText();
-        const request = session.requestExecute(
-            {
-                code,
-                stop_on_error: false,
-                allow_stdin: true,
-                store_history: false
-            },
-            false,
-            metadata
-        );
 
-        // Listen to messages and update our cell execution state appropriately
+        // Skip if no code to execute
+        if (code.trim().length > 0) {
+            const request = session.requestExecute(
+                {
+                    code,
+                    silent: false,
+                    stop_on_error: false,
+                    allow_stdin: true,
+                    store_history: true // Silent actually means don't output anything. Store_history is what affects execution_count
+                },
+                false,
+                metadata
+            );
 
-        // Keep track of our clear state
-        const clearState = new RefBool(false);
+            // Listen to messages and update our cell execution state appropriately
 
-        // Listen to the reponse messages and update state as we go
-        if (request) {
-            // Stop handling the request if the subscriber is canceled.
-            const cancelDisposable = this.token.onCancellationRequested(() => {
-                request.onIOPub = noop;
-                request.onStdin = noop;
-                request.onReply = noop;
-            });
+            // Keep track of our clear state
+            const clearState = new RefBool(false);
 
-            // Listen to messages.
-            request.onIOPub = this.handleIOPub.bind(this, clearState, loggers);
-            request.onStdin = this.handleInputRequest.bind(this, session);
-            request.onReply = this.handleReply.bind(this, clearState);
+            // Listen to the reponse messages and update state as we go
+            if (request) {
+                // Stop handling the request if the subscriber is canceled.
+                const cancelDisposable = this.token.onCancellationRequested(() => {
+                    request.onIOPub = noop;
+                    request.onStdin = noop;
+                    request.onReply = noop;
+                });
 
-            // When the request finishes we are done
-            request.done
-                .then(() => this.completedSuccessfully())
-                .catch((e) => {
-                    // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
-                    // Such an error must be ignored.
-                    if (e && e instanceof Error && e.message === 'Canceled') {
-                        this.completedSuccessfully();
-                    } else {
-                        this.completedWithErrors(e);
-                    }
-                })
-                .finally(() => {
-                    cancelDisposable.dispose();
-                })
-                .ignoreErrors();
+                // Listen to messages.
+                request.onIOPub = this.handleIOPub.bind(this, clearState, loggers);
+                request.onStdin = this.handleInputRequest.bind(this, session);
+                request.onReply = this.handleReply.bind(this, clearState);
+
+                // When the request finishes we are done
+                request.done
+                    .then(() => this.completedSuccessfully())
+                    .catch((e) => {
+                        // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
+                        // Such an error must be ignored.
+                        if (e && e instanceof Error && e.message === 'Canceled') {
+                            this.completedSuccessfully();
+                        } else {
+                            this.completedWithErrors(e);
+                        }
+                    })
+                    .finally(() => {
+                        cancelDisposable.dispose();
+                    })
+                    .ignoreErrors();
+            } else {
+                this.completedWithErrors(new Error('Session cannot generate requrests'));
+            }
         } else {
-            this.completedWithErrors(new Error('Session cannot generate requrests'));
+            this.completedSuccessfully();
         }
     }
 
@@ -310,12 +312,11 @@ export class CellExecution {
         // tslint:disable-next-line:no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
-        // Create a trimming function. Only trim user output. Silent output requires the full thing
-        const trimFunc = this.trimOutput.bind(this);
+        // Keep track of we need to send an update to VS code or not.
         let shouldUpdate = true;
         try {
             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState, trimFunc);
+                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                 this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
@@ -325,7 +326,7 @@ export class CellExecution {
                 shouldUpdate = false;
                 this.handleStatusMessage(statusMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState, trimFunc);
+                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState);
             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
                 this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
@@ -404,16 +405,7 @@ export class CellExecution {
 
     // See this for docs on the messages:
     // https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter
-    private handleExecuteResult(
-        msg: KernelMessage.IExecuteResultMsg,
-        clearState: RefBool,
-        trimFunc: (str: string) => string
-    ) {
-        // Check our length on text output
-        if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
-            msg.content.data['text/plain'] = trimFunc(msg.content.data['text/plain'] as string);
-        }
-
+    private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: RefBool) {
         this.addToCellData(
             {
                 output_type: 'execute_result',
@@ -427,23 +419,17 @@ export class CellExecution {
         );
     }
 
-    private handleExecuteReply(
-        msg: KernelMessage.IExecuteReplyMsg,
-        clearState: RefBool,
-        trimFunc: (str: string) => string
-    ) {
+    private handleExecuteReply(msg: KernelMessage.IExecuteReplyMsg, clearState: RefBool) {
         const reply = msg.content as KernelMessage.IExecuteReply;
         if (reply.payload) {
             reply.payload.forEach((o) => {
                 if (o.data && o.data.hasOwnProperty('text/plain')) {
-                    // tslint:disable-next-line: no-any
-                    const str = (o.data as any)['text/plain'].toString();
-                    const data = trimFunc(str) as string;
                     this.addToCellData(
                         {
                             // Mark as stream output so the text is formatted because it likely has ansi codes in it.
                             output_type: 'stream',
-                            text: data,
+                            // tslint:disable-next-line: no-any
+                            text: (o.data as any)['text/plain'].toString(),
                             metadata: {},
                             execution_count: reply.execution_count
                         },
@@ -455,7 +441,7 @@ export class CellExecution {
     }
 
     private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
-        if (msg.content.execution_count !== null) {
+        if (msg.content.execution_count) {
             updateCellExecutionCount(this.cell, msg.content.execution_count);
         }
     }
@@ -464,14 +450,7 @@ export class CellExecution {
         traceInfo(`Kernel switching to ${msg.content.execution_state}`);
     }
 
-    private handleStreamMesssage(
-        msg: KernelMessage.IStreamMsg,
-        clearState: RefBool,
-        trimFunc: (str: string) => string
-    ) {
-        let originalTextLength = 0;
-        let trimmedTextLength = 0;
-
+    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
         // Clear output if waiting for a clear
         if (clearState.value) {
             this.cell.outputs = [];
@@ -484,33 +463,17 @@ export class CellExecution {
             lastOutput && lastOutput.outputKind === CellOutputKind.Text ? lastOutput : undefined;
         if (existing) {
             // tslint:disable-next-line:restrict-plus-operands
-            existing.text = existing.text + msg.content.text;
-            const originalText = formatStreamText(concatMultilineString(existing.text));
-            originalTextLength = originalText.length;
-            existing.text = trimFunc(originalText);
-            trimmedTextLength = existing.text.length;
+            existing.text = formatStreamText(concatMultilineString(existing.text + msg.content.text));
             this.cell.outputs = [...this.cell.outputs]; // This is necessary to get VS code to update (for now)
         } else {
             const originalText = formatStreamText(concatMultilineString(msg.content.text));
-            originalTextLength = originalText.length;
             // Create a new stream entry
             const output: nbformat.IStream = {
                 output_type: 'stream',
                 name: msg.content.name,
-                text: trimFunc(originalText)
+                text: originalText
             };
             this.cell.outputs = [...this.cell.outputs, cellOutputToVSCCellOutput(output)];
-            trimmedTextLength = output.text.length;
-        }
-
-        // If the output was trimmed, we add the 'outputPrepend' metadata tag.
-        // Later, the react side will display a message letting the user know
-        // the output is trimmed and what setting changes that.
-        if (trimmedTextLength < originalTextLength) {
-            let tags: string[] = this.cell.metadata.custom?.tags || [];
-            tags = tags.filter((t) => t !== 'outputPrepend');
-            tags.push('outputPrepend');
-            this.cell.metadata.custom = { ...this.cell.metadata.custom, tags };
         }
     }
 
@@ -546,27 +509,12 @@ export class CellExecution {
         this.addToCellData(output, clearState);
     }
 
-    // We have a set limit for the number of output text characters that we display by default
-    // trim down strings to that limit, assuming at this point we have compressed down to a single string
-    private trimOutput(outputString: string): string {
-        const outputLimit = this.configService.getSettings(this.cell.document.uri).datascience.textOutputLimit;
-
-        if (!outputLimit || outputLimit === 0 || outputString.length <= outputLimit) {
-            return outputString;
-        }
-
-        return outputString.substr(outputString.length - outputLimit);
-    }
-
     private handleReply(clearState: RefBool, msg: KernelMessage.IShellControlMessage) {
         // tslint:disable-next-line:no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
-        // Create a trimming function. Only trim user output. Silent output requires the full thing
-        const trimFunc = this.trimOutput.bind(this);
-
         if (jupyterLab.KernelMessage.isExecuteReplyMsg(msg)) {
-            this.handleExecuteReply(msg, clearState, trimFunc);
+            this.handleExecuteReply(msg, clearState);
 
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {

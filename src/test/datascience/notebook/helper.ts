@@ -190,7 +190,7 @@ export async function trustAllNotebooks() {
     }
     dsSettings.alwaysTrustNotebooks = true;
 }
-export async function startJupyter(close: boolean) {
+export async function startJupyter(closeInitialEditor: boolean) {
     const { editorProvider, vscodeNotebook } = await getServices();
     await closeActiveWindows();
 
@@ -203,7 +203,7 @@ export async function startJupyter(close: boolean) {
         // Wait for Jupyter to start.
         await waitForCondition(async () => cell.outputs.length > 0, 60_000, 'Cell not executed');
 
-        if (close) {
+        if (closeInitialEditor) {
             await closeActiveWindows();
         } else {
             await deleteCell(0);

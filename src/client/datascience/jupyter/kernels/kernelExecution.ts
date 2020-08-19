@@ -6,7 +6,7 @@
 import { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
-import { IConfigurationService, IDisposable } from '../../../common/types';
+import { IDisposable } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { captureTelemetry } from '../../../telemetry';
@@ -43,16 +43,9 @@ export class KernelExecution implements IDisposable {
         private readonly contentProvider: INotebookContentProvider,
         editorProvider: INotebookEditorProvider,
         readonly kernelSelectionUsage: IKernelSelectionUsage,
-        readonly appShell: IApplicationShell,
-        readonly configService: IConfigurationService
+        readonly appShell: IApplicationShell
     ) {
-        this.executionFactory = new CellExecutionFactory(
-            this.contentProvider,
-            errorHandler,
-            editorProvider,
-            appShell,
-            configService
-        );
+        this.executionFactory = new CellExecutionFactory(this.contentProvider, errorHandler, editorProvider, appShell);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)

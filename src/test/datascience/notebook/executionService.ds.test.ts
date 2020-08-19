@@ -236,6 +236,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         expect(displayCell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         expect(displayCell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
         expect(displayCell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
+        expect(markdownOutput.data['text/markdown']).to.be.equal('foo', 'Display cell did not update');
     });
     test('Clearing output while executing will ensure output is cleared', async function () {
         // https://github.com/microsoft/vscode-python/issues/12302

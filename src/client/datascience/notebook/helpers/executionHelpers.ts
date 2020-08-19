@@ -12,18 +12,6 @@ import { createIOutputFromCellOutputs, createVSCCellOutputsFromOutputs, translat
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
-export function hasTransientOutputForAnotherCell(output?: nbformat.IOutput) {
-    return (
-        output &&
-        // tslint:disable-next-line: no-any
-        (output as any).output_type === 'display_data' &&
-        // tslint:disable-next-line: no-any
-        'transient' in (output as any) &&
-        // tslint:disable-next-line: no-any
-        Object.keys((output as any).transient).length > 0
-    );
-}
-
 /**
  * Updates the cell in notebook model as well as the notebook document.
  * Update notebook document so UI is updated accordingly.
@@ -86,7 +74,7 @@ export function updateCellWithErrorStatus(cell: NotebookCell, ex: Partial<Error>
  * @returns {boolean} Returns `true` if execution count has changed.
  */
 export function updateCellExecutionCount(vscCell: NotebookCell, executionCount: number): boolean {
-    if (vscCell.metadata.executionOrder !== executionCount) {
+    if (vscCell.metadata.executionOrder !== executionCount && executionCount) {
         vscCell.metadata.executionOrder = executionCount;
         return true;
     }

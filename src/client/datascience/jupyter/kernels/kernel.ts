@@ -19,7 +19,7 @@ import {
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
-import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
@@ -85,8 +85,7 @@ export class Kernel implements IKernel {
         editorProvider: INotebookEditorProvider,
         private readonly kernelProvider: IKernelProvider,
         private readonly kernelSelectionUsage: IKernelSelectionUsage,
-        appShell: IApplicationShell,
-        configService: IConfigurationService
+        appShell: IApplicationShell
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -96,14 +95,15 @@ export class Kernel implements IKernel {
             contentProvider,
             editorProvider,
             kernelSelectionUsage,
-            appShell,
-            configService
+            appShell
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
-        // Update cell to running state.
-        cell.metadata.runState = NotebookCellRunState.Running;
-        this.contentProvider.notifyChangesToDocument(cell.notebook);
+        // Update cell to running state if cell has any code
+        if (cell.document.getText().trim().length > 0) {
+            cell.metadata.runState = NotebookCellRunState.Running;
+            this.contentProvider.notifyChangesToDocument(cell.notebook);
+        }
 
         // Then actually start.
         await this.start({ disableUI: false, token: this.startCancellation.token });
