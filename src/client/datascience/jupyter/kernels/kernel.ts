@@ -19,7 +19,6 @@ import {
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { ICommandManager } from '../../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError } from '../../../common/logger';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -38,6 +37,7 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
+import { isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 
@@ -81,7 +81,7 @@ export class Kernel implements IKernel {
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,
-        private readonly launchingFile: string,
+        private readonly launchingFile: string | undefined,
         commandManager: ICommandManager,
         interpreterService: IInterpreterService,
         errorHandler: IDataScienceErrorHandler,
@@ -254,9 +254,7 @@ export class Kernel implements IKernel {
     }
 
     private disableJedi() {
-        const metadata = ((getDefaultNotebookContent().metadata || {}) as unknown) as nbformat.INotebookMetadata;
-
-        if (this.launchingFile && metadata.language_info && metadata.language_info.name === PYTHON_LANGUAGE) {
+        if (this.launchingFile && isPythonKernelConnection(this.metadata)) {
             this.executeObservable(CodeSnippets.disableJedi, this.launchingFile, 0, uuid(), true);
         }
     }
