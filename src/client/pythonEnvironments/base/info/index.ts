@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Architecture } from '../../common/utils/platform';
-import { Version, VersionInfo } from '../../common/utils/version';
+import { Architecture } from '../../../common/utils/platform';
+import { Version, VersionInfo } from '../../../common/utils/version';
 
 /**
  * IDs for the various supported Python environments.
