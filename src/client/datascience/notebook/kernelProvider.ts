@@ -108,7 +108,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         if (editor && editor.kernel && editor.kernel instanceof VSCodeNotebookKernelMetadata) {
             return editor.kernel.selection;
         }
-        return this.kernelSelector.getKernelForLocalConnection(
+        return this.kernelSelector.getPreferredKernelForLocalConnection(
             document.uri,
             'raw',
             undefined,

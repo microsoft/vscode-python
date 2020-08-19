@@ -160,7 +160,7 @@ export class KernelSelector implements IKernelSelectionUsage {
      * (will attempt to find the best matching kernel, or prompt user to use current interpreter or select one).
      */
     @reportAction(ReportableAction.KernelsGetKernelForLocalConnection)
-    public async getKernelForLocalConnection(
+    public async getPreferredKernelForLocalConnection(
         resource: Resource,
         type: 'raw' | 'jupyter' | 'noConnection',
         sessionManager?: IJupyterSessionManager,
@@ -224,7 +224,7 @@ export class KernelSelector implements IKernelSelectionUsage {
      */
     // tslint:disable-next-line: cyclomatic-complexity
     @reportAction(ReportableAction.KernelsGetKernelForRemoteConnection)
-    public async getKernelForRemoteConnection(
+    public async getPreferredKernelForRemoteConnection(
         resource: Resource,
         sessionManager?: IJupyterSessionManager,
         notebookMetadata?: INotebookMetadataLive,
