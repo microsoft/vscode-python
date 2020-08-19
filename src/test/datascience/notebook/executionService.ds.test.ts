@@ -28,8 +28,7 @@ import {
     executeCell,
     insertPythonCellAndWait,
     startJupyter,
-    trustAllNotebooks,
-    waitForExecutionOrderInCell
+    trustAllNotebooks
 } from './helper';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -224,8 +223,12 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await executeActiveDocument();
 
-        // Wait till execution count changes and status is error.
-        await waitForExecutionOrderInCell(updateCell, 3);
+        // Wait till execution count changes and status is success.
+        await waitForCondition(
+            async () => assertHasExecutionCompletedSuccessfully(updateCell),
+            15_000,
+            'Cell did not get executed'
+        );
 
         assert.lengthOf(displayCell.outputs, 1, 'Incorrect output');
         const markdownOutput = displayCell.outputs[0] as CellDisplayOutput;
