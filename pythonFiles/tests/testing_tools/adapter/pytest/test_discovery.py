@@ -344,10 +344,15 @@ class DiscoverTests(unittest.TestCase):
             with open(stdio_mock, "w") as mock:
                 sys.stdout = mock
                 try:
-                    discover([], hidestdio=True, _pytest_main=fake_pytest_main, _plugin=plugin)
+                    discover(
+                        [],
+                        hidestdio=True,
+                        _pytest_main=fake_pytest_main,
+                        _plugin=plugin,
+                    )
                 finally:
                     sys.stdout = sys.__stdout__
-            
+
             with open(stdio_mock, "r") as mock:
                 captured = mock.read()
 
