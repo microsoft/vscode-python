@@ -171,35 +171,45 @@ def fix_fileid(
 
 
 @contextlib.contextmanager
-def _hide_buffer(attr, ignored):
-    # an alternative approach is suggested: #6594
-    assert attr in ("stdout", "stderr")
-    stdout_fd = getattr(sys, attr).fileno()
-    # Set / unset sys.stdout or sys.stderr values.
-    # This will swallow python print statements, logs, etc.
-    setattr(sys, attr, ignored)
+def _replace_fd(file, target):
+    fd = file.fileno()
+    target_fd = target.fileno()
+
+    # `os.dup2()` closes the original FD, so we make copies.
+    dup_fd = os.dup(fd)
     try:
-        with os.fdopen(os.dup(stdout_fd), "w") as old_stdout:
-            # Set / unset file descriptors.
-            # This is required for output coming out of layers lower than python,
-            # e.g., C printf statements via cython.
-            with open(os.devnull, "w") as devnull:
-                os.dup2(devnull.fileno(), stdout_fd)
-            try:
-                yield ignored
-            finally:
-                os.dup2(old_stdout.fileno(), stdout_fd)
+        # Point the FD at the target.
+        os.dup2(target_fd, fd)
+        try:
+            yield
+        finally:
+            # Point the FD back at the original.
+            os.dup2(dup_fd, fd)
     finally:
-        setattr(sys, attr, getattr(sys, "__" + attr + "__"))
+        os.close(dup_fd)
+
+
+@contextlib.contextmanager
+def _replace_stdx(attr, target):
+    assert attr in ("stdout", "stderr")
+    orig = getattr(sys, attr)
+    setattr(sys, attr, target)
+    try:
+        yield orig
+    finally:
+        setattr(sys, attr, orig)
 
 
 @contextlib.contextmanager
 def hide_stdio():
     """Swallow stdout and stderr."""
     ignored = StdioStream()
-    with _hide_buffer("stdout", ignored) as stdout:
-        with _hide_buffer("stderr", ignored):
-            yield stdout
+    with open(os.devnull, 'w') as devnull:
+        with _replace_fd(sys.stdout, devnull):
+            with _replace_stdx("stdout", ignored):
+                with _replace_fd(sys.stderr, devnull):
+                    with _replace_stdx("stderr", ignored):
+                        yield ignored
 
 
 if sys.version_info < (3,):
