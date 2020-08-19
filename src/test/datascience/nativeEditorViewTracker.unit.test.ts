@@ -61,15 +61,22 @@ suite('DataScience - View tracker', () => {
         when(editorProvider.onDidOpenNotebookEditor).thenReturn(openEvent.event);
         editor1 = mock(NativeEditor);
         when(editor1.file).thenReturn(file1);
+        when(editor1.isUntitled).thenReturn(false);
+        const model1 = mock<INotebookModel>();
+        when(editor1.model).thenReturn(instance(model1));
+        when(model1.isUntitled).thenReturn(false);
         editor2 = mock(NativeEditor);
         when(editor2.file).thenReturn(file2);
-        editor1 = mock(NativeEditor);
-        when(editor1.file).thenReturn(file1);
+        when(editor2.isUntitled).thenReturn(false);
+        const model2 = mock<INotebookModel>();
+        when(editor2.model).thenReturn(instance(model2));
+        when(model2.isUntitled).thenReturn(false);
         untitled1 = mock(NativeEditor);
         when(untitled1.file).thenReturn(untitledFile);
         when(untitled1.model).thenReturn(instance(untitledModel));
         when(untitledModel.file).thenReturn(untitledFile);
         when(untitledModel.changed).thenReturn(untitledChangeEvent.event);
+        when(untitledModel.isUntitled).thenReturn(true);
         memento = new MockMemento();
     });
 
