@@ -157,8 +157,7 @@ export class KernelExecution implements IDisposable {
                     kernelModel: undefined,
                     kernelSpec: undefined,
                     kind: 'startUsingPythonInterpreter'
-                },
-                launchingFile: document.uri.fsPath
+                }
             });
         }
         if (!kernel) {

@@ -37,14 +37,10 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly kernelProvider: IKernelProvider
     ) {}
     public executeCell(_: NotebookDocument, cell: NotebookCell) {
-        this.kernelProvider
-            .getOrCreate(cell.notebook.uri, { metadata: this.selection, launchingFile: cell.notebook.uri.fsPath })
-            ?.executeCell(cell); // NOSONAR
+        this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection })?.executeCell(cell); // NOSONAR
     }
     public executeAllCells(document: NotebookDocument) {
-        this.kernelProvider
-            .getOrCreate(document.uri, { metadata: this.selection, launchingFile: document.uri.fsPath })
-            ?.executeAllCells(document); // NOSONAR
+        this.kernelProvider.getOrCreate(document.uri, { metadata: this.selection })?.executeAllCells(document); // NOSONAR
     }
     public cancelCellExecution(_: NotebookDocument, cell: NotebookCell) {
         this.kernelProvider.get(cell.notebook.uri)?.interrupt(); // NOSONAR
@@ -152,8 +148,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
         // This way other parts of extension have access to this kernel immediately after event is handled.
         this.kernelProvider.getOrCreate(document.uri, {
-            metadata: selectedKernelConnectionMetadata,
-            launchingFile: document.uri.fsPath
+            metadata: selectedKernelConnectionMetadata
         });
 
         // Change kernel and update metadata.

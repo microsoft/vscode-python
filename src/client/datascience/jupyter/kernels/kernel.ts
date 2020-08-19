@@ -35,6 +35,7 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
+import { isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 
@@ -78,7 +79,6 @@ export class Kernel implements IKernel {
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,
-        private readonly launchingFile: string | undefined,
         commandManager: ICommandManager,
         interpreterService: IInterpreterService,
         errorHandler: IDataScienceErrorHandler,
@@ -243,8 +243,8 @@ export class Kernel implements IKernel {
             });
             this.notebook.onSessionStatusChanged((e) => this._onStatusChanged.fire(e), this, this.disposables);
         }
-        if (this.launchingFile) {
-            await this.notebook.setLaunchingFile(this.launchingFile);
+        if (isPythonKernelConnection(this.metadata)) {
+            await this.notebook.setLaunchingFile(this.uri.fsPath);
         }
         await this.notebook.waitForIdle(this.launchTimeout);
     }

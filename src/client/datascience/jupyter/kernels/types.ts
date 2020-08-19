@@ -121,7 +121,7 @@ export interface IKernel extends IAsyncDisposable {
     registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
 }
 
-export type KernelOptions = { metadata: KernelConnectionMetadata; waitForIdleTimeout?: number; launchingFile?: string };
+export type KernelOptions = { metadata: KernelConnectionMetadata };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider {
     /**
