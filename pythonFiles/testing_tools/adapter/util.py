@@ -171,7 +171,8 @@ def fix_fileid(
 
 
 @contextlib.contextmanager
-def hide_buffer(attr, ignored):
+def _hide_buffer(attr, ignored):
+    # an alternative approach is suggested: #6594
     assert attr in ("stdout", "stderr")
     stdout_fd = getattr(sys, attr).fileno()
     # Set / unset sys.stdout or sys.stderr values.
@@ -193,7 +194,7 @@ def hide_buffer(attr, ignored):
 
 
 @contextlib.contextmanager
-def hide_stdio(_hide_buffer=hide_buffer):
+def hide_stdio():
     """Swallow stdout and stderr."""
     ignored = StdioStream()
     with _hide_buffer("stdout", ignored) as stdout:
