@@ -76,14 +76,14 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
 
         if (response === Pylance.tryItNow()) {
             this.appShell.openUrl(getPylanceExtensionUri(this.appEnv));
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_TRY_PYLANCE, undefined, { useraction: 'yes' });
+            sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRY_PYLANCE, undefined, { useraction: 'yes' });
             await this.disable();
         } else if (response === Common.bannerLabelNo()) {
             await this.disable();
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_TRY_PYLANCE, undefined, { useraction: 'no' });
+            sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRY_PYLANCE, undefined, { useraction: 'no' });
         } else {
             this.disabledInCurrentSession = true;
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_TRY_PYLANCE, undefined, { useraction: 'later' });
+            sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRY_PYLANCE, undefined, { useraction: 'later' });
         }
     }
 

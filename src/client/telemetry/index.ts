@@ -1295,16 +1295,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: any;
     /**
-     * Telemetry sent on user response to 'Try Pylance' prompt.
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_TRY_PYLANCE]: {
-        /**
-         * User response to the prompt.
-         * @type {string}
-         */
-        useraction: string;
-    };
-    /**
      * Telemetry event sent with details when inExperiment() API is called
      */
     [EventName.PYTHON_EXPERIMENTS]: {
@@ -1372,6 +1362,16 @@ export interface IEventNamePropertyMapping {
      * Telemetry sent when the client makes a request to the Node.js server
      */
     [EventName.LANGUAGE_SERVER_REQUEST]: any;
+    /**
+     * Telemetry sent on user response to 'Try Pylance' prompt.
+     */
+    [EventName.LANGUAGE_SERVER_TRY_PYLANCE]: {
+        /**
+         * User response to the prompt.
+         * @type {string}
+         */
+        useraction: string;
+    };
     /**
      * Telemetry captured for enabling reload.
      */

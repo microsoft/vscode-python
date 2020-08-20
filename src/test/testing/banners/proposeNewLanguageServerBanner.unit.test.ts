@@ -135,7 +135,7 @@ suite('Propose Pylance Banner', () => {
 
         sinon.assert.calledOnce(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, {
-            eventName: EventName.PYTHON_LANGUAGE_SERVER_TRY_PYLANCE,
+            eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
             properties: { useraction: 'no' }
         });
     });
@@ -164,7 +164,7 @@ suite('Propose Pylance Banner', () => {
 
         sinon.assert.calledOnce(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, {
-            eventName: EventName.PYTHON_LANGUAGE_SERVER_TRY_PYLANCE,
+            eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
             properties: {
                 useraction: 'later'
             }
@@ -192,7 +192,7 @@ suite('Propose Pylance Banner', () => {
 
         sinon.assert.calledOnce(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, {
-            eventName: EventName.PYTHON_LANGUAGE_SERVER_TRY_PYLANCE,
+            eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
             properties: {
                 useraction: 'yes'
             }
