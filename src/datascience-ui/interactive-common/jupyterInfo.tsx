@@ -61,6 +61,7 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
                         baseTheme={this.props.baseTheme}
                         class="image-button-image kernel-status-icon"
                         image={this.getIcon()}
+                        title={this.getStatus()}
                     />
                 </div>
                 <div className="kernel-status-divider" />
@@ -112,5 +113,11 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
         return this.props.kernel.jupyterServerStatus === ServerStatus.NotStarted
             ? ImageName.JupyterServerDisconnected
             : ImageName.JupyterServerConnected;
+    }
+
+    private getStatus() {
+        return this.props.kernel.jupyterServerStatus === ServerStatus.NotStarted
+            ? getLocString('DataScience.disconnected', 'Disconnected')
+            : getLocString('DataScience.connected', 'Connected');
     }
 }

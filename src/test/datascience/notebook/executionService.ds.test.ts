@@ -7,7 +7,7 @@
 import { assert, expect } from 'chai';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
-import { commands } from 'vscode';
+import { CellDisplayOutput, commands } from 'vscode';
 import { CellErrorOutput } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
@@ -36,26 +36,23 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 
 // tslint:disable: no-any no-invalid-this
 suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
-    this.timeout(60_000);
+    this.timeout(120_000);
 
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     suiteSetup(async function () {
-        this.timeout(60_000);
+        this.timeout(120_000);
         api = await initialize();
         if (!(await canRunTests())) {
             return this.skip();
         }
         await trustAllNotebooks();
-        await startJupyter();
+        await startJupyter(false); // This should create a new notebook
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
-
-        // Open a notebook and use this for all tests in this test suite.
-        await editorProvider.createNew();
     });
     setup(deleteAllCellsAndWait);
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
@@ -216,6 +213,30 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error, 'Incorrect State');
         assert.include(cell.metadata.statusMessage!, 'NameError', 'Must contain error message');
         assert.include(cell.metadata.statusMessage!, 'abcd', 'Must contain error message');
+    });
+    test('Updating display data', async () => {
+        await insertPythonCellAndWait('from IPython.display import Markdown\n', 0);
+        await insertPythonCellAndWait('dh = display(display_id=True)\n', 1);
+        await insertPythonCellAndWait('dh.update(Markdown("foo"))\n', 2);
+        const displayCell = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
+        const updateCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
+
+        await executeActiveDocument();
+
+        // Wait till execution count changes and status is success.
+        await waitForCondition(
+            async () => assertHasExecutionCompletedSuccessfully(updateCell),
+            15_000,
+            'Cell did not get executed'
+        );
+
+        assert.lengthOf(displayCell.outputs, 1, 'Incorrect output');
+        const markdownOutput = displayCell.outputs[0] as CellDisplayOutput;
+        assert.equal(markdownOutput.outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output');
+        expect(displayCell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
+        expect(displayCell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
+        expect(displayCell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
+        expect(markdownOutput.data['text/markdown']).to.be.equal('foo', 'Display cell did not update');
     });
     test('Clearing output while executing will ensure output is cleared', async function () {
         // https://github.com/microsoft/vscode-python/issues/12302

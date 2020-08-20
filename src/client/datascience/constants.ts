@@ -541,6 +541,7 @@ export namespace CodeSnippets {
     export const ConfigPng = `%config InlineBackend.figure_formats = {'png'}`;
     export const UpdateCWDAndPath =
         'import os\nimport sys\n%cd "{0}"\nif os.getcwd() not in sys.path:\n    sys.path.insert(0, os.getcwd())';
+    export const disableJedi = '%config Completer.use_jedi = False';
 }
 
 export enum JupyterCommands {

@@ -12,12 +12,14 @@ const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { PYTHON_LANGUAGE } from '../../../common/constants';
+import { ReadWrite } from '../../../common/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
     DefaultKernelConnectionMetadata,
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
+    LiveKernelModel,
     PythonKernelConnectionMetadata
 } from './types';
 
@@ -158,20 +160,55 @@ export function areKernelConnectionsEqual(
     if (connection1?.kind !== connection2?.kind) {
         return false;
     }
-    if (connection1?.interpreter?.path !== connection2?.interpreter?.path) {
-        return false;
-    }
     if (connection1?.kind === 'connectToLiveKernel' && connection2?.kind === 'connectToLiveKernel') {
-        return fastDeepEqual(connection1.kernelModel, connection2.kernelModel);
+        return areKernelModelsEqual(connection1.kernelModel, connection2.kernelModel);
     } else if (
         connection1 &&
         connection1.kind !== 'connectToLiveKernel' &&
         connection2 &&
         connection2.kind !== 'connectToLiveKernel'
     ) {
-        return fastDeepEqual(connection1?.kernelSpec || {}, connection2?.kernelSpec || {});
+        const kernelSpecsAreTheSame = areKernelSpecsEqual(connection1?.kernelSpec, connection2?.kernelSpec);
+        // If both are launching interpreters, compare interpreter paths.
+        const interpretersAreSame =
+            connection1.kind === 'startUsingPythonInterpreter'
+                ? connection1.interpreter.path === connection2.interpreter?.path
+                : true;
+
+        return kernelSpecsAreTheSame && interpretersAreSame;
     }
     return false;
+}
+function areKernelSpecsEqual(kernelSpec1?: IJupyterKernelSpec, kernelSpec2?: IJupyterKernelSpec) {
+    if (kernelSpec1 && kernelSpec2) {
+        const spec1 = cloneDeep(kernelSpec1) as ReadWrite<IJupyterKernelSpec>;
+        spec1.env = spec1.env || {};
+        spec1.metadata = spec1.metadata || {};
+        const spec2 = cloneDeep(kernelSpec2) as ReadWrite<IJupyterKernelSpec>;
+        spec2.env = spec1.env || {};
+        spec2.metadata = spec1.metadata || {};
+
+        return fastDeepEqual(spec1, spec2);
+    } else if (!kernelSpec1 && !kernelSpec2) {
+        return true;
+    } else {
+        return false;
+    }
+}
+function areKernelModelsEqual(kernelModel1?: LiveKernelModel, kernelModel2?: LiveKernelModel) {
+    if (kernelModel1 && kernelModel2) {
+        const model1 = cloneDeep(kernelModel1) as ReadWrite<LiveKernelModel>;
+        model1.env = model1.env || {};
+        model1.metadata = model1.metadata || {};
+        const model2 = cloneDeep(kernelModel2) as ReadWrite<LiveKernelModel>;
+        model2.env = model1.env || {};
+        model2.metadata = model1.metadata || {};
+        return fastDeepEqual(model1, model2);
+    } else if (!kernelModel1 && !kernelModel2) {
+        return true;
+    } else {
+        return false;
+    }
 }
 // Check if a name is a default python kernel name and pull the version
 export function detectDefaultKernelName(name: string) {

@@ -509,7 +509,12 @@ suite('DataScience - KernelSelector', () => {
                 )
             ).thenResolve();
 
-            const kernel = await kernelSelector.getKernelForLocalConnection(anything(), 'raw', undefined, nbMetadata);
+            const kernel = await kernelSelector.getPreferredKernelForLocalConnection(
+                anything(),
+                'raw',
+                undefined,
+                nbMetadata
+            );
 
             assert.deepEqual((kernel as any).kernelSpec, kernelSpec);
             assert.deepEqual(kernel?.interpreter, interpreter);
@@ -528,7 +533,7 @@ suite('DataScience - KernelSelector', () => {
                 )
             ).thenResolve();
 
-            const kernel = await kernelSelector.getKernelForLocalConnection(
+            const kernel = await kernelSelector.getPreferredKernelForLocalConnection(
                 anything(),
                 'jupyter',
                 instance(sessionManager),
@@ -550,6 +555,7 @@ suite('DataScience - KernelSelector', () => {
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
             ).thenResolve(kernelSpec);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve();
+            when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
@@ -559,7 +565,7 @@ suite('DataScience - KernelSelector', () => {
                 )
             ).thenResolve();
 
-            const kernel = await kernelSelector.getKernelForLocalConnection(
+            const kernel = await kernelSelector.getPreferredKernelForLocalConnection(
                 undefined,
                 'jupyter',
                 instance(sessionManager),
@@ -567,7 +573,7 @@ suite('DataScience - KernelSelector', () => {
             );
 
             assert.deepEqual((kernel as any).kernelSpec, kernelSpec);
-            assert.isUndefined(kernel?.interpreter);
+            assert.isOk(kernel?.interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
@@ -602,7 +608,7 @@ suite('DataScience - KernelSelector', () => {
                 )
             ).thenResolve();
 
-            const kernel = await kernelSelector.getKernelForLocalConnection(
+            const kernel = await kernelSelector.getPreferredKernelForLocalConnection(
                 undefined,
                 'jupyter',
                 instance(sessionManager),
@@ -648,7 +654,7 @@ suite('DataScience - KernelSelector', () => {
                 )
             ).thenResolve();
 
-            const kernel = await kernelSelector.getKernelForLocalConnection(
+            const kernel = await kernelSelector.getPreferredKernelForLocalConnection(
                 undefined,
                 'jupyter',
                 instance(sessionManager),
@@ -696,7 +702,7 @@ suite('DataScience - KernelSelector', () => {
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
             ).thenResolve();
 
-            const kernel = await kernelSelector.getKernelForRemoteConnection(
+            const kernel = await kernelSelector.getPreferredKernelForRemoteConnection(
                 undefined,
                 instance(sessionManager),
                 undefined
@@ -752,10 +758,14 @@ suite('DataScience - KernelSelector', () => {
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
             ).thenResolve();
 
-            const kernel = await kernelSelector.getKernelForRemoteConnection(undefined, instance(sessionManager), {
-                orig_nbformat: 4,
-                kernelspec: { display_name: 'foo', name: 'foo' }
-            });
+            const kernel = await kernelSelector.getPreferredKernelForRemoteConnection(
+                undefined,
+                instance(sessionManager),
+                {
+                    orig_nbformat: 4,
+                    kernelspec: { display_name: 'foo', name: 'foo' }
+                }
+            );
 
             assert.ok((kernel as any).kernelSpec, 'No kernel spec found for remote');
             assert.equal(
@@ -811,10 +821,14 @@ suite('DataScience - KernelSelector', () => {
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
             ).thenResolve();
 
-            const kernel = await kernelSelector.getKernelForRemoteConnection(undefined, instance(sessionManager), {
-                orig_nbformat: 4,
-                kernelspec: { display_name: 'foo', name: 'foo' }
-            });
+            const kernel = await kernelSelector.getPreferredKernelForRemoteConnection(
+                undefined,
+                instance(sessionManager),
+                {
+                    orig_nbformat: 4,
+                    kernelspec: { display_name: 'foo', name: 'foo' }
+                }
+            );
 
             assert.ok((kernel as any).kernelSpec, 'No kernel spec found for remote');
             assert.equal(

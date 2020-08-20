@@ -4,29 +4,30 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import type { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
+import * as uuid from 'uuid/v4';
 import {
     CancellationToken,
     CancellationTokenSource,
     Event,
     EventEmitter,
     NotebookCell,
+    NotebookCellRunState,
     NotebookDocument,
     Uri
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
-import { ICommandManager } from '../../../common/application/types';
+import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
+import { CodeSnippets } from '../../constants';
 import { INotebookContentProvider } from '../../notebook/types';
 import { getDefaultNotebookContent, updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import {
-    ICell,
     IDataScienceErrorHandler,
     INotebook,
     INotebookEditorProvider,
@@ -35,6 +36,7 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
+import { isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 
@@ -78,14 +80,14 @@ export class Kernel implements IKernel {
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,
-        private readonly launchingFile: string | undefined,
         commandManager: ICommandManager,
         interpreterService: IInterpreterService,
         errorHandler: IDataScienceErrorHandler,
-        contentProvider: INotebookContentProvider,
+        private readonly contentProvider: INotebookContentProvider,
         editorProvider: INotebookEditorProvider,
         private readonly kernelProvider: IKernelProvider,
-        private readonly kernelSelectionUsage: IKernelSelectionUsage
+        private readonly kernelSelectionUsage: IKernelSelectionUsage,
+        appShell: IApplicationShell
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -94,23 +96,18 @@ export class Kernel implements IKernel {
             errorHandler,
             contentProvider,
             editorProvider,
-            kernelSelectionUsage
+            kernelSelectionUsage,
+            appShell
         );
     }
-    public executeObservable(
-        code: string,
-        file: string,
-        line: number,
-        id: string,
-        silent: boolean
-    ): Observable<ICell[]> {
-        if (!this.notebook) {
-            throw new Error('executeObservable cannot be called if kernel has not been started!');
-        }
-        this.notebook.clear(id);
-        return this.notebook.executeObservable(code, file, line, id, silent);
-    }
     public async executeCell(cell: NotebookCell): Promise<void> {
+        // Update cell to running state if cell has any code
+        if (cell.document.getText().trim().length > 0) {
+            cell.metadata.runState = NotebookCellRunState.Running;
+            this.contentProvider.notifyChangesToDocument(cell.notebook);
+        }
+
+        // Then actually start.
         await this.start({ disableUI: false, token: this.startCancellation.token });
         await this.kernelExecution.executeCell(cell);
     }
@@ -136,8 +133,6 @@ export class Kernel implements IKernel {
         } else {
             await this.validate(this.uri);
             const metadata = ((getDefaultNotebookContent().metadata || {}) as unknown) as nbformat.INotebookMetadata;
-            // tslint:disable-next-line: no-suspicious-comment
-            // TODO: Just pass the `this.metadata` into the func.
             updateNotebookMetadata(metadata, this.metadata);
 
             this._notebookPromise = this.notebookProvider.getOrCreateNotebook({
@@ -195,12 +190,6 @@ export class Kernel implements IKernel {
             }
         }
     }
-    public registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void {
-        if (!this.notebook) {
-            throw new Error('Notebook not defined');
-        }
-        this.notebook.registerIOPubListener(listener);
-    }
     private async validate(uri: Uri): Promise<void> {
         const kernel = this.kernelProvider.get(uri);
         if (!kernel) {
@@ -231,6 +220,7 @@ export class Kernel implements IKernel {
         if (!this.notebook) {
             return;
         }
+        this.disableJedi();
         if (!this.hookedNotebookForEvents.has(this.notebook)) {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
@@ -243,9 +233,15 @@ export class Kernel implements IKernel {
             });
             this.notebook.onSessionStatusChanged((e) => this._onStatusChanged.fire(e), this, this.disposables);
         }
-        if (this.launchingFile) {
-            await this.notebook.setLaunchingFile(this.launchingFile);
+        if (isPythonKernelConnection(this.metadata)) {
+            await this.notebook.setLaunchingFile(this.uri.fsPath);
         }
         await this.notebook.waitForIdle(this.launchTimeout);
+    }
+
+    private disableJedi() {
+        if (isPythonKernelConnection(this.metadata) && this.notebook) {
+            this.notebook.executeObservable(CodeSnippets.disableJedi, this.uri.fsPath, 0, uuid(), true);
+        }
     }
 }

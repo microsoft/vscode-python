@@ -118,7 +118,7 @@ import {
 import { ProductService } from '../../client/common/installer/productService';
 import { IInstallationChannelManager, IProductPathService, IProductService } from '../../client/common/installer/types';
 import { InterpreterPathService } from '../../client/common/interpreterPathService';
-import { traceInfo } from '../../client/common/logger';
+import { traceError, traceInfo } from '../../client/common/logger';
 import { BrowserService } from '../../client/common/net/browser';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
@@ -1530,6 +1530,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private async hasFunctionalDependencies(interpreter: PythonEnvironment): Promise<boolean | undefined> {
         try {
+            traceInfo(`Checking ${interpreter.path} for functional dependencies ...`);
             const dependencyChecker = this.serviceManager.get<JupyterInterpreterDependencyService>(
                 JupyterInterpreterDependencyService
             );
@@ -1542,9 +1543,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                         interpreter,
                         allowEnvironmentFetchExceptions: true
                     });
-                return pythonProcess.isModuleInstalled('livelossplot'); // Should we check all dependencies?
+                const result = pythonProcess.isModuleInstalled('livelossplot'); // Should we check all dependencies?
+                traceInfo(`${interpreter.path} has jupyter with livelossplot indicating : ${result}`);
+                return result;
+            } else {
+                traceInfo(`${JSON.stringify(interpreter)} is missing jupyter.`);
             }
         } catch (ex) {
+            traceError(`Exception attempting dependency list for ${interpreter.path}: `, ex);
             return false;
         }
     }

@@ -75,7 +75,7 @@ stages:
     jobs:
       - job: 'Py3x_Windows'
         dependsOn: []
-        timeoutInMinutes: 120
+        timeoutInMinutes: 180
         strategy:
           matrix:
             'Functional':
@@ -83,6 +83,7 @@ stages:
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
               VSCODE_PYTHON_ROLLING: true
+              SplitFunctionalTests: true
         pool:
           vmImage: 'vs2017-win2016'
         steps:

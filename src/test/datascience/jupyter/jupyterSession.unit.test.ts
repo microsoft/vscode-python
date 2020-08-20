@@ -70,8 +70,10 @@ suite('DataScience - JupyterSession', () => {
         when(session.kernel).thenReturn(instance(kernel));
         statusChangedSignal = mock(Signal);
         kernelChangedSignal = mock(Signal);
+        const ioPubSignal = mock(Signal);
         when(session.statusChanged).thenReturn(instance(statusChangedSignal));
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
+        when(session.iopubMessage).thenReturn(instance(ioPubSignal));
         when(session.kernel).thenReturn(instance(kernel));
         when(kernel.status).thenReturn('idle');
         when(connection.rootDirectory).thenReturn('');
@@ -205,6 +207,10 @@ suite('DataScience - JupyterSession', () => {
                         connect: noop,
                         disconnect: noop
                     },
+                    iopubMessage: {
+                        connect: noop,
+                        disconnect: noop
+                    },
                     kernel: {
                         status: 'idle',
                         restart: () => (restartCount = restartCount + 1),
@@ -257,7 +263,7 @@ suite('DataScience - JupyterSession', () => {
                     assert.isTrue(newActiveRemoteKernel.session.isRemoteSession);
                 });
                 test('Will not create a new session', async () => {
-                    verify(sessionManager.startNew(anything())).twice();
+                    verify(sessionManager.startNew(anything())).once();
                 });
                 test('Restart should restart the new remote kernel', async () => {
                     when(remoteKernel.restart()).thenResolve();
@@ -282,10 +288,12 @@ suite('DataScience - JupyterSession', () => {
                 newKernelConnection = mock(DefaultKernel);
                 newStatusChangedSignal = mock(Signal);
                 newKernelChangedSignal = mock(Signal);
+                const newIoPubSignal = mock(Signal);
                 restartSessionCreatedEvent = createDeferred();
                 restartSessionUsedEvent = createDeferred();
                 when(newSession.statusChanged).thenReturn(instance(newStatusChangedSignal));
                 when(newSession.kernelChanged).thenReturn(instance(newKernelChangedSignal));
+                when(newSession.iopubMessage).thenReturn(instance(newIoPubSignal));
                 // tslint:disable-next-line: no-any
                 (instance(newSession) as any).then = undefined;
                 newSessionCreated = createDeferred();
@@ -320,7 +328,7 @@ suite('DataScience - JupyterSession', () => {
                 // Wait untill a new session has been started.
                 await newSessionCreated.promise;
                 // One original, one new session.
-                verify(sessionManager.startNew(anything())).thrice();
+                verify(sessionManager.startNew(anything())).twice();
             });
             suite('Executing user code', async () => {
                 setup(executeUserCode);

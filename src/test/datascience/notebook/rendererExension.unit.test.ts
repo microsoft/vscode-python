@@ -27,12 +27,14 @@ suite('DataScience - NativeNotebook Renderer Extension', () => {
         isDirty: false,
         languages: [],
         metadata: {},
+        isUntitled: false,
         viewType: JupyterNotebookView
     };
     const nonJupyterNotebook: NotebookDocument = {
         cells: [],
         uri: Uri.file('one.xyz'),
         fileName: '',
+        isUntitled: false,
         isDirty: false,
         languages: [],
         metadata: {},

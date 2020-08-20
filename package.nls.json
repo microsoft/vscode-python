@@ -179,6 +179,8 @@
     "DataScience.connectingToJupyter": "Connecting to Jupyter server",
     "DataScience.connectingToIPyKernel": "Connecting to IPython kernel",
     "DataScience.connectedToIPyKernel": "Connected.",
+    "DataScience.connected": "Connected",
+    "DataScience.disconnected": "Disconnected",
     "Experiments.inGroup": "User belongs to experiment group '{0}'",
     "Interpreters.RefreshingInterpreters": "Refreshing Python Interpreters",
     "Interpreters.entireWorkspace": "Entire workspace",

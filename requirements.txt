@@ -7,7 +7,7 @@
 future==0.18.2 \
     --hash=sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d \
     # via python-jsonrpc-server
-isort==5.3.2 \
+isort==5.3.2 ; python_version >= "3.6" \
     --hash=sha256:5196bd2f5b23dc91215734b1c96c6d28390061d69860a948094c12635d6d64e6 \
     --hash=sha256:ba83762132a8661d3525f87a86549712fb7d8da79eeb452e01f327ada9e87920 \
     # via -r requirements.in

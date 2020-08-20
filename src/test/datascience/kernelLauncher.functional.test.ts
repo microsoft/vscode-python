@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { assert } from 'chai';
+import { assert, use } from 'chai';
 
 import { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
@@ -20,6 +20,10 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockKernelFinder } from './mockKernelFinder';
 import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
+
+// Chai as promised is not part of this file
+import * as chaiAsPromised from 'chai-as-promised';
+use(chaiAsPromised);
 
 suite('DataScience - Kernel Launcher', () => {
     let ioc: DataScienceIocContainer;
