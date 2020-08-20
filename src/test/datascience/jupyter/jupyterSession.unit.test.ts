@@ -70,8 +70,10 @@ suite('DataScience - JupyterSession', () => {
         when(session.kernel).thenReturn(instance(kernel));
         statusChangedSignal = mock(Signal);
         kernelChangedSignal = mock(Signal);
+        const ioPubSignal = mock(Signal);
         when(session.statusChanged).thenReturn(instance(statusChangedSignal));
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
+        when(session.iopubMessage).thenReturn(instance(ioPubSignal));
         when(session.kernel).thenReturn(instance(kernel));
         when(kernel.status).thenReturn('idle');
         when(connection.rootDirectory).thenReturn('');
@@ -205,6 +207,10 @@ suite('DataScience - JupyterSession', () => {
                         connect: noop,
                         disconnect: noop
                     },
+                    iopubMessage: {
+                        connect: noop,
+                        disconnect: noop
+                    },
                     kernel: {
                         status: 'idle',
                         restart: () => (restartCount = restartCount + 1),
@@ -282,10 +288,12 @@ suite('DataScience - JupyterSession', () => {
                 newKernelConnection = mock(DefaultKernel);
                 newStatusChangedSignal = mock(Signal);
                 newKernelChangedSignal = mock(Signal);
+                const newIoPubSignal = mock(Signal);
                 restartSessionCreatedEvent = createDeferred();
                 restartSessionUsedEvent = createDeferred();
                 when(newSession.statusChanged).thenReturn(instance(newStatusChangedSignal));
                 when(newSession.kernelChanged).thenReturn(instance(newKernelChangedSignal));
+                when(newSession.iopubMessage).thenReturn(instance(newIoPubSignal));
                 // tslint:disable-next-line: no-any
                 (instance(newSession) as any).then = undefined;
                 newSessionCreated = createDeferred();

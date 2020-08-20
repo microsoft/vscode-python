@@ -253,8 +253,6 @@ suite('DataScience - NativeNotebook helpers', () => {
 
         ['display_data', 'execute_result'].forEach((output_type) => {
             suite(`Rich output for output_type = ${output_type}`, () => {
-                // If `output_type` === `exeucte_result` then we must have an execution_count.
-                const additionalMetadata = output_type === 'execute_result' ? { execution_count: undefined } : {};
                 test('Text mimeType output', async () => {
                     validateCellOutputTranslation(
                         [
@@ -274,7 +272,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                                 metadata: {
                                     custom: {
                                         vscode: {
-                                            ...additionalMetadata,
                                             outputType: output_type
                                         }
                                     }
@@ -305,7 +302,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                                 metadata: {
                                     custom: {
                                         vscode: {
-                                            ...additionalMetadata,
                                             outputType: output_type
                                         }
                                     }
@@ -337,7 +333,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     custom: {
                                         needs_background: 'light',
                                         vscode: {
-                                            ...additionalMetadata,
                                             outputType: output_type
                                         }
                                     }
@@ -369,7 +364,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     custom: {
                                         needs_background: 'dark',
                                         vscode: {
-                                            ...additionalMetadata,
                                             outputType: output_type
                                         }
                                     }
@@ -401,7 +395,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     custom: {
                                         'image/png': { height: '111px', width: '999px' },
                                         vscode: {
-                                            ...additionalMetadata,
                                             outputType: output_type
                                         }
                                     }
@@ -435,7 +428,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                                         unconfined: true,
                                         'image/png': { width: '999px' },
                                         vscode: {
-                                            ...additionalMetadata,
                                             outputType: output_type
                                         }
                                     }
