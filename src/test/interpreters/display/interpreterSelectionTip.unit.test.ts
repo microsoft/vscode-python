@@ -71,4 +71,16 @@ suite('Interpreters - Interpreter Selection Tip', () => {
         verify(appShell.showInformationMessage(anything(), Common.bannerLabelYes(), Common.bannerLabelNo())).once();
         verify(storage.updateValue(true)).once();
     });
+    test('Open survey link if in survey experiment and "Yes" is selected', async () => {
+        when(experimentService.inExperiment(SurveyAndInterpreterTipNotification.tipExperiment)).thenResolve(false);
+        when(experimentService.inExperiment(SurveyAndInterpreterTipNotification.surveyExperiment)).thenResolve(true);
+        when(appShell.showInformationMessage(anything(), Common.bannerLabelYes(), Common.bannerLabelNo())).thenResolve(
+            // tslint:disable-next-line: no-any
+            Common.bannerLabelYes() as any
+        );
+
+        await selectionTip.activate();
+
+        verify(browserService.launch(anything())).once();
+    });
 });
