@@ -65,10 +65,20 @@ export type PythonEnvBaseInfo = {
 };
 
 /**
+ * The possible Python release levels.
+ */
+export enum PythonReleaseLevel {
+    Alpha = 'alpha',
+    Beta = 'beta',
+    Candidate = 'candidate',
+    Final = 'final'
+}
+
+/**
  * Release information for a Python version.
  */
 export type PythonVersionRelease = {
-    level: 'alpha' | 'beta' | 'candidate' | 'final';
+    level: PythonReleaseLevel;
     serial: number;
 };
 
