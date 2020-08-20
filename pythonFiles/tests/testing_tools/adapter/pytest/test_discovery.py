@@ -8,7 +8,7 @@ try:
 except ImportError:  # 2.7
     from StringIO import StringIO
 from os import name as OS_NAME
-from os import path, remove, rmdir
+from os import path, remove, rmdir, write
 import sys
 import tempfile
 import unittest
@@ -253,6 +253,18 @@ class DiscoverTests(unittest.TestCase):
     DEFAULT_ARGS = [
         "--collect-only",
     ]
+    pytest_stdout = "spamspamspamspamspamspamspammityspam"
+
+    @staticmethod
+    def fake_pytest_main(stub, use_fd):
+        def ret(args, plugins):
+            stub.add_call("pytest.main", None, {"args": args, "plugins": plugins})
+            if use_fd:
+                write(sys.__stdout__.fileno(), DiscoverTests.pytest_stdout.encode())
+            else:
+                print(DiscoverTests.pytest_stdout, end="")
+            return 0
+        return ret
 
     def test_basic(self):
         stub = Stub()
@@ -316,13 +328,7 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(stub.calls, calls)
 
     def test_stdio_hidden(self):
-        pytest_stdout = "spamspamspamspamspamspamspammityspam"
         stub = Stub()
-
-        def fake_pytest_main(args, plugins):
-            stub.add_call("pytest.main", None, {"args": args, "plugins": plugins})
-            print(pytest_stdout, end="")
-            return 0
 
         plugin = StubPlugin(stub)
         plugin.discovered = []
@@ -345,7 +351,10 @@ class DiscoverTests(unittest.TestCase):
             sys.stdout = mock
             try:
                 discover(
-                    [], hidestdio=True, _pytest_main=fake_pytest_main, _plugin=plugin,
+                    [],
+                    hidestdio=True,
+                    _pytest_main=self.fake_pytest_main(stub, False),
+                    _plugin=plugin,
                 )
             finally:
                 sys.stdout = sys.__stdout__
@@ -358,14 +367,17 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(captured, "")
         self.assertEqual(stub.calls, calls)
 
-    def test_stdio_not_hidden(self):
-        pytest_stdout = "spamspamspamspamspamspamspammityspam"
-        stub = Stub()
+        # simulate cases where stdout comes from the lower layer than sys.stdout
+        # via file descriptors (e.g., from cython)
+        stub.calls.clear()
+        discover(
+            [], hidestdio=True, _pytest_main=self.fake_pytest_main(stub, True), _plugin=plugin,
+        )
+        self.assertEqual(captured, "")
+        self.assertEqual(stub.calls, calls)
 
-        def fake_pytest_main(args, plugins):
-            stub.add_call("pytest.main", None, {"args": args, "plugins": plugins})
-            print(pytest_stdout, end="")
-            return 0
+    def test_stdio_not_hidden(self):
+        stub = Stub()
 
         plugin = StubPlugin(stub)
         plugin.discovered = []
@@ -384,12 +396,19 @@ class DiscoverTests(unittest.TestCase):
 
         sys.stdout = buf
         try:
-            discover([], hidestdio=False, _pytest_main=fake_pytest_main, _plugin=plugin)
+            discover([], hidestdio=False, _pytest_main=self.fake_pytest_main(stub, False), _plugin=plugin)
         finally:
             sys.stdout = sys.__stdout__
         captured = buf.getvalue()
 
-        self.assertEqual(captured, pytest_stdout)
+        self.assertEqual(captured, DiscoverTests.pytest_stdout)
+        self.assertEqual(stub.calls, calls)
+
+        # simulate cases where stdout comes from the lower layer than sys.stdout
+        # via file descriptors (e.g., from cython)
+        stub.calls.clear()
+        discover([], hidestdio=False, _pytest_main=self.fake_pytest_main(stub, True), _plugin=plugin)
+        self.assertEqual(captured, DiscoverTests.pytest_stdout)
         self.assertEqual(stub.calls, calls)
 
 
