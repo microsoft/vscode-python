@@ -220,7 +220,10 @@ def _temp_io():
     finally:
         with open(path, "r") as f:
             sio.set_value(f.read())
-        os.remove(path)
+        try:
+            os.remove(path)
+        except OSError:
+            pass
         os.rmdir(td)
 
 
