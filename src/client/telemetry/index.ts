@@ -1370,7 +1370,7 @@ export interface IEventNamePropertyMapping {
          * User response to the prompt.
          * @type {string}
          */
-        useraction: string;
+        userAction: string;
     };
     /**
      * Telemetry captured for enabling reload.
