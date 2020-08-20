@@ -257,7 +257,7 @@ suite('DataScience - JupyterSession', () => {
                     assert.isTrue(newActiveRemoteKernel.session.isRemoteSession);
                 });
                 test('Will not create a new session', async () => {
-                    verify(sessionManager.startNew(anything())).twice();
+                    verify(sessionManager.startNew(anything())).once();
                 });
                 test('Restart should restart the new remote kernel', async () => {
                     when(remoteKernel.restart()).thenResolve();
@@ -320,7 +320,7 @@ suite('DataScience - JupyterSession', () => {
                 // Wait untill a new session has been started.
                 await newSessionCreated.promise;
                 // One original, one new session.
-                verify(sessionManager.startNew(anything())).thrice();
+                verify(sessionManager.startNew(anything())).twice();
             });
             suite('Executing user code', async () => {
                 setup(executeUserCode);
