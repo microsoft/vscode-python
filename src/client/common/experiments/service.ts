@@ -104,6 +104,16 @@ export class ExperimentService implements IExperimentService {
         return this.experimentationService.isCachedFlightEnabled(experiment);
     }
 
+    public async getExperimentValue<T extends boolean | number | string>(
+        experimentName: string
+    ): Promise<T | undefined> {
+        if (!this.experimentationService) {
+            return;
+        }
+
+        return this.experimentationService.getTreatmentVariableAsync('vscode', experimentName);
+    }
+
     private logExperiments() {
         const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
 
