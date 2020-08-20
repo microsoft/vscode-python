@@ -2,9 +2,9 @@ name: Insiders Build
 
 on:
   push:
-    # branches:
-    #   - master
-    #   - main
+    branches:
+      - master
+      - main
 
 env:
   PYTHON_VERSION: 3.8
