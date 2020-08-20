@@ -1,10 +1,10 @@
-name: CI
+name: Insiders Build
 
 on:
   push:
-    branches:
-      # Run the CI workflow only on master for microsoft/vscode-python for now.
-      - master
+    # branches:
+    #   - master
+    #   - main
 
 env:
   PYTHON_VERSION: 3.8
@@ -15,95 +15,65 @@ env:
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
+  VSIX_NAME: ms-python-insiders.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
-  LKG_TAG: ci-lkg
 
 jobs:
-  ### Initialization: retrieve, install and cache dependencies
-  python-deps:
-    name: Install Python Requirements
+  build-vsix:
+    name: Build VSIX
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Show all env vars
-        run: |
-          printenv
-        shell: bash
-
-      - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{env.PYTHON_VERSION}}
-
-      - name: Upgrade pip
-        run: python -m pip install -U pip
-
-      - name: Install Python requirements
-        run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-
-      - name: Install debugpy with wheels
-        run: |
-          python -m pip install wheel
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_debugpy.py
-
-      # Retrieve the list of debugpy versions from PyPI in order to increase the specificity of the pip cache key,
-      # so that the cache gets invalidated as necessary.
-      # See https://github.com/microsoft/vscode-python/pull/9843#discussion_r373635221
-      - name: curl PyPI to get debugpy versions
-        run: curl --output debugpy.json https://pypi.org/pypi/debugpy/json
 
       - name: Cache pip files
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('debugpy.json')}}
-
-      - name: Cache ./pythonFiles/lib/python
-        uses: actions/cache@v1
-        with:
-          path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('debugpy.json')}}
-
-  js-ts-deps:
-    name: Install npm dependencies
-    runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}
 
       - name: Cache npm files
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
-  ### Hygiene + VSIX upload
-  compile-hygiene:
-    name: Compile, lint, check for errors
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      - name: Clean directory
+        run: npm run clean
+
+      # Use the GITHUB_RUN_ID environment variable to update the build number.
+      # GITHUB_RUN_ID is a unique number for each run within a repository.
+      # This number does not change if you re-run the workflow run.
+      - name: Update build number
+        run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
+
+      - name: Package the VSIX
+        run: npm run package
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{env.ARTIFACT_NAME_VSIX}}
+          path: ${{env.VSIX_NAME}}
+
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
-    needs: [js-ts-deps, python-deps]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Show all env vars
-        run: |
-          printenv
-        shell: bash
+      - name: Cache pip files
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}
 
-      - name: Retrieve cached npm files
-        uses: actions/cache@v1
+      - name: Cache npm files
+        uses: actions/cache@v2
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
@@ -115,7 +85,7 @@ jobs:
         run: npx gulp prePublishNonBundle
 
       - name: Cache the out/ directory
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
@@ -143,57 +113,11 @@ jobs:
           python -m black . --check
         working-directory: pythonFiles
 
-  build-vsix:
-    name: Build VSIX
-    runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
-    needs: [python-deps, js-ts-deps]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Retrieve cached npm files
-        uses: actions/cache@v1
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
-
-      - name: curl PyPI to get debugpy versions
-        run: curl --output debugpy.json https://pypi.org/pypi/debugpy/json
-
-      - name: Retrieve cached pythonFiles/ directory
-        uses: actions/cache@v1
-        with:
-          path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('debugpy.json')}}
-
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
-
-      - name: Clean directory
-        run: npm run clean
-
-      # Use the GITHUB_RUN_ID environment variable to update the build number.
-      # GITHUB_RUN_ID is a unique number for each run within a repository.
-      # This number does not change if you re-run the workflow run.
-      - name: Update build number
-        run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
-
-      - name: Package the VSIX
-        run: npm run package
-
-      - uses: actions/upload-artifact@v1
-        with:
-          name: ${{env.ARTIFACT_NAME_VSIX}}
-          path: ms-python-insiders.vsix
-
   ### Non-smoke tests
   tests:
     name: Tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-python'
-    needs: [python-deps, js-ts-deps]
     strategy:
       fail-fast: false
       matrix:
@@ -202,7 +126,16 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
         python: [2.7, 3.8]
-        test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
+        test-suite:
+          [
+            ts-unit,
+            python-unit,
+            venv,
+            single-workspace,
+            multi-workspace,
+            debugger,
+            functional,
+          ]
     env:
       # Something in Node 12.16.0 breaks the TS debug adapter, and ubuntu-latest bundles Node 12.16.1.
       # We can remove this when we switch over to the python-based DA in https://github.com/microsoft/vscode-python/issues/7136.
@@ -213,27 +146,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Show all env vars
-        run: |
-          printenv
-        shell: bash
+      - name: Cache pip files
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}
 
-      - name: Retrieve cached npm files
-        uses: actions/cache@v1
+      - name: Cache npm files
+        uses: actions/cache@v2
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
-      - name: Install dependencies (npm ci)
-        run: npm ci
-
-      - name: Retrieve cached compile output directory
+      - name: Cache compiled TS files
         # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
         id: out-cache
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+
+      - name: Install dependencies (npm ci)
+        run: npm ci
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
@@ -249,11 +183,6 @@ jobs:
         with:
           node-version: ${{env.NODE_VERSION}}
 
-      - name: curl PyPI to get debugpy versions
-        run: curl --output debugpy.json https://pypi.org/pypi/debugpy/json
-
-        # We're intentionally not retrieving cached Python requirements installation, as it appears that pulling the cache pulls in some extra libraries as well,
-        # which causes problems with the tests. Also, running the installation seems much faster than retrieving it from cache.
       - name: Install Python requirements
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
@@ -292,7 +221,7 @@ jobs:
       - name: Prepare pipenv for venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          PYTHON_VIRTUAL_ENVS_LOCATION: "./src/tmp/envPaths.json"
         shell: pwsh
         if: matrix.test-suite == 'venv'
         run: |
@@ -302,7 +231,7 @@ jobs:
       - name: Prepare virtualenv for venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          PYTHON_VIRTUAL_ENVS_LOCATION: "./src/tmp/envPaths.json"
         shell: pwsh
         if: matrix.test-suite == 'venv'
         run: |
@@ -317,7 +246,7 @@ jobs:
       - name: Prepare venv for venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          PYTHON_VIRTUAL_ENVS_LOCATION: "./src/tmp/envPaths.json"
         shell: pwsh
         if: matrix.test-suite == 'venv' && startsWith(matrix.python, 3.)
         run: |
@@ -331,7 +260,7 @@ jobs:
       - name: Prepare conda for venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          PYTHON_VIRTUAL_ENVS_LOCATION: "./src/tmp/envPaths.json"
         shell: pwsh
         if: matrix.test-suite == 'venv'
         run: |
@@ -421,7 +350,6 @@ jobs:
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
     needs: [build-vsix]
-    if: github.repository == 'microsoft/vscode-python'
     strategy:
       fail-fast: false
       matrix:
@@ -433,21 +361,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Show all env vars
-        run: |
-          printenv
-        shell: bash
+      - name: Cache pip files
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}
+
+      - name: Cache npm files
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
-
-      - name: Retrieve cached npm files
-        uses: actions/cache@v1
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -469,17 +398,13 @@ jobs:
           python -m pip install --upgrade jupyter
 
       - name: Download VSIX
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2
         with:
           name: ${{env.ARTIFACT_NAME_VSIX}}
 
-      # Extract the artifact from its download folder (./${{env.ARTIFACT_NAME_VSIX}}) to the repo root,
-      # then delete the download folder and compile the source code.
+      # XXX: If we're going to recompile everything then why bother with the VSIX download?
       - name: Prepare for smoke tests
-        run: |
-          mv ${{env.ARTIFACT_NAME_VSIX}}/* .
-          rm -r ${{env.ARTIFACT_NAME_VSIX}}
-          npx tsc -p ./
+        run: npx tsc -p ./
         shell: bash
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
@@ -504,8 +429,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Retrieve cached npm files
-        uses: actions/cache@v1
+      - name: Cache npm files
+        uses: actions/cache@v2
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
@@ -537,28 +462,29 @@ jobs:
           CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
           file: ./coverage/cobertura-coverage.xml
 
-  lkg-tag:
-    # LKG = last known good
-    name: Tag successful build as CI LKG
+  upload:
+    name: Upload VSIX to Azure Blob Storage
     runs-on: ubuntu-latest
-    needs: [tests, smoke-tests]
     if: github.repository == 'microsoft/vscode-python'
-    steps:
-      - name: Delete existing tag
-        run: |
-          curl -s -X DELETE https://api.github.com/repos/microsoft/vscode-python/git/refs/tags/${{env.LKG_TAG}} \
-          -H "Authorization: token ${{secrets.GITHUB_TOKEN}}"
+    needs: [tests, smoke-tests]
+    env:
+      BLOB_CONTAINER_NAME: extension-builds
+      BLOB_NAME: ms-python-gha-insiders.vsix # So named to avoid clobbering Azure Pipelines upload.
 
-      # We only need to create a tag reference for lightweight tags.
-      # See https://developer.github.com/v3/git/tags/#create-a-tag-object
-      # And https://developer.github.com/v3/git/refs/#create-a-reference
-      - name: Create a tag reference
-        run: |
-          curl -s -X POST "https://api.github.com/repos/microsoft/vscode-python/git/refs" \
-          -H "Authorization: token ${{secrets.GITHUB_TOKEN}}"  \
-          -d @- << EOF
-          {
-            "ref": "refs/tags/${{env.LKG_TAG}}",
-            "sha": "${{github.sha}}"
-          }
-          EOF
+    steps:
+      - name: Download VSIX
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.ARTIFACT_NAME_VSIX }}
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Upload to Blob Storage
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az storage blob upload --file ${{ env.VSIX_NAME }} --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }}
+            az storage blob url --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }}
