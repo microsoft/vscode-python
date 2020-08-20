@@ -49,7 +49,7 @@ suite('Propose Pylance Banner', () => {
     let appEnv: typemoq.IMock<IApplicationEnvironment>;
     let settings: typemoq.IMock<IPythonSettings>;
     let sendTelemetryStub: sinon.SinonStub;
-    let telemetryEvent: { eventName: EventName } | undefined;
+    let telemetryEvent: { eventName: EventName; properties: { response: string } } | undefined;
 
     const message = Pylance.proposePylanceMessage();
     const yes = Pylance.tryItNow();
@@ -64,17 +64,20 @@ suite('Propose Pylance Banner', () => {
         appEnv = typemoq.Mock.ofType<IApplicationEnvironment>();
         appEnv.setup((x) => x.uriScheme).returns(() => 'scheme');
 
-        const mockSendTelemetryEvent = (eventName: EventName) => {
-            telemetryEvent = {
-                eventName
-            };
-        };
-        sendTelemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
+        sendTelemetryStub = sinon
+            .stub(Telemetry, 'sendTelemetryEvent')
+            .callsFake((eventName: EventName, _, properties: { response: string }) => {
+                telemetryEvent = {
+                    eventName,
+                    properties
+                };
+            });
     });
 
     teardown(() => {
         telemetryEvent = undefined;
         sinon.restore();
+        Telemetry._resetSharedProperties();
     });
 
     testData.forEach((t) => {
@@ -131,7 +134,10 @@ suite('Propose Pylance Banner', () => {
         appShell.verifyAll();
 
         sinon.assert.calledOnce(sendTelemetryStub);
-        assert.deepEqual(telemetryEvent, { eventName: EventName.PYLANCE_LANGUAGE_SERVER_SWITCH_NO });
+        assert.deepEqual(telemetryEvent, {
+            eventName: EventName.PYTHON_LANGUAGE_SERVER_TRY_PYLANCE,
+            properties: { response: 'no' }
+        });
     });
     test('Clicking Later should disable banner in session', async () => {
         appShell
@@ -157,7 +163,12 @@ suite('Propose Pylance Banner', () => {
         appShell.verifyAll();
 
         sinon.assert.calledOnce(sendTelemetryStub);
-        assert.deepEqual(telemetryEvent, { eventName: EventName.PYLANCE_LANGUAGE_SERVER_SWITCH_LATER });
+        assert.deepEqual(telemetryEvent, {
+            eventName: EventName.PYTHON_LANGUAGE_SERVER_TRY_PYLANCE,
+            properties: {
+                response: 'later'
+            }
+        });
     });
     test('Clicking Yes opens the extension marketplace entry', async () => {
         appShell
@@ -180,7 +191,12 @@ suite('Propose Pylance Banner', () => {
         appShell.verifyAll();
 
         sinon.assert.calledOnce(sendTelemetryStub);
-        assert.deepEqual(telemetryEvent, { eventName: EventName.PYLANCE_LANGUAGE_SERVER_SWITCH_YES });
+        assert.deepEqual(telemetryEvent, {
+            eventName: EventName.PYTHON_LANGUAGE_SERVER_TRY_PYLANCE,
+            properties: {
+                response: 'yes'
+            }
+        });
     });
 });
 
