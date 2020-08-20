@@ -2,11 +2,6 @@
 # Licensed under the MIT License.
 
 import contextlib
-
-try:
-    from io import StringIO
-except ImportError:
-    from StringIO import StringIO  # 2.7
 import os
 import os.path
 import sys
@@ -178,13 +173,7 @@ def _replace_fd(file, target):
     Temporarily replace the file descriptor for `file`,
     for which sys.stdout or sys.stderr is passed.
     """
-    # sys.stdout may have been altered to something (e.g., StringIO)
-    # which does not have fileno(), in which case we do nothing.
-    try:
-        get_fileno = file.fileno
-    except AttributeError:
-        return
-    fd = get_fileno()
+    fd = file.fileno()
     target_fd = target.fileno()
 
     # `os.dup2()` closes the original FD, so we make copies.
@@ -244,17 +233,6 @@ def hide_stdio():
                 with _replace_fd(sys.stderr, fileobj):
                     with _replace_stdx("stderr", fileobj):
                         yield sio
-
-
-if sys.version_info < (3,):
-
-    class StdioStream(StringIO):
-        def write(self, msg):
-            StringIO.write(self, msg.decode())
-
-
-else:
-    StdioStream = StringIO
 
 
 #############################
