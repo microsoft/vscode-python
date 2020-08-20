@@ -264,6 +264,7 @@ class DiscoverTests(unittest.TestCase):
             else:
                 print(DiscoverTests.pytest_stdout, end="")
             return 0
+
         return ret
 
     def test_basic(self):
@@ -371,7 +372,10 @@ class DiscoverTests(unittest.TestCase):
         # via file descriptors (e.g., from cython)
         stub.calls.clear()
         discover(
-            [], hidestdio=True, _pytest_main=self.fake_pytest_main(stub, True), _plugin=plugin,
+            [],
+            hidestdio=True,
+            _pytest_main=self.fake_pytest_main(stub, True),
+            _plugin=plugin,
         )
         self.assertEqual(captured, "")
         self.assertEqual(stub.calls, calls)
@@ -396,7 +400,12 @@ class DiscoverTests(unittest.TestCase):
 
         sys.stdout = buf
         try:
-            discover([], hidestdio=False, _pytest_main=self.fake_pytest_main(stub, False), _plugin=plugin)
+            discover(
+                [],
+                hidestdio=False,
+                _pytest_main=self.fake_pytest_main(stub, False),
+                _plugin=plugin,
+            )
         finally:
             sys.stdout = sys.__stdout__
         captured = buf.getvalue()
@@ -407,7 +416,12 @@ class DiscoverTests(unittest.TestCase):
         # simulate cases where stdout comes from the lower layer than sys.stdout
         # via file descriptors (e.g., from cython)
         stub.calls.clear()
-        discover([], hidestdio=False, _pytest_main=self.fake_pytest_main(stub, True), _plugin=plugin)
+        discover(
+            [],
+            hidestdio=False,
+            _pytest_main=self.fake_pytest_main(stub, True),
+            _plugin=plugin,
+        )
         self.assertEqual(captured, DiscoverTests.pytest_stdout)
         self.assertEqual(stub.calls, calls)
 
