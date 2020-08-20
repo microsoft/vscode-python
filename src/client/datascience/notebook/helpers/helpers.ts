@@ -62,7 +62,9 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
         const content = notebookContent || {};
         const metadata = content.metadata || { orig_nbformat: 3, language_info: {} };
         const language_info = { ...metadata.language_info, name: document.languages[0] };
-        notebookContent = { ...content, metadata: { ...metadata, language_info } };
+        // Fix nyc compiler not working.
+        // tslint:disable-next-line: no-any
+        notebookContent = { ...content, metadata: { ...metadata, language_info } } as any;
     }
     return notebookContent?.metadata;
 }
