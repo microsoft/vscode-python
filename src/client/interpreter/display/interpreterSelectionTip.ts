@@ -10,6 +10,8 @@ import { SurveyAndInterpreterTipNotification } from '../../common/experiments/gr
 import { IBrowserService, IExperimentService, IPersistentState, IPersistentStateFactory } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { Common } from '../../common/utils/localize';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 
 export enum NotificationType {
     Tip,
@@ -64,6 +66,7 @@ export class InterpreterSelectionTip implements IExtensionSingleActivationServic
             );
 
             if (selection === Common.bannerLabelYes()) {
+                sendTelemetryEvent(EventName.ACTIVATION_SURVEY_PROMPT, undefined);
                 this.browserService.launch('https://aka.ms/mailingListSurvey');
             }
         }
