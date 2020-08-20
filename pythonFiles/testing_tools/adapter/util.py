@@ -173,7 +173,12 @@ def _replace_fd(file, target):
     Temporarily replace the file descriptor for `file`,
     for which sys.stdout or sys.stderr is passed.
     """
-    fd = file.fileno()
+    try:
+        fd = file.fileno()
+    except AttributeError:
+        # `file` does not have fileno() so it's been replaced from the
+        # default sys.stdout, etc. Return with noop.
+        return
     target_fd = target.fileno()
 
     # `os.dup2()` closes the original FD, so we make copies.
@@ -202,10 +207,10 @@ def _replace_stdx(attr, target):
 
 
 class _StringIO:
-    def set_value(self, value):
+    def setvalue(self, value):
         self._value = value
 
-    def get_value(self):
+    def getvalue(self):
         return self._value
 
 
@@ -219,7 +224,7 @@ def _temp_io():
             yield sio, f
     finally:
         with open(path, "r") as f:
-            sio.set_value(f.read())
+            sio.setvalue(f.read())
         try:
             os.remove(path)
         except OSError:
