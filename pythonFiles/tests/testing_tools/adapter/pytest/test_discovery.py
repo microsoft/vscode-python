@@ -370,7 +370,7 @@ class DiscoverTests(unittest.TestCase):
 
         # simulate cases where stdout comes from the lower layer than sys.stdout
         # via file descriptors (e.g., from cython)
-        stub.calls.clear()
+        stub.calls = []
         discover(
             [],
             hidestdio=True,
@@ -415,7 +415,7 @@ class DiscoverTests(unittest.TestCase):
 
         # simulate cases where stdout comes from the lower layer than sys.stdout
         # via file descriptors (e.g., from cython)
-        stub.calls.clear()
+        stub.calls = []
         discover(
             [],
             hidestdio=False,
