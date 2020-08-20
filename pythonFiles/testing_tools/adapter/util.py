@@ -7,8 +7,10 @@ try:
     from io import StringIO
 except ImportError:
     from StringIO import StringIO  # 2.7
+import os
 import os.path
 import sys
+import tempfile
 
 
 @contextlib.contextmanager
@@ -210,16 +212,38 @@ def _replace_stdx(attr, target):
         setattr(sys, attr, orig)
 
 
+class _StringIO:
+    def set_value(self, value):
+        self._value = value
+
+    def get_value(self):
+        return self._value
+
+
+@contextlib.contextmanager
+def _temp_io():
+    td = tempfile.mkdtemp()
+    path = os.path.join(td, "temp")
+    sio = _StringIO()
+    try:
+        with open(path, "w") as f:
+            yield sio, f
+    finally:
+        with open(path, "r") as f:
+            sio.set_value(f.read())
+        os.remove(path)
+        os.rmdir(td)
+
+
 @contextlib.contextmanager
 def hide_stdio():
     """Swallow stdout and stderr."""
-    ignored = StdioStream()
-    with open(os.devnull, "w") as devnull:
-        with _replace_fd(sys.stdout, devnull):
-            with _replace_stdx("stdout", ignored):
-                with _replace_fd(sys.stderr, devnull):
-                    with _replace_stdx("stderr", ignored):
-                        yield ignored
+    with _temp_io() as (sio, fileobj):
+        with _replace_fd(sys.stdout, fileobj):
+            with _replace_stdx("stdout", fileobj):
+                with _replace_fd(sys.stderr, fileobj):
+                    with _replace_stdx("stderr", fileobj):
+                        yield sio
 
 
 if sys.version_info < (3,):
