@@ -83,6 +83,7 @@ stages:
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
               VSCODE_PYTHON_ROLLING: true
+              SplitFunctionalTests: true
         pool:
           vmImage: 'vs2017-win2016'
         steps:

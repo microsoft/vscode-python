@@ -50,6 +50,7 @@ stages:
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
+              SplitFunctionalTests: false
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true

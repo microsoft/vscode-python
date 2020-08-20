@@ -1467,7 +1467,7 @@ plt.show()`,
             runTest('Current directory', async () => {
                 const rootFolder = ioc.get<IWorkspaceService>(IWorkspaceService).rootPath!;
                 const escapedPath = `'${rootFolder.replace(/\\/g, '\\\\')}'`;
-                addMockData(`import os\nos.getcwd()`, escapedPath);
+                addMockData(`import os\nprint(os.getcwd())`, escapedPath);
                 const notebook = await notebookProvider.getOrCreateNotebook({
                     identity: getDefaultInteractiveIdentity(),
                     resource: Uri.file(path.join(rootFolder, 'foo.ipynb'))
