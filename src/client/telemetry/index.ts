@@ -1297,7 +1297,13 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry sent on user response to 'Try Pylance' prompt.
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_TRY_PYLANCE]: any;
+    [EventName.PYTHON_LANGUAGE_SERVER_TRY_PYLANCE]: {
+        /**
+         * User response to the prompt.
+         * @type {string}
+         */
+        useraction: string;
+    };
     /**
      * Telemetry event sent with details when inExperiment() API is called
      */
