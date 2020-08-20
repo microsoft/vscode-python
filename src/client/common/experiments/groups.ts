@@ -91,3 +91,10 @@ export enum RemoveKernelToolbarInInteractiveWindow {
 export enum TryPylance {
     experiment = 'tryPylance'
 }
+
+// Experiment for the content of the tip being displayed on first extension launch:
+// interpreter selection tip, feedback survey or nothing.
+export enum SurveyAndInterpreterTipNotification {
+    tipExperiment = 'pythonTipPromptWording',
+    surveyExperiment = 'pythonMailingListPromptWording'
+}
