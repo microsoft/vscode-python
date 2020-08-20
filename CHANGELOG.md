@@ -7,6 +7,8 @@
 1. Update LSP to latest to resolve problems with LS settings.
    ([#13511](https://github.com/microsoft/vscode-python/pull/13511))
 1. Update debugger to address terminal input issues.
+1. Added tooltip to indicate status of server connection
+   ([#13543](https://github.com/Microsoft/vscode-python/issues/13543))
 
 ### Thanks
 
