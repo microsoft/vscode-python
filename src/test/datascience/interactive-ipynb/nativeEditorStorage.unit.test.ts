@@ -283,7 +283,9 @@ suite('DataScience - Native Editor Storage', () => {
         when(executionProvider.serverStarted).thenReturn(serverStartedEvent.event);
 
         when(trustService.isNotebookTrusted(anything(), anything())).thenReturn(Promise.resolve(true));
-        when(trustService.trustNotebook(anything(), anything())).thenReturn(Promise.resolve());
+        when(trustService.trustNotebook(anything(), anything())).thenCall(() => {
+            return Promise.resolve();
+        });
 
         testIndex += 1;
         when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
@@ -351,7 +353,7 @@ suite('DataScience - Native Editor Storage', () => {
             context.object,
             globalMemento,
             localMemento,
-            trustService,
+            instance(trustService),
             new NotebookModelFactory(false)
         );
 
