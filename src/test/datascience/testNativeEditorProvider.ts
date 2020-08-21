@@ -125,7 +125,8 @@ export class TestNativeEditorProvider extends TestNativeEditorProviderMixin(Nati
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(ICustomEditorService) customEditorService: ICustomEditorService,
         @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
-        @inject(INotebookProvider) notebookProvider: INotebookProvider
+        @inject(INotebookProvider) notebookProvider: INotebookProvider,
+        @inject(IDataScienceFileSystem) fs: IDataScienceFileSystem
     ) {
         super(
             serviceContainer,
@@ -135,7 +136,8 @@ export class TestNativeEditorProvider extends TestNativeEditorProviderMixin(Nati
             configuration,
             customEditorService,
             storage,
-            notebookProvider
+            notebookProvider,
+            fs
         );
     }
 }

@@ -108,7 +108,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         @inject(IConfigurationService) protected readonly configuration: IConfigurationService,
         @inject(ICustomEditorService) private customEditorService: ICustomEditorService,
         @inject(INotebookStorageProvider) protected readonly storage: INotebookStorageProvider,
-        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider
+        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
+        @inject(IDataScienceFileSystem) protected readonly fs: IDataScienceFileSystem
     ) {
         traceInfo(`id is ${this._id}`);
 
@@ -214,14 +215,18 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     public async loadModel(file: Uri, contents?: string, backupId?: string): Promise<INotebookModel>;
     // tslint:disable-next-line: no-any
     public async loadModel(file: Uri, contents?: string, options?: any): Promise<INotebookModel> {
-        // Every time we load a new untitled file, up the counter past the max value for this counter
-        this.untitledCounter = getNextUntitledCounter(file, this.untitledCounter);
+        // Get the model that may match this file
+        let model = [...this.models.values()].find((m) => this.fs.arePathsSame(m.file, file));
+        if (!model) {
+            // Every time we load a new untitled file, up the counter past the max value for this counter
+            this.untitledCounter = getNextUntitledCounter(file, this.untitledCounter);
 
-        // Load our model from our storage object.
-        const model = await this.storage.getOrCreateModel(file, contents, options);
+            // Load our model from our storage object.
+            model = await this.storage.getOrCreateModel(file, contents, options);
 
-        // Make sure to listen to events on the model
-        this.trackModel(model);
+            // Make sure to listen to events on the model
+            this.trackModel(model);
+        }
         return model;
     }
 

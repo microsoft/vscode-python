@@ -83,7 +83,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(ICustomEditorService) customEditorService: ICustomEditorService,
-        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
+        @inject(IDataScienceFileSystem) fs: IDataScienceFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
@@ -98,7 +98,8 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             configuration,
             customEditorService,
             storage,
-            notebookProvider
+            notebookProvider,
+            fs
         );
 
         // No live share sync required as open document from vscode will give us our contents.
@@ -107,21 +108,18 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.documentManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditorHandler.bind(this))
         );
         this.disposables.push(
-            this.cmdManager.registerCommand(Commands.SaveNotebookNonCustomEditor, async (resource: Uri) => {
-                const customDocument = this.customDocuments.get(resource.fsPath);
-                if (customDocument) {
-                    await this.saveCustomDocument(customDocument, new CancellationTokenSource().token);
-                }
+            this.cmdManager.registerCommand(Commands.SaveNotebookNonCustomEditor, async (model: INotebookModel) => {
+                await this.storage.save(model, new CancellationTokenSource().token);
             })
         );
         this.disposables.push(
             this.cmdManager.registerCommand(
                 Commands.SaveAsNotebookNonCustomEditor,
-                async (resource: Uri, targetResource: Uri) => {
-                    const customDocument = this.customDocuments.get(resource.fsPath);
+                async (model: INotebookModel, targetResource: Uri) => {
+                    await this.storage.saveAs(model, targetResource);
+                    const customDocument = this.customDocuments.get(model.file.fsPath);
                     if (customDocument) {
-                        await this.saveCustomDocumentAs(customDocument, targetResource);
-                        this.customDocuments.delete(resource.fsPath);
+                        this.customDocuments.delete(model.file.fsPath);
                         this.customDocuments.set(targetResource.fsPath, { ...customDocument, uri: targetResource });
                     }
                 }
