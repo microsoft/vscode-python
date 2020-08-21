@@ -1,0 +1,3 @@
+# Ignore the pythonEnvironments/ folder because we use ESLint there instead
+src/client/pythonEnvironments/*
+src/test/pythonEnvironments/*
