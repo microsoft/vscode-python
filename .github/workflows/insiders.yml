@@ -69,7 +69,7 @@ jobs:
       - name: Update build number
         run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
 
-      - name: Package the VSIX
+      - name: Create the VSIX
         run: npm run package
 
       - uses: actions/upload-artifact@v2
@@ -376,6 +376,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         python: [3.8]
     steps:
+      # Need the source to have the tests available.
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -415,12 +416,13 @@ jobs:
         run: |
           python -m pip install --upgrade jupyter
 
+      # Save time by reusing bits from the VSIX.
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
           name: ${{env.ARTIFACT_NAME_VSIX}}
 
-      # XXX: If we're going to recompile everything then why bother with the VSIX download?
+      # Compile the test files.
       - name: Prepare for smoke tests
         run: npx tsc -p ./
         shell: bash
@@ -484,7 +486,7 @@ jobs:
     name: Upload VSIX to Azure Blob Storage
     runs-on: ubuntu-latest
     if: github.repository == 'microsoft/vscode-python'
-    needs: [tests, smoke-tests]
+    needs: [tests, smoke-tests, build-vsix]
     env:
       BLOB_CONTAINER_NAME: extension-builds
       BLOB_NAME: ms-python-gha-insiders.vsix # So named to avoid clobbering Azure Pipelines upload.
