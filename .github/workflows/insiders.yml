@@ -60,9 +60,6 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
-      - name: Clean directory
-        run: npm run clean
-
       # Use the GITHUB_RUN_ID environment variable to update the build number.
       # GITHUB_RUN_ID is a unique number for each run within a repository.
       # This number does not change if you re-run the workflow run.
