@@ -13,7 +13,8 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { anything, objectContaining, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
+import { CustomEditorProvider, Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 import {
     IApplicationShell,
     ICommandManager,
@@ -79,8 +80,10 @@ import {
     srcDirectory,
     typeCode,
     verifyCellIndex,
+    verifyCellSource,
     verifyHtmlOnCell
 } from './testHelpers';
+import { ITestNativeEditorProvider } from './testNativeEditorProvider';
 
 use(chaiAsPromised);
 
@@ -236,6 +239,64 @@ suite('DataScience Native Editor', () => {
                     } else {
                         context.skip();
                     }
+                });
+
+                runMountedTest('Save on close', async (_context) => {
+                    // Close should cause the save as to come up. Remap appshell so we can check
+                    const dummyDisposable = {
+                        dispose: () => {
+                            return;
+                        }
+                    };
+                    const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+                    appShell
+                        .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                        .returns((e) => {
+                            throw e;
+                        });
+                    appShell
+                        .setup((a) =>
+                            a.showInformationMessage(
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                            )
+                        )
+                        .returns((_a1, _a2, a3, _a4) => Promise.resolve(a3));
+                    appShell
+                        .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
+                        .returns(() => {
+                            return Promise.resolve(Uri.file(tempNotebookFile.filePath));
+                        });
+                    appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+                    ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+
+                    // Create an editor
+                    const ne = await createNewEditor(ioc);
+
+                    // Add a cell
+                    await addCell(ne.mount, 'a=1\na');
+
+                    // Close the editor. It should ask for save as (if not custom editor)
+                    if (useCustomEditorApi) {
+                        // For custom editor do what VS code would do on close
+                        const notebookEditorProvider = ioc.get<ITestNativeEditorProvider>(INotebookEditorProvider);
+                        const customDoc = notebookEditorProvider.getCustomDocument(ne.editor.file);
+                        assert.ok(customDoc, 'No custom document for new notebook');
+                        const customEditorProvider = (notebookEditorProvider as any) as CustomEditorProvider;
+                        await customEditorProvider.saveCustomDocumentAs(
+                            customDoc!,
+                            Uri.file(tempNotebookFile.filePath),
+                            CancellationToken.None
+                        );
+                    }
+                    await ne.editor.dispose();
+
+                    // Open the temp file to make sure it has the new cell
+                    const opened = await openEditor(ioc, '', tempNotebookFile.filePath);
+
+                    verifyCellSource(opened.mount.wrapper, 'NativeCell', 'a=1\na', CellPosition.Last);
                 });
 
                 runMountedTest('Invalid kernel still runs', async (context) => {
