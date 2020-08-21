@@ -71,7 +71,9 @@
 		"max-len": [
 			"error",
 			{
-				"code": 120
+				"code": 120,
+				"ignorePattern": "^import\\s.+\\sfrom\\s.+;$",
+				"ignoreUrls": true
 			}
 		],
 		"no-confusing-arrow": [
