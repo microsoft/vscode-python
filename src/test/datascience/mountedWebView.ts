@@ -7,7 +7,7 @@ import {
     IWebPanelOptions,
     WebPanelMessage
 } from '../../client/common/application/types';
-import { traceInfo } from '../../client/common/logger';
+import { traceError, traceInfo } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -236,6 +236,9 @@ export class MountedWebView implements IMountedWebView, IDisposable {
         }
     }
     private postMessageToWebPanel(msg: any) {
+        if (this.disposed && !msg.type.startsWith(`DISPATCHED`)) {
+            traceError(`Posting to disposed mount.`);
+        }
         if (this.webPanelListener) {
             this.webPanelListener.onMessage(msg.type, msg.payload);
         } else {

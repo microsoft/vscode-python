@@ -269,7 +269,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         }
         try {
             if (!this.isUntitled) {
-                await this.commandManager.executeCommand(Commands.SaveNotebookNonCustomEditor, this.model?.file);
+                await this.commandManager.executeCommand(Commands.SaveNotebookNonCustomEditor, this.model);
                 this.savedEvent.fire(this);
                 return;
             }
@@ -295,7 +295,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             if (fileToSaveTo) {
                 await this.commandManager.executeCommand(
                     Commands.SaveAsNotebookNonCustomEditor,
-                    this.model.file,
+                    this.model,
                     fileToSaveTo
                 );
                 this.savedEvent.fire(this);
