@@ -1,7 +1,14 @@
-# Disable ESLint in vscode-python/src except for src/client/pythonEnvironments.
+build/*
+
+# Disable ESLint in vscode-python/src except for 
+# src/client/pythonEnvironments and src/test/pythonEnvironments.
 # See https://stackoverflow.com/a/5534865 for why we have to unignore each parent directory.
 src/*
 !src/client/
 
 src/client/*
 !src/client/pythonEnvironments/
+
+!src/test/
+src/test/*
+!src/test/pythonEnvironments/
