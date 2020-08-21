@@ -2080,8 +2080,6 @@
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
                             "tryPylance",
-                            "pythonTipPromptWording",
-                            "pythonMailingListPromptWording",
                             "All"
                         ]
                     },
@@ -2106,8 +2104,6 @@
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
                             "tryPylance",
-                            "pythonTipPromptWording",
-                            "pythonMailingListPromptWording",
                             "All"
                         ]
                     },
