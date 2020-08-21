@@ -386,16 +386,32 @@ steps:
       python -c "from __future__ import print_function;import sys;print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))"
     displayName: 'Set CI_PYTHON_PATH'
 
-  # Run the functional tests.
+  # Run the functional tests with each file split.
+  #
+  # This task only runs if the string 'testFunctional' exists in variable `TestsToRun`.
+  #
+  # Note it is crucial this uses npm to start the runFunctionalTests.js. Otherwise the
+  # environment will be messed up.
+  #
+  # Example command line (windows pwsh):
+  # > node build/ci/scripts/runFunctionalTests.js
+  - script: |
+      npm run test:functional:split
+    displayName: 'Run functional split'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testFunctional'), eq(variables['SplitFunctionalTests'], 'true'))
+    env:
+      DISPLAY: :10
+
+  # Run the functional tests when not splitting
   #
   # This task only runs if the string 'testFunctional' exists in variable `TestsToRun`.
   #
   # Example command line (windows pwsh):
-  # > npm run test:functional
+  # > node build/ci/scripts/runFunctionalTests.js
   - script: |
       npm run test:functional
     displayName: 'Run functional tests'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'testFunctional'))
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testFunctional'), not(eq(variables['SplitFunctionalTests'], 'true')))
     env:
       DISPLAY: :10
 
@@ -404,7 +420,7 @@ steps:
     displayName: 'Publish functional tests results'
     condition: contains(variables['TestsToRun'], 'testFunctional')
     inputs:
-      testResultsFiles: '$(MOCHA_FILE)'
+      testResultsFiles: '$(Build.ArtifactStagingDirectory)/test-junit*.xml'
       testRunTitle: 'functional-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'FunctionalTests'

@@ -1363,6 +1363,16 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.LANGUAGE_SERVER_REQUEST]: any;
     /**
+     * Telemetry sent on user response to 'Try Pylance' prompt.
+     */
+    [EventName.LANGUAGE_SERVER_TRY_PYLANCE]: {
+        /**
+         * User response to the prompt.
+         * @type {string}
+         */
+        userAction: string;
+    };
+    /**
      * Telemetry captured for enabling reload.
      */
     [EventName.PYTHON_WEB_APP_RELOAD]: {

@@ -32,7 +32,7 @@ obj/**
 tmp/**
 .python-version
 .vs/
-test-results.xml
+test-results*.xml
 xunit-test-results.xml
 build/ci/performance/performance-results.json
 !build/

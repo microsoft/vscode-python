@@ -3,24 +3,35 @@
     "version": "0.1.0",
     "configurations": [
         {
+            "name": "Node: Current File",
+            "program": "${file}",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "pwa-node"
+        },
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "justMyCode": true,
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "Extension",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}"
-            ],
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
             "stopOnEntry": false,
             "smartStep": true,
             "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
+            "skipFiles": ["<node_internals>/**"],
             "env": {
                 // Enable this to turn on redux logging during debugging
                 "XVSC_PYTHON_FORCE_LOGGING": "1",
@@ -37,40 +48,27 @@
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}"
-            ],
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
             "stopOnEntry": false,
             "smartStep": true,
             "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Inject DS WebBrowser UI",
             "env": {
                 "VSC_PYTHON_DS_UI_PROMPT": "1"
             },
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Extension inside container",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "${workspaceFolder}/data"
-            ],
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "${workspaceFolder}/data"],
             "stopOnEntry": false,
             "smartStep": true,
             "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile"
         },
         {
@@ -79,9 +77,7 @@
             "request": "launch",
             "module": "IPython",
             "console": "integratedTerminal",
-            "args": [
-                "${file}"
-            ] // Additional args should be prefixed with a '--' first.
+            "args": ["${file}"] // Additional args should be prefixed with a '--' first.
         },
         {
             "name": "Python: Current File",
@@ -104,17 +100,12 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "smartStep": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
             "env": {
                 "IS_CI_SERVER_TEST_DEBUGGER": "1"
             },
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             // Note, for the smoke test you want to debug, you may need to copy the file,
@@ -134,14 +125,9 @@
             },
             "stopOnEntry": false,
             "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Tests (Single Workspace, VS Code, *.test.ts)",
@@ -159,14 +145,9 @@
             },
             "stopOnEntry": false,
             "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Tests (DataScience, *.ds.test.ts)",
@@ -189,14 +170,9 @@
             },
             "stopOnEntry": false,
             "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Tests (Multiroot, VS Code, *.test.ts)",
@@ -212,14 +188,9 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "smartStep": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Unit Tests (without VS Code, *.unit.test.ts)",
@@ -237,14 +208,9 @@
                 //"--grep", "<suite name>",
                 "--timeout=300000"
             ],
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Unit Tests (fast, without VS Code and without react/monaco, *.unit.test.ts)",
@@ -263,14 +229,9 @@
                 "--timeout=300000",
                 "--fast"
             ],
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Functional Tests (without VS Code, *.functional.test.ts)",
@@ -301,14 +262,9 @@
                 // Remove 'X' prefix to dump output for debugger. Directory has to exist prior to launch
                 "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output"
             },
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Functional DS UI Tests (without VS Code, *.ui.functional.test.ts)",
@@ -337,26 +293,17 @@
                 // Remove `X` prefix and update path to test with real python interpreter (for DS functional tests).
                 "XCI_PYTHON_PATH": "<Python Path>"
             },
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "type": "node",
             "request": "launch",
             "name": "Gulp tasks (helpful for debugging gulpfile.js)",
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
-            "args": [
-                "watch"
-            ],
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "args": ["watch"],
+            "skipFiles": ["<node_internals>/**"]
         }
     ]
 }

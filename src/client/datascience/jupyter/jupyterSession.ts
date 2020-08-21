@@ -83,12 +83,7 @@ export class JupyterSession extends BaseJupyterSession {
                 newSession = this.sessionManager.connectTo(kernelConnection.kernelModel.session);
                 newSession.isRemoteSession = true;
             } else {
-                newSession = await this.createSession(
-                    this.serverSettings,
-                    kernelConnection,
-                    this.contentsManager,
-                    cancelToken
-                );
+                newSession = await this.createSession(this.serverSettings, kernelConnection, cancelToken);
             }
 
             // Make sure it is idle before we return
@@ -118,12 +113,7 @@ export class JupyterSession extends BaseJupyterSession {
         let exception: any;
         while (tryCount < 3) {
             try {
-                result = await this.createSession(
-                    session.serverSettings,
-                    kernelConnection,
-                    this.contentsManager,
-                    cancelToken
-                );
+                result = await this.createSession(session.serverSettings, kernelConnection, cancelToken);
                 await this.waitForIdleOnSession(result, 30000);
                 this.restartSessionCreated(result.kernel);
                 return result;
@@ -146,12 +136,9 @@ export class JupyterSession extends BaseJupyterSession {
         }
     }
 
-    private async createSession(
-        serverSettings: ServerConnection.ISettings,
-        kernelConnection: KernelConnectionMetadata | undefined,
-        contentsManager: ContentsManager,
-        cancelToken?: CancellationToken
-    ): Promise<ISessionWithSocket> {
+    private async createBackingFile(): Promise<Contents.IModel> {
+        let backingFile: Contents.IModel;
+
         // First make sure the notebook is in the right relative path (jupyter expects a relative path with unix delimiters)
         const relativeDirectory = path.relative(this.connInfo.rootDirectory, this.workingDirectory).replace(/\\/g, '/');
 
@@ -161,15 +148,45 @@ export class JupyterSession extends BaseJupyterSession {
                 ? { type: 'notebook', path: relativeDirectory }
                 : { type: 'notebook' };
 
-        // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)
-        let backingFile = await contentsManager.newUntitled(backingFileOptions);
-        const backingFileDir = path.dirname(backingFile.path);
-        backingFile = await contentsManager.rename(
-            backingFile.path,
-            backingFileDir.length && backingFileDir !== '.'
-                ? `${backingFileDir}/t-${uuid()}.ipynb`
-                : `t-${uuid()}.ipynb` // Note, the docs say the path uses UNIX delimiters.
-        );
+        try {
+            // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)
+            backingFile = await this.contentsManager.newUntitled(backingFileOptions);
+            const backingFileDir = path.dirname(backingFile.path);
+            backingFile = await this.contentsManager.rename(
+                backingFile.path,
+                backingFileDir.length && backingFileDir !== '.'
+                    ? `${backingFileDir}/t-${uuid()}.ipynb`
+                    : `t-${uuid()}.ipynb` // Note, the docs say the path uses UNIX delimiters.
+            );
+        } catch (exc) {
+            // If it failed for local, try without a relative directory
+            if (this.connInfo.localLaunch) {
+                backingFile = await this.contentsManager.newUntitled({ type: 'notebook' });
+                const backingFileDir = path.dirname(backingFile.path);
+                backingFile = await this.contentsManager.rename(
+                    backingFile.path,
+                    backingFileDir.length && backingFileDir !== '.'
+                        ? `${backingFileDir}/t-${uuid()}.ipynb`
+                        : `t-${uuid()}.ipynb` // Note, the docs say the path uses UNIX delimiters.
+                );
+            } else {
+                throw exc;
+            }
+        }
+
+        if (backingFile) {
+            return backingFile;
+        }
+        throw new Error(`Backing file cannot be generated for Jupyter connection`);
+    }
+
+    private async createSession(
+        serverSettings: ServerConnection.ISettings,
+        kernelConnection: KernelConnectionMetadata | undefined,
+        cancelToken?: CancellationToken
+    ): Promise<ISessionWithSocket> {
+        // Create our backing file for the notebook
+        const backingFile = await this.createBackingFile();
 
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {

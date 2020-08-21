@@ -29,10 +29,6 @@ import { VSCodeNotebookModel } from './vscNotebookModel';
 const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
 
-export function isUntitled(model?: INotebookModel): boolean {
-    return isUntitledFile(model?.file);
-}
-
 export function getNextUntitledCounter(file: Uri | undefined, currentValue: number): number {
     if (file && isUntitledFile(file)) {
         const basename = path.basename(file.fsPath, 'ipynb');
@@ -348,9 +344,11 @@ export class NativeEditorStorage implements INotebookStorage {
             };
         });
 
-        // Make sure at least one
-        if (remapped.length === 0) {
-            remapped.splice(0, 0, this.createEmptyCell(uuid()));
+        if (!forVSCodeNotebook) {
+            // Make sure at least one
+            if (remapped.length === 0) {
+                remapped.splice(0, 0, this.createEmptyCell(uuid()));
+            }
         }
         const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
 

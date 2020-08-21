@@ -166,7 +166,6 @@ export class JupyterNotebookBase implements INotebook {
     public get onKernelRestarted(): Event<void> {
         return this.kernelRestarted.event;
     }
-
     public get onKernelInterrupted(): Event<void> {
         return this.kernelInterrupted.event;
     }
@@ -179,10 +178,13 @@ export class JupyterNotebookBase implements INotebook {
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this.session.kernelSocket;
     }
+    public get session(): IJupyterSession {
+        return this._session;
+    }
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
-        private session: IJupyterSession,
+        private readonly _session: IJupyterSession,
         private configService: IConfigurationService,
         private disposableRegistry: IDisposableRegistry,
         executionInfo: INotebookExecutionInfo,

@@ -17,6 +17,8 @@ import {
     IPythonExtensionBanner
 } from '../common/types';
 import { Common, Pylance } from '../common/utils/localize';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 
 export function getPylanceExtensionUri(appEnv: IApplicationEnvironment): string {
     return `${appEnv.uriScheme}:extension/${PYLANCE_EXTENSION_ID}`;
@@ -72,14 +74,19 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
             Pylance.remindMeLater()
         );
 
+        let userAction: string;
         if (response === Pylance.tryItNow()) {
             this.appShell.openUrl(getPylanceExtensionUri(this.appEnv));
+            userAction = 'yes';
             await this.disable();
         } else if (response === Common.bannerLabelNo()) {
             await this.disable();
+            userAction = 'no';
         } else {
             this.disabledInCurrentSession = true;
+            userAction = 'later';
         }
+        sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRY_PYLANCE, undefined, { userAction });
     }
 
     public async shouldShowBanner(): Promise<boolean> {
