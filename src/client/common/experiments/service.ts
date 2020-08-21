@@ -104,14 +104,12 @@ export class ExperimentService implements IExperimentService {
         return this.experimentationService.isCachedFlightEnabled(experiment);
     }
 
-    public async getExperimentValue<T extends boolean | number | string>(
-        experimentName: string
-    ): Promise<T | undefined> {
-        if (!this.experimentationService) {
+    public async getExperimentValue<T extends boolean | number | string>(experiment: string): Promise<T | undefined> {
+        if (!this.experimentationService || this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
             return;
         }
 
-        return this.experimentationService.getTreatmentVariableAsync('vscode', experimentName);
+        return this.experimentationService.getTreatmentVariableAsync('vscode', experiment);
     }
 
     private logExperiments() {
