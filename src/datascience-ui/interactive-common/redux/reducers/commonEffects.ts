@@ -3,10 +3,10 @@
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
-import { Identifiers } from '../../../../client/datascience/constants';
+// import { Identifiers } from '../../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetCssResponse } from '../../../../client/datascience/messages';
-import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
+// import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
 import { CellState, ICell } from '../../../../client/datascience/types';
 import { ICellViewModel, IMainState } from '../../../interactive-common/mainState';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
@@ -127,11 +127,13 @@ export namespace CommonEffects {
         };
     }
 
-    export function monacoThemeChange<T>(arg: CommonReducerArg<T, IGetMonacoThemeResponse>): IMainState {
-        return {
-            ...arg.prevState,
-            monacoTheme: Identifiers.GeneratedThemeName
-        };
+    // tslint:disable-next-line: no-any
+    export function monacoThemeChange(arg: any): IMainState {
+        return arg.prevState;
+        // return {
+        //     ...arg.prevState,
+        //     monacoTheme: Identifiers.GeneratedThemeName
+        // };
     }
 
     function focusPending(prevState: IMainState): IMainState {

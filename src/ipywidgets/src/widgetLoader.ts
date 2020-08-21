@@ -15,6 +15,13 @@ async function requirePromise(pkg: string | string[]): Promise<any> {
         }
     });
 }
+// tslint:disable-next-line: no-any
+const requirePromises = new Map<string, Promise<any>>();
 export function requireLoader(moduleName: string) {
-    return requirePromise([`${moduleName}`]);
+    if (requirePromises.get(moduleName)) {
+        return requirePromises.get(moduleName);
+    }
+    const promise = requirePromise([`${moduleName}`]);
+    requirePromises.set(moduleName, promise);
+    return promise;
 }

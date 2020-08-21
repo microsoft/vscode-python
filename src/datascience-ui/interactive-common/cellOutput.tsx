@@ -16,7 +16,7 @@ import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { ICellViewModel } from './mainState';
 import { fixMarkdown } from './markdownManipulation';
-import { getRichestMimetype, getTransform, isIPyWidgetOutput, isMimeTypeSupported } from './transforms';
+import { getRichestMimetype, isIPyWidgetOutput } from './transforms';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiToHtml = require('ansi-to-html');
@@ -27,7 +27,6 @@ import { Widget } from '@phosphor/widgets';
 import { noop } from '../../client/common/utils/misc';
 import { WIDGET_MIMETYPE } from '../../client/datascience/ipywidgets/constants';
 import { concatMultilineString } from '../common';
-import { TrimmedOutputMessage } from './trimmedOutputLink';
 
 interface ICellOutputProps {
     cellVM: ICellViewModel;
@@ -246,9 +245,9 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return this.props.cellVM.cell.data as nbformat.ICodeCell;
     };
 
-    private getMarkdownCell = () => {
-        return this.props.cellVM.cell.data as nbformat.IMarkdownCell;
-    };
+    // private getMarkdownCell = () => {
+    //     return this.props.cellVM.cell.data as nbformat.IMarkdownCell;
+    // };
 
     private renderResults = (): JSX.Element[] => {
         // Results depend upon the type of cell
@@ -289,17 +288,18 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     };
 
     private renderMarkdownOutputs = () => {
-        const markdown = this.getMarkdownCell();
-        // React-markdown expects that the source is a string
-        const source = fixMarkdown(concatMultilineString(markdown.source));
-        const Transform = getTransform('text/markdown');
-        const MarkdownClassName = 'markdown-cell-output';
+        // const markdown = this.getMarkdownCell();
+        // // React-markdown expects that the source is a string
+        // const source = fixMarkdown(concatMultilineString(markdown.source));
+        // const Transform = getTransform('text/markdown');
+        // const MarkdownClassName = 'markdown-cell-output';
 
-        return [
-            <div key={0} className={MarkdownClassName}>
-                <Transform key={0} data={source} />
-            </div>
-        ];
+        // return [
+        //     <div key={0} className={MarkdownClassName}>
+        //         <Transform key={0} data={source} />
+        //     </div>
+        // ];
+        return [];
     };
 
     private computeOutputData(output: nbformat.IOutput): ICellOutputData {
@@ -480,7 +480,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return [this.renderOutput(outputs, trim)];
     }
 
-    private renderOutput = (outputs: nbformat.IOutput[], trim: string): JSX.Element => {
+    private renderOutput = (outputs: nbformat.IOutput[], _trim: string): JSX.Element => {
         const buffer: JSX.Element[] = [];
         const transformedList = outputs.map(this.transformOutput.bind(this));
 
@@ -489,49 +489,49 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             if (isIPyWidgetOutput(transformed.output.mimeBundle)) {
                 // Create a view for this output if not already there.
                 this.renderWidget(transformed.output);
-            } else if (mimeType && isMimeTypeSupported(mimeType)) {
-                // If that worked, use the transform
-                // Get the matching React.Component for that mimetype
-                const Transform = getTransform(mimeType);
+                // } else if (mimeType && isMimeTypeSupported(mimeType)) {
+                //     // If that worked, use the transform
+                //     // Get the matching React.Component for that mimetype
+                //     const Transform = getTransform(mimeType);
 
-                let className = transformed.output.isText ? 'cell-output-text' : 'cell-output-html';
-                className = transformed.output.isError ? `${className} cell-output-error` : className;
+                //     let className = transformed.output.isText ? 'cell-output-text' : 'cell-output-html';
+                //     className = transformed.output.isError ? `${className} cell-output-error` : className;
 
-                // If we are not theming plots then wrap them in a white span
-                if (transformed.outputSpanClassName) {
-                    buffer.push(
-                        <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
-                            <span className={transformed.outputSpanClassName}>
-                                {transformed.extraButton}
-                                <Transform data={transformed.output.data} />
-                            </span>
-                        </div>
-                    );
-                } else {
-                    if (trim === 'outputPrepend') {
-                        buffer.push(
-                            <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
-                                {transformed.extraButton}
-                                <TrimmedOutputMessage openSettings={this.props.openSettings} />
-                                <Transform data={transformed.output.data} />
-                            </div>
-                        );
-                    } else {
-                        buffer.push(
-                            <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
-                                {transformed.extraButton}
-                                <Transform data={transformed.output.data} />
-                            </div>
-                        );
-                    }
-                }
-            } else if (
-                !mimeType ||
-                mimeType.startsWith('application/scrapbook.scrap.') ||
-                mimeType.startsWith('application/aml')
-            ) {
-                // Silently skip rendering of these mime types, render an empty div so the user sees the cell was executed.
-                buffer.push(<div key={index}></div>);
+                //     // If we are not theming plots then wrap them in a white span
+                //     if (transformed.outputSpanClassName) {
+                //         buffer.push(
+                //             <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
+                //                 <span className={transformed.outputSpanClassName}>
+                //                     {transformed.extraButton}
+                //                     <Transform data={transformed.output.data} />
+                //                 </span>
+                //             </div>
+                //         );
+                //     } else {
+                //         if (trim === 'outputPrepend') {
+                //             buffer.push(
+                //                 <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
+                //                     {transformed.extraButton}
+                //                     <TrimmedOutputMessage openSettings={this.props.openSettings} />
+                //                     <Transform data={transformed.output.data} />
+                //                 </div>
+                //             );
+                //         } else {
+                //             buffer.push(
+                //                 <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
+                //                     {transformed.extraButton}
+                //                     <Transform data={transformed.output.data} />
+                //                 </div>
+                //             );
+                //         }
+                //     }
+                // } else if (
+                //     !mimeType ||
+                //     mimeType.startsWith('application/scrapbook.scrap.') ||
+                //     mimeType.startsWith('application/aml')
+                // ) {
+                //     // Silently skip rendering of these mime types, render an empty div so the user sees the cell was executed.
+                //     buffer.push(<div key={index}></div>);
             } else {
                 const str: string = this.getUnknownMimeTypeFormatString().format(mimeType);
                 buffer.push(<div key={index}>{str}</div>);

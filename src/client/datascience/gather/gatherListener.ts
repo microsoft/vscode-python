@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { IDisposable } from 'monaco-editor';
+import type { IDisposable } from 'monaco-editor';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Position, Uri, ViewColumn } from 'vscode';
 import { createMarkdownCell } from '../../../datascience-ui/common/cellFactory';

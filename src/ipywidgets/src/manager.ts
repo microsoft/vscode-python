@@ -23,6 +23,8 @@ export class WidgetManager extends jupyterlab.WidgetManager {
     public kernel: Kernel.IKernelConnection;
     public el: HTMLElement;
 
+    private classPromise = new Map<string, Promise<any>>();
+
     constructor(
         kernel: Kernel.IKernelConnection,
         el: HTMLElement,
@@ -94,16 +96,20 @@ export class WidgetManager extends jupyterlab.WidgetManager {
         // Disabled for now.
         // This throws errors if enabled, can be added later.
     }
-
-    public get onUnhandledIOPubMessage() {
-        return super.onUnhandledIOPubMessage;
-    }
-
+    // public get onUnhandledIOPubMessage() {
+    //     return super.onUnhandledIOPubMessage;
+    // }
     protected async loadClass(className: string, moduleName: string, moduleVersion: string): Promise<any> {
+        const key = `${className}${moduleName}${moduleVersion}`;
+        if (this.classPromise.has(key)) {
+            // Call the base class to try and load. If that fails, look locally
+            window.console.log(`Found. WidgetManager: Loading class ${className}:${moduleName}:${moduleVersion}`);
+            return this.classPromise.get(key);
+        }
         // Call the base class to try and load. If that fails, look locally
-        window.console.log(`WidgetManager: Loading class ${className}:${moduleName}:${moduleVersion}`);
+        window.console.log(`Not Found. WidgetManager: Loading class ${className}:${moduleName}:${moduleVersion}`);
         // tslint:disable-next-line: no-unnecessary-local-variable
-        const result = await super
+        const result = super
             .loadClass(className, moduleName, moduleVersion)
             .then((r) => {
                 this.sendSuccess(className, moduleName, moduleVersion);
@@ -132,6 +138,7 @@ export class WidgetManager extends jupyterlab.WidgetManager {
                     throw originalException;
                 }
             });
+        this.classPromise.set(key, result);
 
         return result;
     }

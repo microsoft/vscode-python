@@ -3,7 +3,7 @@
 'use strict';
 import '../../../common/extensions';
 
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as vscode from 'vscode';
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
 

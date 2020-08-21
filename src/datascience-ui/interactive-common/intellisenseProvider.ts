@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as uuid from 'uuid/v4';
 
 import { IDisposable } from '../../client/common/types';
@@ -59,9 +59,9 @@ export class IntellisenseProvider
         readonly language: string
     ) {
         // Register a completion provider
-        this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider(language, this));
-        this.registerDisposables.push(monacoEditor.languages.registerHoverProvider(language, this));
-        this.registerDisposables.push(monacoEditor.languages.registerSignatureHelpProvider(language, this));
+        // this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider(language, this));
+        // this.registerDisposables.push(monacoEditor.languages.registerHoverProvider(language, this));
+        // this.registerDisposables.push(monacoEditor.languages.registerSignatureHelpProvider(language, this));
     }
 
     public provideCompletionItems(

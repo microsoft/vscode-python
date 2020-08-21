@@ -3,7 +3,7 @@
 'use strict';
 
 import * as fastDeepEqual from 'fast-deep-equal';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 import { isTestExecution } from '../../client/common/constants';
 import { IDisposable } from '../../client/common/types';
@@ -17,11 +17,11 @@ const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 // tslint:disable-next-line:no-require-imports no-var-requires
 const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 
-import { noop } from '../../client/common/utils/misc';
+// import { noop } from '../../client/common/utils/misc';
 import { CursorPos } from '../interactive-common/mainState';
 import './codicon/codicon.css';
 import './monacoEditor.css';
-import { generateChangeEvent, IMonacoModelContentChangeEvent } from './monacoHelpers';
+import { IMonacoModelContentChangeEvent } from './monacoHelpers';
 
 const LINE_HEIGHT = 18;
 
@@ -80,22 +80,22 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private styleObserver: MutationObserver | undefined;
     private watchingMargin: boolean = false;
     private throttledUpdateWidgetPosition = throttle(this.updateWidgetPosition.bind(this), 100);
-    private throttledScrollCurrentPosition = throttle(this.tryToScrollToCurrentPosition.bind(this), 100);
+    // private throttledScrollCurrentPosition = throttle(this.tryToScrollToCurrentPosition.bind(this), 100);
     private monacoContainer: HTMLDivElement | undefined;
     private lineTops: { top: number; index: number }[] = [];
-    private debouncedComputeLineTops = debounce(this.computeLineTops.bind(this), 100);
-    private skipNotifications = false;
-    private previousModelValue: string = '';
+    // private debouncedComputeLineTops = debounce(this.computeLineTops.bind(this), 100);
+    // private skipNotifications = false;
+    // private previousModelValue: string = '';
     /**
      * Reference to parameter widget (used by monaco to display parameter docs).
      */
     private parameterWidget?: Element;
-    private keyHasBeenPressed = false;
+    // private keyHasBeenPressed = false;
     private visibleLineCount: number = -1;
     private attached: boolean = false; // Keeps track of when we reparent the editor out of the dummy dom node.
     private pendingLayoutScroll = false;
-    private lastPasteCommandTime = 0;
-    private lastPasteCommandText = '';
+    // private lastPasteCommandTime = 0;
+    // private lastPasteCommandText = '';
 
     constructor(props: IMonacoEditorProps) {
         super(props);
@@ -115,187 +115,187 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (window) {
             window.addEventListener('resize', this.windowResized);
         }
-        if (this.containerRef.current) {
-            // Compute our outermost parent
-            let outerParent = this.containerRef.current.parentElement;
-            while (outerParent && !outerParent.classList.contains(this.props.outermostParentClass)) {
-                outerParent = outerParent.parentElement;
-            }
-            this.outermostParent = outerParent;
-            if (this.outermostParent) {
-                this.outermostParent.addEventListener('mouseleave', this.outermostParentLeave);
-            }
+        // if (this.containerRef.current) {
+        //     // Compute our outermost parent
+        //     let outerParent = this.containerRef.current.parentElement;
+        //     while (outerParent && !outerParent.classList.contains(this.props.outermostParentClass)) {
+        //         outerParent = outerParent.parentElement;
+        //     }
+        //     this.outermostParent = outerParent;
+        //     if (this.outermostParent) {
+        //         this.outermostParent.addEventListener('mouseleave', this.outermostParentLeave);
+        //     }
 
-            // Create a dummy DOM node to attach the editor to so that it skips layout.
-            this.monacoContainer = document.createElement('div');
-            this.monacoContainer.setAttribute('class', 'monaco-editor-container');
+        //     // Create a dummy DOM node to attach the editor to so that it skips layout.
+        //     this.monacoContainer = document.createElement('div');
+        //     this.monacoContainer.setAttribute('class', 'monaco-editor-container');
 
-            // Create the editor
-            const editor = monacoEditor.editor.create(this.monacoContainer, {
-                value: this.props.value,
-                language: this.props.language,
-                ...this.props.options
-            });
+        //     // Create the editor
+        //     const editor = monacoEditor.editor.create(this.monacoContainer, {
+        //         value: this.props.value,
+        //         language: this.props.language,
+        //         ...this.props.options
+        //     });
 
-            // Listen for commands on the editor. This is to work around a problem
-            // with double pasting
-            // tslint:disable: no-any
-            if ((editor as any)._commandService) {
-                const commandService = (editor as any)._commandService as any;
-                if (commandService._onWillExecuteCommand) {
-                    this.subscriptions.push(
-                        commandService._onWillExecuteCommand.event(this.onCommandWillExecute.bind(this))
-                    );
-                }
-            }
+        //     // Listen for commands on the editor. This is to work around a problem
+        //     // with double pasting
+        //     // tslint:disable: no-any
+        //     if ((editor as any)._commandService) {
+        //         const commandService = (editor as any)._commandService as any;
+        //         if (commandService._onWillExecuteCommand) {
+        //             this.subscriptions.push(
+        //                 commandService._onWillExecuteCommand.event(this.onCommandWillExecute.bind(this))
+        //             );
+        //         }
+        //     }
 
-            // Force the editor to behave like a unix editor as
-            // all of our code is assuming that.
-            const model = editor.getModel();
-            if (model) {
-                model.setEOL(monacoEditor.editor.EndOfLineSequence.LF);
+        //     // Force the editor to behave like a unix editor as
+        //     // all of our code is assuming that.
+        //     const model = editor.getModel();
+        //     if (model) {
+        //         model.setEOL(monacoEditor.editor.EndOfLineSequence.LF);
 
-                // Listen to model changes too.
-                this.subscriptions.push(model?.onDidChangeContent(this.onModelChanged));
-            }
+        //         // Listen to model changes too.
+        //         this.subscriptions.push(model?.onDidChangeContent(this.onModelChanged));
+        //     }
 
-            // When testing, eliminate the _assertNotDisposed call. It can break tests if autocomplete
-            // is still open at the end of a test
-            // tslint:disable-next-line: no-any
-            if (isTestExecution() && model && (model as any)._assertNotDisposed) {
-                // tslint:disable-next-line: no-any
-                (model as any)._assertNotDisposed = noop;
-            }
+        //     // When testing, eliminate the _assertNotDisposed call. It can break tests if autocomplete
+        //     // is still open at the end of a test
+        //     // tslint:disable-next-line: no-any
+        //     if (isTestExecution() && model && (model as any)._assertNotDisposed) {
+        //         // tslint:disable-next-line: no-any
+        //         (model as any)._assertNotDisposed = noop;
+        //     }
 
-            // Listen for keydown events. We don't do auto scrolling until the user types something
-            this.subscriptions.push(editor.onKeyDown((_e) => (this.keyHasBeenPressed = true)));
+        //     // Listen for keydown events. We don't do auto scrolling until the user types something
+        //     this.subscriptions.push(editor.onKeyDown((_e) => (this.keyHasBeenPressed = true)));
 
-            // Register a link opener so when a user clicks on a link we can navigate to it.
-            // tslint:disable-next-line: no-any
-            const openerService = (editor.getContribution('editor.linkDetector') as any).openerService;
-            if (openerService && openerService.open) {
-                openerService.open = this.props.openLink;
-            }
+        //     // Register a link opener so when a user clicks on a link we can navigate to it.
+        //     // tslint:disable-next-line: no-any
+        //     const openerService = (editor.getContribution('editor.linkDetector') as any).openerService;
+        //     if (openerService && openerService.open) {
+        //         openerService.open = this.props.openLink;
+        //     }
 
-            // Save the editor and the model in our state.
-            this.setState({ editor, model });
-            if (this.props.hasFocus) {
-                this.giveFocusToEditor(editor, this.props.cursorPos, this.props.options.readOnly);
-            }
-            if (this.props.theme) {
-                monacoEditor.editor.setTheme(this.props.theme);
-            }
+        //     // Save the editor and the model in our state.
+        //     this.setState({ editor, model });
+        //     if (this.props.hasFocus) {
+        //         this.giveFocusToEditor(editor, this.props.cursorPos, this.props.options.readOnly);
+        //     }
+        //     if (this.props.theme) {
+        //         monacoEditor.editor.setTheme(this.props.theme);
+        //     }
 
-            // do the initial set of the height (wait a bit)
-            this.windowResized();
+        //     // do the initial set of the height (wait a bit)
+        //     this.windowResized();
 
-            // on each edit recompute height (wait a bit)
-            if (model) {
-                this.subscriptions.push(
-                    model.onDidChangeContent(() => {
-                        this.windowResized();
-                        if (this.state.editor && this.state.editor.hasWidgetFocus()) {
-                            this.hideAllOtherHoverAndParameterWidgets();
-                        }
-                    })
-                );
-            }
+        //     // on each edit recompute height (wait a bit)
+        //     if (model) {
+        //         this.subscriptions.push(
+        //             model.onDidChangeContent(() => {
+        //                 this.windowResized();
+        //                 if (this.state.editor && this.state.editor.hasWidgetFocus()) {
+        //                     this.hideAllOtherHoverAndParameterWidgets();
+        //                 }
+        //             })
+        //         );
+        //     }
 
-            // On layout recompute height
-            this.subscriptions.push(
-                editor.onDidLayoutChange(() => {
-                    this.windowResized();
-                    // Recompute visible line tops
-                    this.debouncedComputeLineTops();
+        //     // On layout recompute height
+        //     this.subscriptions.push(
+        //         editor.onDidLayoutChange(() => {
+        //             this.windowResized();
+        //             // Recompute visible line tops
+        //             this.debouncedComputeLineTops();
 
-                    // A layout change may be because of a new line
-                    this.throttledScrollCurrentPosition();
-                })
-            );
+        //             // A layout change may be because of a new line
+        //             this.throttledScrollCurrentPosition();
+        //         })
+        //     );
 
-            // Setup our context menu to show up outside. Autocomplete doesn't have this problem so it just works
-            this.subscriptions.push(
-                editor.onContextMenu((e) => {
-                    if (this.state.editor) {
-                        const domNode = this.state.editor.getDomNode();
-                        const contextMenuElement = domNode
-                            ? (domNode.querySelector('.monaco-menu-container') as HTMLElement)
-                            : null;
-                        if (contextMenuElement) {
-                            const posY =
-                                e.event.posy + contextMenuElement.clientHeight > window.outerHeight
-                                    ? e.event.posy - contextMenuElement.clientHeight
-                                    : e.event.posy;
-                            const posX =
-                                e.event.posx + contextMenuElement.clientWidth > window.outerWidth
-                                    ? e.event.posx - contextMenuElement.clientWidth
-                                    : e.event.posx;
-                            contextMenuElement.style.position = 'fixed';
-                            contextMenuElement.style.top = `${Math.max(0, Math.floor(posY))}px`;
-                            contextMenuElement.style.left = `${Math.max(0, Math.floor(posX))}px`;
-                        }
-                    }
-                })
-            );
+        //     // Setup our context menu to show up outside. Autocomplete doesn't have this problem so it just works
+        //     this.subscriptions.push(
+        //         editor.onContextMenu((e) => {
+        //             if (this.state.editor) {
+        //                 const domNode = this.state.editor.getDomNode();
+        //                 const contextMenuElement = domNode
+        //                     ? (domNode.querySelector('.monaco-menu-container') as HTMLElement)
+        //                     : null;
+        //                 if (contextMenuElement) {
+        //                     const posY =
+        //                         e.event.posy + contextMenuElement.clientHeight > window.outerHeight
+        //                             ? e.event.posy - contextMenuElement.clientHeight
+        //                             : e.event.posy;
+        //                     const posX =
+        //                         e.event.posx + contextMenuElement.clientWidth > window.outerWidth
+        //                             ? e.event.posx - contextMenuElement.clientWidth
+        //                             : e.event.posx;
+        //                     contextMenuElement.style.position = 'fixed';
+        //                     contextMenuElement.style.top = `${Math.max(0, Math.floor(posY))}px`;
+        //                     contextMenuElement.style.left = `${Math.max(0, Math.floor(posX))}px`;
+        //                 }
+        //             }
+        //         })
+        //     );
 
-            // When editor loses focus, hide parameter widgets (if any currently displayed).
-            this.subscriptions.push(
-                editor.onDidBlurEditorWidget(() => {
-                    this.hideParameterWidget();
-                })
-            );
+        //     // When editor loses focus, hide parameter widgets (if any currently displayed).
+        //     this.subscriptions.push(
+        //         editor.onDidBlurEditorWidget(() => {
+        //             this.hideParameterWidget();
+        //         })
+        //     );
 
-            // Track focus changes to make sure we update our widget parent and widget position
-            this.subscriptions.push(
-                editor.onDidFocusEditorWidget(() => {
-                    this.throttledUpdateWidgetPosition();
-                    this.updateWidgetParent(editor);
-                    this.hideAllOtherHoverAndParameterWidgets();
+        //     // Track focus changes to make sure we update our widget parent and widget position
+        //     this.subscriptions.push(
+        //         editor.onDidFocusEditorWidget(() => {
+        //             this.throttledUpdateWidgetPosition();
+        //             this.updateWidgetParent(editor);
+        //             this.hideAllOtherHoverAndParameterWidgets();
 
-                    // Also update our scroll position, but do that after focus is established.
-                    // This is necessary so that markdown can switch to edit mode before we
-                    // try to scroll to it.
-                    setTimeout(() => this.throttledScrollCurrentPosition(), 0);
-                })
-            );
+        //             // Also update our scroll position, but do that after focus is established.
+        //             // This is necessary so that markdown can switch to edit mode before we
+        //             // try to scroll to it.
+        //             setTimeout(() => this.throttledScrollCurrentPosition(), 0);
+        //         })
+        //     );
 
-            // Track cursor changes and make sure line is on the screen
-            this.subscriptions.push(
-                editor.onDidChangeCursorPosition(() => {
-                    this.throttledUpdateWidgetPosition();
+        //     // Track cursor changes and make sure line is on the screen
+        //     this.subscriptions.push(
+        //         editor.onDidChangeCursorPosition(() => {
+        //             this.throttledUpdateWidgetPosition();
 
-                    // Do this after the cursor changes so the text has time to appear
-                    setTimeout(() => this.throttledScrollCurrentPosition(), 0);
-                })
-            );
+        //             // Do this after the cursor changes so the text has time to appear
+        //             setTimeout(() => this.throttledScrollCurrentPosition(), 0);
+        //         })
+        //     );
 
-            // Update our margin to include the correct line number style
-            this.updateMargin(editor);
+        //     // Update our margin to include the correct line number style
+        //     this.updateMargin(editor);
 
-            // If we're readonly, monaco is not putting the aria-readonly property on the textarea
-            // We should do that
-            if (this.props.options.readOnly) {
-                this.setAriaReadOnly(editor);
-            }
+        //     // If we're readonly, monaco is not putting the aria-readonly property on the textarea
+        //     // We should do that
+        //     if (this.props.options.readOnly) {
+        //         this.setAriaReadOnly(editor);
+        //     }
 
-            // Eliminate the find action if possible
-            // tslint:disable-next-line: no-any
-            const editorAny = editor as any;
-            if (editorAny._standaloneKeybindingService) {
-                editorAny._standaloneKeybindingService.addDynamicKeybinding('-actions.find');
-            }
+        //     // Eliminate the find action if possible
+        //     // tslint:disable-next-line: no-any
+        //     const editorAny = editor as any;
+        //     if (editorAny._standaloneKeybindingService) {
+        //         editorAny._standaloneKeybindingService.addDynamicKeybinding('-actions.find');
+        //     }
 
-            // Tell our parent the editor is ready to use
-            this.props.editorMounted(editor);
+        //     // Tell our parent the editor is ready to use
+        //     this.props.editorMounted(editor);
 
-            if (editor) {
-                this.subscriptions.push(
-                    editor.onMouseMove(() => {
-                        this.hideAllOtherHoverAndParameterWidgets();
-                    })
-                );
-            }
-        }
+        //     if (editor) {
+        //         this.subscriptions.push(
+        //             editor.onMouseMove(() => {
+        //                 this.hideAllOtherHoverAndParameterWidgets();
+        //             })
+        //         );
+        //     }
+        // }
     };
 
     public componentWillUnmount = () => {
@@ -331,12 +331,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     // tslint:disable-next-line: cyclomatic-complexity
     public componentDidUpdate(prevProps: IMonacoEditorProps, prevState: IMonacoEditorState) {
         if (this.state.editor) {
-            if (prevProps.language !== this.props.language && this.state.model) {
-                monacoEditor.editor.setModelLanguage(this.state.model, this.props.language);
-            }
-            if (prevProps.theme !== this.props.theme && this.props.theme) {
-                monacoEditor.editor.setTheme(this.props.theme);
-            }
+            // if (prevProps.language !== this.props.language && this.state.model) {
+            //     monacoEditor.editor.setModelLanguage(this.state.model, this.props.language);
+            // }
+            // if (prevProps.theme !== this.props.theme && this.props.theme) {
+            //     monacoEditor.editor.setTheme(this.props.theme);
+            // }
             if (!fastDeepEqual(prevProps.options, this.props.options)) {
                 if (prevProps.options.lineNumbers !== this.props.options.lineNumbers) {
                     this.updateMargin(this.state.editor);
@@ -375,7 +375,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
 
         // Reset key press tracking.
-        this.keyHasBeenPressed = false;
+        // this.keyHasBeenPressed = false;
     }
     public shouldComponentUpdate(
         nextProps: Readonly<IMonacoEditorProps>,
@@ -483,22 +483,22 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     }
 
-    private forceValue(text: string, cursorPos: CursorPos | monacoEditor.IPosition, allowNotifications?: boolean) {
+    private forceValue(text: string, cursorPos: CursorPos | monacoEditor.IPosition, _allowNotifications?: boolean) {
         if (this.state.model && this.state.editor) {
             // Save current position. May need it to update after setting.
             const current = this.state.editor.getPosition();
 
             // Disable change notifications if forcing this value should not allow them
-            this.skipNotifications = allowNotifications ? false : true;
+            // this.skipNotifications = allowNotifications ? false : true;
 
             // Close any suggestions that are open
             this.closeSuggestWidget();
 
             // Change our text.
-            this.previousModelValue = text;
+            // this.previousModelValue = text;
             this.state.model.setValue(text);
 
-            this.skipNotifications = false;
+            // this.skipNotifications = false;
 
             // Compute new position
             if (typeof cursorPos !== 'object') {
@@ -511,14 +511,14 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     }
 
-    private onModelChanged = (e: monacoEditor.editor.IModelContentChangedEvent) => {
-        // If not skipping notifications, send an event
-        if (!this.skipNotifications && this.state.model && this.state.editor) {
-            this.props.modelChanged(generateChangeEvent(e, this.state.model, this.previousModelValue));
-            // Any changes from now onw will be considered previous.
-            this.previousModelValue = this.getContents();
-        }
-    };
+    // private onModelChanged = (e: monacoEditor.editor.IModelContentChangedEvent) => {
+    //     // If not skipping notifications, send an event
+    //     if (!this.skipNotifications && this.state.model && this.state.editor) {
+    //         this.props.modelChanged(generateChangeEvent(e, this.state.model, this.previousModelValue));
+    //         // Any changes from now onw will be considered previous.
+    //         this.previousModelValue = this.getContents();
+    //     }
+    // };
 
     private getCurrentVisibleLinePosOrIndex(pickResult: (pos: number, index: number) => number): number | undefined {
         // Convert the current cursor into a top and use that to find which visible
@@ -566,13 +566,13 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         return this.lineTops;
     }
 
-    private tryToScrollToCurrentPosition() {
-        // Don't scroll if no key has been pressed
-        if (!this.keyHasBeenPressed) {
-            return;
-        }
-        this.scrollToCurrentPosition();
-    }
+    // private tryToScrollToCurrentPosition() {
+    //     // Don't scroll if no key has been pressed
+    //     if (!this.keyHasBeenPressed) {
+    //         return;
+    //     }
+    //     this.scrollToCurrentPosition();
+    // }
 
     private scrollToCurrentPosition() {
         // Unfortunately during functional tests we hack the line count and the like.
@@ -597,30 +597,30 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         return false;
     }
 
-    private onCommandWillExecute(ev: { commandId: string; args: any[] }) {
-        if (ev.commandId === 'paste' && ev.args.length > 0 && ev.args[0].text) {
-            // See if same as last paste and within 100ms. This is the error condition.
-            const diff = Date.now() - this.lastPasteCommandTime;
-            if (diff < 100 && ev.args[0].text && ev.args[0].text === this.lastPasteCommandText) {
-                ev.args[0].text = ''; // Turn into an empty paste to null the operation.
-            }
-            this.lastPasteCommandText = ev.args[0].text;
-            this.lastPasteCommandTime = Date.now();
-        }
-    }
+    // private onCommandWillExecute(ev: { commandId: string; args: any[] }) {
+    //     if (ev.commandId === 'paste' && ev.args.length > 0 && ev.args[0].text) {
+    //         // See if same as last paste and within 100ms. This is the error condition.
+    //         const diff = Date.now() - this.lastPasteCommandTime;
+    //         if (diff < 100 && ev.args[0].text && ev.args[0].text === this.lastPasteCommandText) {
+    //             ev.args[0].text = ''; // Turn into an empty paste to null the operation.
+    //         }
+    //         this.lastPasteCommandText = ev.args[0].text;
+    //         this.lastPasteCommandTime = Date.now();
+    //     }
+    // }
 
-    private setAriaReadOnly(editor: monacoEditor.editor.IStandaloneCodeEditor) {
-        const editorDomNode = editor.getDomNode();
-        if (editorDomNode) {
-            const textArea = editorDomNode.getElementsByTagName('textarea');
-            if (textArea && textArea.length > 0) {
-                const item = textArea.item(0);
-                if (item) {
-                    item.setAttribute('aria-readonly', 'true');
-                }
-            }
-        }
-    }
+    // private setAriaReadOnly(editor: monacoEditor.editor.IStandaloneCodeEditor) {
+    //     const editorDomNode = editor.getDomNode();
+    //     if (editorDomNode) {
+    //         const textArea = editorDomNode.getElementsByTagName('textarea');
+    //         if (textArea && textArea.length > 0) {
+    //             const item = textArea.item(0);
+    //             if (item) {
+    //                 item.setAttribute('aria-readonly', 'true');
+    //             }
+    //         }
+    //     }
+    // }
 
     private windowResized = () => {
         if (this.resizeTimer) {

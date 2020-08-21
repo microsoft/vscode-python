@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+// import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { Reducer } from 'redux';
 
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { createDeferred } from '../../../../client/common/utils/async';
-import { Identifiers } from '../../../../client/datascience/constants';
+// import { Identifiers } from '../../../../client/datascience/constants';
 import {
     ILoadTmLanguageResponse,
     InteractiveWindowMessages,
@@ -17,8 +17,8 @@ import {
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { deserializeLanguageConfiguration } from '../../../../client/datascience/interactive-common/serialization';
 import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
-import { CssMessages } from '../../../../client/datascience/messages';
-import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
+// import { CssMessages } from '../../../../client/datascience/messages';
+// import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
 import { PostOffice } from '../../../react-common/postOffice';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { IntellisenseProvider } from '../../intellisenseProvider';
@@ -51,20 +51,20 @@ type MonacoReducerArg<T = never | undefined> = ReducerArg<
 
 function handleLoaded<T>(arg: MonacoReducerArg<T>): IMonacoState {
     // Send the requests to get the onigasm and tmlanguage data if necessary
-    if (!Tokenizer.hasOnigasm()) {
-        postActionToExtension(arg, InteractiveWindowMessages.LoadOnigasmAssemblyRequest);
-    }
-    if (arg.prevState.language && !Tokenizer.hasLanguage(arg.prevState.language)) {
-        postActionToExtension(arg, InteractiveWindowMessages.LoadTmLanguageRequest, arg.prevState.language);
-    }
+    // if (!Tokenizer.hasOnigasm()) {
+    //     postActionToExtension(arg, InteractiveWindowMessages.LoadOnigasmAssemblyRequest);
+    // }
+    // if (arg.prevState.language && !Tokenizer.hasLanguage(arg.prevState.language)) {
+    //     postActionToExtension(arg, InteractiveWindowMessages.LoadTmLanguageRequest, arg.prevState.language);
+    // }
     // If have both, tell other side monaco is ready
-    if (Tokenizer.hasOnigasm() && Tokenizer.hasLanguage(arg.prevState.language)) {
-        onigasmPromise.resolve(true);
+    // if (Tokenizer.hasOnigasm() && Tokenizer.hasLanguage(arg.prevState.language)) {
+    onigasmPromise.resolve(true);
 
-        // Both queue to the reducers and to the extension side that we're ready
-        queueIncomingAction(arg, InteractiveWindowMessages.MonacoReady);
-        postActionToExtension(arg, InteractiveWindowMessages.MonacoReady);
-    }
+    // Both queue to the reducers and to the extension side that we're ready
+    queueIncomingAction(arg, InteractiveWindowMessages.MonacoReady);
+    postActionToExtension(arg, InteractiveWindowMessages.MonacoReady);
+    // }
 
     return arg.prevState;
 }
@@ -151,11 +151,12 @@ function handleKernelUpdate(arg: MonacoReducerArg<IServerState | undefined>): IM
     return arg.prevState;
 }
 
-function handleThemeResponse(arg: MonacoReducerArg<IGetMonacoThemeResponse>): IMonacoState {
-    // Tell monaco we have a new theme. THis is like a state update for monaco
-    monacoEditor.editor.defineTheme(Identifiers.GeneratedThemeName, arg.payload.data.theme);
-    return arg.prevState;
-}
+// tslint:disable-next-line: no-any
+// function handleThemeResponse(arg: any): IMonacoState {
+//     // Tell monaco we have a new theme. THis is like a state update for monaco
+//     // monacoEditor.editor.defineTheme(Identifiers.GeneratedThemeName, arg.payload.data.theme);
+//     return arg.prevState;
+// }
 
 function handleCompletionItemsResponse(arg: MonacoReducerArg<IProvideCompletionItemsResponse>): IMonacoState {
     const ensuredProvider = handleStarted(arg);
@@ -215,7 +216,7 @@ class IMonacoActionMapping {
     public [InteractiveWindowMessages.Started]: MonacoReducerFunc;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: MonacoReducerFunc<Buffer>;
     public [InteractiveWindowMessages.LoadTmLanguageResponse]: MonacoReducerFunc<ILoadTmLanguageResponse>;
-    public [CssMessages.GetMonacoThemeResponse]: MonacoReducerFunc<IGetMonacoThemeResponse>;
+    // public [CssMessages.GetMonacoThemeResponse]: MonacoReducerFunc<IGetMonacoThemeResponse>;
     public [InteractiveWindowMessages.ProvideCompletionItemsResponse]: MonacoReducerFunc<
         IProvideCompletionItemsResponse
     >;
@@ -235,7 +236,7 @@ const reducerMap: IMonacoActionMapping = {
     [InteractiveWindowMessages.Started]: handleStarted,
     [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: handleLoadOnigasmResponse,
     [InteractiveWindowMessages.LoadTmLanguageResponse]: handleLoadTmLanguageResponse,
-    [CssMessages.GetMonacoThemeResponse]: handleThemeResponse,
+    // [CssMessages.GetMonacoThemeResponse]: handleThemeResponse,
     [InteractiveWindowMessages.ProvideCompletionItemsResponse]: handleCompletionItemsResponse,
     [InteractiveWindowMessages.ProvideSignatureHelpResponse]: handleSignatureHelpResponse,
     [InteractiveWindowMessages.ProvideHoverResponse]: handleHoverResponse,

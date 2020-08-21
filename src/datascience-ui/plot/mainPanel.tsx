@@ -7,10 +7,10 @@ import * as React from 'react';
 import { Tool, Value } from 'react-svg-pan-zoom';
 import * as uuid from 'uuid/v4';
 
-import { createDeferred } from '../../client/common/utils/async';
+// import { createDeferred } from '../../client/common/utils/async';
 import { RegExpValues } from '../../client/datascience/constants';
 import { SharedMessages } from '../../client/datascience/messages';
-import { IPlotViewerMapping, PlotViewerMessages } from '../../client/datascience/plotting/types';
+// import { IPlotViewerMapping, PlotViewerMessages } from '../../client/datascience/plotting/types';
 import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
@@ -19,7 +19,7 @@ import { StyleInjector } from '../react-common/styleInjector';
 import { SvgList } from '../react-common/svgList';
 import { SvgViewer } from '../react-common/svgViewer';
 import { TestSvg } from './testSvg';
-import { Toolbar } from './toolbar';
+// import { Toolbar } from './toolbar';
 
 // Our css has to come after in order to override body styles
 export interface IMainPanelProps {
@@ -80,7 +80,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.addHandler(this);
 
         // Tell the plot viewer code we have started.
-        this.postOffice.sendMessage<IPlotViewerMapping>(PlotViewerMessages.Started);
+        // this.postOffice.sendMessage<IPlotViewerMapping>(PlotViewerMessages.Started);
 
         // Listen to key events
         window.addEventListener('keydown', this.onKeyDown);
@@ -104,7 +104,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         darkChanged={this.darkChanged}
                         postOffice={this.postOffice}
                     />
-                    {this.renderToolbar(baseTheme)}
+                    {/* {this.renderToolbar(baseTheme)} */}
                     {this.renderThumbnails(baseTheme)}
                     {this.renderPlot(baseTheme)}
                 </div>
@@ -117,9 +117,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // tslint:disable-next-line:no-any
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
-            case PlotViewerMessages.SendPlot:
-                this.addPlot(payload);
-                break;
+            // case PlotViewerMessages.SendPlot:
+            //     this.addPlot(payload);
+            //     break;
 
             case SharedMessages.UpdateSettings:
                 this.updateSettings(payload);
@@ -229,16 +229,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     };
 
-    private addPlot(payload: any) {
-        this.setState({
-            images: [...this.state.images, payload as string],
-            thumbnails: [...this.state.thumbnails, this.generateThumbnail(payload)],
-            sizes: [...this.state.sizes, this.extractSize(payload)],
-            values: [...this.state.values, undefined],
-            ids: [...this.state.ids, uuid()],
-            currentImage: this.state.images.length
-        });
-    }
+    // private addPlot(payload: any) {
+    //     this.setState({
+    //         images: [...this.state.images, payload as string],
+    //         thumbnails: [...this.state.thumbnails, this.generateThumbnail(payload)],
+    //         sizes: [...this.state.sizes, this.extractSize(payload)],
+    //         values: [...this.state.values, undefined],
+    //         ids: [...this.state.ids, uuid()],
+    //         currentImage: this.state.images.length
+    //     });
+    // }
 
     private renderThumbnails(_baseTheme: string) {
         return (
@@ -251,22 +251,22 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         );
     }
 
-    private renderToolbar(baseTheme: string) {
-        const prev = this.state.currentImage > 0 ? this.prevClicked : undefined;
-        const next = this.state.currentImage < this.state.images.length - 1 ? this.nextClicked : undefined;
-        const deleteClickHandler = this.state.currentImage !== -1 ? this.deleteClicked : undefined;
-        return (
-            <Toolbar
-                baseTheme={baseTheme}
-                changeTool={this.changeTool}
-                exportButtonClicked={this.exportCurrent}
-                copyButtonClicked={this.copyCurrent}
-                prevButtonClicked={prev}
-                nextButtonClicked={next}
-                deleteButtonClicked={deleteClickHandler}
-            />
-        );
-    }
+    // private renderToolbar(baseTheme: string) {
+    //     const prev = this.state.currentImage > 0 ? this.prevClicked : undefined;
+    //     const next = this.state.currentImage < this.state.images.length - 1 ? this.nextClicked : undefined;
+    //     const deleteClickHandler = this.state.currentImage !== -1 ? this.deleteClicked : undefined;
+    //     return (
+    //         <Toolbar
+    //             baseTheme={baseTheme}
+    //             changeTool={this.changeTool}
+    //             exportButtonClicked={this.exportCurrent}
+    //             copyButtonClicked={this.copyCurrent}
+    //             prevButtonClicked={prev}
+    //             nextButtonClicked={next}
+    //             deleteButtonClicked={deleteClickHandler}
+    //         />
+    //     );
+    // }
     private renderPlot(baseTheme: string) {
         // Render current plot
         const currentPlot = this.state.currentImage >= 0 ? this.state.images[this.state.currentImage] : undefined;
@@ -303,9 +303,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.currentValue = { ...value };
     };
 
-    private changeTool = (tool: Tool) => {
-        this.setState({ tool });
-    };
+    // private changeTool = (tool: Tool) => {
+    //     this.setState({ tool });
+    // };
 
     private extractSize(image: string): ISize {
         let height = '100px';
@@ -353,76 +353,76 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.changeCurrentImage(index);
     };
 
-    private sendMessage<M extends IPlotViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        this.postOffice.sendMessage<M, T>(type, payload);
-    }
+    // private sendMessage<M extends IPlotViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
+    //     this.postOffice.sendMessage<M, T>(type, payload);
+    // }
 
-    private exportCurrent = async () => {
-        // In order to export, we need the png and the svg. Generate
-        // a png by drawing to a canvas and then turning the canvas into a dataurl.
-        if (this.container && this.container.current) {
-            const doc = this.container.current.ownerDocument;
-            if (doc) {
-                const canvas = doc.createElement('canvas');
-                if (canvas) {
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) {
-                        const waitable = createDeferred();
-                        const svgBlob = new Blob([this.state.images[this.state.currentImage]], {
-                            type: 'image/svg+xml;charset=utf-8'
-                        });
-                        const img = new Image();
-                        const url = window.URL.createObjectURL(svgBlob);
-                        img.onload = () => {
-                            canvas.width = img.width;
-                            canvas.height = img.height;
-                            ctx.clearRect(0, 0, canvas.width, canvas.height);
-                            ctx.drawImage(img, 0, 0);
-                            waitable.resolve();
-                        };
-                        img.src = url;
-                        await waitable.promise;
-                        const png = canvas.toDataURL('png');
-                        canvas.remove();
+    // private exportCurrent = async () => {
+    //     // In order to export, we need the png and the svg. Generate
+    //     // a png by drawing to a canvas and then turning the canvas into a dataurl.
+    //     if (this.container && this.container.current) {
+    //         const doc = this.container.current.ownerDocument;
+    //         if (doc) {
+    //             const canvas = doc.createElement('canvas');
+    //             if (canvas) {
+    //                 const ctx = canvas.getContext('2d');
+    //                 if (ctx) {
+    //                     const waitable = createDeferred();
+    //                     const svgBlob = new Blob([this.state.images[this.state.currentImage]], {
+    //                         type: 'image/svg+xml;charset=utf-8'
+    //                     });
+    //                     const img = new Image();
+    //                     const url = window.URL.createObjectURL(svgBlob);
+    //                     img.onload = () => {
+    //                         canvas.width = img.width;
+    //                         canvas.height = img.height;
+    //                         ctx.clearRect(0, 0, canvas.width, canvas.height);
+    //                         ctx.drawImage(img, 0, 0);
+    //                         waitable.resolve();
+    //                     };
+    //                     img.src = url;
+    //                     await waitable.promise;
+    //                     const png = canvas.toDataURL('png');
+    //                     canvas.remove();
 
-                        // Send both our image and the png.
-                        this.sendMessage(PlotViewerMessages.ExportPlot, {
-                            svg: this.state.images[this.state.currentImage],
-                            png
-                        });
-                    }
-                }
-            }
-        }
-    };
+    //                     // Send both our image and the png.
+    //                     this.sendMessage(PlotViewerMessages.ExportPlot, {
+    //                         svg: this.state.images[this.state.currentImage],
+    //                         png
+    //                     });
+    //                 }
+    //             }
+    //         }
+    //     }
+    // };
 
-    private copyCurrent = async () => {
-        // Not supported at the moment.
-    };
+    // private copyCurrent = async () => {
+    //     // Not supported at the moment.
+    // };
 
-    private prevClicked = () => {
-        this.changeCurrentImage(this.state.currentImage - 1);
-    };
+    // private prevClicked = () => {
+    //     this.changeCurrentImage(this.state.currentImage - 1);
+    // };
 
-    private nextClicked = () => {
-        this.changeCurrentImage(this.state.currentImage + 1);
-    };
+    // private nextClicked = () => {
+    //     this.changeCurrentImage(this.state.currentImage + 1);
+    // };
 
-    private deleteClicked = () => {
-        if (this.state.currentImage >= 0) {
-            const oldCurrent = this.state.currentImage;
-            const newCurrent = this.state.images.length > 1 ? this.state.currentImage : -1;
+    // private deleteClicked = () => {
+    //     if (this.state.currentImage >= 0) {
+    //         const oldCurrent = this.state.currentImage;
+    //         const newCurrent = this.state.images.length > 1 ? this.state.currentImage : -1;
 
-            this.setState({
-                images: this.state.images.filter((_v, i) => i !== oldCurrent),
-                sizes: this.state.sizes.filter((_v, i) => i !== oldCurrent),
-                values: this.state.values.filter((_v, i) => i !== oldCurrent),
-                thumbnails: this.state.thumbnails.filter((_v, i) => i !== oldCurrent),
-                currentImage: newCurrent
-            });
+    //         this.setState({
+    //             images: this.state.images.filter((_v, i) => i !== oldCurrent),
+    //             sizes: this.state.sizes.filter((_v, i) => i !== oldCurrent),
+    //             values: this.state.values.filter((_v, i) => i !== oldCurrent),
+    //             thumbnails: this.state.thumbnails.filter((_v, i) => i !== oldCurrent),
+    //             currentImage: newCurrent
+    //         });
 
-            // Tell the other side too as we don't want it sending this image again
-            this.sendMessage(PlotViewerMessages.RemovePlot, oldCurrent);
-        }
-    };
+    //         // Tell the other side too as we don't want it sending this image again
+    //         this.sendMessage(PlotViewerMessages.RemovePlot, oldCurrent);
+    //     }
+    // };
 }

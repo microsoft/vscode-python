@@ -4,7 +4,7 @@
 import '../../client/common/extensions';
 
 import type { nbformat } from '@jupyterlab/coreutils';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
 import { concatMultilineString } from '../common';

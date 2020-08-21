@@ -4,7 +4,7 @@
 import '../../../common/extensions';
 
 import { inject, injectable, named } from 'inversify';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import {

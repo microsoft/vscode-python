@@ -208,10 +208,10 @@ export class WidgetManagerComponent extends React.Component<Props> {
      * Or check local FS then fall back to CDN (depending on the order defined by the user).
      */
     private loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void> {
-        // tslint:disable-next-line: no-console
-        console.log(`Fetch IPyWidget source for ${moduleName}`);
         let request = this.widgetSourceRequests.get(moduleName);
         if (!request) {
+            // tslint:disable-next-line: no-console
+            console.log(`1.Fetch IPyWidget source for ${moduleName}`);
             request = {
                 deferred: createDeferred<void>(),
                 timer: undefined

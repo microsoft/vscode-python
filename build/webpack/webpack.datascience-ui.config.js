@@ -4,5 +4,6 @@
 'use strict';
 
 const builder = require('./webpack.datascience-ui.config.builder');
-module.exports = [builder.notebooks, builder.myipywidgets];
+module.exports = [builder.notebooks];
+// module.exports = [builder.notebooks, builder.myipywidgets];
 // module.exports = [builder.notebooks];

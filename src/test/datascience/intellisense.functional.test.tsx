@@ -3,7 +3,7 @@
 'use strict';
 import * as assert from 'assert';
 import { ReactWrapper } from 'enzyme';
-import { IDisposable } from 'monaco-editor';
+import type { IDisposable } from 'monaco-editor';
 import { Disposable } from 'vscode';
 
 import { nbformat } from '@jupyterlab/coreutils';

@@ -4,7 +4,7 @@
 import * as cors from 'cors';
 import * as express from 'express';
 import * as http from 'http';
-import { IDisposable } from 'monaco-editor';
+import type { IDisposable } from 'monaco-editor';
 import * as path from 'path';
 import * as socketIO from 'socket.io';
 import { env, Event, EventEmitter, window } from 'vscode';

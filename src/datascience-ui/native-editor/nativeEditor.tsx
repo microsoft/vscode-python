@@ -20,12 +20,12 @@ import { IVariablePanelProps, VariablePanel } from '../interactive-common/variab
 import { getOSType } from '../react-common/constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
-import { Progress } from '../react-common/progress';
+// import { Progress } from '../react-common/progress';
 import { AddCellLine } from './addCellLine';
 import { getConnectedNativeCell } from './nativeCell';
 import './nativeEditor.less';
 import { actionCreators } from './redux/actions';
-import { ToolbarComponent } from './toolbar';
+// import { ToolbarComponent } from './toolbar';
 
 type INativeEditorProps = IMainWithVariables & typeof actionCreators;
 
@@ -86,7 +86,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
         }
 
         // Update the state controller with our new state
-        const progressBar = (this.props.busy || !this.props.loaded) && !this.props.testMode ? <Progress /> : undefined;
+        // const progressBar = (this.props.busy || !this.props.loaded) && !this.props.testMode ? <Progress /> : undefined;
         const addCellLine =
             this.props.cellVMs.length === 0 ? null : (
                 <AddCellLine
@@ -104,10 +104,6 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                     <style>{`${this.props.rootCss ? this.props.rootCss : ''}
 ${buildSettingsCss(this.props.settings)}`}</style>
                 </div>
-                <header ref={this.mainPanelToolbarRef} id="main-panel-toolbar">
-                    {this.renderToolbarPanel()}
-                    {progressBar}
-                </header>
                 <section
                     id="main-panel-variable"
                     aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
@@ -125,9 +121,9 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     private insertAboveFirst() {
         setTimeout(() => this.props.insertAboveFirst(), 1);
     }
-    private renderToolbarPanel() {
-        return <ToolbarComponent isNotebookTrusted={this.props.isNotebookTrusted}></ToolbarComponent>;
-    }
+    // private renderToolbarPanel() {
+    //     return <ToolbarComponent isNotebookTrusted={this.props.isNotebookTrusted}></ToolbarComponent>;
+    // }
 
     private renderVariablePanel(baseTheme: string) {
         if (this.props.variableState.visible) {

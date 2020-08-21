@@ -1,7 +1,7 @@
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken } from 'monaco-editor';
+// import { CancellationToken } from 'monaco-editor';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { TemporaryDirectory } from '../../common/platform/types';

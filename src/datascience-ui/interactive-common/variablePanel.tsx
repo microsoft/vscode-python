@@ -5,7 +5,7 @@
 import * as React from 'react';
 
 import { IJupyterVariable } from '../../client/datascience/types';
-import { VariableExplorer } from './variableExplorer';
+// import { VariableExplorer } from './variableExplorer';
 
 export interface IVariablePanelProps {
     baseTheme: string;
@@ -33,25 +33,25 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
         super(prop);
     }
 
-    public render() {
-        return (
-            <VariableExplorer
-                gridHeight={this.props.gridHeight}
-                containerHeight={this.props.containerHeight}
-                offsetHeight={this.props.offsetHeight}
-                fontSize={this.props.fontSize}
-                variables={this.props.variables}
-                debugging={this.props.debugging}
-                baseTheme={this.props.baseTheme}
-                skipDefault={this.props.skipDefault}
-                showDataExplorer={this.props.showDataExplorer}
-                closeVariableExplorer={this.props.closeVariableExplorer}
-                setVariableExplorerHeight={this.props.setVariableExplorerHeight}
-                pageIn={this.props.pageIn}
-                executionCount={this.props.executionCount}
-                supportsDebugging={this.props.supportsDebugging}
-                refreshCount={this.props.refreshCount}
-            />
-        );
-    }
+    // public render() {
+    //     return (
+    //         <VariableExplorer
+    //             gridHeight={this.props.gridHeight}
+    //             containerHeight={this.props.containerHeight}
+    //             offsetHeight={this.props.offsetHeight}
+    //             fontSize={this.props.fontSize}
+    //             variables={this.props.variables}
+    //             debugging={this.props.debugging}
+    //             baseTheme={this.props.baseTheme}
+    //             skipDefault={this.props.skipDefault}
+    //             showDataExplorer={this.props.showDataExplorer}
+    //             closeVariableExplorer={this.props.closeVariableExplorer}
+    //             setVariableExplorerHeight={this.props.setVariableExplorerHeight}
+    //             pageIn={this.props.pageIn}
+    //             executionCount={this.props.executionCount}
+    //             supportsDebugging={this.props.supportsDebugging}
+    //             refreshCount={this.props.refreshCount}
+    //         />
+    //     );
+    // }
 }

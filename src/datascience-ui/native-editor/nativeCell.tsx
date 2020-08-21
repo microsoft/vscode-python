@@ -5,7 +5,7 @@ import '../../client/common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import * as fastDeepEqual from 'fast-deep-equal';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 import { connect } from 'react-redux';
 
@@ -17,7 +17,7 @@ import {
 } from '../../client/datascience/constants';
 import { CellState } from '../../client/datascience/types';
 import { concatMultilineString } from '../common';
-import { CellInput } from '../interactive-common/cellInput';
+import type { CellInput } from '../interactive-common/cellInput';
 import { CellOutput } from '../interactive-common/cellOutput';
 import { ExecutionCount } from '../interactive-common/executionCount';
 import { InformationMessages } from '../interactive-common/informationMessages';
@@ -27,7 +27,7 @@ import { IKeyboardEvent } from '../react-common/event';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
-import { IMonacoModelContentChangeEvent } from '../react-common/monacoHelpers';
+// import { IMonacoModelContentChangeEvent } from '../react-common/monacoHelpers';
 import { AddCellLine } from './addCellLine';
 import { actionCreators } from './redux/actions';
 
@@ -753,14 +753,14 @@ export class NativeCell extends React.Component<INativeCellProps> {
         if (this.shouldRenderInput()) {
             // Make sure the glyph margin is always there for native cells.
             // We need it for debugging.
-            const options = {
-                ...this.props.editorOptions,
-                glyphMargin: true
-            };
+            // const options = {
+            //     ...this.props.editorOptions,
+            //     glyphMargin: true
+            // };
             return (
                 <div className="cell-input-wrapper">
                     {this.renderMiddleToolbar()}
-                    <CellInput
+                    {/* <CellInput
                         cellVM={this.props.cellVM}
                         editorOptions={options}
                         history={undefined}
@@ -783,29 +783,29 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         focusPending={this.props.focusPending}
                         language={this.props.language}
                         isNotebookTrusted={this.props.isNotebookTrusted}
-                    />
+                    /> */}
                 </div>
             );
         }
         return null;
     };
 
-    private onCodeFocused = () => {
-        this.props.focusCell(this.cellId, CursorPos.Current);
-    };
+    // private onCodeFocused = () => {
+    //     this.props.focusCell(this.cellId, CursorPos.Current);
+    // };
 
-    private onCodeUnfocused = () => {
-        // Make sure to save the code from the editor into the cell
-        this.props.unfocusCell(this.cellId, this.getCurrentCode());
-    };
+    // private onCodeUnfocused = () => {
+    //     // Make sure to save the code from the editor into the cell
+    //     this.props.unfocusCell(this.cellId, this.getCurrentCode());
+    // };
 
-    private onCodeChange = (e: IMonacoModelContentChangeEvent) => {
-        this.props.editCell(this.getCell().id, e);
-    };
+    // private onCodeChange = (e: IMonacoModelContentChangeEvent) => {
+    //     this.props.editCell(this.getCell().id, e);
+    // };
 
-    private onCodeCreated = (_code: string, _file: string, cellId: string, modelId: string) => {
-        this.props.codeCreated(cellId, modelId);
-    };
+    // private onCodeCreated = (_code: string, _file: string, cellId: string, modelId: string) => {
+    //     this.props.codeCreated(cellId, modelId);
+    // };
 
     private renderOutput = (): JSX.Element | null => {
         const themeMatplotlibPlots = this.props.themeMatplotlibPlots ? true : false;
@@ -882,9 +882,9 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return <div className={classes}></div>;
     };
 
-    private openLink = (uri: monacoEditor.Uri) => {
-        this.props.linkClick(uri.toString());
-    };
+    // private openLink = (uri: monacoEditor.Uri) => {
+    //     this.props.linkClick(uri.toString());
+    // };
 }
 
 // Main export, return a redux connected editor
