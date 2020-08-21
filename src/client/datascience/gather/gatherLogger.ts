@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import cloneDeep = require('lodash/cloneDeep');
 import { extensions } from 'vscode';
 import { concatMultilineString } from '../../../datascience-ui/common';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -69,7 +69,11 @@ export class GatherLogger implements IGatherLogger {
                 }
             }
             const api = ext.exports;
-            this.gather = api.getGatherProvider();
+            try {
+                this.gather = api.getGatherProvider();
+            } catch {
+                traceInfo(`Gather not installed`);
+            }
         }
     }
 }
