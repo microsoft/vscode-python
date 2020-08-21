@@ -148,7 +148,7 @@ suite('Environment collection', async () => {
             fileSystem.object,
             new EnvironmentInfoService(),
             workspaceService.object,
-            serviceContainer.object
+            locators.map((l) => l.object)
         );
     });
 
@@ -295,7 +295,9 @@ suite('Environment collection', async () => {
     });
 
     test('Wait for all locators to discover & store environments before returning list if getAllEnvironments option is set to true', async () => {
-        const getEnvironmentsPromise = environmentsCollection.getEnvironments(resource, { getAllEnvironments: true });
+        const getEnvironmentsPromise = environmentsCollection.getEnvironments(resource, {
+            getAllEnvironmentsForResource: true
+        });
         const getEnvironmentsDeferred = createDeferredFromPromise(getEnvironmentsPromise);
         const environmentsDiscoveredByLocator2 = [{ path: path.join('path5', 'to', 'python5') }];
         locatorPromises[5].resolve(environmentsDiscoveredByLocator2);

@@ -6,19 +6,8 @@
 import { Disposable, Event, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IDisposableRegistry, IPersistentStateFactory, Resource } from '../../common/types';
+import { IPersistentStateFactory, Resource } from '../../common/types';
 import { createDeferredFromPromise, Deferred } from '../../common/utils/async';
-import {
-    CONDA_ENV_FILE_SERVICE,
-    CONDA_ENV_SERVICE,
-    CURRENT_PATH_SERVICE,
-    GLOBAL_VIRTUAL_ENV_SERVICE,
-    KNOWN_PATH_SERVICE,
-    PIPENV_SERVICE,
-    WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
-} from '../../interpreter/contracts';
-import { IServiceContainer } from '../../ioc/types';
 import { PartialPythonEnvironment } from '../info';
 import { EnvironmentInfoServiceQueuePriority, IEnvironmentInfoService } from '../info/environmentInfoService';
 import { EnvironmentsStorage } from './environmentsStorage';
@@ -29,7 +18,7 @@ import {
 } from './locators/types';
 
 /**
- * Facilitates locating Python environments.
+ * Collects environments from locators and maintains environment storage.
  */
 export class EnvironmentsCollectionService implements IEnvironmentsCollectionService {
     public get onDidChange(): Event<Resource> {
@@ -41,23 +30,28 @@ export class EnvironmentsCollectionService implements IEnvironmentsCollectionSer
         Resource,
         Deferred<void[][]> | undefined
     >();
-    private readonly locators: IEnvironmentLocatorService[];
+    private disposables: Disposable[] = [];
 
     constructor(
         persistentStateFactory: IPersistentStateFactory,
         fileSystem: IFileSystem,
         environmentsInfo: IEnvironmentInfoService,
         private readonly workspaceService: IWorkspaceService,
-        private readonly serviceContainer: IServiceContainer
+        private readonly locators: IEnvironmentLocatorService[]
     ) {
         this.environmentsStorage = new EnvironmentsStorage(persistentStateFactory, environmentsInfo, fileSystem);
-        this.locators = this.getLocators();
-        const disposables = serviceContainer.get<Disposable[]>(IDisposableRegistry);
         this.locators.forEach((locator) => {
-            disposables.push(
+            this.disposables.push(
                 locator.onDidChange((resource) => this.getEnvironmentsFromLocatorAndStoreIt(locator, resource))
             );
         });
+    }
+
+    public dispose() {
+        while (this.disposables.length > 0) {
+            const disposable = this.disposables.shift()!;
+            disposable.dispose();
+        }
     }
 
     public async getEnvironments(
@@ -65,18 +59,12 @@ export class EnvironmentsCollectionService implements IEnvironmentsCollectionSer
         options?: GetEnvironmentLocatorOptions
     ): Promise<PartialPythonEnvironment[]> {
         resource = this.workspaceService.getWorkspaceFolder(resource)?.uri;
-        let areAllEnvironmentsStoredDeferred = this.areAllEnvironmentsStoredForResourceDeferred.get(resource);
-        if (!areAllEnvironmentsStoredDeferred || areAllEnvironmentsStoredDeferred.completed) {
-            // Do not trigger discovery using locators for resource again if previous promise is still ongoing
-            const promise = this.getEnvironmentsAndStoreIt(resource, options);
-            areAllEnvironmentsStoredDeferred = createDeferredFromPromise(promise);
-            this.areAllEnvironmentsStoredForResourceDeferred.set(resource, areAllEnvironmentsStoredDeferred);
-        }
-        if (options?.getAllEnvironments) {
+        const areAllEnvironmentsStoredPromise = this.getEnvironmentsAndStoreIt(resource, options);
+        if (options?.getAllEnvironmentsForResource) {
             // Wait until all discovered environments are stored into storage
-            await areAllEnvironmentsStoredDeferred.promise;
+            await areAllEnvironmentsStoredPromise;
         }
-        return this.environmentsStorage.getEnvironments(areAllEnvironmentsStoredDeferred.promise, resource);
+        return this.environmentsStorage.getEnvironments(areAllEnvironmentsStoredPromise, resource);
     }
 
     public async addPath(interpreterPath: string) {
@@ -86,10 +74,21 @@ export class EnvironmentsCollectionService implements IEnvironmentsCollectionSer
         );
     }
 
+    /**
+     * Calls into locators to upgrade storage cache, can be used to refresh storage.
+     * Returns a promise which resolves when all environments are discovered and stored and storage is upto date.
+     */
     private async getEnvironmentsAndStoreIt(resource?: Uri, options?: GetEnvironmentLocatorOptions) {
-        return Promise.all(
+        const deferred = this.areAllEnvironmentsStoredForResourceDeferred.get(resource);
+        if (deferred && !deferred.completed) {
+            // If previous promise to this method is still ongoing, do not initiate a new promise & return previous promise
+            return deferred.promise;
+        }
+        const promise = Promise.all(
             this.locators.map(async (locator) => this.getEnvironmentsFromLocatorAndStoreIt(locator, resource, options))
         );
+        this.areAllEnvironmentsStoredForResourceDeferred.set(resource, createDeferredFromPromise(promise));
+        return promise;
     }
 
     private async getEnvironmentsFromLocatorAndStoreIt(
@@ -100,25 +99,6 @@ export class EnvironmentsCollectionService implements IEnvironmentsCollectionSer
         const environments = await locator.getEnvironments(resource, options);
         return Promise.all(
             environments.map((interpreter) => this.environmentsStorage.addPartialInfo(interpreter, options))
-        );
-    }
-
-    /**
-     * Return the list of applicable interpreter locators.
-     */
-    private getLocators(): IEnvironmentLocatorService[] {
-        const keys = [
-            WINDOWS_REGISTRY_SERVICE,
-            CONDA_ENV_SERVICE,
-            CONDA_ENV_FILE_SERVICE,
-            PIPENV_SERVICE,
-            GLOBAL_VIRTUAL_ENV_SERVICE,
-            WORKSPACE_VIRTUAL_ENV_SERVICE,
-            KNOWN_PATH_SERVICE,
-            CURRENT_PATH_SERVICE
-        ];
-        return keys.map((item) =>
-            this.serviceContainer.get<IEnvironmentLocatorService>(IEnvironmentLocatorService, item)
         );
     }
 }

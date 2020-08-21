@@ -9,7 +9,7 @@ import { PartialPythonEnvironment } from '../../info';
 export type GetInterpreterLocatorOptions = GetInterpreterOptions & { ignoreCache?: boolean };
 
 export type GetEnvironmentLocatorOptions = GetInterpreterOptions & {
-    getAllEnvironments?: boolean;
+    getAllEnvironmentsForResource?: boolean;
     getCompleteInfoForAllEnvironments?: boolean;
 };
 

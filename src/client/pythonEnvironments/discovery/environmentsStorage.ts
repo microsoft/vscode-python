@@ -3,14 +3,13 @@
 
 'use strict';
 
-import * as path from 'path';
 import { Event, EventEmitter } from 'vscode';
 import { IFileSystem } from '../../common/platform/types';
 import { IPersistentStateFactory, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { mergeEnvironments, PartialPythonEnvironment, PythonEnvironment } from '../info';
 import { EnvironmentInfoServiceQueuePriority, IEnvironmentInfoService } from '../info/environmentInfoService';
-import { isEnvironmentValid, resolvePossibleSymlinkToRealPath } from '../utils';
+import { isEnvironmentValid } from '../utils';
 import { GetEnvironmentLocatorOptions } from './locators/types';
 
 export const partialInfoEnvironmentMapKey = 'PARTIAL_INFO_ENVIRONMENT_MAP_KEY';
@@ -62,38 +61,24 @@ export class EnvironmentsStorage {
         return mergeEnvironments(items, this.fileSystem);
     }
 
+    /**
+     * Adds environments returned by locators to storage. The environments are not expected to contain the complete environment info.
+     * So a call to get complete info is initiated in the background which runs python to get full info.
+     */
     public async addPartialInfo(
         partialInfo: PartialPythonEnvironment,
         options?: GetEnvironmentLocatorOptions & { priority?: EnvironmentInfoServiceQueuePriority }
     ) {
-        partialInfo.path = path.normalize(resolvePossibleSymlinkToRealPath(partialInfo.path));
         if (this.completeInfoEnvironmentMap.has(partialInfo.path)) {
             return;
         }
         if (this.partialInfoEnvironmentMap.has(partialInfo.path)) {
+            // This environment is already stored, combine the stored info with the new info
             const storedInfo = this.partialInfoEnvironmentMap.get(partialInfo.path)!;
-            // Combine the stored info with the new info
             partialInfo = mergeEnvironments([storedInfo, partialInfo], this.fileSystem)[0];
         }
-
-        const storeCompleteInfoPromise = this.environmentsInfo
-            .getEnvironmentInfo(partialInfo.path, options?.priority)
-            .then((environmentInfo) => {
-                if (this.partialInfoEnvironmentMap.has(partialInfo.path)) {
-                    this.partialInfoEnvironmentMap.delete(partialInfo.path);
-                }
-                if (!environmentInfo) {
-                    return;
-                }
-                // Partial info may contain certain properties like 'pipEnvWorkspaceFolder' which environment info doesn't return
-                // Combine the two to create complete info
-                const completeEnvironmentInfo = mergeEnvironments(
-                    [environmentInfo, partialInfo],
-                    this.fileSystem
-                )[0] as PythonEnvironment;
-                this.completeInfoEnvironmentMap.set(partialInfo.path, completeEnvironmentInfo);
-                this.didChangeCollectionEmitter.fire(partialInfo.resource);
-            });
+        // Initiate this in background
+        const storeCompleteInfoPromise = this.getCompleteInfoAndStoreIt(partialInfo, options?.priority);
 
         if (options?.getCompleteInfoForAllEnvironments) {
             await storeCompleteInfoPromise;
@@ -102,7 +87,6 @@ export class EnvironmentsStorage {
             this.partialInfoEnvironmentMap.set(partialInfo.path, partialInfo);
             this.didChangeCollectionEmitter.fire(partialInfo.resource);
         }
-        // One environment just added to storage, resolve promise
         this.storageContainsEnvironments.resolve();
     }
 
@@ -117,5 +101,30 @@ export class EnvironmentsStorage {
                 });
             })
         );
+    }
+
+    /**
+     * Get complete information for environments by running python (for eg. `interpreterInfo.py`)
+     */
+    private async getCompleteInfoAndStoreIt(
+        partialInfo: PartialPythonEnvironment,
+        priority?: EnvironmentInfoServiceQueuePriority
+    ) {
+        return this.environmentsInfo.getEnvironmentInfo(partialInfo.path, priority).then((environmentInfo) => {
+            if (this.partialInfoEnvironmentMap.has(partialInfo.path)) {
+                this.partialInfoEnvironmentMap.delete(partialInfo.path);
+            }
+            if (!environmentInfo) {
+                return;
+            }
+            // Partial info may contain certain properties like 'pipEnvWorkspaceFolder' which environment info doesn't return
+            // Combine the two to create complete info
+            const completeEnvironmentInfo = mergeEnvironments(
+                [environmentInfo, partialInfo],
+                this.fileSystem
+            )[0] as PythonEnvironment;
+            this.completeInfoEnvironmentMap.set(partialInfo.path, completeEnvironmentInfo);
+            this.didChangeCollectionEmitter.fire(partialInfo.resource);
+        });
     }
 }
