@@ -183,10 +183,11 @@ def _replace_fd(file, target):
     except AttributeError:
         # `file` does not have fileno() so it's been replaced from the
         # default sys.stdout, etc. Return with noop.
+        yield
         return
     target_fd = target.fileno()
 
-    # `os.dup2()` closes the original FD, so we make copies.
+    # Keep the original FD to be restored in the finally clause.
     dup_fd = os.dup(fd)
     try:
         # Point the FD at the target.
