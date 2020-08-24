@@ -196,14 +196,23 @@ def _replace_fd(file, target):
 
 
 @contextlib.contextmanager
-def _replace_stdx(attr, target):
-    assert attr in ("stdout", "stderr")
-    orig = getattr(sys, attr)
-    setattr(sys, attr, target)
+def _replace_stdout(target):
+    orig = sys.stdout
+    sys.stdout = target
     try:
         yield orig
     finally:
-        setattr(sys, attr, orig)
+        sys.stdout = orig
+
+
+@contextlib.contextmanager
+def _replace_stderr(target):
+    orig = sys.stderr
+    sys.stderr = target
+    try:
+        yield orig
+    finally:
+        sys.stderr = orig
 
 
 class _StringIO:
@@ -237,9 +246,9 @@ def hide_stdio():
     """Swallow stdout and stderr."""
     with _temp_io() as (sio, fileobj):
         with _replace_fd(sys.stdout, fileobj):
-            with _replace_stdx("stdout", fileobj):
+            with _replace_stdout(fileobj):
                 with _replace_fd(sys.stderr, fileobj):
-                    with _replace_stdx("stderr", fileobj):
+                    with _replace_stderr(fileobj):
                         yield sio
 
 
