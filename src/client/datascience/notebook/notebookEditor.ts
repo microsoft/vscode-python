@@ -98,7 +98,7 @@ export class NotebookEditor implements INotebookEditor {
         this.commandManager.executeCommand('notebook.execute').then(noop, noop);
     }
     public runSelectedCell(): void {
-        this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow').then(noop, noop);
+        this.commandManager.executeCommand('notebook.cell.execute').then(noop, noop);
     }
     public addCellBelow(): void {
         this.commandManager.executeCommand('notebook.cell.insertCodeCellBelow').then(noop, noop);
