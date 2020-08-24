@@ -129,11 +129,6 @@
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
             },
             {
-                "command": "notebook.cell.execute",
-                "key": "shift+enter",
-                "when": "notebookCellListFocused"
-            },
-            {
                 "command": "python.datascience.runcurrentcell",
                 "key": "ctrl+enter",
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"

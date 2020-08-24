@@ -100,7 +100,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
     ['vscode.open']: [Uri];
     ['notebook.execute']: [];
-    ['notebook.cell.execute']: [];
+    ['notebook.cell.executeAndSelectBelow']: [];
     ['notebook.cell.insertCodeCellBelow']: [];
     ['notebook.undo']: [];
     ['notebook.redo']: [];
