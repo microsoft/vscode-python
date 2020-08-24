@@ -9,6 +9,7 @@ pr:
   branches:
     include:
       - 'master'
+      - 'main'
       - 'release*'
       - 'ds*'
       - 'logging-changes-and-drop-old-debugger'

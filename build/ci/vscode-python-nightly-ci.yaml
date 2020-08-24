@@ -15,6 +15,7 @@ schedules:
     branches:
       include:
         - master
+        - main
         - release*
     always: true
 

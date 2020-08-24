@@ -6,7 +6,7 @@ name: '$(Year:yyyy).$(Month).0.$(BuildID)-ci'
 #        on changes in the news and .vscode folders.
 trigger:
   branches:
-    include: ['master', 'release*']
+    include: ['master', 'main', 'release*']
   paths:
     exclude: ['/news/1 Enhancements', '/news/2 Fixes', '/news/3 Code Health', '/.vscode']
 

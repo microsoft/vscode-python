@@ -34,8 +34,13 @@ steps:
 
   - bash: |
       npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
-    displayName: 'Update dev Version of Extension'
+    displayName: 'Update dev Version of Extension (master)'
     condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
+
+  - bash: |
+      npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
+    displayName: 'Update dev Version of Extension (main)'
+    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'main'))
 
   - bash: |
       npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID --updateChangelog
