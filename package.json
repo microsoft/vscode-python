@@ -116,7 +116,7 @@
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
-                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !python.datascience.ownsSelection"
+                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !python.datascience.ownsSelection && !notebookEditorFocused"
             },
             {
                 "command": "python.datascience.execSelectionInteractive",
