@@ -222,20 +222,13 @@ def _replace_stderr(target):
 
 @contextlib.contextmanager
 def _temp_io():
-    td = tempfile.mkdtemp()
-    path = os.path.join(td, "temp")
     sio = StringIO()
-    try:
-        with open(path, "w") as f:
-            yield sio, f
-    finally:
-        with open(path, "r") as f:
-            sio.setvalue(f.read())
+    with tempfile.TemporaryFile() as tmp:
         try:
-            os.remove(path)
-        except OSError:
-            pass
-        os.rmdir(td)
+            yield sio, tmp
+        finally:
+            tmp.seek(0)
+            sio.setvalue(tmp.read())
 
 
 @contextlib.contextmanager
