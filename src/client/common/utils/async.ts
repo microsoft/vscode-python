@@ -139,8 +139,6 @@ async function getNext<T, R = void>(it: AsyncIterator<T, R>, indexMaybe?: number
 // tslint:disable-next-line:promise-must-complete no-empty
 const NEVER: Promise<unknown> = new Promise(() => {});
 
-// Ultimately we may also want to support cancellation.
-
 /**
  * Yield everything produced by the given iterators as soon as each is ready.
  *
@@ -154,6 +152,7 @@ const NEVER: Promise<unknown> = new Promise(() => {});
 export async function* chain<T, R = void>(
     iterators: AsyncIterator<T | void, R>[],
     onError?: (err: Error, index: number) => Promise<void>
+    // Ultimately we may also want to support cancellation.
 ): AsyncIterator<T | R | void, void> {
     const promises = iterators.map(getNext);
     let numRunning = iterators.length;
