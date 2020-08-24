@@ -1443,19 +1443,19 @@
                     "command": "python.datascience.newNotebook.removeallcells",
                     "title": "%python.command.python.datascience.newNotebook.removeallcells.title%",
                     "category": "Python",
-                    "when": "editorLangId == python && python.datascience.featureenabled && notebookEditorFocused"
+                    "when": "python.datascience.featureenabled && notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.newNotebook.expandallcells",
                     "title": "%python.command.python.datascience.newNotebook.expandallcells.title%",
                     "category": "Python",
-                    "when": "editorLangId == python && python.datascience.featureenabled && notebookEditorFocused"
+                    "when": "python.datascience.featureenabled && notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.newNotebook.collapseallcells",
                     "title": "%python.command.python.datascience.newNotebook.collapseallcells.title%",
                     "category": "Python",
-                    "when": "editorLangId == python && python.datascience.featureenabled && notebookEditorFocused"
+                    "when": "python.datascience.featureenabled && notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.expandallcells",
