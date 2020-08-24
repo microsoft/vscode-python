@@ -8,7 +8,7 @@ try:
 except ImportError:  # 2.7
     from StringIO import StringIO
 from os import name as OS_NAME
-from os import read, write
+from os import write
 import sys
 import tempfile
 import unittest
