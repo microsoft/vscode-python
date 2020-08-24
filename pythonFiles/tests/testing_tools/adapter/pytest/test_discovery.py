@@ -338,20 +338,21 @@ class DiscoverTests(unittest.TestCase):
             ("discovered.__len__", None, None),
             ("discovered.__getitem__", (0,), None),
         ]
+        pytest_stdout = "spamspamspamspamspamspamspammityspam"
 
         # In Python 3.8 __len__ is called twice.
         if PYTHON_38_OR_LATER:
             calls.insert(3, ("discovered.__len__", None, None))
 
-        # to simulate stdio behavior including methods like .fileno(),
+        # to simulate stdio behavior in methods like os.dup,
         # use actual files (rather than StringIO)
-        with tempfile.TemporaryFile() as mock:
+        with tempfile.TemporaryFile("r+") as mock:
             sys.stdout = mock
             try:
                 discover(
                     [],
                     hidestdio=True,
-                    _pytest_main=fake_pytest_main(stub, False),
+                    _pytest_main=fake_pytest_main(stub, False, pytest_stdout),
                     _plugin=plugin,
                 )
             finally:
@@ -369,7 +370,7 @@ class DiscoverTests(unittest.TestCase):
         discover(
             [],
             hidestdio=True,
-            _pytest_main=fake_pytest_main(stub, True),
+            _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
             _plugin=plugin,
         )
         self.assertEqual(captured, "")
@@ -386,6 +387,7 @@ class DiscoverTests(unittest.TestCase):
             ("discovered.__len__", None, None),
             ("discovered.__getitem__", (0,), None),
         ]
+        pytest_stdout = "spamspamspamspamspamspamspammityspam"
 
         # In Python 3.8 __len__ is called twice.
         if PYTHON_38_OR_LATER:
@@ -393,7 +395,6 @@ class DiscoverTests(unittest.TestCase):
 
         buf = StringIO()
 
-        pytest_stdout = "spamspamspamspamspamspamspammityspam"
         sys.stdout = buf
         try:
             discover(
@@ -412,7 +413,6 @@ class DiscoverTests(unittest.TestCase):
         # simulate cases where stdout comes from the lower layer than sys.stdout
         # via file descriptors (e.g., from cython)
         stub.calls = []
-        pytest_stdout = "spamspamspamspamspamspamspammityspam"
         discover(
             [],
             hidestdio=False,

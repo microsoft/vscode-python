@@ -223,12 +223,13 @@ def _replace_stderr(target):
 @contextlib.contextmanager
 def _temp_io():
     sio = StringIO()
-    with tempfile.TemporaryFile() as tmp:
+    with tempfile.TemporaryFile("r+") as tmp:
         try:
             yield sio, tmp
         finally:
             tmp.seek(0)
-            sio.setvalue(tmp.read())
+            buff = tmp.read()
+            sio.write(buff)
 
 
 @contextlib.contextmanager
