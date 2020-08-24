@@ -82,7 +82,8 @@ async function isWindowsStoreEnvironment(interpreterPath: string): Promise<boole
     const pythonPathToCompare = interpreterPath.toUpperCase().replace(/\//g, '\\');
     const localAppDataStorePath = path
         .join(getEnvironmentVariable('LOCALAPPDATA') || '', 'Microsoft', 'WindowsApps')
-        .toUpperCase();
+        .toUpperCase()
+        .replace(/\//g, '\\');
     if (pythonPathToCompare.includes(localAppDataStorePath)) {
         return true;
     }
@@ -91,7 +92,8 @@ async function isWindowsStoreEnvironment(interpreterPath: string): Promise<boole
     // We should never have to look at this path or even execute python from this path.
     const programFilesStorePath = path
         .join(getEnvironmentVariable('ProgramFiles') || 'Program Files', 'WindowsApps')
-        .toUpperCase();
+        .toUpperCase()
+        .replace(/\//g, '\\');
     if (pythonPathToCompare.includes(programFilesStorePath)) {
         traceWarning('isWindowsStoreEnvironment called with Program Files store path.');
         return true;
