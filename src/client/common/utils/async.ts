@@ -151,17 +151,10 @@ async function getNext<T, R = void>(it: AsyncIterator<T, R>, indexMaybe?: number
  * @param iterators - the async iterators from which to yield items
  * @param onError - called/awaited once for each iterator that fails
  */
-export function chain<T, R = void>(
+export async function* chain<T, R = void>(
     iterators: AsyncIterator<T, R>[],
     onError?: (err: Error, index: number) => Promise<void>
 ): AsyncIterator<T | R, void> {
-    return chainRaw<T, R>(iterators, onError);
-}
-
-async function* chainRaw<T, R>(
-    iterators: AsyncIterator<T, R>[],
-    onError?: (err: Error, index: number) => Promise<void>
-) {
     const promises = iterators.map(getNext);
     let numRunning = iterators.length;
     while (numRunning > 0) {
