@@ -114,9 +114,6 @@ export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
 //================================
 // iterators
 
-// tslint:disable-next-line:promise-must-complete no-empty
-const NEVER = new Promise(() => {});
-
 /**
  * An iterator that yields nothing.
  */
@@ -139,6 +136,9 @@ async function getNext<T, R = void>(it: AsyncIterator<T, R>, indexMaybe?: number
     }
 }
 
+// tslint:disable-next-line:promise-must-complete no-empty
+const NEVER: Promise<unknown> = new Promise(() => {});
+
 // Ultimately we may also want to support cancellation.
 
 /**
@@ -160,14 +160,14 @@ export async function* chain<T, R = void>(
     while (numRunning > 0) {
         const { index, result, err } = await Promise.race(promises);
         if (err !== null) {
-            promises[index] = (NEVER as unknown) as Promise<NextResult<T, R>>;
+            promises[index] = NEVER as Promise<NextResult<T, R>>;
             numRunning -= 1;
             if (onError !== undefined) {
                 await onError(err, index);
             }
             // XXX Log the error.
         } else if (result!.done) {
-            promises[index] = (NEVER as unknown) as Promise<NextResult<T, R>>;
+            promises[index] = NEVER as Promise<NextResult<T, R>>;
             numRunning -= 1;
             // If R is void then result.value will be undefined.
             if (result!.value !== undefined) {
