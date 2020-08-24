@@ -345,9 +345,7 @@ class DiscoverTests(unittest.TestCase):
 
         # to simulate stdio behavior including methods like .fileno(),
         # use actual files (rather than StringIO)
-        td = tempfile.mkdtemp()
-        stdio_mock = path.join(td, "stdio_mock")
-        with open(stdio_mock, "w") as mock:
+        with tempfile.TemporaryFile() as mock:
             sys.stdout = mock
             try:
                 discover(
@@ -359,10 +357,8 @@ class DiscoverTests(unittest.TestCase):
             finally:
                 sys.stdout = sys.__stdout__
 
-        with open(stdio_mock, "r") as mock:
+            mock.seek(0)
             captured = mock.read()
-        remove(stdio_mock)
-        rmdir(td)
 
         self.assertEqual(captured, "")
         self.assertEqual(stub.calls, calls)
