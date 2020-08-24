@@ -2,6 +2,11 @@
 # Licensed under the MIT License.
 
 import contextlib
+
+try:
+    from io import StringIO
+except ImportError:
+    from StringIO import StringIO  # 2.7
 import os
 import os.path
 import sys
@@ -215,19 +220,11 @@ def _replace_stderr(target):
         sys.stderr = orig
 
 
-class _StringIO:
-    def setvalue(self, value):
-        self._value = value
-
-    def getvalue(self):
-        return self._value
-
-
 @contextlib.contextmanager
 def _temp_io():
     td = tempfile.mkdtemp()
     path = os.path.join(td, "temp")
-    sio = _StringIO()
+    sio = StringIO()
     try:
         with open(path, "w") as f:
             yield sio, f
