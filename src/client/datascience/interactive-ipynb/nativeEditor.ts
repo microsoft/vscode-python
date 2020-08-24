@@ -815,4 +815,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         }
     }
+
+    public expandAllCells(): void {}
+    public collapseAllCells(): void {}
 }

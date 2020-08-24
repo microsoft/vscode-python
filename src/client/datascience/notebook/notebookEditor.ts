@@ -134,6 +134,24 @@ export class NotebookEditor implements INotebookEditor {
             }
         });
     }
+    public expandAllCells(): void {
+        if (!this.vscodeNotebook.activeNotebookEditor) {
+            return;
+        }
+        this.vscodeNotebook.activeNotebookEditor.document.cells.forEach((cell) => {
+            cell.metadata.inputCollapsed = false;
+            cell.metadata.outputCollapsed = false;
+        });
+    }
+    public collapseAllCells(): void {
+        if (!this.vscodeNotebook.activeNotebookEditor) {
+            return;
+        }
+        this.vscodeNotebook.activeNotebookEditor.document.cells.forEach((cell) => {
+            cell.metadata.inputCollapsed = true;
+            cell.metadata.outputCollapsed = true;
+        });
+    }
     public notifyExecution(code: string) {
         this._executed.fire(this);
         this.executedCode.fire(code);

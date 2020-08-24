@@ -866,6 +866,21 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.newNotebook.removeallcells",
+                "title": "%python.command.python.datascience.newNotebook.removeallcells.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.newNotebook.expandallcells",
+                "title": "%python.command.python.datascience.newNotebook.expandallcells.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.newNotebook.collapseallcells",
+                "title": "%python.command.python.datascience.newNotebook.collapseallcells.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.expandallcells",
                 "title": "%python.command.python.datascience.expandallcells.title%",
                 "category": "Python"
@@ -1423,6 +1438,24 @@
                     "title": "%python.command.python.datascience.notebookeditor.addcellbelow.title%",
                     "category": "Python",
                     "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
+                },
+                {
+                    "command": "python.datascience.newNotebook.removeallcells",
+                    "title": "%python.command.python.datascience.newNotebook.removeallcells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.newNotebook.expandallcells",
+                    "title": "%python.command.python.datascience.newNotebook.expandallcells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.newNotebook.collapseallcells",
+                    "title": "%python.command.python.datascience.newNotebook.collapseallcells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.expandallcells",

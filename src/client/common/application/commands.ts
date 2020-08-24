@@ -202,4 +202,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.LatestExtension]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [undefined | never];
     [DSCommands.TrustNotebook]: [undefined | never | Uri];
+    [DSCommands.NewNotebookRemoveAllCells]: [];
+    [DSCommands.NewNotebookExpandAllCells]: [];
+    [DSCommands.NewNotebookCollapseAllCells]: [];
 }

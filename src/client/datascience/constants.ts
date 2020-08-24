@@ -109,6 +109,9 @@ export namespace Commands {
     export const TrustNotebook = 'python.datascience.notebookeditor.trust';
     export const EnableLoadingWidgetsFrom3rdPartySource =
         'python.datascience.enableLoadingWidgetScriptsFromThirdPartySource';
+    export const NewNotebookRemoveAllCells = 'python.datascience.newNotebook.removeallcells';
+    export const NewNotebookExpandAllCells = 'python.datascience.newNotebook.expandallcells';
+    export const NewNotebookCollapseAllCells = 'python.datascience.newNotebook.collapseallcells';
 }
 
 export namespace CodeLensCommands {
