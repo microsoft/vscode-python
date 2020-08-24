@@ -53,6 +53,10 @@ async function buildEnvironmentInfo(interpreterPath: string): Promise<PythonEnvi
 
 @injectable()
 export class EnvironmentInfoService implements IEnvironmentInfoService {
+    // Caching environment here in-memory. This is so that we don;t have to run this on the same
+    // path again ang again in a given session. This information will likely not change in a given
+    // session. There are definitely cases where this will change. But a simple reload should address
+    // those.
     private readonly cache: Map<string, PythonEnvironment> = new Map<string, PythonEnvironment>();
     private readonly workerPool: IWorkerPool<string, PythonEnvironment | undefined>;
     public constructor() {
