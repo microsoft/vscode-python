@@ -13,7 +13,7 @@ import { Common } from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 
-export enum NotificationType {
+enum NotificationType {
     Tip,
     Survey,
     NoPrompt
@@ -58,6 +58,7 @@ export class InterpreterSelectionTip implements IExtensionSingleActivationServic
     private async showTip() {
         if (this.notificationType === NotificationType.Tip) {
             await this.shell.showInformationMessage(this.notificationContent!, Common.gotIt());
+            sendTelemetryEvent(EventName.ACTIVATION_TIP_PROMPT, undefined);
         } else if (this.notificationType === NotificationType.Survey) {
             const selection = await this.shell.showInformationMessage(
                 this.notificationContent!,
