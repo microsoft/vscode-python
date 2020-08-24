@@ -248,24 +248,24 @@ def generate_parse_item(pathsep):
 # tests
 
 
+def fake_pytest_main(stub, use_fd):
+    def ret(args, plugins):
+        stub.add_call("pytest.main", None, {"args": args, "plugins": plugins})
+        if use_fd:
+            write(sys.__stdout__.fileno(), DiscoverTests.pytest_stdout.encode())
+        else:
+            print(DiscoverTests.pytest_stdout, end="")
+        return 0
+
+    return ret
+
+
 class DiscoverTests(unittest.TestCase):
 
     DEFAULT_ARGS = [
         "--collect-only",
     ]
     pytest_stdout = "spamspamspamspamspamspamspammityspam"
-
-    @staticmethod
-    def fake_pytest_main(stub, use_fd):
-        def ret(args, plugins):
-            stub.add_call("pytest.main", None, {"args": args, "plugins": plugins})
-            if use_fd:
-                write(sys.__stdout__.fileno(), DiscoverTests.pytest_stdout.encode())
-            else:
-                print(DiscoverTests.pytest_stdout, end="")
-            return 0
-
-        return ret
 
     def test_basic(self):
         stub = Stub()
@@ -354,7 +354,7 @@ class DiscoverTests(unittest.TestCase):
                 discover(
                     [],
                     hidestdio=True,
-                    _pytest_main=self.fake_pytest_main(stub, False),
+                    _pytest_main=fake_pytest_main(stub, False),
                     _plugin=plugin,
                 )
             finally:
@@ -374,7 +374,7 @@ class DiscoverTests(unittest.TestCase):
         discover(
             [],
             hidestdio=True,
-            _pytest_main=self.fake_pytest_main(stub, True),
+            _pytest_main=fake_pytest_main(stub, True),
             _plugin=plugin,
         )
         self.assertEqual(captured, "")
@@ -403,7 +403,7 @@ class DiscoverTests(unittest.TestCase):
             discover(
                 [],
                 hidestdio=False,
-                _pytest_main=self.fake_pytest_main(stub, False),
+                _pytest_main=fake_pytest_main(stub, False),
                 _plugin=plugin,
             )
         finally:
@@ -419,7 +419,7 @@ class DiscoverTests(unittest.TestCase):
         discover(
             [],
             hidestdio=False,
-            _pytest_main=self.fake_pytest_main(stub, True),
+            _pytest_main=fake_pytest_main(stub, True),
             _plugin=plugin,
         )
         self.assertEqual(captured, DiscoverTests.pytest_stdout)
