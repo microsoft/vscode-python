@@ -221,6 +221,12 @@ def _replace_stderr(target):
         sys.stderr = orig
 
 
+if sys.version_info < (3,):
+    _coerce_unicode = lambda s: unicode(s)
+else:
+    _coerce_unicode = lambda s: s
+
+
 @contextlib.contextmanager
 def _temp_io():
     sio = StringIO()
@@ -230,7 +236,7 @@ def _temp_io():
         finally:
             tmp.seek(0)
             buff = tmp.read()
-            sio.write(buff)
+            sio.write(_coerce_unicode(buff))
 
 
 @contextlib.contextmanager
