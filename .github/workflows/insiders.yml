@@ -330,18 +330,24 @@ jobs:
         if: matrix.test-suite == 'venv'
 
       - name: Run single-workspace tests
+        env:
+          CI_PYTHON_VERSION: ${{matrix.python}}
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: npm run testSingleWorkspace
         if: matrix.test-suite == 'single-workspace'
 
       - name: Run multi-workspace tests
+        env:
+          CI_PYTHON_VERSION: ${{matrix.python}}
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: npm run testMultiWorkspace
         if: matrix.test-suite == 'multi-workspace'
 
       - name: Run debugger tests
+        env:
+          CI_PYTHON_VERSION: ${{matrix.python}}
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: npm run testDebugger
