@@ -248,13 +248,13 @@ def generate_parse_item(pathsep):
 # tests
 
 
-def fake_pytest_main(stub, use_fd):
+def fake_pytest_main(stub, use_fd, pytest_stdout):
     def ret(args, plugins):
         stub.add_call("pytest.main", None, {"args": args, "plugins": plugins})
         if use_fd:
-            write(sys.__stdout__.fileno(), DiscoverTests.pytest_stdout.encode())
+            write(sys.__stdout__.fileno(), pytest_stdout.encode())
         else:
-            print(DiscoverTests.pytest_stdout, end="")
+            print(pytest_stdout, end="")
         return 0
 
     return ret
@@ -265,7 +265,6 @@ class DiscoverTests(unittest.TestCase):
     DEFAULT_ARGS = [
         "--collect-only",
     ]
-    pytest_stdout = "spamspamspamspamspamspamspammityspam"
 
     def test_basic(self):
         stub = Stub()
@@ -398,31 +397,33 @@ class DiscoverTests(unittest.TestCase):
 
         buf = StringIO()
 
+        pytest_stdout = "spamspamspamspamspamspamspammityspam"
         sys.stdout = buf
         try:
             discover(
                 [],
                 hidestdio=False,
-                _pytest_main=fake_pytest_main(stub, False),
+                _pytest_main=fake_pytest_main(stub, False, pytest_stdout),
                 _plugin=plugin,
             )
         finally:
             sys.stdout = sys.__stdout__
         captured = buf.getvalue()
 
-        self.assertEqual(captured, DiscoverTests.pytest_stdout)
+        self.assertEqual(captured, pytest_stdout)
         self.assertEqual(stub.calls, calls)
 
         # simulate cases where stdout comes from the lower layer than sys.stdout
         # via file descriptors (e.g., from cython)
         stub.calls = []
+        pytest_stdout = "spamspamspamspamspamspamspammityspam"
         discover(
             [],
             hidestdio=False,
-            _pytest_main=fake_pytest_main(stub, True),
+            _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
             _plugin=plugin,
         )
-        self.assertEqual(captured, DiscoverTests.pytest_stdout)
+        self.assertEqual(captured, pytest_stdout)
         self.assertEqual(stub.calls, calls)
 
 
