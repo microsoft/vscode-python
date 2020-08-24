@@ -8,7 +8,7 @@ try:
 except ImportError:  # 2.7
     from StringIO import StringIO
 from os import name as OS_NAME
-from os import path, remove, rmdir, write
+from os import read, write
 import sys
 import tempfile
 import unittest
@@ -252,7 +252,7 @@ def fake_pytest_main(stub, use_fd, pytest_stdout):
     def ret(args, plugins):
         stub.add_call("pytest.main", None, {"args": args, "plugins": plugins})
         if use_fd:
-            write(sys.__stdout__.fileno(), pytest_stdout.encode())
+            write(sys.stdout.fileno(), pytest_stdout.encode())
         else:
             print(pytest_stdout, end="")
         return 0
@@ -327,7 +327,7 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(tests, expected)
         self.assertEqual(stub.calls, calls)
 
-    def test_stdio_hidden(self):
+    def test_stdio_hidden_file(self):
         stub = Stub()
 
         plugin = StubPlugin(stub)
@@ -364,19 +364,27 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(captured, "")
         self.assertEqual(stub.calls, calls)
 
+    def test_stdio_hidden_fd(self):
         # simulate cases where stdout comes from the lower layer than sys.stdout
         # via file descriptors (e.g., from cython)
-        stub.calls = []
-        discover(
-            [],
-            hidestdio=True,
-            _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
-            _plugin=plugin,
-        )
-        self.assertEqual(captured, "")
-        self.assertEqual(stub.calls, calls)
+        stub = Stub()
+        plugin = StubPlugin(stub)
+        pytest_stdout = "spamspamspamspamspamspamspammityspam"
 
-    def test_stdio_not_hidden(self):
+        sys.stdio = StringIO()
+        try:
+            discover(
+                [],
+                hidestdio=True,
+                _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
+                _plugin=plugin,
+            )
+        finally:
+            captured = sys.stdout.read()
+            sys.stdout = sys.__stdout__
+        self.assertEqual(captured, b"")
+
+    def test_stdio_not_hidden_file(self):
         stub = Stub()
 
         plugin = StubPlugin(stub)
@@ -410,17 +418,27 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(captured, pytest_stdout)
         self.assertEqual(stub.calls, calls)
 
+    def test_stdio_not_hidden_fd(self):
         # simulate cases where stdout comes from the lower layer than sys.stdout
         # via file descriptors (e.g., from cython)
+        stub = Stub()
+        plugin = StubPlugin(stub)
+        pytest_stdout = "spamspamspamspamspamspamspammityspam"
         stub.calls = []
-        discover(
-            [],
-            hidestdio=False,
-            _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
-            _plugin=plugin,
-        )
+        with tempfile.TemporaryFile("r+") as mock:
+            sys.stdout = mock
+            try:
+                discover(
+                    [],
+                    hidestdio=False,
+                    _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
+                    _plugin=plugin,
+                )
+            finally:
+                mock.seek(0)
+                captured = sys.stdout.read()
+                sys.stdout = sys.__stdout__
         self.assertEqual(captured, pytest_stdout)
-        self.assertEqual(stub.calls, calls)
 
 
 class CollectorTests(unittest.TestCase):
