@@ -152,9 +152,9 @@ async function getNext<T, R = void>(it: AsyncIterator<T, R>, indexMaybe?: number
  * @param onError - called/awaited once for each iterator that fails
  */
 export async function* chain<T, R = void>(
-    iterators: AsyncIterator<T, R>[],
+    iterators: AsyncIterator<T | void, R>[],
     onError?: (err: Error, index: number) => Promise<void>
-): AsyncIterator<T | R, void> {
+): AsyncIterator<T | R | void, void> {
     const promises = iterators.map(getNext);
     let numRunning = iterators.length;
     while (numRunning > 0) {
