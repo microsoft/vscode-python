@@ -30,18 +30,18 @@ export function getOSType(platform: string = process.platform): OSType {
     }
 }
 
-export function getEnv(n: string): string | undefined {
+export function getEnvironmentVariable(key: string): string | undefined {
     // tslint:disable-next-line: no-any
-    return ((process as any) as EnvironmentVariables)[n];
+    return ((process.env as any) as EnvironmentVariables)[key];
 }
 
-export function getPathEnv(): string | undefined {
-    return getEnv('Path') || getEnv('PATH');
+export function getPathEnvironmentVariable(): string | undefined {
+    return getEnvironmentVariable('Path') || getEnvironmentVariable('PATH');
 }
 
 export function getUserHomeDir(): string | undefined {
     if (getOSType() === OSType.Windows) {
-        return getEnv('USERPROFILE');
+        return getEnvironmentVariable('USERPROFILE');
     }
-    return getEnv('HOME');
+    return getEnvironmentVariable('HOME');
 }

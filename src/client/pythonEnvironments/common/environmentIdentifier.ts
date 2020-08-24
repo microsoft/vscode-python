@@ -3,9 +3,9 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
+import { traceWarning } from '../../common/logger';
 import { createDeferred } from '../../common/utils/async';
-import { getEnv, getPathEnv, getUserHomeDir } from '../../common/utils/platform';
-import { EnvironmentVariables } from '../../common/variables/types';
+import { getEnvironmentVariable } from '../../common/utils/platform';
 import { EnvironmentType } from '../info';
 
 function pathExists(absPath: string): Promise<boolean> {
@@ -23,7 +23,7 @@ function or(...arr: boolean[]): boolean {
 /**
  * Checks if the given interpreter path belongs to a conda environment. Using
  * known folder layout, and presence of 'conda-meta' directory.
- * @param {string} interpreterPath: Path to any python interpreter.
+ * @param {string} interpreterPath: Absolute path to any python interpreter.
  *
  * Remarks: This is what we will use to begin with. Another approach we can take
  * here is to parse ~/.conda/environments.txt. This file will have list of conda
@@ -31,6 +31,24 @@ function or(...arr: boolean[]): boolean {
  * We don't want to rely on this file because it is an implementation detail of
  * conda. If it turns out that the layout based identification is not sufficient
  * that is the next alternative that is cheap.
+ *
+ * sample content of the ~/.conda/environments.txt:
+ * C:\envs\\myenv
+ * C:\ProgramData\Miniconda3
+ *
+ * Yet another approach is to use `conda env list --json` and compare the returned env
+ * list to see if the given interpreter path belongs to any of the returned environments.
+ * This approach is heavy, and involves running a binary. For now we decided not to
+ * take this approach, since it does not look like we need it.
+ *
+ * sample output from `conda env list --json`:
+ * conda env list --json
+ * {
+ *   "envs": [
+ *     "C:\\envs\\myenv",
+ *     "C:\\ProgramData\\Miniconda3"
+ *   ]
+ * }
  */
 async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
     const conda_dir = 'conda-meta';
@@ -43,7 +61,7 @@ async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
     const conda_env_dir_1 = path.join(path.dirname(interpreterPath), conda_dir);
 
     // Check if the conda-meta directory is in the same directory as the interpreter.
-    // This layout is common on linux/MAc.
+    // This layout is common on linux/Mac.
     // env
     // |__ conda-meta  <--- check if this directory exists
     // |__ bin
@@ -53,34 +71,57 @@ async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
     return or(await pathExists(conda_env_dir_1), await pathExists(conda_env_dir_2));
 }
 
-async function isPyenvEnvironment(interpreterPath: string): Promise<boolean> {
-    let pyenvRoot = getEnv('PYENV_ROOT');
-    if (pyenvRoot === undefined) {
-        pyenvRoot = getPathEnv()
-            ?.split(path.delimiter)
-            .filter((p) => p.includes('.pyenv'))
-            .shift();
-    }
-
-    if (pyenvRoot === undefined) {
-        const userHome = getUserHomeDir();
-        if (userHome !== undefined) {
-            const pathToCheck: string = path.join(userHome, '.pyenv');
-            if (await pathExists(pathToCheck)) {
-                pyenvRoot = pathToCheck;
-            }
-        }
-    }
-}
-
+/**
+ * Checks if the given interpreter belongs to Windows Store Python environment.
+ * @param interpreterPath: Absolute path to any python interpreter.
+ *
+ * Remarks: Check if the path includes 'Microsoft\WindowsApps`, `Program Files\WindowsApps`.
+ * This is not a string signal, since this
+ */
 async function isWindowsStoreEnvironment(interpreterPath: string): Promise<boolean> {
     const pythonPathToCompare = interpreterPath.toUpperCase().replace(/\//g, '\\');
-    return (
-        pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\'.toUpperCase()) ||
-        pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase())
-    );
+    const localAppDataStorePath = path
+        .join(getEnvironmentVariable('LOCALAPPDATA') || '', 'Microsoft', 'WindowsApps')
+        .toUpperCase();
+    if (pythonPathToCompare.includes(localAppDataStorePath)) {
+        return true;
+    }
+
+    // Program Files store path is a forbidden path. Only admins and system has access this path.
+    // We should never have to look at this path or even execute python from this path.
+    const programFilesStorePath = path
+        .join(getEnvironmentVariable('ProgramFiles') || 'Program Files', 'WindowsApps')
+        .toUpperCase();
+    if (pythonPathToCompare.includes(programFilesStorePath)) {
+        traceWarning('isWindowsStoreEnvironment called with Program Files store path.');
+        return true;
+    }
+    return false;
 }
 
+/**
+ * Returns environment type.
+ * @param {string} interpreterPath : Absolute path to the python interpreter binary.
+ * @returns {EnvironmentType}
+ *
+ * Remarks: This is the order of detection based on how the various distributions and tools
+ * configure the environment, and the fall back for identification.
+ * Top level we have the following environment types, since they leave a unique signature
+ * in the environment or * use a unique path for the environments they create.
+ *  1. Conda
+ *  2. Windows Store
+ *  3. PipEnv
+ *  4. Pyenv
+ *  5. Poetry
+ *
+ * Next level we have the following virtual environment tools. The are here because they
+ * are consumed by the tools above, and can also be used independently.
+ *  1. venv
+ *  2. virtualenvwrapper
+ *  3. virtualenv
+ *
+ * Last category is globally installed python, or system python.
+ */
 export async function identifyEnvironment(interpreterPath: string): Promise<EnvironmentType> {
     if (await isCondaEnvironment(interpreterPath)) {
         return EnvironmentType.Conda;
@@ -89,6 +130,8 @@ export async function identifyEnvironment(interpreterPath: string): Promise<Envi
     if (await isWindowsStoreEnvironment(interpreterPath)) {
         return EnvironmentType.WindowsStore;
     }
+
+    // additional identifiers go here
 
     return EnvironmentType.Unknown;
 }
