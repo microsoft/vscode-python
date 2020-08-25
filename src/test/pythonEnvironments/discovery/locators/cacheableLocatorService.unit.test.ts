@@ -7,7 +7,9 @@
 
 import { expect } from 'chai';
 import * as md5 from 'md5';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import {
+    anything, instance, mock, verify, when
+} from 'ts-mockito';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
@@ -25,18 +27,23 @@ suite('Interpreters - Cacheable Locator Service', () => {
             constructor(name: string, serviceCcontainer: IServiceContainer, private readonly mockLocator: MockLocator) {
                 super(name, serviceCcontainer);
             }
+
             public dispose() {
                 noop();
             }
+
             protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
                 return this.mockLocator.getInterpretersImplementation();
             }
+
             protected getCachedInterpreters(_resource?: Uri): PythonEnvironment[] | undefined {
                 return this.mockLocator.getCachedInterpreters();
             }
+
             protected async cacheInterpreters(_interpreters: PythonEnvironment[], _resource?: Uri) {
                 return this.mockLocator.cacheInterpreters();
             }
+
             protected getCacheKey(_resource?: Uri) {
                 return this.mockLocator.getCacheKey();
             }
@@ -45,12 +52,15 @@ suite('Interpreters - Cacheable Locator Service', () => {
             public async getInterpretersImplementation(): Promise<PythonEnvironment[]> {
                 return [];
             }
+
             public getCachedInterpreters(): PythonEnvironment[] | undefined {
-                return;
+
             }
+
             public async cacheInterpreters() {
-                return;
+
             }
+
             public getCacheKey(): string {
                 return '';
             }
@@ -119,6 +129,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const mockedLocatorForVerification = mock(MockLocator);
             class Watcher implements IInterpreterWatcher {
                 private listner?: (e: Resource) => any;
+
                 public onDidCreate(
                     listener: (e: Resource) => any,
                     _thisArgs?: any,
@@ -127,6 +138,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
                     this.listner = listener;
                     return { dispose: noop };
                 }
+
                 public invokeListeners() {
                     this.listner!(undefined);
                 }
@@ -195,16 +207,20 @@ suite('Interpreters - Cacheable Locator Service', () => {
             public dispose() {
                 noop();
             }
+
             // tslint:disable-next-line:no-unnecessary-override
             public getCacheKey(resource?: Uri) {
                 return super.getCacheKey(resource);
             }
+
             protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
                 return [];
             }
+
             protected getCachedInterpreters(_resource?: Uri): PythonEnvironment[] | undefined {
                 return [];
             }
+
             protected async cacheInterpreters(_interpreters: PythonEnvironment[], _resource?: Uri) {
                 noop();
             }

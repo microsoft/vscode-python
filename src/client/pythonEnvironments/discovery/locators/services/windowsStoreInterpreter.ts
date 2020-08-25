@@ -26,8 +26,8 @@ import { IServiceContainer } from '../../../../ioc/types';
 export function isRestrictedWindowsStoreInterpreterPath(pythonPath: string): boolean {
     const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
     return (
-        pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
-        pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
+        pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase())
+        || pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
     );
 }
 
@@ -61,6 +61,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
         @inject(IPersistentStateFactory) private readonly persistentFactory: IPersistentStateFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
+
     /**
      * Whether this is a Windows Store/App Interpreter.
      *
@@ -71,11 +72,12 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
     public isWindowsStoreInterpreter(pythonPath: string): boolean {
         const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
         return (
-            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\'.toUpperCase()) ||
-            pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
-            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
+            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\'.toUpperCase())
+            || pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase())
+            || pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
         );
     }
+
     /**
      * Whether this is a python executable in a windows app store folder that is internal and can be hidden from users.
      * Interpreters that fall into this category will not be displayed to the users.
@@ -87,6 +89,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
     public isHiddenInterpreter(pythonPath: string): boolean {
         return isRestrictedWindowsStoreInterpreterPath(pythonPath);
     }
+
     /**
      * Gets the hash of the Python interpreter (installed from the windows store).
      * We need to use a special way to get the hash for these, by first resolving the

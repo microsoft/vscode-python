@@ -37,7 +37,7 @@ const execAsync = promisify(exec);
 async function run(argv: string[], cwd: string) {
     const cmdline = argv.join(' ');
     const { stderr } = await execAsync(cmdline, {
-        cwd: cwd
+        cwd
     });
     if (stderr && stderr.length > 0) {
         throw Error(stderr);

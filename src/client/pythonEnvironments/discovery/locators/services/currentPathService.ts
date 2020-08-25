@@ -64,9 +64,7 @@ export class CurrentPathService extends CacheableLocatorService {
             pythonPaths
                 .then((interpreters) => interpreters.filter((item) => item.length > 0))
                 // tslint:disable-next-line:promise-function-async
-                .then((interpreters) =>
-                    Promise.all(interpreters.map((interpreter) => this.getInterpreterDetails(interpreter)))
-                )
+                .then((interpreters) => Promise.all(interpreters.map((interpreter) => this.getInterpreterDetails(interpreter))))
                 .then((interpreters) => interpreters.filter((item) => !!item).map((item) => item!))
         );
     }
@@ -128,19 +126,16 @@ export class CurrentPathService extends CacheableLocatorService {
 @injectable()
 export class PythonInPathCommandProvider implements IPythonInPathCommandProvider {
     constructor(@inject(IPlatformService) private readonly platform: IPlatformService) {}
+
     public getCommands(): { command: string; args?: string[] }[] {
-        const paths = ['python3.7', 'python3.6', 'python3', 'python2', 'python'].map((item) => {
-            return { command: item };
-        });
+        const paths = ['python3.7', 'python3.6', 'python3', 'python2', 'python'].map((item) => ({ command: item }));
         if (this.platform.osType !== OSType.Windows) {
             return paths;
         }
 
         const versions = ['3.7', '3.6', '3', '2'];
         return paths.concat(
-            versions.map((version) => {
-                return { command: 'py', args: [`-${version}`] };
-            })
+            versions.map((version) => ({ command: 'py', args: [`-${version}`] }))
         );
     }
 }

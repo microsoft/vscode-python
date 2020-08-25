@@ -29,12 +29,10 @@ export function getDisplayName(condaInfo: CondaInfo = {}): string {
         const displayName = sysVersionParts[1].trim();
         if (isIdentifiableAsAnaconda(displayName)) {
             return displayName;
-        } else {
-            return `${displayName} : ${AnacondaDisplayName}`;
         }
-    } else {
-        return AnacondaDisplayName;
+        return `${displayName} : ${AnacondaDisplayName}`;
     }
+    return AnacondaDisplayName;
 }
 
 /**

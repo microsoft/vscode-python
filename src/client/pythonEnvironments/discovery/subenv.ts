@@ -42,7 +42,7 @@ export async function getType(python: string, finders: TypeFinderFunc[]): Promis
     return undefined;
 }
 
-//======= default sets ========
+//= ====== default sets ========
 
 /**
  * Build the list of default "name finder" functions to pass to `getName()`.
@@ -68,9 +68,8 @@ export function getNameFinders(
             if (dirname && (await isPipenvRoot(dirname, python))) {
                 // In pipenv, return the folder name of the root dir.
                 return pathBasename(dirname);
-            } else {
-                return pathBasename(pathDirname(pathDirname(python)));
             }
+            return pathBasename(pathDirname(pathDirname(python)));
         }
     ];
 }
@@ -113,7 +112,7 @@ export function getTypeFinders(
     ];
 }
 
-//======= venv ========
+//= ====== venv ========
 
 /**
  * Build a "type finder" function that identifies venv environments.
@@ -172,7 +171,7 @@ export function getVenvExecutableFinder(
     };
 }
 
-//======= virtualenv ========
+//= ====== virtualenv ========
 
 /**
  * Build a "type finder" function that identifies virtualenv environments.
@@ -197,7 +196,7 @@ export function getVirtualenvTypeFinder(
     };
 }
 
-//======= pipenv ========
+//= ====== pipenv ========
 
 /**
  * Build a "type finder" function that identifies pipenv environments.

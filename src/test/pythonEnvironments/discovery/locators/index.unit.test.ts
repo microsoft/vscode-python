@@ -93,9 +93,7 @@ suite('Interpreters - Locators Index', () => {
                         .verifiable(TypeMoq.Times.once());
 
                     serviceContainer
-                        .setup((c) =>
-                            c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName))
-                        )
+                        .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName)))
                         .returns(() => typeLocator.object);
 
                     return {
@@ -156,9 +154,7 @@ suite('Interpreters - Locators Index', () => {
                         .verifiable(TypeMoq.Times.once());
 
                     serviceContainer
-                        .setup((c) =>
-                            c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName))
-                        )
+                        .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName)))
                         .returns(() => typeLocator.object);
 
                     return {
@@ -222,9 +218,7 @@ suite('Interpreters - Locators Index', () => {
                         .verifiable(TypeMoq.Times.once());
 
                     serviceContainer
-                        .setup((c) =>
-                            c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName))
-                        )
+                        .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName)))
                         .returns(() => typeLocator.object);
 
                     return {
@@ -240,9 +234,7 @@ suite('Interpreters - Locators Index', () => {
 
                 await locator.getInterpreters(resource, { onSuggestion: true });
 
-                locatorsWithInterpreters.forEach((item) =>
-                    item.locator.verify((l) => (l.didTriggerInterpreterSuggestions = true), TypeMoq.Times.once())
-                );
+                locatorsWithInterpreters.forEach((item) => item.locator.verify((l) => (l.didTriggerInterpreterSuggestions = true), TypeMoq.Times.once()));
                 expect(locator.didTriggerInterpreterSuggestions).to.equal(
                     true,
                     'didTriggerInterpreterSuggestions should be set to true.'

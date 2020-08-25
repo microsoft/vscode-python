@@ -37,14 +37,13 @@ export function buildPythonExecInfo(python: string | string[], pythonArgs?: stri
             // cases it currently is.
             pythonExecutable: python[python.length - 1]
         };
-    } else {
-        return {
-            command: python,
-            args: pythonArgs || [],
-            python: [python],
-            pythonExecutable: python
-        };
     }
+    return {
+        command: python,
+        args: pythonArgs || [],
+        python: [python],
+        pythonExecutable: python
+    };
 }
 
 /**

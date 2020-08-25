@@ -32,11 +32,10 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper
     ) {}
+
     public async mergeInterpreters(interpreters: PythonEnvironment[]): Promise<PythonEnvironment[]> {
         const items = interpreters
-            .map((item) => {
-                return { ...item };
-            })
+            .map((item) => ({ ...item }))
             .map((item) => {
                 item.path = path.normalize(item.path);
                 return item;
@@ -47,11 +46,11 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                     // If same version and same base path, then ignore.
                     // Could be Python 3.6 with path = python.exe, and Python 3.6 and path = python3.exe.
                     if (
-                        item.version &&
-                        item.version.raw === currentVersion &&
-                        item.path &&
-                        current.path &&
-                        this.fs.arePathsSame(path.dirname(item.path), path.dirname(current.path))
+                        item.version
+                        && item.version.raw === currentVersion
+                        && item.path
+                        && current.path
+                        && this.fs.arePathsSame(path.dirname(item.path), path.dirname(current.path))
                     ) {
                         return true;
                     }
@@ -63,8 +62,8 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                     // Preserve type information.
                     // Possible we identified environment as unknown, but a later provider has identified env type.
                     if (
-                        existingItem.envType === EnvironmentType.Unknown &&
-                        current.envType !== EnvironmentType.Unknown
+                        existingItem.envType === EnvironmentType.Unknown
+                        && current.envType !== EnvironmentType.Unknown
                     ) {
                         existingItem.envType = current.envType;
                     }

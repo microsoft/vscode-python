@@ -156,9 +156,7 @@ suite('Interpreters Conda Service', () => {
     test('Correctly identifies a python path as a conda environment (linux)', async () => {
         const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
         fileSystem
-            .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))
-            )
+            .setup((f) => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))))
             .returns(() => Promise.resolve(true));
         await identifyPythonPathAsCondaEnvironment(false, false, true, pythonPath);
     });
@@ -166,9 +164,7 @@ suite('Interpreters Conda Service', () => {
     test('Correctly identifies a python path as a conda environment (osx)', async () => {
         const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
         fileSystem
-            .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))
-            )
+            .setup((f) => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))))
             .returns(() => Promise.resolve(true));
         await identifyPythonPathAsCondaEnvironment(false, true, false, pythonPath);
     });
@@ -187,9 +183,7 @@ suite('Interpreters Conda Service', () => {
             .setup((f) => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta'))))
             .returns(() => Promise.resolve(false));
         fileSystem
-            .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))
-            )
+            .setup((f) => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))))
             .returns(() => Promise.resolve(false));
 
         const isCondaEnv = await condaService.isCondaEnvironment(pythonPath);
@@ -268,9 +262,7 @@ suite('Interpreters Conda Service', () => {
         const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
 
         fileSystem
-            .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))
-            )
+            .setup((f) => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))))
             .returns(() => Promise.resolve(true));
         await checkCondaNameAndPathForCondaEnvironments(false, true, false, pythonPath, condaEnvDir, {
             name: 'One',
@@ -283,9 +275,7 @@ suite('Interpreters Conda Service', () => {
         const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
 
         fileSystem
-            .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))
-            )
+            .setup((f) => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))))
             .returns(() => Promise.resolve(true));
         await checkCondaNameAndPathForCondaEnvironments(false, true, false, pythonPath, condaEnvDir, {
             name: 'Eight',
@@ -298,9 +288,7 @@ suite('Interpreters Conda Service', () => {
         const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
 
         fileSystem
-            .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))
-            )
+            .setup((f) => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))))
             .returns(() => Promise.resolve(true));
         await checkCondaNameAndPathForCondaEnvironments(false, false, true, pythonPath, condaEnvDir, {
             name: 'One',
@@ -313,9 +301,7 @@ suite('Interpreters Conda Service', () => {
         const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
 
         fileSystem
-            .setup((f) =>
-                f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))
-            )
+            .setup((f) => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta'))))
             .returns(() => Promise.resolve(true));
         await checkCondaNameAndPathForCondaEnvironments(false, false, true, pythonPath, condaEnvDir, {
             name: 'Eight',
@@ -445,9 +431,7 @@ suite('Interpreters Conda Service', () => {
                 companyDisplayName: 'Continuum Analytics, Inc.',
                 envType: EnvironmentType.Unknown
             }
-        ].map((item) => {
-            return { ...info, ...item };
-        });
+        ].map((item) => ({ ...info, ...item }));
         const condaInterpreterIndex = registryInterpreters.findIndex((i) => i.displayName === 'Anaconda');
         const expectedCodnaPath = path.join(
             path.dirname(registryInterpreters[condaInterpreterIndex].path),
@@ -519,9 +503,7 @@ suite('Interpreters Conda Service', () => {
                 companyDisplayName: 'Continuum Analytics, Inc.',
                 envType: EnvironmentType.Unknown
             }
-        ].map((item) => {
-            return { ...info, ...item };
-        });
+        ].map((item) => ({ ...info, ...item }));
         const indexOfLatestVersion = 3;
         const expectedCodnaPath = path.join(path.dirname(registryInterpreters[indexOfLatestVersion].path), 'conda.exe');
         platformService.setup((p) => p.isWindows).returns(() => true);
@@ -590,9 +572,7 @@ suite('Interpreters Conda Service', () => {
                 companyDisplayName: 'Continuum Analytics, Inc.',
                 envType: EnvironmentType.Unknown
             }
-        ].map((item) => {
-            return { ...info, ...item };
-        });
+        ].map((item) => ({ ...info, ...item }));
         platformService.setup((p) => p.isWindows).returns(() => true);
         processService
             .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
@@ -694,9 +674,7 @@ suite('Interpreters Conda Service', () => {
             const expectedCondaLocation = untildify(knownLocation);
             platformService.setup((p) => p.isWindows).returns(() => false);
             processService
-                .setup((p) =>
-                    p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())
-                )
+                .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
                 .returns(() => Promise.reject(new Error('Not Found')));
             fileSystem
                 .setup((fs) => fs.search(TypeMoq.It.isAny()))
@@ -750,9 +728,7 @@ suite('Interpreters Conda Service', () => {
             .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'xyz' }));
         processService
-            .setup((p) =>
-                p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['info', '--json']), TypeMoq.It.isAny())
-            )
+            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['info', '--json']), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(expectedInfo) }));
 
         const condaInfo = await condaService.getCondaInfo();
@@ -764,9 +740,7 @@ suite('Interpreters Conda Service', () => {
             .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'xyz' }));
         processService
-            .setup((p) =>
-                p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['info', '--json']), TypeMoq.It.isAny())
-            )
+            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['info', '--json']), TypeMoq.It.isAny()))
             .returns(() => Promise.reject(new Error('unknown')));
 
         const condaInfo = await condaService.getCondaInfo();
@@ -840,9 +814,7 @@ suite('Interpreters Conda Service', () => {
             .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'xyz' }));
         processService
-            .setup((p) =>
-                p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['info', '--json']), TypeMoq.It.isAny())
-            )
+            .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['info', '--json']), TypeMoq.It.isAny()))
             .returns(() => Promise.reject(new Error('unknown')));
 
         const condaInfo = await condaService.getCondaInfo();
@@ -891,9 +863,7 @@ suite('Interpreters Conda Service', () => {
                 companyDisplayName: 'Continuum Analytics, Inc.',
                 envType: EnvironmentType.Unknown
             }
-        ].map((item) => {
-            return { ...info, ...item };
-        });
+        ].map((item) => ({ ...info, ...item }));
 
         const expectedCodaExe = path.join(path.dirname(condaPythonExePath), 'conda.exe');
 
@@ -1046,16 +1016,14 @@ suite('Interpreters Conda Service', () => {
             platformService.setup((p) => p.isWindows).returns(() => !t.isLinux);
             platformService.setup((p) => p.isMac).returns(() => false);
             fileSystem
-                .setup((f) =>
-                    f.fileExists(
-                        TypeMoq.It.is((p) => {
-                            if (p === t.expectedCondaPath) {
-                                return true;
-                            }
-                            return false;
-                        })
-                    )
-                )
+                .setup((f) => f.fileExists(
+                    TypeMoq.It.is((p) => {
+                        if (p === t.expectedCondaPath) {
+                            return true;
+                        }
+                        return false;
+                    })
+                ))
                 .returns(() => Promise.resolve(true));
 
             const condaFile = await condaService.getCondaFileFromInterpreter(t.pythonPath, t.environmentName);
@@ -1066,16 +1034,14 @@ suite('Interpreters Conda Service', () => {
             platformService.setup((p) => p.isWindows).returns(() => !t.isLinux);
             platformService.setup((p) => p.isMac).returns(() => false);
             fileSystem
-                .setup((f) =>
-                    f.fileExists(
-                        TypeMoq.It.is((p) => {
-                            if (p === t.expectedCondaPath) {
-                                return true;
-                            }
-                            return false;
-                        })
-                    )
-                )
+                .setup((f) => f.fileExists(
+                    TypeMoq.It.is((p) => {
+                        if (p === t.expectedCondaPath) {
+                            return true;
+                        }
+                        return false;
+                    })
+                ))
                 .returns(() => Promise.resolve(true));
 
             const condaFile = await condaService.getCondaFileFromInterpreter(t.pythonPath, undefined);

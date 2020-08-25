@@ -21,7 +21,7 @@ export class GlobalVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
         @inject(IVirtualEnvironmentsSearchPathProvider)
         @named('global')
-        globalVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
+            globalVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         super(globalVirtualEnvPathProvider, serviceContainer, 'VirtualEnvService');
@@ -31,7 +31,9 @@ export class GlobalVirtualEnvService extends BaseVirtualEnvService {
 @injectable()
 export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvironmentsSearchPathProvider {
     private readonly config: IConfigurationService;
+
     private readonly currentProcess: ICurrentProcess;
+
     private readonly virtualEnvMgr: IVirtualEnvironmentManager;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {

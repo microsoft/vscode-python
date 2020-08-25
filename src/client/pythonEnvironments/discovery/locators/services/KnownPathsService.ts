@@ -9,6 +9,7 @@ import { IServiceContainer } from '../../../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
+
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 /**
@@ -49,12 +50,8 @@ export class KnownPathsService extends CacheableLocatorService {
         return Promise.all<string[]>(promises)
             .then((listOfInterpreters) => flatten(listOfInterpreters))
             .then((interpreters) => interpreters.filter((item) => item.length > 0))
-            .then((interpreters) =>
-                Promise.all(interpreters.map((interpreter) => this.getInterpreterDetails(interpreter)))
-            )
-            .then((interpreters) =>
-                interpreters.filter((interpreter) => !!interpreter).map((interpreter) => interpreter!)
-            );
+            .then((interpreters) => Promise.all(interpreters.map((interpreter) => this.getInterpreterDetails(interpreter))))
+            .then((interpreters) => interpreters.filter((interpreter) => !!interpreter).map((interpreter) => interpreter!));
     }
 
     /**
@@ -87,6 +84,7 @@ export class KnownPathsService extends CacheableLocatorService {
 @injectable()
 export class KnownSearchPathsForInterpreters implements IKnownSearchPathsForInterpreters {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
+
     /**
      * Return the paths where Python interpreters might be found.
      */

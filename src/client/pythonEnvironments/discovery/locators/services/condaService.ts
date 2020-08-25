@@ -1,10 +1,14 @@
-import { inject, injectable, named, optional } from 'inversify';
+import {
+    inject, injectable, named, optional
+} from 'inversify';
 import * as path from 'path';
 import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../../../common/application/types';
-import { traceDecorators, traceError, traceVerbose, traceWarning } from '../../../../common/logger';
+import {
+    traceDecorators, traceError, traceVerbose, traceWarning
+} from '../../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
@@ -51,6 +55,7 @@ export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
 @injectable()
 export class CondaService implements ICondaService {
     private condaFile?: Promise<string | undefined>;
+
     private isAvailable: boolean | undefined;
 
     constructor(
@@ -179,7 +184,7 @@ export class CondaService implements ICondaService {
      */
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean> {
         const dir = path.dirname(interpreterPath);
-        const isWindows = this.platform.isWindows;
+        const { isWindows } = this.platform;
         const condaMetaDirectory = isWindows ? path.join(dir, 'conda-meta') : path.join(dir, '..', 'conda-meta');
         return this.fileSystem.directoryExists(condaMetaDirectory);
     }
@@ -323,12 +328,12 @@ export class CondaService implements ICondaService {
      */
     private detectCondaEnvironment(interpreter: PythonEnvironment) {
         return (
-            interpreter.envType === EnvironmentType.Conda ||
-            (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
-            (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('ANACONDA') >=
-                0 ||
-            (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('CONTINUUM') >=
-                0
+            interpreter.envType === EnvironmentType.Conda
+            || (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0
+            || (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('ANACONDA')
+                >= 0
+            || (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('CONTINUUM')
+                >= 0
         );
     }
 
@@ -348,6 +353,7 @@ export class CondaService implements ICondaService {
         const disposable = this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this));
         this.disposableRegistry.push(disposable);
     }
+
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
             ? this.workspaceService.workspaceFolders!.map((workspace) => workspace.uri)

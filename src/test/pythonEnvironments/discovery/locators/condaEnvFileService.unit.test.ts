@@ -81,20 +81,16 @@ suite('Interpreters from Conda Environments Text File', () => {
         condaService.setup((c) => c.condaEnvironmentsFile).returns(() => environmentsFilePath);
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
-            .returns((environmentPath) => {
-                return isWindows
-                    ? path.join(environmentPath, 'python.exe')
-                    : path.join(environmentPath, 'bin', 'python');
-            });
+            .returns((environmentPath) => (isWindows
+                ? path.join(environmentPath, 'python.exe')
+                : path.join(environmentPath, 'bin', 'python')));
         condaService
             .setup((c) => c.getCondaEnvironments(TypeMoq.It.isAny()))
             .returns(() => {
-                const condaEnvironments = validPaths.map((item) => {
-                    return {
-                        path: item,
-                        name: path.basename(item)
-                    };
-                });
+                const condaEnvironments = validPaths.map((item) => ({
+                    path: item,
+                    name: path.basename(item)
+                }));
                 return Promise.resolve(condaEnvironments);
             });
         fileSystem

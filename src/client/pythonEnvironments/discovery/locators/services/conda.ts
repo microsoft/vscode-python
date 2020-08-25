@@ -61,9 +61,7 @@ export async function parseCondaInfo(
 
     return (
         Promise.all(promises)
-            .then((interpreters) =>
-                interpreters.filter((interpreter) => interpreter !== null && interpreter !== undefined)
-            )
+            .then((interpreters) => interpreters.filter((interpreter) => interpreter !== null && interpreter !== undefined))
             // tslint:disable-next-line:no-non-null-assertion
             .then((interpreters) => interpreters.map((interpreter) => interpreter!))
     );

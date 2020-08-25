@@ -45,9 +45,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
             .setup((p) => p.basename(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((p: string) => p.split(/[\\,\/]/).reverse()[0]);
         // So effectively these are functional tests...
-        fs.setup((f) => f.fileExists(TypeMoq.It.isAny())).returns((filename) => {
-            return fsextra.pathExists(filename);
-        });
+        fs.setup((f) => f.fileExists(TypeMoq.It.isAny())).returns((filename) => fsextra.pathExists(filename));
         const state = new MockState(undefined);
         interpreterHelper
             .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
@@ -424,7 +422,9 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 arch: Architecture.x86,
                 values: ['\\Software\\Python\\Company Three\\6.0.0']
             },
-            { key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['7.0.0'] },
+            {
+                key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['7.0.0']
+            },
             {
                 key: '\\Software\\Python\\Company A',
                 hive: RegistryHive.HKLM,
@@ -624,7 +624,9 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 arch: Architecture.x86,
                 values: ['\\Software\\Python\\Company Five\\8.0.0']
             },
-            { key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['9.0.0'] },
+            {
+                key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['9.0.0']
+            },
             {
                 key: '\\Software\\Python\\Company A',
                 hive: RegistryHive.HKLM,
@@ -838,7 +840,9 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 arch: Architecture.x86,
                 values: ['\\Software\\Python\\Company Five\\Five !']
             },
-            { key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['A'] },
+            {
+                key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['A']
+            },
             {
                 key: '\\Software\\Python\\Company A',
                 hive: RegistryHive.HKLM,
