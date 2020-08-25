@@ -3,10 +3,9 @@ name: Release Build
 on:
   push:
     branches:
-      # XXX Remove before creating PR!
-      # - 'release'
-      # - 'release/*'
-      # - 'release-*'
+      - 'release'
+      - 'release/*'
+      - 'release-*'
 
 env:
   PYTHON_VERSION: 3.8
