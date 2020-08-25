@@ -15,8 +15,13 @@
  * indicated by "\s".  Also, unlike with regular expression literals,
  * backslashes must be escaped.  Conversely, forward slashes do not
  * need to be escaped.
+ *
+ * Line comments are also removed.  A comment is two spaces followed
+ * by `#` followed by a space and then the rest of the text to the
+ * end of the line.
  */
-export function verboseRegExp(pattern: string): RegExp {
+export function verboseRegExp(pattern: string, flags?: string): RegExp {
+    pattern = pattern.replace(/(^| {2})# .*$/gm, '');
     pattern = pattern.replace(/\s+?/g, '');
-    return RegExp(pattern);
+    return RegExp(pattern, flags);
 }

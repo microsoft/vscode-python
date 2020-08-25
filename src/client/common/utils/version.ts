@@ -3,7 +3,10 @@
 
 'use strict';
 
+// tslint:disable:no-multiline-string
+
 import * as semver from 'semver';
+import { verboseRegExp } from './regexp';
 
 //===========================
 // basic version info
@@ -141,6 +144,23 @@ export type ParseResult<T extends BasicVersionInfo = BasicVersionInfo> = {
     after: string;
 };
 
+const basicVersionPattern = `
+    ^
+    (.*?)  # <before>
+    (\\d+)  # <major>
+    (?:
+        [.]
+        (\\d+)  # <minor>
+        (?:
+            [.]
+            (\\d+)  # <micro>
+        )?
+    )?
+    ([^\\d].*)?  # <after>
+    $
+`;
+const basicVersionRegexp = verboseRegExp(basicVersionPattern, 's');
+
 /**
  * Extract a version from the given text.
  *
@@ -148,20 +168,7 @@ export type ParseResult<T extends BasicVersionInfo = BasicVersionInfo> = {
  * as well.
  */
 export function parseBasicVersionInfo<T extends BasicVersionInfo>(verStr: string): ParseResult<T> | undefined {
-    // ^
-    // (.*?)
-    // (\d+)
-    // (?:
-    //   \.
-    //   (\d+)
-    //   (?:
-    //     \.
-    //     (\d+)
-    //   )?
-    // )?
-    // ([^\d].*)?
-    // $
-    const match = verStr.match(/^(.*?)(\d+)(?:\.(\d+)(?:\.(\d+))?)?([^\d].*)?$/s);
+    const match = verStr.match(basicVersionRegexp);
     if (!match) {
         return undefined;
     }
