@@ -8,7 +8,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import untildify = require('untildify');
 import { IWorkspaceService } from '../../../../common/application/types';
 import { IConfigurationService } from '../../../../common/types';
 import {
@@ -18,6 +17,9 @@ import {
 } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
 import { BaseVirtualEnvService } from './baseVirtualEnvService';
+
+// tslint:disable-next-line: no-var-requires
+const untildify = require('untildify');
 
 @injectable()
 export class WorkspaceVirtualEnvService extends BaseVirtualEnvService {
