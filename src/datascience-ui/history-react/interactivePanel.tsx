@@ -237,6 +237,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         selectServer={this.props.selectServer}
                         selectKernel={this.props.selectKernel}
                         shouldShowTrustMessage={false}
+                        settings={this.props.settings}
                     />
                 );
             } else if (this.props.kernel.localizedUri === getLocString('DataScience.localJupyterServer', 'local')) {
@@ -252,6 +253,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                 selectServer={this.props.selectServer}
                 selectKernel={this.props.selectKernel}
                 shouldShowTrustMessage={false}
+                settings={this.props.settings}
             />
         );
     }
