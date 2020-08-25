@@ -102,10 +102,10 @@ export class Kernel implements IKernel {
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
         // Update cell to running state if cell has any code
-        if (cell.document.getText().trim().length > 0) {
-            cell.metadata.runState = NotebookCellRunState.Running;
-            this.contentProvider.notifyChangesToDocument(cell.notebook);
-        }
+        //if (cell.document.getText().trim().length > 0) {
+        //cell.metadata.runState = NotebookCellRunState.Running;
+        //this.contentProvider.notifyChangesToDocument(cell.notebook);
+        //}
 
         // Then actually start.
         await this.start({ disableUI: false, token: this.startCancellation.token });
@@ -146,7 +146,13 @@ export class Kernel implements IKernel {
 
             this._notebookPromise
                 .then((nb) => (this.kernelExecution.notebook = this.notebook = nb))
-                .catch((ex) => traceError('failed to create INotebook in kernel', ex));
+                .catch((ex) => {
+                    traceError('failed to create INotebook in kernel', ex)
+                    this._notebookPromise = undefined;
+                    this.startCancellation.cancel();
+                    return;
+                    //throw ex;
+                });
             await this._notebookPromise;
             await this.initializeAfterStart();
         }
