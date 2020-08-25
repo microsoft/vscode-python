@@ -1467,14 +1467,14 @@ plt.show()`,
             runTest('Current directory', async () => {
                 const rootFolder = ioc.get<IWorkspaceService>(IWorkspaceService).rootPath!;
                 const escapedPath = `'${rootFolder.replace(/\\/g, '\\\\')}'`;
-                addMockData(`import os\nprint(os.getcwd())`, escapedPath);
+                addMockData(`import os\nos.getcwd()`, escapedPath);
                 const notebook = await notebookProvider.getOrCreateNotebook({
                     identity: getDefaultInteractiveIdentity(),
                     resource: Uri.file(path.join(rootFolder, 'foo.ipynb'))
                 });
 
                 assert.ok(notebook, 'did not create notebook');
-                await verifySimple(notebook, `import os\nprint(os.getcwd())`, escapedPath, true);
+                await verifySimple(notebook, `import os\nos.getcwd()`, escapedPath, true);
             });
         });
     });
