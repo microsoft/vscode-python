@@ -54,7 +54,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             }
 
             public getCachedInterpreters(): PythonEnvironment[] | undefined {
-
+                return undefined;
             }
 
             public async cacheInterpreters() {
