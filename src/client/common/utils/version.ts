@@ -67,6 +67,15 @@ type RawBasicVersionInfo = BasicVersionInfo & {
  * Make a copy and set all the properties properly.
  */
 export function normalizeBasicVersionInfo<T extends BasicVersionInfo>(info: T): T {
+    if (!info) {
+        const empty = { major: -1, minor: -1, micro: -1 };
+        ((empty as unknown) as RawBasicVersionInfo).unnormalized = {
+            major: undefined,
+            minor: undefined,
+            micro: undefined
+        };
+        return empty as T;
+    }
     const norm: T = { ...info };
     const raw = (norm as unknown) as RawBasicVersionInfo;
     if (raw.unnormalized === undefined) {
@@ -103,6 +112,9 @@ function validateVersionPart(prop: string, part: number, unnormalized?: unknown)
  * The info is expected to be normalized already.
  */
 export function validateBasicVersionInfo<T extends BasicVersionInfo>(info: T) {
+    if (!info) {
+        throw Error('invalid version (not normalized)');
+    }
     const raw = (info as unknown) as RawBasicVersionInfo;
     validateVersionPart('major', info.major, raw.unnormalized?.major);
     validateVersionPart('minor', info.minor, raw.unnormalized?.minor);
@@ -125,6 +137,9 @@ export function validateBasicVersionInfo<T extends BasicVersionInfo>(info: T) {
  * The object is expected to be normalized.
  */
 export function getVersionString<T extends BasicVersionInfo>(info: T): string {
+    if (!info) {
+        return '';
+    }
     if (typeof info.major !== 'number' || typeof info.minor !== 'number' || typeof info.micro !== 'number') {
         return '';
     }
@@ -206,6 +221,9 @@ export function parseBasicVersionInfo<T extends BasicVersionInfo>(verStr: string
  * The object is expected to already be normalized.
  */
 export function isVersionInfoEmpty<T extends BasicVersionInfo>(info: T): boolean {
+    if (!info) {
+        return false;
+    }
     if (typeof info.major !== 'number' || typeof info.minor !== 'number' || typeof info.micro !== 'number') {
         return false;
     }
@@ -228,7 +246,12 @@ export type VersionInfo = BasicVersionInfo & {
  * Make a copy and set all the properties properly.
  */
 export function normalizeVersionInfo<T extends VersionInfo>(info: T): T {
-    const norm = { ...info, ...normalizeBasicVersionInfo(info) };
+    const basic = normalizeBasicVersionInfo(info);
+    if (!info) {
+        basic.raw = '';
+        return basic;
+    }
+    const norm = { ...info, ...basic };
     if (!norm.raw) {
         norm.raw = '';
     }
