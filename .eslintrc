@@ -68,10 +68,12 @@
 			}
 		],
 		"max-len": [
-			"error",
+			"warn",
 			{
 				"code": 120,
 				"ignorePattern": "^import\\s.+\\sfrom\\s.+;$",
+				"ignoreStrings": true,
+				"ignoreTemplateLiterals": true,
 				"ignoreUrls": true
 			}
 		],
