@@ -75,15 +75,36 @@ async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
  * Checks if the given interpreter belongs to Windows Store Python environment.
  * @param interpreterPath: Absolute path to any python interpreter.
  *
- * Remarks: Check if the path includes 'Microsoft\WindowsApps`, `Program Files\WindowsApps`.
- * This is not a string signal, since this
+ * Remarks:
+ * 1. Checking if the path includes 'Microsoft\WindowsApps`, `Program Files\WindowsApps`, is
+ * NOT enough. In WSL, /mnt/c/users/user/AppData/Local/Microsoft/WindowsApps is available as a search
+ * path. It is possible to get a false positive for that path. So the comparison should check if the
+ * absolute path to 'WindowsApps' directory is present in the given interpreter path. The WSL path to
+ * 'WindowsApps' is not a valid path to access, Windows Store Python.
+ *
+ * 2. 'startsWith' comparison may not be right, user can provide '\\?\C:\users\' style long paths in windows.
+ *
+ * 3. A limitation of the checks here is that they don't handle 8.3 style windows paths.
+ * For example,
+ *     C:\Users\USER\AppData\Local\MICROS~1\WINDOW~1\PYTHON~2.EXE
+ * is the shortened form of
+ *     C:\Users\USER\AppData\Local\Microsoft\WindowsApps\python3.7.exe
+ *
+ * The correct way to compare these would be to always convert given paths to long path (or to short path).
+ *
+ * To convert to short path without using N-API in node would be to use this command:
+ * > cmd /c for %A in ("C:\Users\USER\AppData\Local\Microsoft\WindowsApps\python3.7.exe") do @echo %~sA
+ * The above command will print out this:
+ * C:\Users\USER\AppData\Local\MICROS~1\WINDOW~1\PYTHON~2.EXE
+ *
+ * For this to work correctly you need actual file to exist, and accessible from the user's account.
  */
 async function isWindowsStoreEnvironment(interpreterPath: string): Promise<boolean> {
-    const pythonPathToCompare = interpreterPath.toUpperCase().replace(/\//g, '\\');
+    const pythonPathToCompare = path.normalize(interpreterPath).toUpperCase();
     const localAppDataStorePath = path
         .join(getEnvironmentVariable('LOCALAPPDATA') || '', 'Microsoft', 'WindowsApps')
-        .toUpperCase()
-        .replace(/\//g, '\\');
+        .normalize()
+        .toUpperCase();
     if (pythonPathToCompare.includes(localAppDataStorePath)) {
         return true;
     }
@@ -92,8 +113,8 @@ async function isWindowsStoreEnvironment(interpreterPath: string): Promise<boole
     // We should never have to look at this path or even execute python from this path.
     const programFilesStorePath = path
         .join(getEnvironmentVariable('ProgramFiles') || 'Program Files', 'WindowsApps')
-        .toUpperCase()
-        .replace(/\//g, '\\');
+        .normalize()
+        .toUpperCase();
     if (pythonPathToCompare.includes(programFilesStorePath)) {
         traceWarning('isWindowsStoreEnvironment called with Program Files store path.');
         return true;

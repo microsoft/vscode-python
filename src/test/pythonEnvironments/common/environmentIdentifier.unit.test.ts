@@ -74,13 +74,13 @@ suite('Environment Identifier', () => {
                 const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
                 assert.deepEqual(envType, EnvironmentType.WindowsStore);
             });
-            test('Local app data not set', async () => {
+            test(`Local app data not set (${exe})`, async () => {
                 getEnvVar.withArgs('LOCALAPPDATA').returns(undefined);
                 const interpreterPath = path.join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', exe);
                 const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
                 assert.deepEqual(envType, EnvironmentType.WindowsStore);
             });
-            test('Program files app data not set', async () => {
+            test(`Program files app data not set (${exe})`, async () => {
                 getEnvVar.withArgs('ProgramFiles').returns(undefined);
                 const interpreterPath = path.join(
                     fakeProgramFilesPath,
@@ -89,6 +89,20 @@ suite('Environment Identifier', () => {
                     exe
                 );
                 const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+                assert.deepEqual(envType, EnvironmentType.WindowsStore);
+            });
+            test(`Path using forward slashes (${exe})`, async () => {
+                const interpreterPath = path
+                    .join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', exe)
+                    .replace('\\', '/');
+                const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+                assert.deepEqual(envType, EnvironmentType.WindowsStore);
+            });
+            test(`Path using long path style slashes (${exe})`, async () => {
+                const interpreterPath = path
+                    .join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', exe)
+                    .replace('\\', '/');
+                const envType: EnvironmentType = await identifyEnvironment(`\\\\?\\${interpreterPath}`);
                 assert.deepEqual(envType, EnvironmentType.WindowsStore);
             });
         });
