@@ -51,14 +51,14 @@ function or(...arr: boolean[]): boolean {
  * }
  */
 async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
-    const conda_dir = 'conda-meta';
+    const conda_meta_dir = 'conda-meta';
 
     // Check if the conda-meta directory is in the same directory as the interpreter.
     // This layout is common in Windows.
     // env
     // |__ conda-meta  <--- check if this directory exists
     // |__ python.exe  <--- interpreterPath
-    const conda_env_dir_1 = path.join(path.dirname(interpreterPath), conda_dir);
+    const conda_env_dir_1 = path.join(path.dirname(interpreterPath), conda_meta_dir);
 
     // Check if the conda-meta directory is in the same directory as the interpreter.
     // This layout is common on linux/Mac.
@@ -66,7 +66,7 @@ async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
     // |__ conda-meta  <--- check if this directory exists
     // |__ bin
     //     |__ python  <--- interpreterPath
-    const conda_env_dir_2 = path.join(path.dirname(path.dirname(interpreterPath)), conda_dir);
+    const conda_env_dir_2 = path.join(path.dirname(path.dirname(interpreterPath)), conda_meta_dir);
 
     return or(await pathExists(conda_env_dir_1), await pathExists(conda_env_dir_2));
 }
