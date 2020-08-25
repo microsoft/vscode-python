@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Architecture } from '../../../common/utils/platform';
-import { Version, VersionInfo } from '../../../common/utils/version';
+import { BasicVersionInfo, VersionInfo } from '../../../common/utils/version';
 
 /**
  * IDs for the various supported Python environments.
@@ -87,7 +87,7 @@ export type PythonVersionRelease = {
  *
  * @prop sysVersion - the raw text from `sys.version`
  */
-export type PythonVersion = VersionInfo & {
+export type PythonVersion = BasicVersionInfo & {
     release: PythonVersionRelease;
     sysVersion?: string;
 };
@@ -118,7 +118,7 @@ export type PythonDistroMetaInfo = {
  * @prop binDir - where to look for the distro's executables (i.e. tools)
  */
 export type PythonDistroInfo = PythonDistroMetaInfo & {
-    version?: Version;
+    version?: VersionInfo;
     binDir?: string;
 };
 
