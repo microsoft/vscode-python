@@ -31,6 +31,8 @@ export enum PythonEnvKind {
 export type PythonExecutableInfo = {
     filename: string;
     sysPrefix: string;
+    ctime: number;
+    mtime: number;
 };
 
 /**
