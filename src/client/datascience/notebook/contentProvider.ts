@@ -77,8 +77,8 @@ export class NotebookContentProvider implements INotebookContentProvider {
             throw new Error('Incorrect NotebookModel, expected VSCodeNotebookModel');
         }
 
-        if (model.metadata) {
-            model.metadata.language_info = getLanguageInfo(model.metadata);
+        if (model.metadata && model.metadata.kernelspec) {
+            model.metadata.language_info = getLanguageInfo(model.metadata.kernelspec);
         }
         setSharedProperty('ds_notebookeditor', 'native');
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cells.length });
