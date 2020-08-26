@@ -31,7 +31,7 @@ type EnvsEventListener = (e: PythonEnvsChangedEvent) => unknown;
  * If disabled, events emitted by the wrapped watcher are discarded.
  */
 export class DisableableEnvsWatcher implements IPythonEnvsWatcher {
-    private enabled = true;
+    protected enabled = true;
     constructor(
         // To wrap more than one use `PythonEnvWatchers`.
         private readonly wrapped: IPythonEnvsWatcher
