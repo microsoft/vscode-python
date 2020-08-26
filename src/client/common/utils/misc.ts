@@ -55,6 +55,34 @@ type DeepReadonlyObject<T> = {
 };
 type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
 
+/**
+ * An object that can be disabled.
+ */
+export class Disableable {
+    private enabled = true;
+
+    /**
+     * True if the watcher is currently enabled.
+     */
+    public get isEnabled(): boolean {
+        return this.enabled;
+    }
+
+    /**
+     * Ensure that the watcher is enabled.
+     */
+    public enable() {
+        this.enabled = true;
+    }
+
+    /**
+     * Ensure that the watcher is disabled.
+     */
+    public disable() {
+        this.enabled = false;
+    }
+}
+
 // Information about a traced function/method call.
 export type TraceInfo = {
     elapsed: number; // milliseconds
