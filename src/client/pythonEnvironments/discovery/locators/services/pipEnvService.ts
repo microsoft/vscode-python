@@ -157,7 +157,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         } catch (error) {
             traceError('PipEnv identification failed', error);
             if (ignoreErrors) {
-
+                return undefined;
             }
         }
     }

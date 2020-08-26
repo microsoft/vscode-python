@@ -58,7 +58,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             }
 
             public async cacheInterpreters() {
-
+                return undefined;
             }
 
             public getCacheKey(): string {
