@@ -13,7 +13,6 @@ import {
     Event,
     EventEmitter,
     NotebookCell,
-    NotebookCellRunState,
     NotebookDocument,
     Uri
 } from 'vscode';
@@ -83,7 +82,7 @@ export class Kernel implements IKernel {
         commandManager: ICommandManager,
         interpreterService: IInterpreterService,
         private readonly errorHandler: IDataScienceErrorHandler,
-        private readonly contentProvider: INotebookContentProvider,
+        contentProvider: INotebookContentProvider,
         editorProvider: INotebookEditorProvider,
         private readonly kernelProvider: IKernelProvider,
         private readonly kernelSelectionUsage: IKernelSelectionUsage,
