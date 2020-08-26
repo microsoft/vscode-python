@@ -9,7 +9,7 @@ on:
 
 env:
   PYTHON_VERSION: 3.8
-  MOCHA_REPORTER_JUNIT: false # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
+  MOCHA_REPORTER_JUNIT: false # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it hasn't already.
   CACHE_NPM_DEPS: cache-npm
   CACHE_OUT_DIRECTORY: cache-out-directory
   CACHE_PIP_DEPS: cache-pip
