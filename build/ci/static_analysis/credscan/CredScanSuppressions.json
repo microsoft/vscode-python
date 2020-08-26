@@ -7,8 +7,7 @@
         },
         {
             "file": "src\\test\\datascience\\serverConfigFiles\\remotePassword.py",
-            "hash": "sha1:74182e119a7b:e1b98bbba98f9ada3fd714eda9652437e80082e2",
-            "_justification": "This secret is used here for testing."
+            "_justification": "The secret in this file used here for testing."
         }
     ]
 }
