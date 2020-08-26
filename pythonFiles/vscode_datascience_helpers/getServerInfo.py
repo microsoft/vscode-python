@@ -24,8 +24,8 @@ try:
 
     print(json.dumps(server_info_list))
 except Exception:
-    """ Usage of subprocess is safe here as we are using run and are in control of all the arguments passed to it
-    flagging for execution of partial path is also not correct as it is a command, not a path """
+    """Usage of subprocess is safe here as we are using run and are in control of all the arguments passed to it
+    flagging for execution of partial path is also not correct as it is a command, not a path"""
     import subprocess  # nosec
     import sys
 

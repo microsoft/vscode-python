@@ -48,7 +48,12 @@ class ParseGeneralTests(unittest.TestCase):
 
 class ParseDiscoverTests(unittest.TestCase):
     def test_pytest_default(self):
-        tool, cmd, args, toolargs = parse_args(["discover", "pytest",])
+        tool, cmd, args, toolargs = parse_args(
+            [
+                "discover",
+                "pytest",
+            ]
+        )
 
         self.assertEqual(tool, "pytest")
         self.assertEqual(cmd, "discover")
@@ -88,7 +93,13 @@ class ParseDiscoverTests(unittest.TestCase):
 
     def test_pytest_opts(self):
         tool, cmd, args, toolargs = parse_args(
-            ["discover", "pytest", "--simple", "--no-hide-stdio", "--pretty",]
+            [
+                "discover",
+                "pytest",
+                "--simple",
+                "--no-hide-stdio",
+                "--pretty",
+            ]
         )
 
         self.assertEqual(tool, "pytest")
@@ -120,8 +131,14 @@ class MainTests(unittest.TestCase):
             "discover",
             {"spam": "eggs"},
             [],
-            _tools={tool.name: {"discover": tool.discover,}},
-            _reporters={"discover": reporter.report,},
+            _tools={
+                tool.name: {
+                    "discover": tool.discover,
+                }
+            },
+            _reporters={
+                "discover": reporter.report,
+            },
         )
 
         self.assertEqual(

@@ -109,7 +109,12 @@ class FilePathTests(unittest.TestCase):
         # no-op paths
         paths = [path for _, path in tests]
         paths.extend(
-            [".", "..", "some-dir", "spam.py",]
+            [
+                ".",
+                "..",
+                "some-dir",
+                "spam.py",
+            ]
         )
         for path in paths:
             for pathsep in [ntpath.sep, posixpath.sep]:
@@ -140,7 +145,10 @@ class FilePathTests(unittest.TestCase):
         # no-op
         for path in [".", ".."]:
             tests.extend(
-                [(path, posixpath, path), (path, ntpath, path),]
+                [
+                    (path, posixpath, path),
+                    (path, ntpath, path),
+                ]
             )
         for path, _os_path, expected in tests:
             with self.subTest((path, _os_path.sep)):
@@ -169,7 +177,10 @@ class FilePathTests(unittest.TestCase):
         ]
         tests = [(p, posixpath, e) for p, e in common]
         tests.extend(
-            (p, posixpath, e) for p, e in [(r"\spam.py", r"./\spam.py"),]
+            (p, posixpath, e)
+            for p, e in [
+                (r"\spam.py", r"./\spam.py"),
+            ]
         )
         tests.extend((p, ntpath, e) for p, e in common)
         tests.extend(
