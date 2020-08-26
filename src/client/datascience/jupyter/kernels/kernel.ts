@@ -82,7 +82,7 @@ export class Kernel implements IKernel {
         private readonly launchTimeout: number,
         commandManager: ICommandManager,
         interpreterService: IInterpreterService,
-        errorHandler: IDataScienceErrorHandler,
+        private readonly errorHandler: IDataScienceErrorHandler,
         private readonly contentProvider: INotebookContentProvider,
         editorProvider: INotebookEditorProvider,
         private readonly kernelProvider: IKernelProvider,
@@ -101,13 +101,6 @@ export class Kernel implements IKernel {
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
-        // Update cell to running state if cell has any code
-        //if (cell.document.getText().trim().length > 0) {
-        //cell.metadata.runState = NotebookCellRunState.Running;
-        //this.contentProvider.notifyChangesToDocument(cell.notebook);
-        //}
-
-        // Then actually start.
         await this.start({ disableUI: false, token: this.startCancellation.token });
         await this.kernelExecution.executeCell(cell);
     }
@@ -150,8 +143,7 @@ export class Kernel implements IKernel {
                     traceError('failed to create INotebook in kernel', ex)
                     this._notebookPromise = undefined;
                     this.startCancellation.cancel();
-                    return;
-                    //throw ex;
+                    this.errorHandler.handleError(ex);
                 });
             await this._notebookPromise;
             await this.initializeAfterStart();

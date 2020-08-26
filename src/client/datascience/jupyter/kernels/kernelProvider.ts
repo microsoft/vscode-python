@@ -29,10 +29,9 @@ export class KernelProvider implements IKernelProvider {
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider,
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
-
         @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
-    ) {}
+    ) { }
     public get(uri: Uri): IKernel | undefined {
         return this.kernelsByUri.get(uri.toString())?.kernel;
     }
