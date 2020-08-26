@@ -28,7 +28,7 @@ import {
 import { traceError, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { CellState, ICell, INotebookMetadataLive, INotebookModel } from '../../types';
+import { CellState, ICell, INotebookModel } from '../../types';
 import { JupyterNotebookView } from '../constants';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
