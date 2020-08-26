@@ -139,10 +139,10 @@ export class Kernel implements IKernel {
             this._notebookPromise
                 .then((nb) => (this.kernelExecution.notebook = this.notebook = nb))
                 .catch((ex) => {
-                    traceError('failed to create INotebook in kernel', ex)
+                    traceError('failed to create INotebook in kernel', ex);
                     this._notebookPromise = undefined;
                     this.startCancellation.cancel();
-                    this.errorHandler.handleError(ex);
+                    this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
                 });
             await this._notebookPromise;
             await this.initializeAfterStart();
