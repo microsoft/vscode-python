@@ -185,11 +185,21 @@ def generate_parse_item(pathsep):
         raise NotImplementedError
     ##########
     def _fix_fileid(*args):
-        return fix_fileid(*args, **dict(_normcase=normcase, _pathsep=pathsep,))
+        return fix_fileid(
+            *args,
+            **dict(
+                _normcase=normcase,
+                _pathsep=pathsep,
+            )
+        )
 
     def _normalize_test_id(*args):
         return pytest_item._normalize_test_id(
-            *args, **dict(_fix_fileid=_fix_fileid, _pathsep=pathsep,)
+            *args,
+            **dict(
+                _fix_fileid=_fix_fileid,
+                _pathsep=pathsep,
+            )
         )
 
     def _iter_nodes(*args):
@@ -203,20 +213,39 @@ def generate_parse_item(pathsep):
         )
 
     def _parse_node_id(*args):
-        return pytest_item._parse_node_id(*args, **dict(_iter_nodes=_iter_nodes,))
+        return pytest_item._parse_node_id(
+            *args,
+            **dict(
+                _iter_nodes=_iter_nodes,
+            )
+        )
 
     ##########
     def _split_fspath(*args):
-        return pytest_item._split_fspath(*args, **dict(_normcase=normcase,))
+        return pytest_item._split_fspath(
+            *args,
+            **dict(
+                _normcase=normcase,
+            )
+        )
 
     ##########
     def _matches_relfile(*args):
         return pytest_item._matches_relfile(
-            *args, **dict(_normcase=normcase, _pathsep=pathsep,)
+            *args,
+            **dict(
+                _normcase=normcase,
+                _pathsep=pathsep,
+            )
         )
 
     def _is_legacy_wrapper(*args):
-        return pytest_item._is_legacy_wrapper(*args, **dict(_pathsep=pathsep,))
+        return pytest_item._is_legacy_wrapper(
+            *args,
+            **dict(
+                _pathsep=pathsep,
+            )
+        )
 
     def _get_location(*args):
         return pytest_item._get_location(
@@ -286,7 +315,9 @@ class DiscoverTests(unittest.TestCase):
 
         self.assertEqual(
             stub.calls,
-            [("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),],
+            [
+                ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
+            ],
         )
 
     def test_no_tests_found(self):
@@ -778,7 +809,9 @@ class CollectorTests(unittest.TestCase):
                             id="./x/y/z/test_eggs.py::test_eggs",
                             name="test_eggs",
                             path=TestPath(
-                                root=testroot, relfile=fix_relpath(relfile), func=None,
+                                root=testroot,
+                                relfile=fix_relpath(relfile),
+                                func=None,
                             ),
                             source="{}:{}".format(fix_relpath(relfile), 1),
                             markers=[],
@@ -801,7 +834,9 @@ class CollectorTests(unittest.TestCase):
                             id="./x/y/z/test_eggs.py::test_eggs.TestSpam",
                             name="test_eggs.TestSpam",
                             path=TestPath(
-                                root=testroot, relfile=fix_relpath(relfile), func=None,
+                                root=testroot,
+                                relfile=fix_relpath(relfile),
+                                func=None,
                             ),
                             source="{}:{}".format(fix_relpath(relfile), 13),
                             markers=[],
@@ -824,7 +859,9 @@ class CollectorTests(unittest.TestCase):
                             id="./x/y/z/test_eggs.py::test_eggs.TestSpam.TestEggs",
                             name="test_eggs.TestSpam.TestEggs",
                             path=TestPath(
-                                root=testroot, relfile=fix_relpath(relfile), func=None,
+                                root=testroot,
+                                relfile=fix_relpath(relfile),
+                                func=None,
                             ),
                             source="{}:{}".format(fix_relpath(relfile), 28),
                             markers=[],
