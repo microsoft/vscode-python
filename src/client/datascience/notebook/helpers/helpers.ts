@@ -673,23 +673,23 @@ export function getLanguageInfo(
     metadata: INotebookMetadataLive | undefined
 ): nbformat.ILanguageInfoMetadata | undefined {
     if (metadata) {
-        let display_name = metadata.kernelspec?.display_name?.toLowerCase();
+        const display_name = metadata.kernelspec?.display_name?.toLowerCase();
         let language_name: string;
 
         switch (true) {
-            case display_name?.indexOf(PYTHON_LANGUAGE) != -1:
+            case display_name?.indexOf(PYTHON_LANGUAGE) !== -1:
                 language_name = PYTHON_LANGUAGE;
                 break;
-            case display_name?.indexOf(CSHARP_LANGUAGE) != -1:
+            case display_name?.indexOf(CSHARP_LANGUAGE) !== -1:
                 language_name = CSHARP_LANGUAGE;
                 break;
-            case display_name?.indexOf(FSHARP_LANGUAGE) != -1:
+            case display_name?.indexOf(FSHARP_LANGUAGE) !== -1:
                 language_name = FSHARP_LANGUAGE;
                 break;
-            case display_name?.indexOf(POWERSHELL_LANGUAGE) != -1:
+            case display_name?.indexOf(POWERSHELL_LANGUAGE) !== -1:
                 language_name = POWERSHELL_LANGUAGE;
                 break;
-            case display_name?.indexOf(JULIA_LANGUAGE) != -1:
+            case display_name?.indexOf(JULIA_LANGUAGE) !== -1:
                 language_name = JULIA_LANGUAGE;
                 break;
             default:
