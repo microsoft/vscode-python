@@ -17,11 +17,18 @@ import type {
 } from 'vscode-proposed';
 import { NotebookCellRunState } from '../../../../../typings/vscode-proposed';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
-import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
+import {
+    CSHARP_LANGUAGE,
+    FSHARP_LANGUAGE,
+    JULIA_LANGUAGE,
+    MARKDOWN_LANGUAGE,
+    POWERSHELL_LANGUAGE,
+    PYTHON_LANGUAGE
+} from '../../../common/constants';
 import { traceError, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { CellState, ICell, INotebookModel } from '../../types';
+import { CellState, ICell, INotebookMetadataLive, INotebookModel } from '../../types';
 import { JupyterNotebookView } from '../constants';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -660,4 +667,38 @@ export function updateVSCNotebookAfterTrustingNotebook(document: NotebookDocumen
             cell.outputs = createVSCCellOutputsFromOutputs(originalCells[index].data.outputs as any);
         }
     });
+}
+
+export function getLanguageInfo(
+    metadata: INotebookMetadataLive | undefined
+): nbformat.ILanguageInfoMetadata | undefined {
+    if (metadata) {
+        let display_name = metadata.kernelspec?.display_name?.toLowerCase();
+        let language_name: string;
+
+        switch (true) {
+            case display_name?.indexOf(PYTHON_LANGUAGE) != -1:
+                language_name = PYTHON_LANGUAGE;
+                break;
+            case display_name?.indexOf(CSHARP_LANGUAGE) != -1:
+                language_name = CSHARP_LANGUAGE;
+                break;
+            case display_name?.indexOf(FSHARP_LANGUAGE) != -1:
+                language_name = FSHARP_LANGUAGE;
+                break;
+            case display_name?.indexOf(POWERSHELL_LANGUAGE) != -1:
+                language_name = POWERSHELL_LANGUAGE;
+                break;
+            case display_name?.indexOf(JULIA_LANGUAGE) != -1:
+                language_name = JULIA_LANGUAGE;
+                break;
+            default:
+                language_name = 'plain text';
+        }
+
+        return {
+            name: language_name
+        };
+    }
+    return undefined;
 }

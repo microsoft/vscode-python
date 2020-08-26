@@ -1,6 +1,10 @@
 export const PYTHON_LANGUAGE = 'python';
 export const MARKDOWN_LANGUAGE = 'markdown';
 export const JUPYTER_LANGUAGE = 'jupyter';
+export const CSHARP_LANGUAGE = 'c#';
+export const FSHARP_LANGUAGE = 'f#';
+export const POWERSHELL_LANGUAGE = 'powershell';
+export const JULIA_LANGUAGE = 'julia';
 
 export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
 
