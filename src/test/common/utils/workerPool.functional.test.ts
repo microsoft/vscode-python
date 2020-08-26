@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import { createWorkerPool, IWorkerPool, QueuePosition } from '../../../client/common/utils/workerPool';
+import { createWorkerPool, QueuePosition } from '../../../client/common/utils/workerPool';
 
 suite('Process Queue', () => {
     test('Run two workers to calculate square', async () => {
