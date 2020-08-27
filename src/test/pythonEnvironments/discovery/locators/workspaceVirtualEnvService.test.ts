@@ -125,6 +125,8 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
     }
 
     suiteSetup(async function () {
+        this.skip();
+
         // skip for Python < 3, no venv support
         if (await isPythonVersionInProcess(undefined, '2')) {
             return this.skip();
