@@ -31,7 +31,7 @@ export type BasicVersionInfo = {
     // There is also a hidden `unnormalized` property.
 };
 
-function normalizeVersionPart(part: number): number {
+function normalizeVersionPart(part: unknown): number {
     // Any -1 values where the original is not a number are handled in validation.
     if (typeof part === 'number') {
         if (isNaN(part) || part < 0) {
@@ -41,7 +41,7 @@ function normalizeVersionPart(part: number): number {
         return part;
     }
     if (typeof part === 'string') {
-        const parsed = parseInt((part as unknown) as string, 10);
+        const parsed = parseInt(part as string, 10);
         if (isNaN(parsed) || parsed < 0) {
             return -1;
         }
@@ -55,11 +55,9 @@ function normalizeVersionPart(part: number): number {
 
 type RawBasicVersionInfo = BasicVersionInfo & {
     unnormalized?: {
-        // tslint:disable:no-any
-        major?: any;
-        minor?: any;
-        micro?: any;
-        // tslint:enable:no-any
+        major?: unknown;
+        minor?: unknown;
+        micro?: unknown;
     };
 };
 
@@ -68,11 +66,15 @@ type RawBasicVersionInfo = BasicVersionInfo & {
  */
 export function normalizeBasicVersionInfo<T extends BasicVersionInfo>(info: T): T {
     if (!info) {
-        const empty = { major: -1, minor: -1, micro: -1 };
-        ((empty as unknown) as RawBasicVersionInfo).unnormalized = {
-            major: undefined,
-            minor: undefined,
-            micro: undefined
+        const empty: unknown = {
+            major: -1,
+            minor: -1,
+            micro: -1,
+            unnormalized: {
+                major: undefined,
+                minor: undefined,
+                micro: undefined
+            }
         };
         return empty as T;
     }
@@ -87,7 +89,7 @@ export function normalizeBasicVersionInfo<T extends BasicVersionInfo>(info: T): 
     return norm;
 }
 
-function validateVersionPart(prop: string, part: number, unnormalized?: unknown) {
+function validateVersionPart(prop: string, part: unknown, unnormalized?: unknown) {
     if (typeof part !== 'number' || isNaN(part)) {
         throw Error(`invalid ${prop} version (not normalized)`);
     }
