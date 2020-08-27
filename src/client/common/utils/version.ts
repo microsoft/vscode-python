@@ -43,7 +43,7 @@ function normalizeVersionPart(part: unknown): [number, ErrorMsg] {
         return [part, ''];
     }
     if (typeof part === 'string') {
-        const parsed = parseInt(part as string, 10);
+        const parsed = parseInt(part, 10);
         if (isNaN(parsed)) {
             return [-1, 'string not numeric'];
         }
