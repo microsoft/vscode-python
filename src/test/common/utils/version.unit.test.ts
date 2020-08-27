@@ -76,24 +76,12 @@ const INVALID: VersionInfo[] = [
 ];
 
 suite('common utils - getVersionString', () => {
-    suite('valid', () => {
-        VERSIONS.forEach((data) => {
-            const [info, expected] = data;
-            test(`${expected}`, () => {
-                const result = getVersionString(info);
+    VERSIONS.forEach((data) => {
+        const [info, expected] = data;
+        test(`${expected}`, () => {
+            const result = getVersionString(info);
 
-                assert.equal(result, expected);
-            });
-        });
-    });
-
-    suite('invalid', () => {
-        INVALID.forEach((info) => {
-            test(`[${info.major}, ${info.minor}, ${info.micro}]`, () => {
-                const result = getVersionString(info);
-
-                assert.equal(result, '');
-            });
+            assert.equal(result, expected);
         });
     });
 });

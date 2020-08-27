@@ -145,12 +145,6 @@ export function validateBasicVersionInfo<T extends BasicVersionInfo>(info: T) {
  * The object is expected to be normalized.
  */
 export function getVersionString<T extends BasicVersionInfo>(info: T): string {
-    if (!info) {
-        return '';
-    }
-    if (typeof info.major !== 'number' || typeof info.minor !== 'number' || typeof info.micro !== 'number') {
-        return '';
-    }
     if (info.major < 0) {
         return '';
     } else if (info.minor < 0) {
