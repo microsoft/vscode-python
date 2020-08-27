@@ -63,6 +63,9 @@ type RawBasicVersionInfo = BasicVersionInfo & {
 
 /**
  * Make a copy and set all the properties properly.
+ *
+ * Only the "basic" version info will be normalized.  The caller
+ * is responsible for any other properties beyond that.
  */
 export function normalizeBasicVersionInfo<T extends BasicVersionInfo>(info: T): T {
     if (!info) {
@@ -112,6 +115,9 @@ function validateVersionPart(prop: string, part: unknown, unnormalized?: unknown
  * Fail if any properties are not set properly.
  *
  * The info is expected to be normalized already.
+ *
+ * Only the "basic" version info will be validated.  The caller
+ * is responsible for any other properties beyond that.
  */
 export function validateBasicVersionInfo<T extends BasicVersionInfo>(info: T) {
     if (!info) {
