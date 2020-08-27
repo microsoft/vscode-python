@@ -5,7 +5,7 @@ name: '$(Year:yyyy).$(Month).0.$(BuildID)-nightly-flake'
 # Not the CI build, see `vscode-python-nightly-flake-ci.yaml`.
 trigger: none
 
-# Not the PR build for merges to master and release.
+# Not the PR build for merges to main and release.
 pr: none
 
 schedules:
@@ -14,7 +14,6 @@ schedules:
     displayName: Nightly Flake build
     branches:
       include:
-        - master
         - main
         - release*
     always: true

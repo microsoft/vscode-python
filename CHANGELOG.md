@@ -2872,7 +2872,7 @@ part of!
    ([#7376](https://github.com/Microsoft/vscode-python/issues/7376))
 1. Refactor Azure Pipelines to use stages.
    ([#7431](https://github.com/Microsoft/vscode-python/issues/7431))
-1. Add unit tests to guarantee that the extension version in the master branch has the '-dev' suffix.
+1. Add unit tests to guarantee that the extension version in the main branch has the '-dev' suffix.
    ([#7471](https://github.com/Microsoft/vscode-python/issues/7471))
 1. Add a smoke test for the `Interactive Window`.
    ([#7653](https://github.com/Microsoft/vscode-python/issues/7653))
@@ -4947,7 +4947,7 @@ part of!
    ([#3317](https://github.com/Microsoft/vscode-python/issues/3317))
 1. Add YAML file specification for CI builds
    ([#3350](https://github.com/Microsoft/vscode-python/issues/3350))
-1. Stop running CI tests against the `master` branch of ptvsd.
+1. Stop running CI tests against the `main` branch of ptvsd.
    ([#3414](https://github.com/Microsoft/vscode-python/issues/3414))
 1. Be more aggressive in searching for a Python environment that can run Jupyter
    (make sure to cleanup any kernelspecs that are created during this process).
@@ -5818,7 +5818,7 @@ nearly as feature-rich and useful as it is.
    ([#1703](https://github.com/Microsoft/vscode-python/issues/1703))
 1. Update debug capabilities to add support for the setting `supportTerminateDebuggee` due to an upstream update from [PTVSD](https://github.com/Microsoft/ptvsd/issues).
    ([#1719](https://github.com/Microsoft/vscode-python/issues/1719))
-1. Build and upload development build of the extension to the Azure blob store even if CI tests fail on the `master` branch.
+1. Build and upload development build of the extension to the Azure blob store even if CI tests fail on the `main` branch.
    ([#1730](https://github.com/Microsoft/vscode-python/issues/1730))
 1. Changes to the script used to upload the extension to the Azure blob store.
    ([#1732](https://github.com/Microsoft/vscode-python/issues/1732))
@@ -5948,7 +5948,7 @@ his help on [our issue tracker](https://github.com/Microsoft/vscode-python)!
    ([#1216](https://github.com/Microsoft/vscode-python/issues/1216))
 1. Parallelize jobs (unit tests) on CI server.
    ([#1247](https://github.com/Microsoft/vscode-python/issues/1247))
-1. Run CI tests against the release version and master branch of PTVSD (experimental debugger), allowing tests to fail against the master branch of PTVSD.
+1. Run CI tests against the release version and main branch of PTVSD (experimental debugger), allowing tests to fail against the main branch of PTVSD.
    ([#1253](https://github.com/Microsoft/vscode-python/issues/1253))
 1. Only trigger the extension for `file` and `untitled` in preparation for
    [Visual Studio Live Share](https://aka.ms/vsls)
