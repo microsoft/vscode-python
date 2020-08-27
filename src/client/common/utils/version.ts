@@ -31,33 +31,38 @@ export type BasicVersionInfo = {
     // There is also a hidden `unnormalized` property.
 };
 
-function normalizeVersionPart(part: unknown): number {
+type ErrorMsg = string;
+
+function normalizeVersionPart(part: unknown): [number, ErrorMsg] {
     // Any -1 values where the original is not a number are handled in validation.
     if (typeof part === 'number') {
         if (isNaN(part) || part < 0) {
             // We leave this as a marker.
-            return -1;
+            return [-1, ''];
         }
-        return part;
+        return [part, ''];
     }
     if (typeof part === 'string') {
         const parsed = parseInt(part as string, 10);
-        if (isNaN(parsed) || parsed < 0) {
-            return -1;
+        if (isNaN(parsed)) {
+            return [-1, 'string not numeric'];
         }
-        return parsed;
+        if (parsed < 0) {
+            return [-1, ''];
+        }
+        return [parsed, ''];
     }
     if (part === undefined || part === null) {
-        return -1;
+        return [-1, 'missing'];
     }
-    return -1;
+    return [-1, 'unsupported type'];
 }
 
 type RawBasicVersionInfo = BasicVersionInfo & {
     unnormalized?: {
-        major?: unknown;
-        minor?: unknown;
-        micro?: unknown;
+        major?: ErrorMsg;
+        minor?: ErrorMsg;
+        micro?: ErrorMsg;
     };
 };
 
@@ -83,32 +88,27 @@ export function normalizeBasicVersionInfo<T extends BasicVersionInfo>(info: T): 
     }
     const norm: T = { ...info };
     const raw = (norm as unknown) as RawBasicVersionInfo;
+    // Do not normalize if it has already been normalized.
     if (raw.unnormalized === undefined) {
-        raw.unnormalized = { ...norm };
-        norm.major = normalizeVersionPart(norm.major);
-        norm.minor = normalizeVersionPart(norm.minor);
-        norm.micro = normalizeVersionPart(norm.micro);
+        raw.unnormalized = {};
+        [norm.major, raw.unnormalized.major] = normalizeVersionPart(norm.major);
+        [norm.minor, raw.unnormalized.minor] = normalizeVersionPart(norm.minor);
+        [norm.micro, raw.unnormalized.micro] = normalizeVersionPart(norm.micro);
     }
     return norm;
 }
 
-function validateVersionPart(prop: string, part: unknown, unnormalized?: unknown) {
+function validateVersionPart(prop: string, part: unknown, unnormalized?: ErrorMsg) {
     if (typeof part !== 'number' || isNaN(part)) {
         throw Error(`invalid ${prop} version (not normalized)`);
     }
     if (part === 0 || part > 0) {
         return;
     }
-    if (typeof unnormalized === 'number') {
+    if (!unnormalized || unnormalized === '') {
         return;
     }
-    if (unnormalized === undefined || unnormalized === null) {
-        return;
-    }
-    if (typeof unnormalized === 'string' && !isNaN(parseInt(unnormalized, 10))) {
-        return;
-    }
-    throw Error(`invalid ${prop} version (failed to normalize)`);
+    throw Error(`invalid ${prop} version (failed to normalize; ${unnormalized})`);
 }
 
 /**
