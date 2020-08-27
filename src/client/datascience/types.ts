@@ -586,6 +586,8 @@ export interface INotebookEditor extends Disposable {
     undoCells(): void;
     redoCells(): void;
     removeAllCells(): void;
+    expandAllCells(): void;
+    collapseAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
 }

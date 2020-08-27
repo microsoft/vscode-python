@@ -67,7 +67,6 @@
 				"SwitchCase": 1
 			}
 		],
-		"max-classes-per-file": "on",
 		"max-len": [
 			"error",
 			{

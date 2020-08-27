@@ -116,7 +116,7 @@
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
-                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !python.datascience.ownsSelection"
+                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !python.datascience.ownsSelection && !notebookEditorFocused"
             },
             {
                 "command": "python.datascience.execSelectionInteractive",
@@ -861,6 +861,21 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.newNotebook.removeallcells",
+                "title": "%python.command.python.datascience.newNotebook.removeallcells.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.newNotebook.expandallcells",
+                "title": "%python.command.python.datascience.newNotebook.expandallcells.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.newNotebook.collapseallcells",
+                "title": "%python.command.python.datascience.newNotebook.collapseallcells.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.expandallcells",
                 "title": "%python.command.python.datascience.expandallcells.title%",
                 "category": "Python"
@@ -1418,6 +1433,24 @@
                     "title": "%python.command.python.datascience.notebookeditor.addcellbelow.title%",
                     "category": "Python",
                     "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
+                },
+                {
+                    "command": "python.datascience.newNotebook.removeallcells",
+                    "title": "%python.command.python.datascience.newNotebook.removeallcells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled && notebookEditorFocused"
+                },
+                {
+                    "command": "python.datascience.newNotebook.expandallcells",
+                    "title": "%python.command.python.datascience.newNotebook.expandallcells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled && notebookEditorFocused"
+                },
+                {
+                    "command": "python.datascience.newNotebook.collapseallcells",
+                    "title": "%python.command.python.datascience.newNotebook.collapseallcells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled && notebookEditorFocused"
                 },
                 {
                     "command": "python.datascience.expandallcells",
@@ -3523,7 +3556,7 @@
         "vscode-languageclient": "^7.0.0-next.8",
         "vscode-languageserver": "^7.0.0-next.6",
         "vscode-languageserver-protocol": "^3.16.0-next.6",
-        "vscode-tas-client": "^0.0.864",
+        "vscode-tas-client": "^0.1.4",
         "vsls": "^0.3.1291",
         "winreg": "^1.2.4",
         "winston": "^3.2.1",

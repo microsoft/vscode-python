@@ -8,7 +8,9 @@ try:
 except ImportError:  # 2.7
     from StringIO import StringIO
 from os import name as OS_NAME
+from os import write
 import sys
+import tempfile
 import unittest
 
 import pytest
@@ -185,11 +187,21 @@ def generate_parse_item(pathsep):
         raise NotImplementedError
     ##########
     def _fix_fileid(*args):
-        return fix_fileid(*args, **dict(_normcase=normcase, _pathsep=pathsep,))
+        return fix_fileid(
+            *args,
+            **dict(
+                _normcase=normcase,
+                _pathsep=pathsep,
+            )
+        )
 
     def _normalize_test_id(*args):
         return pytest_item._normalize_test_id(
-            *args, **dict(_fix_fileid=_fix_fileid, _pathsep=pathsep,)
+            *args,
+            **dict(
+                _fix_fileid=_fix_fileid,
+                _pathsep=pathsep,
+            )
         )
 
     def _iter_nodes(*args):
@@ -203,20 +215,39 @@ def generate_parse_item(pathsep):
         )
 
     def _parse_node_id(*args):
-        return pytest_item._parse_node_id(*args, **dict(_iter_nodes=_iter_nodes,))
+        return pytest_item._parse_node_id(
+            *args,
+            **dict(
+                _iter_nodes=_iter_nodes,
+            )
+        )
 
     ##########
     def _split_fspath(*args):
-        return pytest_item._split_fspath(*args, **dict(_normcase=normcase,))
+        return pytest_item._split_fspath(
+            *args,
+            **dict(
+                _normcase=normcase,
+            )
+        )
 
     ##########
     def _matches_relfile(*args):
         return pytest_item._matches_relfile(
-            *args, **dict(_normcase=normcase, _pathsep=pathsep,)
+            *args,
+            **dict(
+                _normcase=normcase,
+                _pathsep=pathsep,
+            )
         )
 
     def _is_legacy_wrapper(*args):
-        return pytest_item._is_legacy_wrapper(*args, **dict(_pathsep=pathsep,))
+        return pytest_item._is_legacy_wrapper(
+            *args,
+            **dict(
+                _pathsep=pathsep,
+            )
+        )
 
     def _get_location(*args):
         return pytest_item._get_location(
@@ -244,6 +275,18 @@ def generate_parse_item(pathsep):
 
 ##################################
 # tests
+
+
+def fake_pytest_main(stub, use_fd, pytest_stdout):
+    def ret(args, plugins):
+        stub.add_call("pytest.main", None, {"args": args, "plugins": plugins})
+        if use_fd:
+            write(sys.stdout.fileno(), pytest_stdout.encode())
+        else:
+            print(pytest_stdout, end="")
+        return 0
+
+    return ret
 
 
 class DiscoverTests(unittest.TestCase):
@@ -286,7 +329,9 @@ class DiscoverTests(unittest.TestCase):
 
         self.assertEqual(
             stub.calls,
-            [("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),],
+            [
+                ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
+            ],
         )
 
     def test_no_tests_found(self):
@@ -313,14 +358,8 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(tests, expected)
         self.assertEqual(stub.calls, calls)
 
-    def test_stdio_hidden(self):
-        pytest_stdout = "spamspamspamspamspamspamspammityspam"
+    def test_stdio_hidden_file(self):
         stub = Stub()
-
-        def fake_pytest_main(args, plugins):
-            stub.add_call("pytest.main", None, {"args": args, "plugins": plugins})
-            print(pytest_stdout, end="")
-            return 0
 
         plugin = StubPlugin(stub)
         plugin.discovered = []
@@ -330,31 +369,54 @@ class DiscoverTests(unittest.TestCase):
             ("discovered.__len__", None, None),
             ("discovered.__getitem__", (0,), None),
         ]
+        pytest_stdout = "spamspamspamspamspamspamspammityspam"
 
         # In Python 3.8 __len__ is called twice.
         if PYTHON_38_OR_LATER:
             calls.insert(3, ("discovered.__len__", None, None))
 
-        buf = StringIO()
+        # to simulate stdio behavior in methods like os.dup,
+        # use actual files (rather than StringIO)
+        with tempfile.TemporaryFile("r+") as mock:
+            sys.stdout = mock
+            try:
+                discover(
+                    [],
+                    hidestdio=True,
+                    _pytest_main=fake_pytest_main(stub, False, pytest_stdout),
+                    _plugin=plugin,
+                )
+            finally:
+                sys.stdout = sys.__stdout__
 
-        sys.stdout = buf
-        try:
-            discover([], hidestdio=True, _pytest_main=fake_pytest_main, _plugin=plugin)
-        finally:
-            sys.stdout = sys.__stdout__
-        captured = buf.getvalue()
+            mock.seek(0)
+            captured = mock.read()
 
         self.assertEqual(captured, "")
         self.assertEqual(stub.calls, calls)
 
-    def test_stdio_not_hidden(self):
-        pytest_stdout = "spamspamspamspamspamspamspammityspam"
+    def test_stdio_hidden_fd(self):
+        # simulate cases where stdout comes from the lower layer than sys.stdout
+        # via file descriptors (e.g., from cython)
         stub = Stub()
+        plugin = StubPlugin(stub)
+        pytest_stdout = "spamspamspamspamspamspamspammityspam"
 
-        def fake_pytest_main(args, plugins):
-            stub.add_call("pytest.main", None, {"args": args, "plugins": plugins})
-            print(pytest_stdout, end="")
-            return 0
+        sys.stdio = StringIO()
+        try:
+            discover(
+                [],
+                hidestdio=True,
+                _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
+                _plugin=plugin,
+            )
+        finally:
+            captured = sys.stdout.read()
+            sys.stdout = sys.__stdout__
+        self.assertEqual(captured, b"")
+
+    def test_stdio_not_hidden_file(self):
+        stub = Stub()
 
         plugin = StubPlugin(stub)
         plugin.discovered = []
@@ -364,6 +426,7 @@ class DiscoverTests(unittest.TestCase):
             ("discovered.__len__", None, None),
             ("discovered.__getitem__", (0,), None),
         ]
+        pytest_stdout = "spamspamspamspamspamspamspammityspam"
 
         # In Python 3.8 __len__ is called twice.
         if PYTHON_38_OR_LATER:
@@ -373,13 +436,40 @@ class DiscoverTests(unittest.TestCase):
 
         sys.stdout = buf
         try:
-            discover([], hidestdio=False, _pytest_main=fake_pytest_main, _plugin=plugin)
+            discover(
+                [],
+                hidestdio=False,
+                _pytest_main=fake_pytest_main(stub, False, pytest_stdout),
+                _plugin=plugin,
+            )
         finally:
             sys.stdout = sys.__stdout__
         captured = buf.getvalue()
 
         self.assertEqual(captured, pytest_stdout)
         self.assertEqual(stub.calls, calls)
+
+    def test_stdio_not_hidden_fd(self):
+        # simulate cases where stdout comes from the lower layer than sys.stdout
+        # via file descriptors (e.g., from cython)
+        stub = Stub()
+        plugin = StubPlugin(stub)
+        pytest_stdout = "spamspamspamspamspamspamspammityspam"
+        stub.calls = []
+        with tempfile.TemporaryFile("r+") as mock:
+            sys.stdout = mock
+            try:
+                discover(
+                    [],
+                    hidestdio=False,
+                    _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
+                    _plugin=plugin,
+                )
+            finally:
+                mock.seek(0)
+                captured = sys.stdout.read()
+                sys.stdout = sys.__stdout__
+        self.assertEqual(captured, pytest_stdout)
 
 
 class CollectorTests(unittest.TestCase):
@@ -778,7 +868,9 @@ class CollectorTests(unittest.TestCase):
                             id="./x/y/z/test_eggs.py::test_eggs",
                             name="test_eggs",
                             path=TestPath(
-                                root=testroot, relfile=fix_relpath(relfile), func=None,
+                                root=testroot,
+                                relfile=fix_relpath(relfile),
+                                func=None,
                             ),
                             source="{}:{}".format(fix_relpath(relfile), 1),
                             markers=[],
@@ -801,7 +893,9 @@ class CollectorTests(unittest.TestCase):
                             id="./x/y/z/test_eggs.py::test_eggs.TestSpam",
                             name="test_eggs.TestSpam",
                             path=TestPath(
-                                root=testroot, relfile=fix_relpath(relfile), func=None,
+                                root=testroot,
+                                relfile=fix_relpath(relfile),
+                                func=None,
                             ),
                             source="{}:{}".format(fix_relpath(relfile), 13),
                             markers=[],
@@ -824,7 +918,9 @@ class CollectorTests(unittest.TestCase):
                             id="./x/y/z/test_eggs.py::test_eggs.TestSpam.TestEggs",
                             name="test_eggs.TestSpam.TestEggs",
                             path=TestPath(
-                                root=testroot, relfile=fix_relpath(relfile), func=None,
+                                root=testroot,
+                                relfile=fix_relpath(relfile),
+                                func=None,
                             ),
                             source="{}:{}".format(fix_relpath(relfile), 28),
                             markers=[],

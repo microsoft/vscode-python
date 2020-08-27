@@ -25,7 +25,7 @@ def launch_kernel(
     cwd=None,
     **kw
 ):
-    """ Launches a localhost kernel, binding to the specified ports.
+    """Launches a localhost kernel, binding to the specified ports.
 
     Parameters
     ----------
@@ -81,7 +81,13 @@ def launch_kernel(
 
     encoding = getdefaultencoding(prefer_stream=False)
     kwargs = kw.copy()
-    main_args = dict(stdin=_stdin, stdout=_stdout, stderr=_stderr, cwd=cwd, env=env,)
+    main_args = dict(
+        stdin=_stdin,
+        stdout=_stdout,
+        stderr=_stderr,
+        cwd=cwd,
+        env=env,
+    )
     kwargs.update(main_args)
 
     # Spawn a kernel.

@@ -1,21 +1,22 @@
-name: Insiders Build
+name: Release Build
 
 on:
   push:
     branches:
-      - master
-      - main
+      - 'release'
+      - 'release/*'
+      - 'release-*'
 
 env:
   PYTHON_VERSION: 3.8
-  MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
+  MOCHA_REPORTER_JUNIT: false # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it hasn't already.
   CACHE_NPM_DEPS: cache-npm
   CACHE_OUT_DIRECTORY: cache-out-directory
   CACHE_PIP_DEPS: cache-pip
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
-  ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
-  VSIX_NAME: ms-python-insiders.vsix
+  ARTIFACT_NAME_VSIX: ms-python-release-vsix
+  VSIX_NAME: ms-python-release.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
 
@@ -56,21 +57,17 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{env.ARTIFACT_NAME_VSIX}}
-          path: ${{env.VSIX_NAME}}
+          name: ${{ env.ARTIFACT_NAME_VSIX }}
+          path: ${{ env.VSIX_NAME }}
 
   lint:
+    # Unlike for the insiders build, we skip linting file formatting as that
+    # will be caught when we merge back into 'main'.
     name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Cache pip files
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}
 
       - name: Cache npm files
         uses: actions/cache@v2
@@ -95,23 +92,6 @@ jobs:
 
       - name: Run linting on TypeScript code
         run: npx tslint --project tsconfig.json
-
-      - name: Run prettier on TypeScript code
-        run: npx prettier 'src/**/*.ts*' --check
-
-      - name: Run prettier on JavaScript code
-        run: npx prettier 'build/**/*.js' --check
-
-      - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{env.PYTHON_VERSION}}
-
-      - name: Run Black on Python code
-        run: |
-          python -m pip install -U black
-          python -m black . --check
-        working-directory: pythonFiles
 
   ### Non-smoke tests
   tests:
@@ -284,14 +264,6 @@ jobs:
         run: npm run test:unittests:cover
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
-      # Upload unit test coverage reports for later use in the "reports" job.
-      - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v1
-        with:
-          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
-          path: .nyc_output
-        if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
-
       # Run the Python and IPython tests in our codebase.
       - name: Run Python and IPython unit tests
         run: |
@@ -418,71 +390,3 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
-
-  coverage:
-    name: Coverage reports upload
-    runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
-    needs: [tests, smoke-tests]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Cache npm files
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
-
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
-
-      # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
-      # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
-      # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
-      - name: Download Ubuntu test coverage artifacts
-        uses: actions/download-artifact@v1
-        with:
-          name: Linux-${{env.COVERAGE_REPORTS}}
-
-      - name: Extract Ubuntu coverage artifacts to ./nyc_output
-        run: |
-          mkdir .nyc_output
-          mv Linux-${{env.COVERAGE_REPORTS}}/* .nyc_output
-          rm -r Linux-${{env.COVERAGE_REPORTS}}
-
-      - name: Generate coverage reports
-        run: npm run test:cover:report
-        continue-on-error: true
-
-      - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage/cobertura-coverage.xml
-
-  upload:
-    name: Upload VSIX to Azure Blob Storage
-    runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
-    needs: [tests, smoke-tests, build-vsix]
-    env:
-      BLOB_CONTAINER_NAME: extension-builds
-      BLOB_NAME: ms-python-gha-insiders.vsix # So named to avoid clobbering Azure Pipelines upload.
-
-    steps:
-      - name: Download VSIX
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ env.ARTIFACT_NAME_VSIX }}
-
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Upload to Blob Storage
-        run: az storage blob upload --file ${{ env.VSIX_NAME }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
-
-      - name: Get URL to uploaded VSIX
-        run: az storage blob url --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login

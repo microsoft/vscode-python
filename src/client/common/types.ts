@@ -637,6 +637,7 @@ export interface IExperimentsManager {
 export const IExperimentService = Symbol('IExperimentService');
 export interface IExperimentService {
     inExperiment(experimentName: string): Promise<boolean>;
+    getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
 }
 
 export type InterpreterConfigurationScope = { uri: Resource; configTarget: ConfigurationTarget };

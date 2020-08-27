@@ -31,12 +31,34 @@ export class NotebookCommands implements IDisposable {
     public register() {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SwitchJupyterKernel, this.switchKernel, this),
-            this.commandManager.registerCommand(Commands.SetJupyterKernel, this.setKernel, this)
+            this.commandManager.registerCommand(Commands.SetJupyterKernel, this.setKernel, this),
+            this.commandManager.registerCommand(Commands.NewNotebookCollapseAllCells, this.collapseAll, this),
+            this.commandManager.registerCommand(Commands.NewNotebookExpandAllCells, this.expandAll, this),
+            this.commandManager.registerCommand(Commands.NewNotebookRemoveAllCells, this.removeAll, this)
         );
     }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
+
+    private collapseAll() {
+        if (this.notebookEditorProvider.activeEditor) {
+            this.notebookEditorProvider.activeEditor.collapseAllCells();
+        }
+    }
+
+    private expandAll() {
+        if (this.notebookEditorProvider.activeEditor) {
+            this.notebookEditorProvider.activeEditor.expandAllCells();
+        }
+    }
+
+    private removeAll() {
+        if (this.notebookEditorProvider.activeEditor) {
+            this.notebookEditorProvider.activeEditor.removeAllCells();
+        }
+    }
+
     private async switchKernel(options: ISwitchKernelOptions | undefined) {
         // If no identity, spec, or resource, look at the active editor or interactive window.
         // Only one is possible to be active at any point in time

@@ -52,8 +52,7 @@ class ChangeType:
 
 
 class Change:
-    """
-    """
+    """"""
 
     EDIT = 0
     NEW = 1
@@ -337,8 +336,7 @@ class RopeRefactoring(object):
         return json.loads(request)
 
     def _process_request(self, request):
-        """Accept serialized request from VSCode and write response.
-        """
+        """Accept serialized request from VSCode and write response."""
         request = self._deserialize(request)
         lookup = request.get("lookup", "")
 

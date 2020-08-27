@@ -1399,6 +1399,14 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes' | 'Maybe later' | 'Do not show again' | undefined;
     };
     /**
+     * Telemetry event sent when the Python interpreter tip is shown on activation for new users.
+     */
+    [EventName.ACTIVATION_TIP_PROMPT]: never | undefined;
+    /**
+     * Telemetry event sent when the feedback survey prompt is shown on activation for new users, and they click on the survey link.
+     */
+    [EventName.ACTIVATION_SURVEY_PROMPT]: never | undefined;
+    /**
      * Telemetry event sent when 'Extract Method' command is invoked
      */
     [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
