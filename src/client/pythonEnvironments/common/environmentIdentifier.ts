@@ -17,7 +17,7 @@ function pathExists(absPath: string): Promise<boolean> {
 }
 
 function or(...arr: boolean[]): boolean {
-    return arr.filter((x) => x).length > 0;
+    return arr.includes(true);
 }
 
 /**
@@ -51,22 +51,22 @@ function or(...arr: boolean[]): boolean {
  * }
  */
 async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
-    const conda_meta_dir = 'conda-meta';
+    const condaMetaDir = 'conda-meta';
 
     // Check if the conda-meta directory is in the same directory as the interpreter.
     // This layout is common in Windows.
     // env
     // |__ conda-meta  <--- check if this directory exists
     // |__ python.exe  <--- interpreterPath
-    const conda_env_dir_1 = path.join(path.dirname(interpreterPath), conda_meta_dir);
+    const conda_env_dir_1 = path.join(path.dirname(interpreterPath), condaMetaDir);
 
-    // Check if the conda-meta directory is in the same directory as the interpreter.
+    // Check if the conda-meta directory is in the parent directory relative to the interpreter.
     // This layout is common on linux/Mac.
     // env
     // |__ conda-meta  <--- check if this directory exists
     // |__ bin
     //     |__ python  <--- interpreterPath
-    const conda_env_dir_2 = path.join(path.dirname(path.dirname(interpreterPath)), conda_meta_dir);
+    const conda_env_dir_2 = path.join(path.dirname(path.dirname(interpreterPath)), condaMetaDir);
 
     return or(await pathExists(conda_env_dir_1), await pathExists(conda_env_dir_2));
 }
@@ -91,13 +91,17 @@ async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
  *     C:\Users\USER\AppData\Local\Microsoft\WindowsApps\python3.7.exe
  *
  * The correct way to compare these would be to always convert given paths to long path (or to short path).
+ * For either approach to work correctly you need actual file to exist, and accessible from the user's
+ * account.
  *
- * To convert to short path without using N-API in node would be to use this command:
+ * To convert to short path without using N-API in node would be to use this command. This is very expensive:
  * > cmd /c for %A in ("C:\Users\USER\AppData\Local\Microsoft\WindowsApps\python3.7.exe") do @echo %~sA
  * The above command will print out this:
  * C:\Users\USER\AppData\Local\MICROS~1\WINDOW~1\PYTHON~2.EXE
  *
- * For this to work correctly you need actual file to exist, and accessible from the user's account.
+ * If we go down the N-API route, use node-ffi and either call GetShortPathNameW or GetLongPathNameW from,
+ * Kernel32 to convert between the two path variants.
+ *
  */
 async function isWindowsStoreEnvironment(interpreterPath: string): Promise<boolean> {
     const pythonPathToCompare = path.normalize(interpreterPath).toUpperCase();
