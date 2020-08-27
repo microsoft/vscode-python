@@ -137,7 +137,7 @@ async function getNext<T>(it: AsyncIterator<T, T | void>, indexMaybe?: number): 
 }
 
 // tslint:disable-next-line:promise-must-complete no-empty
-const NEVER: Promise<unknown> = new Promise(() => {});
+export const NEVER: Promise<unknown> = new Promise(() => {});
 
 /**
  * Yield everything produced by the given iterators as soon as each is ready.
