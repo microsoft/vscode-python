@@ -44,21 +44,23 @@ const AllowedKeys = {
     ['execute_result']: new Set(Object.keys(dummyExecuteResultObj))
 };
 
-export function getSavedUriList(globalState: Memento): { uri: string; time: number }[] {
-    const uriList = globalState.get<{ uri: string; time: number }[]>(Settings.JupyterServerUriList);
+export function getSavedUriList(globalState: Memento): { uri: string; time: number; displayName?: string }[] {
+    const uriList = globalState.get<{ uri: string; time: number; displayName?: string }[]>(
+        Settings.JupyterServerUriList
+    );
     return uriList
         ? uriList.sort((a, b) => {
               return b.time - a.time;
           })
         : [];
 }
-export function addToUriList(globalState: Memento, uri: string, time: number) {
+export function addToUriList(globalState: Memento, uri: string, time: number, displayName: string) {
     const uriList = getSavedUriList(globalState);
 
     const editList = uriList.filter((f, i) => {
         return f.uri !== uri && i < Settings.JupyterServerUriListMax - 1;
     });
-    editList.splice(0, 0, { uri, time });
+    editList.splice(0, 0, { uri, time, displayName });
 
     globalState.update(Settings.JupyterServerUriList, editList).then(noop, noop);
 }
