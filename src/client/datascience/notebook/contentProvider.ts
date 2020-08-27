@@ -20,7 +20,7 @@ import { captureTelemetry, sendTelemetryEvent, setSharedProperty } from '../../t
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
-import { getLanguageInfo, notebookModelToVSCNotebookData } from './helpers/helpers';
+import { notebookModelToVSCNotebookData } from './helpers/helpers';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
 import { INotebookContentProvider } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -77,9 +77,6 @@ export class NotebookContentProvider implements INotebookContentProvider {
             throw new Error('Incorrect NotebookModel, expected VSCodeNotebookModel');
         }
 
-        if (model.metadata && model.metadata.kernelspec) {
-            model.metadata.language_info = getLanguageInfo(model.metadata.kernelspec);
-        }
         setSharedProperty('ds_notebookeditor', 'native');
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cells.length });
         return notebookModelToVSCNotebookData(model);

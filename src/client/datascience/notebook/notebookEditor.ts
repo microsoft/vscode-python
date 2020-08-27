@@ -22,7 +22,7 @@ import {
     InterruptResult,
     IStatusProvider
 } from '../types';
-import { getDefaultCodeLanguage } from './helpers/helpers';
+import { getCodeLanguage } from './helpers/helpers';
 
 export class NotebookEditor implements INotebookEditor {
     public readonly type = 'native';
@@ -125,7 +125,7 @@ export class NotebookEditor implements INotebookEditor {
         if (!this.vscodeNotebook.activeNotebookEditor) {
             return;
         }
-        const defaultLanguage = getDefaultCodeLanguage(this.model);
+        const defaultLanguage = getCodeLanguage(this.model);
         this.vscodeNotebook.activeNotebookEditor.edit((editor) => {
             const totalLength = this.document.cells.length;
             editor.insert(this.document.cells.length, '', defaultLanguage, CellKind.Code, [], undefined);

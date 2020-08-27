@@ -17,14 +17,7 @@ import type {
 } from 'vscode-proposed';
 import { NotebookCellRunState } from '../../../../../typings/vscode-proposed';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
-import {
-    CSHARP_LANGUAGE,
-    FSHARP_LANGUAGE,
-    JULIA_LANGUAGE,
-    MARKDOWN_LANGUAGE,
-    POWERSHELL_LANGUAGE,
-    PYTHON_LANGUAGE
-} from '../../../common/constants';
+import { MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { traceError, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
@@ -101,7 +94,7 @@ export function notebookModelToVSCNotebookData(model: VSCodeNotebookModel): Note
         .filter((item) => !!item)
         .map((item) => item!);
 
-    const defaultLanguage = getDefaultCodeLanguage(model);
+    const defaultLanguage = getCodeLanguage(model);
     return {
         cells,
         languages: [defaultLanguage],
@@ -188,12 +181,14 @@ export function updateVSCNotebookCellMetadata(cellMetadata: NotebookCellMetadata
     });
 }
 
-export function getDefaultCodeLanguage(model: INotebookModel) {
-    return model.metadata?.language_info?.name &&
-        model.metadata?.language_info?.name.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()
-        ? model.metadata?.language_info?.name
-        : PYTHON_LANGUAGE;
+export function getCodeLanguage(model: INotebookModel): string {
+    if (model.metadata && model.metadata.language_info) {
+        return model.metadata.language_info.name;
+    }
+
+    return 'plain text';
 }
+
 function createRawCellFromVSCNotebookCell(cell: NotebookCell): nbformat.IRawCell {
     const rawCell: nbformat.IRawCell = {
         cell_type: 'raw',
@@ -252,7 +247,7 @@ function createVSCNotebookCellDataFromMarkdownCell(model: INotebookModel, cell: 
 function createVSCNotebookCellDataFromCodeCell(model: INotebookModel, cell: ICell): NotebookCellData {
     // tslint:disable-next-line: no-any
     const outputs = createVSCCellOutputsFromOutputs(cell.data.outputs as any);
-    const defaultCodeLanguage = getDefaultCodeLanguage(model);
+    const defaultCodeLanguage = getCodeLanguage(model);
     // If we have an execution count & no errors, then success state.
     // If we have an execution count &  errors, then error state.
     // Else idle state.
@@ -667,33 +662,4 @@ export function updateVSCNotebookAfterTrustingNotebook(document: NotebookDocumen
             cell.outputs = createVSCCellOutputsFromOutputs(originalCells[index].data.outputs as any);
         }
     });
-}
-
-export function getLanguageInfo(kernelspec: nbformat.IKernelspecMetadata): nbformat.ILanguageInfoMetadata {
-    const display_name = kernelspec.display_name.toLowerCase();
-    let language_name: string;
-
-    switch (true) {
-        case display_name.indexOf(PYTHON_LANGUAGE) !== -1:
-            language_name = PYTHON_LANGUAGE;
-            break;
-        case display_name.indexOf(CSHARP_LANGUAGE) !== -1:
-            language_name = CSHARP_LANGUAGE;
-            break;
-        case display_name.indexOf(FSHARP_LANGUAGE) !== -1:
-            language_name = FSHARP_LANGUAGE;
-            break;
-        case display_name.indexOf(POWERSHELL_LANGUAGE) !== -1:
-            language_name = POWERSHELL_LANGUAGE;
-            break;
-        case display_name.indexOf(JULIA_LANGUAGE) !== -1:
-            language_name = JULIA_LANGUAGE;
-            break;
-        default:
-            language_name = 'plain text';
-    }
-
-    return {
-        name: language_name
-    };
 }
