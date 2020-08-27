@@ -30,6 +30,19 @@ import { GetInterpreterLocatorOptions } from './types';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
+/**
+ * A wrapper around all locators used by the extension.
+ */
+export class ExtensionLocators extends Locators {
+    constructor(
+        // These are all wrapped up together.
+        nonWorkspace: ILocator[],
+        workspace: ILocator
+    ) {
+        super([...nonWorkspace, workspace]);
+    }
+}
+
 type WorkspaceLocatorFactory = (root: Uri) => ILocator[];
 
 interface IWorkspaceFolders {
