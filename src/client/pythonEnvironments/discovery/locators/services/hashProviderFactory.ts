@@ -24,8 +24,9 @@ export class InterpeterHashProviderFactory implements IInterpreterHashProviderFa
     ) {}
 
     public async create(options: { pythonPath: string } | { resource: Uri }): Promise<IInterpreterHashProvider> {
-        const pythonPath =
-            'pythonPath' in options ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
+        const pythonPath = 'pythonPath' in options
+            ? options.pythonPath
+            : this.configService.getSettings(options.resource).pythonPath;
         return this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)
             ? this.windowsStoreHashProvider
             : this.hashProvider;
