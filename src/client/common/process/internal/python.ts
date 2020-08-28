@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { logMessage } from '../../../../datascience-ui/react-common/logger';
 import { _ISOLATED as ISOLATED } from './scripts';
 
 // "python" contains functions corresponding to the various ways that

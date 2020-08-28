@@ -4,7 +4,6 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, OutputChannel, ProgressLocation, ProgressOptions } from 'vscode';
-import { logMessage } from '../../../datascience-ui/react-common/logger';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { EnvironmentType } from '../../pythonEnvironments/info';

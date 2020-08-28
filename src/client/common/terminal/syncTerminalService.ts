@@ -5,7 +5,6 @@
 
 import { inject } from 'inversify';
 import { CancellationToken, Disposable, Event } from 'vscode';
-import { logMessage } from '../../../datascience-ui/react-common/logger';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { Cancellation } from '../cancellation';
