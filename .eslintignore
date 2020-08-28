@@ -301,6 +301,7 @@ src/test/common/utils/regexp.unit.test.ts
 src/test/common/utils/cacheUtils.unit.test.ts
 src/test/common/utils/decorators.unit.test.ts
 src/test/common/utils/localize.functional.test.ts
+src/test/common/utils/workerPool.functional.test.ts
 src/test/common/configSettings/configSettings.pythonPath.unit.test.ts
 src/test/common/configSettings/configSettings.unit.test.ts
 src/test/common/featureDeprecationManager.unit.test.ts
@@ -1053,6 +1054,7 @@ src/client/common/utils/version.ts
 src/client/common/utils/misc.ts
 src/client/common/utils/logging.ts
 src/client/common/utils/cacheUtils.ts
+src/client/common/utils/workerPool.ts
 src/client/common/crypto.ts
 src/client/common/extensions.ts
 src/client/common/dotnet/compatibilityService.ts

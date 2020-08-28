@@ -36,7 +36,7 @@ async function buildEnvironmentInfo(interpreterPath: string): Promise<PythonEnvi
             minor: interpreterInfo.version.minor,
             patch: interpreterInfo.version.patch,
             build: interpreterInfo.version.build,
-            prerelease: interpreterInfo.version.prerelease
+            prerelease: interpreterInfo.version.prerelease,
         },
         sysVersion: interpreterInfo.sysVersion,
         architecture: interpreterInfo.architecture,
@@ -47,7 +47,7 @@ async function buildEnvironmentInfo(interpreterPath: string): Promise<PythonEnvi
         envType: EnvironmentType.Unknown, // Code to handle This will be added later.
         envName: '',
         envPath: '',
-        cachedEntry: false
+        cachedEntry: false,
     };
 }
 
@@ -58,14 +58,16 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
     // session. There are definitely cases where this will change. But a simple reload should address
     // those.
     private readonly cache: Map<string, PythonEnvironment> = new Map<string, PythonEnvironment>();
+
     private readonly workerPool: IWorkerPool<string, PythonEnvironment | undefined>;
+
     public constructor() {
         this.workerPool = createWorkerPool<string, PythonEnvironment | undefined>(buildEnvironmentInfo);
     }
 
     public async getEnvironmentInfo(
         interpreterPath: string,
-        priority?: EnvironmentInfoServiceQueuePriority
+        priority?: EnvironmentInfoServiceQueuePriority,
     ): Promise<PythonEnvironment | undefined> {
         const result = this.cache.get(interpreterPath);
         if (result !== undefined) {

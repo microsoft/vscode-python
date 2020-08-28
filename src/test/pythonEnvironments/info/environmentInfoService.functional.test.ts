@@ -12,7 +12,7 @@ import * as ExternalDep from '../../../client/pythonEnvironments/common/external
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import {
     EnvironmentInfoService,
-    EnvironmentInfoServiceQueuePriority
+    EnvironmentInfoServiceQueuePriority,
 } from '../../../client/pythonEnvironments/info/environmentInfoService';
 
 suite('Environment Info Service', () => {
@@ -31,14 +31,14 @@ suite('Environment Info Service', () => {
                 minor: 8,
                 patch: 3,
                 prerelease: ['final'],
-                raw: '3.8.3-final'
+                raw: '3.8.3-final',
             },
             companyDisplayName: '',
             displayName: '',
             envType: EnvironmentType.Unknown,
             envName: '',
             envPath: '',
-            cachedEntry: false
+            cachedEntry: false,
         };
     }
 
@@ -49,9 +49,9 @@ suite('Environment Info Service', () => {
             new Promise<ExecutionResult<string>>((resolve) => {
                 resolve({
                     stdout:
-                        '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "version": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}'
+                        '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "version": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
                 });
-            })
+            }),
         );
     });
     teardown(() => {
@@ -61,7 +61,7 @@ suite('Environment Info Service', () => {
         const envService = new EnvironmentInfoService();
         const promises: Promise<PythonEnvironment | undefined>[] = [];
         const expected: PythonEnvironment[] = [];
-        for (let i: number = 0; i < 10; i = i + 1) {
+        for (let i = 0; i < 10; i = i + 1) {
             const path = `any-path${i}`;
             if (i < 5) {
                 promises.push(envService.getEnvironmentInfo(path));
@@ -91,7 +91,7 @@ suite('Environment Info Service', () => {
         // Evaluate once so the result is cached.
         await envService.getEnvironmentInfo(path);
 
-        for (let i: number = 0; i < 10; i = i + 1) {
+        for (let i = 0; i < 10; i = i + 1) {
             promises.push(envService.getEnvironmentInfo(path));
             expected.push(createExpectedEnvInfo(path));
         }

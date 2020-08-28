@@ -5,7 +5,9 @@
 
 // tslint:disable: no-any
 
-import { anything, instance, mock, verify } from 'ts-mockito';
+import {
+    anything, instance, mock, verify,
+} from 'ts-mockito';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -106,7 +108,7 @@ suite('Interpreters - Service Registry', () => {
             ),
         ).once();
         verify(
-            serviceManager.addSingletonInstance<IEnvironmentInfoService>(IEnvironmentInfoService, anything())
+            serviceManager.addSingletonInstance<IEnvironmentInfoService>(IEnvironmentInfoService, anything()),
         ).once();
     });
 });
