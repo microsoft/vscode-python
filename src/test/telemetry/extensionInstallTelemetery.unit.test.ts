@@ -1,3 +1,4 @@
+import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { anyString, instance, mock, when } from 'ts-mockito';
 import { FileSystem } from '../../client/common/platform/fileSystem';
@@ -18,11 +19,11 @@ suite('Extension Install Telemetry', () => {
     test('PythonCodingPack exists', async () => {
         when(fs.fileExists(anyString())).thenResolve(true);
         await setExtensionInstallTelemetryProperties(instance(fs));
-        telemetryPropertyStub.calledOnceWithExactly('installSource', 'pythonCodingPack');
+        assert.ok(telemetryPropertyStub.calledOnceWithExactly('installSource', 'pythonCodingPack'));
     });
     test('PythonCodingPack does not exists', async () => {
         when(fs.fileExists(anyString())).thenResolve(false);
         await setExtensionInstallTelemetryProperties(instance(fs));
-        telemetryPropertyStub.calledOnceWithExactly('installSource', 'markerPlace');
+        assert.ok(telemetryPropertyStub.calledOnceWithExactly('installSource', 'marketPlace'));
     });
 });
