@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CellKind, ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
 import type { NotebookDocument } from 'vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -23,6 +23,8 @@ import {
     IStatusProvider
 } from '../types';
 import { getDefaultCodeLanguage } from './helpers/helpers';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export class NotebookEditor implements INotebookEditor {
     public readonly type = 'native';
@@ -128,7 +130,14 @@ export class NotebookEditor implements INotebookEditor {
         const defaultLanguage = getDefaultCodeLanguage(this.model);
         this.vscodeNotebook.activeNotebookEditor.edit((editor) => {
             const totalLength = this.document.cells.length;
-            editor.insert(this.document.cells.length, '', defaultLanguage, CellKind.Code, [], undefined);
+            editor.insert(
+                this.document.cells.length,
+                '',
+                defaultLanguage,
+                vscodeNotebookEnums.CellKind.Code,
+                [],
+                undefined
+            );
             for (let i = totalLength - 1; i >= 0; i = i - 1) {
                 editor.delete(i);
             }

@@ -22,6 +22,7 @@ suite('DataScience - NativeNotebook Renderer Extension', () => {
     const disposables: IDisposable[] = [];
     const jupyterNotebook: NotebookDocument = {
         cells: [],
+        version: 1,
         uri: Uri.file('one.ipynb'),
         fileName: '',
         isDirty: false,
@@ -32,6 +33,7 @@ suite('DataScience - NativeNotebook Renderer Extension', () => {
     };
     const nonJupyterNotebook: NotebookDocument = {
         cells: [],
+        version: 1,
         uri: Uri.file('one.xyz'),
         fileName: '',
         isUntitled: false,

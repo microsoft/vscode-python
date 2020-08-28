@@ -10,7 +10,10 @@ import {
     CancellationToken,
     Disposable,
     DocumentSelector,
-    ProviderResult
+    ProviderResult,
+    WorkspaceEditEntryMetadata,
+    Command,
+    AccessibilityInformation
 } from 'vscode';
 
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
@@ -93,7 +96,7 @@ export enum NotebookRunState {
 
 export interface NotebookCellMetadata {
     /**
-     * Controls if the content of a cell is editable or not.
+     * Controls whether a cell's editor is editable/readonly.
      */
     editable?: boolean;
 
@@ -161,7 +164,7 @@ export interface NotebookCell {
     readonly uri: Uri;
     readonly cellKind: CellKind;
     readonly document: TextDocument;
-    language: string;
+    readonly language: string;
     outputs: CellOutput[];
     metadata: NotebookCellMetadata;
 }
@@ -212,11 +215,12 @@ export interface NotebookDocumentMetadata {
 
 export interface NotebookDocument {
     readonly uri: Uri;
+    readonly version: number;
     readonly fileName: string;
     readonly viewType: string;
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
-    readonly cells: NotebookCell[];
+    readonly cells: ReadonlyArray<NotebookCell>;
     languages: string[];
     displayOrder?: GlobPattern[];
     metadata: NotebookDocumentMetadata;
@@ -241,7 +245,29 @@ export interface NotebookConcatTextDocument {
     contains(uri: Uri): boolean;
 }
 
+export interface WorkspaceEdit {
+    replaceCells(
+        uri: Uri,
+        start: number,
+        end: number,
+        cells: NotebookCellData[],
+        metadata?: WorkspaceEditEntryMetadata
+    ): void;
+    replaceCellOutput(uri: Uri, index: number, outputs: CellOutput[], metadata?: WorkspaceEditEntryMetadata): void;
+    replaceCellMetadata(
+        uri: Uri,
+        index: number,
+        cellMetadata: NotebookCellMetadata,
+        metadata?: WorkspaceEditEntryMetadata
+    ): void;
+}
+
 export interface NotebookEditorCellEdit {
+    replaceCells(start: number, end: number, cells: NotebookCellData[]): void;
+    replaceOutput(index: number, outputs: CellOutput[]): void;
+    replaceMetadata(index: number, metadata: NotebookCellMetadata): void;
+
+    /** @deprecated */
     insert(
         index: number,
         content: string | string[],
@@ -250,6 +276,7 @@ export interface NotebookEditorCellEdit {
         outputs: CellOutput[],
         metadata: NotebookCellMetadata | undefined
     ): void;
+    /** @deprecated */
     delete(index: number): void;
 }
 
@@ -267,7 +294,7 @@ export interface NotebookEditor {
     /**
      * The column in which this editor shows.
      */
-    viewColumn?: ViewColumn;
+    readonly viewColumn?: ViewColumn;
 
     /**
      * Whether the panel is active (focused by the user).
@@ -320,31 +347,6 @@ export interface NotebookRenderRequest {
     outputId: string;
 }
 
-export interface NotebookOutputRenderer {
-    /**
-     *
-     * @returns HTML fragment. We can probably return `CellOutput` instead of string ?
-     *
-     */
-    render(document: NotebookDocument, request: NotebookRenderRequest): string;
-
-    /**
-     * Call before HTML from the renderer is executed, and will be called for
-     * every editor associated with notebook documents where the renderer
-     * is or was used.
-     *
-     * The communication object will only send and receive messages to the
-     * render API, retrieved via `acquireNotebookRendererApi`, acquired with
-     * this specific renderer's ID.
-     *
-     * If you need to keep an association between the communication object
-     * and the document for use in the `render()` method, you can use a WeakMap.
-     */
-    resolveNotebook?(document: NotebookDocument, communication: NotebookCommunication): void;
-
-    readonly preloads?: Uri[];
-}
-
 export interface NotebookCellsChangeData {
     readonly start: number;
     readonly deletedCount: number;
@@ -391,12 +393,17 @@ export interface NotebookCellMetadataChangeEvent {
     readonly cell: NotebookCell;
 }
 
+export interface NotebookEditorSelectionChangeEvent {
+    readonly notebookEditor: NotebookEditor;
+    readonly selection?: NotebookCell;
+}
+
 export interface NotebookCellData {
     readonly cellKind: CellKind;
     readonly source: string;
-    language: string;
-    outputs: CellOutput[];
-    metadata: NotebookCellMetadata;
+    readonly language: string;
+    readonly outputs: CellOutput[];
+    readonly metadata: NotebookCellMetadata | undefined;
 }
 
 export interface NotebookData {
@@ -516,8 +523,6 @@ export interface NotebookContentProvider {
         context: NotebookDocumentBackupContext,
         cancellation: CancellationToken
     ): Promise<NotebookDocumentBackup>;
-
-    kernel?: NotebookKernel;
 }
 
 export interface NotebookKernel {
@@ -549,10 +554,50 @@ export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKerne
     ): ProviderResult<void>;
 }
 
+/**
+ * Represents the alignment of status bar items.
+ */
+export enum NotebookCellStatusBarAlignment {
+    /**
+     * Aligned to the left side.
+     */
+    Left = 1,
+
+    /**
+     * Aligned to the right side.
+     */
+    Right = 2
+}
+
+export interface NotebookCellStatusBarItem {
+    readonly cell: NotebookCell;
+    readonly alignment: NotebookCellStatusBarAlignment;
+    readonly priority?: number;
+    text: string;
+    tooltip: string | undefined;
+    command: string | Command | undefined;
+    accessibilityInformation?: AccessibilityInformation;
+    show(): void;
+    hide(): void;
+    dispose(): void;
+}
+
 export namespace notebook {
     export function registerNotebookContentProvider(
         notebookType: string,
-        provider: NotebookContentProvider
+        provider: NotebookContentProvider,
+        options?: {
+            /**
+             * Controls if outputs change will trigger notebook document content change and if it will be used in the diff editor
+             * Default to false. If the content provider doesn't persisit the outputs in the file document, this should be set to true.
+             */
+            transientOutputs: boolean;
+            /**
+             * Controls if a meetadata property change will trigger notebook document content change and if it will be used in the diff editor
+             * Default to false. If the content provider doesn't persisit a metadata property in the file document, it should be set to true.
+             */
+            transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
+        }
     ): Disposable;
 
     export function registerNotebookKernelProvider(
@@ -561,12 +606,6 @@ export namespace notebook {
     ): Disposable;
 
     export function registerNotebookKernel(id: string, selectors: GlobPattern[], kernel: NotebookKernel): Disposable;
-
-    export function registerNotebookOutputRenderer(
-        id: string,
-        outputSelector: NotebookOutputSelector,
-        renderer: NotebookOutputRenderer
-    ): Disposable;
 
     export const onDidOpenNotebookDocument: Event<NotebookDocument>;
     export const onDidCloseNotebookDocument: Event<NotebookDocument>;
@@ -577,11 +616,12 @@ export namespace notebook {
      */
     export const notebookDocuments: ReadonlyArray<NotebookDocument>;
 
-    export let visibleNotebookEditors: NotebookEditor[];
+    export const visibleNotebookEditors: NotebookEditor[];
     export const onDidChangeVisibleNotebookEditors: Event<NotebookEditor[]>;
 
-    export let activeNotebookEditor: NotebookEditor | undefined;
+    export const activeNotebookEditor: NotebookEditor | undefined;
     export const onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
+    export const onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
     export const onDidChangeNotebookCells: Event<NotebookCellsChangeEvent>;
     export const onDidChangeCellOutputs: Event<NotebookCellOutputsChangeEvent>;
     export const onDidChangeCellLanguage: Event<NotebookCellLanguageChangeEvent>;
@@ -602,4 +642,19 @@ export namespace notebook {
         document: NotebookDocument;
         kernel: NotebookKernel | undefined;
     }>;
+
+    /**
+     * Creates a notebook cell status bar [item](#NotebookCellStatusBarItem).
+     * It will be disposed automatically when the notebook document is closed or the cell is deleted.
+     *
+     * @param cell The cell on which this item should be shown.
+     * @param alignment The alignment of the item.
+     * @param priority The priority of the item. Higher values mean the item should be shown more to the left.
+     * @return A new status bar item.
+     */
+    export function createCellStatusBarItem(
+        cell: NotebookCell,
+        alignment?: NotebookCellStatusBarAlignment,
+        priority?: number
+    ): NotebookCellStatusBarItem;
 }

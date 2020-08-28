@@ -5,6 +5,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
+import { cloneDeep } from 'lodash';
 import type { CellOutput } from 'vscode-proposed';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -50,8 +51,12 @@ suite('DataScience - NativeNotebook helpers', () => {
         assert.isOk(notebook);
         assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
         // ignore metadata we add.
-        notebook.cells.forEach((cell) => delete cell.metadata.custom);
-        assert.deepEqual(notebook.cells, [
+        const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
+            const cellToCompareWith = cloneDeep(cell);
+            delete cellToCompareWith.metadata?.custom;
+            return cellToCompareWith;
+        });
+        assert.deepEqual(cellsWithoutCustomMetadata, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Code,
                 language: PYTHON_LANGUAGE,

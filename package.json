@@ -28,7 +28,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.47.0"
+        "vscode": "^1.49.0"
     },
     "keywords": [
         "python",
@@ -101,6 +101,7 @@
         "onCommand:python.datascience.selectjupytercommandline",
         "onCommand:python.enableSourceMapSupport",
         "onNotebookEditor:jupyter-notebook",
+        "onNotebook:jupyter-notebook",
         "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml"
     ],
@@ -3419,7 +3420,8 @@
         },
         "notebookOutputRenderer": [
             {
-                "viewType": "jupyter-notebook-renderer",
+                "id": "jupyter-notebook-renderer",
+                "entrypoint": "./out/datascience-ui/renderers/renderers.js",
                 "displayName": "Jupyter Notebook Renderer",
                 "mimeTypes": [
                     "application/geo+json",
@@ -3637,6 +3639,7 @@
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
         "@types/vscode": "^1.47.0",
+        "@types/vscode-notebook-renderer": "^1.48.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",

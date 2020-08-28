@@ -11,9 +11,7 @@ import type {
     NotebookDocumentFilter,
     NotebookEditor,
     NotebookKernel,
-    NotebookKernelProvider,
-    NotebookOutputRenderer,
-    NotebookOutputSelector
+    NotebookKernelProvider
 } from 'vscode-proposed';
 import { UseProposedApi } from '../constants';
 import { IDisposableRegistry } from '../types';
@@ -106,13 +104,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         provider: NotebookKernelProvider
     ): Disposable {
         return this.notebook.registerNotebookKernelProvider(selector, provider);
-    }
-    public registerNotebookOutputRenderer(
-        id: string,
-        outputSelector: NotebookOutputSelector,
-        renderer: NotebookOutputRenderer
-    ): Disposable {
-        return this.notebook.registerNotebookOutputRenderer(id, outputSelector, renderer);
     }
     private addEventHandlers() {
         if (this.addedEventHandlers) {

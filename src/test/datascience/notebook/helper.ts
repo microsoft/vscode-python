@@ -421,8 +421,10 @@ export function createNotebookDocument(
     model: VSCodeNotebookModel,
     viewType: string = JupyterNotebookView
 ): NotebookDocument {
+    const cells: NotebookCell[] = [];
     const doc: NotebookDocument = {
-        cells: [],
+        cells,
+        version: 1,
         fileName: model.file.fsPath,
         isDirty: false,
         languages: [],
@@ -440,12 +442,15 @@ export function createNotebookDocument(
     model.cells.forEach((cell, index) => {
         const vscCell = createVSCNotebookCellDataFromCell(model, cell)!;
         const vscDocumentCell: NotebookCell = {
-            ...vscCell,
+            cellKind: vscCell.cellKind,
+            language: vscCell.language,
+            metadata: vscCell.metadata || {},
             uri: model.file.with({ fragment: `cell${index}` }),
             notebook: doc,
-            document: instance(mock<TextDocument>())
+            document: instance(mock<TextDocument>()),
+            outputs: vscCell.outputs
         };
-        doc.cells.push(vscDocumentCell);
+        cells.push(vscDocumentCell);
     });
     model.associateNotebookDocument(doc);
     return doc;

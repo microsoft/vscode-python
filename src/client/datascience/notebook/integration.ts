@@ -18,7 +18,6 @@ import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook } from './helpers/helpers';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
-import { NotebookOutputRenderer } from './renderer';
 import { INotebookContentProvider } from './types';
 
 const EditorAssociationUpdatedKey = 'EditorAssociationUpdatedToUseNotebooks';
@@ -36,7 +35,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
         @inject(VSCodeKernelPickerProvider) private readonly kernelProvider: VSCodeKernelPickerProvider,
-        @inject(NotebookOutputRenderer) private readonly renderer: NotebookOutputRenderer,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -64,34 +62,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                 this.vscNotebook.registerNotebookKernelProvider(
                     { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },
                     this.kernelProvider
-                )
-            );
-            this.disposables.push(
-                this.vscNotebook.registerNotebookOutputRenderer(
-                    'jupyter-notebook-renderer',
-                    {
-                        mimeTypes: [
-                            'application/geo+json',
-                            'application/vdom.v1+json',
-                            'application/vnd.dataresource+json',
-                            'application/vnd.plotly.v1+json',
-                            'application/vnd.vega.v2+json',
-                            'application/vnd.vega.v3+json',
-                            'application/vnd.vega.v4+json',
-                            'application/vnd.vega.v5+json',
-                            'application/vnd.vegalite.v1+json',
-                            'application/vnd.vegalite.v2+json',
-                            'application/vnd.vegalite.v3+json',
-                            'application/vnd.vegalite.v4+json',
-                            'application/x-nteract-model-debug+json',
-                            'image/gif',
-                            'image/png',
-                            'image/jpeg',
-                            'text/latex',
-                            'text/vnd.plotly.v1+html'
-                        ]
-                    },
-                    this.renderer
                 )
             );
         } catch (ex) {
