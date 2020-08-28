@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { logMessage } from '../../../../datascience-ui/react-common/logger';
 import { _ISOLATED as ISOLATED } from './scripts';
 
 // "python" contains functions corresponding to the various ways that
@@ -28,10 +29,13 @@ export function execCode(code: string, isolated = true): string[] {
 export function execModule(name: string, moduleArgs: string[], isolated = true): string[] {
     const args = ['-m', name, ...moduleArgs];
     if (isolated) {
-        args[0] = ISOLATED; // replace
+        // .fileToCommandArgument here?
+        args[0] = ISOLATED.fileToCommandArgument(); // replace
+        //args[0] = ISOLATED; // replace
     }
     // "code" isn't specific enough to know how to parse it,
     // so we only return the args.
+    logMessage(`**** execModule ${name} ${moduleArgs}`);
     return args;
 }
 

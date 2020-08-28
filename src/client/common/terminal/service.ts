@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Terminal } from 'vscode';
+import { logMessage } from '../../../datascience-ui/react-common/logger';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -51,6 +52,7 @@ export class TerminalService implements ITerminalService, Disposable {
         if (!this.options?.hideFromUser) {
             this.terminal!.show(true);
         }
+        logMessage(`**** Terminal Send Command: ${text}`);
         this.terminal!.sendText(text, true);
     }
     public async sendText(text: string): Promise<void> {
