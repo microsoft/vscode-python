@@ -12,7 +12,7 @@ import { PlatformService } from '../../../../client/common/platform/platformServ
 import { IConfigurationService, ICurrentProcess, IPythonSettings } from '../../../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../../../client/interpreter/autoSelection/types';
 import { IVirtualEnvironmentManager } from '../../../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../../../client/ioc/container';
@@ -52,15 +52,15 @@ suite('Virtual environments', () => {
         serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, process.object);
         serviceManager.addSingletonInstance<IVirtualEnvironmentManager>(
             IVirtualEnvironmentManager,
-            virtualEnvMgr.object
+            virtualEnvMgr.object,
         );
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
             IInterpreterAutoSeletionProxyService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
     });
 
@@ -95,7 +95,7 @@ suite('Virtual environments', () => {
 
         expect([...new Set(paths)]).to.deep.equal(
             paths,
-            'Duplicates are not removed from the list of global search paths'
+            'Duplicates are not removed from the list of global search paths',
         );
     });
 

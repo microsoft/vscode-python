@@ -11,7 +11,7 @@ import * as path from 'path';
 import { SemVer } from 'semver';
 import * as sinon from 'sinon';
 import {
-    anything, instance, mock, when
+    anything, instance, mock, when,
 } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
@@ -23,7 +23,7 @@ import {
     ICurrentProcess,
     IPersistentState,
     IPersistentStateFactory,
-    IPythonSettings
+    IPythonSettings,
 } from '../../../../client/common/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IEnvironmentVariablesProvider } from '../../../../client/common/variables/types';
@@ -242,7 +242,7 @@ suite('Interpreters - PipEnv', () => {
                 test(`Should return interpreter information using PipFile defined in Env variable${testSuffix}`, async () => {
                     const envPipFile = 'XYZ';
                     const env = {
-                        PIPENV_PIPFILE: envPipFile
+                        PIPENV_PIPFILE: envPipFile,
                     };
                     const pythonPath = 'one';
                     envVarsProvider

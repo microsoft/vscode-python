@@ -27,7 +27,7 @@ export class CurrentPathService extends CacheableLocatorService {
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IPythonInPathCommandProvider) private readonly pythonCommandProvider: IPythonInPathCommandProvider,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
     ) {
         super('CurrentPathService', serviceContainer);
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
@@ -64,7 +64,9 @@ export class CurrentPathService extends CacheableLocatorService {
             pythonPaths
                 .then((interpreters) => interpreters.filter((item) => item.length > 0))
                 // tslint:disable-next-line:promise-function-async
-                .then((interpreters) => Promise.all(interpreters.map((interpreter) => this.getInterpreterDetails(interpreter))))
+                .then((interpreters) => Promise.all(
+                    interpreters.map((interpreter) => this.getInterpreterDetails(interpreter)),
+                ))
                 .then((interpreters) => interpreters.filter((item) => !!item).map((item) => item!))
         );
     }
@@ -81,7 +83,7 @@ export class CurrentPathService extends CacheableLocatorService {
             return {
                 ...(details as PythonEnvironment),
                 path: pythonPath,
-                envType: details.envType ? details.envType : EnvironmentType.Unknown
+                envType: details.envType ? details.envType : EnvironmentType.Unknown,
             };
         });
     }
@@ -103,16 +105,16 @@ export class CurrentPathService extends CacheableLocatorService {
                     }
                     traceError(
                         `Detection of Python Interpreter for Command ${options.command} and args ${pyArgs.join(
-                            ' '
-                        )} failed as file ${value} does not exist`
+                            ' ',
+                        )} failed as file ${value} does not exist`,
                     );
                     return '';
                 })
                 .catch((_ex) => {
                     traceInfo(
                         `Detection of Python Interpreter for Command ${options.command} and args ${pyArgs.join(
-                            ' '
-                        )} failed`
+                            ' ',
+                        )} failed`,
                     );
                     return '';
                 }); // Ignore exceptions in getting the executable.
@@ -135,7 +137,7 @@ export class PythonInPathCommandProvider implements IPythonInPathCommandProvider
 
         const versions = ['3.7', '3.6', '3', '2'];
         return paths.concat(
-            versions.map((version) => ({ command: 'py', args: [`-${version}`] }))
+            versions.map((version) => ({ command: 'py', args: [`-${version}`] })),
         );
     }
 }

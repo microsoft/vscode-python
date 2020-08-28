@@ -25,7 +25,7 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
 
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) private readonly disposables: Disposable[]
+        @inject(IDisposableRegistry) private readonly disposables: Disposable[],
     ) {
         this.locators = serviceContainer.getAll<IInterpreterLocatorService>(IInterpreterLocatorService);
     }

@@ -52,7 +52,7 @@ export function getDisplayName(condaInfo: CondaInfo = {}): string {
  *                          "/Users/donjayamanne/anaconda3/envs/seven "
  */
 export function parseCondaEnvFileContents(
-    condaEnvFileContents: string
+    condaEnvFileContents: string,
 ): { name: string; path: string; isActive: boolean }[] | undefined {
     // Don't trim the lines. `path` portion of the line can end with a space.
     const lines = condaEnvFileContents.splitLines({ trim: false });

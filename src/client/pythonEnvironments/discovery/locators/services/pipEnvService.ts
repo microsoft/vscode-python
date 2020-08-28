@@ -112,7 +112,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             ...(details as PythonEnvironment),
             path: interpreterPath,
             envType: EnvironmentType.Pipenv,
-            pipEnvWorkspaceFolder: pipenvCwd
+            pipEnvWorkspaceFolder: pipenvCwd,
         };
     }
 
@@ -137,7 +137,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             if (version === undefined) {
                 const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
                 appShell.showWarningMessage(
-                    `Workspace contains Pipfile but '${this.executable}' was not found. Make sure '${this.executable}' is on the PATH.`
+                    `Workspace contains Pipfile but '${this.executable}' was not found. Make sure '${this.executable}' is on the PATH.`,
                 );
                 return;
             }
@@ -147,7 +147,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             if (venv === undefined) {
                 const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
                 appShell.showWarningMessage(
-                    'Workspace contains Pipfile but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.'
+                    'Workspace contains Pipfile but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.',
                 );
                 return;
             }
@@ -193,7 +193,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             const currentProc = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
             const enviromentVariableValues: Record<string, string | undefined> = {
                 LC_ALL: currentProc.env.LC_ALL,
-                LANG: currentProc.env.LANG
+                LANG: currentProc.env.LANG,
             };
             enviromentVariableValues[platformService.pathVariableName] = currentProc.env[platformService.pathVariableName];
 

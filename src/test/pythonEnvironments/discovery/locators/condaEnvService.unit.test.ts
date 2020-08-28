@@ -9,7 +9,7 @@ import { IServiceContainer } from '../../../../client/ioc/types';
 import {
     AnacondaCompanyName,
     CondaInfo,
-    parseCondaInfo
+    parseCondaInfo,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/conda';
 import { CondaEnvService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaEnvService';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
@@ -44,7 +44,7 @@ suite('Interpreters from Conda Environments', () => {
             condaService.object,
             interpreterHelper.object,
             serviceContainer.object,
-            fileSystem.object
+            fileSystem.object,
         );
     });
     teardown(() => ioc.dispose());
@@ -64,7 +64,7 @@ suite('Interpreters from Conda Environments', () => {
             {} as any,
             condaService.object,
             fileSystem.object,
-            interpreterHelper.object
+            interpreterHelper.object,
         );
         assert.equal(interpreters.length, 0, 'Incorrect number of entries');
     });
@@ -73,11 +73,11 @@ suite('Interpreters from Conda Environments', () => {
         const info = {
             envs: [
                 path.join(environmentsPath, 'conda', 'envs', 'numpy'),
-                path.join(environmentsPath, 'conda', 'envs', 'scipy')
+                path.join(environmentsPath, 'conda', 'envs', 'scipy'),
             ],
             default_prefix: '',
             'sys.version':
-                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
+                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
         };
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -98,7 +98,7 @@ suite('Interpreters from Conda Environments', () => {
             info,
             condaService.object,
             fileSystem.object,
-            interpreterHelper.object
+            interpreterHelper.object,
         );
         assert.equal(interpreters.length, 2, 'Incorrect number of entries');
 
@@ -107,7 +107,7 @@ suite('Interpreters from Conda Environments', () => {
         assert.equal(
             interpreters[0].companyDisplayName,
             AnacondaCompanyName,
-            'Incorrect company display name for first env'
+            'Incorrect company display name for first env',
         );
         assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
 
@@ -116,7 +116,7 @@ suite('Interpreters from Conda Environments', () => {
         assert.equal(
             interpreters[1].companyDisplayName,
             AnacondaCompanyName,
-            'Incorrect company display name for first env'
+            'Incorrect company display name for first env',
         );
         assert.equal(interpreters[1].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
@@ -130,11 +130,11 @@ suite('Interpreters from Conda Environments', () => {
         const info = {
             envs: [
                 path.join(environmentsPath, 'conda', 'envs', 'numpy'),
-                path.join(environmentsPath, 'conda', 'envs', 'scipy')
+                path.join(environmentsPath, 'conda', 'envs', 'scipy'),
             ],
             default_prefix: path.join(environmentsPath, 'conda', 'envs', 'root'),
             'sys.version':
-                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
+                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
         };
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -157,7 +157,7 @@ suite('Interpreters from Conda Environments', () => {
             .returns(() => Promise.resolve([
                 { name: 'base', path: environmentsPath },
                 { name: 'numpy', path: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
-                { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') }
+                { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') },
             ]));
         fileSystem
             .setup((fs) => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -171,7 +171,7 @@ suite('Interpreters from Conda Environments', () => {
         assert.equal(
             interpreters[0].companyDisplayName,
             AnacondaCompanyName,
-            'Incorrect company display name for first env'
+            'Incorrect company display name for first env',
         );
         assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
 
@@ -180,7 +180,7 @@ suite('Interpreters from Conda Environments', () => {
         assert.equal(
             interpreters[1].companyDisplayName,
             AnacondaCompanyName,
-            'Incorrect company display name for first env'
+            'Incorrect company display name for first env',
         );
         assert.equal(interpreters[1].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
@@ -195,7 +195,7 @@ suite('Interpreters from Conda Environments', () => {
         const info = {
             envs: [path.join(environmentsPath, 'conda', 'envs', 'numpy')],
             default_prefix: '',
-            'sys.version': '3.6.1 |Anaonda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
+            'sys.version': '3.6.1 |Anaonda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
         };
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -216,7 +216,7 @@ suite('Interpreters from Conda Environments', () => {
             info,
             condaService.object,
             fileSystem.object,
-            interpreterHelper.object
+            interpreterHelper.object,
         );
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
 
@@ -225,7 +225,7 @@ suite('Interpreters from Conda Environments', () => {
         assert.equal(
             interpreters[0].companyDisplayName,
             AnacondaCompanyName,
-            'Incorrect company display name for first env'
+            'Incorrect company display name for first env',
         );
         assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
@@ -240,7 +240,7 @@ suite('Interpreters from Conda Environments', () => {
         const info = {
             envs: [path.join(environmentsPath, 'conda', 'envs', 'numpy')],
             default_prefix: '',
-            'sys.version': '3.6.1 |Anaonda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
+            'sys.version': '3.6.1 |Anaonda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
         };
         interpreterHelper
             .setup((i) => i.getInterpreterInformation(TypeMoq.It.isAny()))
@@ -251,7 +251,7 @@ suite('Interpreters from Conda Environments', () => {
             .returns(() => Promise.resolve([
                 { name: 'base', path: environmentsPath },
                 { name: 'numpy', path: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
-                { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') }
+                { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') },
             ]));
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -279,7 +279,7 @@ suite('Interpreters from Conda Environments', () => {
         assert.equal(
             interpreters[0].companyDisplayName,
             AnacondaCompanyName,
-            'Incorrect company display name for first env'
+            'Incorrect company display name for first env',
         );
         assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
@@ -292,7 +292,7 @@ suite('Interpreters from Conda Environments', () => {
 
     async function useDefaultNameIfSysVersionIsEmpty(isWindows: boolean) {
         const info = {
-            envs: [path.join(environmentsPath, 'conda', 'envs', 'numpy')]
+            envs: [path.join(environmentsPath, 'conda', 'envs', 'numpy')],
         };
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -313,7 +313,7 @@ suite('Interpreters from Conda Environments', () => {
             info,
             condaService.object,
             fileSystem.object,
-            interpreterHelper.object
+            interpreterHelper.object,
         );
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
 
@@ -322,7 +322,7 @@ suite('Interpreters from Conda Environments', () => {
         assert.equal(
             interpreters[0].companyDisplayName,
             AnacondaCompanyName,
-            'Incorrect company display name for first env'
+            'Incorrect company display name for first env',
         );
         assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
@@ -336,7 +336,7 @@ suite('Interpreters from Conda Environments', () => {
 
     async function useDefaultNameIfSysVersionIsEmptyAndSuffixWithEnvironmentName(isWindows: boolean) {
         const info = {
-            envs: [path.join(environmentsPath, 'conda', 'envs', 'numpy')]
+            envs: [path.join(environmentsPath, 'conda', 'envs', 'numpy')],
         };
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -359,7 +359,7 @@ suite('Interpreters from Conda Environments', () => {
             .returns(() => Promise.resolve([
                 { name: 'base', path: environmentsPath },
                 { name: 'numpy', path: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
-                { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') }
+                { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') },
             ]));
         fileSystem
             .setup((fs) => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -373,7 +373,7 @@ suite('Interpreters from Conda Environments', () => {
         assert.equal(
             interpreters[0].companyDisplayName,
             AnacondaCompanyName,
-            'Incorrect company display name for first env'
+            'Incorrect company display name for first env',
         );
         assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
@@ -386,7 +386,7 @@ suite('Interpreters from Conda Environments', () => {
 
     async function includeDefaultPrefixIntoListOfInterpreters(isWindows: boolean) {
         const info = {
-            default_prefix: path.join(environmentsPath, 'conda', 'envs', 'numpy')
+            default_prefix: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
         };
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -405,7 +405,7 @@ suite('Interpreters from Conda Environments', () => {
             info,
             condaService.object,
             fileSystem.object,
-            interpreterHelper.object
+            interpreterHelper.object,
         );
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
 
@@ -414,7 +414,7 @@ suite('Interpreters from Conda Environments', () => {
         assert.equal(
             interpreters[0].companyDisplayName,
             AnacondaCompanyName,
-            'Incorrect company display name for first env'
+            'Incorrect company display name for first env',
         );
         assert.equal(interpreters[0].envType, EnvironmentType.Conda, 'Environment not detected as a conda environment');
     }
@@ -433,8 +433,8 @@ suite('Interpreters from Conda Environments', () => {
                 path.join(environmentsPath, 'path1', 'one.exe'),
                 path.join(environmentsPath, 'path2', 'one.exe'),
                 path.join(environmentsPath, 'conda', 'envs', 'scipy'),
-                path.join(environmentsPath, 'path3', 'three.exe')
-            ]
+                path.join(environmentsPath, 'path3', 'three.exe'),
+            ],
         };
         const validPaths = info.envs.filter((_, index) => index % 2 === 0);
         interpreterHelper
@@ -456,7 +456,7 @@ suite('Interpreters from Conda Environments', () => {
             info,
             condaService.object,
             fileSystem.object,
-            interpreterHelper.object
+            interpreterHelper.object,
         );
 
         assert.equal(interpreters.length, validPaths.length, 'Incorrect number of entries');

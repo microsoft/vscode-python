@@ -18,7 +18,7 @@ import {
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 import { IServiceManager } from '../ioc/types';
@@ -31,7 +31,7 @@ import { CondaService } from './discovery/locators/services/condaService';
 import { CurrentPathService, PythonInPathCommandProvider } from './discovery/locators/services/currentPathService';
 import {
     GlobalVirtualEnvironmentsSearchPathProvider,
-    GlobalVirtualEnvService
+    GlobalVirtualEnvService,
 } from './discovery/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from './discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from './discovery/locators/services/hashProviderFactory';
@@ -43,7 +43,7 @@ import { WindowsRegistryService } from './discovery/locators/services/windowsReg
 import { WindowsStoreInterpreter } from './discovery/locators/services/windowsStoreInterpreter';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
-    WorkspaceVirtualEnvService
+    WorkspaceVirtualEnvService,
 } from './discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
 
@@ -52,80 +52,80 @@ export function registerForIOC(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         PythonInterpreterLocatorService,
-        INTERPRETER_LOCATOR_SERVICE
+        INTERPRETER_LOCATOR_SERVICE,
     );
     serviceManager.addSingleton<IInterpreterLocatorProgressService>(
         IInterpreterLocatorProgressService,
-        InterpreterLocatorProgressService
+        InterpreterLocatorProgressService,
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         CondaEnvFileService,
-        CONDA_ENV_FILE_SERVICE
+        CONDA_ENV_FILE_SERVICE,
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         CondaEnvService,
-        CONDA_ENV_SERVICE
+        CONDA_ENV_SERVICE,
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         CurrentPathService,
-        CURRENT_PATH_SERVICE
+        CURRENT_PATH_SERVICE,
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         GlobalVirtualEnvService,
-        GLOBAL_VIRTUAL_ENV_SERVICE
+        GLOBAL_VIRTUAL_ENV_SERVICE,
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         WorkspaceVirtualEnvService,
-        WORKSPACE_VIRTUAL_ENV_SERVICE
+        WORKSPACE_VIRTUAL_ENV_SERVICE,
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
 
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         WindowsRegistryService,
-        WINDOWS_REGISTRY_SERVICE
+        WINDOWS_REGISTRY_SERVICE,
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
         KnownPathsService,
-        KNOWN_PATH_SERVICE
+        KNOWN_PATH_SERVICE,
     );
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
     serviceManager.addSingleton<IPythonInPathCommandProvider>(
         IPythonInPathCommandProvider,
-        PythonInPathCommandProvider
+        PythonInPathCommandProvider,
     );
 
     serviceManager.add<IInterpreterWatcher>(
         IInterpreterWatcher,
         WorkspaceVirtualEnvWatcherService,
-        WORKSPACE_VIRTUAL_ENV_SERVICE
+        WORKSPACE_VIRTUAL_ENV_SERVICE,
     );
     serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
     serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
     serviceManager.addSingleton<InterpeterHashProviderFactory>(
         InterpeterHashProviderFactory,
-        InterpeterHashProviderFactory
+        InterpeterHashProviderFactory,
     );
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
         IVirtualEnvironmentsSearchPathProvider,
         GlobalVirtualEnvironmentsSearchPathProvider,
-        'global'
+        'global',
     );
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
         IVirtualEnvironmentsSearchPathProvider,
         WorkspaceVirtualEnvironmentsSearchPathProvider,
-        'workspace'
+        'workspace',
     );
     serviceManager.addSingleton<IKnownSearchPathsForInterpreters>(
         IKnownSearchPathsForInterpreters,
-        KnownSearchPathsForInterpreters
+        KnownSearchPathsForInterpreters,
     );
     serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
 }

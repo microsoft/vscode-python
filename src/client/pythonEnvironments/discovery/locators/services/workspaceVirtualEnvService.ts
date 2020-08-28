@@ -13,7 +13,7 @@ import { IConfigurationService } from '../../../../common/types';
 import {
     IInterpreterWatcher,
     IInterpreterWatcherBuilder,
-    IVirtualEnvironmentsSearchPathProvider
+    IVirtualEnvironmentsSearchPathProvider,
 } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
 import { BaseVirtualEnvService } from './baseVirtualEnvService';
@@ -28,7 +28,7 @@ export class WorkspaceVirtualEnvService extends BaseVirtualEnvService {
         @named('workspace')
             workspaceVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IInterpreterWatcherBuilder) private readonly builder: IInterpreterWatcherBuilder
+        @inject(IInterpreterWatcherBuilder) private readonly builder: IInterpreterWatcherBuilder,
     ) {
         super(workspaceVirtualEnvPathProvider, serviceContainer, 'WorkspaceVirtualEnvService', true);
     }

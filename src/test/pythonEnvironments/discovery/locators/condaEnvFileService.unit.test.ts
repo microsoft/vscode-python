@@ -7,7 +7,7 @@ import { IPersistentStateFactory } from '../../../../client/common/types';
 import {
     ICondaService,
     IInterpreterHelper,
-    IInterpreterLocatorService
+    IInterpreterLocatorService,
 } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { AnacondaCompanyName } from '../../../../client/pythonEnvironments/discovery/locators/services/conda';
@@ -42,7 +42,7 @@ suite('Interpreters from Conda Environments Text File', () => {
             interpreterHelper.object,
             condaService.object,
             fileSystem.object,
-            serviceContainer.object
+            serviceContainer.object,
         );
     });
     test('Must return an empty list if environment file cannot be found', async () => {
@@ -71,12 +71,12 @@ suite('Interpreters from Conda Environments Text File', () => {
     async function filterFilesInEnvironmentsFileAndReturnValidItems(isWindows: boolean) {
         const validPaths = [
             path.join(environmentsPath, 'conda', 'envs', 'numpy'),
-            path.join(environmentsPath, 'conda', 'envs', 'scipy')
+            path.join(environmentsPath, 'conda', 'envs', 'scipy'),
         ];
         const interpreterPaths = [
             path.join(environmentsPath, 'xyz', 'one'),
             path.join(environmentsPath, 'xyz', 'two'),
-            path.join(environmentsPath, 'xyz', 'python.exe')
+            path.join(environmentsPath, 'xyz', 'python.exe'),
         ].concat(validPaths);
         condaService.setup((c) => c.condaEnvironmentsFile).returns(() => environmentsFilePath);
         condaService
@@ -89,7 +89,7 @@ suite('Interpreters from Conda Environments Text File', () => {
             .returns(() => {
                 const condaEnvironments = validPaths.map((item) => ({
                     path: item,
-                    name: path.basename(item)
+                    name: path.basename(item),
                 }));
                 return Promise.resolve(condaEnvironments);
             });

@@ -30,7 +30,7 @@ export async function lookForInterpretersInDirectory(pathToCheck: string, _: IFi
 export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper
+        @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper,
     ) {}
 
     public async mergeInterpreters(interpreters: PythonEnvironment[]): Promise<PythonEnvironment[]> {
@@ -74,7 +74,7 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                         'sysPrefix',
                         'architecture',
                         'sysVersion',
-                        'version'
+                        'version',
                     ];
                     for (const prop of props) {
                         if (!existingItem[prop] && current[prop]) {
@@ -94,7 +94,7 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                     item.pipEnvWorkspaceFolder = info.workspaceFolder.fsPath;
                     item.envName = info.envName || item.envName;
                 }
-            })
+            }),
         );
         return items;
     }

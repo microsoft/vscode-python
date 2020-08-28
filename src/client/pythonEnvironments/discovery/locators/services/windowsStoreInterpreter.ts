@@ -59,7 +59,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private readonly persistentFactory: IPersistentStateFactory,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
     ) {}
 
     /**
@@ -113,7 +113,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
         const stateStore = this.persistentFactory.createGlobalPersistentState<string | undefined>(
             key,
             undefined,
-            60 * 60 * 1000
+            60 * 60 * 1000,
         );
 
         if (stateStore.value) {

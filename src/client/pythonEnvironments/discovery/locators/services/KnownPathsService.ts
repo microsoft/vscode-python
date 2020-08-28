@@ -20,7 +20,7 @@ export class KnownPathsService extends CacheableLocatorService {
     public constructor(
         @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: IKnownSearchPathsForInterpreters,
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
     ) {
         super('KnownPathsService', serviceContainer);
     }
@@ -49,9 +49,15 @@ export class KnownPathsService extends CacheableLocatorService {
         const promises = this.knownSearchPaths.getSearchPaths().map((dir) => this.getInterpretersInDirectory(dir));
         return Promise.all<string[]>(promises)
             .then((listOfInterpreters) => flatten(listOfInterpreters))
-            .then((interpreters) => interpreters.filter((item) => item.length > 0))
-            .then((interpreters) => Promise.all(interpreters.map((interpreter) => this.getInterpreterDetails(interpreter))))
-            .then((interpreters) => interpreters.filter((interpreter) => !!interpreter).map((interpreter) => interpreter!));
+            .then((interpreters) => interpreters.filter(
+                (item) => item.length > 0,
+            ))
+            .then((interpreters) => Promise.all(
+                interpreters.map((interpreter) => this.getInterpreterDetails(interpreter)),
+            ))
+            .then((interpreters) => interpreters.filter(
+                (interpreter) => !!interpreter,
+            ).map((interpreter) => interpreter!));
     }
 
     /**
@@ -66,7 +72,7 @@ export class KnownPathsService extends CacheableLocatorService {
         return {
             ...(details as PythonEnvironment),
             path: interpreter,
-            envType: EnvironmentType.Unknown
+            envType: EnvironmentType.Unknown,
         };
     }
 

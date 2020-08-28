@@ -5,7 +5,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
 import {
-    IFileSystem, IPlatformService, IRegistry, RegistryHive
+    IFileSystem, IPlatformService, IRegistry, RegistryHive,
 } from '../../../../common/platform/types';
 import { IPathUtils } from '../../../../common/types';
 import { Architecture } from '../../../../common/utils/platform';
@@ -45,7 +45,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
         @inject(IRegistry) private registry: IRegistry,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
+        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
     ) {
         super('WindowsRegistryService', serviceContainer);
         this.pathUtils = serviceContainer.get<IPathUtils>(IPathUtils);
@@ -69,7 +69,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
         const hkcuArch = this.platform.is64bit ? undefined : Architecture.x86;
         const promises: Promise<CompanyInterpreter[]>[] = [
             this.getCompanies(RegistryHive.HKCU, hkcuArch),
-            this.getCompanies(RegistryHive.HKLM, Architecture.x86)
+            this.getCompanies(RegistryHive.HKLM, Architecture.x86),
         ];
         // https://github.com/Microsoft/PTVS/blob/ebfc4ca8bab234d453f15ee426af3b208f3c143c/Python/Product/Cookiecutter/Shared/Interpreters/PythonRegistrySearch.cs#L44
         if (this.platform.is64bit) {
@@ -80,7 +80,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
         const companyInterpreters = await Promise.all(
             flatten(companies)
                 .filter((item) => item !== undefined && item !== null)
-                .map((company) => this.getInterpretersForCompany(company.companyKey, company.hive, company.arch))
+                .map((company) => this.getInterpretersForCompany(company.companyKey, company.hive, company.arch)),
         );
 
         return (
@@ -100,7 +100,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
     private async getCompanies(hive: RegistryHive, arch?: Architecture): Promise<CompanyInterpreter[]> {
         return this.registry.getKeys('\\Software\\Python', hive, arch).then((companyKeys) => companyKeys
             .filter(
-                (companyKey) => CompaniesToIgnore.indexOf(this.pathUtils.basename(companyKey).toUpperCase()) === -1
+                (companyKey) => CompaniesToIgnore.indexOf(this.pathUtils.basename(companyKey).toUpperCase()) === -1,
             )
             .map((companyKey) => ({ companyKey, hive, arch })));
     }
@@ -108,7 +108,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
     private async getInterpretersForCompany(companyKey: string, hive: RegistryHive, arch?: Architecture) {
         const tagKeys = await this.registry.getKeys(companyKey, hive, arch);
         return Promise.all(
-            tagKeys.map((tagKey) => this.getInreterpreterDetailsForCompany(tagKey, companyKey, hive, arch))
+            tagKeys.map((tagKey) => this.getInreterpreterDetailsForCompany(tagKey, companyKey, hive, arch)),
         );
     }
 
@@ -116,7 +116,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
         tagKey: string,
         companyKey: string,
         hive: RegistryHive,
-        arch?: Architecture
+        arch?: Architecture,
     ): Promise<PythonEnvironment | undefined | null> {
         const key = `${tagKey}\\InstallPath`;
         type InterpreterInformation =
@@ -143,7 +143,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                     Promise.resolve(installPath),
                     this.registry.getValue(key, hive, arch, 'ExecutablePath'),
                     this.registry.getValue(tagKey, hive, arch, 'SysVersion'),
-                    this.getCompanyDisplayName(companyKey, hive, arch)
+                    this.getCompanyDisplayName(companyKey, hive, arch),
                 ]).then(([installedPath, executablePath, version, companyDisplayName]) => {
                     companyDisplayName = AnacondaCompanyNames.indexOf(companyDisplayName!) === -1
                         ? companyDisplayName
@@ -153,7 +153,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                         installPath: installedPath,
                         executablePath,
                         version,
-                        companyDisplayName
+                        companyDisplayName,
                     } as InterpreterInformation;
                 });
             })
@@ -188,7 +188,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                     companyDisplayName: interpreterInfo.companyDisplayName,
                     envType: this.windowsStoreInterpreter.isWindowsStoreInterpreter(executablePath)
                         ? EnvironmentType.WindowsStore
-                        : EnvironmentType.Unknown
+                        : EnvironmentType.Unknown,
                 } as PythonEnvironment;
             })
             .then((interpreter) => (interpreter
@@ -200,7 +200,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
             .catch((error) => {
                 traceError(
                     `Failed to retrieve interpreter details for company ${companyKey},tag: ${tagKey}, hive: ${hive}, arch: ${arch}`,
-                    error
+                    error,
                 );
                 return null;
             });

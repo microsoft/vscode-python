@@ -8,10 +8,10 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import {
-    anything, instance, mock, verify, when
+    anything, instance, mock, verify, when,
 } from 'ts-mockito';
 import {
-    Disposable, FileSystemWatcher, Uri, WorkspaceFolder
+    Disposable, FileSystemWatcher, Uri, WorkspaceFolder,
 } from 'vscode';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { isUnitTestExecution } from '../../../../client/common/constants';
@@ -48,7 +48,7 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
             [],
             instance(workspaceService),
             instance(platformService),
-            instance(execFactory)
+            instance(execFactory),
         );
 
         when(platformService.isWindows).thenReturn(os === OSType.Windows);
@@ -70,7 +70,7 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
 
         const fsWatcher = mock(FSWatcher);
         when(workspaceService.createFileSystemWatcher(anything())).thenReturn(
-            instance((fsWatcher as any) as FileSystemWatcher)
+            instance((fsWatcher as any) as FileSystemWatcher),
         );
 
         await watcher.register(resource);
@@ -102,7 +102,7 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
             disposables,
             instance(workspaceService),
             instance(platformService),
-            instance(execFactory)
+            instance(execFactory),
         );
 
         when(platformService.isWindows).thenReturn(os === OSType.Windows);

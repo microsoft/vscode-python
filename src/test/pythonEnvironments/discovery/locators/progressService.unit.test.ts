@@ -7,7 +7,7 @@
 
 import { expect } from 'chai';
 import {
-    anything, instance, mock, when
+    anything, instance, mock, when,
 } from 'ts-mockito';
 import { Disposable, Uri } from 'vscode';
 import { createDeferred } from '../../../../client/common/utils/async';
@@ -29,7 +29,7 @@ suite('Interpreters - Locator Progress', () => {
         public onLocating(
             listener: (e: Promise<PythonEnvironment[]>) => any,
             _thisArgs?: any,
-            _disposables?: Disposable[]
+            _disposables?: Disposable[],
         ): Disposable {
             this.locatingCallback = listener;
             return { dispose: noop };

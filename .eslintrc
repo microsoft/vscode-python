@@ -45,7 +45,6 @@
 		"@typescript-eslint/no-useless-constructor": "error",
 		"@typescript-eslint/no-var-requires": "off",
 		// Other rules
-		"comma-dangle": "off",
 		"func-names": "off",
 		"import/extensions": "off",
 		"import/namespace": "off",

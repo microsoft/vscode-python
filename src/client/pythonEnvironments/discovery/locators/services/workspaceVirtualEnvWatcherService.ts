@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import {
-    Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri
+    Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri,
 } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import '../../../../common/extensions';
@@ -33,7 +33,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
         @inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
     ) {
         this.didCreate = new EventEmitter<Resource>();
         disposableRegistry.push(this);
@@ -95,7 +95,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
 
         const timer = setTimeout(
             () => this.notifyCreationWhenReady(pythonPath).ignoreErrors(),
-            timeToPollForEnvCreation
+            timeToPollForEnvCreation,
         );
         this.timers.set(pythonPath, { timer, counter });
     }

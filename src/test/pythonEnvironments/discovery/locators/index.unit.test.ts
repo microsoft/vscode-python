@@ -23,7 +23,7 @@ import {
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { PythonInterpreterLocatorService } from '../../../../client/pythonEnvironments/discovery/locators';
@@ -78,7 +78,7 @@ suite('Interpreters - Locators Index', () => {
                         sysPrefix: typeName,
                         sysVersion: typeName,
                         envType: EnvironmentType.Unknown,
-                        version: new SemVer('0.0.0-alpha')
+                        version: new SemVer('0.0.0-alpha'),
                     };
 
                     const typeLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
@@ -99,7 +99,7 @@ suite('Interpreters - Locators Index', () => {
                     return {
                         type: typeName,
                         locator: typeLocator,
-                        interpreters: [interpreter]
+                        interpreters: [interpreter],
                     };
                 });
 
@@ -139,7 +139,7 @@ suite('Interpreters - Locators Index', () => {
                         sysPrefix: typeName,
                         sysVersion: typeName,
                         envType: EnvironmentType.Unknown,
-                        version: new SemVer('0.0.0-alpha')
+                        version: new SemVer('0.0.0-alpha'),
                     };
 
                     const typeLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
@@ -160,7 +160,7 @@ suite('Interpreters - Locators Index', () => {
                     return {
                         type: typeName,
                         locator: typeLocator,
-                        interpreters: [interpreter]
+                        interpreters: [interpreter],
                     };
                 });
 
@@ -203,7 +203,7 @@ suite('Interpreters - Locators Index', () => {
                         sysPrefix: typeName,
                         sysVersion: typeName,
                         envType: EnvironmentType.Unknown,
-                        version: new SemVer('0.0.0-alpha')
+                        version: new SemVer('0.0.0-alpha'),
                     };
 
                     const typeLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
@@ -224,7 +224,7 @@ suite('Interpreters - Locators Index', () => {
                     return {
                         type: typeName,
                         locator: typeLocator,
-                        interpreters: [interpreter]
+                        interpreters: [interpreter],
                     };
                 });
 
@@ -234,10 +234,12 @@ suite('Interpreters - Locators Index', () => {
 
                 await locator.getInterpreters(resource, { onSuggestion: true });
 
-                locatorsWithInterpreters.forEach((item) => item.locator.verify((l) => (l.didTriggerInterpreterSuggestions = true), TypeMoq.Times.once()));
+                locatorsWithInterpreters.forEach((item) => item.locator.verify(
+                    (l) => (l.didTriggerInterpreterSuggestions = true), TypeMoq.Times.once(),
+                ));
                 expect(locator.didTriggerInterpreterSuggestions).to.equal(
                     true,
-                    'didTriggerInterpreterSuggestions should be set to true.'
+                    'didTriggerInterpreterSuggestions should be set to true.',
                 );
             });
         });

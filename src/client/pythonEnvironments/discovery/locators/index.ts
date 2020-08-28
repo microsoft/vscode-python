@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import {
-    Disposable, Event, EventEmitter, Uri
+    Disposable, Event, EventEmitter, Uri,
 } from 'vscode';
 import { traceDecorators } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
@@ -17,7 +17,7 @@ import {
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonEnvironment } from '../../info';
@@ -122,7 +122,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             [GLOBAL_VIRTUAL_ENV_SERVICE, undefined],
             [WORKSPACE_VIRTUAL_ENV_SERVICE, undefined],
             [KNOWN_PATH_SERVICE, undefined],
-            [CURRENT_PATH_SERVICE, undefined]
+            [CURRENT_PATH_SERVICE, undefined],
         ];
 
         const locators = keys

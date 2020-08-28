@@ -6,7 +6,7 @@
 import { injectable, unmanaged } from 'inversify';
 import * as md5 from 'md5';
 import {
-    Disposable, Event, EventEmitter, Uri
+    Disposable, Event, EventEmitter, Uri,
 } from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import '../../../../common/extensions';
@@ -83,7 +83,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     constructor(
         @unmanaged() private readonly name: string,
         @unmanaged() protected readonly serviceContainer: IServiceContainer,
-        @unmanaged() private cachePerWorkspace: boolean = false
+        @unmanaged() private cachePerWorkspace: boolean = false,
     ) {
         this._hasInterpreters = createDeferred<boolean>();
         this.cacheKeyPrefix = `INTERPRETERS_CACHE_v3_${name}`;
@@ -123,12 +123,12 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                 .then(async (items) => {
                     await this.cacheInterpreters(items, resource);
                     traceVerbose(
-                        `Interpreters returned by ${this.name} are of count ${Array.isArray(items) ? items.length : 0}`
+                        `Interpreters returned by ${this.name} are of count ${Array.isArray(items) ? items.length : 0}`,
                     );
                     traceVerbose(`Interpreters returned by ${this.name} are ${JSON.stringify(items)}`);
                     sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
                         locator: this.name,
-                        interpreters: Array.isArray(items) ? items.length : 0
+                        interpreters: Array.isArray(items) ? items.length : 0,
                     });
                     deferred!.resolve(items);
                 })
@@ -137,7 +137,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                         EventName.PYTHON_INTERPRETER_DISCOVERY,
                         stopWatch.elapsedTime,
                         { locator: this.name },
-                        ex
+                        ex,
                     );
                     deferred!.reject(ex);
                 });
@@ -171,7 +171,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                     this.getInterpreters(resource).ignoreErrors();
                 },
                 this,
-                disposableRegisry
+                disposableRegisry,
             );
         });
     }
@@ -198,7 +198,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         }
         return persistence.value.map((item) => ({
             ...item,
-            cachedEntry: true
+            cachedEntry: true,
         }));
     }
 

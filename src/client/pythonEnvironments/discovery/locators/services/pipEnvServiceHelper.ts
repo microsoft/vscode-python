@@ -19,11 +19,11 @@ export class PipEnvServiceHelper implements IPipEnvServiceHelper {
 
     constructor(
         @inject(IPersistentStateFactory) private readonly statefactory: IPersistentStateFactory,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
     ) {
         this.state = this.statefactory.createGlobalPersistentState<ReadonlyArray<PipEnvInformation>>(
             'PipEnvInformation',
-            []
+            [],
         );
     }
 
@@ -46,7 +46,7 @@ export class PipEnvServiceHelper implements IPipEnvServiceHelper {
             return;
         }
         const list = await Promise.all(
-            this.state.value.map(async (item) => ((await this.fs.fileExists(item.pythonPath)) ? item : undefined))
+            this.state.value.map(async (item) => ((await this.fs.fileExists(item.pythonPath)) ? item : undefined)),
         );
         const filteredList = list.filter((item) => !!item) as PipEnvInformation[];
         await this.state.updateValue(filteredList);

@@ -124,7 +124,7 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType) {
 export function areSameEnvironment(
     environment1: PartialPythonEnvironment | undefined,
     environment2: PartialPythonEnvironment | undefined,
-    fs: IFileSystem
+    fs: IFileSystem,
 ): boolean {
     if (!environment1 || !environment2) {
         return false;
@@ -163,7 +163,7 @@ export function updateEnvironment(environment: PartialPythonEnvironment, other: 
         'architecture',
         'sysVersion',
         'version',
-        'pipEnvWorkspaceFolder'
+        'pipEnvWorkspaceFolder',
     ];
     props.forEach((prop) => {
         if (!environment[prop] && other[prop]) {
@@ -182,7 +182,7 @@ export function updateEnvironment(environment: PartialPythonEnvironment, other: 
  */
 export function mergeEnvironments(
     environments: PartialPythonEnvironment[],
-    fs: IFileSystem
+    fs: IFileSystem,
 ): PartialPythonEnvironment[] {
     return environments.reduce<PartialPythonEnvironment[]>((accumulator, current) => {
         const existingItem = accumulator.find((item) => areSameEnvironment(current, item, fs));

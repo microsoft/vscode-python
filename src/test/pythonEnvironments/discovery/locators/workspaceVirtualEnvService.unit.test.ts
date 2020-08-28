@@ -7,7 +7,7 @@
 
 import { expect } from 'chai';
 import {
-    anything, instance, mock, verify, when
+    anything, instance, mock, verify, when,
 } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IInterpreterWatcher } from '../../../../client/interpreter/contracts';

@@ -22,7 +22,7 @@ export function extractInterpreterInfo(python: string, raw: PythonEnvInfo): Inte
         path: python,
         version: parsePythonVersion(rawVersion),
         sysVersion: raw.sysVersion,
-        sysPrefix: raw.sysPrefix
+        sysPrefix: raw.sysPrefix,
     };
 }
 
@@ -47,7 +47,7 @@ type Logger = {
 export async function getInterpreterInfo(
     python: PythonExecInfo,
     shellExec: ShellExecFunc,
-    logger?: Logger
+    logger?: Logger,
 ): Promise<InterpreterInformation | undefined> {
     const [args, parse] = getInterpreterInfoCommand();
     const info = copyPythonExecInfo(python, args);

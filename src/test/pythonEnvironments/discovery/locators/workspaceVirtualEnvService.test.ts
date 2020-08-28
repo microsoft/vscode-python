@@ -15,7 +15,7 @@ import { StopWatch } from '../../../../client/common/utils/stopWatch';
 import {
     IInterpreterLocatorService,
     IInterpreterWatcherBuilder,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { WorkspaceVirtualEnvWatcherService } from '../../../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvWatcherService';
@@ -27,7 +27,7 @@ import {
     OSType,
     PYTHON_PATH,
     rootWorkspaceUri,
-    waitForCondition
+    waitForCondition,
 } from '../../../common';
 import { IS_MULTI_ROOT_TEST } from '../../../constants';
 import { sleep } from '../../../core';
@@ -37,7 +37,7 @@ const execAsync = promisify(exec);
 async function run(argv: string[], cwd: string) {
     const cmdline = argv.join(' ');
     const { stderr } = await execAsync(cmdline, {
-        cwd
+        cwd,
     });
     if (stderr && stderr.length > 0) {
         throw Error(stderr);
@@ -95,7 +95,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
         const stopWatch = new StopWatch();
         const builder = serviceContainer.get<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder);
         const watcher = (await builder.getWorkspaceVirtualEnvInterpreterWatcher(
-            workspaceUri
+            workspaceUri,
         )) as WorkspaceVirtualEnvWatcherService;
         const binDir = getOSType() === OSType.Windows ? 'Scripts' : 'bin';
         const executable = getOSType() === OSType.Windows ? 'python.exe' : 'python';
@@ -114,7 +114,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
         const promise = waitForCondition(
             predicate,
             timeoutMs,
-            `${envNameToLookFor}, Environment not detected in the workspace ${workspaceUri.fsPath}`
+            `${envNameToLookFor}, Environment not detected in the workspace ${workspaceUri.fsPath}`,
         );
         const deferred = createDeferredFromPromise(promise);
         manuallyTriggerFSWatcher(deferred).ignoreErrors();
@@ -133,7 +133,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
         serviceContainer = (await initialize()).serviceContainer;
         locator = serviceContainer.get<IInterpreterLocatorService>(
             IInterpreterLocatorService,
-            WORKSPACE_VIRTUAL_ENV_SERVICE
+            WORKSPACE_VIRTUAL_ENV_SERVICE,
         );
         // This test is required, we need to wait for interpreter listing completes,
         // before proceeding with other tests.
@@ -168,7 +168,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
 
         const [env1, env2] = await Promise.all([
             createVirtualEnvironment('first3'),
-            createVirtualEnvironment('second3')
+            createVirtualEnvironment('second3'),
         ]);
         await Promise.all([waitForInterpreterToBeDetected(env1), waitForInterpreterToBeDetected(env2)]);
 

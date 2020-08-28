@@ -23,7 +23,7 @@ import {
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../client/interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -35,18 +35,18 @@ import { CondaEnvService } from '../../client/pythonEnvironments/discovery/locat
 import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';
 import {
     CurrentPathService,
-    PythonInPathCommandProvider
+    PythonInPathCommandProvider,
 } from '../../client/pythonEnvironments/discovery/locators/services/currentPathService';
 import {
     GlobalVirtualEnvironmentsSearchPathProvider,
-    GlobalVirtualEnvService
+    GlobalVirtualEnvService,
 } from '../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import { InterpreterWatcherBuilder } from '../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
 import {
     KnownPathsService,
-    KnownSearchPathsForInterpreters
+    KnownSearchPathsForInterpreters,
 } from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
 import { PipEnvService } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvServiceHelper';
@@ -54,7 +54,7 @@ import { WindowsRegistryService } from '../../client/pythonEnvironments/discover
 import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
-    WorkspaceVirtualEnvService
+    WorkspaceVirtualEnvService,
 } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
@@ -91,7 +91,7 @@ suite('Interpreters - Service Registry', () => {
 
             [WindowsStoreInterpreter, WindowsStoreInterpreter],
             [InterpreterHashProvider, InterpreterHashProvider],
-            [InterpeterHashProviderFactory, InterpeterHashProviderFactory]
+            [InterpeterHashProviderFactory, InterpeterHashProviderFactory],
         ].forEach((mapping) => {
             verify(serviceManager.addSingleton.apply(serviceManager, mapping as any)).once();
         });
@@ -99,8 +99,8 @@ suite('Interpreters - Service Registry', () => {
             serviceManager.add<IInterpreterWatcher>(
                 IInterpreterWatcher,
                 WorkspaceVirtualEnvWatcherService,
-                WORKSPACE_VIRTUAL_ENV_SERVICE
-            )
+                WORKSPACE_VIRTUAL_ENV_SERVICE,
+            ),
         ).once();
     });
 });
