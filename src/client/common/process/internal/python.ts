@@ -30,12 +30,10 @@ export function execModule(name: string, moduleArgs: string[], isolated = true):
     const args = ['-m', name, ...moduleArgs];
     if (isolated) {
         // .fileToCommandArgument here?
-        //args[0] = ISOLATED.fileToCommandArgument(); // replace
         args[0] = ISOLATED; // replace
     }
     // "code" isn't specific enough to know how to parse it,
     // so we only return the args.
-    logMessage(`**** execModule ${name} ${moduleArgs}`);
     return args;
 }
 
