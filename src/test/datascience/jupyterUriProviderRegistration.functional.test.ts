@@ -99,7 +99,6 @@ suite(`DataScience JupyterServerUriProvider tests`, () => {
         await ioc.dispose();
     });
 
-    //test('Host & Guest Simple', async function () {
     test('Expiration', async function () {
         // Issue #13668 filed to investigate / reactivate. Was failing randomly in some PR runs.
         // tslint:disable-next-line: no-invalid-this
