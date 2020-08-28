@@ -19,13 +19,10 @@ export async function setExtensionInstallTelemetryProperties(fs: IFileSystem) {
     // pack.
     //
     // Use parent of EXTENSION_ROOT_DIR to access %USERPROFILE%/.vscode/extensions
-    // If you use join (%USERPROFILE%, .vscode, extensions), then if user has both
-    // ~/.vscode and ~./vscode-insiders, and launches Python extension via VS Code
-    // insiders, it will look for ~/.vscode/extensions/PythonCodingPack which is
-    // wrong. This is a rare scenario, and it can be easily avoided by using parent
-    // of EXTENSION_ROOT_DIR. If you use EXTENSION_ROOT_DIR then, in the case of
-    // VS Code insiders it will be, ~/.vscode-insiders/extensions/. That folder will
-    // NOT have PythonCodingPack file and we can treat the insiders case as MarkerPlace.
+    // this is because the installer will add PythonCodingPack to %USERPROFILE%/.vscode/extensions
+    // or %USERPROFILE%/.vscode-insiders/extensions depending on what was installed
+    // previously by the user. If we always join (<home>, .vscode, extensions), we will
+    // end up looking at the wrong place, with respect to the extension that was launched.
     const fileToCheck = path.join(path.dirname(EXTENSION_ROOT_DIR), 'PythonCodingPack');
     if (await fs.fileExists(fileToCheck)) {
         setSharedProperty('installSource', 'pythonCodingPack');
