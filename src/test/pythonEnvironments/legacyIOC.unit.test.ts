@@ -5,7 +5,7 @@
 
 // tslint:disable: no-any
 
-import { instance, mock, verify } from 'ts-mockito';
+import { anything, instance, mock, verify } from 'ts-mockito';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -26,6 +26,7 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../client/interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
+import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { PythonInterpreterLocatorService } from '../../client/pythonEnvironments/discovery/locators';
 import { InterpreterLocatorHelper } from '../../client/pythonEnvironments/discovery/locators/helpers';
@@ -57,12 +58,14 @@ import {
     WorkspaceVirtualEnvService,
 } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvWatcherService';
+import { IEnvironmentInfoService } from '../../client/pythonEnvironments/info/environmentInfoService';
 import { registerForIOC } from '../../client/pythonEnvironments/legacyIOC';
 
 suite('Interpreters - Service Registry', () => {
     test('Registrations', () => {
         const serviceManager = mock(ServiceManager);
-        registerForIOC(instance(serviceManager));
+        const serviceContainer = mock(ServiceContainer);
+        registerForIOC(instance(serviceManager), instance(serviceContainer));
 
         [
             [IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters],
@@ -101,6 +104,9 @@ suite('Interpreters - Service Registry', () => {
                 WorkspaceVirtualEnvWatcherService,
                 WORKSPACE_VIRTUAL_ENV_SERVICE,
             ),
+        ).once();
+        verify(
+            serviceManager.addSingletonInstance<IEnvironmentInfoService>(IEnvironmentInfoService, anything())
         ).once();
     });
 });

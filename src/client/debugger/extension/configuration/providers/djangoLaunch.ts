@@ -37,7 +37,7 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
             type: DebuggerTypeName,
             request: 'launch',
             program: program || defaultProgram,
-            args: ['runserver', '--noreload'],
+            args: ['runserver'],
             django: true
         };
         if (!program) {

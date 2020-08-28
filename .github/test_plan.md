@@ -155,7 +155,7 @@ enable=bad-names
 
 ```python3
 # example.py
-foo = 42  # Marked as a blacklisted name.
+foo = 42  # Marked as a disallowed name.
 ```
 
 -   [ ] Installation via the prompt installs Pylint as appropriate
@@ -576,12 +576,14 @@ def test_failure():
     1. Run a cell on the host
     1. Verify the editor opens on the guest and the cell is run there too
 -   [ ] Jupyter Hub support
+
     1. Windows install instructions
+
         1. Install Docker Desktop onto a machine
         1. Create a folder with a file 'Dockerfile' in it.
         1. Mark the file to look like so:
 
-        ``` 
+        ```
         ARG BASE_CONTAINER=jupyterhub/jupyterhub
         FROM $BASE_CONTAINER
 
@@ -590,28 +592,26 @@ def test_failure():
         USER $NB_UID
         ```
 
-        1. From a command prompt (in the same folder as the Dockerfile), run ```docker build -t jupyterhubcontainer:1.0 .```
-        1. Run ```docker container create --name jupyterhub jupyterhubcontainer:1.0 jupyterhub```
-        1. From the docker desktop app, start the jupyterhub container. 
-        1. From the docker desktop app, run the CLI 
+        1. From a command prompt (in the same folder as the Dockerfile), run `docker build -t jupyterhubcontainer:1.0 .`
+        1. Run `docker container create --name jupyterhub jupyterhubcontainer:1.0 jupyterhub`
+        1. From the docker desktop app, start the jupyterhub container.
+        1. From the docker desktop app, run the CLI
+
     1. OR Mac / Linux install instructions
         1. Install docker
-        1. From the terminal ```docker run -p 8000:8000 -d --name jupyterhub jupyterhub/jupyterhub jupyterhub```
-        1. Open a terminal in the docker container with ```docker exec -it jupyterhub bash```
-        1. From that terminal run ```python3 -m pip install notebook```
-    1. From the new command prompt, run ```adduser testuser```
+        1. From the terminal `docker run -p 8000:8000 -d --name jupyterhub jupyterhub/jupyterhub jupyterhub`
+        1. Open a terminal in the docker container with `docker exec -it jupyterhub bash`
+        1. From that terminal run `python3 -m pip install notebook`
+    1. From the new command prompt, run `adduser testuser`
     1. Follow the series of prompts to add a password for this user
     1. Open VS code
     1. Open a folder with a python file in it.
-    1. Run the ```Python: Specify local or remote Jupyter server for connections``` command.
+    1. Run the `Python: Specify local or remote Jupyter server for connections` command.
     1. Pick 'Existing'
-    1. Enter ```http://localhost:8000``` (assuming the jupyter hub container was successful in launching)
+    1. Enter `http://localhost:8000` (assuming the jupyter hub container was successful in launching)
     1. Reload VS code and reopen this folder.
     1. Run a cell in a python file.
-        [ ] Verify results
-            1. Verify you are asked first for a user name and then a password.
-            1. Verify a cell runs once you enter the user name and password
-            1. Verify that the python that is running in the interactive window is from the docker container (if on windows it should show a linux path)
+       [ ] Verify results 1. Verify you are asked first for a user name and then a password. 1. Verify a cell runs once you enter the user name and password 1. Verify that the python that is running in the interactive window is from the docker container (if on windows it should show a linux path)
 
 #### P2 Test Scenarios
 

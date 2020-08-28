@@ -13,7 +13,6 @@ import {
     Event,
     EventEmitter,
     NotebookCell,
-    NotebookCellRunState,
     NotebookDocument,
     Uri
 } from 'vscode';
@@ -82,8 +81,8 @@ export class Kernel implements IKernel {
         private readonly launchTimeout: number,
         commandManager: ICommandManager,
         interpreterService: IInterpreterService,
-        errorHandler: IDataScienceErrorHandler,
-        private readonly contentProvider: INotebookContentProvider,
+        private readonly errorHandler: IDataScienceErrorHandler,
+        contentProvider: INotebookContentProvider,
         editorProvider: INotebookEditorProvider,
         private readonly kernelProvider: IKernelProvider,
         private readonly kernelSelectionUsage: IKernelSelectionUsage,
@@ -101,13 +100,6 @@ export class Kernel implements IKernel {
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
-        // Update cell to running state if cell has any code
-        if (cell.document.getText().trim().length > 0) {
-            cell.metadata.runState = NotebookCellRunState.Running;
-            this.contentProvider.notifyChangesToDocument(cell.notebook);
-        }
-
-        // Then actually start.
         await this.start({ disableUI: false, token: this.startCancellation.token });
         await this.kernelExecution.executeCell(cell);
     }
@@ -146,7 +138,12 @@ export class Kernel implements IKernel {
 
             this._notebookPromise
                 .then((nb) => (this.kernelExecution.notebook = this.notebook = nb))
-                .catch((ex) => traceError('failed to create INotebook in kernel', ex));
+                .catch((ex) => {
+                    traceError('failed to create INotebook in kernel', ex);
+                    this._notebookPromise = undefined;
+                    this.startCancellation.cancel();
+                    this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
+                });
             await this._notebookPromise;
             await this.initializeAfterStart();
         }

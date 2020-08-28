@@ -299,7 +299,7 @@ export class IocContainer {
     public registerMockInterpreterTypes() {
         this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
         this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
-        registerForIOC(this.serviceManager);
+        registerForIOC(this.serviceManager, this.serviceContainer);
     }
 
     public registerMockProcess() {

@@ -460,7 +460,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         );
         ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
 
-        registerForIOC(ioc.serviceManager);
+        registerForIOC(ioc.serviceManager, ioc.serviceContainer);
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 

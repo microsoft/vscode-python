@@ -62,7 +62,7 @@ def error_decorator(func):
 
 
 class PythonDaemon(MethodDispatcher):
-    """ Base Python Daemon with simple methods to check if a module exists, get version info and the like.
+    """Base Python Daemon with simple methods to check if a module exists, get version info and the like.
     To add additional methods, please create a separate class based off this and pass in the arg `--daemon-module` to `vscode_datascience_helpers.daemon`.
     """
 

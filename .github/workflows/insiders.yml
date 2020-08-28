@@ -47,27 +47,13 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install -U pip
 
-      - name: Install Python requirements
-        run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+      - name: Build VSIX
+        uses: ./.github/actions/build-vsix
+        id: build-vsix
 
-      - name: Install debugpy with wheels
-        run: |
-          python -m pip install wheel
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_debugpy.py
-
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
-
-      # Use the GITHUB_RUN_ID environment variable to update the build number.
-      # GITHUB_RUN_ID is a unique number for each run within a repository.
-      # This number does not change if you re-run the workflow run.
-      - name: Update build number
-        run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
-
-      - name: Create the VSIX
-        run: npm run package
+      - name: Rename VSIX
+        if: steps.build-vsix.outputs.path != env.VSIX_NAME
+        run: mv ${{ steps.build-vsix.outputs.path }} ${{ env.VSIX_NAME }}
 
       - uses: actions/upload-artifact@v2
         with:
@@ -473,7 +459,7 @@ jobs:
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1
         with:
-          CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/cobertura-coverage.xml
 
   upload:
@@ -497,7 +483,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Upload to Blob Storage
-        run: az storage blob upload --file ${{ env.VSIX_NAME }} --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
+        run: az storage blob upload --file ${{ env.VSIX_NAME }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
 
       - name: Get URL to uploaded VSIX
-        run: az storage blob url --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
+        run: az storage blob url --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login

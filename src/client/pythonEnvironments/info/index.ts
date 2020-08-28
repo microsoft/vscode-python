@@ -48,7 +48,7 @@ export type PythonVersionInfo = [number, number, number, ReleaseLevel];
 export type InterpreterInformation = {
     path: string;
     version?: PythonVersion;
-    sysVersion: string;
+    sysVersion?: string;
     architecture: Architecture;
     sysPrefix: string;
     pipEnvWorkspaceFolder?: string;

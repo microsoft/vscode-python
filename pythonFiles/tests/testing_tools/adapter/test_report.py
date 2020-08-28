@@ -29,14 +29,22 @@ class ReportDiscoveredTests(unittest.TestCase):
             TestInfo(
                 id="test#1",
                 name="test_spam",
-                path=TestPath(root=testroot, relfile=relfile, func="test_spam",),
+                path=TestPath(
+                    root=testroot,
+                    relfile=relfile,
+                    func="test_spam",
+                ),
                 source="{}:{}".format(relfile, 10),
                 markers=[],
                 parentid="file#1",
             ),
         ]
         parents = [
-            ParentInfo(id="<root>", kind="folder", name=testroot,),
+            ParentInfo(
+                id="<root>",
+                kind="folder",
+                name=testroot,
+            ),
             ParentInfo(
                 id="file#1",
                 kind="file",
@@ -74,7 +82,12 @@ class ReportDiscoveredTests(unittest.TestCase):
         report_discovered(tests, parents, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [("send", (expected,), None),])
+        self.assertEqual(
+            stub.calls,
+            [
+                ("send", (expected,), None),
+            ],
+        )
 
     def test_multiroot(self):
         stub = StubSender()
@@ -87,14 +100,22 @@ class ReportDiscoveredTests(unittest.TestCase):
             TestInfo(
                 id=relfileid1 + "::test_spam",
                 name="test_spam",
-                path=TestPath(root=testroot1, relfile=relfile1, func="test_spam",),
+                path=TestPath(
+                    root=testroot1,
+                    relfile=relfile1,
+                    func="test_spam",
+                ),
                 source="{}:{}".format(relfile1, 10),
                 markers=[],
                 parentid=relfileid1,
             ),
         ]
         parents = [
-            ParentInfo(id=".", kind="folder", name=testroot1,),
+            ParentInfo(
+                id=".",
+                kind="folder",
+                name=testroot1,
+            ),
             ParentInfo(
                 id=relfileid1,
                 kind="file",
@@ -139,7 +160,9 @@ class ReportDiscoveredTests(unittest.TestCase):
                     id=relfileid2 + "::BasicTests::test_first",
                     name="test_first",
                     path=TestPath(
-                        root=testroot2, relfile=relfile2, func="BasicTests.test_first",
+                        root=testroot2,
+                        relfile=relfile2,
+                        func="BasicTests.test_first",
                     ),
                     source="{}:{}".format(relfile2, 61),
                     markers=[],
@@ -149,7 +172,11 @@ class ReportDiscoveredTests(unittest.TestCase):
         )
         parents.extend(
             [
-                ParentInfo(id=".", kind="folder", name=testroot2,),
+                ParentInfo(
+                    id=".",
+                    kind="folder",
+                    name=testroot2,
+                ),
                 ParentInfo(
                     id="./w",
                     kind="folder",
@@ -218,7 +245,12 @@ class ReportDiscoveredTests(unittest.TestCase):
         report_discovered(tests, parents, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [("send", (expected,), None),])
+        self.assertEqual(
+            stub.calls,
+            [
+                ("send", (expected,), None),
+            ],
+        )
 
     def test_complex(self):
         """
@@ -269,7 +301,9 @@ class ReportDiscoveredTests(unittest.TestCase):
                 id=relfileid1 + "::MySuite::test_x1",
                 name="test_x1",
                 path=TestPath(
-                    root=testroot, relfile=fix_path(relfileid1), func="MySuite.test_x1",
+                    root=testroot,
+                    relfile=fix_path(relfileid1),
+                    func="MySuite.test_x1",
                 ),
                 source="{}:{}".format(fix_path(relfileid1), 10),
                 markers=None,
@@ -279,7 +313,9 @@ class ReportDiscoveredTests(unittest.TestCase):
                 id=relfileid1 + "::MySuite::test_x2",
                 name="test_x2",
                 path=TestPath(
-                    root=testroot, relfile=fix_path(relfileid1), func="MySuite.test_x2",
+                    root=testroot,
+                    relfile=fix_path(relfileid1),
+                    func="MySuite.test_x2",
                 ),
                 source="{}:{}".format(fix_path(relfileid1), 21),
                 markers=None,
@@ -301,7 +337,9 @@ class ReportDiscoveredTests(unittest.TestCase):
                 id=relfileid3 + "::test_ham1",
                 name="test_ham1",
                 path=TestPath(
-                    root=testroot, relfile=fix_path(relfileid3), func="test_ham1",
+                    root=testroot,
+                    relfile=fix_path(relfileid3),
+                    func="test_ham1",
                 ),
                 source="{}:{}".format(fix_path(relfileid3), 8),
                 markers=None,
@@ -395,7 +433,11 @@ class ReportDiscoveredTests(unittest.TestCase):
             ),
         ]
         parents = [
-            ParentInfo(id=".", kind="folder", name=testroot,),
+            ParentInfo(
+                id=".",
+                kind="folder",
+                name=testroot,
+            ),
             ParentInfo(
                 id=relfileid1,
                 kind="file",
@@ -770,7 +812,12 @@ class ReportDiscoveredTests(unittest.TestCase):
         report_discovered(tests, parents, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [("send", (expected,), None),])
+        self.assertEqual(
+            stub.calls,
+            [
+                ("send", (expected,), None),
+            ],
+        )
 
     def test_simple_basic(self):
         stub = StubSender()
@@ -808,7 +855,12 @@ class ReportDiscoveredTests(unittest.TestCase):
         report_discovered(tests, parents, simple=True, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [("send", (expected,), None),])
+        self.assertEqual(
+            stub.calls,
+            [
+                ("send", (expected,), None),
+            ],
+        )
 
     def test_simple_complex(self):
         """
@@ -861,7 +913,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 id="test#1",
                 name="test_x1",
                 path=TestPath(
-                    root=testroot1, relfile=relfile1, func="MySuite.test_x1", sub=None,
+                    root=testroot1,
+                    relfile=relfile1,
+                    func="MySuite.test_x1",
+                    sub=None,
                 ),
                 source="{}:{}".format(relfile1, 10),
                 markers=None,
@@ -871,7 +926,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 id="test#2",
                 name="test_x2",
                 path=TestPath(
-                    root=testroot1, relfile=relfile1, func="MySuite.test_x2", sub=None,
+                    root=testroot1,
+                    relfile=relfile1,
+                    func="MySuite.test_x2",
+                    sub=None,
                 ),
                 source="{}:{}".format(relfile1, 21),
                 markers=None,
@@ -895,7 +953,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 id="test#4",
                 name="test_ham1",
                 path=TestPath(
-                    root=testroot2, relfile=relfile3, func="test_ham1", sub=None,
+                    root=testroot2,
+                    relfile=relfile3,
+                    func="test_ham1",
+                    sub=None,
                 ),
                 source="{}:{}".format(relfile3, 8),
                 markers=None,
@@ -1110,4 +1171,9 @@ class ReportDiscoveredTests(unittest.TestCase):
         report_discovered(tests, parents, simple=True, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [("send", (expected,), None),])
+        self.assertEqual(
+            stub.calls,
+            [
+                ("send", (expected,), None),
+            ],
+        )

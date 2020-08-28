@@ -82,7 +82,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
             instance(mock(InterpreterService))
         );
 
-        registerForIOC(ioc.serviceManager);
+        registerForIOC(ioc.serviceManager, ioc.serviceContainer);
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 
