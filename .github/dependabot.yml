@@ -3,12 +3,12 @@ updates:
   - package-ecosystem: 'github-actions'
     directory: /
     schedule:
-      interval: weekly
+      interval: daily
 
   - package-ecosystem: 'pip'
     directory: /
     schedule:
-      interval: weekly
+      interval: daily
 
   - package-ecosystem: 'pip'
     directory: /news
@@ -18,4 +18,4 @@ updates:
   # - package-ecosystem: 'npm'
   #   directory: /
   #   schedule:
-  #     interval: weekly
+  #     interval: daily
