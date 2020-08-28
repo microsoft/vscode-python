@@ -33,6 +33,7 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
     constructor(prop: IJupyterInfoProps) {
         super(prop);
         this.selectKernel = this.selectKernel.bind(this);
+        this.selectServer = this.selectServer.bind(this);
     }
 
     public render() {
@@ -59,11 +60,18 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
             maxWidth: getMaxWidth(displayNameTextSize)
         };
 
+        const ariaDisabled = this.props.isNotebookTrusted === undefined ? false : this.props.isNotebookTrusted;
         return (
             <div className="kernel-status" style={dynamicFont}>
                 {this.renderTrustMessage()}
-                <div className="kernel-status-section kernel-status-server" style={serverTextWidth} role="button">
-                    <div className="kernel-status-text" title={jupyterServerDisplayName}>
+                <div className="kernel-status-section kernel-status-server" style={serverTextWidth}>
+                    <div
+                        className="kernel-status-text kernel-status-section-hoverable"
+                        style={serverTextWidth}
+                        onClick={this.selectServer}
+                        role="button"
+                        aria-disabled={ariaDisabled}
+                    >
                         {getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {jupyterServerDisplayName}
                     </div>
                     <Image
@@ -152,5 +160,9 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
         }
 
         return res[1];
+    }
+
+    private selectServer(): void {
+        this.props.selectServer();
     }
 }
