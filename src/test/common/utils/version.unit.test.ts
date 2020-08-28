@@ -15,13 +15,19 @@ import {
 
 const NOT_USED = {};
 
+type Unnormalized = {
+    major: string;
+    minor: string;
+    micro: string;
+};
+
 function ver(
     // tslint:disable:no-any
     major: any,
     minor: any = NOT_USED,
     micro: any = NOT_USED,
     // tslint:enable:no-any
-    unnormalized?: VersionInfo
+    unnormalized?: Unnormalized
 ): VersionInfo {
     if (minor === NOT_USED) {
         minor = -1;
@@ -40,6 +46,10 @@ function ver(
         ((info as unknown) as any).unnormalized = unnormalized;
     }
     return info;
+}
+
+function unnorm(major: string, minor: string, micro: string): Unnormalized {
+    return { major, minor, micro };
 }
 
 function res(
@@ -71,7 +81,6 @@ const INVALID: VersionInfo[] = [
     ver(undefined, undefined, undefined),
     ver(null, null, null),
     ver({}, {}, {}),
-    //ver('-1', '-1', '-1'),
     ver('x', 'y', 'z')
 ];
 
@@ -90,7 +99,7 @@ suite('common utils - isVersionEmpty', () => {
     [
         ver(-1, -1, -1),
         // normalization failed:
-        ver(-1, -1, -1, ver(null, null, null)),
+        ver(-1, -1, -1, unnorm('oops', 'uh-oh', "I've got a bad feeling about this")),
         // not normalized by still empty
         ver(-10, -10, -10)
     ].forEach((data: VersionInfo) => {
@@ -131,85 +140,94 @@ suite('common utils - isVersionEmpty', () => {
 });
 
 suite('common utils - normalizeVersionInfo', () => {
-    test(`noop`, () => {
-        const info = ver(1, 2, 3);
-        info.raw = '1.2.3';
-        // tslint:disable-next-line:no-any
-        ((info as unknown) as any).unnormalized = { ...info };
-        const expected = info;
+    suite('valid', () => {
+        test(`noop`, () => {
+            const info = ver(1, 2, 3);
+            info.raw = '1.2.3';
+            // tslint:disable-next-line:no-any
+            ((info as unknown) as any).unnormalized = unnorm('', '', '');
+            const expected = info;
 
-        const normalized = normalizeVersionInfo(info);
-
-        assert.deepEqual(normalized, expected);
-    });
-
-    test(`same`, () => {
-        const info = ver(1, 2, 3);
-        info.raw = '1.2.3';
-        // tslint:disable-next-line:no-any
-        const expected: any = { ...info };
-        expected.unnormalized = { ...info };
-
-        const normalized = normalizeVersionInfo(info);
-
-        assert.deepEqual(normalized, expected);
-    });
-
-    test(`NaN`, () => {
-        const info = ver(NaN, 2, 3);
-        info.raw = '';
-        // tslint:disable-next-line:no-any
-        const expected: any = { ...info };
-        expected.major = -1;
-        expected.unnormalized = { ...info };
-
-        const normalized = normalizeVersionInfo(info);
-
-        // tslint:disable-next-line:no-any
-        const raw = (normalized as unknown) as any;
-        assert.ok(isNaN(raw.unnormalized?.major));
-        raw.unnormalized.major = 1;
-        expected.unnormalized.major = 1;
-        assert.deepEqual(normalized, expected);
-    });
-
-    test('valid', () => {
-        const info = ver(3, -1, -10);
-        // tslint:disable-next-line:no-any
-        const expected: any = ver(3, -1, -1);
-        expected.raw = '';
-        expected.unnormalized = { ...info };
-
-        const normalized = normalizeVersionInfo(info);
-
-        assert.deepEqual(normalized, expected);
-    });
-
-    test('empty', () => {
-        const info = ver(-1, -5, -10);
-        // tslint:disable-next-line:no-any
-        const expected: any = ver(-1, -1, -1);
-        expected.raw = '';
-        expected.unnormalized = { ...info };
-
-        const normalized = normalizeVersionInfo(info);
-
-        assert.deepEqual(normalized, expected);
-    });
-
-    [
-        [ver(3, null, undefined), ver(3, -1, -1)],
-        [ver('', 4, '5'), ver(-1, 4, 5)],
-        [ver({}, [], 5), ver(-1, -1, 5)]
-    ].forEach((data) => {
-        const [info, expected] = data;
-        // tslint:disable-next-line:no-any
-        ((expected as unknown) as any).unnormalized = info;
-        expected.raw = '';
-        test(`partially invalid: [${info.major}, ${info.minor}, ${info.micro}]`, () => {
             const normalized = normalizeVersionInfo(info);
 
             assert.deepEqual(normalized, expected);
+        });
+
+        test(`same`, () => {
+            const info = ver(1, 2, 3);
+            info.raw = '1.2.3';
+            // tslint:disable-next-line:no-any
+            const expected: any = { ...info };
+            expected.unnormalized = unnorm('', '', '');
+
+            const normalized = normalizeVersionInfo(info);
+
+            assert.deepEqual(normalized, expected);
+        });
+
+        [
+            [ver(3, 4, 5), ver(3, 4, 5)],
+            [ver(3, 4, 1), ver(3, 4, 1)],
+            [ver(3, 4, 0), ver(3, 4, 0)],
+            [ver(3, 4, -1), ver(3, 4, -1)],
+            [ver(3, 4, -5), ver(3, 4, -1)],
+            // empty
+            [ver(-1, -1, -1), ver(-1, -1, -1)],
+            [ver(-3, -4, -5), ver(-1, -1, -1)],
+            // numeric permutations
+            [ver(1, 5, 10), ver(1, 5, 10)],
+            [ver(1, 5, -10), ver(1, 5, -1)],
+            [ver(1, -5, -10), ver(1, -1, -1)],
+            [ver(-1, -5, -10), ver(-1, -1, -1)],
+            [ver(1, -5, 10), ver(1, -1, 10)],
+            [ver(-1, -5, 10), ver(-1, -1, 10)],
+            // coerced
+            [ver(3, 4, '5'), ver(3, 4, 5)],
+            [ver(3, 4, '1'), ver(3, 4, 1)],
+            [ver(3, 4, '0'), ver(3, 4, 0)],
+            [ver(3, 4, '-1'), ver(3, 4, -1)],
+            [ver(3, 4, '-5'), ver(3, 4, -1)]
+        ].forEach((data) => {
+            const [info, expected] = data;
+            // tslint:disable-next-line:no-any
+            ((expected as unknown) as any).unnormalized = unnorm('', '', '');
+            expected.raw = '';
+            test(`[${info.major}, ${info.minor}, ${info.micro}]`, () => {
+                const normalized = normalizeVersionInfo(info);
+
+                assert.deepEqual(normalized, expected);
+            });
+        });
+    });
+
+    suite('partially "invalid"', () => {
+        ([
+            [ver(undefined, 4, 5), unnorm('missing', '', '')],
+            [ver(3, null, 5), unnorm('', 'missing', '')],
+            [ver(3, 4, NaN), unnorm('', '', 'missing')],
+            [ver(3, 4, ''), unnorm('', '', 'string not numeric')],
+            [ver(3, 4, ' '), unnorm('', '', 'string not numeric')],
+            [ver(3, 4, 'foo'), unnorm('', '', 'string not numeric')],
+            [ver(3, 4, {}), unnorm('', '', 'unsupported type')],
+            [ver(3, 4, []), unnorm('', '', 'unsupported type')]
+        ] as [VersionInfo, Unnormalized][]).forEach((data) => {
+            const [info, unnormalized] = data;
+            const expected = { ...info };
+            if (info.major !== 3) {
+                expected.major = -1;
+            } else if (info.minor !== 4) {
+                expected.minor = -1;
+            } else {
+                expected.micro = -1;
+            }
+            // tslint:disable-next-line:no-any
+            ((expected as unknown) as any).unnormalized = unnormalized;
+            expected.raw = '';
+            test(`[${info.major}, ${info.minor}, ${info.micro}]`, () => {
+                const normalized = normalizeVersionInfo(info);
+
+                assert.deepEqual(normalized, expected);
+            });
         });
     });
 });
@@ -228,20 +246,11 @@ suite('common utils - validateVersionInfo', () => {
             });
         });
 
-        [
-            // Each of these normalizes to -1:
-            NaN,
-            '-1',
-            '-10',
-            -11,
-            undefined,
-            null
-        ].forEach((value) => {
-            const raw = ver(3, 4, value);
-            const info = ver(3, 4, -1, raw);
-            test(`normalization worked: [${raw.major}, ${raw.minor}, ${raw.micro}]`, () => {
-                validateVersionInfo(info);
-            });
+        test('normalization worked', () => {
+            const raw = unnorm('', '', '');
+            const info = ver(3, 8, -1, raw);
+
+            validateVersionInfo(info);
         });
     });
 
@@ -261,18 +270,15 @@ suite('common utils - validateVersionInfo', () => {
         });
 
         [
-            // parseInt() -> NaN:
-            '',
-            ' ',
-            '\n',
-            'foo',
-            // no equivalent number and no special-case:
-            {},
-            []
-        ].forEach((value) => {
-            const raw = ver(3, 4, value);
+            // These are all error messages that will be used in the unnormalized property.
+            'string not numeric',
+            'missing',
+            'unsupported type',
+            'oops!'
+        ].forEach((errMsg) => {
+            const raw = unnorm('', '', errMsg);
             const info = ver(3, 4, -1, raw);
-            test(`normalization failed: [${raw.major}, ${raw.minor}, ${raw.micro}]`, () => {
+            test(`normalization failed: ${errMsg}`, () => {
                 assert.throws(() => validateVersionInfo(info));
             });
         });

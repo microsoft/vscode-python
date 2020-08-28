@@ -36,7 +36,10 @@ type ErrorMsg = string;
 function normalizeVersionPart(part: unknown): [number, ErrorMsg] {
     // Any -1 values where the original is not a number are handled in validation.
     if (typeof part === 'number') {
-        if (isNaN(part) || part < 0) {
+        if (isNaN(part)) {
+            return [-1, 'missing'];
+        }
+        if (part < 0) {
             // We leave this as a marker.
             return [-1, ''];
         }
