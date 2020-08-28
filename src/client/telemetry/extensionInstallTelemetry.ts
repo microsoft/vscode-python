@@ -23,7 +23,7 @@ export async function setExtensionInstallTelemetryProperties(fs: IFileSystem) {
     // ~/.vscode and ~./vscode-insiders, and launches Python extension via VS Code
     // insiders, it will look for ~/.vscode/extensions/PythonCodingPack which is
     // wrong. This is a rare scenario, and it can be easily avoided by using parent
-    // of EXTENSION_ROOT_DIR. Ii you use EXTENSION_ROOT_DIR then, in the case of
+    // of EXTENSION_ROOT_DIR. If you use EXTENSION_ROOT_DIR then, in the case of
     // VS Code insiders it will be, ~/.vscode-insiders/extensions/. That folder will
     // NOT have PythonCodingPack file and we can treat the insiders case as MarkerPlace.
     const fileToCheck = path.join(path.dirname(EXTENSION_ROOT_DIR), 'PythonCodingPack');
