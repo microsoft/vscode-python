@@ -59,6 +59,7 @@ export function createRemoteConnectionInfo(
             return { dispose: noop };
         },
         dispose: noop,
-        getAuthHeader: serverUri ? () => getJupyterServerUri(uri)?.authorizationHeader : undefined
+        getAuthHeader: serverUri ? () => getJupyterServerUri(uri)?.authorizationHeader : undefined,
+        url: uri
     };
 }

@@ -74,6 +74,7 @@ export interface IJupyterConnection extends Disposable {
     readonly token: string;
     readonly hostName: string;
     localProcExitCode: number | undefined;
+    readonly url?: string;
     // tslint:disable-next-line: no-any
     getAuthHeader?(): any; // Snould be a json object
 }
