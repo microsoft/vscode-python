@@ -28,7 +28,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.49.0"
+        "vscode": "^1.48.0"
     },
     "keywords": [
         "python",
@@ -101,7 +101,6 @@
         "onCommand:python.datascience.selectjupytercommandline",
         "onCommand:python.enableSourceMapSupport",
         "onNotebookEditor:jupyter-notebook",
-        "onNotebook:jupyter-notebook",
         "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml"
     ],
