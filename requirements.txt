@@ -4,9 +4,6 @@
 #
 #    pip-compile --generate-hashes
 #
-future==0.18.2 \
-    --hash=sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d \
-    # via python-jsonrpc-server
 isort==5.3.2 ; python_version >= "3.6" \
     --hash=sha256:5196bd2f5b23dc91215734b1c96c6d28390061d69860a948094c12635d6d64e6 \
     --hash=sha256:ba83762132a8661d3525f87a86549712fb7d8da79eeb452e01f327ada9e87920 \
@@ -19,6 +16,10 @@ parso==0.7.0 \
     --hash=sha256:158c140fc04112dc45bca311633ae5033c2c2a7b732fa33d0955bad8152a8dd0 \
     --hash=sha256:908e9fae2144a076d72ae4e25539143d40b8e3eafbaeae03c1bfe226f4cdf12c \
     # via jedi
-python-jsonrpc-server==0.2.0 \
-    --hash=sha256:59ce9c9523c14c493a327b3a27ee37464a36dc2b9d8ab485ecbcedd38840380a \
+python-jsonrpc-server==0.3.4 \
+    --hash=sha256:1f85f75f37f923149cc0aa078474b6df55b708e82ed819ca8846a65d7d0ada7f \
+    --hash=sha256:c73bf5495c9dd4d2f902755bedeb6da5afe778e0beee82f0e195c4655352fe37 \
     # via -r requirements.in
+ujson==1.35 \
+    --hash=sha256:f66073e5506e91d204ab0c614a148d5aa938bdbf104751be66f8ad7a222f5f86 \
+    # via python-jsonrpc-server
