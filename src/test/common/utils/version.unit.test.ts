@@ -283,15 +283,8 @@ suite('common utils - validateVersionInfo', () => {
             });
         });
 
-        [
-            ...INVALID,
-            // extra cases:
-            ver(NaN, 4, 5)
-        ].forEach((info) => {
-            test(`bogus: [${info.major}, ${info.minor}, ${info.micro}]`, () => {
-                assert.throws(() => validateVersionInfo(info));
-            });
-        });
+        // We expect only numbers, so NaN nor any of the items
+        // in INVALID need to be tested.
     });
 });
 

@@ -69,25 +69,26 @@ type RawBasicVersionInfo = BasicVersionInfo & {
     };
 };
 
+export const EMPTY_VERSION: RawBasicVersionInfo = {
+    major: -1,
+    minor: -1,
+    micro: -1,
+    unnormalized: {
+        major: undefined,
+        minor: undefined,
+        micro: undefined
+    }
+};
+
 /**
  * Make a copy and set all the properties properly.
  *
  * Only the "basic" version info will be normalized.  The caller
  * is responsible for any other properties beyond that.
  */
-export function normalizeBasicVersionInfo<T extends BasicVersionInfo>(info: T): T {
+export function normalizeBasicVersionInfo<T extends BasicVersionInfo>(info: T | undefined): T {
     if (!info) {
-        const empty: unknown = {
-            major: -1,
-            minor: -1,
-            micro: -1,
-            unnormalized: {
-                major: undefined,
-                minor: undefined,
-                micro: undefined
-            }
-        };
-        return empty as T;
+        return EMPTY_VERSION as T;
     }
     const norm: T = { ...info };
     const raw = (norm as unknown) as RawBasicVersionInfo;
@@ -101,10 +102,9 @@ export function normalizeBasicVersionInfo<T extends BasicVersionInfo>(info: T): 
     return norm;
 }
 
-function validateVersionPart(prop: string, part: unknown, unnormalized?: ErrorMsg) {
-    if (typeof part !== 'number' || isNaN(part)) {
-        throw Error(`invalid ${prop} version (not normalized)`);
-    }
+function validateVersionPart(prop: string, part: number, unnormalized?: ErrorMsg) {
+    // We expect a normalized version part here, so there's no need
+    // to check for NaN or non-numbers here.
     if (part === 0 || part > 0) {
         return;
     }
@@ -123,9 +123,6 @@ function validateVersionPart(prop: string, part: unknown, unnormalized?: ErrorMs
  * is responsible for any other properties beyond that.
  */
 export function validateBasicVersionInfo<T extends BasicVersionInfo>(info: T) {
-    if (!info) {
-        throw Error('invalid version (not normalized)');
-    }
     const raw = (info as unknown) as RawBasicVersionInfo;
     validateVersionPart('major', info.major, raw.unnormalized?.major);
     validateVersionPart('minor', info.minor, raw.unnormalized?.minor);
