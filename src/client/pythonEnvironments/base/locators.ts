@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { chain } from '../../common/utils/async';
+import { PythonEnvInfo } from './info';
 import { ILocator, NOOP_ITERATOR, PythonEnvsIterator, PythonLocatorQuery } from './locator';
 import { DisableableEnvsWatcher, PythonEnvsWatchers } from './watchers';
 
@@ -22,6 +23,16 @@ export class Locators extends PythonEnvsWatchers {
         const iterators = this.locators.map((loc) => loc.iterEnvs(query));
         return chain(iterators);
     }
+
+    public async resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        for (const locator of this.locators) {
+            const resolved = await locator.resolveEnv(env);
+            if (resolved !== undefined) {
+                return resolved;
+            }
+        }
+        return undefined;
+    }
 }
 
 /**
@@ -40,5 +51,12 @@ export class DisableableLocator extends DisableableEnvsWatcher {
             return NOOP_ITERATOR;
         }
         return this.locator.iterEnvs(query);
+    }
+
+    public async resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
+        return this.locator.resolveEnv(env);
     }
 }

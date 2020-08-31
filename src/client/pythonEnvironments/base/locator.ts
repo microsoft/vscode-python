@@ -71,6 +71,13 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
      * @param query - if provided, the locator will limit results to match
      */
     iterEnvs(query?: QueryForEvent<E>): PythonEnvsIterator;
+
+    /**
+     * Fill in any missing info in the given data, if possible.
+     *
+     * The result is a copy of whatever was passed in.
+     */
+    resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
 }
 
 interface IBasicEmitter {
@@ -88,6 +95,9 @@ type EmitterForEvent<E> = E extends PythonEnvsChangedEvent ? IFullEmitter : IBas
  *
  * Subclasses will call `this.emitter.fire()` or `this.emitter.trigger()`
  * to emit events.
+ *
+ * By default `resolveEnv()` returns undefined.  Subclasses may override
+ * the method to provide an implementation.
  */
 abstract class Locator<E extends BasicPythonEnvsChangedEvent> {
     public readonly onChanged: Event<E>;
@@ -98,6 +108,10 @@ abstract class Locator<E extends BasicPythonEnvsChangedEvent> {
     }
 
     public abstract iterEnvs(query?: QueryForEvent<E>): PythonEnvsIterator;
+
+    public async resolveEnv(_env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        return undefined;
+    }
 }
 
 /**

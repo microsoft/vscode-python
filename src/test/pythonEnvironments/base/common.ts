@@ -82,6 +82,7 @@ export class SimpleLocator extends FullLocator {
     constructor(
         private envs: PythonEnvInfo[],
         private callbacks?: {
+            resolve?: null | ((env: PythonEnvInfo) => Promise<PythonEnvInfo | undefined>);
             before?: Promise<void>;
             after?: Promise<void>;
             beforeEach?(e: PythonEnvInfo): Promise<void>;
@@ -127,6 +128,15 @@ export class SimpleLocator extends FullLocator {
             deferred.resolve();
         }
         return iterator();
+    }
+    public async resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        if (this.callbacks?.resolve === undefined) {
+            return env;
+        } else if (this.callbacks?.resolve === null) {
+            return undefined;
+        } else {
+            return this.callbacks.resolve(env);
+        }
     }
 }
 
