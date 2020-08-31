@@ -16,10 +16,6 @@ function pathExists(absPath: string): Promise<boolean> {
     return deferred.promise;
 }
 
-function or(...arr: boolean[]): boolean {
-    return arr.includes(true);
-}
-
 /**
  * Checks if the given interpreter path belongs to a conda environment. Using
  * known folder layout, and presence of 'conda-meta' directory.
@@ -68,7 +64,7 @@ async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
     //     |__ python  <--- interpreterPath
     const conda_env_dir_2 = path.join(path.dirname(path.dirname(interpreterPath)), condaMetaDir);
 
-    return or(await pathExists(conda_env_dir_1), await pathExists(conda_env_dir_2));
+    return [await pathExists(conda_env_dir_1), await pathExists(conda_env_dir_2)].includes(true);
 }
 
 /**
