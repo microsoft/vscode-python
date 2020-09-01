@@ -59,6 +59,7 @@
                 "SwitchCase": 1
             }
         ],
+        "linebreak-style": "off",
         "max-len": [
             "warn",
             {
@@ -97,7 +98,6 @@
                 "extensions": [".tsx"]
             }
         ],
-        "strict": "off",
-        "linebreak-style": "off"
+        "strict": "off"
     }
 }

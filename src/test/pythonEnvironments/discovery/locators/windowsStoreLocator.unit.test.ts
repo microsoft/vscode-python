@@ -4,18 +4,20 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as storeApis from '../../../client/pythonEnvironments/common/windowsStoreUtils';
-import { TEST_LAYOUT_ROOT } from './commonTestConstants';
+import * as platformApis from '../../../../client/common/utils/platform';
+import * as storeApis from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
+import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 
 suite('Windows Store Utils', () => {
-    let getStoreRoot: sinon.SinonStub;
-    const testStoreAppRoot = path.join(TEST_LAYOUT_ROOT, 'storeApps');
+    let getEnvVar: sinon.SinonStub;
+    const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
+    const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
     setup(() => {
-        getStoreRoot = sinon.stub(storeApis, 'getWindowsStoreAppsRoot');
-        getStoreRoot.returns(testStoreAppRoot);
+        getEnvVar = sinon.stub(platformApis, 'getEnvironmentVariable');
+        getEnvVar.withArgs('LOCALAPPDATA').returns(testLocalAppData);
     });
     teardown(() => {
-        getStoreRoot.restore();
+        getEnvVar.restore();
     });
     test('Store Python Interpreters', async () => {
         const expected = [
