@@ -306,6 +306,7 @@
     "diagnostics.invalidDebuggerTypeDiagnostic": "Your launch.json file needs to be updated to change the \"pythonExperimental\" debug configurations to use the \"python\" debugger type, otherwise Python debugging may not work. Would you like to automatically update your launch.json file now?",
     "diagnostics.consoleTypeDiagnostic": "Your launch.json file needs to be updated to change the console type string from \"none\" to \"internalConsole\", otherwise Python debugging may not work. Would you like to automatically update your launch.json file now?",
     "diagnostics.justMyCodeDiagnostic": "Configuration \"debugStdLib\" in launch.json is no longer supported. It's recommended to replace it with \"justMyCode\", which is the exact opposite of using \"debugStdLib\". Would you like to automatically update your launch.json file to do that?",
+    "diagnostics.checkIsort5UpgradeGuide": "We found outdated configuration for sorting imports in this workspace. Check the [isort upgrade guide](https://aka.ms/AA9j5x4) to update your settings.",
     "diagnostics.yesUpdateLaunch": "Yes, update launch.json",
     "diagnostics.invalidTestSettings": "Your settings needs to be updated to change the setting \"python.unitTest.\" to \"python.testing.\", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?",
     "DataScience.interruptKernel": "Interrupt IPython kernel",

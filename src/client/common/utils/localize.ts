@@ -60,6 +60,10 @@ export namespace Diagnostics {
         'Your settings needs to be updated to change the setting "python.unitTest." to "python.testing.", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?'
     );
     export const updateSettings = localize('diagnostics.updateSettings', 'Yes, update settings');
+    export const checkIsort5UpgradeGuide = localize(
+        'diagnostics.checkIsort5UpgradeGuide',
+        'We found outdated configuration for sorting imports in this workspace. Check the [isort upgrade guide](https://aka.ms/AA9j5x4) to update your settings.'
+    );
 }
 
 export namespace Common {
