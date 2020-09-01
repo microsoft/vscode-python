@@ -335,6 +335,77 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asSelectionRanges(_selectionRanges: any): any {
         throw new Error('Method not implemented.');
     }
+    public asSemanticTokensLegend(_value: proto.SemanticTokensLegend): code.SemanticTokensLegend {
+        throw new Error('Method not implemented.');
+    }
+    public asSemanticTokens(value: proto.SemanticTokens): code.SemanticTokens;
+    public asSemanticTokens(value: undefined | null): undefined;
+    public asSemanticTokens(value: proto.SemanticTokens | undefined | null): code.SemanticTokens | undefined;
+    public asSemanticTokens(value: proto.SemanticTokens | undefined | null): code.SemanticTokens | undefined;
+    public asSemanticTokens(_value: any): code.SemanticTokens | undefined {
+        throw new Error('Method not implemented.');
+    }
+    public asSemanticTokensEdit(_value: proto.SemanticTokensEdit): code.SemanticTokensEdit {
+        throw new Error('Method not implemented.');
+    }
+    public asSemanticTokensEdits(value: proto.SemanticTokensDelta): code.SemanticTokensEdits;
+    public asSemanticTokensEdits(value: undefined | null): undefined;
+    public asSemanticTokensEdits(
+        value: proto.SemanticTokensDelta | undefined | null
+    ): code.SemanticTokensEdits | undefined;
+    public asSemanticTokensEdits(
+        value: proto.SemanticTokensDelta | undefined | null
+    ): code.SemanticTokensEdits | undefined;
+    public asSemanticTokensEdits(_value: any): code.SemanticTokensEdits | undefined {
+        throw new Error('Method not implemented.');
+    }
+    public asCallHierarchyItem(item: null): undefined;
+    public asCallHierarchyItem(item: proto.CallHierarchyItem): code.CallHierarchyItem;
+    public asCallHierarchyItem(item: proto.CallHierarchyItem | null): code.CallHierarchyItem | undefined;
+    public asCallHierarchyItem(item: proto.CallHierarchyItem | null): code.CallHierarchyItem | undefined;
+    public asCallHierarchyItem(_item: any): code.CallHierarchyItem | undefined {
+        throw new Error('Method not implemented.');
+    }
+    public asCallHierarchyItems(items: null): undefined;
+    public asCallHierarchyItems(items: proto.CallHierarchyItem[]): code.CallHierarchyItem[];
+    public asCallHierarchyItems(items: proto.CallHierarchyItem[] | null): code.CallHierarchyItem[] | undefined;
+    public asCallHierarchyItems(items: proto.CallHierarchyItem[] | null): code.CallHierarchyItem[] | undefined;
+    public asCallHierarchyItems(_items: any): code.CallHierarchyItem[] | undefined {
+        throw new Error('Method not implemented.');
+    }
+    public asCallHierarchyIncomingCall(_item: proto.CallHierarchyIncomingCall): code.CallHierarchyIncomingCall {
+        throw new Error('Method not implemented.');
+    }
+    public asCallHierarchyIncomingCalls(items: null): undefined;
+    public asCallHierarchyIncomingCalls(
+        items: ReadonlyArray<proto.CallHierarchyIncomingCall>
+    ): code.CallHierarchyIncomingCall[];
+    public asCallHierarchyIncomingCalls(
+        items: ReadonlyArray<proto.CallHierarchyIncomingCall> | null
+    ): code.CallHierarchyIncomingCall[] | undefined;
+    public asCallHierarchyIncomingCalls(
+        items: ReadonlyArray<proto.CallHierarchyIncomingCall> | null
+    ): code.CallHierarchyIncomingCall[] | undefined;
+    public asCallHierarchyIncomingCalls(_items: any): code.CallHierarchyIncomingCall[] | undefined {
+        throw new Error('Method not implemented.');
+    }
+    public asCallHierarchyOutgoingCall(_item: proto.CallHierarchyOutgoingCall): code.CallHierarchyOutgoingCall {
+        throw new Error('Method not implemented.');
+    }
+    public asCallHierarchyOutgoingCalls(items: null): undefined;
+    public asCallHierarchyOutgoingCalls(
+        items: ReadonlyArray<proto.CallHierarchyOutgoingCall>
+    ): code.CallHierarchyOutgoingCall[];
+    public asCallHierarchyOutgoingCalls(
+        items: ReadonlyArray<proto.CallHierarchyOutgoingCall> | null
+    ): code.CallHierarchyOutgoingCall[] | undefined;
+    public asCallHierarchyOutgoingCalls(
+        items: ReadonlyArray<proto.CallHierarchyOutgoingCall> | null
+    ): code.CallHierarchyOutgoingCall[] | undefined;
+    public asCallHierarchyOutgoingCalls(_items: any): code.CallHierarchyOutgoingCall[] | undefined {
+        throw new Error('Method not implemented.');
+    }
+
     private asCompletionItemKind(
         value: proto.CompletionItemKind
     ): [code.CompletionItemKind, proto.CompletionItemKind | undefined] {
