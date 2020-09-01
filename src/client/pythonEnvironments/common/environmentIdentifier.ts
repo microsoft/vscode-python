@@ -7,6 +7,7 @@ import { traceWarning } from '../../common/logger';
 import { createDeferred } from '../../common/utils/async';
 import { getEnvironmentVariable } from '../../common/utils/platform';
 import { EnvironmentType } from '../info';
+import { getWindowsStoreAppsRoot, isForbiddenStorePath } from './windowsStoreUtils';
 
 function pathExists(absPath: string): Promise<boolean> {
     const deferred = createDeferred<boolean>();
@@ -102,8 +103,7 @@ async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
 async function isWindowsStoreEnvironment(interpreterPath: string): Promise<boolean> {
     const pythonPathToCompare = path.normalize(interpreterPath).toUpperCase();
     const localAppDataStorePath = path
-        .join(getEnvironmentVariable('LOCALAPPDATA') || '', 'Microsoft', 'WindowsApps')
-        .normalize()
+        .normalize(getWindowsStoreAppsRoot())
         .toUpperCase();
     if (pythonPathToCompare.includes(localAppDataStorePath)) {
         return true;
@@ -111,11 +111,7 @@ async function isWindowsStoreEnvironment(interpreterPath: string): Promise<boole
 
     // Program Files store path is a forbidden path. Only admins and system has access this path.
     // We should never have to look at this path or even execute python from this path.
-    const programFilesStorePath = path
-        .join(getEnvironmentVariable('ProgramFiles') || 'Program Files', 'WindowsApps')
-        .normalize()
-        .toUpperCase();
-    if (pythonPathToCompare.includes(programFilesStorePath)) {
+    if (isForbiddenStorePath(pythonPathToCompare)) {
         traceWarning('isWindowsStoreEnvironment called with Program Files store path.');
         return true;
     }

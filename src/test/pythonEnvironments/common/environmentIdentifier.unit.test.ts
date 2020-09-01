@@ -7,28 +7,17 @@ import * as sinon from 'sinon';
 import * as platformApis from '../../../client/common/utils/platform';
 import { identifyEnvironment } from '../../../client/pythonEnvironments/common/environmentIdentifier';
 import { EnvironmentType } from '../../../client/pythonEnvironments/info';
+import { TEST_LAYOUT_ROOT } from './commonTestConstants';
 
 suite('Environment Identifier', () => {
-    const testLayoutsRoot = path.join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        '..',
-        'src',
-        'test',
-        'pythonEnvironments',
-        'common',
-        'envlayouts',
-    );
     suite('Conda', () => {
         test('Conda layout with conda-meta and python binary in the same directory', async () => {
-            const interpreterPath: string = path.join(testLayoutsRoot, 'conda1', 'python.exe');
+            const interpreterPath: string = path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe');
             const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
             assert.deepEqual(envType, EnvironmentType.Conda);
         });
         test('Conda layout with conda-meta and python binary in a sub directory', async () => {
-            const interpreterPath: string = path.join(testLayoutsRoot, 'conda2', 'bin', 'python');
+            const interpreterPath: string = path.join(TEST_LAYOUT_ROOT, 'conda2', 'bin', 'python');
             const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
             assert.deepEqual(envType, EnvironmentType.Conda);
         });
