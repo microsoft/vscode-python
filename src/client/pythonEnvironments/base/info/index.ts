@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Uri } from 'vscode';
 import { Architecture } from '../../../common/utils/platform';
 import { BasicVersionInfo, VersionInfo } from '../../../common/utils/version';
 
@@ -135,8 +136,10 @@ type _PythonEnvInfo = PythonEnvBaseInfo & PythonBuildInfo;
  *
  * @prop distro - the installed Python distro that this env is using or belongs to
  * @prop defaultDisplayName - the text to use when showing the env to users
+ * @prop searchLocation - the root under which a locator found this env, if any
  */
 export type PythonEnvInfo = _PythonEnvInfo & {
     distro: PythonDistroInfo;
     defaultDisplayName?: string;
+    searchLocation?: Uri;
 };
