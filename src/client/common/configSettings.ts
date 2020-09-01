@@ -24,7 +24,6 @@ import { WorkspaceService } from './application/workspace';
 import { DEFAULT_INTERPRETER_SETTING, isTestExecution } from './constants';
 import { DeprecatePythonPath } from './experiments/groups';
 import { ExtensionChannels } from './insidersBuild/types';
-import { traceError } from './logger';
 import { IS_WINDOWS } from './platform/constants';
 import * as internalPython from './process/internal/python';
 import {
