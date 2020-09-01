@@ -47,7 +47,7 @@ suite('Python Settings', async () => {
     let settings: CustomPythonSettings;
     setup(() => {
         sinon.stub(EnvFileTelemetry, 'sendSettingTelemetry').returns();
-        config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
+        config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Loose);
         expected = new CustomPythonSettings(undefined, new MockAutoSelectionService());
         settings = new CustomPythonSettings(undefined, new MockAutoSelectionService());
         expected.defaultInterpreterPath = 'python';

@@ -544,6 +544,11 @@ export class PythonSettings implements IPythonSettings {
             this.datascience = dataScienceSettings;
         }
 
+        const showStartPage = pythonSettings.get<boolean>('showStartPage');
+        if (showStartPage !== undefined) {
+            this.showStartPage = showStartPage;
+        }
+
         this.insidersChannel = pythonSettings.get<ExtensionChannels>('insidersChannel')!;
     }
 
