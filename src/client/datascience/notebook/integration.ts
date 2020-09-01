@@ -56,7 +56,23 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         }
         try {
             this.disposables.push(
-                this.vscNotebook.registerNotebookContentProvider(JupyterNotebookView, this.notebookContentProvider)
+                this.vscNotebook.registerNotebookContentProvider(JupyterNotebookView, this.notebookContentProvider, {
+                    transientOutputs: false,
+                    transientMetadata: {
+                        breakpointMargin: true,
+                        editable: true,
+                        hasExecutionOrder: true,
+                        inputCollapsed: true,
+                        lastRunDuration: true,
+                        outputCollapsed: true,
+                        runStartTime: true,
+                        runnable: true,
+                        executionOrder: false,
+                        custom: false,
+                        runState: false,
+                        statusMessage: false
+                    }
+                })
             );
             this.disposables.push(
                 this.vscNotebook.registerNotebookKernelProvider(

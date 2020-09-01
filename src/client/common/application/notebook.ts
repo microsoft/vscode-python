@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter } from 'vscode';
 import type {
     notebook,
+    NotebookCellMetadata,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookDocument,
@@ -96,8 +97,15 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.canUseNotebookApi = true;
         }
     }
-    public registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable {
-        return this.notebook.registerNotebookContentProvider(notebookType, provider);
+    public registerNotebookContentProvider(
+        notebookType: string,
+        provider: NotebookContentProvider,
+        options?: {
+            transientOutputs: boolean;
+            transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
+        }
+    ): Disposable {
+        return this.notebook.registerNotebookContentProvider(notebookType, provider, options);
     }
     public registerNotebookKernelProvider(
         selector: NotebookDocumentFilter,

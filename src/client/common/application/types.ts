@@ -60,6 +60,7 @@ import {
 } from 'vscode';
 import type {
     NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
+    NotebookCellMetadata,
     NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
@@ -1541,7 +1542,22 @@ export interface IVSCodeNotebook {
     readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     readonly notebookEditors: Readonly<NotebookEditor[]>;
     readonly activeNotebookEditor: NotebookEditor | undefined;
-    registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable;
+    registerNotebookContentProvider(
+        notebookType: string,
+        provider: NotebookContentProvider,
+        options?: {
+            /**
+             * Controls if outputs change will trigger notebook document content change and if it will be used in the diff editor
+             * Default to false. If the content provider doesn't persisit the outputs in the file document, this should be set to true.
+             */
+            transientOutputs: boolean;
+            /**
+             * Controls if a meetadata property change will trigger notebook document content change and if it will be used in the diff editor
+             * Default to false. If the content provider doesn't persisit a metadata property in the file document, it should be set to true.
+             */
+            transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
+        }
+    ): Disposable;
 
     registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
 }
