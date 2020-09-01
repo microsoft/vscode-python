@@ -2593,12 +2593,6 @@
                     "description": "Defines type of the language server.",
                     "scope": "window"
                 },
-                "python.analysis.openFilesOnly": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Only show errors and warnings for open files rather than for the entire workspace.",
-                    "scope": "resource"
-                },
                 "python.analysis.diagnosticPublishDelay": {
                     "type": "integer",
                     "default": 1000,
@@ -2661,12 +2655,6 @@
                     "description": "Allows code analysis to keep parser trees in memory. Increases memory consumption but may improve performance with large library analysis.",
                     "scope": "resource"
                 },
-                "python.analysis.memory.keepLibraryLocalVariables": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Allows code analysis to keep library function local variables. Allows code navigation in Python libraries function bodies. Increases memory consumption.",
-                    "scope": "resource"
-                },
                 "python.analysis.logLevel": {
                     "type": "string",
                     "enum": [
@@ -2683,18 +2671,6 @@
                     "type": "integer",
                     "default": 10,
                     "description": "Limits depth of the symbol tree in the document outline.",
-                    "scope": "resource"
-                },
-                "python.analysis.cachingLevel": {
-                    "type": "string",
-                    "enum": [
-                        "Default",
-                        "None",
-                        "System",
-                        "Library"
-                    ],
-                    "default": "Default",
-                    "description": "Defines which types of modules get their analysis cached.",
                     "scope": "resource"
                 },
                 "python.linting.enabled": {

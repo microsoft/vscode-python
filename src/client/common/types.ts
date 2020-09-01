@@ -325,7 +325,6 @@ export enum AnalysisSettingsLogLevel {
 export type LanguageServerDownloadChannels = 'stable' | 'beta' | 'daily';
 export interface IAnalysisSettings {
     readonly downloadChannel?: LanguageServerDownloadChannels;
-    readonly openFilesOnly: boolean;
     readonly typeshedPaths: string[];
     readonly cacheFolderPath: string | null;
     readonly errors: string[];
