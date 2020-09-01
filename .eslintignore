@@ -301,6 +301,7 @@ src/test/common/utils/regexp.unit.test.ts
 src/test/common/utils/cacheUtils.unit.test.ts
 src/test/common/utils/decorators.unit.test.ts
 src/test/common/utils/localize.functional.test.ts
+src/test/common/utils/version.unit.test.ts
 src/test/common/utils/workerPool.functional.test.ts
 src/test/common/configSettings/configSettings.pythonPath.unit.test.ts
 src/test/common/configSettings/configSettings.unit.test.ts
@@ -415,6 +416,7 @@ src/test/startPage/startPage.functional.test.tsx
 src/test/telemetry/index.unit.test.ts
 src/test/telemetry/importTracker.unit.test.ts
 src/test/telemetry/envFileTelemetry.unit.test.ts
+src/test/telemetry/extensionInstallTelemetry.unit.test.ts
 
 src/test/linters/pylint.unit.test.ts
 src/test/linters/mypy.unit.test.ts
@@ -1192,6 +1194,7 @@ src/client/telemetry/importTracker.ts
 src/client/telemetry/constants.ts
 src/client/telemetry/index.ts
 src/client/telemetry/envFileTelemetry.ts
+src/client/telemetry/extensionInstallTelemetry.ts
 
 src/client/linters/pydocstyle.ts
 src/client/linters/serviceRegistry.ts

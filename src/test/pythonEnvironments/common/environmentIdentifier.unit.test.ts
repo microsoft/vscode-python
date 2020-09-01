@@ -19,7 +19,7 @@ suite('Environment Identifier', () => {
         'test',
         'pythonEnvironments',
         'common',
-        'envlayouts'
+        'envlayouts',
     );
     suite('Conda', () => {
         test('Conda layout with conda-meta and python binary in the same directory', async () => {
@@ -59,7 +59,7 @@ suite('Environment Identifier', () => {
                     'Microsoft',
                     'WindowsApps',
                     'PythonSoftwareFoundation.Python.3.8_qbz5n2kfra8p0',
-                    exe
+                    exe,
                 );
                 const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
                 assert.deepEqual(envType, EnvironmentType.WindowsStore);
@@ -69,7 +69,7 @@ suite('Environment Identifier', () => {
                     fakeProgramFilesPath,
                     'WindowsApps',
                     'PythonSoftwareFoundation.Python.3.8_qbz5n2kfra8p0',
-                    exe
+                    exe,
                 );
                 const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
                 assert.deepEqual(envType, EnvironmentType.WindowsStore);
@@ -86,7 +86,7 @@ suite('Environment Identifier', () => {
                     fakeProgramFilesPath,
                     'WindowsApps',
                     'PythonSoftwareFoundation.Python.3.8_qbz5n2kfra8p0',
-                    exe
+                    exe,
                 );
                 const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
                 assert.deepEqual(envType, EnvironmentType.WindowsStore);
