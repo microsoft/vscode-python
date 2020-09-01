@@ -72,7 +72,6 @@ export function updateCellWithErrorStatus(editor: NotebookEditor, cell: Notebook
         edit.replaceMetadata(cellIndex, { ...cell.metadata, runState: vscodeNotebookEnums.NotebookCellRunState.Error });
         edit.replaceOutput(cellIndex, [translateErrorOutput(createErrorOutput(ex))]);
     });
-    cell.outputs = [translateErrorOutput(createErrorOutput(ex))];
 }
 
 /**
