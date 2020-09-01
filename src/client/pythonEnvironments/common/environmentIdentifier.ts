@@ -54,7 +54,7 @@ async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
     // env
     // |__ conda-meta  <--- check if this directory exists
     // |__ python.exe  <--- interpreterPath
-    const conda_env_dir_1 = path.join(path.dirname(interpreterPath), condaMetaDir);
+    const condaEnvDir1 = path.join(path.dirname(interpreterPath), condaMetaDir);
 
     // Check if the conda-meta directory is in the parent directory relative to the interpreter.
     // This layout is common on linux/Mac.
@@ -62,9 +62,9 @@ async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
     // |__ conda-meta  <--- check if this directory exists
     // |__ bin
     //     |__ python  <--- interpreterPath
-    const conda_env_dir_2 = path.join(path.dirname(path.dirname(interpreterPath)), condaMetaDir);
+    const condaEnvDir2 = path.join(path.dirname(path.dirname(interpreterPath)), condaMetaDir);
 
-    return [await pathExists(conda_env_dir_1), await pathExists(conda_env_dir_2)].includes(true);
+    return [await pathExists(condaEnvDir1), await pathExists(condaEnvDir2)].includes(true);
 }
 
 /**
