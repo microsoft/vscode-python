@@ -13,7 +13,8 @@ import type {
     NotebookCellData,
     NotebookCellMetadata,
     NotebookData,
-    NotebookDocument
+    NotebookDocument,
+    NotebookEditor
 } from 'vscode-proposed';
 import { NotebookCellRunState } from '../../../../../typings/vscode-proposed';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
@@ -338,38 +339,59 @@ export function createIOutputFromCellOutputs(cellOutputs: CellOutput[]): nbforma
         .map((output) => output!!);
 }
 
-export function clearCellForExecution(cell: NotebookCell) {
-    cell.metadata.statusMessage = undefined;
-    cell.metadata.executionOrder = undefined;
-    cell.metadata.lastRunDuration = undefined;
-    cell.metadata.runStartTime = undefined;
-    cell.outputs = [];
+export function clearCellForExecution(editor: NotebookEditor, cell: NotebookCell) {
+    editor.edit((edit) => {
+        const cellIndex = editor.document.cells.indexOf(cell);
+        edit.replaceMetadata(cellIndex, {
+            ...cell.metadata,
+            statusMessage: undefined,
+            executionOrder: undefined,
+            lastRunDuration: undefined,
+            runStartTime: undefined
+        });
+        edit.replaceOutput(cellIndex, []);
+    });
 
-    updateCellExecutionTimes(cell);
+    updateCellExecutionTimes(editor, cell);
 }
 
 /**
  * Store execution start and end times.
  * Stored as ISO for portability.
  */
-export function updateCellExecutionTimes(cell: NotebookCell, times?: { startTime?: number; duration?: number }) {
-    if (!times || !times.duration || !times.startTime) {
-        if (cell.metadata.custom?.metadata?.vscode?.start_execution_time) {
-            delete cell.metadata.custom.metadata.vscode.start_execution_time;
+export function updateCellExecutionTimes(
+    editor: NotebookEditor,
+    cell: NotebookCell,
+    times?: { startTime?: number; duration?: number }
+) {
+    editor.edit((edit) => {
+        const cellIndex = editor.document.cells.indexOf(cell);
+        if (!times || !times.duration || !times.startTime) {
+            const cellMetadata = cloneDeep(cell.metadata);
+            let updated = false;
+            if (cellMetadata.custom?.metadata?.vscode?.start_execution_time) {
+                delete cellMetadata.custom.metadata.vscode.start_execution_time;
+                updated = true;
+            }
+            if (cellMetadata.custom?.metadata?.vscode?.end_execution_time) {
+                delete cellMetadata.custom.metadata.vscode.end_execution_time;
+                updated = true;
+            }
+            if (updated) {
+                edit.replaceMetadata(cellIndex, { ...cellMetadata });
+            }
+            return;
         }
-        if (cell.metadata.custom?.metadata?.vscode?.end_execution_time) {
-            delete cell.metadata.custom.metadata.vscode.end_execution_time;
-        }
-        return;
-    }
 
-    const startTimeISO = new Date(times.startTime).toISOString();
-    const endTimeISO = new Date(times.startTime + times.duration).toISOString();
-    cell.metadata.custom = cell.metadata.custom || {};
-    cell.metadata.custom.metadata = cell.metadata.custom.metadata || {};
-    cell.metadata.custom.metadata.vscode = cell.metadata.custom.metadata.vscode || {};
-    cell.metadata.custom.metadata.vscode.end_execution_time = endTimeISO;
-    cell.metadata.custom.metadata.vscode.start_execution_time = startTimeISO;
+        const startTimeISO = new Date(times.startTime).toISOString();
+        const endTimeISO = new Date(times.startTime + times.duration).toISOString();
+        const customMetadata = cloneDeep(cell.metadata.custom || {});
+        customMetadata.metadata = customMetadata.metadata || {};
+        customMetadata.metadata.vscode = customMetadata.metadata.vscode || {};
+        customMetadata.metadata.vscode.end_execution_time = endTimeISO;
+        customMetadata.metadata.vscode.start_execution_time = startTimeISO;
+        edit.replaceMetadata(cellIndex, { ...cell.metadata, custom: customMetadata });
+    });
 }
 
 function createCodeCellFromVSCNotebookCell(cell: NotebookCell): nbformat.ICodeCell {
@@ -640,7 +662,11 @@ export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: CellOu
 /**
  * Updates a notebook document as a result of trusting it.
  */
-export function updateVSCNotebookAfterTrustingNotebook(document: NotebookDocument, originalCells: ICell[]) {
+export function updateVSCNotebookAfterTrustingNotebook(
+    editor: NotebookEditor,
+    document: NotebookDocument,
+    originalCells: ICell[]
+) {
     const areAllCellsEditableAndRunnable = document.cells.every((cell) => {
         if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
             return cell.metadata.editable;
@@ -664,13 +690,16 @@ export function updateVSCNotebookAfterTrustingNotebook(document: NotebookDocumen
     document.metadata.editable = true;
     document.metadata.runnable = true;
 
-    document.cells.forEach((cell, index) => {
-        cell.metadata.editable = true;
-        if (cell.cellKind !== vscodeNotebookEnums.CellKind.Markdown) {
-            cell.metadata.runnable = true;
-            // Restore the output once we trust the notebook.
-            // tslint:disable-next-line: no-any
-            cell.outputs = createVSCCellOutputsFromOutputs(originalCells[index].data.outputs as any);
-        }
+    editor.edit((edit) => {
+        document.cells.forEach((cell, index) => {
+            if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
+                edit.replaceMetadata(index, { ...cell.metadata, editable: true });
+            } else {
+                edit.replaceMetadata(index, { ...cell.metadata, editable: true, runnable: true });
+                // Restore the output once we trust the notebook.
+                // tslint:disable-next-line: no-any
+                edit.replaceOutput(index, createVSCCellOutputsFromOutputs(originalCells[index].data.outputs as any));
+            }
+        });
     });
 }

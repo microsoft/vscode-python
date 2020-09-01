@@ -17,7 +17,7 @@ import {
     Uri
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell, ICommandManager } from '../../../common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -86,7 +86,8 @@ export class Kernel implements IKernel {
         editorProvider: INotebookEditorProvider,
         private readonly kernelProvider: IKernelProvider,
         private readonly kernelSelectionUsage: IKernelSelectionUsage,
-        appShell: IApplicationShell
+        appShell: IApplicationShell,
+        vscNotebook: IVSCodeNotebook
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -96,7 +97,8 @@ export class Kernel implements IKernel {
             contentProvider,
             editorProvider,
             kernelSelectionUsage,
-            appShell
+            appShell,
+            vscNotebook
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {

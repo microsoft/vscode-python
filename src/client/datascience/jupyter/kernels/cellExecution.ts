@@ -6,8 +6,9 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
 import { CancellationToken, CellOutputKind, CellStreamOutput, NotebookCell, NotebookCellRunState } from 'vscode';
+import type { NotebookEditor as VSCNotebookEditor } from '../../../../../types/vscode-proposed';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
-import { IApplicationShell } from '../../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
 import { createDeferred } from '../../../common/utils/async';
@@ -43,12 +44,14 @@ export class CellExecutionFactory {
         private readonly contentProvider: INotebookContentProvider,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
-        private readonly appShell: IApplicationShell
+        private readonly appShell: IApplicationShell,
+        private readonly vscNotebook: IVSCodeNotebook
     ) {}
 
     public create(cell: NotebookCell) {
         // tslint:disable-next-line: no-use-before-declare
         return CellExecution.fromCell(
+            this.vscNotebook.notebookEditors.find((e) => e.document === cell.notebook)!,
             cell,
             this.contentProvider,
             this.errorHandler,
@@ -89,6 +92,7 @@ export class CellExecution {
     private _completed?: boolean;
 
     private constructor(
+        public readonly editor: VSCNotebookEditor,
         public readonly cell: NotebookCell,
         private readonly contentProvider: INotebookContentProvider,
         private readonly errorHandler: IDataScienceErrorHandler,
@@ -100,19 +104,20 @@ export class CellExecution {
     }
 
     public static fromCell(
+        editor: VSCNotebookEditor,
         cell: NotebookCell,
         contentProvider: INotebookContentProvider,
         errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
         appService: IApplicationShell
     ) {
-        return new CellExecution(cell, contentProvider, errorHandler, editorProvider, appService);
+        return new CellExecution(editor, cell, contentProvider, errorHandler, editorProvider, appService);
     }
 
     public start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
         this.started = true;
         // Ensure we clear the cell state and trigger a change.
-        clearCellForExecution(this.cell);
+        clearCellForExecution(this.editor, this.cell);
         this.cell.metadata.runStartTime = new Date().getTime();
         this.stopWatch.reset();
         // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
@@ -149,7 +154,7 @@ export class CellExecution {
     private completedWithErrors(error: Partial<Error>) {
         this.sendPerceivedCellExecute();
         this.cell.metadata.lastRunDuration = this.stopWatch.elapsedTime;
-        updateCellWithErrorStatus(this.cell, error);
+        updateCellWithErrorStatus(this.editor, this.cell, error);
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
         this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
 
@@ -169,7 +174,7 @@ export class CellExecution {
 
         this.cell.metadata.statusMessage = '';
         this.cell.metadata.lastRunDuration = this.stopWatch.elapsedTime;
-        updateCellExecutionTimes(this.cell, {
+        updateCellExecutionTimes(this.editor, this.cell, {
             startTime: this.cell.metadata.runStartTime,
             duration: this.cell.metadata.lastRunDuration
         });
@@ -353,7 +358,7 @@ export class CellExecution {
 
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
-                if (updateCellExecutionCount(this.cell, msg.content.execution_count)) {
+                if (updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count)) {
                     shouldUpdate = true;
                 }
             }
@@ -449,7 +454,7 @@ export class CellExecution {
 
     private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
         if (msg.content.execution_count) {
-            updateCellExecutionCount(this.cell, msg.content.execution_count);
+            updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
         }
     }
 
@@ -530,7 +535,7 @@ export class CellExecution {
 
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
-                updateCellExecutionCount(this.cell, msg.content.execution_count);
+                updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
             }
 
             // Send this event.

@@ -5,7 +5,7 @@
 
 import { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../../common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { IDisposable } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
@@ -43,9 +43,16 @@ export class KernelExecution implements IDisposable {
         private readonly contentProvider: INotebookContentProvider,
         editorProvider: INotebookEditorProvider,
         readonly kernelSelectionUsage: IKernelSelectionUsage,
-        readonly appShell: IApplicationShell
+        readonly appShell: IApplicationShell,
+        readonly vscNotebook: IVSCodeNotebook
     ) {
-        this.executionFactory = new CellExecutionFactory(this.contentProvider, errorHandler, editorProvider, appShell);
+        this.executionFactory = new CellExecutionFactory(
+            this.contentProvider,
+            errorHandler,
+            editorProvider,
+            appShell,
+            vscNotebook
+        );
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
@@ -163,8 +170,11 @@ export class KernelExecution implements IDisposable {
     private onIoPubMessage(document: NotebookDocument, msg: KernelMessage.IIOPubMessage) {
         // tslint:disable-next-line:no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-        if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg) && handleUpdateDisplayDataMessage(msg, document)) {
-            this.contentProvider.notifyChangesToDocument(document);
+        const editor = this.vscNotebook.notebookEditors.find((e) => e.document === document);
+        if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg) && editor) {
+            if (handleUpdateDisplayDataMessage(msg, editor)) {
+                this.contentProvider.notifyChangesToDocument(document);
+            }
         }
     }
 
