@@ -49,8 +49,8 @@ export interface IKernelFinder {
         interpreterUri: InterpreterUri,
         kernelSpecMetadata?: nbformat.IKernelspecMetadata,
         cancelToken?: CancellationToken,
-        ignoreDependencyCheck?: boolean
-    ): Promise<IJupyterKernelSpec>;
+        findForNativeNotebooks?: boolean
+    ): Promise<IJupyterKernelSpec | undefined>;
     listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]>;
 }
 

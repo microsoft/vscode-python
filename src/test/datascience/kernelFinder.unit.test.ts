@@ -474,10 +474,10 @@ suite('Kernel Finder', () => {
                     return Promise.resolve(JSON.stringify(kernel));
                 });
             let spec = await kernelFinder.findKernelSpec(resource);
-            expect(spec.display_name).to.equal(activeInterpreter.displayName);
+            expect(spec!.display_name).to.equal(activeInterpreter.displayName);
 
             spec = await kernelFinder.findKernelSpec(resource);
-            expect(spec.display_name).to.equal(activeInterpreter2.displayName);
+            expect(spec!.display_name).to.equal(activeInterpreter2.displayName);
             fileSystem.reset();
         });
 
@@ -532,7 +532,7 @@ suite('Kernel Finder', () => {
                 });
             // get default kernel
             const spec = await kernelFinder.findKernelSpec(resource);
-            assert.equal(spec.name.includes('python_defaultSpec'), true);
+            assert.equal(spec!.name.includes('python_defaultSpec'), true);
             fileSystem.reset();
         });
 
@@ -551,8 +551,8 @@ suite('Kernel Finder', () => {
                 name: defaultKernelSpecName,
                 display_name: 'TargetDisplayName'
             });
-            assert.equal(spec.name.includes(defaultKernelSpecName), true);
-            expect(spec.display_name).to.equals('TargetDisplayName');
+            assert.equal(spec!.name.includes(defaultKernelSpecName), true);
+            expect(spec!.display_name).to.equals('TargetDisplayName');
             fileSystem.reset();
         });
 
@@ -569,7 +569,7 @@ suite('Kernel Finder', () => {
 
             // get default kernel
             const spec = await kernelFinder.findKernelSpec(resource);
-            assert.equal(spec.name.includes('python_defaultSpec'), true);
+            assert.equal(spec!.name.includes('python_defaultSpec'), true);
             fileSystem.reset();
 
             setupFileSystem();
@@ -577,14 +577,14 @@ suite('Kernel Finder', () => {
                 .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
                 .returns((pathParam: string) => {
                     if (pathParam.includes(cacheFile)) {
-                        return Promise.resolve(`["${spec.path}"]`);
+                        return Promise.resolve(`["${spec!.path}"]`);
                     }
                     return Promise.resolve(JSON.stringify(spec));
                 })
                 .verifiable(typemoq.Times.once());
 
             // get the same kernel, but from cache
-            const spec2 = await kernelFinder.findKernelSpec(resource, { name: spec.name, display_name: '' });
+            const spec2 = await kernelFinder.findKernelSpec(resource, { name: spec!.name, display_name: '' });
             assert.notStrictEqual(spec, spec2);
 
             fileSystem.verifyAll();
@@ -609,7 +609,7 @@ suite('Kernel Finder', () => {
                 });
 
             const spec = await kernelFinder.findKernelSpec(resource, { name: 'kernelA', display_name: '' });
-            assert.equal(spec.name.includes('kernelA'), true);
+            assert.equal(spec!.name.includes('kernelA'), true);
             fileSystem.reset();
 
             setupFileSystem();
@@ -637,7 +637,7 @@ suite('Kernel Finder', () => {
                     return Promise.resolve('{}');
                 });
             const spec2 = await kernelFinder.findKernelSpec(resource, { name: 'kernelB', display_name: '' });
-            assert.equal(spec2.name.includes('kernelB'), true);
+            assert.equal(spec2!.name.includes('kernelB'), true);
         });
     });
 });

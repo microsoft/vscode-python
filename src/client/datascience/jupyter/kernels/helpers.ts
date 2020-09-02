@@ -15,7 +15,6 @@ import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { ReadWrite } from '../../../common/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
-    DefaultKernelConnectionMetadata,
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
@@ -35,10 +34,7 @@ export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpe
     return kernelSpec.argv.indexOf(connectionFilePlaceholder);
 }
 
-type ConnectionWithKernelSpec =
-    | KernelSpecConnectionMetadata
-    | PythonKernelConnectionMetadata
-    | DefaultKernelConnectionMetadata;
+type ConnectionWithKernelSpec = KernelSpecConnectionMetadata | PythonKernelConnectionMetadata;
 export function kernelConnectionMetadataHasKernelSpec(
     connectionMetadata: KernelConnectionMetadata
 ): connectionMetadata is ConnectionWithKernelSpec {
@@ -110,6 +106,9 @@ export function getInterpreterFromKernelConnectionMetadata(
 export function isPythonKernelConnection(kernelConnection?: KernelConnectionMetadata): boolean {
     if (!kernelConnection) {
         return false;
+    }
+    if (kernelConnection.kind === 'startUsingPythonInterpreter') {
+        return true;
     }
     const model = kernelConnectionMetadataHasKernelModel(kernelConnection) ? kernelConnection.kernelModel : undefined;
     const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)

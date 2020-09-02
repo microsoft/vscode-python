@@ -167,7 +167,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         notebookMetadata?: nbformat.INotebookMetadata,
         disableUI?: boolean,
         cancelToken?: CancellationToken,
-        ignoreDependencyCheck?: boolean
+        findForNativeNotebooks?: boolean
     ): Promise<
         KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | DefaultKernelConnectionMetadata | undefined
     > {
@@ -204,7 +204,7 @@ export class KernelSelector implements IKernelSelectionUsage {
                 resource,
                 notebookMetadata,
                 cancelToken,
-                ignoreDependencyCheck
+                findForNativeNotebooks
             );
         }
 
@@ -491,21 +491,27 @@ export class KernelSelector implements IKernelSelectionUsage {
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken,
-        ignoreDependencyCheck?: boolean
+        findForNativeNotebooks?: boolean
     ): Promise<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | undefined> {
         // First use our kernel finder to locate a kernelspec on disk
         const kernelSpec = await this.kernelFinder.findKernelSpec(
             resource,
             notebookMetadata?.kernelspec,
             cancelToken,
-            ignoreDependencyCheck
+            findForNativeNotebooks
         );
-        if (!kernelSpec) {
+        const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
+        if (!kernelSpec && !activeInterpreter) {
             return;
-        }
-        // Locate the interpreter that matches our kernelspec
-        const interpreter = await this.kernelService.findMatchingInterpreter(kernelSpec, cancelToken);
-        if (interpreter) {
+        } else if (!kernelSpec && activeInterpreter) {
+            // Return current interpreter.
+            return {
+                kind: 'startUsingPythonInterpreter',
+                interpreter: activeInterpreter
+            };
+        } else if (kernelSpec) {
+            // Locate the interpreter that matches our kernelspec
+            const interpreter = await this.kernelService.findMatchingInterpreter(kernelSpec, cancelToken);
             return { kind: 'startUsingKernelSpec', kernelSpec, interpreter };
         }
     }

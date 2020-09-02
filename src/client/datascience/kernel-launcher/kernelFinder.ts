@@ -17,7 +17,7 @@ import { IInterpreterLocatorService, IInterpreterService, KNOWN_PATH_SERVICE } f
 import { captureTelemetry } from '../../telemetry';
 import { getRealPath } from '../common';
 import { Telemetry } from '../constants';
-import { createDefaultKernelSpec, defaultKernelSpecName } from '../jupyter/kernels/helpers';
+import { defaultKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import { IDataScienceFileSystem, IJupyterKernelSpec } from '../types';
 import { getKernelInterpreter } from './helpers';
@@ -67,8 +67,8 @@ export class KernelFinder implements IKernelFinder {
         resource: Resource,
         kernelSpecMetadata?: nbformat.IKernelspecMetadata,
         cancelToken?: CancellationToken,
-        ignoreDependencyCheck?: boolean
-    ): Promise<IJupyterKernelSpec> {
+        findForNativeNotebooks?: boolean
+    ): Promise<IJupyterKernelSpec | undefined> {
         await this.readCache();
         let foundKernel: IJupyterKernelSpec | undefined;
 
@@ -102,20 +102,14 @@ export class KernelFinder implements IKernelFinder {
                     result = both[0] ? both[0] : both[1];
                 }
 
-                foundKernel = result ? result : await this.getDefaultKernelSpec(resource);
-            } else {
-                // For a previous default kernel spec, just use it again
-                foundKernel = this.reuseExistingDefaultSpec(kernelSpecMetadata);
+                foundKernel = result;
             }
-        } else {
-            // If we don't have kernel metadata then just get a default spec to use
-            foundKernel = await this.getDefaultKernelSpec(resource);
         }
 
         this.writeCache().ignoreErrors();
 
         // Verify that ipykernel is installed into the given kernelspec interpreter
-        return ignoreDependencyCheck ? foundKernel : this.verifyIpyKernel(foundKernel, cancelToken);
+        return findForNativeNotebooks || !foundKernel ? foundKernel : this.verifyIpyKernel(foundKernel, cancelToken);
     }
 
     // Search all our local file system locations for installed kernel specs and return them
@@ -137,10 +131,6 @@ export class KernelFinder implements IKernelFinder {
 
         // ! as the has and set above verify that we have a return here
         return this.workspaceToKernels.get(workspaceFolderId)!;
-    }
-
-    private reuseExistingDefaultSpec(kernelMetadata: nbformat.IKernelspecMetadata): IJupyterKernelSpec {
-        return createDefaultKernelSpec(kernelMetadata.display_name);
     }
 
     private async findResourceKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
@@ -385,12 +375,6 @@ export class KernelFinder implements IKernelFinder {
         });
 
         return this.searchCache(kernelName);
-    }
-
-    private async getDefaultKernelSpec(resource: Resource): Promise<IJupyterKernelSpec> {
-        const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
-
-        return createDefaultKernelSpec(activeInterpreter?.displayName);
     }
 
     private async readCache(): Promise<void> {

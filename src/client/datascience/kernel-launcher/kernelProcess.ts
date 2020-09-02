@@ -12,7 +12,11 @@ import { Resource } from '../../common/types';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { findIndexOfConnectionFile, isPythonKernelConnection } from '../jupyter/kernels/helpers';
+import {
+    createDefaultKernelSpec,
+    findIndexOfConnectionFile,
+    isPythonKernelConnection
+} from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IDataScienceFileSystem, IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
@@ -144,8 +148,15 @@ export class KernelProcess implements IKernelProcess {
             return this._launchKernelSpec;
         }
 
-        // We always expect a kernel spec, even when launching a Python process, because we generate a dummy `kernelSpec`.
-        const kernelSpec = this._kernelConnectionMetadata.kernelSpec;
+        let kernelSpec = this._kernelConnectionMetadata.kernelSpec;
+        // If there is no kernelspec & when launching a Python process, generate a dummy `kernelSpec`
+        if (!kernelSpec && this._kernelConnectionMetadata.kind === 'startUsingPythonInterpreter') {
+            kernelSpec = createDefaultKernelSpec(
+                this._kernelConnectionMetadata.interpreter.displayName ||
+                    this._kernelConnectionMetadata.interpreter.path
+            );
+        }
+        // We always expect a kernel spec.
         if (!kernelSpec) {
             throw new Error('KernelSpec cannot be empty in KernelProcess.ts');
         }
