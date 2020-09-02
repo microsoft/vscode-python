@@ -4,7 +4,7 @@ import { anyString, instance, mock, when } from 'ts-mockito';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
 import * as Telemetry from '../../client/telemetry';
-import { setExtensionInstallTelemetryProperties } from '../../client/telemetry/extensionInstallTelemtry';
+import { setExtensionInstallTelemetryProperties } from '../../client/telemetry/extensionInstallTelemetry';
 
 suite('Extension Install Telemetry', () => {
     let fs: IFileSystem;
