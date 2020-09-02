@@ -4,7 +4,7 @@
 
 import { IServiceManager } from '../../ioc/types';
 import { IWebviewPanelProvider } from '../application/types';
-import { WebPanelProvider } from '../application/webPanels/webPanelProvider';
+import { WebviewPanelProvider } from '../application/webPanels/webviewPanelProvider';
 import { ProductType } from '../types';
 import { InstallationChannelManager } from './channelManager';
 import { CondaInstaller } from './condaInstaller';
@@ -75,5 +75,5 @@ export function registerTypes(serviceManager: IServiceManager) {
         DataScienceProductPathService,
         ProductType.DataScience
     );
-    serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebPanelProvider);
+    serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
 }

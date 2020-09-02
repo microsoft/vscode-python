@@ -89,7 +89,7 @@ import {
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../client/common/application/types';
-import { WebPanelProvider } from '../../client/common/application/webPanels/webPanelProvider';
+import { WebviewPanelProvider } from '../../client/common/application/webPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -464,7 +464,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         architecture: Architecture.x64
     };
 
-    private webPanelProvider = mock(WebPanelProvider);
+    private webPanelProvider = mock(WebviewPanelProvider);
     private settingsMap = new Map<string, any>();
     private configMap = new Map<string, MockWorkspaceConfiguration>();
     private emptyConfig = new MockWorkspaceConfiguration();

@@ -7,10 +7,10 @@ import { Uri } from 'vscode';
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../types';
 import { IWebviewPanel, IWebviewPanelOptions, IWebviewPanelProvider } from '../types';
-import { WebPanel } from './webPanel';
+import { WebviewPanel } from './webviewPanel';
 
 @injectable()
-export class WebPanelProvider implements IWebviewPanelProvider {
+export class WebviewPanelProvider implements IWebviewPanelProvider {
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IFileSystem) private readonly fs: IFileSystem,
@@ -25,6 +25,6 @@ export class WebPanelProvider implements IWebviewPanelProvider {
         if (Array.isArray(options.additionalPaths)) {
             additionalRootPaths.push(...options.additionalPaths.map((item) => Uri.file(item)));
         }
-        return new WebPanel(this.fs, this.disposableRegistry, options, additionalRootPaths);
+        return new WebviewPanel(this.fs, this.disposableRegistry, options, additionalRootPaths);
     }
 }

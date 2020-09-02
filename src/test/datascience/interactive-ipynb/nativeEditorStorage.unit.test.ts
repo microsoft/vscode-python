@@ -17,8 +17,8 @@ import {
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../../client/common/application/types';
-import { WebPanel } from '../../../client/common/application/webPanels/webPanel';
-import { WebPanelProvider } from '../../../client/common/application/webPanels/webPanelProvider';
+import { WebviewPanel } from '../../../client/common/application/webPanels/webviewPanel';
+import { WebviewPanelProvider } from '../../../client/common/application/webPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
@@ -255,7 +255,7 @@ suite('DataScience - Native Editor Storage', () => {
         docManager = mock(DocumentManager);
         workspace = mock(WorkspaceService);
         interpreterService = mock(InterpreterService);
-        webPanelProvider = mock(WebPanelProvider);
+        webPanelProvider = mock(WebviewPanelProvider);
         executionProvider = mock(JupyterExecutionFactory);
         trustService = mock(TrustService);
         const settings = mock(PythonSettings);
@@ -291,7 +291,7 @@ suite('DataScience - Native Editor Storage', () => {
         when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
 
         let listener: IWebPanelMessageListener;
-        const webPanel = mock(WebPanel);
+        const webPanel = mock(WebviewPanel);
         const startTime = Date.now();
         class WebPanelCreateMatcher extends Matcher {
             public match(value: any) {

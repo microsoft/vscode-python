@@ -4,7 +4,7 @@
 import '../../extensions';
 
 import * as path from 'path';
-import { Event, EventEmitter, Uri, Webview, WebviewOptions, WebviewPanel, window } from 'vscode';
+import { Event, EventEmitter, Uri, Webview, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
 import { Identifiers } from '../../../datascience/constants';
 import { traceError } from '../../logger';
 import { IFileSystem } from '../../platform/types';
@@ -12,8 +12,8 @@ import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
 import { IWebviewPanel, IWebviewPanelOptions, WebPanelMessage } from '../types';
 
-export class WebPanel implements IWebviewPanel {
-    private panel: WebviewPanel | undefined;
+export class WebviewPanel implements IWebviewPanel {
+    private panel: vscodeWebviewPanel | undefined;
     private loadPromise: Promise<void>;
     private loadFailedEmitter = new EventEmitter<void>();
 
