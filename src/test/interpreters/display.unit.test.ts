@@ -273,7 +273,7 @@ suite('Interpreters Display', () => {
         statusBar.verify((s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!), TypeMoq.Times.once());
         statusBar.verify((s) => (s.tooltip = TypeMoq.It.isValue(pythonPath)!), TypeMoq.Times.atLeastOnce());
     });
-    suite('Visibilityxxx', () => {
+    suite('Visibility', () => {
         const resource = Uri.file('x');
         setup(() => {
             const workspaceFolder = Uri.file('workspace');
