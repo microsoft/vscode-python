@@ -13,7 +13,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import {
     IDocumentManager,
-    IWebPanelMessageListener,
+    IWebviewPanelMessageListener,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../../client/common/application/types';
@@ -290,7 +290,7 @@ suite('DataScience - Native Editor Storage', () => {
         testIndex += 1;
         when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
 
-        let listener: IWebPanelMessageListener;
+        let listener: IWebviewPanelMessageListener;
         const webPanel = mock(WebviewPanel);
         const startTime = Date.now();
         class WebPanelCreateMatcher extends Matcher {

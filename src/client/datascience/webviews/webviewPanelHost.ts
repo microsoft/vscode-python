@@ -7,8 +7,8 @@ import { injectable, unmanaged } from 'inversify';
 import { ConfigurationChangeEvent, extensions, Uri, ViewColumn, WebviewPanel, WorkspaceConfiguration } from 'vscode';
 
 import {
-    IWebPanelMessageListener,
     IWebviewPanel,
+    IWebviewPanelMessageListener,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -33,7 +33,7 @@ export abstract class WebviewPanelHost<IMapping> implements IDisposable {
     private disposed: boolean = false;
     private webPanel: IWebviewPanel | undefined;
     private webPanelInit: Deferred<void> | undefined = createDeferred<void>();
-    private messageListener: IWebPanelMessageListener;
+    private messageListener: IWebviewPanelMessageListener;
     private themeIsDarkPromise: Deferred<boolean> | undefined = createDeferred<boolean>();
     private startupStopwatch = new StopWatch();
     private readonly _disposables: IDisposable[] = [];
@@ -49,7 +49,7 @@ export abstract class WebviewPanelHost<IMapping> implements IDisposable {
             callback: (message: string, payload: {}) => void,
             viewChanged: (panel: IWebviewPanel) => void,
             disposed: () => void
-        ) => IWebPanelMessageListener,
+        ) => IWebviewPanelMessageListener,
         @unmanaged() private rootPath: string,
         @unmanaged() private scripts: string[],
         @unmanaged() private _title: string,

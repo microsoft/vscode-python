@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IWebPanelMessageListener, IWebviewPanel } from '../application/types';
+import { IWebviewPanel, IWebviewPanelMessageListener } from '../application/types';
 import '../extensions';
 
 // tslint:disable:no-any
 // This class listens to messages that come from the local Python Interactive window
-export class StartPageMessageListener implements IWebPanelMessageListener {
+export class StartPageMessageListener implements IWebviewPanelMessageListener {
     private disposedCallback: () => void;
     private callback: (message: string, payload: any) => void;
     private viewChanged: (panel: IWebviewPanel) => void;

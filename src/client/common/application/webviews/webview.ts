@@ -7,7 +7,7 @@ import * as path from 'path';
 import { Uri, Webview as vscodeWebview } from 'vscode';
 import { Identifiers } from '../../../datascience/constants';
 import { IFileSystem } from '../../platform/types';
-import { IWebview, IWebviewOptions, WebPanelMessage } from '../types';
+import { IWebview, IWebviewOptions, WebviewMessage } from '../types';
 
 // Wrapper over a vscode webview. To be used with either WebviewPanel or WebviewView
 export class Webview implements IWebview {
@@ -22,7 +22,7 @@ export class Webview implements IWebview {
         return this.webview.asWebviewUri(localResource);
     }
 
-    public postMessage(message: WebPanelMessage) {
+    public postMessage(message: WebviewMessage) {
         if (this.webview) {
             this.webview.postMessage(message);
         }

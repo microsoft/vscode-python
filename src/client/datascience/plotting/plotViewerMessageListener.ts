@@ -3,12 +3,12 @@
 'use strict';
 import '../../common/extensions';
 
-import { IWebPanelMessageListener, IWebviewPanel } from '../../common/application/types';
+import { IWebviewPanel, IWebviewPanelMessageListener } from '../../common/application/types';
 
 // tslint:disable:no-any
 
 // This class listens to messages that come from the local Plot Viewer window
-export class PlotViewerMessageListener implements IWebPanelMessageListener {
+export class PlotViewerMessageListener implements IWebviewPanelMessageListener {
     private disposedCallback: () => void;
     private callback: (message: string, payload: any) => void;
     private viewChanged: (panel: IWebviewPanel) => void;

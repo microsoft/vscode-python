@@ -1031,22 +1031,24 @@ export interface IApplicationEnvironment {
     readonly uriScheme: string;
 }
 
-export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
-export interface IWebPanelMessageListener extends IAsyncDisposable {
+interface IWebviewMessageListener {
     /**
-     * Listens to web panel messages
+     * Listens to webview messages
      * @param message: the message being sent
      * @param payload: extra data that came with the message
-     * @return A IWebPanel that can be used to show html pages.
      */
     onMessage(message: string, payload: any): void;
+}
+
+export const IWebviewPanelMessageListener = Symbol('IWebviewPanelMessageListener');
+export interface IWebviewPanelMessageListener extends IWebviewMessageListener, IAsyncDisposable {
     /**
      * Listens to web panel state changes
      */
     onChangeViewState(panel: IWebviewPanel): void;
 }
 
-export type WebPanelMessage = {
+export type WebviewMessage = {
     /**
      * Message type
      */
@@ -1096,7 +1098,7 @@ export interface IWebviewPanel {
     /**
      * Sends a message to the hosted html page
      */
-    postMessage(message: WebPanelMessage): void;
+    postMessage(message: WebviewMessage): void;
 
     /**
      * Attempts to close the panel if it's visible
@@ -1121,7 +1123,7 @@ export interface IWebviewOptions {
 
 export interface IWebviewPanelOptions extends IWebviewOptions {
     viewColumn: ViewColumn;
-    listener: IWebPanelMessageListener;
+    listener: IWebviewPanelMessageListener;
     title: string;
     /**
      * Additional paths apart from cwd and rootPath, that webview would allow loading resources/files from.

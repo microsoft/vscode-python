@@ -2,10 +2,10 @@ import { ReactWrapper } from 'enzyme';
 import { noop } from 'lodash';
 import { Event, EventEmitter, Uri } from 'vscode';
 import {
-    IWebPanelMessageListener,
     IWebviewPanel,
+    IWebviewPanelMessageListener,
     IWebviewPanelOptions,
-    WebPanelMessage
+    WebviewMessage
 } from '../../client/common/application/types';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
@@ -40,7 +40,7 @@ export interface IMountedWebView extends IWebviewPanel, IDisposable {
     readonly id: string;
     readonly wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
     readonly onDisposed: Event<void>;
-    postMessage(ev: WebPanelMessage): void;
+    postMessage(ev: WebviewMessage): void;
     changeViewState(active: boolean, visible: boolean): void;
     addMessageListener(callback: (m: string, p: any) => void): void;
     removeMessageListener(callback: (m: string, p: any) => void): void;
@@ -51,7 +51,7 @@ export interface IMountedWebView extends IWebviewPanel, IDisposable {
 export class MountedWebView implements IMountedWebView, IDisposable {
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
     private missedMessages: any[] = [];
-    private webPanelListener: IWebPanelMessageListener | undefined;
+    private webPanelListener: IWebviewPanelMessageListener | undefined;
     private reactMessageCallback: ((ev: MessageEvent) => void) | undefined;
     private extraListeners: ((m: string, p: any) => void)[] = [];
     private disposed = false;
@@ -187,7 +187,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
     public isVisible(): boolean {
         return this.visible;
     }
-    public postMessage(m: WebPanelMessage): void {
+    public postMessage(m: WebviewMessage): void {
         // Actually send to the UI
         if (this.reactMessageCallback) {
             // tslint:disable-next-line: no-require-imports

@@ -6,7 +6,7 @@ import '../../common/extensions';
 import * as vscode from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi, IWebPanelMessageListener, IWebviewPanel } from '../../common/application/types';
+import { ILiveShareApi, IWebviewPanel, IWebviewPanelMessageListener } from '../../common/application/types';
 import { Identifiers, LiveShare } from '../constants';
 import { PostOffice } from '../liveshare/postOffice';
 import { InteractiveWindowMessages, InteractiveWindowRemoteMessages } from './interactiveWindowTypes';
@@ -14,7 +14,7 @@ import { InteractiveWindowMessages, InteractiveWindowRemoteMessages } from './in
 // tslint:disable:no-any
 
 // This class listens to messages that come from the local Python Interactive window
-export class InteractiveWindowMessageListener implements IWebPanelMessageListener {
+export class InteractiveWindowMessageListener implements IWebviewPanelMessageListener {
     private postOffice: PostOffice;
     private disposedCallback: () => void;
     private callback: (message: string, payload: any) => void;
