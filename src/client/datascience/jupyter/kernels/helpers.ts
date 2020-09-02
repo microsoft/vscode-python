@@ -15,6 +15,7 @@ import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { ReadWrite } from '../../../common/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
+    DefaultKernelConnectionMetadata,
     KernelConnectionMetadata,
     KernelSpecConnectionMetadata,
     LiveKernelConnectionMetadata,
@@ -34,7 +35,10 @@ export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpe
     return kernelSpec.argv.indexOf(connectionFilePlaceholder);
 }
 
-type ConnectionWithKernelSpec = KernelSpecConnectionMetadata | PythonKernelConnectionMetadata;
+type ConnectionWithKernelSpec =
+    | KernelSpecConnectionMetadata
+    | PythonKernelConnectionMetadata
+    | DefaultKernelConnectionMetadata;
 export function kernelConnectionMetadataHasKernelSpec(
     connectionMetadata: KernelConnectionMetadata
 ): connectionMetadata is ConnectionWithKernelSpec {
