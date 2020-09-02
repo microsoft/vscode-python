@@ -147,7 +147,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             undefined,
             getNotebookMetadata(document),
             true,
-            token
+            token,
+            true
         );
     }
     private async onDidChangeActiveNotebookKernel({

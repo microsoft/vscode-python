@@ -48,7 +48,8 @@ export interface IKernelFinder {
     findKernelSpec(
         interpreterUri: InterpreterUri,
         kernelSpecMetadata?: nbformat.IKernelspecMetadata,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        ignoreDependencyCheck?: boolean
     ): Promise<IJupyterKernelSpec>;
     listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]>;
 }

@@ -166,7 +166,8 @@ export class KernelSelector implements IKernelSelectionUsage {
         sessionManager?: IJupyterSessionManager,
         notebookMetadata?: nbformat.INotebookMetadata,
         disableUI?: boolean,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        ignoreDependencyCheck?: boolean
     ): Promise<
         KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | DefaultKernelConnectionMetadata | undefined
     > {
@@ -199,7 +200,12 @@ export class KernelSelector implements IKernelSelectionUsage {
                 cancelToken
             );
         } else if (type === 'raw') {
-            selection = await this.getKernelForLocalRawConnection(resource, notebookMetadata, cancelToken);
+            selection = await this.getKernelForLocalRawConnection(
+                resource,
+                notebookMetadata,
+                cancelToken,
+                ignoreDependencyCheck
+            );
         }
 
         // If still not found, log an error (this seems possible for some people, so use the default)
@@ -484,10 +490,16 @@ export class KernelSelector implements IKernelSelectionUsage {
     private async getKernelForLocalRawConnection(
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        ignoreDependencyCheck?: boolean
     ): Promise<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | undefined> {
         // First use our kernel finder to locate a kernelspec on disk
-        const kernelSpec = await this.kernelFinder.findKernelSpec(resource, notebookMetadata?.kernelspec, cancelToken);
+        const kernelSpec = await this.kernelFinder.findKernelSpec(
+            resource,
+            notebookMetadata?.kernelspec,
+            cancelToken,
+            ignoreDependencyCheck
+        );
         if (!kernelSpec) {
             return;
         }
