@@ -56,12 +56,16 @@ suite('pyenvs watchers - PythonEnvsWatchers', () => {
 
 suite('pyenvs watchers - DisableableEnvsWatcher', () => {
     test('enabled by default', () => {
+        const event1: PythonEnvsChangedEvent = {};
+        const expected = [event1];
         const sub = new PythonEnvsWatcher();
         const watcher = new DisableableEnvsWatcher(sub);
+        const events: PythonEnvsChangedEvent[] = [];
+        watcher.onChanged((e) => events.push(e));
 
-        const enabled = watcher.isEnabled;
+        sub.fire(event1);
 
-        assert.ok(enabled);
+        assert.deepEqual(events, expected);
     });
 
     suite('onChanged', () => {
@@ -74,6 +78,7 @@ suite('pyenvs watchers - DisableableEnvsWatcher', () => {
             const events: PythonEnvsChangedEvent[] = [];
             watcher.onChanged((e) => events.push(e));
 
+            watcher.enable();
             sub.fire(event1);
             sub.fire(event2);
 
@@ -106,6 +111,7 @@ suite('pyenvs watchers - DisableableEnvsWatcher', () => {
             const events: PythonEnvsChangedEvent[] = [];
             watcher.onChanged((e) => events.push(e));
 
+            watcher.enable();
             sub.fire(event1);
             watcher.disable();
             sub.fire(event2);
