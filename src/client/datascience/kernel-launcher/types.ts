@@ -49,7 +49,7 @@ export interface IKernelFinder {
         interpreterUri: InterpreterUri,
         kernelSpecMetadata?: nbformat.IKernelspecMetadata,
         cancelToken?: CancellationToken,
-        findForNativeNotebooks?: boolean
+        ignoreDependencyCheck?: boolean
     ): Promise<IJupyterKernelSpec | undefined>;
     listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]>;
 }

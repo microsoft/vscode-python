@@ -167,7 +167,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         notebookMetadata?: nbformat.INotebookMetadata,
         disableUI?: boolean,
         cancelToken?: CancellationToken,
-        findForNativeNotebooks?: boolean
+        ignoreDependencyCheck?: boolean
     ): Promise<
         KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | DefaultKernelConnectionMetadata | undefined
     > {
@@ -204,7 +204,7 @@ export class KernelSelector implements IKernelSelectionUsage {
                 resource,
                 notebookMetadata,
                 cancelToken,
-                findForNativeNotebooks
+                ignoreDependencyCheck
             );
         }
 
@@ -491,14 +491,14 @@ export class KernelSelector implements IKernelSelectionUsage {
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken,
-        findForNativeNotebooks?: boolean
+        ignoreDependencyCheck?: boolean
     ): Promise<KernelSpecConnectionMetadata | PythonKernelConnectionMetadata | undefined> {
         // First use our kernel finder to locate a kernelspec on disk
         const kernelSpec = await this.kernelFinder.findKernelSpec(
             resource,
             notebookMetadata?.kernelspec,
             cancelToken,
-            findForNativeNotebooks
+            ignoreDependencyCheck
         );
         const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
         if (!kernelSpec && !activeInterpreter) {

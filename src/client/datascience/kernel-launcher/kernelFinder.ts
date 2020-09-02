@@ -67,7 +67,7 @@ export class KernelFinder implements IKernelFinder {
         resource: Resource,
         kernelSpecMetadata?: nbformat.IKernelspecMetadata,
         cancelToken?: CancellationToken,
-        findForNativeNotebooks?: boolean
+        ignoreDependencyCheck?: boolean
     ): Promise<IJupyterKernelSpec | undefined> {
         await this.readCache();
         let foundKernel: IJupyterKernelSpec | undefined;
@@ -109,7 +109,7 @@ export class KernelFinder implements IKernelFinder {
         this.writeCache().ignoreErrors();
 
         // Verify that ipykernel is installed into the given kernelspec interpreter
-        return findForNativeNotebooks || !foundKernel ? foundKernel : this.verifyIpyKernel(foundKernel, cancelToken);
+        return ignoreDependencyCheck || !foundKernel ? foundKernel : this.verifyIpyKernel(foundKernel, cancelToken);
     }
 
     // Search all our local file system locations for installed kernel specs and return them
