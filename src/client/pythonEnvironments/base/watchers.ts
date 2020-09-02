@@ -22,8 +22,8 @@ export class PythonEnvsWatchers {
     }
 }
 
-// tslint:disable-next-line:no-any
-type EnvsEventListener = (e: PythonEnvsChangedEvent) => any;
+// This matches the `vscode.Event` arg.
+type EnvsEventListener = (e: PythonEnvsChangedEvent) => unknown;
 
 /**
  * A watcher wrapper that can be disabled.
@@ -51,8 +51,8 @@ export class DisableableEnvsWatcher {
         this.enabled = false;
     }
 
-    // tslint:disable-next-line:no-any
-    public onChanged(listener: EnvsEventListener, thisArgs?: any, disposables?: Disposable[]): Disposable {
+    // This matches the signature of `vscode.Event`.
+    public onChanged(listener: EnvsEventListener, thisArgs?: unknown, disposables?: Disposable[]): Disposable {
         return this.wrapped.onChanged(
             (e: PythonEnvsChangedEvent) => {
                 if (this.enabled) {
