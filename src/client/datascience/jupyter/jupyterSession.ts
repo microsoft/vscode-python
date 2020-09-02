@@ -37,7 +37,8 @@ export class JupyterSession extends BaseJupyterSession {
         private readonly outputChannel: IOutputChannel,
         private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
-        readonly workingDirectory: string
+        readonly workingDirectory: string,
+        private readonly idleTimeout: number
     ) {
         super(restartSessionUsed, workingDirectory);
         this.kernelConnectionMetadata = kernelSpec;
@@ -106,7 +107,6 @@ export class JupyterSession extends BaseJupyterSession {
         if (!session || !this.contentsManager || !this.sessionManager) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
-
         let result: ISessionWithSocket | undefined;
         let tryCount = 0;
         // tslint:disable-next-line: no-any
@@ -114,7 +114,7 @@ export class JupyterSession extends BaseJupyterSession {
         while (tryCount < 3) {
             try {
                 result = await this.createSession(session.serverSettings, kernelConnection, cancelToken);
-                await this.waitForIdleOnSession(result, 30000);
+                await this.waitForIdleOnSession(result, this.idleTimeout);
                 this.restartSessionCreated(result.kernel);
                 return result;
             } catch (exc) {
