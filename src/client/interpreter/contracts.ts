@@ -127,5 +127,5 @@ export const IInterpreterStatusbarVisibilityFilter = Symbol('IInterpreterStatusb
  */
 export interface IInterpreterStatusbarVisibilityFilter {
     readonly changed?: Event<void>;
-    readonly visible: boolean;
+    readonly hidden: boolean;
 }

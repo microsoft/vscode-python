@@ -4,11 +4,13 @@
 'use strict';
 
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { IInterpreterStatusbarVisibilityFilter } from '../../interpreter/contracts';
 import { IServiceManager } from '../../ioc/types';
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { NotebookContentProvider } from './contentProvider';
 import { NotebookIntegration } from './integration';
+import { InterpreterStatusBarVisibility } from './interpreterStatusBarVisbility';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { NotebookSurveyBanner, NotebookSurveyDataLogger } from './survey';
@@ -28,6 +30,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
     serviceManager.addSingleton<NotebookSurveyBanner>(NotebookSurveyBanner, NotebookSurveyBanner);
     serviceManager.addSingleton<VSCodeKernelPickerProvider>(VSCodeKernelPickerProvider, VSCodeKernelPickerProvider);
+    serviceManager.addSingleton<IInterpreterStatusbarVisibilityFilter>(
+        IInterpreterStatusbarVisibilityFilter,
+        InterpreterStatusBarVisibility
+    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookSurveyDataLogger
