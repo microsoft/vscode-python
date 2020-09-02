@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../common/extensions';
+import '../../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
 import { ConfigurationChangeEvent, extensions, Uri, ViewColumn, WebviewPanel, WorkspaceConfiguration } from 'vscode';
@@ -11,18 +11,18 @@ import {
     IWebviewPanel,
     IWebviewPanelProvider,
     IWorkspaceService
-} from '../common/application/types';
-import { isTestExecution } from '../common/constants';
-import { traceInfo } from '../common/logger';
-import { IConfigurationService, IDisposable, Resource } from '../common/types';
-import { createDeferred, Deferred } from '../common/utils/async';
-import * as localize from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
-import { StopWatch } from '../common/utils/stopWatch';
-import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { DefaultTheme, GatherExtension, Telemetry } from './constants';
-import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
-import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from './types';
+} from '../../common/application/types';
+import { isTestExecution } from '../../common/constants';
+import { traceInfo } from '../../common/logger';
+import { IConfigurationService, IDisposable, Resource } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
+import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { DefaultTheme, GatherExtension, Telemetry } from '../constants';
+import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
+import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewPanelHost<IMapping> implements IDisposable {

@@ -16,7 +16,7 @@ import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { ICodeCssGenerator, IDataScienceFileSystem, IPlotViewer, IThemeFinder } from '../types';
-import { WebviewPanelHost } from '../webviewPanelHost';
+import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { PlotViewerMessageListener } from './plotViewerMessageListener';
 import { IExportPlotRequest, IPlotViewerMapping, PlotViewerMessages } from './types';
 

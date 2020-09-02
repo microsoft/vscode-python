@@ -18,7 +18,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
 import { ICodeCssGenerator, IThemeFinder } from '../types';
-import { WebviewPanelHost } from '../webviewPanelHost';
+import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
     DataViewerMessages,

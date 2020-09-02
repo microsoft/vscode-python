@@ -105,7 +105,7 @@ import {
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
-import { WebviewPanelHost } from '../webviewPanelHost';
+import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
 

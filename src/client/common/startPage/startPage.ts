@@ -9,7 +9,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Commands, Telemetry } from '../../datascience/constants';
 import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../../datascience/types';
-import { WebviewPanelHost } from '../../datascience/webviewPanelHost';
+import { WebviewPanelHost } from '../../datascience/webviews/webviewPanelHost';
 import { sendTelemetryEvent } from '../../telemetry';
 import {
     IApplicationEnvironment,
