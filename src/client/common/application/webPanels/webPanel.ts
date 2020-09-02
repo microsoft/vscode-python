@@ -10,9 +10,9 @@ import { traceError } from '../../logger';
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
-import { IWebPanel, IWebPanelOptions, WebPanelMessage } from '../types';
+import { IWebPanelOptions, IWebviewPanel, WebPanelMessage } from '../types';
 
-export class WebPanel implements IWebPanel {
+export class WebPanel implements IWebviewPanel {
     private panel: WebviewPanel | undefined;
     private loadPromise: Promise<void>;
     private loadFailedEmitter = new EventEmitter<void>();

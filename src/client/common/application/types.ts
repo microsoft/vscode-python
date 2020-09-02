@@ -1043,7 +1043,7 @@ export interface IWebPanelMessageListener extends IAsyncDisposable {
     /**
      * Listens to web panel state changes
      */
-    onChangeViewState(panel: IWebPanel): void;
+    onChangeViewState(panel: IWebviewPanel): void;
 }
 
 export type WebPanelMessage = {
@@ -1058,9 +1058,13 @@ export type WebPanelMessage = {
     payload?: any;
 };
 
+// Wraps a VS Code webview
+export const IWebview = Symbol('IWebview');
+export interface IWebview {}
+
 // Wraps the VS Code webview panel
-export const IWebPanel = Symbol('IWebPanel');
-export interface IWebPanel {
+export const IWebviewPanel = Symbol('IWebviewPanel');
+export interface IWebviewPanel {
     /**
      * Event is fired when the load for a web panel fails
      */
@@ -1137,7 +1141,7 @@ export interface IWebPanelProvider {
      * @returns {IWebPanel}
      * @memberof IWebPanelProvider
      */
-    create(options: IWebPanelOptions): Promise<IWebPanel>;
+    create(options: IWebPanelOptions): Promise<IWebviewPanel>;
 }
 
 // Wraps the vsls liveshare API

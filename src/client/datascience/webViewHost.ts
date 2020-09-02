@@ -6,7 +6,12 @@ import '../common/extensions';
 import { injectable, unmanaged } from 'inversify';
 import { ConfigurationChangeEvent, extensions, Uri, ViewColumn, WebviewPanel, WorkspaceConfiguration } from 'vscode';
 
-import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
+import {
+    IWebPanelMessageListener,
+    IWebPanelProvider,
+    IWebviewPanel,
+    IWorkspaceService
+} from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import { traceInfo } from '../common/logger';
 import { IConfigurationService, IDisposable, Resource } from '../common/types';
@@ -26,7 +31,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
     }
     protected viewState: { visible: boolean; active: boolean } = { visible: false, active: false };
     private disposed: boolean = false;
-    private webPanel: IWebPanel | undefined;
+    private webPanel: IWebviewPanel | undefined;
     private webPanelInit: Deferred<void> | undefined = createDeferred<void>();
     private messageListener: IWebPanelMessageListener;
     private themeIsDarkPromise: Deferred<boolean> | undefined = createDeferred<boolean>();
@@ -42,7 +47,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         @unmanaged()
         messageListenerCtor: (
             callback: (message: string, payload: {}) => void,
-            viewChanged: (panel: IWebPanel) => void,
+            viewChanged: (panel: IWebviewPanel) => void,
             disposed: () => void
         ) => IWebPanelMessageListener,
         @unmanaged() private rootPath: string,
@@ -303,7 +308,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         return defaultValue;
     }
 
-    private webPanelViewStateChanged = (webPanel: IWebPanel) => {
+    private webPanelViewStateChanged = (webPanel: IWebviewPanel) => {
         const visible = webPanel.isVisible();
         const active = webPanel.isActive();
         const current = { visible, active };

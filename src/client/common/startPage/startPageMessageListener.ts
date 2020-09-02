@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IWebPanel, IWebPanelMessageListener } from '../application/types';
+import { IWebPanelMessageListener, IWebviewPanel } from '../application/types';
 import '../extensions';
 
 // tslint:disable:no-any
@@ -9,11 +9,11 @@ import '../extensions';
 export class StartPageMessageListener implements IWebPanelMessageListener {
     private disposedCallback: () => void;
     private callback: (message: string, payload: any) => void;
-    private viewChanged: (panel: IWebPanel) => void;
+    private viewChanged: (panel: IWebviewPanel) => void;
 
     constructor(
         callback: (message: string, payload: any) => void,
-        viewChanged: (panel: IWebPanel) => void,
+        viewChanged: (panel: IWebviewPanel) => void,
         disposed: () => void
     ) {
         // Save our dispose callback so we remove our interactive window
@@ -35,7 +35,7 @@ export class StartPageMessageListener implements IWebPanelMessageListener {
         this.callback(message, payload);
     }
 
-    public onChangeViewState(panel: IWebPanel) {
+    public onChangeViewState(panel: IWebviewPanel) {
         // Forward this onto our callback
         this.viewChanged(panel);
     }

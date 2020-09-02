@@ -2,9 +2,9 @@ import { ReactWrapper } from 'enzyme';
 import { noop } from 'lodash';
 import { Event, EventEmitter, Uri } from 'vscode';
 import {
-    IWebPanel,
     IWebPanelMessageListener,
     IWebPanelOptions,
+    IWebviewPanel,
     WebPanelMessage
 } from '../../client/common/application/types';
 import { traceError, traceInfo } from '../../client/common/logger';
@@ -36,7 +36,7 @@ export type WaitForMessageOptions = {
 };
 
 // tslint:disable: no-any
-export interface IMountedWebView extends IWebPanel, IDisposable {
+export interface IMountedWebView extends IWebviewPanel, IDisposable {
     readonly id: string;
     readonly wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
     readonly onDisposed: Event<void>;
