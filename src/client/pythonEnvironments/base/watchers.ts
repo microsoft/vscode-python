@@ -5,10 +5,12 @@ import { Disposable, Event } from 'vscode';
 import { IPythonEnvsWatcher, PythonEnvsChangedEvent, PythonEnvsWatcher } from './watcher';
 
 /**
- * A wrapper around a set of watchers.
+ * A wrapper around a set of watchers, exposing them as a single watcher.
  *
  * If any of the wrapped watchers emits an event then this wrapper
  * emits that event.
+ *
+ * @implements IPythonEnvsWatcher
  */
 export class PythonEnvsWatchers {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
@@ -29,6 +31,8 @@ type EnvsEventListener = (e: PythonEnvsChangedEvent) => unknown;
  * A watcher wrapper that can be disabled.
  *
  * If disabled, events emitted by the wrapped watcher are discarded.
+ *
+ * @implements IPythonEnvsWatcher
  */
 export class DisableableEnvsWatcher {
     private enabled = true;

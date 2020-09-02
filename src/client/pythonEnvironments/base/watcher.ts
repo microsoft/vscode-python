@@ -49,6 +49,8 @@ export interface IPythonEnvsWatcher<E extends BasicPythonEnvsChangedEvent = Pyth
  * but instead keep a private watcher property.  The rule of thumb
  * is to follow whether or not consumers of *that* class should be able
  * to trigger events (via `fire()`).
+ *
+ * @implements IPythonEnvsWatcher
  */
 class WatcherBase<T> {
     /**
@@ -69,10 +71,24 @@ class WatcherBase<T> {
     }
 }
 
+// The use cases for BasicPythonEnvsWatcher are currently hypothetical.
+// However, there's a real chance they may prove useful for the concrete
+// locators.  Adding BasicPythonEnvsWatcher later will be much harder
+// than removing it later, so we're leaving it for now.
+
 /**
  * A watcher for the basic Python environments events.
  *
- * The same rule-of-thumb for subclassing `WatcherBase` applies here.
+ * This should be used only in low-level cases, with the most
+ * rudimentary watchers.  Most of the time `PythonEnvsWatcher`
+ * should be used instead.
+ *
+ * Note that in most cases classes will not inherit from this classes,
+ * but instead keep a private watcher property.  The rule of thumb
+ * is to follow whether or not consumers of *that* class should be able
+ * to trigger events (via `fire()`).
+ *
+ * @implements IPythonEnvsWatcher
  */
 export class BasicPythonEnvsWatcher extends WatcherBase<BasicPythonEnvsChangedEvent> {
     /**
@@ -86,7 +102,15 @@ export class BasicPythonEnvsWatcher extends WatcherBase<BasicPythonEnvsChangedEv
 /**
  * A general-use watcher for Python environments events.
  *
- * The same rule-of-thumb for subclassing `WatcherBase` applies here.
+ * In most cases this is the class you will want to use or subclass.
+ * Only in low-level cases should you consider using `BasicPythonEnvsWatcher`.
+ *
+ * Note that in most cases classes will not inherit from this classes,
+ * but instead keep a private watcher property.  The rule of thumb
+ * is to follow whether or not consumers of *that* class should be able
+ * to trigger events (via `fire()`).
+ *
+ * @implements IPythonEnvsWatcher
  */
 export class PythonEnvsWatcher extends WatcherBase<PythonEnvsChangedEvent> {
     /**
