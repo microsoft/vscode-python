@@ -11,6 +11,8 @@
 
 1. Fixed connection to a Compute Instance from the quickpicks history options.
    ([#13387](https://github.com/Microsoft/vscode-python/issues/13387))
+1. Fixed the behavior of the 'python.showStartPage' setting.
+   ([#13347](https://github.com/microsoft/vscode-python/issues/13347))
 
 ### Thanks
 
