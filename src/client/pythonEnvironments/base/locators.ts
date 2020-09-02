@@ -7,7 +7,7 @@ import { ILocator, NOOP_ITERATOR, PythonEnvsIterator, PythonLocatorQuery } from 
 import { DisableableEnvsWatcher, PythonEnvsWatchers } from './watchers';
 
 /**
- * A wrapper around a set of locators.
+ * A wrapper around a set of locators, exposing them as a single locator.
  *
  * Events and iterator results are combined.
  */
@@ -37,6 +37,10 @@ export class Locators extends PythonEnvsWatchers implements ILocator {
 
 /**
  * A locator wrapper that can be disabled.
+ *
+ * If disabled, events emitted by the wrapped locator are discarded,
+ * `iterEnvs()` yields nothing, and `resolveEnv()` already returns
+ * `undefined`.
  */
 export class DisableableLocator extends DisableableEnvsWatcher implements ILocator {
     constructor(
