@@ -136,11 +136,11 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     }
 
     public async _showWarningAndOptionallyShowOutput() {
-        const warningPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
+        const neverShowAgain = this.persistentStateFactory.createGlobalPersistentState(
             doNotDisplayPromptStateKey,
-            true
+            false
         );
-        if (!warningPromptEnabled.value) {
+        if (neverShowAgain.value) {
             return;
         }
         const selection = await this.shell.showWarningMessage(
@@ -151,7 +151,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         if (selection === Common.openOutputPanel()) {
             this.output.show(true);
         } else if (selection === Common.doNotShowAgain()) {
-            await warningPromptEnabled.updateValue(false);
+            await neverShowAgain.updateValue(true);
         }
     }
 

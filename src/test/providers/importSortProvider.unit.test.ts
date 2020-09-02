@@ -643,11 +643,11 @@ suite('Import Sort Provider', () => {
     });
 
     test('If user clicks show output on the isort5 warning prompt, show the Python output', async () => {
-        const warningPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+        const neverShowAgain = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         persistentStateFactory
-            .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), true))
-            .returns(() => warningPromptEnabled.object);
-        warningPromptEnabled.setup((p) => p.value).returns(() => true);
+            .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), false))
+            .returns(() => neverShowAgain.object);
+        neverShowAgain.setup((p) => p.value).returns(() => false);
         shell
             .setup((s) =>
                 s.showWarningMessage(
@@ -662,44 +662,34 @@ suite('Import Sort Provider', () => {
         output.verifyAll();
     });
 
-    test('If user clicks do not show again on the isort5 warning prompt, disable the prompt', async () => {
-        const warningPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+    test('If user clicks do not show again on the isort5 warning prompt, do not show the prompt again', async () => {
+        const neverShowAgain = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         persistentStateFactory
-            .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), true))
-            .returns(() => warningPromptEnabled.object);
-        warningPromptEnabled.setup((p) => p.value).returns(() => true);
-        warningPromptEnabled
-            .setup((p) => p.updateValue(false))
-            .returns(() => Promise.resolve())
+            .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), false))
+            .returns(() => neverShowAgain.object);
+        let doNotShowAgainValue = false;
+        neverShowAgain.setup((p) => p.value).returns(() => doNotShowAgainValue);
+        neverShowAgain
+            .setup((p) => p.updateValue(true))
+            .returns(() => {
+                doNotShowAgainValue = true;
+                return Promise.resolve();
+            });
+        shell
+            .setup((s) =>
+                s.showWarningMessage(
+                    Diagnostics.checkIsort5UpgradeGuide(),
+                    Common.openOutputPanel(),
+                    Common.doNotShowAgain()
+                )
+            )
+            .returns(() => Promise.resolve(Common.doNotShowAgain()))
             .verifiable(TypeMoq.Times.once());
-        shell
-            .setup((s) =>
-                s.showWarningMessage(
-                    Diagnostics.checkIsort5UpgradeGuide(),
-                    Common.openOutputPanel(),
-                    Common.doNotShowAgain()
-                )
-            )
-            .returns(() => Promise.resolve(Common.doNotShowAgain()));
-        await sortProvider._showWarningAndOptionallyShowOutput();
-        warningPromptEnabled.verifyAll();
-    });
 
-    test('If the warning prompt is disabled, do not show the prompt and simply return', async () => {
-        const warningPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-        persistentStateFactory
-            .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), true))
-            .returns(() => warningPromptEnabled.object);
-        warningPromptEnabled.setup((p) => p.value).returns(() => false);
-        shell
-            .setup((s) =>
-                s.showWarningMessage(
-                    Diagnostics.checkIsort5UpgradeGuide(),
-                    Common.openOutputPanel(),
-                    Common.doNotShowAgain()
-                )
-            )
-            .verifiable(TypeMoq.Times.never());
+        await sortProvider._showWarningAndOptionallyShowOutput();
+        shell.verifyAll();
+
+        await sortProvider._showWarningAndOptionallyShowOutput();
         await sortProvider._showWarningAndOptionallyShowOutput();
         shell.verifyAll();
     });
