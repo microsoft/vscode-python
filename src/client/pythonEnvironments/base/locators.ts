@@ -11,7 +11,7 @@ import { DisableableEnvsWatcher, PythonEnvsWatchers } from './watchers';
  *
  * Events and iterator results are combined.
  */
-export class Locators extends PythonEnvsWatchers {
+export class Locators extends PythonEnvsWatchers implements ILocator {
     constructor(
         // The locators will be watched as well as iterated.
         private readonly locators: ReadonlyArray<ILocator>
@@ -38,7 +38,7 @@ export class Locators extends PythonEnvsWatchers {
 /**
  * A locator wrapper that can be disabled.
  */
-export class DisableableLocator extends DisableableEnvsWatcher {
+export class DisableableLocator extends DisableableEnvsWatcher implements ILocator {
     constructor(
         // To wrapp more than one use `Locators`.
         private readonly locator: ILocator

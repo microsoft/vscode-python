@@ -99,7 +99,7 @@ type EmitterForEvent<E> = E extends PythonEnvsChangedEvent ? IFullEmitter : IBas
  * By default `resolveEnv()` returns undefined.  Subclasses may override
  * the method to provide an implementation.
  */
-abstract class Locator<E extends BasicPythonEnvsChangedEvent> {
+abstract class Locator<E extends BasicPythonEnvsChangedEvent> implements ILocator<E> {
     public readonly onChanged: Event<E>;
     protected readonly emitter: EmitterForEvent<E>;
     constructor(watcher: IPythonEnvsWatcher<E> & EmitterForEvent<E>) {
