@@ -117,6 +117,10 @@ abstract class Locator<E extends BasicPythonEnvsChangedEvent> implements ILocato
 /**
  * The base for locators that deal only with basic info for Python environments.
  *
+ * This should be used only in low-level cases, with the most
+ * rudimentary locators.  Most of the time `FullLocator` should
+ * be used instead.
+ *
  * Subclasses will call `this.emitter.fire()` or `this.emitter.trigger()`
  * to emit events.
  */
@@ -128,6 +132,9 @@ export abstract class BasicLocator extends Locator<BasicPythonEnvsChangedEvent> 
 
 /**
  * The base for locators that deal with full info for Python environments.
+ *
+ * In most cases this is the class you will want to use or subclass.
+ * Only in low-level cases should you consider using `BasicLocator`.
  *
  * Subclasses will call `this.emitter.fire()` or `this.emitter.trigger()`
  * to emit events.
