@@ -7,7 +7,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, EventEmitter } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../../client/common/application/types';
-import { WebviewPanelProvider } from '../../../client/common/application/webPanels/webviewPanelProvider';
+import { WebviewPanelProvider } from '../../../client/common/application/webviewPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';

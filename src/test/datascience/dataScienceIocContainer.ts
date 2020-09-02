@@ -89,7 +89,7 @@ import {
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../client/common/application/types';
-import { WebviewPanelProvider } from '../../client/common/application/webPanels/webviewPanelProvider';
+import { WebviewPanelProvider } from '../../client/common/application/webviewPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';

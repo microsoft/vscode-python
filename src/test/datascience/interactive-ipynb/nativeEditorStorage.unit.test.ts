@@ -17,8 +17,8 @@ import {
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../../client/common/application/types';
-import { WebviewPanel } from '../../../client/common/application/webPanels/webviewPanel';
-import { WebviewPanelProvider } from '../../../client/common/application/webPanels/webviewPanelProvider';
+import { WebviewPanel } from '../../../client/common/application/webviewPanels/webviewPanel';
+import { WebviewPanelProvider } from '../../../client/common/application/webviewPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';

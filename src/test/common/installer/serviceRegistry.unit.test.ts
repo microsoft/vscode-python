@@ -5,7 +5,7 @@
 
 import { instance, mock, verify } from 'ts-mockito';
 import { IWebviewPanelProvider } from '../../../client/common/application/types';
-import { WebviewPanelProvider } from '../../../client/common/application/webPanels/webviewPanelProvider';
+import { WebviewPanelProvider } from '../../../client/common/application/webviewPanels/webviewPanelProvider';
 import { InstallationChannelManager } from '../../../client/common/installer/channelManager';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { InsidersBuildInstaller, StableBuildInstaller } from '../../../client/common/installer/extensionBuildInstaller';
