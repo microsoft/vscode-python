@@ -3,38 +3,43 @@
 'use strict';
 import '../../extensions';
 
-import * as path from 'path';
-import { Event, EventEmitter, Uri, Webview, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
-import { Identifiers } from '../../../datascience/constants';
+import { Event, EventEmitter, Uri, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
 import { traceError } from '../../logger';
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
-import { IWebviewPanel, IWebviewPanelOptions, WebPanelMessage } from '../types';
+import { IWebviewPanel, IWebviewPanelOptions } from '../types';
+import { Webview } from '../webviews/webview';
 
-export class WebviewPanel implements IWebviewPanel {
+export class WebviewPanel extends Webview implements IWebviewPanel {
     private panel: vscodeWebviewPanel | undefined;
     private loadPromise: Promise<void>;
     private loadFailedEmitter = new EventEmitter<void>();
 
     constructor(
-        private fs: IFileSystem,
+        fs: IFileSystem,
         private disposableRegistry: IDisposableRegistry,
-        private options: IWebviewPanelOptions,
+        private panelOptions: IWebviewPanelOptions,
         additionalRootPaths: Uri[] = []
     ) {
+        super(fs, panelOptions);
+
         const webViewOptions: WebviewOptions = {
             enableScripts: true,
-            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd), ...additionalRootPaths]
+            localResourceRoots: [
+                Uri.file(this.panelOptions.rootPath),
+                Uri.file(this.panelOptions.cwd),
+                ...additionalRootPaths
+            ]
         };
-        if (options.webViewPanel) {
-            this.panel = options.webViewPanel;
+        if (panelOptions.webViewPanel) {
+            this.panel = panelOptions.webViewPanel;
             this.panel.webview.options = webViewOptions;
         } else {
             this.panel = window.createWebviewPanel(
-                options.title.toLowerCase().replace(' ', ''),
-                options.title,
-                { viewColumn: options.viewColumn, preserveFocus: true },
+                panelOptions.title.toLowerCase().replace(' ', ''),
+                panelOptions.title,
+                { viewColumn: panelOptions.viewColumn, preserveFocus: true },
                 {
                     retainContextWhenHidden: true,
                     enableFindWidget: true,
@@ -42,6 +47,9 @@ export class WebviewPanel implements IWebviewPanel {
                 }
             );
         }
+
+        this.webview = this.panel.webview;
+
         this.loadPromise = this.load();
     }
 
@@ -64,12 +72,6 @@ export class WebviewPanel implements IWebviewPanel {
             this.panel.dispose();
         }
     }
-    public asWebviewUri(localResource: Uri) {
-        if (!this.panel) {
-            throw new Error('WebView not initialized, too early to get a Uri');
-        }
-        return this.panel?.webview.asWebviewUri(localResource);
-    }
 
     public isVisible(): boolean {
         return this.panel ? this.panel.visible : false;
@@ -79,14 +81,8 @@ export class WebviewPanel implements IWebviewPanel {
         return this.panel ? this.panel.active : false;
     }
 
-    public postMessage(message: WebPanelMessage) {
-        if (this.panel && this.panel.webview) {
-            this.panel.webview.postMessage(message);
-        }
-    }
-
     public setTitle(newTitle: string) {
-        this.options.title = newTitle;
+        this.panelOptions.title = newTitle;
         if (this.panel) {
             this.panel.title = newTitle;
         }
@@ -96,40 +92,40 @@ export class WebviewPanel implements IWebviewPanel {
     private async load() {
         try {
             if (this.panel) {
-                const localFilesExist = await Promise.all(this.options.scripts.map((s) => this.fs.fileExists(s)));
+                const localFilesExist = await Promise.all(this.panelOptions.scripts.map((s) => this.fs.fileExists(s)));
                 if (localFilesExist.every((exists) => exists === true)) {
                     // Call our special function that sticks this script inside of an html page
                     // and translates all of the paths to vscode-resource URIs
-                    this.panel.webview.html = await this.generateLocalReactHtml(this.panel.webview);
+                    this.panel.webview.html = await this.generateLocalReactHtml();
 
                     // Reset when the current panel is closed
                     this.disposableRegistry.push(
                         this.panel.onDidDispose(() => {
                             this.panel = undefined;
-                            this.options.listener.dispose().ignoreErrors();
+                            this.panelOptions.listener.dispose().ignoreErrors();
                         })
                     );
 
                     this.disposableRegistry.push(
                         this.panel.webview.onDidReceiveMessage((message) => {
                             // Pass the message onto our listener
-                            this.options.listener.onMessage(message.type, message.payload);
+                            this.panelOptions.listener.onMessage(message.type, message.payload);
                         })
                     );
 
                     this.disposableRegistry.push(
                         this.panel.onDidChangeViewState((_e) => {
                             // Pass the state change onto our listener
-                            this.options.listener.onChangeViewState(this);
+                            this.panelOptions.listener.onChangeViewState(this);
                         })
                     );
 
                     // Set initial state
-                    this.options.listener.onChangeViewState(this);
+                    this.panelOptions.listener.onChangeViewState(this);
                 } else {
                     // Indicate that we can't load the file path
                     const badPanelString = localize.DataScience.badWebPanelFormatString();
-                    this.panel.webview.html = badPanelString.format(this.options.scripts.join(', '));
+                    this.panel.webview.html = badPanelString.format(this.panelOptions.scripts.join(', '));
                 }
             }
         } catch (error) {
@@ -138,58 +134,5 @@ export class WebviewPanel implements IWebviewPanel {
             traceError(`Error Loading WebPanel: ${error}`);
             this.loadFailedEmitter.fire();
         }
-    }
-
-    // tslint:disable-next-line:no-any
-    private async generateLocalReactHtml(webView: Webview) {
-        const uriBase = webView.asWebviewUri(Uri.file(this.options.cwd)).toString();
-        const uris = this.options.scripts.map((script) => webView.asWebviewUri(Uri.file(script)));
-        const testFiles = await this.fs.getFiles(this.options.rootPath);
-
-        // This method must be called so VSC is aware of files that can be pulled.
-        // Allow js and js.map files to be loaded by webpack in the webview.
-        testFiles
-            .filter((f) => f.toLowerCase().endsWith('.js') || f.toLowerCase().endsWith('.js.map'))
-            .forEach((f) => webView.asWebviewUri(Uri.file(f)));
-
-        const rootPath = webView.asWebviewUri(Uri.file(this.options.rootPath)).toString();
-        const fontAwesomePath = webView
-            .asWebviewUri(
-                Uri.file(
-                    path.join(this.options.rootPath, 'node_modules', 'font-awesome', 'css', 'font-awesome.min.css')
-                )
-            )
-            .toString();
-        return `<!doctype html>
-        <html lang="en">
-            <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
-                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob: ${
-                    webView.cspSource
-                }; default-src 'unsafe-inline' 'unsafe-eval' data: https: http: blob: ${webView.cspSource};">
-                <meta name="theme-color" content="#000000">
-                <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
-                <title>VS Code Python React UI</title>
-                <base href="${uriBase}${uriBase.endsWith('/') ? '' : '/'}"/>
-                <link rel="stylesheet" href="${fontAwesomePath}">
-                </head>
-            <body>
-                <noscript>You need to enable JavaScript to run this app.</noscript>
-                <div id="root"></div>
-                <script type="text/javascript">
-                    // Public path that will be used by webpack.
-                    window.__PVSC_Public_Path = "${rootPath}/";
-                    function resolvePath(relativePath) {
-                        if (relativePath && relativePath[0] == '.' && relativePath[1] != '.') {
-                            return "${uriBase}" + relativePath.substring(1);
-                        }
-
-                        return "${uriBase}" + relativePath;
-                    }
-                </script>
-                ${uris.map((uri) => `<script type="text/javascript" src="${uri}"></script>`).join('\n')}
-            </body>
-        </html>`;
     }
 }

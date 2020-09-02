@@ -1113,18 +1113,21 @@ export interface IWebviewPanel {
     updateCwd(cwd: string): void;
 }
 
-export interface IWebviewPanelOptions {
+export interface IWebviewOptions {
+    rootPath: string;
+    cwd: string;
+    scripts: string[];
+}
+
+export interface IWebviewPanelOptions extends IWebviewOptions {
     viewColumn: ViewColumn;
     listener: IWebPanelMessageListener;
     title: string;
-    rootPath: string;
     /**
      * Additional paths apart from cwd and rootPath, that webview would allow loading resources/files from.
      * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
      */
     additionalPaths?: string[];
-    scripts: string[];
-    cwd: string;
     // tslint:disable-next-line: no-any
     settings?: any;
     // Web panel to use if supplied by VS code instead
