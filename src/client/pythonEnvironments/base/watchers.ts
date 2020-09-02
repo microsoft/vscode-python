@@ -9,10 +9,8 @@ import { IPythonEnvsWatcher, PythonEnvsChangedEvent, PythonEnvsWatcher } from '.
  *
  * If any of the wrapped watchers emits an event then this wrapper
  * emits that event.
- *
- * @implements IPythonEnvsWatcher
  */
-export class PythonEnvsWatchers {
+export class PythonEnvsWatchers implements IPythonEnvsWatcher {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
     private watcher = new PythonEnvsWatcher();
 
@@ -31,10 +29,8 @@ type EnvsEventListener = (e: PythonEnvsChangedEvent) => unknown;
  * A watcher wrapper that can be disabled.
  *
  * If disabled, events emitted by the wrapped watcher are discarded.
- *
- * @implements IPythonEnvsWatcher
  */
-export class DisableableEnvsWatcher {
+export class DisableableEnvsWatcher implements IPythonEnvsWatcher {
     private enabled = true;
     constructor(
         // To wrap more than one use `PythonEnvWatchers`.

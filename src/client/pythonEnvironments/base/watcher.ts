@@ -49,10 +49,8 @@ export interface IPythonEnvsWatcher<E extends BasicPythonEnvsChangedEvent = Pyth
  * but instead keep a private watcher property.  The rule of thumb
  * is to follow whether or not consumers of *that* class should be able
  * to trigger events (via `fire()`).
- *
- * @implements IPythonEnvsWatcher
  */
-class WatcherBase<T> {
+class WatcherBase<T> implements IPythonEnvsWatcher<T> {
     /**
      * The hook for registering event listeners (callbacks).
      */
@@ -87,8 +85,6 @@ class WatcherBase<T> {
  * but instead keep a private watcher property.  The rule of thumb
  * is to follow whether or not consumers of *that* class should be able
  * to trigger events (via `fire()`).
- *
- * @implements IPythonEnvsWatcher
  */
 export class BasicPythonEnvsWatcher extends WatcherBase<BasicPythonEnvsChangedEvent> {
     /**
@@ -109,8 +105,6 @@ export class BasicPythonEnvsWatcher extends WatcherBase<BasicPythonEnvsChangedEv
  * but instead keep a private watcher property.  The rule of thumb
  * is to follow whether or not consumers of *that* class should be able
  * to trigger events (via `fire()`).
- *
- * @implements IPythonEnvsWatcher
  */
 export class PythonEnvsWatcher extends WatcherBase<PythonEnvsChangedEvent> {
     /**
