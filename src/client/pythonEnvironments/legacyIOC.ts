@@ -49,7 +49,7 @@ import {
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { EnvironmentInfoService, IEnvironmentInfoService } from './info/environmentInfoService';
 
-export function registerForIOC(serviceManager: IServiceManager, serviceContainer: IServiceContainer) {
+export function registerForIOC(serviceManager: IServiceManager, serviceContainer: IServiceContainer): void {
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
