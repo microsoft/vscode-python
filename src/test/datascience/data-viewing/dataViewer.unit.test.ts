@@ -6,7 +6,7 @@
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, EventEmitter } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
-import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../../client/common/application/types';
+import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../../client/common/application/types';
 import { WebPanelProvider } from '../../../client/common/application/webPanels/webPanelProvider';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -21,7 +21,7 @@ import { ICodeCssGenerator, IThemeFinder } from '../../../client/datascience/typ
 
 suite('DataScience - DataViewer', () => {
     let dataViewer: IDataViewer;
-    let webPanelProvider: IWebPanelProvider;
+    let webPanelProvider: IWebviewPanelProvider;
     let configService: IConfigurationService;
     let codeCssGenerator: ICodeCssGenerator;
     let themeFinder: IThemeFinder;

@@ -8,7 +8,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
@@ -104,7 +104,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         applicationShell: IApplicationShell,
         documentManager: IDocumentManager,
         statusProvider: IStatusProvider,
-        provider: IWebPanelProvider,
+        provider: IWebviewPanelProvider,
         disposables: IDisposableRegistry,
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,

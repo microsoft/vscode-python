@@ -85,8 +85,8 @@ import {
     ILiveShareTestingApi,
     ITerminalManager,
     IVSCodeNotebook,
-    IWebPanelOptions,
-    IWebPanelProvider,
+    IWebviewPanelOptions,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../client/common/application/types';
 import { WebPanelProvider } from '../../client/common/application/webPanels/webPanelProvider';
@@ -576,12 +576,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Setup our webpanel provider to create our dummy web panel
         when(this.webPanelProvider.create(anything())).thenCall(this.onCreateWebPanel.bind(this));
         if (this.uiTest) {
-            this.serviceManager.addSingleton<IWebPanelProvider>(IWebPanelProvider, WebBrowserPanelProvider);
+            this.serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebBrowserPanelProvider);
             this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetScriptSource);
             this.serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
         } else {
-            this.serviceManager.addSingletonInstance<IWebPanelProvider>(
-                IWebPanelProvider,
+            this.serviceManager.addSingletonInstance<IWebviewPanelProvider>(
+                IWebviewPanelProvider,
                 instance(this.webPanelProvider)
             );
         }
@@ -1403,7 +1403,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.experimentState.set(experimentName, enabled);
     }
 
-    private async onCreateWebPanel(options: IWebPanelOptions) {
+    private async onCreateWebPanel(options: IWebviewPanelOptions) {
         if (!this.pendingWebPanel) {
             throw new Error('Creating web panel without a mount');
         }

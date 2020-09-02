@@ -3,8 +3,8 @@ import { noop } from 'lodash';
 import { Event, EventEmitter, Uri } from 'vscode';
 import {
     IWebPanelMessageListener,
-    IWebPanelOptions,
     IWebviewPanel,
+    IWebviewPanelOptions,
     WebPanelMessage
 } from '../../client/common/application/types';
 import { traceError, traceInfo } from '../../client/common/logger';
@@ -44,7 +44,7 @@ export interface IMountedWebView extends IWebviewPanel, IDisposable {
     changeViewState(active: boolean, visible: boolean): void;
     addMessageListener(callback: (m: string, p: any) => void): void;
     removeMessageListener(callback: (m: string, p: any) => void): void;
-    attach(options: IWebPanelOptions): void;
+    attach(options: IWebviewPanelOptions): void;
     waitForMessage(message: string, options?: WaitForMessageOptions): Promise<void>;
 }
 
@@ -101,7 +101,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
     public get loadFailed(): Event<void> {
         return this.loadFailedEmitter.event;
     }
-    public attach(options: IWebPanelOptions) {
+    public attach(options: IWebviewPanelOptions) {
         this.webPanelListener = options.listener;
 
         // Send messages that were already posted but were missed.

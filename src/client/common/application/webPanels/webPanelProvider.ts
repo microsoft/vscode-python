@@ -6,11 +6,11 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../types';
-import { IWebPanelOptions, IWebPanelProvider, IWebviewPanel } from '../types';
+import { IWebviewPanel, IWebviewPanelOptions, IWebviewPanelProvider } from '../types';
 import { WebPanel } from './webPanel';
 
 @injectable()
-export class WebPanelProvider implements IWebPanelProvider {
+export class WebPanelProvider implements IWebviewPanelProvider {
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IFileSystem) private readonly fs: IFileSystem,
@@ -18,7 +18,7 @@ export class WebPanelProvider implements IWebPanelProvider {
     ) {}
 
     // tslint:disable-next-line:no-any
-    public async create(options: IWebPanelOptions): Promise<IWebviewPanel> {
+    public async create(options: IWebviewPanelOptions): Promise<IWebviewPanel> {
         // Allow loading resources from the `<extension folder>/tmp` folder when in webiviews.
         // Used by widgets to place files that are not otherwise accessible.
         const additionalRootPaths = [Uri.file(path.join(this.context.extensionPath, 'tmp'))];

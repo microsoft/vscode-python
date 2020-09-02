@@ -14,7 +14,7 @@ import { DocumentManager } from '../../../client/common/application/documentMana
 import {
     IDocumentManager,
     IWebPanelMessageListener,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../../client/common/application/types';
 import { WebPanel } from '../../../client/common/application/webPanels/webPanel';
@@ -58,7 +58,7 @@ suite('DataScience - Native Editor Storage', () => {
     let fileSystem: typemoq.IMock<IDataScienceFileSystem>;
     let docManager: IDocumentManager;
     let interpreterService: IInterpreterService;
-    let webPanelProvider: IWebPanelProvider;
+    let webPanelProvider: IWebviewPanelProvider;
     let executionProvider: IJupyterExecution;
     let globalMemento: MockMemento;
     let localMemento: MockMemento;

@@ -9,7 +9,7 @@ import { Event, EventEmitter, ViewColumn } from 'vscode';
 
 import { traceInfo } from '../../../client/common/logger';
 import { createDeferred } from '../../../client/common/utils/async';
-import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 
@@ -27,7 +27,7 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
     private removedEvent: EventEmitter<number> = new EventEmitter<number>();
 
     constructor(
-        @inject(IWebPanelProvider) provider: IWebPanelProvider,
+        @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,

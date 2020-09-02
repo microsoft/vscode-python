@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ViewColumn } from 'vscode';
 
-import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, Resource } from '../../common/types';
@@ -38,7 +38,7 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
     private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
 
     constructor(
-        @inject(IWebPanelProvider) provider: IWebPanelProvider,
+        @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,

@@ -8,7 +8,7 @@ import { IDisposable } from 'monaco-editor';
 import * as path from 'path';
 import * as socketIO from 'socket.io';
 import { env, Event, EventEmitter, Uri, WebviewOptions, WebviewPanel, window } from 'vscode';
-import { IWebPanelOptions, IWebviewPanel } from '../../../client/common/application/types';
+import { IWebviewPanel, IWebviewPanelOptions } from '../../../client/common/application/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
@@ -135,7 +135,10 @@ export class WebBrowserPanel implements IWebviewPanel, IDisposable {
     private server?: IWebServer;
     private serverUrl: string | undefined;
     private loadFailedEmitter = new EventEmitter<void>();
-    constructor(private readonly disposableRegistry: IDisposableRegistry, private readonly options: IWebPanelOptions) {
+    constructor(
+        private readonly disposableRegistry: IDisposableRegistry,
+        private readonly options: IWebviewPanelOptions
+    ) {
         this.disposableRegistry.push(this);
         const webViewOptions: WebviewOptions = {
             enableScripts: true,

@@ -4,7 +4,7 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
-import { IWebPanelProvider } from '../../../client/common/application/types';
+import { IWebviewPanelProvider } from '../../../client/common/application/types';
 import { WebPanelProvider } from '../../../client/common/application/webPanels/webPanelProvider';
 import { InstallationChannelManager } from '../../../client/common/installer/channelManager';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
@@ -112,6 +112,6 @@ suite('Common installer Service Registry', () => {
                 ProductType.DataScience
             )
         ).once();
-        verify(serviceManager.addSingleton<IWebPanelProvider>(IWebPanelProvider, WebPanelProvider)).once();
+        verify(serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebPanelProvider)).once();
     });
 });

@@ -10,7 +10,7 @@ import { traceError } from '../../logger';
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
-import { IWebPanelOptions, IWebviewPanel, WebPanelMessage } from '../types';
+import { IWebviewPanel, IWebviewPanelOptions, WebPanelMessage } from '../types';
 
 export class WebPanel implements IWebviewPanel {
     private panel: WebviewPanel | undefined;
@@ -20,7 +20,7 @@ export class WebPanel implements IWebviewPanel {
     constructor(
         private fs: IFileSystem,
         private disposableRegistry: IDisposableRegistry,
-        private options: IWebPanelOptions,
+        private options: IWebviewPanelOptions,
         additionalRootPaths: Uri[] = []
     ) {
         const webViewOptions: WebviewOptions = {

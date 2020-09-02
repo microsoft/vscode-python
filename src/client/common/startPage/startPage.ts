@@ -16,7 +16,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../application/types';
 import { IFileSystem } from '../platform/types';
@@ -39,7 +39,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     private firstTime = false;
     private webviewDidLoad = false;
     constructor(
-        @inject(IWebPanelProvider) provider: IWebPanelProvider,
+        @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IConfigurationService) protected configuration: IConfigurationService,

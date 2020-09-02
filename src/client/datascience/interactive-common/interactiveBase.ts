@@ -29,7 +29,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
@@ -147,7 +147,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         liveShare: ILiveShareApi,
         protected applicationShell: IApplicationShell,
         protected documentManager: IDocumentManager,
-        provider: IWebPanelProvider,
+        provider: IWebviewPanelProvider,
         private disposables: IDisposableRegistry,
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,

@@ -1113,7 +1113,7 @@ export interface IWebviewPanel {
     updateCwd(cwd: string): void;
 }
 
-export interface IWebPanelOptions {
+export interface IWebviewPanelOptions {
     viewColumn: ViewColumn;
     listener: IWebPanelMessageListener;
     title: string;
@@ -1132,16 +1132,9 @@ export interface IWebPanelOptions {
 }
 
 // Wraps the VS Code api for creating a web panel
-export const IWebPanelProvider = Symbol('IWebPanelProvider');
-export interface IWebPanelProvider {
-    /**
-     * Creates a new webpanel
-     *
-     * @param {IWebPanelOptions} options - params for creating an IWebPanel
-     * @returns {IWebPanel}
-     * @memberof IWebPanelProvider
-     */
-    create(options: IWebPanelOptions): Promise<IWebviewPanel>;
+export const IWebviewPanelProvider = Symbol('IWebviewPanelProvider');
+export interface IWebviewPanelProvider {
+    create(options: IWebviewPanelOptions): Promise<IWebviewPanel>;
 }
 
 // Wraps the vsls liveshare API

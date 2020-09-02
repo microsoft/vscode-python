@@ -8,8 +8,8 @@ import { ConfigurationChangeEvent, extensions, Uri, ViewColumn, WebviewPanel, Wo
 
 import {
     IWebPanelMessageListener,
-    IWebPanelProvider,
     IWebviewPanel,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
@@ -40,7 +40,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
 
     constructor(
         @unmanaged() protected configService: IConfigurationService,
-        @unmanaged() private provider: IWebPanelProvider,
+        @unmanaged() private provider: IWebviewPanelProvider,
         @unmanaged() private cssGenerator: ICodeCssGenerator,
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
