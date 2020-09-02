@@ -25,7 +25,7 @@ import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } f
 import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from './types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
-export abstract class WebViewHost<IMapping> implements IDisposable {
+export abstract class WebviewPanelHost<IMapping> implements IDisposable {
     protected get isDisposed(): boolean {
         return this.disposed;
     }
