@@ -7,7 +7,7 @@ import { PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../../client/pythonEnvironments/base/watcher';
 import { DisableableEnvsWatcher, PythonEnvsWatchers } from '../../../client/pythonEnvironments/base/watchers';
 
-suite('pyenvs watchers - PythonEnvsWatchers', () => {
+suite('Python envs watchers - PythonEnvsWatchers', () => {
     suite('onChanged consolidates', () => {
         test('empty', () => {
             const watcher = new PythonEnvsWatchers([]);
@@ -54,7 +54,7 @@ suite('pyenvs watchers - PythonEnvsWatchers', () => {
     });
 });
 
-suite('pyenvs watchers - DisableableEnvsWatcher', () => {
+suite('Python envs watchers - DisableableEnvsWatcher', () => {
     test('enabled by default', () => {
         const event1: PythonEnvsChangedEvent = {};
         const expected = [event1];

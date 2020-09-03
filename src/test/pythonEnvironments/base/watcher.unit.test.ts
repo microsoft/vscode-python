@@ -20,7 +20,7 @@ const KINDS_TO_TEST = [
     PythonEnvKind.OtherVirtual
 ];
 
-suite('pyenvs watcher - PythonEnvsWatcher', () => {
+suite('Python envs watcher - PythonEnvsWatcher', () => {
     const location = Uri.file('some-dir');
 
     suite('fire()', () => {

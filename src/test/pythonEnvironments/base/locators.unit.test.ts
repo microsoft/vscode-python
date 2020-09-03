@@ -10,7 +10,7 @@ import { DisableableLocator, Locators } from '../../../client/pythonEnvironments
 import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
 import { createEnv, createLocatedEnv, getEnvs, SimpleLocator } from './common';
 
-suite('pyenvs locators - Locators', () => {
+suite('Python envs locators - Locators', () => {
     suite('onChanged consolidates', () => {
         test('one', () => {
             const event1: PythonEnvsChangedEvent = {};
@@ -265,7 +265,7 @@ suite('pyenvs locators - Locators', () => {
     });
 });
 
-suite('pyenvs locators - DisableableLocator', () => {
+suite('Python envs locators - DisableableLocator', () => {
     suite('onChanged', () => {
         test('fires if enabled', () => {
             const event1: PythonEnvsChangedEvent = {};
