@@ -53,10 +53,16 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         @unmanaged() private _title: string,
         @unmanaged() private viewColumn: ViewColumn,
         @unmanaged() protected readonly useCustomEditorApi: boolean,
-        @unmanaged() private readonly enableVariablesDuringDebugging: boolean,
-        @unmanaged() private readonly hideKernelToolbarInInteractiveWindow: Promise<boolean>
+        @unmanaged() enableVariablesDuringDebugging: boolean,
+        @unmanaged() hideKernelToolbarInInteractiveWindow: Promise<boolean>
     ) {
-        super();
+        super(
+            configService,
+            workspaceService,
+            useCustomEditorApi,
+            enableVariablesDuringDebugging,
+            hideKernelToolbarInInteractiveWindow
+        );
 
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(
@@ -110,15 +116,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         }
     }
 
-    protected asWebviewUri(localResource: Uri) {
-        if (!this.webPanel) {
-            throw new Error('asWebViewUri called too early');
-        }
-        return this.webPanel?.asWebviewUri(localResource);
-    }
-
-    protected abstract get owningResource(): Resource;
-
     //tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
@@ -139,11 +136,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         }
     }
 
-    protected postMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]): Promise<void> {
-        // Then send it the message
-        return this.postMessageInternal(type.toString(), payload);
-    }
-
     protected shareMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]) {
         // Send our remote message.
         this.messageListener.onMessage(type.toString(), payload);
@@ -151,59 +143,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
 
     protected onViewStateChanged(_args: WebViewViewChangeEventArgs) {
         noop();
-    }
-
-    protected async generateDataScienceExtraSettings(): Promise<IDataScienceExtraSettings> {
-        const resource = this.owningResource;
-        const editor = this.workspaceService.getConfiguration('editor');
-        const workbench = this.workspaceService.getConfiguration('workbench');
-        const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
-        const ext = extensions.getExtension(GatherExtension);
-
-        return {
-            ...this.configService.getSettings(resource).datascience,
-            extraSettings: {
-                editor: {
-                    cursor: this.getValue(editor, 'cursorStyle', 'line'),
-                    cursorBlink: this.getValue(editor, 'cursorBlinking', 'blink'),
-                    autoClosingBrackets: this.getValue(editor, 'autoClosingBrackets', 'languageDefined'),
-                    autoClosingQuotes: this.getValue(editor, 'autoClosingQuotes', 'languageDefined'),
-                    autoSurround: this.getValue(editor, 'autoSurround', 'languageDefined'),
-                    autoIndent: this.getValue(editor, 'autoIndent', false),
-                    fontLigatures: this.getValue(editor, 'fontLigatures', false),
-                    scrollBeyondLastLine: this.getValue(editor, 'scrollBeyondLastLine', true),
-                    // VS Code puts a value for this, but it's 10 (the explorer bar size) not 14 the editor size for vert
-                    verticalScrollbarSize: this.getValue(editor, 'scrollbar.verticalScrollbarSize', 14),
-                    horizontalScrollbarSize: this.getValue(editor, 'scrollbar.horizontalScrollbarSize', 10),
-                    fontSize: this.getValue(editor, 'fontSize', 14),
-                    fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
-                },
-                theme: theme,
-                useCustomEditorApi: this.useCustomEditorApi
-            },
-            intellisenseOptions: {
-                quickSuggestions: {
-                    other: this.getValue(editor, 'quickSuggestions.other', true),
-                    comments: this.getValue(editor, 'quickSuggestions.comments', false),
-                    strings: this.getValue(editor, 'quickSuggestions.strings', false)
-                },
-                acceptSuggestionOnEnter: this.getValue(editor, 'acceptSuggestionOnEnter', 'on'),
-                quickSuggestionsDelay: this.getValue(editor, 'quickSuggestionsDelay', 10),
-                suggestOnTriggerCharacters: this.getValue(editor, 'suggestOnTriggerCharacters', true),
-                tabCompletion: this.getValue(editor, 'tabCompletion', 'on'),
-                suggestLocalityBonus: this.getValue(editor, 'suggest.localityBonus', true),
-                suggestSelection: this.getValue(editor, 'suggestSelection', 'recentlyUsed'),
-                wordBasedSuggestions: this.getValue(editor, 'wordBasedSuggestions', true),
-                parameterHintsEnabled: this.getValue(editor, 'parameterHints.enabled', true)
-            },
-            variableOptions: {
-                enableDuringDebugger: this.enableVariablesDuringDebugging
-            },
-            webviewExperiments: {
-                removeKernelToolbarInInteractiveWindow: await this.hideKernelToolbarInInteractiveWindow
-            },
-            gatherIsInstalled: ext ? true : false
-        };
     }
 
     protected async loadWebPanel(cwd: string, webViewPanel?: WebviewPanel) {
@@ -261,29 +200,10 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         this.sendLocStrings().ignoreErrors();
     }
 
-    protected async sendLocStrings() {
-        const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
-        this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
-    }
-
-    // Post a message to our webpanel and update our new datascience settings
-    protected onDataScienceSettingsChanged = async () => {
-        // Stringify our settings to send over to the panel
-        const dsSettings = JSON.stringify(await this.generateDataScienceExtraSettings());
-        this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
-    };
-
     // If our webpanel fails to load then just dispose ourselves
     private onWebPanelLoadFailed = async () => {
         this.dispose();
     };
-
-    private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
-        if (workspaceConfig) {
-            return workspaceConfig.get(section, defaultValue);
-        }
-        return defaultValue;
-    }
 
     private webPanelViewStateChanged = (webPanel: IWebviewPanel) => {
         const visible = webPanel.isVisible();

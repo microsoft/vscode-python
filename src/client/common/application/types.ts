@@ -1067,15 +1067,6 @@ export interface IWebview {
      * Sends a message to the hosted html page
      */
     postMessage(message: WebviewMessage): void;
-}
-
-// Wraps the VS Code webview panel
-export const IWebviewPanel = Symbol('IWebviewPanel');
-export interface IWebviewPanel extends IWebview {
-    /**
-     * Event is fired when the load for a web panel fails
-     */
-    readonly loadFailed: Event<void>;
     /**
      * Convert a uri for the local file system to one that can be used inside webviews.
      *
@@ -1088,6 +1079,15 @@ export interface IWebviewPanel extends IWebview {
      * ```
      */
     asWebviewUri(localResource: Uri): Uri;
+}
+
+// Wraps the VS Code webview panel
+export const IWebviewPanel = Symbol('IWebviewPanel');
+export interface IWebviewPanel extends IWebview {
+    /**
+     * Event is fired when the load for a web panel fails
+     */
+    readonly loadFailed: Event<void>;
     setTitle(val: string): void;
     /**
      * Makes the webpanel show up.
