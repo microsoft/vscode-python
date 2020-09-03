@@ -1208,6 +1208,8 @@ plt.show()`,
             });
 
             class DyingProcess implements ChildProcess {
+                public readonly exitCode: number | null = null;
+                public readonly signalCode: number | null = null;
                 public stdin: Writable;
                 public stdout: Readable;
                 public stderr: Readable;
@@ -1215,7 +1217,7 @@ plt.show()`,
                 public killed: boolean = false;
                 public pid: number = 1;
                 public connected: boolean = true;
-                constructor(private timeout: number) {
+                constructor(private readonly timeout: number) {
                     noop();
                     this.stderr = this.stdout = new Readable();
                     this.stdin = new Writable();
