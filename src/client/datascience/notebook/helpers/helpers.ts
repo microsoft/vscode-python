@@ -27,6 +27,7 @@ import { JupyterNotebookView } from '../constants';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { isUntitledFile } from '../../../common/utils/misc';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
@@ -95,9 +96,18 @@ export function notebookModelToVSCNotebookData(model: VSCodeNotebookModel): Note
         .map((item) => item!);
 
     const defaultLanguage = getDefaultCodeLanguage(model);
+    if (cells.length === 0 && isUntitledFile(model.file)) {
+        cells.push({
+            cellKind: vscodeNotebookEnums.CellKind.Code,
+            language: defaultLanguage,
+            metadata: {},
+            outputs: [],
+            source: ''
+        });
+    }
     return {
         cells,
-        languages: [defaultLanguage],
+        languages: ['*'],
         metadata: {
             custom: model.notebookContentWithoutCells,
             cellEditable: model.isTrusted,
