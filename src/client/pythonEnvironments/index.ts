@@ -14,11 +14,8 @@ import { registerForIOC } from './legacyIOC';
  */
 export function activate(serviceManager: IServiceManager, serviceContainer: IServiceContainer) {
     const [api, activateAPI] = createAPI();
+    registerForIOC(serviceManager, serviceContainer, api);
     activateAPI();
-    // tslint:disable-next-line:no-unused-expression
-    api;
-
-    registerForIOC(serviceManager, serviceContainer);
 }
 
 /**

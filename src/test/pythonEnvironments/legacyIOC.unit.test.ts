@@ -30,6 +30,7 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
+import { PythonEnvironments } from '../../client/pythonEnvironments';
 import { PythonInterpreterLocatorService } from '../../client/pythonEnvironments/discovery/locators';
 import { InterpreterLocatorHelper } from '../../client/pythonEnvironments/discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from '../../client/pythonEnvironments/discovery/locators/progressService';
@@ -67,7 +68,8 @@ suite('Interpreters - Service Registry', () => {
     test('Registrations', () => {
         const serviceManager = mock(ServiceManager);
         const serviceContainer = mock(ServiceContainer);
-        registerForIOC(instance(serviceManager), instance(serviceContainer));
+        const api = mock(PythonEnvironments);
+        registerForIOC(instance(serviceManager), instance(serviceContainer), instance(api));
         verify(serviceManager.addSingleton(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters)).once();
         verify(serviceManager.addSingleton(IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global')).once();
         verify(serviceManager.addSingleton(IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace')).once();

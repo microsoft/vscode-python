@@ -49,7 +49,12 @@ import {
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { EnvironmentInfoService, IEnvironmentInfoService } from './info/environmentInfoService';
 
-export function registerForIOC(serviceManager: IServiceManager, serviceContainer: IServiceContainer): void {
+import { PythonEnvironments } from '.';
+
+export function registerForIOC(serviceManager: IServiceManager, serviceContainer: IServiceContainer, api: PythonEnvironments): void {
+    // tslint:disable-next-line:no-unused-expression
+    api;
+
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
