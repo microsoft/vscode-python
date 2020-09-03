@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createDeferred } from '../../../client/common/utils/async';
+import { createDeferred, flattenIterator } from '../../../client/common/utils/async';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EMPTY_VERSION, parseBasicVersionInfo } from '../../../client/common/utils/version';
 import {
@@ -151,13 +151,6 @@ export class SimpleLocator extends Locator {
     }
 }
 
-// We should consider using a "iterableFromIterator()" helper function instead...
 export async function getEnvs(iterator: PythonEnvsIterator): Promise<PythonEnvInfo[]> {
-    const envs: PythonEnvInfo[] = [];
-    let result = await iterator.next();
-    while (!result.done) {
-        envs.push(result.value);
-        result = await iterator.next();
-    }
-    return envs;
+    return flattenIterator(iterator);
 }
