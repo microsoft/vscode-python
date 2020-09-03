@@ -17,7 +17,7 @@ import pytest
 try:
     from pathlib import Path
 except ImportError:
-    from pathlib2 import Path
+    from pathlib2 import Path  # type: ignore (for Pylance)
 
 from testing_tools.adapter.util import (
     fix_path,

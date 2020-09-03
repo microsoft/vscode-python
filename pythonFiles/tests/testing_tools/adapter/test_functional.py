@@ -19,7 +19,7 @@ from testing_tools.adapter.util import fix_path, PATH_SEP
 try:
     from pathlib import Path
 except ImportError:
-    from pathlib2 import Path
+    from pathlib2 import Path  # type: ignore (for Pylance)
 
 
 CWD = os.getcwd()
