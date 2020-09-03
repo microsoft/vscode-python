@@ -29,7 +29,6 @@ from testing_tools.adapter.util import (
 
 @unittest.skipIf(sys.version_info < (3,), "Python 2 does not have subTest")
 class FilePathTests(unittest.TestCase):
-    @pytest.mark.functional
     def test_isolated_imports(self):
         import testing_tools.adapter
         from testing_tools.adapter import util

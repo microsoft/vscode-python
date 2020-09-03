@@ -88,7 +88,6 @@ def fix_source(tests, testid, srcfile, lineno):
 # operating environment.
 
 
-@pytest.mark.functional
 class PytestTests(unittest.TestCase):
     def setUp(self):
         if PATH_SEP is not os.path.sep:
