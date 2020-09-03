@@ -3,7 +3,7 @@
 
 import { createDeferred } from '../../../client/common/utils/async';
 import { Architecture } from '../../../client/common/utils/platform';
-import { parseBasicVersionInfo } from '../../../client/common/utils/version';
+import { EMPTY_VERSION, parseBasicVersionInfo } from '../../../client/common/utils/version';
 import {
     PythonEnvInfo,
     PythonEnvKind,
@@ -16,13 +16,41 @@ import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/
 export function createEnv(
     name: string,
     versionStr: string,
-    kind = PythonEnvKind.Unknown,
-    executable = 'python',
+    kind?: PythonEnvKind,
+    executable?: string,
     idStr?: string
 ): PythonEnvInfo {
+    if (kind === undefined) {
+        kind = PythonEnvKind.Unknown;
+    }
+    if (executable === undefined || executable === '') {
+        executable = 'python';
+    }
     const id = idStr ? idStr : `${kind}-${name}`;
+    const version = parseVersion(versionStr);
+    return {
+        id,
+        kind,
+        version,
+        name,
+        location: '',
+        arch: Architecture.x86,
+        executable: {
+            filename: executable,
+            sysPrefix: '',
+            mtime: -1,
+            ctime: -1
+        },
+        distro: { org: '' }
+    };
+}
+
+function parseVersion(versionStr: string): PythonVersion {
     const parsed = parseBasicVersionInfo<PythonVersion>(versionStr);
     if (!parsed) {
+        if (versionStr === '') {
+            return EMPTY_VERSION as PythonVersion;
+        }
         throw Error(`invalid version ${versionStr}`);
     }
     const { version, after } = parsed;
@@ -44,21 +72,7 @@ export function createEnv(
             serial: parseInt(serialStr, 10)
         };
     }
-    return {
-        id,
-        kind,
-        version,
-        name,
-        location: '',
-        arch: Architecture.x86,
-        executable: {
-            filename: executable,
-            sysPrefix: '',
-            mtime: -1,
-            ctime: -1
-        },
-        distro: { org: 'PSF' }
-    };
+    return version;
 }
 
 export function createLocatedEnv(
@@ -125,13 +139,14 @@ export class SimpleLocator extends Locator {
         }
         return iterator();
     }
-    public async resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        const envInfo: PythonEnvInfo = typeof env === 'string' ? createEnv('', '', undefined, env) : env;
         if (this.callbacks?.resolve === undefined) {
-            return env;
+            return envInfo;
         } else if (this.callbacks?.resolve === null) {
             return undefined;
         } else {
-            return this.callbacks.resolve(env);
+            return this.callbacks.resolve(envInfo);
         }
     }
 }

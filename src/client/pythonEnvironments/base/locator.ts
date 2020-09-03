@@ -62,16 +62,29 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
     /**
      * Iterate over the enviroments known tos this locator.
      *
+     * Locators are not required to have provide all info about
+     * an environment.  However, each yielded item will at least
+     * include all the `PythonEnvBaseInfo` data.
+     *
      * @param query - if provided, the locator will limit results to match
      */
     iterEnvs(query?: QueryForEvent<E>): PythonEnvsIterator;
 
     /**
-     * Fill in any missing info in the given data, if possible.
+     * Find the given Python environment and fill in as much missing info as possible.
      *
-     * The result is a copy of whatever was passed in.
+     * If the locator can find the environment then the result is as
+     * much info about that env as the locator has.  At the least this
+     * will include all the `PythonEnvBaseInfo` data.  If a `PythonEnvInfo`
+     * was provided then the result will be a copy with any updates or
+     * extra info applied.
+     *
+     * If the locator could not find the environment then `undefined`
+     * is returned.
+     *
+     * @param env - the Python executable path or partial env info to find and update
      */
-    resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
+    resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
 }
 
 interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
@@ -100,7 +113,7 @@ export abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = Python
 
     public abstract iterEnvs(query?: QueryForEvent<E>): PythonEnvsIterator;
 
-    public async resolveEnv(_env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    public async resolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return undefined;
     }
 }

@@ -24,7 +24,7 @@ export class Locators extends PythonEnvsWatchers implements ILocator {
         return chain(iterators);
     }
 
-    public async resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         for (const locator of this.locators) {
             const resolved = await locator.resolveEnv(env);
             if (resolved !== undefined) {
@@ -57,7 +57,7 @@ export class DisableableLocator extends DisableableEnvsWatcher implements ILocat
         return this.locator.iterEnvs(query);
     }
 
-    public async resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         if (!this.enabled) {
             return undefined;
         }
