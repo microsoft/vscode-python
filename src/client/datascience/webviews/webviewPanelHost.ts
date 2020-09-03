@@ -34,12 +34,11 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
     private webPanel: IWebviewPanel | undefined;
     private messageListener: IWebviewPanelMessageListener;
     private startupStopwatch = new StopWatch();
-    private readonly _disposables: IDisposable[] = [];
 
     constructor(
         @unmanaged() protected configService: IConfigurationService,
         @unmanaged() private provider: IWebviewPanelProvider,
-        @unmanaged() private cssGenerator: ICodeCssGenerator,
+        @unmanaged() cssGenerator: ICodeCssGenerator,
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
         @unmanaged()
@@ -58,6 +57,8 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
     ) {
         super(
             configService,
+            cssGenerator,
+            themeFinder,
             workspaceService,
             useCustomEditorApi,
             enableVariablesDuringDebugging,
@@ -69,14 +70,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
             this.onMessage.bind(this),
             this.webPanelViewStateChanged.bind(this),
             this.dispose.bind(this)
-        );
-
-        // Listen for settings changes from vscode.
-        this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
-
-        // Listen for settings changes
-        this._disposables.push(
-            this.configService.getSettings(undefined).onDidChange(this.onDataScienceSettingsChanged.bind(this))
         );
     }
 
@@ -94,6 +87,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
             this.webPanel.updateCwd(cwd);
         }
     }
+
     public dispose() {
         if (!this.isDisposed) {
             this.disposed = true;
@@ -101,9 +95,9 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
                 this.webPanel.close();
                 this.webPanel = undefined;
             }
-
-            this._disposables.forEach((item) => item.dispose());
         }
+
+        super.dispose();
     }
     public get title() {
         return this._title;
@@ -123,15 +117,9 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
                 this.webPanelRendered();
                 break;
 
-            case CssMessages.GetCssRequest:
-                this.handleCssRequest(payload as IGetCssRequest).ignoreErrors();
-                break;
-
-            case CssMessages.GetMonacoThemeRequest:
-                this.handleMonacoThemeRequest(payload as IGetMonacoThemeRequest).ignoreErrors();
-                break;
-
             default:
+                // Forward unhandled messages to the base class
+                super.onMessage(message, payload);
                 break;
         }
     }
@@ -215,33 +203,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         this.onViewStateChanged({ current, previous });
     };
 
-    @captureTelemetry(Telemetry.WebviewStyleUpdate)
-    private async handleCssRequest(request: IGetCssRequest): Promise<void> {
-        const settings = await this.generateDataScienceExtraSettings();
-        const requestIsDark = settings.ignoreVscodeTheme ? false : request?.isDark;
-        this.setTheme(requestIsDark);
-        const isDark = settings.ignoreVscodeTheme
-            ? false
-            : await this.themeFinder.isThemeDark(settings.extraSettings.theme);
-        const resource = this.owningResource;
-        const css = await this.cssGenerator.generateThemeCss(resource, requestIsDark, settings.extraSettings.theme);
-        return this.postMessageInternal(CssMessages.GetCssResponse, {
-            css,
-            theme: settings.extraSettings.theme,
-            knownDark: isDark
-        });
-    }
-
-    @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
-    private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
-        const settings = await this.generateDataScienceExtraSettings();
-        const isDark = settings.ignoreVscodeTheme ? false : request?.isDark;
-        this.setTheme(isDark);
-        const resource = this.owningResource;
-        const monacoTheme = await this.cssGenerator.generateMonacoTheme(resource, isDark, settings.extraSettings.theme);
-        return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
-    }
-
     // tslint:disable-next-line:no-any
     private webPanelRendered() {
         if (this.webviewInit && !this.webviewInit.resolved) {
@@ -258,33 +219,4 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         this.sendLocStrings().ignoreErrors();
         this.onDataScienceSettingsChanged().ignoreErrors();
     }
-
-    // Post a message to our webpanel and update our new datascience settings
-    private onPossibleSettingsChange = async (event: ConfigurationChangeEvent) => {
-        if (
-            event.affectsConfiguration('workbench.colorTheme') ||
-            event.affectsConfiguration('editor.fontSize') ||
-            event.affectsConfiguration('editor.fontFamily') ||
-            event.affectsConfiguration('editor.cursorStyle') ||
-            event.affectsConfiguration('editor.cursorBlinking') ||
-            event.affectsConfiguration('editor.autoClosingBrackets') ||
-            event.affectsConfiguration('editor.autoClosingQuotes') ||
-            event.affectsConfiguration('editor.autoSurround') ||
-            event.affectsConfiguration('editor.autoIndent') ||
-            event.affectsConfiguration('editor.scrollBeyondLastLine') ||
-            event.affectsConfiguration('editor.fontLigatures') ||
-            event.affectsConfiguration('editor.scrollbar.verticalScrollbarSize') ||
-            event.affectsConfiguration('editor.scrollbar.horizontalScrollbarSize') ||
-            event.affectsConfiguration('files.autoSave') ||
-            event.affectsConfiguration('files.autoSaveDelay') ||
-            event.affectsConfiguration('python.dataScience.widgetScriptSources')
-        ) {
-            // See if the theme changed
-            const newSettings = await this.generateDataScienceExtraSettings();
-            if (newSettings) {
-                const dsSettings = JSON.stringify(newSettings);
-                this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
-            }
-        }
-    };
 }
