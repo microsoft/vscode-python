@@ -11,8 +11,7 @@ import { IWebview, IWebviewOptions, WebviewMessage } from '../types';
 
 // Wrapper over a vscode webview. To be used with either WebviewPanel or WebviewView
 export class Webview implements IWebview {
-    protected webview?: vscodeWebview; // IANHU: Cleaner way to pass this in versus setting after construction? Could just tweak constructor ordering
-
+    protected webview?: vscodeWebview;
     constructor(protected fs: IFileSystem, protected options: IWebviewOptions) {}
 
     public asWebviewUri(localResource: Uri) {

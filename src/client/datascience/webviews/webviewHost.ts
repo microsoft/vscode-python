@@ -18,10 +18,9 @@ import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from '../t
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
-    protected webview?: IWebview; // IANHU Consider better way to set this?
+    protected webview?: IWebview;
     protected disposed: boolean = false;
 
-    // IANHU: Manually set by base classes?
     protected themeIsDarkPromise: Deferred<boolean> | undefined = createDeferred<boolean>();
     protected webviewInit: Deferred<void> | undefined = createDeferred<void>();
 

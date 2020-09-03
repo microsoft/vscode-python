@@ -48,6 +48,7 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
             );
         }
 
+        // Set our base webview from the panel
         this.webview = this.panel.webview;
 
         this.loadPromise = this.load();
