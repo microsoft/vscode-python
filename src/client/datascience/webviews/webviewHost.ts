@@ -4,26 +4,17 @@
 import '../../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
-import { ConfigurationChangeEvent, extensions, Uri, ViewColumn, WebviewPanel, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationChangeEvent, extensions, Uri, WorkspaceConfiguration } from 'vscode';
 
-import {
-    IWebview,
-    IWebviewMessageListener,
-    IWebviewPanel,
-    IWebviewPanelProvider,
-    IWorkspaceService
-} from '../../common/application/types';
+import { IWebview, IWorkspaceService } from '../../common/application/types';
 import { isTestExecution } from '../../common/constants';
-import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposable, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { captureTelemetry } from '../../telemetry';
 import { DefaultTheme, GatherExtension, Telemetry } from '../constants';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
-import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
+import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from '../types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {

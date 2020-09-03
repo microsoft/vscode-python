@@ -4,7 +4,7 @@
 import '../../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
-import { ConfigurationChangeEvent, extensions, Uri, ViewColumn, WebviewPanel, WorkspaceConfiguration } from 'vscode';
+import { Uri, ViewColumn, WebviewPanel } from 'vscode';
 
 import {
     IWebviewPanel,
@@ -12,17 +12,15 @@ import {
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
-import { isTestExecution } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposable, Resource } from '../../common/types';
+import { IConfigurationService, IDisposable } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { DefaultTheme, GatherExtension, Telemetry } from '../constants';
-import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
-import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
+import { SharedMessages } from '../messages';
+import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 import { WebviewHost } from './webviewHost';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
