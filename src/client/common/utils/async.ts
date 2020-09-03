@@ -117,16 +117,16 @@ export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
 /**
  * An iterator that yields nothing.
  */
-export function iterEmpty<T, R = void>(): AsyncIterator<T, R> {
+export function iterEmpty<T>(): AsyncIterator<T, void> {
     // tslint:disable-next-line:no-empty
-    return ((async function* () {})() as unknown) as AsyncIterator<T, R>;
+    return ((async function* () {})() as unknown) as AsyncIterator<T, void>;
 }
 
-type NextResult<T, R = void> = { index: number } & (
-    | { result: IteratorResult<T, R>; err: null }
+type NextResult<T> = { index: number } & (
+    | { result: IteratorResult<T, T | void>; err: null }
     | { result: null; err: Error }
 );
-async function getNext<T, R = void>(it: AsyncIterator<T, R>, indexMaybe?: number): Promise<NextResult<T, R>> {
+async function getNext<T>(it: AsyncIterator<T, T | void>, indexMaybe?: number): Promise<NextResult<T>> {
     const index = indexMaybe === undefined ? -1 : indexMaybe;
     try {
         const result = await it.next();
@@ -149,24 +149,24 @@ const NEVER: Promise<unknown> = new Promise(() => {});
  * @param iterators - the async iterators from which to yield items
  * @param onError - called/awaited once for each iterator that fails
  */
-export async function* chain<T, R = void>(
-    iterators: AsyncIterator<T | void, R>[],
+export async function* chain<T>(
+    iterators: AsyncIterator<T, T | void>[],
     onError?: (err: Error, index: number) => Promise<void>
     // Ultimately we may also want to support cancellation.
-): AsyncIterator<T | R | void, void> {
+): AsyncIterator<T, void> {
     const promises = iterators.map(getNext);
     let numRunning = iterators.length;
     while (numRunning > 0) {
         const { index, result, err } = await Promise.race(promises);
         if (err !== null) {
-            promises[index] = NEVER as Promise<NextResult<T, R>>;
+            promises[index] = NEVER as Promise<NextResult<T>>;
             numRunning -= 1;
             if (onError !== undefined) {
                 await onError(err, index);
             }
             // XXX Log the error.
         } else if (result!.done) {
-            promises[index] = NEVER as Promise<NextResult<T, R>>;
+            promises[index] = NEVER as Promise<NextResult<T>>;
             numRunning -= 1;
             // If R is void then result.value will be undefined.
             if (result!.value !== undefined) {
@@ -174,7 +174,9 @@ export async function* chain<T, R = void>(
             }
         } else {
             promises[index] = getNext(iterators[index], index);
-            yield result!.value;
+            // Only the "return" result can be undefined (void),
+            // so we're okay here.
+            yield result!.value as T;
         }
     }
 }
