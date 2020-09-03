@@ -10,12 +10,12 @@ pycodestyle
 prospector==1.2.0 # Last version of prospector with Python 2.7 support
 pydocstyle
 nose
-pytest < 6.0.0  # Tests do not support pytest 6 yet.
+pytest < 6.0.0; python_version > '2.7' # Tests do not support pytest 6 yet.
 rope
 flask
 django
 isort
  # Python 2.7 compatibility (pytest)
 pytest==4.6.9; python_version == '2.7'
-pathlib2>=2.2.0 ; python_version == '2.7'
+pathlib2>=2.2.0; python_version == '2.7'
 py==1.8.1; python_version == '2.7'
