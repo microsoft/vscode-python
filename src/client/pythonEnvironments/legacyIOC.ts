@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
+import { Uri } from 'vscode';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -22,11 +23,13 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
+//import { GetInterpreterOptions } from '../interpreter/interpreterService';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
+import { CondaEnvironmentInfo } from './discovery/locators/services/conda';
 import { CondaEnvFileService } from './discovery/locators/services/condaEnvFileService';
 import { CondaEnvService } from './discovery/locators/services/condaEnvService';
 import { CondaService } from './discovery/locators/services/condaService';
@@ -48,13 +51,28 @@ import {
     WorkspaceVirtualEnvService,
 } from './discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
+import { GetInterpreterLocatorOptions } from './discovery/locators/types';
+import { PythonEnvironment } from './info';
 import { EnvironmentInfoService, IEnvironmentInfoService } from './info/environmentInfoService';
 
 import { PythonEnvironments } from '.';
 
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
-    // We will fill in the API separately.
+    // IInterpreterService
+    hasInterpreters: Promise<boolean>;
+    //getInterpreters(_resource?: vscode.Uri, _options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
+    getInterpreterDetails(pythonPath: string, _resource?: vscode.Uri): Promise<undefined | PythonEnvironment>;
+    // IInterpreterLocatorService
+    getInterpreters(resource?: vscode.Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]>;
+    // IInterpreterHelper
+    getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
+    isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined>;
+    // ICondaService
+    isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined>;
+    getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
+    // IWindowsStoreInterpreter
+    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined>;
 }
 
 @injectable()
@@ -69,6 +87,62 @@ class ComponentAdapter implements IComponentAdapter {
                 // do nothing
             });
         }
+    }
+
+    // IInterpreterHelper
+
+    public async getInterpreterInformation(_pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
+        return undefined;
+        // ...
+    }
+
+    public async isMacDefaultPythonPath(_pythonPath: string): Promise<boolean> {
+        return false;
+        // ...
+    }
+
+    // IInterpreterService
+
+    public get hasInterpreters(): Promise<boolean> {
+        return Promise.resolve(false);
+        // ...
+    }
+
+    //public async getInterpreters(_resource?: Uri, _options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
+
+    public async getInterpreterDetails(_pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment> {
+        return undefined;
+        // ...
+    }
+
+    // ICondaService
+
+    public async isCondaEnvironment(_interpreterPath: string): Promise<boolean> {
+        return false;
+        // ...
+    }
+
+    public async getCondaEnvironment(_interpreterPath: string): Promise<CondaEnvironmentInfo | undefined> {
+        return undefined;
+        // ...
+    }
+
+    // IWindowsStoreInterpreter
+
+    public isWindowsStoreInterpreter(_pythonPath: string): boolean {
+        return false;
+        // ...
+    }
+
+    // IInterpreterLocatorService
+
+    public async getInterpreters(_resource?: Uri, _options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]> {
+        //{
+        //    ignoreCache?: boolean
+        //    onSuggestion?: boolean;
+        //}
+        return [];
+        // ...
     }
 }
 
