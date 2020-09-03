@@ -3700,7 +3700,7 @@
         "node-html-parser": "^1.1.13",
         "nyc": "^15.0.0",
         "playwright-chromium": "^0.13.0",
-        "plotly.js-dist": "^1.54.5",
+        "plotly.js-dist": "^1.55.1",
         "postcss": "^7.0.27",
         "postcss-cssnext": "^3.1.0",
         "postcss-import": "^12.0.1",
