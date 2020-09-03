@@ -595,10 +595,10 @@ class CollectorTests(unittest.TestCase):
                             ("./test_spam.py", "test_spam.py", "file"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./test_spam.py::SpamTests::test_one",
                             name="test_one",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=relfile1,
                                 func="SpamTests.test_one",
@@ -619,10 +619,10 @@ class CollectorTests(unittest.TestCase):
                             ("./test_spam.py", "test_spam.py", "file"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./test_spam.py::SpamTests::test_other",
                             name="test_other",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=relfile1,
                                 func="SpamTests.test_other",
@@ -642,10 +642,10 @@ class CollectorTests(unittest.TestCase):
                             ("./test_spam.py", "test_spam.py", "file"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./test_spam.py::test_all",
                             name="test_all",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=relfile1,
                                 func="test_all",
@@ -666,10 +666,10 @@ class CollectorTests(unittest.TestCase):
                             ("./test_spam.py", "test_spam.py", "file"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./test_spam.py::test_each[10-10]",
                             name="test_each[10-10]",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=relfile1,
                                 func="test_each",
@@ -698,10 +698,10 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::All::BasicTests::test_first",
                             name="test_first",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=adapter_util.fix_relpath(relfile2),
                                 func="All.BasicTests.test_first",
@@ -737,10 +737,10 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::All::BasicTests::test_each[1+2-3]",
                             name="test_each[1+2-3]",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=adapter_util.fix_relpath(relfile2),
                                 func="All.BasicTests.test_each",
@@ -794,10 +794,10 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam",
                             name="test_spam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func="SpamTests.test_spam",
@@ -870,10 +870,10 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/test_doctest.txt::test_doctest.txt",
                             name="test_doctest.txt",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=adapter_util.fix_relpath(doctestfile),
                                 func=None,
@@ -897,10 +897,10 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::test_eggs",
                             name="test_eggs",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func=None,
@@ -922,10 +922,10 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::test_eggs.TestSpam",
                             name="test_eggs.TestSpam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func=None,
@@ -949,10 +949,10 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::test_eggs.TestSpam.TestEggs",
                             name="test_eggs.TestSpam.TestEggs",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func=None,
@@ -1010,10 +1010,10 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam[a-[b]-c]",
                             name="test_spam[a-[b]-c]",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func="SpamTests.test_spam",
@@ -1073,10 +1073,10 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::Ham::Eggs::test_spam",
                             name="test_spam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func="SpamTests.Ham.Eggs.test_spam",
@@ -1167,10 +1167,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/Y/Z/test_Eggs.py::SpamTests::test_spam",
                             name="test_spam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,  # not normalized
                                 relfile=r".\X\Y\Z\test_Eggs.py",  # not normalized
                                 func="SpamTests.test_spam",
@@ -1195,10 +1195,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_a.py::test_spam",
                             name="test_spam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=r".\X\test_a.py",
                                 func="test_spam",
@@ -1220,10 +1220,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", altroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_b.py::test_spam",
                             name="test_spam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=altroot,
                                 relfile=r"./X/test_b.py",
                                 func="test_spam",
@@ -1245,10 +1245,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_c.py::test_spam",
                             name="test_spam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=r".\X\test_c.py",
                                 func="test_spam",
@@ -1270,10 +1270,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", altroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_d.py::test_spam",
                             name="test_spam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=altroot,
                                 relfile=r"./X/test_d.py",
                                 func="test_spam",
@@ -1295,10 +1295,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_e.py::test_spam",
                             name="test_spam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=r".\X\test_e.py",
                                 func="test_spam",
@@ -1320,10 +1320,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", altroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_f.py::test_spam",
                             name="test_spam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=altroot,
                                 relfile=r"./X/test_f.py",
                                 func="test_spam",
@@ -1345,10 +1345,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_g.py::test_spam",
                             name="test_spam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=r".\X\test_g.py",
                                 func="test_spam",
@@ -1370,10 +1370,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", altroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_h.py::test_spam",
                             name="test_spam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=altroot,
                                 relfile=r"./X/test_h.py",
                                 func="test_spam",
@@ -1425,10 +1425,10 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam",
                             name="test_spam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func="SpamTests.test_spam",
@@ -1493,10 +1493,10 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam",
                             name="test_spam",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func="SpamTests.test_spam",
@@ -1521,10 +1521,10 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::test_ham",
                             name="test_ham",
-                            path=info.TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func="test_ham",
