@@ -4,13 +4,7 @@
 import { Event, Uri } from 'vscode';
 import { iterEmpty } from '../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind } from './info';
-import {
-    BasicPythonEnvsChangedEvent,
-    BasicPythonEnvsWatcher,
-    IPythonEnvsWatcher,
-    PythonEnvsChangedEvent,
-    PythonEnvsWatcher
-} from './watcher';
+import { BasicPythonEnvsChangedEvent, IPythonEnvsWatcher, PythonEnvsChangedEvent, PythonEnvsWatcher } from './watcher';
 
 /**
  * An async iterator of `PythonEnvInfo`.
@@ -80,29 +74,26 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
     resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
 }
 
-interface IBasicEmitter {
-    fire(e: BasicPythonEnvsChangedEvent): void;
-    trigger(kind?: PythonEnvKind): void;
+interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
+    fire(e: E): void;
 }
-interface IFullEmitter {
-    fire(e: PythonEnvsChangedEvent): void;
-    trigger(kind?: PythonEnvKind, searchLocation?: Uri): void;
-}
-type EmitterForEvent<E> = E extends PythonEnvsChangedEvent ? IFullEmitter : IBasicEmitter;
 
 /**
- * The base for locators.
- *
- * Subclasses will call `this.emitter.fire()` or `this.emitter.trigger()`
- * to emit events.
+ * The generic base for Python envs locators.
  *
  * By default `resolveEnv()` returns undefined.  Subclasses may override
  * the method to provide an implementation.
+ *
+ * Subclasses will call `this.emitter.fire()` to emit events.
+ *
+ * Also, in most cases the default event type (`PythonEnvsChangedEvent`)
+ * should be used.  Only in low-level cases should you consider using
+ * `BasicPythonEnvsChangedEvent`.
  */
-abstract class Locator<E extends BasicPythonEnvsChangedEvent> implements ILocator<E> {
+export abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent> implements ILocator<E> {
     public readonly onChanged: Event<E>;
-    protected readonly emitter: EmitterForEvent<E>;
-    constructor(watcher: IPythonEnvsWatcher<E> & EmitterForEvent<E>) {
+    protected readonly emitter: IEmitter<E>;
+    constructor(watcher: IPythonEnvsWatcher<E> & IEmitter<E>) {
         this.emitter = watcher;
         this.onChanged = watcher.onChanged;
     }
@@ -115,31 +106,18 @@ abstract class Locator<E extends BasicPythonEnvsChangedEvent> implements ILocato
 }
 
 /**
- * The base for locators that deal only with basic info for Python environments.
+ * The base for most Python envs locators.
  *
- * This should be used only in low-level cases, with the most
- * rudimentary locators.  Most of the time `FullLocator` should
- * be used instead.
+ * By default `resolveEnv()` returns undefined.  Subclasses may override
+ * the method to provide an implementation.
  *
- * Subclasses will call `this.emitter.fire()` or `this.emitter.trigger()`
- * to emit events.
+ * Subclasses will call `this.emitter.fire()` * to emit events.
+ *
+ * In most cases this is the class you will want to subclass.
+ * Only in low-level cases should you consider subclassing `LocatorBase`
+ * using `BasicPythonEnvsChangedEvent.
  */
-export abstract class BasicLocator extends Locator<BasicPythonEnvsChangedEvent> {
-    constructor() {
-        super(new BasicPythonEnvsWatcher());
-    }
-}
-
-/**
- * The base for locators that deal with full info for Python environments.
- *
- * In most cases this is the class you will want to use or subclass.
- * Only in low-level cases should you consider using `BasicLocator`.
- *
- * Subclasses will call `this.emitter.fire()` or `this.emitter.trigger()`
- * to emit events.
- */
-export abstract class FullLocator extends Locator<PythonEnvsChangedEvent> {
+export abstract class Locator extends LocatorBase {
     constructor() {
         super(new PythonEnvsWatcher());
     }

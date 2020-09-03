@@ -6,6 +6,11 @@
 import { Event, EventEmitter, Uri } from 'vscode';
 import { PythonEnvKind } from './info';
 
+// The use cases for `BasicPythonEnvsChangedEvent` are currently
+// hypothetical.  However, there's a real chance they may prove
+// useful for the concrete low-level locators.  So for now we are
+// keeping the separate "basic" type.
+
 /**
  * The most basic info for a Python environments event.
  *
@@ -40,17 +45,21 @@ export interface IPythonEnvsWatcher<E extends BasicPythonEnvsChangedEvent = Pyth
 }
 
 /**
- * This provides the fundamental functionality of a watcher for any event type.
+ * This provides the fundamental functionality of a Python envs watcher.
  *
  * Consumers register listeners (callbacks) using `onChanged`.  Each
  * listener is invoked when `fire()` is called.
  *
- * Note that in most cases classes will not inherit from this classes,
+ * Note that in most cases classes will not inherit from this class,
  * but instead keep a private watcher property.  The rule of thumb
  * is to follow whether or not consumers of *that* class should be able
  * to trigger events (via `fire()`).
+ *
+ * Also, in most cases the default event type (`PythonEnvsChangedEvent`)
+ * should be used.  Only in low-level cases should you consider using
+ * `BasicPythonEnvsChangedEvent`.
  */
-class WatcherBase<T> implements IPythonEnvsWatcher<T> {
+export class PythonEnvsWatcher<T extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent> implements IPythonEnvsWatcher<T> {
     /**
      * The hook for registering event listeners (callbacks).
      */
@@ -66,51 +75,5 @@ class WatcherBase<T> implements IPythonEnvsWatcher<T> {
      */
     public fire(event: T) {
         this.didChange.fire(event);
-    }
-}
-
-// The use cases for BasicPythonEnvsWatcher are currently hypothetical.
-// However, there's a real chance they may prove useful for the concrete
-// locators.  Adding BasicPythonEnvsWatcher later will be much harder
-// than removing it later, so we're leaving it for now.
-
-/**
- * A watcher for the basic Python environments events.
- *
- * This should be used only in low-level cases, with the most
- * rudimentary watchers.  Most of the time `PythonEnvsWatcher`
- * should be used instead.
- *
- * Note that in most cases classes will not inherit from this classes,
- * but instead keep a private watcher property.  The rule of thumb
- * is to follow whether or not consumers of *that* class should be able
- * to trigger events (via `fire()`).
- */
-export class BasicPythonEnvsWatcher extends WatcherBase<BasicPythonEnvsChangedEvent> {
-    /**
-     * Fire an event based on the given info.
-     */
-    public trigger(kind?: PythonEnvKind) {
-        this.fire({ kind });
-    }
-}
-
-/**
- * A general-use watcher for Python environments events.
- *
- * In most cases this is the class you will want to use or subclass.
- * Only in low-level cases should you consider using `BasicPythonEnvsWatcher`.
- *
- * Note that in most cases classes will not inherit from this classes,
- * but instead keep a private watcher property.  The rule of thumb
- * is to follow whether or not consumers of *that* class should be able
- * to trigger events (via `fire()`).
- */
-export class PythonEnvsWatcher extends WatcherBase<PythonEnvsChangedEvent> {
-    /**
-     * Fire an event based on the given info.
-     */
-    public trigger(kind?: PythonEnvKind, searchLocation?: Uri) {
-        this.fire({ kind, searchLocation });
     }
 }

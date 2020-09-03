@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Uri } from 'vscode';
 import { createDeferred } from '../../../client/common/utils/async';
 import { Architecture } from '../../../client/common/utils/platform';
 import { parseBasicVersionInfo } from '../../../client/common/utils/version';
@@ -11,7 +10,7 @@ import {
     PythonReleaseLevel,
     PythonVersion
 } from '../../../client/pythonEnvironments/base/info';
-import { FullLocator, PythonEnvsIterator, PythonLocatorQuery } from '../../../client/pythonEnvironments/base/locator';
+import { Locator, PythonEnvsIterator, PythonLocatorQuery } from '../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
 
 export function createEnv(
@@ -77,7 +76,7 @@ export function createLocatedEnv(
     return env;
 }
 
-export class SimpleLocator extends FullLocator {
+export class SimpleLocator extends Locator {
     private deferred = createDeferred<void>();
     constructor(
         private envs: PythonEnvInfo[],
@@ -97,9 +96,6 @@ export class SimpleLocator extends FullLocator {
     }
     public fire(event: PythonEnvsChangedEvent) {
         this.emitter.fire(event);
-    }
-    public trigger(kind?: PythonEnvKind, searchLocation?: Uri) {
-        this.emitter.trigger(kind, searchLocation);
     }
     public iterEnvs(query?: PythonLocatorQuery): PythonEnvsIterator {
         const deferred = this.deferred;
