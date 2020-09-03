@@ -5,8 +5,8 @@ from __future__ import print_function, unicode_literals
 
 try:
     from io import StringIO
-except ImportError:  # 2.7
-    from StringIO import StringIO
+except ImportError:
+    from StringIO import StringIO  # type: ignore (for Pylance)
 import os
 import sys
 import tempfile
