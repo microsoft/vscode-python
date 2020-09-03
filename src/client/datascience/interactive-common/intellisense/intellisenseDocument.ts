@@ -3,7 +3,16 @@
 'use strict';
 import '../../../common/extensions';
 
-import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEvent, TextLine, Uri } from 'vscode';
+import {
+    EndOfLine,
+    NotebookDocument,
+    Position,
+    Range,
+    TextDocument,
+    TextDocumentContentChangeEvent,
+    TextLine,
+    Uri
+} from 'vscode';
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
 
 import { PYTHON_LANGUAGE } from '../../../common/constants';
@@ -12,12 +21,12 @@ import { IEditorContentChange } from '../interactiveWindowTypes';
 import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from './wordHelper';
 
 class IntellisenseLine implements TextLine {
-    private _range: Range;
-    private _rangeWithLineBreak: Range;
+    private readonly _range: Range;
+    private readonly _rangeWithLineBreak: Range;
     private _firstNonWhitespaceIndex: number | undefined;
     private _isEmpty: boolean | undefined;
 
-    constructor(private _contents: string, private _line: number, private _offset: number) {
+    constructor(private readonly _contents: string, private readonly _line: number, private readonly _offset: number) {
         this._range = new Range(new Position(_line, 0), new Position(_line, _contents.length));
         this._rangeWithLineBreak = new Range(this.range.start, new Position(_line, _contents.length + 1));
     }
@@ -64,7 +73,9 @@ export interface ICellData {
 }
 
 export class IntellisenseDocument implements TextDocument {
-    private _uri: Uri;
+    public readonly notebook: NotebookDocument | undefined;
+
+    private readonly _uri: Uri;
     private _version: number = 1;
     private _lines: IntellisenseLine[] = [];
     private _contents: string = '';
@@ -108,14 +119,30 @@ export class IntellisenseDocument implements TextDocument {
     public get isClosed(): boolean {
         return false;
     }
-    public save(): Thenable<boolean> {
-        return Promise.resolve(true);
-    }
     public get eol(): EndOfLine {
         return EndOfLine.LF;
     }
     public get lineCount(): number {
         return this._lines.length;
+    }
+
+    public get textDocumentItem(): vscodeLanguageClient.TextDocumentItem {
+        return {
+            uri: this._uri.toString(),
+            languageId: this.languageId,
+            version: this.version,
+            text: this.getText()
+        };
+    }
+
+    public get textDocumentId(): vscodeLanguageClient.VersionedTextDocumentIdentifier {
+        return {
+            uri: this._uri.toString(),
+            version: this.version
+        };
+    }
+    public save(): Thenable<boolean> {
+        return Promise.resolve(true);
     }
 
     public lineAt(position: Position | number): TextLine {
@@ -189,22 +216,6 @@ export class IntellisenseDocument implements TextDocument {
     }
     public validatePosition(position: Position): Position {
         return position;
-    }
-
-    public get textDocumentItem(): vscodeLanguageClient.TextDocumentItem {
-        return {
-            uri: this._uri.toString(),
-            languageId: this.languageId,
-            version: this.version,
-            text: this.getText()
-        };
-    }
-
-    public get textDocumentId(): vscodeLanguageClient.VersionedTextDocumentIdentifier {
-        return {
-            uri: this._uri.toString(),
-            version: this.version
-        };
     }
 
     public loadAllCells(

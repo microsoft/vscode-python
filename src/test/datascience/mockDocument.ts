@@ -1,7 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEvent, TextLine, Uri } from 'vscode';
+import {
+    EndOfLine,
+    NotebookDocument,
+    Position,
+    Range,
+    TextDocument,
+    TextDocumentContentChangeEvent,
+    TextLine,
+    Uri
+} from 'vscode';
 
 import {
     DefaultWordPattern,
@@ -11,12 +20,12 @@ import {
 } from '../../client/datascience/interactive-common/intellisense/wordHelper';
 
 class MockLine implements TextLine {
-    private _range: Range;
-    private _rangeWithLineBreak: Range;
+    private readonly _range: Range;
+    private readonly _rangeWithLineBreak: Range;
     private _firstNonWhitespaceIndex: number | undefined;
     private _isEmpty: boolean | undefined;
 
-    constructor(private _contents: string, private _line: number, private _offset: number) {
+    constructor(private readonly _contents: string, private readonly _line: number, private readonly _offset: number) {
         this._range = new Range(new Position(_line, 0), new Position(_line, _contents.length));
         this._rangeWithLineBreak = new Range(this.range.start, new Position(_line, _contents.length + 1));
     }
@@ -51,33 +60,20 @@ class MockLine implements TextLine {
 }
 
 export class MockDocument implements TextDocument {
-    private _uri: Uri;
+    public readonly notebook: NotebookDocument | undefined;
+    private readonly _uri: Uri;
     private _version: number = 0;
     private _lines: MockLine[] = [];
     private _contents: string = '';
     private _isUntitled = false;
     private _isDirty = false;
-    private _onSave: (doc: TextDocument) => Promise<boolean>;
+    private readonly _onSave: (doc: TextDocument) => Promise<boolean>;
 
     constructor(contents: string, fileName: string, onSave: (doc: TextDocument) => Promise<boolean>) {
         this._uri = Uri.file(fileName);
         this._contents = contents;
         this._lines = this.createLines();
         this._onSave = onSave;
-    }
-
-    public setContent(contents: string) {
-        this._contents = contents;
-        this._lines = this.createLines();
-    }
-
-    public addContent(contents: string) {
-        this.setContent(`${this._contents}\n${contents}`);
-    }
-
-    public forceUntitled(): void {
-        this._isUntitled = true;
-        this._isDirty = true;
     }
 
     public get uri(): Uri {
@@ -102,14 +98,28 @@ export class MockDocument implements TextDocument {
     public get isClosed(): boolean {
         return false;
     }
-    public save(): Thenable<boolean> {
-        return this._onSave(this);
-    }
     public get eol(): EndOfLine {
         return EndOfLine.LF;
     }
     public get lineCount(): number {
         return this._lines.length;
+    }
+
+    public setContent(contents: string) {
+        this._contents = contents;
+        this._lines = this.createLines();
+    }
+
+    public addContent(contents: string) {
+        this.setContent(`${this._contents}\n${contents}`);
+    }
+
+    public forceUntitled(): void {
+        this._isUntitled = true;
+        this._isDirty = true;
+    }
+    public save(): Thenable<boolean> {
+        return this._onSave(this);
     }
     public lineAt(position: Position | number): TextLine {
         if (typeof position === 'number') {

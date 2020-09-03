@@ -17,14 +17,15 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
     public matchOnDescription: boolean = false;
     public matchOnDetail: boolean = false;
     public buttons: QuickInputButton[] = [];
-    private didChangeValueEmitter: EventEmitter<string> = new EventEmitter<string>();
-    private didAcceptEmitter: EventEmitter<void> = new EventEmitter<void>();
-    private didTriggerButtonEmitter: EventEmitter<QuickInputButton> = new EventEmitter<QuickInputButton>();
-    private didChangeActiveEmitter: EventEmitter<QuickPickItem[]> = new EventEmitter<QuickPickItem[]>();
-    private didChangeSelectedEmitter: EventEmitter<QuickPickItem[]> = new EventEmitter<QuickPickItem[]>();
-    private didHideEmitter: EventEmitter<void> = new EventEmitter<void>();
+    public sortByLabel: boolean = true;
+    private readonly didChangeValueEmitter: EventEmitter<string> = new EventEmitter<string>();
+    private readonly didAcceptEmitter: EventEmitter<void> = new EventEmitter<void>();
+    private readonly didTriggerButtonEmitter: EventEmitter<QuickInputButton> = new EventEmitter<QuickInputButton>();
+    private readonly didChangeActiveEmitter: EventEmitter<QuickPickItem[]> = new EventEmitter<QuickPickItem[]>();
+    private readonly didChangeSelectedEmitter: EventEmitter<QuickPickItem[]> = new EventEmitter<QuickPickItem[]>();
+    private readonly didHideEmitter: EventEmitter<void> = new EventEmitter<void>();
     private _activeItems: QuickPickItem[] = [];
-    private _pickedItem: string;
+    private readonly _pickedItem: string;
     constructor(pickedItem: string) {
         this._pickedItem = pickedItem;
     }
