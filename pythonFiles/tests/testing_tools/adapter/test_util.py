@@ -128,7 +128,7 @@ class FilePathTests(unittest.TestCase):
             ("eggs/spam/", posixpath, "./eggs/spam/"),
             (r"\spam.py", posixpath, r"./\spam.py"),
             ("spam.py", ntpath, r".\spam.py"),
-            (r"eggs\spam.py", ntpath, ".\eggs\spam.py"),
+            (r"eggs\spam.py", ntpath, r".\eggs\spam.py"),
             ("eggs\\spam\\", ntpath, ".\\eggs\\spam\\"),
             ("/spam.py", ntpath, r"\spam.py"),  # Note the fixed "/".
             # absolute
@@ -213,7 +213,7 @@ class FilePathTests(unittest.TestCase):
         # with rootdir
         common = [
             ("spam.py", "/eggs", "./spam.py"),
-            ("spam.py", "\eggs", "./spam.py"),
+            ("spam.py", r"\eggs", "./spam.py"),
             # absolute
             ("/spam.py", "/", "./spam.py"),
             ("/eggs/spam.py", "/eggs", "./spam.py"),
