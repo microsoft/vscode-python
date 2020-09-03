@@ -1031,7 +1031,7 @@ export interface IApplicationEnvironment {
     readonly uriScheme: string;
 }
 
-interface IWebviewMessageListener {
+export interface IWebviewMessageListener {
     /**
      * Listens to webview messages
      * @param message: the message being sent
@@ -1062,11 +1062,16 @@ export type WebviewMessage = {
 
 // Wraps a VS Code webview
 export const IWebview = Symbol('IWebview');
-export interface IWebview {}
+export interface IWebview {
+    /**
+     * Sends a message to the hosted html page
+     */
+    postMessage(message: WebviewMessage): void;
+}
 
 // Wraps the VS Code webview panel
 export const IWebviewPanel = Symbol('IWebviewPanel');
-export interface IWebviewPanel {
+export interface IWebviewPanel extends IWebview {
     /**
      * Event is fired when the load for a web panel fails
      */
@@ -1094,11 +1099,6 @@ export interface IWebviewPanel {
      * Indicates if this web panel is visible or not.
      */
     isVisible(): boolean;
-
-    /**
-     * Sends a message to the hosted html page
-     */
-    postMessage(message: WebviewMessage): void;
 
     /**
      * Attempts to close the panel if it's visible

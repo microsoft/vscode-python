@@ -15,7 +15,7 @@ import {
 import { isTestExecution } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposable, Resource } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
+import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -23,18 +23,16 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { DefaultTheme, GatherExtension, Telemetry } from '../constants';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
+import { WebviewHost } from './webviewHost';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
-export abstract class WebviewPanelHost<IMapping> implements IDisposable {
+export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> implements IDisposable {
     protected get isDisposed(): boolean {
         return this.disposed;
     }
     protected viewState: { visible: boolean; active: boolean } = { visible: false, active: false };
-    private disposed: boolean = false;
     private webPanel: IWebviewPanel | undefined;
-    private webPanelInit: Deferred<void> | undefined = createDeferred<void>();
     private messageListener: IWebviewPanelMessageListener;
-    private themeIsDarkPromise: Deferred<boolean> | undefined = createDeferred<boolean>();
     private startupStopwatch = new StopWatch();
     private readonly _disposables: IDisposable[] = [];
 
@@ -58,6 +56,8 @@ export abstract class WebviewPanelHost<IMapping> implements IDisposable {
         @unmanaged() private readonly enableVariablesDuringDebugging: boolean,
         @unmanaged() private readonly hideKernelToolbarInInteractiveWindow: Promise<boolean>
     ) {
+        super();
+
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(
             this.onMessage.bind(this),
@@ -97,9 +97,6 @@ export abstract class WebviewPanelHost<IMapping> implements IDisposable {
             }
 
             this._disposables.forEach((item) => item.dispose());
-
-            this.webPanelInit = undefined;
-            this.themeIsDarkPromise = undefined;
         }
     }
     public get title() {
@@ -113,14 +110,6 @@ export abstract class WebviewPanelHost<IMapping> implements IDisposable {
         }
     }
 
-    public setTheme(isDark: boolean) {
-        if (this.themeIsDarkPromise && !this.themeIsDarkPromise.resolved) {
-            this.themeIsDarkPromise.resolve(isDark);
-        } else {
-            this.themeIsDarkPromise = createDeferred<boolean>();
-            this.themeIsDarkPromise.resolve(isDark);
-        }
-    }
     protected asWebviewUri(localResource: Uri) {
         if (!this.webPanel) {
             throw new Error('asWebViewUri called too early');
@@ -162,17 +151,6 @@ export abstract class WebviewPanelHost<IMapping> implements IDisposable {
 
     protected onViewStateChanged(_args: WebViewViewChangeEventArgs) {
         noop();
-    }
-
-    // tslint:disable-next-line:no-any
-    protected async postMessageInternal(type: string, payload?: any): Promise<void> {
-        if (this.webPanelInit) {
-            // Make sure the webpanel is up before we send it anything.
-            await this.webPanelInit.promise;
-
-            // Then send it the message
-            this.webPanel?.postMessage({ type: type.toString(), payload: payload });
-        }
     }
 
     protected async generateDataScienceExtraSettings(): Promise<IDataScienceExtraSettings> {
@@ -228,17 +206,13 @@ export abstract class WebviewPanelHost<IMapping> implements IDisposable {
         };
     }
 
-    protected isDark(): Promise<boolean> {
-        return this.themeIsDarkPromise ? this.themeIsDarkPromise.promise : Promise.resolve(false);
-    }
-
     protected async loadWebPanel(cwd: string, webViewPanel?: WebviewPanel) {
         // Make not disposed anymore
         this.disposed = false;
 
         // Setup our init promise for the web panel. We use this to make sure we're in sync with our
         // react control.
-        this.webPanelInit = this.webPanelInit ? this.webPanelInit : createDeferred();
+        this.webviewInit = this.webviewInit || createDeferred();
 
         // Setup a promise that will wait until the webview passes back
         // a message telling us what them is in use
@@ -270,6 +244,9 @@ export abstract class WebviewPanelHost<IMapping> implements IDisposable {
                 webViewPanel,
                 additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []
             });
+
+            // Set our webview after load
+            this.webview = this.webPanel;
 
             // Track to seee if our web panel fails to load
             this._disposables.push(this.webPanel.loadFailed(this.onWebPanelLoadFailed, this));
@@ -347,12 +324,12 @@ export abstract class WebviewPanelHost<IMapping> implements IDisposable {
 
     // tslint:disable-next-line:no-any
     private webPanelRendered() {
-        if (this.webPanelInit && !this.webPanelInit.resolved) {
+        if (this.webviewInit && !this.webviewInit.resolved) {
             // Send telemetry for startup
             sendTelemetryEvent(Telemetry.WebviewStartup, this.startupStopwatch.elapsedTime, { type: this.title });
 
             // Resolve our started promise. This means the webpanel is ready to go.
-            this.webPanelInit.resolve();
+            this.webviewInit.resolve();
 
             traceInfo('Web view react rendered');
         }
