@@ -133,6 +133,25 @@ commandNames.set(CommandType.Hover, 'tooltip');
 commandNames.set(CommandType.Usages, 'usages');
 commandNames.set(CommandType.Symbols, 'names');
 
+type JediProxyConfig = {
+    extraPaths: string[];
+    useSnippets: boolean;
+    caseInsensitiveCompletion: boolean;
+    showDescriptions: boolean;
+    fuzzyMatcher: boolean;
+};
+
+type JediProxyPayload = {
+    id: number;
+    prefix: string;
+    lookup?: string;
+    path: string;
+    source?: string;
+    line?: number;
+    column?: number;
+    config: JediProxyConfig;
+};
+
 export class JediProxy implements Disposable {
     private proc?: ChildProcess;
     private pythonSettings: IPythonSettings;
@@ -617,8 +636,8 @@ export class JediProxy implements Disposable {
     }
 
     // tslint:disable-next-line:no-any
-    private createPayload<T extends ICommandResult>(cmd: IExecutionCommand<T>): any {
-        const payload = {
+    private createPayload<T extends ICommandResult>(cmd: IExecutionCommand<T>): JediProxyPayload {
+        const payload: JediProxyPayload = {
             id: cmd.id,
             prefix: '',
             lookup: commandNames.get(cmd.command),
@@ -706,7 +725,7 @@ export class JediProxy implements Disposable {
         }
         return this.environmentVariablesProvider;
     }
-    private getConfig() {
+    private getConfig(): JediProxyConfig {
         // Add support for paths relative to workspace.
         const extraPaths = this.pythonSettings.autoComplete
             ? this.pythonSettings.autoComplete.extraPaths.map((extraPath) => {

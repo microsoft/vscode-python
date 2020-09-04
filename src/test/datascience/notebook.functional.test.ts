@@ -1208,6 +1208,8 @@ plt.show()`,
             });
 
             class DyingProcess implements ChildProcess {
+                public readonly exitCode: number | null = null;
+                public readonly signalCode: number | null = null;
                 public stdin: Writable;
                 public stdout: Readable;
                 public stderr: Readable;

@@ -37,10 +37,13 @@ export class TestTreeItem extends TreeItem {
         this.testType = getTestDataItemType(this.data);
         this.setCommand();
     }
+
+    // @ts-ignore https://devblogs.microsoft.com/typescript/announcing-typescript-4-0-rc/#properties-overridding-accessors-and-vice-versa-is-an-error
     public get contextValue(): string {
         return this.testType;
     }
 
+    // @ts-ignore https://devblogs.microsoft.com/typescript/announcing-typescript-4-0-rc/#properties-overridding-accessors-and-vice-versa-is-an-error
     public get iconPath(): string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon {
         if (this.testType === TestDataItemType.workspaceFolder) {
             return ThemeIcon.Folder;
@@ -71,6 +74,7 @@ export class TestTreeItem extends TreeItem {
         }
     }
 
+    // @ts-ignore https://devblogs.microsoft.com/typescript/announcing-typescript-4-0-rc/#properties-overridding-accessors-and-vice-versa-is-an-error
     public get tooltip(): string {
         if (!this.data || this.testType === TestDataItemType.workspaceFolder) {
             return '';
