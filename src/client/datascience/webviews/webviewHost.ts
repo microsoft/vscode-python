@@ -1,65 +1,39 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../common/extensions';
+import '../../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
-import { ConfigurationChangeEvent, extensions, Uri, ViewColumn, WebviewPanel, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationChangeEvent, extensions, Uri, WorkspaceConfiguration } from 'vscode';
 
-import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
-import { isTestExecution } from '../common/constants';
-import { traceInfo } from '../common/logger';
-import { IConfigurationService, IDisposable, Resource } from '../common/types';
-import { createDeferred, Deferred } from '../common/utils/async';
-import * as localize from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
-import { StopWatch } from '../common/utils/stopWatch';
-import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { DefaultTheme, GatherExtension, Telemetry } from './constants';
-import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
-import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from './types';
+import { IWebview, IWorkspaceService } from '../../common/application/types';
+import { isTestExecution } from '../../common/constants';
+import { IConfigurationService, IDisposable, Resource } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
+import * as localize from '../../common/utils/localize';
+import { captureTelemetry } from '../../telemetry';
+import { DefaultTheme, GatherExtension, Telemetry } from '../constants';
+import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
+import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from '../types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
-export abstract class WebViewHost<IMapping> implements IDisposable {
-    protected get isDisposed(): boolean {
-        return this.disposed;
-    }
-    protected viewState: { visible: boolean; active: boolean } = { visible: false, active: false };
-    private disposed: boolean = false;
-    private webPanel: IWebPanel | undefined;
-    private webPanelInit: Deferred<void> | undefined = createDeferred<void>();
-    private messageListener: IWebPanelMessageListener;
-    private themeIsDarkPromise: Deferred<boolean> | undefined = createDeferred<boolean>();
-    private startupStopwatch = new StopWatch();
-    private readonly _disposables: IDisposable[] = [];
+export abstract class WebviewHost<IMapping> implements IDisposable {
+    protected webview?: IWebview;
+    protected disposed: boolean = false;
 
+    protected themeIsDarkPromise: Deferred<boolean> | undefined = createDeferred<boolean>();
+    protected webviewInit: Deferred<void> | undefined = createDeferred<void>();
+
+    protected readonly _disposables: IDisposable[] = [];
     constructor(
         @unmanaged() protected configService: IConfigurationService,
-        @unmanaged() private provider: IWebPanelProvider,
         @unmanaged() private cssGenerator: ICodeCssGenerator,
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
-        @unmanaged()
-        messageListenerCtor: (
-            callback: (message: string, payload: {}) => void,
-            viewChanged: (panel: IWebPanel) => void,
-            disposed: () => void
-        ) => IWebPanelMessageListener,
-        @unmanaged() private rootPath: string,
-        @unmanaged() private scripts: string[],
-        @unmanaged() private _title: string,
-        @unmanaged() private viewColumn: ViewColumn,
         @unmanaged() protected readonly useCustomEditorApi: boolean,
         @unmanaged() private readonly enableVariablesDuringDebugging: boolean,
         @unmanaged() private readonly hideKernelToolbarInInteractiveWindow: Promise<boolean>
     ) {
-        // Create our message listener for our web panel.
-        this.messageListener = messageListenerCtor(
-            this.onMessage.bind(this),
-            this.webPanelViewStateChanged.bind(this),
-            this.dispose.bind(this)
-        );
-
         // Listen for settings changes from vscode.
         this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
 
@@ -69,43 +43,14 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         );
     }
 
-    public async show(preserveFocus: boolean): Promise<void> {
-        if (!this.isDisposed) {
-            // Then show our web panel.
-            if (this.webPanel) {
-                await this.webPanel.show(preserveFocus);
-            }
-        }
-    }
-
-    public updateCwd(cwd: string): void {
-        if (this.webPanel) {
-            this.webPanel.updateCwd(cwd);
-        }
-    }
     public dispose() {
-        if (!this.isDisposed) {
+        if (!this.disposed) {
             this.disposed = true;
-            if (this.webPanel) {
-                this.webPanel.close();
-                this.webPanel = undefined;
-            }
-
-            this._disposables.forEach((item) => item.dispose());
-
-            this.webPanelInit = undefined;
             this.themeIsDarkPromise = undefined;
+            this._disposables.forEach((item) => item.dispose());
         }
-    }
-    public get title() {
-        return this._title;
-    }
 
-    public setTitle(newTitle: string) {
-        this._title = newTitle;
-        if (!this.isDisposed && this.webPanel) {
-            this.webPanel.setTitle(newTitle);
-        }
+        this.webviewInit = undefined;
     }
 
     public setTheme(isDark: boolean) {
@@ -116,22 +61,31 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             this.themeIsDarkPromise.resolve(isDark);
         }
     }
+
+    // Post a message to our webview and update our new datascience settings
+    protected onDataScienceSettingsChanged = async () => {
+        // Stringify our settings to send over to the panel
+        const dsSettings = JSON.stringify(await this.generateDataScienceExtraSettings());
+        this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
+    };
+
     protected asWebviewUri(localResource: Uri) {
-        if (!this.webPanel) {
+        if (!this.webview) {
             throw new Error('asWebViewUri called too early');
         }
-        return this.webPanel?.asWebviewUri(localResource);
+        return this.webview?.asWebviewUri(localResource);
     }
 
     protected abstract get owningResource(): Resource;
 
+    protected postMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]): Promise<void> {
+        // Then send it the message
+        return this.postMessageInternal(type.toString(), payload);
+    }
+
     //tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
-            case SharedMessages.Started:
-                this.webPanelRendered();
-                break;
-
             case CssMessages.GetCssRequest:
                 this.handleCssRequest(payload as IGetCssRequest).ignoreErrors();
                 break;
@@ -142,31 +96,6 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
 
             default:
                 break;
-        }
-    }
-
-    protected postMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]): Promise<void> {
-        // Then send it the message
-        return this.postMessageInternal(type.toString(), payload);
-    }
-
-    protected shareMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        // Send our remote message.
-        this.messageListener.onMessage(type.toString(), payload);
-    }
-
-    protected onViewStateChanged(_args: WebViewViewChangeEventArgs) {
-        noop();
-    }
-
-    // tslint:disable-next-line:no-any
-    protected async postMessageInternal(type: string, payload?: any): Promise<void> {
-        if (this.webPanelInit) {
-            // Make sure the webpanel is up before we send it anything.
-            await this.webPanelInit.promise;
-
-            // Then send it the message
-            this.webPanel?.postMessage({ type: type.toString(), payload: payload });
         }
     }
 
@@ -223,95 +152,25 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         };
     }
 
-    protected isDark(): Promise<boolean> {
-        return this.themeIsDarkPromise ? this.themeIsDarkPromise.promise : Promise.resolve(false);
-    }
-
-    protected async loadWebPanel(cwd: string, webViewPanel?: WebviewPanel) {
-        // Make not disposed anymore
-        this.disposed = false;
-
-        // Setup our init promise for the web panel. We use this to make sure we're in sync with our
-        // react control.
-        this.webPanelInit = this.webPanelInit ? this.webPanelInit : createDeferred();
-
-        // Setup a promise that will wait until the webview passes back
-        // a message telling us what them is in use
-        this.themeIsDarkPromise = this.themeIsDarkPromise ? this.themeIsDarkPromise : createDeferred<boolean>();
-
-        // Load our actual web panel
-
-        traceInfo(`Loading web panel. Panel is ${this.webPanel ? 'set' : 'notset'}`);
-
-        // Create our web panel (it's the UI that shows up for the history)
-        if (this.webPanel === undefined) {
-            // Get our settings to pass along to the react control
-            const settings = await this.generateDataScienceExtraSettings();
-
-            traceInfo('Loading web view...');
-
-            const workspaceFolder = this.workspaceService.getWorkspaceFolder(Uri.file(cwd))?.uri;
-
-            // Use this script to create our web view panel. It should contain all of the necessary
-            // script to communicate with this class.
-            this.webPanel = await this.provider.create({
-                viewColumn: this.viewColumn,
-                listener: this.messageListener,
-                title: this.title,
-                rootPath: this.rootPath,
-                scripts: this.scripts,
-                settings,
-                cwd,
-                webViewPanel,
-                additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []
-            });
-
-            // Track to seee if our web panel fails to load
-            this._disposables.push(this.webPanel.loadFailed(this.onWebPanelLoadFailed, this));
-
-            traceInfo('Web view created.');
-        }
-
-        // Send the first settings message
-        this.onDataScienceSettingsChanged().ignoreErrors();
-
-        // Send the loc strings (skip during testing as it takes up a lot of memory)
-        this.sendLocStrings().ignoreErrors();
-    }
-
     protected async sendLocStrings() {
         const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
         this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
     }
 
-    // Post a message to our webpanel and update our new datascience settings
-    protected onDataScienceSettingsChanged = async () => {
-        // Stringify our settings to send over to the panel
-        const dsSettings = JSON.stringify(await this.generateDataScienceExtraSettings());
-        this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
-    };
+    // tslint:disable-next-line:no-any
+    protected async postMessageInternal(type: string, payload?: any): Promise<void> {
+        if (this.webviewInit) {
+            // Make sure the webpanel is up before we send it anything.
+            await this.webviewInit.promise;
 
-    // If our webpanel fails to load then just dispose ourselves
-    private onWebPanelLoadFailed = async () => {
-        this.dispose();
-    };
-
-    private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
-        if (workspaceConfig) {
-            return workspaceConfig.get(section, defaultValue);
+            // Then send it the message
+            this.webview?.postMessage({ type: type.toString(), payload: payload });
         }
-        return defaultValue;
     }
 
-    private webPanelViewStateChanged = (webPanel: IWebPanel) => {
-        const visible = webPanel.isVisible();
-        const active = webPanel.isActive();
-        const current = { visible, active };
-        const previous = { visible: this.viewState.visible, active: this.viewState.active };
-        this.viewState.visible = visible;
-        this.viewState.active = active;
-        this.onViewStateChanged({ current, previous });
-    };
+    protected isDark(): Promise<boolean> {
+        return this.themeIsDarkPromise ? this.themeIsDarkPromise.promise : Promise.resolve(false);
+    }
 
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
     private async handleCssRequest(request: IGetCssRequest): Promise<void> {
@@ -340,21 +199,11 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
     }
 
-    // tslint:disable-next-line:no-any
-    private webPanelRendered() {
-        if (this.webPanelInit && !this.webPanelInit.resolved) {
-            // Send telemetry for startup
-            sendTelemetryEvent(Telemetry.WebviewStartup, this.startupStopwatch.elapsedTime, { type: this.title });
-
-            // Resolve our started promise. This means the webpanel is ready to go.
-            this.webPanelInit.resolve();
-
-            traceInfo('Web view react rendered');
+    private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
+        if (workspaceConfig) {
+            return workspaceConfig.get(section, defaultValue);
         }
-
-        // On started, resend our init data.
-        this.sendLocStrings().ignoreErrors();
-        this.onDataScienceSettingsChanged().ignoreErrors();
+        return defaultValue;
     }
 
     // Post a message to our webpanel and update our new datascience settings

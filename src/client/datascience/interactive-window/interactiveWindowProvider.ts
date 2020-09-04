@@ -11,7 +11,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { UseCustomEditorApi } from '../../common/constants';
@@ -171,7 +171,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<IDocumentManager>(IDocumentManager),
             this.serviceContainer.get<IStatusProvider>(IStatusProvider),
-            this.serviceContainer.get<IWebPanelProvider>(IWebPanelProvider),
+            this.serviceContainer.get<IWebviewPanelProvider>(IWebviewPanelProvider),
             this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
             this.serviceContainer.get<ICodeCssGenerator>(ICodeCssGenerator),
             this.serviceContainer.get<IThemeFinder>(IThemeFinder),

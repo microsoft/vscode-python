@@ -32,9 +32,8 @@ export class NotebookCommands implements IDisposable {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SwitchJupyterKernel, this.switchKernel, this),
             this.commandManager.registerCommand(Commands.SetJupyterKernel, this.setKernel, this),
-            this.commandManager.registerCommand(Commands.NewNotebookCollapseAllCells, this.collapseAll, this),
-            this.commandManager.registerCommand(Commands.NewNotebookExpandAllCells, this.expandAll, this),
-            this.commandManager.registerCommand(Commands.NewNotebookRemoveAllCells, this.removeAll, this)
+            this.commandManager.registerCommand(Commands.NotebookEditorCollapseAllCells, this.collapseAll, this),
+            this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, this.expandAll, this)
         );
     }
     public dispose() {
@@ -50,12 +49,6 @@ export class NotebookCommands implements IDisposable {
     private expandAll() {
         if (this.notebookEditorProvider.activeEditor) {
             this.notebookEditorProvider.activeEditor.expandAllCells();
-        }
-    }
-
-    private removeAll() {
-        if (this.notebookEditorProvider.activeEditor) {
-            this.notebookEditorProvider.activeEditor.removeAllCells();
         }
     }
 

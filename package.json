@@ -861,18 +861,18 @@
                 "category": "Python"
             },
             {
-                "command": "python.datascience.newNotebook.removeallcells",
-                "title": "%python.command.python.datascience.newNotebook.removeallcells.title%",
+                "command": "python.datascience.notebookeditor.removeallcells",
+                "title": "%python.command.python.datascience.notebookeditor.removeallcells.title%",
                 "category": "Python"
             },
             {
-                "command": "python.datascience.newNotebook.expandallcells",
-                "title": "%python.command.python.datascience.newNotebook.expandallcells.title%",
+                "command": "python.datascience.notebookeditor.expandallcells",
+                "title": "%python.command.python.datascience.notebookeditor.expandallcells.title%",
                 "category": "Python"
             },
             {
-                "command": "python.datascience.newNotebook.collapseallcells",
-                "title": "%python.command.python.datascience.newNotebook.collapseallcells.title%",
+                "command": "python.datascience.notebookeditor.collapseallcells",
+                "title": "%python.command.python.datascience.notebookeditor.collapseallcells.title%",
                 "category": "Python"
             },
             {
@@ -1435,20 +1435,20 @@
                     "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
-                    "command": "python.datascience.newNotebook.removeallcells",
-                    "title": "%python.command.python.datascience.newNotebook.removeallcells.title%",
+                    "command": "python.datascience.notebookeditor.removeallcells",
+                    "title": "%python.command.python.datascience.removeallcells.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled && notebookEditorFocused"
                 },
                 {
-                    "command": "python.datascience.newNotebook.expandallcells",
-                    "title": "%python.command.python.datascience.newNotebook.expandallcells.title%",
+                    "command": "python.datascience.notebookeditor.expandallcells",
+                    "title": "%python.command.python.datascience.expandallcells.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled && notebookEditorFocused"
                 },
                 {
-                    "command": "python.datascience.newNotebook.collapseallcells",
-                    "title": "%python.command.python.datascience.newNotebook.collapseallcells.title%",
+                    "command": "python.datascience.notebookeditor.collapseallcells",
+                    "title": "%python.command.python.datascience.collapseallcells.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled && notebookEditorFocused"
                 },
@@ -3700,7 +3700,7 @@
         "node-html-parser": "^1.1.13",
         "nyc": "^15.0.0",
         "playwright-chromium": "^0.13.0",
-        "plotly.js-dist": "^1.54.5",
+        "plotly.js-dist": "^1.55.1",
         "postcss": "^7.0.27",
         "postcss-cssnext": "^3.1.0",
         "postcss-import": "^12.0.1",

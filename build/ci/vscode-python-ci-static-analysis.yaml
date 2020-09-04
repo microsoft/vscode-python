@@ -2,15 +2,15 @@
 
 name: 'VSCode-Python-ci-static-analysis'
 
-# Notes: Only trigger a commit for master and release, and skip build/rebuild
+# Notes: Only trigger a commit for main and release, and skip build/rebuild
 #        on changes in the news and .vscode folders.
 trigger:
   branches:
-    include: ['master', 'main', 'release*']
+    include: ['main', 'release*']
   paths:
     exclude: ['/news/1 Enhancements', '/news/2 Fixes', '/news/3 Code Health', '/.vscode']
 
-# Not the PR build for merges to master and release.
+# Not the PR build for merges to main and release.
 pr: none
 
 jobs:

@@ -9,25 +9,25 @@ import { Event, EventEmitter, ViewColumn } from 'vscode';
 
 import { traceInfo } from '../../../client/common/logger';
 import { createDeferred } from '../../../client/common/utils/async';
-import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 
 import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { ICodeCssGenerator, IDataScienceFileSystem, IPlotViewer, IThemeFinder } from '../types';
-import { WebViewHost } from '../webViewHost';
+import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { PlotViewerMessageListener } from './plotViewerMessageListener';
 import { IExportPlotRequest, IPlotViewerMapping, PlotViewerMessages } from './types';
 
 const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
-export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
+export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
     private closedEvent: EventEmitter<IPlotViewer> = new EventEmitter<IPlotViewer>();
     private removedEvent: EventEmitter<number> = new EventEmitter<number>();
 
     constructor(
-        @inject(IWebPanelProvider) provider: IWebPanelProvider,
+        @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,

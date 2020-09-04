@@ -4,7 +4,7 @@
 
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
-import { WebPanelMessage } from '../../client/common/application/types';
+import { WebviewMessage } from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
 import { logMessage } from './logger';
 
@@ -101,7 +101,7 @@ export class PostOffice implements IDisposable {
 
     private async handleMessages(ev: MessageEvent) {
         if (this.handlers) {
-            const msg = ev.data as WebPanelMessage;
+            const msg = ev.data as WebviewMessage;
             if (msg) {
                 this.subject.next({ type: msg.type, payload: msg.payload });
                 this.handlers.forEach((h: IMessageHandler | null) => {

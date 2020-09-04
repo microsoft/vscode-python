@@ -29,7 +29,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
@@ -105,11 +105,11 @@ import {
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
-import { WebViewHost } from '../webViewHost';
+import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
 
-export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {
+export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindowMapping> implements IInteractiveBase {
     public get notebook(): INotebook | undefined {
         return this._notebook;
     }
@@ -147,7 +147,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         liveShare: ILiveShareApi,
         protected applicationShell: IApplicationShell,
         protected documentManager: IDocumentManager,
-        provider: IWebPanelProvider,
+        provider: IWebviewPanelProvider,
         private disposables: IDisposableRegistry,
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,

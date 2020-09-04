@@ -9,14 +9,14 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Commands, Telemetry } from '../../datascience/constants';
 import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../../datascience/types';
-import { WebViewHost } from '../../datascience/webViewHost';
+import { WebviewPanelHost } from '../../datascience/webviews/webviewPanelHost';
 import { sendTelemetryEvent } from '../../telemetry';
 import {
     IApplicationEnvironment,
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../application/types';
 import { IFileSystem } from '../platform/types';
@@ -31,7 +31,8 @@ const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'vie
 // Class that opens, disposes and handles messages and actions for the Python Extension Start Page.
 // It also runs when the extension activates.
 @injectable()
-export class StartPage extends WebViewHost<IStartPageMapping> implements IStartPage, IExtensionSingleActivationService {
+export class StartPage extends WebviewPanelHost<IStartPageMapping>
+    implements IStartPage, IExtensionSingleActivationService {
     protected closedEvent: EventEmitter<IStartPage> = new EventEmitter<IStartPage>();
     private timer: StopWatch;
     private actionTaken = false;
@@ -39,7 +40,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     private firstTime = false;
     private webviewDidLoad = false;
     constructor(
-        @inject(IWebPanelProvider) provider: IWebPanelProvider,
+        @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IConfigurationService) protected configuration: IConfigurationService,

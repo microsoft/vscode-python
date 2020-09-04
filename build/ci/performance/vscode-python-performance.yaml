@@ -7,7 +7,6 @@ schedules:
     displayName: Weekly Performance Test
     branches:
       include:
-        - master
         - main
 
 stages:
