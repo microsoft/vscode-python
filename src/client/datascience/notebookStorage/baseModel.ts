@@ -24,11 +24,15 @@ type KernelIdListEntry = {
 
 // tslint:disable-next-line: cyclomatic-complexity
 export function updateNotebookMetadata(
-    metadata: nbformat.INotebookMetadata | undefined,
+    metadata?: nbformat.INotebookMetadata,
     kernelConnection?: KernelConnectionMetadata
 ) {
     let changed = false;
     let kernelId: string | undefined;
+    if (!metadata) {
+        return { changed, kernelId };
+    }
+
     // Get our kernel_info and language_info from the current notebook
     const interpreter = getInterpreterFromKernelConnectionMetadata(kernelConnection);
     if (
@@ -51,7 +55,7 @@ export function updateNotebookMetadata(
         kernelConnection && kernelConnectionMetadataHasKernelModel(kernelConnection)
             ? kernelConnection.kernelModel
             : kernelConnection?.kernelSpec;
-    if (kernelSpecOrModel && metadata && !metadata.kernelspec) {
+    if (kernelSpecOrModel && !metadata.kernelspec) {
         // Add a new spec in this case
         metadata.kernelspec = {
             name: kernelSpecOrModel.name || kernelSpecOrModel.display_name || '',
@@ -59,7 +63,7 @@ export function updateNotebookMetadata(
         };
         kernelId = kernelSpecOrModel.id;
         changed = true;
-    } else if (kernelSpecOrModel && metadata && metadata.kernelspec) {
+    } else if (kernelSpecOrModel && metadata.kernelspec) {
         // Spec exists, just update name and display_name
         const name = kernelSpecOrModel.name || kernelSpecOrModel.display_name || '';
         const displayName = kernelSpecOrModel.display_name || kernelSpecOrModel.name || '';
@@ -72,6 +76,21 @@ export function updateNotebookMetadata(
             metadata.kernelspec.name = name;
             metadata.kernelspec.display_name = displayName;
             kernelId = kernelSpecOrModel.id;
+        }
+    } else if (kernelConnection?.kind === 'startUsingPythonInterpreter') {
+        // Store interpreter name, we expect the kernel finder will find the corresponding interpreter based on this name.
+        const name = kernelConnection.interpreter.displayName || kernelConnection.interpreter.path;
+        if (metadata.kernelspec?.name !== name || metadata.kernelspec?.display_name !== name) {
+            changed = true;
+            metadata.kernelspec = {
+                name,
+                display_name: name,
+                metadata: {
+                    interpreter: {
+                        path: kernelConnection.interpreter.path
+                    }
+                }
+            };
         }
     }
     return { changed, kernelId };
