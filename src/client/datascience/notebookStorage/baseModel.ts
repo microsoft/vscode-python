@@ -14,6 +14,7 @@ import {
 } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ICell, INotebookMetadataLive, INotebookModel } from '../types';
+
 export const ActiveKernelIdList = `Active_Kernel_Id_List`;
 // This is the number of kernel ids that will be remembered between opening and closing VS code
 export const MaximumKernelIdListSize = 40;
