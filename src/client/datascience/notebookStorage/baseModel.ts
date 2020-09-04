@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
+import { sha256 } from 'hash.js';
 import { Event, EventEmitter, Memento, Uri } from 'vscode';
 import { ICryptoUtils } from '../../common/types';
 import { isUntitledFile } from '../../common/utils/misc';
@@ -13,7 +14,6 @@ import {
 } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ICell, INotebookMetadataLive, INotebookModel } from '../types';
-
 export const ActiveKernelIdList = `Active_Kernel_Id_List`;
 // This is the number of kernel ids that will be remembered between opening and closing VS code
 export const MaximumKernelIdListSize = 40;
@@ -84,7 +84,12 @@ export function updateNotebookMetadata(
             changed = true;
             metadata.kernelspec = {
                 name,
-                display_name: name
+                display_name: name,
+                metadata: {
+                    interpreter: {
+                        hash: sha256().update(kernelConnection.interpreter.path).digest('hex')
+                    }
+                }
             };
         }
     }
