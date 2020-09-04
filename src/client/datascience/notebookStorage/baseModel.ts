@@ -84,12 +84,7 @@ export function updateNotebookMetadata(
             changed = true;
             metadata.kernelspec = {
                 name,
-                display_name: name,
-                metadata: {
-                    interpreter: {
-                        path: kernelConnection.interpreter.path
-                    }
-                }
+                display_name: name
             };
         }
     }
