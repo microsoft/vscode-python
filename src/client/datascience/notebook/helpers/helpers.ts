@@ -76,11 +76,8 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
 }
 
 /**
- * No need to trigger an event indicating changes have been made.
- * If user runs a cell & document is updated, then it will get saved as part of that .
- * Or if user makes other changes, then it will get saved as part of that updat e.
- * I.e. just because user (or we automatically) selected a kernel, doesn't mean we need to mark the document as dir ty.
- * If not, when users open a blank notebook and a kernel is auto selected, document is marked as dirty. Hence as soon as you create a blank notebook it is dr ity.
+ * No need to update the notebook metadata just yet.
+ * When users open a blank notebook and a kernel is auto selected, document is marked as dirty. Hence as soon as you create a blank notebook it is dr ity.
  * Similarly, if you open an existing notebook, it is marked as dirty.
  *
  * Solution: Store the metadata in some place, when saving, take the metadata & store in the file.
