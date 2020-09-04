@@ -26,6 +26,12 @@ import { getNotebookMetadata, isJupyterNotebook, updateKernelInNotebookMetadata 
 import { INotebookContentProvider } from './types';
 
 class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
+    get preloads(): Uri[] {
+        return [];
+    }
+    get id() {
+        return getKernelConnectionId(this.selection);
+    }
     constructor(
         public readonly label: string,
         public readonly description: string,
@@ -33,12 +39,6 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         public readonly isPreferred: boolean,
         private readonly kernelProvider: IKernelProvider
     ) {}
-    get preloads(): Uri[] {
-        return [];
-    }
-    get id() {
-        return getKernelConnectionId(this.selection);
-    }
     public executeCell(_: NotebookDocument, cell: NotebookCell) {
         this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection })?.executeCell(cell); // NOSONAR
     }
@@ -55,8 +55,11 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
 
 @injectable()
 export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
-    private readonly _onDidChangeKernels = new EventEmitter<NotebookDocument | undefined>();
-    private readonly notebookKernelChangeHandled = new WeakSet<INotebook>();
+    public get onDidChangeKernels(): Event<void> {
+        return this._onDidChangeKernels.event;
+    }
+    private readonly _onDidChangeKernels = new EventEmitter<void>();
+    private notebookKernelChangeHandled = new WeakSet<INotebook>();
     constructor(
         @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
         @inject(KernelSelector) private readonly kernelSelector: KernelSelector,
@@ -69,15 +72,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
-        this.kernelSelectionProvider.SelectionsChanged(
-            () => this._onDidChangeKernels.fire(undefined),
-            this,
-            disposables
-        );
+        this.kernelSelectionProvider.SelectionsChanged(() => this._onDidChangeKernels.fire(), this, disposables);
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
-    }
-    public get onDidChangeKernels(): Event<NotebookDocument | undefined> {
-        return this._onDidChangeKernels.event;
     }
     public async provideKernels(
         document: NotebookDocument,

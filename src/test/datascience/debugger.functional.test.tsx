@@ -323,7 +323,7 @@ suite('DataScience Debugger tests', () => {
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
             const fileName = 'Untitled-1';
             docManager.addDocument(code, fileName);
-            const mockDoc = (docManager.textDocuments[0] as unknown) as MockDocument;
+            const mockDoc = docManager.textDocuments[0] as MockDocument;
             mockDoc.forceUntitled();
 
             // Start the jupyter server

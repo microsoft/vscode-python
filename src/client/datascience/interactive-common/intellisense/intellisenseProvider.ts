@@ -87,16 +87,16 @@ const CallableRegex = /python\n\(.+?\) \S+?: (\([\s\S]+?\))/;
 // tslint:disable:no-any
 @injectable()
 export class IntellisenseProvider implements IInteractiveWindowListener {
+    public get postMessage(): Event<{ message: string; payload: any }> {
+        return this.postEmitter.event;
+    }
     private documentPromise: Deferred<IntellisenseDocument> | undefined;
     private temporaryFile: TemporaryFile | undefined;
-    private readonly postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
+    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
         payload: any;
     }>();
-    private readonly cancellationSources: Map<string, CancellationTokenSource> = new Map<
-        string,
-        CancellationTokenSource
-    >();
+    private cancellationSources: Map<string, CancellationTokenSource> = new Map<string, CancellationTokenSource>();
     private notebookIdentity: Uri | undefined;
     private notebookType: 'interactive' | 'native' = 'interactive';
     private potentialResource: Uri | undefined;
@@ -106,18 +106,13 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private interpreter: PythonEnvironment | undefined;
 
     constructor(
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
-        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(ILanguageServerCache) private readonly languageServerCache: ILanguageServerCache,
-        @inject(IJupyterVariables)
-        @named(Identifiers.ALL_VARIABLES)
-        private readonly variableProvider: IJupyterVariables
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(ILanguageServerCache) private languageServerCache: ILanguageServerCache,
+        @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableProvider: IJupyterVariables
     ) {}
-    public get postMessage(): Event<{ message: string; payload: any }> {
-        return this.postEmitter.event;
-    }
 
     public dispose() {
         if (this.temporaryFile) {

@@ -34,8 +34,7 @@ suite('Terminal Auto Activation', () => {
             processId: Promise.resolve(0),
             sendText: noop,
             show: noop,
-            exitStatus: { code: 0 },
-            dimensions: undefined
+            exitStatus: { code: 0 }
         };
         terminalManager = mock(TerminalManager);
         activator = mock(TerminalActivator);
@@ -78,8 +77,7 @@ suite('Terminal Auto Activation', () => {
             processId: Promise.resolve(0),
             sendText: noop,
             show: noop,
-            exitStatus: { code: 0 },
-            dimensions: undefined
+            exitStatus: { code: 0 }
         };
         type EventHandler = (e: Terminal) => void;
         let handler: undefined | EventHandler;

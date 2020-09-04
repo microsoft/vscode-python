@@ -32,14 +32,14 @@ export class MockDocumentManager implements IDocumentManager {
     public activeTextEditor: TextEditor | undefined;
     public visibleTextEditors: TextEditor[] = [];
     public didChangeActiveTextEditorEmitter = new EventEmitter<TextEditor>();
-    private readonly didOpenEmitter = new EventEmitter<TextDocument>();
-    private readonly didChangeVisibleEmitter = new EventEmitter<TextEditor[]>();
-    private readonly didChangeTextEditorSelectionEmitter = new EventEmitter<TextEditorSelectionChangeEvent>();
-    private readonly didChangeTextEditorOptionsEmitter = new EventEmitter<TextEditorOptionsChangeEvent>();
-    private readonly didChangeTextEditorViewColumnEmitter = new EventEmitter<TextEditorViewColumnChangeEvent>();
-    private readonly didCloseEmitter = new EventEmitter<TextDocument>();
-    private readonly didSaveEmitter = new EventEmitter<TextDocument>();
-    private readonly didChangeTextDocumentEmitter = new EventEmitter<TextDocumentChangeEvent>();
+    private didOpenEmitter = new EventEmitter<TextDocument>();
+    private didChangeVisibleEmitter = new EventEmitter<TextEditor[]>();
+    private didChangeTextEditorSelectionEmitter = new EventEmitter<TextEditorSelectionChangeEvent>();
+    private didChangeTextEditorOptionsEmitter = new EventEmitter<TextEditorOptionsChangeEvent>();
+    private didChangeTextEditorViewColumnEmitter = new EventEmitter<TextEditorViewColumnChangeEvent>();
+    private didCloseEmitter = new EventEmitter<TextDocument>();
+    private didSaveEmitter = new EventEmitter<TextDocument>();
+    private didChangeTextDocumentEmitter = new EventEmitter<TextDocumentChangeEvent>();
     public get onDidChangeActiveTextEditor(): Event<TextEditor | undefined> {
         return this.didChangeActiveTextEditorEmitter.event;
     }
@@ -67,13 +67,6 @@ export class MockDocumentManager implements IDocumentManager {
     public get onDidSaveTextDocument(): Event<TextDocument> {
         return this.didSaveEmitter.event;
     }
-
-    private get lastDocument(): TextDocument {
-        if (this.textDocuments.length > 0) {
-            return this.textDocuments[this.textDocuments.length - 1];
-        }
-        throw new Error('No documents in MockDocumentManager');
-    }
     public showTextDocument(
         _document: TextDocument,
         _column?: ViewColumn,
@@ -82,7 +75,7 @@ export class MockDocumentManager implements IDocumentManager {
     public showTextDocument(_document: TextDocument | Uri, _options?: TextDocumentShowOptions): Thenable<TextEditor>;
     public showTextDocument(document: any, _column?: any, _preserveFocus?: any): Thenable<TextEditor> {
         this.visibleTextEditors.push(document);
-        const mockEditor = new MockEditor(this, (this.lastDocument as unknown) as MockDocument);
+        const mockEditor = new MockEditor(this, this.lastDocument as MockDocument);
         this.activeTextEditor = mockEditor;
         this.didChangeActiveTextEditorEmitter.fire(this.activeTextEditor);
         return Promise.resolve(mockEditor);
@@ -101,7 +94,7 @@ export class MockDocumentManager implements IDocumentManager {
     }
 
     public addDocument(code: string, file: string) {
-        let existing = (this.textDocuments.find((d) => d.uri.fsPath === file) as unknown) as MockDocument;
+        let existing = this.textDocuments.find((d) => d.uri.fsPath === file) as MockDocument;
         if (existing) {
             existing.setContent(code);
         } else {
@@ -112,7 +105,7 @@ export class MockDocumentManager implements IDocumentManager {
     }
 
     public changeDocument(file: string, changes: { range: Range; newText: string }[]) {
-        const doc = (this.textDocuments.find((d) => d.uri.fsPath === Uri.file(file).fsPath) as unknown) as MockDocument;
+        const doc = this.textDocuments.find((d) => d.uri.fsPath === Uri.file(file).fsPath) as MockDocument;
         if (doc) {
             const contentChanges = changes.map((c) => {
                 const startOffset = doc.offsetAt(c.range.start);
@@ -138,7 +131,14 @@ export class MockDocumentManager implements IDocumentManager {
         throw new Error('Method not implemented');
     }
 
-    private readonly saveDocument = (doc: TextDocument): Promise<boolean> => {
+    private get lastDocument(): TextDocument {
+        if (this.textDocuments.length > 0) {
+            return this.textDocuments[this.textDocuments.length - 1];
+        }
+        throw new Error('No documents in MockDocumentManager');
+    }
+
+    private saveDocument = (doc: TextDocument): Promise<boolean> => {
         // Create a new document with the contents of the doc passed in
         this.addDocument(doc.getText(), path.join(EXTENSION_ROOT_DIR, 'baz.py'));
         return Promise.resolve(true);
