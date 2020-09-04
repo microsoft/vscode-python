@@ -53,6 +53,12 @@ export class InterpreterSelectionTip implements IExtensionSingleActivationServic
         }
 
         this.showTip().ignoreErrors();
+
+        // We will disable this prompt for all users even if they are not
+        // in any experiment. The idea is that people should get either the
+        // tip or survey or nothing, on first load. If we are here here that
+        // means we are done with this prompt (even if it was not shown).
+        await this.storage.updateValue(true);
     }
     @swallowExceptions('Failed to display tip')
     private async showTip() {
@@ -71,7 +77,5 @@ export class InterpreterSelectionTip implements IExtensionSingleActivationServic
                 this.browserService.launch('https://aka.ms/mailingListSurvey');
             }
         }
-
-        await this.storage.updateValue(true);
     }
 }
