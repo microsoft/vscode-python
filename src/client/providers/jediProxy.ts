@@ -635,7 +635,6 @@ export class JediProxy implements Disposable {
         }
     }
 
-    // tslint:disable-next-line:no-any
     private createPayload<T extends ICommandResult>(cmd: IExecutionCommand<T>): JediProxyPayload {
         const payload: JediProxyPayload = {
             id: cmd.id,
