@@ -37,13 +37,10 @@ export class TestTreeItem extends TreeItem {
         this.testType = getTestDataItemType(this.data);
         this.setCommand();
     }
-
-    // @ts-ignore
     public get contextValue(): string {
         return this.testType;
     }
 
-    // @ts-ignore
     public get iconPath(): string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon {
         if (this.testType === TestDataItemType.workspaceFolder) {
             return ThemeIcon.Folder;
@@ -74,7 +71,6 @@ export class TestTreeItem extends TreeItem {
         }
     }
 
-    // @ts-ignore
     public get tooltip(): string {
         if (!this.data || this.testType === TestDataItemType.workspaceFolder) {
             return '';

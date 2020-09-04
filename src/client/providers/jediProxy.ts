@@ -135,20 +135,20 @@ commandNames.set(CommandType.Symbols, 'names');
 
 export class JediProxy implements Disposable {
     private proc?: ChildProcess;
-    private readonly pythonSettings: IPythonSettings;
+    private pythonSettings: IPythonSettings;
     private cmdId: number = 0;
-    private readonly lastKnownPythonInterpreter: string;
+    private lastKnownPythonInterpreter: string;
     private previousData = '';
-    private readonly commands = new Map<number, IExecutionCommand<ICommandResult>>();
+    private commands = new Map<number, IExecutionCommand<ICommandResult>>();
     private commandQueue: number[] = [];
     private spawnRetryAttempts = 0;
     private additionalAutoCompletePaths: string[] = [];
-    private readonly workspacePath: string;
+    private workspacePath: string;
     private languageServerStarted!: Deferred<void>;
-    private readonly initialized: Deferred<void>;
+    private initialized: Deferred<void>;
     private environmentVariablesProvider!: IEnvironmentVariablesProvider;
     private ignoreJediMemoryFootprint: boolean = false;
-    private readonly pidUsageFailures = { timer: new StopWatch(), counter: 0 };
+    private pidUsageFailures = { timer: new StopWatch(), counter: 0 };
     private lastCmdIdProcessed?: number;
     private lastCmdIdProcessedForPidUsage?: number;
     private readonly disposables: Disposable[] = [];
@@ -157,7 +157,7 @@ export class JediProxy implements Disposable {
     public constructor(
         workspacePath: string,
         interpreter: PythonEnvironment | undefined,
-        private readonly serviceContainer: IServiceContainer
+        private serviceContainer: IServiceContainer
     ) {
         this.workspacePath = workspacePath;
         const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -618,22 +618,7 @@ export class JediProxy implements Disposable {
 
     // tslint:disable-next-line:no-any
     private createPayload<T extends ICommandResult>(cmd: IExecutionCommand<T>): any {
-        const payload: {
-            id: number;
-            prefix: string;
-            lookup?: string;
-            path: string;
-            source?: string;
-            line?: number;
-            column?: number;
-            config: {
-                extraPaths: string[];
-                useSnippets: boolean;
-                caseInsensitiveCompletion: boolean;
-                showDescriptions: boolean;
-                fuzzyMatcher: boolean;
-            };
-        } = {
+        const payload = {
             id: cmd.id,
             prefix: '',
             lookup: commandNames.get(cmd.command),
@@ -863,14 +848,14 @@ export interface IHoverItem {
 }
 
 export class JediProxyHandler<R extends ICommandResult> implements Disposable {
-    private readonly commandCancellationTokenSources: Map<CommandType, CancellationTokenSource>;
-
-    public constructor(private readonly jediProxy: JediProxy) {
-        this.commandCancellationTokenSources = new Map<CommandType, CancellationTokenSource>();
-    }
+    private commandCancellationTokenSources: Map<CommandType, CancellationTokenSource>;
 
     public get JediProxy(): JediProxy {
         return this.jediProxy;
+    }
+
+    public constructor(private jediProxy: JediProxy) {
+        this.commandCancellationTokenSources = new Map<CommandType, CancellationTokenSource>();
     }
 
     public dispose() {

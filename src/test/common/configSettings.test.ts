@@ -44,9 +44,9 @@ suite('Configuration Settings', () => {
                 );
 
                 const workspaceSettingsWithoutPath = { ...workspaceSettings };
-                workspaceSettingsWithoutPath.tagFilePath = '';
+                delete workspaceSettingsWithoutPath.tagFilePath;
                 const pythonSettingValueWithoutPath = { ...((pythonSettingValue as {}) as IWorkspaceSymbolSettings) };
-                pythonSettingValueWithoutPath.tagFilePath = '';
+                delete pythonSettingValueWithoutPath.tagFilePath;
                 assert.deepEqual(
                     workspaceSettingsWithoutPath,
                     pythonSettingValueWithoutPath,
