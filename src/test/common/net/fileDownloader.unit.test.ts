@@ -63,7 +63,7 @@ class DelayedReadMemoryStream extends Readable {
     ) {
         super();
     }
-    // @ts-ignore
+    // @ts-ignore https://devblogs.microsoft.com/typescript/announcing-typescript-4-0-rc/#properties-overridding-accessors-and-vice-versa-is-an-error
     public get readableLength() {
         return 1024 * 10;
     }
