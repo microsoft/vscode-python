@@ -869,12 +869,12 @@ export interface IHoverItem {
 export class JediProxyHandler<R extends ICommandResult> implements Disposable {
     private commandCancellationTokenSources: Map<CommandType, CancellationTokenSource>;
 
-    public get JediProxy(): JediProxy {
-        return this.jediProxy;
-    }
-
     public constructor(private jediProxy: JediProxy) {
         this.commandCancellationTokenSources = new Map<CommandType, CancellationTokenSource>();
+    }
+
+    public get JediProxy(): JediProxy {
+        return this.jediProxy;
     }
 
     public dispose() {
