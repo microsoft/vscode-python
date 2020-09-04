@@ -30,7 +30,6 @@ import cloneDeep = require('lodash/cloneDeep');
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
-import { INotebookContentProvider } from '../types';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 export interface IBaseCellVSCodeMetadata {
@@ -53,6 +52,8 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     }
 }
 
+const kernelInformationForUntitledFiles = new WeakMap<NotebookDocument, KernelConnectionMetadata | undefined>();
+
 export function getNotebookMetadata(document: NotebookDocument): nbformat.INotebookMetadata | undefined {
     // tslint:disable-next-line: no-any
     let notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
@@ -66,24 +67,29 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
         // tslint:disable-next-line: no-any
         notebookContent = { ...content, metadata: { ...metadata, language_info } } as any;
     }
-    return notebookContent?.metadata;
+    notebookContent = cloneDeep(notebookContent);
+    if (kernelInformationForUntitledFiles.has(document)) {
+        updateNotebookMetadata(notebookContent.metadata, kernelInformationForUntitledFiles.get(document));
+    }
+
+    return notebookContent.metadata;
 }
+
+/**
+ * No need to trigger an event indicating changes have been made.
+ * If user runs a cell & document is updated, then it will get saved as part of that .
+ * Or if user makes other changes, then it will get saved as part of that updat e.
+ * I.e. just because user (or we automatically) selected a kernel, doesn't mean we need to mark the document as dir ty.
+ * If not, when users open a blank notebook and a kernel is auto selected, document is marked as dirty. Hence as soon as you create a blank notebook it is dr ity.
+ * Similarly, if you open an existing notebook, it is marked as dirty.
+ *
+ * Solution: Store the metadata in some place, when saving, take the metadata & store in the file.
+ */
 export function updateKernelInNotebookMetadata(
     document: NotebookDocument,
-    kernelConnection: KernelConnectionMetadata | undefined,
-    notebookContentProvider: INotebookContentProvider
+    kernelConnection: KernelConnectionMetadata | undefined
 ) {
-    // tslint:disable-next-line: no-any
-    const notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
-    if (!notebookContent || !notebookContent.metadata) {
-        traceError('VSCode Notebook does not have custom metadata', notebookContent);
-        throw new Error('VSCode Notebook does not have custom metadata');
-    }
-    const info = updateNotebookMetadata(notebookContent.metadata, kernelConnection);
-
-    if (info.changed) {
-        notebookContentProvider.notifyChangesToDocument(document);
-    }
+    kernelInformationForUntitledFiles.set(document, kernelConnection);
 }
 /**
  * Converts a NotebookModel into VSCode friendly format.

@@ -23,7 +23,6 @@ import { getKernelConnectionId, IKernelProvider, KernelConnectionMetadata } from
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebook, INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, updateKernelInNotebookMetadata } from './helpers/helpers';
-import { INotebookContentProvider } from './types';
 
 class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     get preloads(): Uri[] {
@@ -68,7 +67,6 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
-        @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
@@ -247,7 +245,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                         if (notebook.disposed) {
                             return;
                         }
-                        updateKernelInNotebookMetadata(document, e, this.notebookContentProvider);
+                        updateKernelInNotebookMetadata(document, e);
                     },
                     this,
                     this.disposables
@@ -260,7 +258,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             // Adding comment here, so we have context for the requirement.
             this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
         } else {
-            updateKernelInNotebookMetadata(document, selectedKernelConnectionMetadata, this.notebookContentProvider);
+            updateKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
         }
     }
 }
