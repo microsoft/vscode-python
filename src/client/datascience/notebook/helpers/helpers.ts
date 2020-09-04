@@ -52,7 +52,7 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     }
 }
 
-const kernelInformationForUntitledFiles = new WeakMap<NotebookDocument, KernelConnectionMetadata | undefined>();
+const kernelInformationForNotebooks = new WeakMap<NotebookDocument, KernelConnectionMetadata | undefined>();
 
 export function getNotebookMetadata(document: NotebookDocument): nbformat.INotebookMetadata | undefined {
     // tslint:disable-next-line: no-any
@@ -68,8 +68,8 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
         notebookContent = { ...content, metadata: { ...metadata, language_info } } as any;
     }
     notebookContent = cloneDeep(notebookContent);
-    if (kernelInformationForUntitledFiles.has(document)) {
-        updateNotebookMetadata(notebookContent.metadata, kernelInformationForUntitledFiles.get(document));
+    if (kernelInformationForNotebooks.has(document)) {
+        updateNotebookMetadata(notebookContent.metadata, kernelInformationForNotebooks.get(document));
     }
 
     return notebookContent.metadata;
@@ -86,7 +86,7 @@ export function updateKernelInNotebookMetadata(
     document: NotebookDocument,
     kernelConnection: KernelConnectionMetadata | undefined
 ) {
-    kernelInformationForUntitledFiles.set(document, kernelConnection);
+    kernelInformationForNotebooks.set(document, kernelConnection);
 }
 /**
  * Converts a NotebookModel into VSCode friendly format.
