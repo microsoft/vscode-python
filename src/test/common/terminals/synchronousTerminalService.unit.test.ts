@@ -67,7 +67,7 @@ suite('Terminal Service (synchronous)', () => {
         });
     });
     suite('sendCommand', () => {
-        const isolated = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
+        const isolated = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py').replace(/\\/g, '/');
         const shellExecFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'shell_exec.py');
 
         test('run sendCommand in terminalService if there is no cancellation token', async () => {
