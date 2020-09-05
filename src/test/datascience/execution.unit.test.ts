@@ -60,13 +60,13 @@ import { IEnvironmentActivationService } from '../../client/interpreter/activati
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { ServiceContainer } from '../../client/ioc/container';
-import { KnownSearchPathsForInterpreters } from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockJupyterServer } from './mockJupyterServer';
+import { KnownSearchPathsForInterpreters } from '../../client/pythonEnvironments/discovery/locators/services/KnownSearchPaths';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 class DisposableRegistry implements IAsyncDisposableRegistry {

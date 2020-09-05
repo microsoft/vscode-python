@@ -18,6 +18,7 @@ import {
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
+    WINDOWS_STORE_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
@@ -37,11 +38,13 @@ import {
 import { InterpreterHashProvider } from './discovery/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from './discovery/locators/services/hashProviderFactory';
 import { InterpreterWatcherBuilder } from './discovery/locators/services/interpreterWatcherBuilder';
-import { KnownPathsService, KnownSearchPathsForInterpreters } from './discovery/locators/services/KnownPathsService';
+import { KnownPathsService } from './discovery/locators/services/KnownPathsService';
+import { KnownSearchPathsForInterpreters } from './discovery/locators/services/KnownSearchPaths';
 import { PipEnvService } from './discovery/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from './discovery/locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from './discovery/locators/services/windowsRegistryService';
 import { WindowsStoreInterpreter } from './discovery/locators/services/windowsStoreInterpreter';
+import { WindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
     WorkspaceVirtualEnvService,
@@ -96,6 +99,11 @@ export function registerForIOC(serviceManager: IServiceManager, serviceContainer
         IInterpreterLocatorService,
         KnownPathsService,
         KNOWN_PATH_SERVICE,
+    );
+    serviceManager.addSingleton<IInterpreterLocatorService>(
+        IInterpreterLocatorService,
+        WindowsStoreLocator,
+        WINDOWS_STORE_SERVICE,
     );
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);

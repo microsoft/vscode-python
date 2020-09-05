@@ -2,6 +2,7 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { traceError, traceInfo } from '../../../../common/logger';
+import { pathExists } from '../../../../common/platform/fileSystem';
 import { IFileSystem, IPlatformService } from '../../../../common/platform/types';
 import * as internalPython from '../../../../common/process/internal/python';
 import { IProcessServiceFactory } from '../../../../common/process/types';
@@ -100,13 +101,13 @@ export class CurrentPathService extends CacheableLocatorService {
                 .exec(options.command, pyArgs.concat(args), {})
                 .then((output) => parse(output.stdout))
                 .then(async (value) => {
-                    if (value.length > 0 && (await this.fs.fileExists(value))) {
+                    if (value.length > 0 && (await pathExists(value))) {
                         return value;
                     }
                     traceError(
                         `Detection of Python Interpreter for Command ${options.command} and args ${pyArgs.join(
                             ' ',
-                        )} failed as file ${value} does not exist`,
+                        )} failed as file ${this.fs.directorySeparatorChar+value} does not exist`,
                     );
                     return '';
                 })

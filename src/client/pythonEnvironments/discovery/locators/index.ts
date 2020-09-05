@@ -17,6 +17,7 @@ import {
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
+    WINDOWS_STORE_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
@@ -123,6 +124,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             [WORKSPACE_VIRTUAL_ENV_SERVICE, undefined],
             [KNOWN_PATH_SERVICE, undefined],
             [CURRENT_PATH_SERVICE, undefined],
+            [WINDOWS_STORE_SERVICE, OSType.Windows],
         ];
 
         const locators = keys

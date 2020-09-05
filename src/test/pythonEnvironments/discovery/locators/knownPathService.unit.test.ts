@@ -12,7 +12,7 @@ import { IPlatformService } from '../../../../client/common/platform/types';
 import { ICurrentProcess, IPathUtils } from '../../../../client/common/types';
 import { IKnownSearchPathsForInterpreters } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { KnownSearchPathsForInterpreters } from '../../../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
+import { KnownSearchPathsForInterpreters } from '../../../../client/pythonEnvironments/discovery/locators/services/KnownSearchPaths';
 
 suite('Interpreters Known Paths', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

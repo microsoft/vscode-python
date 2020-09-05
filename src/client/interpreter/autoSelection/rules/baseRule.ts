@@ -7,6 +7,7 @@ import { inject, injectable, unmanaged } from 'inversify';
 import { compare } from 'semver';
 import '../../../common/extensions';
 import { traceDecorators, traceVerbose } from '../../../common/logger';
+import { pathExists } from '../../../common/platform/fileSystem';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPersistentState, IPersistentStateFactory, Resource } from '../../../common/types';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -55,7 +56,11 @@ export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
     }
     public getPreviouslyAutoSelectedInterpreter(_resource: Resource): PythonEnvironment | undefined {
         const value = this.stateStore.value;
-        traceVerbose(`Current value for rule ${this.ruleName} is ${value ? JSON.stringify(value) : 'nothing'}`);
+        traceVerbose(
+            `Current value for rule ${this.ruleName + this.fs.directorySeparatorChar} is ${
+                value ? JSON.stringify(value) : 'nothing'
+            }`
+        );
         return value;
     }
     protected abstract onAutoSelectInterpreter(
@@ -87,7 +92,7 @@ export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
         return false;
     }
     protected async clearCachedInterpreterIfInvalid(resource: Resource) {
-        if (!this.stateStore.value || (await this.fs.fileExists(this.stateStore.value.path))) {
+        if (!this.stateStore.value || (await pathExists(this.stateStore.value.path))) {
             return;
         }
         sendTelemetryEvent(

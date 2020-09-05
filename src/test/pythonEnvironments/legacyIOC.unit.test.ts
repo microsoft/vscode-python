@@ -49,8 +49,8 @@ import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/d
 import { InterpreterWatcherBuilder } from '../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
 import {
     KnownPathsService,
-    KnownSearchPathsForInterpreters,
 } from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
+import { KnownSearchPathsForInterpreters } from '../../client/pythonEnvironments/discovery/locators/services/KnownSearchPaths';
 import { PipEnvService } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from '../../client/pythonEnvironments/discovery/locators/services/windowsRegistryService';

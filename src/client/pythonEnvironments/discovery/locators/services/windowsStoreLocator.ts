@@ -2,10 +2,16 @@
 // Licensed under the MIT License.
 
 import * as fsapi from 'fs-extra';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { traceWarning } from '../../../../common/logger';
-import { getEnvironmentVariable } from '../../../../common/utils/platform';
+import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
+import { IInterpreterHelper } from '../../../../interpreter/contracts';
+import { IServiceContainer } from '../../../../ioc/types';
 import { isWindowsPythonExe } from '../../../common/windowsUtils';
+import { EnvironmentType, PythonEnvironment } from '../../../info';
+import { CacheableLocatorService } from './cacheableLocatorService';
 
 /**
  * Gets path to the Windows Apps directory.
@@ -109,3 +115,52 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
 
 // tslint:disable-next-line: no-suspicious-comment
 // TODO: The above APIs will be consumed by the Windows Store locator class when we have it.
+@injectable()
+export class WindowsStoreLocator extends CacheableLocatorService {
+    public constructor(
+        @inject(IInterpreterHelper) private helper: IInterpreterHelper,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+    ) {
+        super('WindowsStoreLocator', serviceContainer);
+    }
+
+    /**
+     * Release any held resources.
+     *
+     * Called by VS Code to indicate it is done with the resource.
+     */
+    // tslint:disable-next-line:no-empty
+    public dispose() {}
+
+    /**
+     * Return the located interpreters.
+     *
+     * This is used by CacheableLocatorService.getInterpreters().
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    protected getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
+        return getWindowsStorePythonExes().then((interpreters) => interpreters.filter(
+            (item) => item.length > 0,
+        )).then((interpreters) => Promise.all(
+            interpreters.map((interpreter) => this.getInterpreterDetails(interpreter)),
+        )).then((interpreters) => interpreters.filter(
+            (interpreter) => !!interpreter,
+        ).map((interpreter) => interpreter!));
+    }
+
+    private async getInterpreterDetails(interpreter: string): Promise<PythonEnvironment|undefined> {
+        const details = await this.helper.getInterpreterInformation(interpreter);
+        if (!details) {
+            return;
+        }
+        this._hasInterpreters.resolve(true);
+        // eslint-disable-next-line consistent-return
+        return {
+            version: details.version,
+            architecture: Architecture.x64,
+            sysPrefix: details.sysPrefix ? details.sysPrefix : '',
+            path: interpreter,
+            envType: EnvironmentType.WindowsStore,
+        };
+    }
+}

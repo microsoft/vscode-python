@@ -20,6 +20,7 @@ import {
 } from '../common/types';
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
+import { identifyEnvironment } from '../pythonEnvironments/common/environmentIdentifier';
 import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { captureTelemetry } from '../telemetry';
@@ -34,7 +35,7 @@ import {
 import { IInterpreterHashProviderFactory } from './locators/types';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
-const EXPITY_DURATION = 24 * 60 * 60 * 1000;
+const EXPITY_DURATION = 0;
 
 export type GetInterpreterOptions = {
     onSuggestion?: boolean;
@@ -317,9 +318,16 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (info.envName && info.envName.length > 0) {
             envSuffixParts.push(`'${info.envName}'`);
         }
+        const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
         if (info.envType) {
-            const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
             const name = interpreterHelper.getInterpreterTypeDisplayName(info.envType);
+            if (name) {
+                envSuffixParts.push(name);
+            }
+        } else {
+            const name = interpreterHelper.getInterpreterTypeDisplayName(
+                await identifyEnvironment(info.path ? info.path : '')
+            );
             if (name) {
                 envSuffixParts.push(name);
             }

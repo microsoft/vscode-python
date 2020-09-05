@@ -8,6 +8,7 @@ import { IFileSystem, IPlatformService } from '../../../../common/platform/types
 import { IInterpreterHelper, IVirtualEnvironmentsSearchPathProvider } from '../../../../interpreter/contracts';
 import { IVirtualEnvironmentManager } from '../../../../interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../../../ioc/types';
+import { identifyEnvironment } from '../../../common/environmentIdentifier';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
@@ -91,7 +92,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
         return Promise.all([
             this.helper.getInterpreterInformation(interpreter),
             this.virtualEnvMgr.getEnvironmentName(interpreter, resource),
-            this.virtualEnvMgr.getEnvironmentType(interpreter, resource),
+            identifyEnvironment(interpreter),
         ]).then(([details, virtualEnvName, type]) => {
             if (!details) {
                 return;

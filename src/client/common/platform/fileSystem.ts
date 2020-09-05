@@ -12,6 +12,7 @@ import { promisify } from 'util';
 import * as vscode from 'vscode';
 import '../../common/extensions';
 import { traceError } from '../logger';
+import { createDeferred } from '../utils/async';
 import { createDirNotEmptyError, isFileExistsError, isFileNotFoundError, isNoPermissionsError } from './errors';
 import { FileSystemPaths, FileSystemPathUtils } from './fs-paths';
 import { TemporaryFileSystem } from './fs-temp';
@@ -491,6 +492,17 @@ export function getHashString(data: string): string {
     return hash.digest('hex');
 }
 
+export function pathExists(absPath: string): Promise<boolean> {
+    const deferred = createDeferred<boolean>();
+    fs.exists(absPath, (result) => {
+        deferred.resolve(result);
+    });
+    return deferred.promise;
+}
+
+export function readFile(filePath: string): Promise<string> {
+    return fs.readFile(filePath, 'utf-8');
+}
 //==========================================
 // legacy filesystem API
 

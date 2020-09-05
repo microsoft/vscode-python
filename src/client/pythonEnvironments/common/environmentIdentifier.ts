@@ -1,19 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { createDeferred } from '../../common/utils/async';
+import { pathExists } from '../../common/platform/fileSystem';
+import { isPipenvEnvironment } from '../discovery/locators/services/pipEnvHelper';
 import { isWindowsStoreEnvironment } from '../discovery/locators/services/windowsStoreLocator';
 import { EnvironmentType } from '../info';
-
-function pathExists(absPath: string): Promise<boolean> {
-    const deferred = createDeferred<boolean>();
-    fsapi.exists(absPath, (result) => {
-        deferred.resolve(result);
-    });
-    return deferred.promise;
-}
 
 /**
  * Checks if the given interpreter path belongs to a conda environment. Using
@@ -98,6 +90,9 @@ export async function identifyEnvironment(interpreterPath: string): Promise<Envi
         return EnvironmentType.WindowsStore;
     }
 
+    if (await isPipenvEnvironment(interpreterPath)) {
+        return EnvironmentType.Pipenv;
+    }
     // additional identifiers go here
 
     return EnvironmentType.Unknown;
