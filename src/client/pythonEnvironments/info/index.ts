@@ -109,6 +109,12 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType) {
         case EnvironmentType.VirtualEnv: {
             return 'virtualenv';
         }
+        case EnvironmentType.WindowsStore: {
+            return 'store';
+        }
+        case EnvironmentType.Poetry: {
+            return 'poetry';
+        }
         default: {
             return '';
         }
