@@ -10,7 +10,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { CellMatcher } from '../cellMatcher';
 import { GatherExtension, Telemetry } from '../constants';
 import { ICell as IVscCell, IGatherLogger, IGatherProvider } from '../types';
-concatMultilineString
+
 @injectable()
 export class GatherLogger implements IGatherLogger {
     private gather: IGatherProvider | undefined;
