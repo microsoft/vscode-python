@@ -134,6 +134,10 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
     }
 
     suiteSetup(async function () {
+        // Skipping test due to flaky ness
+        //  see:https://github.com/microsoft/vscode-python/issues/13649
+        this.skip();
+
         // skip for Python < 3, no venv support
         if (await isPythonVersionInProcess(undefined, '2')) {
             return this.skip();
