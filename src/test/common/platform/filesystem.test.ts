@@ -37,10 +37,12 @@ suite('FileSystem - raw', () => {
     });
 
     suite('stat', () => {
-        test('gets the info for an existing file', async function () {
+        setup(function () {
             // https://github.com/microsoft/vscode-python/issues/10294
             // tslint:disable-next-line: no-invalid-this
-            return this.skip();
+            this.skip();
+        });
+        test('gets the info for an existing file', async () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const old = await fsextra.stat(filename);
             const expected = convertStat(old, FileType.File);
@@ -935,10 +937,12 @@ suite('FileSystem', () => {
 
     suite('raw', () => {
         suite('stat', () => {
-            test('gets the info for an existing file', async function () {
+            setup(function () {
                 // https://github.com/microsoft/vscode-python/issues/10294
                 // tslint:disable-next-line: no-invalid-this
-                return this.skip();
+                this.skip();
+            });
+            test('gets the info for an existing file', async () => {
                 const filename = await fix.createFile('x/y/z/spam.py', '...');
                 const old = await fsextra.stat(filename);
                 const expected = convertStat(old, FileType.File);
