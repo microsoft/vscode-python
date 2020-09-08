@@ -108,8 +108,10 @@ class ComponentAdapter implements IComponentAdapter {
     // IInterpreterService
 
     public get hasInterpreters(): Promise<boolean> {
-        return Promise.resolve(false);
-        // ...
+        const iterator = this.api.iterEnvs();
+        return iterator.next().then((res) => {
+            return !res.done;
+        });
     }
 
     //public async getInterpreters(_resource?: Uri, _options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
