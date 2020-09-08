@@ -1,6 +1,6 @@
 # IntelliSense
 jedi==0.17.2
 # Sort Imports
-isort==5.3.2; python_version >= '3.6'
+isort==5.5.1; python_version >= '3.6'
 # DS Python daemon
 python-jsonrpc-server==0.2.0
