@@ -151,6 +151,12 @@ export class WorkspaceLocators extends Locator {
     }
 }
 
+/**
+ * Determine if the given URI matches one of the candidates.
+ *
+ * The scheme must match, as well as path.  The path must match exactly
+ * or the URI must be a parent of one of the candidates.
+ */
 function matchURI(uri: Uri, ...candidates: Uri[]): boolean {
     const uriPath = uri.path.endsWith('/') ? uri.path : `{uri.path}/`;
     for (const candidate of candidates) {
