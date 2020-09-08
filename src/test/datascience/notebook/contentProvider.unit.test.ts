@@ -62,7 +62,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                 const notebook = await contentProvider.openNotebook(fileUri, {});
 
                 assert.isOk(notebook);
-                assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
+                assert.deepEqual(notebook.languages, ['*']);
                 // ignore metadata we add.
                 const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
                     const cellToCompareWith = cloneDeep(cell);
@@ -142,7 +142,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                 const notebook = await contentProvider.openNotebook(fileUri, {});
 
                 assert.isOk(notebook);
-                assert.deepEqual(notebook.languages, ['csharp']);
+                assert.deepEqual(notebook.languages, ['*']);
 
                 assert.equal(notebook.metadata.cellEditable, isNotebookTrusted);
                 assert.equal(notebook.metadata.cellRunnable, isNotebookTrusted);

@@ -140,7 +140,7 @@ import { closeActiveWindows, initializeTest } from './../initialize';
 
 chai_use(chaiAsPromised);
 
-const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
+const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py').replace(/\\/g, '/');
 
 const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
