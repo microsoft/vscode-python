@@ -95,7 +95,7 @@ export class WorkspaceLocators extends Locator {
             const locator = this.locators[key];
             return locator.iterEnvs(query);
         });
-        return chain<PythonEnvInfo>(iterators);
+        return chain(iterators);
     }
 
     public async resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
