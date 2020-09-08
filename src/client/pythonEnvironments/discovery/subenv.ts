@@ -126,14 +126,10 @@ export function getVenvTypeFinder(
         const dir = pathDirname(python);
         const VENVFILES = ['pyvenv.cfg', pathJoin('..', 'pyvenv.cfg')];
         const cfgFiles = VENVFILES.map((file) => pathJoin(dir, file));
-        try {
-            const files = await Promise.all(cfgFiles.map(fileExists));
+        const files = await Promise.all(cfgFiles.map(fileExists));
 
-            if (files.find((file) => file)) {
-                return EnvironmentType.Venv;
-            }
-        } catch {
-            return undefined;
+        if (files.find((file) => file)) {
+            return EnvironmentType.Venv;
         }
 
         return undefined;
