@@ -35,8 +35,10 @@ const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
  */
 export class ExtensionLocators extends Locators {
     constructor(
-        // These are all wrapped up together.
+        // These are expected to be low-level locators (e.g. system).
         nonWorkspace: ILocator[],
+        // This is expected to be a locator wrapping any found in
+        // the workspace (i.e. WorkspaceLocators).
         workspace: ILocator
     ) {
         super([...nonWorkspace, workspace]);
