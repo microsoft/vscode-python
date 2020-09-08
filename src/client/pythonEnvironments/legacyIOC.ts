@@ -25,6 +25,7 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 //import { GetInterpreterOptions } from '../interpreter/interpreterService';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
+import { PythonEnvKind } from './base/info';
 import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
@@ -96,9 +97,12 @@ class ComponentAdapter implements IComponentAdapter {
         // ...
     }
 
-    public async isMacDefaultPythonPath(_pythonPath: string): Promise<boolean> {
-        return false;
-        // ...
+    public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined> {
+        const env = await this.api.resolveEnv(pythonPath);
+        if (env === undefined) {
+            return undefined;
+        }
+        return env.kind === PythonEnvKind.MacDefault;
     }
 
     // IInterpreterService
