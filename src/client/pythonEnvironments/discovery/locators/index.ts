@@ -21,7 +21,7 @@ import {
 } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonEnvInfo } from '../../base/info';
-import { Locator, ILocator, NOOP_ITERATOR, PythonEnvsIterator, PythonLocatorQuery } from '../../base/locator';
+import { ILocator, Locator, NOOP_ITERATOR, PythonEnvsIterator, PythonLocatorQuery } from '../../base/locator';
 import { DisableableLocator, Locators } from '../../base/locators';
 import { PythonEnvironment } from '../../info';
 import { isHiddenInterpreter } from './services/interpreterFilter';

@@ -131,10 +131,10 @@ export class SimpleLocator extends Locator {
                         callbacks.beforeEach(env).then(() => [closure, index])
                     );
                 }
-                for(let i = 0; i < pending.length; i += 1) {
+                for (const _ of pending) {
                     const [env, index] = await Promise.race(pending);
                     pending[index] = NEVER as Promise<[PythonEnvInfo, number]>;
-                    yield env
+                    yield env;
                     if (callbacks?.afterEach !== undefined) {
                         await callbacks.afterEach(env);
                     }
