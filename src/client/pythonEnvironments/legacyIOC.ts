@@ -172,9 +172,12 @@ class ComponentAdapter implements IComponentAdapter {
 
     //public async getInterpreters(_resource?: Uri, _options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
 
-    public async getInterpreterDetails(_pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment> {
-        return undefined;
-        // ...
+    public async getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment> {
+        const env = await this.api.resolveEnv(pythonPath);
+        if (env === undefined) {
+            return undefined;
+        }
+        return convertEnvInfo(env);
     }
 
     // ICondaService
