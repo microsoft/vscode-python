@@ -3,6 +3,7 @@
 
 import { injectable } from 'inversify';
 import { Uri } from 'vscode';
+import { getVersionString, parseVersion } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -25,7 +26,7 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 //import { GetInterpreterOptions } from '../interpreter/interpreterService';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
-import { PythonEnvKind } from './base/info';
+import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
 import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
@@ -53,10 +54,62 @@ import {
 } from './discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { GetInterpreterLocatorOptions } from './discovery/locators/types';
-import { PythonEnvironment } from './info';
+import { EnvironmentType, PythonEnvironment } from './info';
 import { EnvironmentInfoService, IEnvironmentInfoService } from './info/environmentInfoService';
 
 import { PythonEnvironments } from '.';
+
+function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
+    const env: PythonEnvironment = {
+        envType: EnvironmentType.Unknown,
+        envName: info.name,
+        envPath: info.location,
+        path: info.executable.filename,
+        architecture: info.arch,
+        sysPrefix: info.executable.sysPrefix
+    };
+
+    if (info.kind === PythonEnvKind.System) {
+        env.envType = EnvironmentType.System;
+    } else if (info.kind === PythonEnvKind.MacDefault) {
+        env.envType = EnvironmentType.System;
+    } else if (info.kind === PythonEnvKind.WindowsStore) {
+        env.envType = EnvironmentType.WindowsStore;
+    } else if (info.kind === PythonEnvKind.Pyenv) {
+        env.envType = EnvironmentType.Pyenv;
+    } else if (info.kind === PythonEnvKind.Conda) {
+        env.envType = EnvironmentType.Conda;
+    } else if (info.kind === PythonEnvKind.CondaBase) {
+        env.envType = EnvironmentType.Conda;
+    } else if (info.kind === PythonEnvKind.VirtualEnv) {
+        env.envType = EnvironmentType.VirtualEnv;
+    } else if (info.kind === PythonEnvKind.Pipenv) {
+        env.envType = EnvironmentType.Pipenv;
+        if (info.searchLocation !== undefined) {
+            env.pipEnvWorkspaceFolder = info.searchLocation.fsPath;
+        }
+    } else if (info.kind === PythonEnvKind.Venv) {
+        env.envType = EnvironmentType.Venv;
+    }
+    // Otherwise it stays Unknown.
+
+    if (info.version !== undefined) {
+        const releaseStr = info.version.release.level === PythonReleaseLevel.Final
+            ? 'final'
+            : `${info.version.release.level}${info.version.release.serial}`;
+        const versionStr = `${getVersionString(info.version)}-${releaseStr}`;
+        env.version = parseVersion(versionStr);
+        env.sysVersion = info.version.sysVersion;
+    }
+
+    if (info.distro !== undefined && info.distro.org !== '') {
+        env.companyDisplayName = info.distro.org;
+    }
+    // We do not worry about using info.distro.defaultDisplayName
+    // or info.defaultDisplayName.
+
+    return env;
+}
 
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
