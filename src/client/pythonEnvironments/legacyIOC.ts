@@ -121,9 +121,12 @@ class ComponentAdapter implements IComponentAdapter {
 
     // ICondaService
 
-    public async isCondaEnvironment(_interpreterPath: string): Promise<boolean> {
-        return false;
-        // ...
+    public async isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined> {
+        const env = await this.api.resolveEnv(interpreterPath);
+        if (env === undefined) {
+            return undefined;
+        }
+        return env.kind === PythonEnvKind.Conda;
     }
 
     public async getCondaEnvironment(_interpreterPath: string): Promise<CondaEnvironmentInfo | undefined> {
