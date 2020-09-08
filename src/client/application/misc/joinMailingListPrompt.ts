@@ -27,25 +27,25 @@ export class JoinMailingListPrompt implements IExtensionSingleActivationService 
     }
 
     public async activate(): Promise<void> {
+        // Only show the prompt if we have never shown it before. True here, means we have
+        // shown the prompt before.
         if (this.storage.value) {
             return Promise.resolve();
         }
 
         let promptContent: string | undefined;
-        if (await this.experiments.inExperiment(JoinMailingListPromptVariants.joinMailingListWordingVariant1)) {
-            promptContent = await this.experiments.getExperimentValue<string>(
-                JoinMailingListPromptVariants.joinMailingListWordingVariant1
-            );
-        } else if (await this.experiments.inExperiment(JoinMailingListPromptVariants.joinMailingListWordingVariant2)) {
-            promptContent = await this.experiments.getExperimentValue<string>(
-                JoinMailingListPromptVariants.joinMailingListWordingVariant2
-            );
-        } else if (await this.experiments.inExperiment(JoinMailingListPromptVariants.joinMailingListWordingVariant3)) {
-            promptContent = await this.experiments.getExperimentValue<string>(
-                JoinMailingListPromptVariants.joinMailingListWordingVariant3
-            );
+        if (await this.experiments.inExperiment(JoinMailingListPromptVariants.variant1)) {
+            promptContent = await this.experiments.getExperimentValue<string>(JoinMailingListPromptVariants.variant1);
+        } else if (await this.experiments.inExperiment(JoinMailingListPromptVariants.variant2)) {
+            promptContent = await this.experiments.getExperimentValue<string>(JoinMailingListPromptVariants.variant2);
+        } else if (await this.experiments.inExperiment(JoinMailingListPromptVariants.variant3)) {
+            promptContent = await this.experiments.getExperimentValue<string>(JoinMailingListPromptVariants.variant3);
+        } else {
+            // Not in any experiment, so no content to show.
+            promptContent = undefined;
         }
 
+        // Show the prompt only if there is any content to show.
         if (promptContent) {
             this.showTip(promptContent).ignoreErrors();
         }

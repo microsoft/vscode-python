@@ -101,7 +101,7 @@ export enum SurveyAndInterpreterTipNotification {
 
 // Experiment to show a prompt asking users to join python mailing list.
 export enum JoinMailingListPromptVariants {
-    joinMailingListWordingVariant1 = 'pythonJoinMailingListVar1',
-    joinMailingListWordingVariant2 = 'pythonJoinMailingListVar2',
-    joinMailingListWordingVariant3 = 'pythonJoinMailingListVar3'
+    variant1 = 'pythonJoinMailingListVar1',
+    variant2 = 'pythonJoinMailingListVar2',
+    variant3 = 'pythonJoinMailingListVar3'
 }
