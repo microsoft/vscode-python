@@ -19,13 +19,9 @@ type PipenvFinderFunc = (python: string) => Promise<EnvironmentType.Pipenv | und
  * @param finders - the functions specific to different Python environment types
  */
 export async function getName(python: string, finders: NameFinderFunc[]): Promise<string | undefined> {
-    try {
-        const envNames = await Promise.all(finders.map((find) => find(python)));
+    const envNames = await Promise.all(finders.map((find) => find(python)));
 
-        return envNames.find((name) => name && name !== '');
-    } catch {
-        return undefined;
-    }
+    return envNames.find((name) => name && name !== '');
 }
 
 /**
@@ -35,13 +31,9 @@ export async function getName(python: string, finders: NameFinderFunc[]): Promis
  * @param finders - the functions specific to different Python environment types
  */
 export async function getType(python: string, finders: TypeFinderFunc[]): Promise<EnvironmentType | undefined> {
-    try {
-        const envTypes = await Promise.all(finders.map((find) => find(python)));
+    const envTypes = await Promise.all(finders.map((find) => find(python)));
 
-        return envTypes.find((type) => type && type !== EnvironmentType.Unknown);
-    } catch {
-        return undefined;
-    }
+    return envTypes.find((type) => type && type !== EnvironmentType.Unknown);
 }
 
 // ======= default sets ========
