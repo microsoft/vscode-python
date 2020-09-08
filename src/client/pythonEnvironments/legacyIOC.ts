@@ -145,9 +145,12 @@ class ComponentAdapter implements IComponentAdapter {
 
     // IInterpreterHelper
 
-    public async getInterpreterInformation(_pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
-        return undefined;
-        // ...
+    public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
+        const env = await this.api.resolveEnv(pythonPath);
+        if (env === undefined) {
+            return undefined;
+        }
+        return convertEnvInfo(env);
     }
 
     public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined> {
