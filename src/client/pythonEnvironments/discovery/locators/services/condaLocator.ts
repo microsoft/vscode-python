@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 import * as path from 'path';
-import { isWindowsStoreEnvironment } from '../discovery/locators/services/windowsStoreLocator';
-import { EnvironmentType } from '../info';
-import { pathExists } from './externalDependencies';
+import { pathExists } from '../../../common/externalDependencies';
 
 /**
  * Checks if the given interpreter path belongs to a conda environment. Using
@@ -19,7 +16,7 @@ import { pathExists } from './externalDependencies';
  * that is the next alternative that is cheap.
  *
  * sample content of the ~/.conda/environments.txt:
- * C:\envs\\myenv
+ * C:\envs\myenv
  * C:\ProgramData\Miniconda3
  *
  * Yet another approach is to use `conda env list --json` and compare the returned env
@@ -36,7 +33,7 @@ import { pathExists } from './externalDependencies';
  *   ]
  * }
  */
-async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
+export async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
     const condaMetaDir = 'conda-meta';
 
     // Check if the conda-meta directory is in the same directory as the interpreter.
@@ -55,41 +52,4 @@ async function isCondaEnvironment(interpreterPath: string): Promise<boolean> {
     const condaEnvDir2 = path.join(path.dirname(path.dirname(interpreterPath)), condaMetaDir);
 
     return [await pathExists(condaEnvDir1), await pathExists(condaEnvDir2)].includes(true);
-}
-
-/**
- * Returns environment type.
- * @param {string} interpreterPath : Absolute path to the python interpreter binary.
- * @returns {EnvironmentType}
- *
- * Remarks: This is the order of detection based on how the various distributions and tools
- * configure the environment, and the fall back for identification.
- * Top level we have the following environment types, since they leave a unique signature
- * in the environment or * use a unique path for the environments they create.
- *  1. Conda
- *  2. Windows Store
- *  3. PipEnv
- *  4. Pyenv
- *  5. Poetry
- *
- * Next level we have the following virtual environment tools. The are here because they
- * are consumed by the tools above, and can also be used independently.
- *  1. venv
- *  2. virtualenvwrapper
- *  3. virtualenv
- *
- * Last category is globally installed python, or system python.
- */
-export async function identifyEnvironment(interpreterPath: string): Promise<EnvironmentType> {
-    if (await isCondaEnvironment(interpreterPath)) {
-        return EnvironmentType.Conda;
-    }
-
-    if (await isWindowsStoreEnvironment(interpreterPath)) {
-        return EnvironmentType.WindowsStore;
-    }
-
-    // additional identifiers go here
-
-    return EnvironmentType.Unknown;
 }
