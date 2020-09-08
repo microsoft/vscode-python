@@ -133,9 +133,12 @@ class ComponentAdapter implements IComponentAdapter {
 
     // IWindowsStoreInterpreter
 
-    public isWindowsStoreInterpreter(_pythonPath: string): boolean {
-        return false;
-        // ...
+    public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined> {
+        const env = await this.api.resolveEnv(pythonPath);
+        if (env === undefined) {
+            return undefined;
+        }
+        return env.kind === PythonEnvKind.WindowsStore;
     }
 
     // IInterpreterLocatorService
