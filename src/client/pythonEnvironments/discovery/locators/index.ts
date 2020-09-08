@@ -98,8 +98,8 @@ export class WorkspaceLocators extends Locator {
         return chain(iterators);
     }
 
-    public async resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        if (env.searchLocation) {
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        if (typeof env !== 'string' && env.searchLocation) {
             const rootLocator = this.locators[env.searchLocation.toString()];
             if (rootLocator) {
                 return rootLocator.resolveEnv(env);
