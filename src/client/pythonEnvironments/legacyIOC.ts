@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { Uri } from 'vscode';
+import * as vscode from 'vscode';
 import { getVersionString, parseVersion } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -27,6 +27,7 @@ import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpret
 //import { GetInterpreterOptions } from '../interpreter/interpreterService';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
+import { PythonLocatorQuery } from './base/locator';
 import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
@@ -170,9 +171,9 @@ class ComponentAdapter implements IComponentAdapter {
         });
     }
 
-    //public async getInterpreters(_resource?: Uri, _options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
+    //public async getInterpreters(_resource?: vscode.Uri, _options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
 
-    public async getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment> {
+    public async getInterpreterDetails(pythonPath: string, _resource?: vscode.Uri): Promise<undefined | PythonEnvironment> {
         const env = await this.api.resolveEnv(pythonPath);
         if (env === undefined) {
             return undefined;
@@ -217,13 +218,31 @@ class ComponentAdapter implements IComponentAdapter {
 
     // IInterpreterLocatorService
 
-    public async getInterpreters(_resource?: Uri, _options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]> {
+    public async getInterpreters(
+        resource?: vscode.Uri,
+        _options?: GetInterpreterLocatorOptions
+    ): Promise<PythonEnvironment[]> {
+        // We ignore the options:
         //{
         //    ignoreCache?: boolean
         //    onSuggestion?: boolean;
         //}
-        return [];
-        // ...
+        const query: PythonLocatorQuery = {};
+        if (resource !== undefined) {
+            const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
+            if (wsFolder !== undefined) {
+                query.searchLocations = [wsFolder.uri];
+            }
+        }
+
+        const envs: PythonEnvironment[] = [];
+        const iterator = this.api.iterEnvs(query);
+        let res = await iterator.next();
+        while (!res.done) {
+            envs.push(convertEnvInfo(res.value));
+            res = await iterator.next();
+        }
+        return envs;
     }
 }
 
