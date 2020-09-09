@@ -21,10 +21,10 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
+import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
-import { FileBasedCancellationStrategy } from './cancellationUtils';
 
 @injectable()
 export class JediLanguageServerProxy implements ILanguageServerProxy {

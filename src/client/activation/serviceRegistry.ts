@@ -22,7 +22,6 @@ import { LanguageServerDownloadChannel } from './common/packageRepository';
 import { ExtensionSurveyPrompt } from './extensionSurvey';
 import { JediLanguageServerAnalysisOptions } from './jedi/analysisOptions';
 import { JediLanguageClientFactory } from './jedi/languageClientFactory';
-import { JediLanguageServerPackageService } from './jedi/languageServerPackageService';
 import { JediLanguageServerProxy } from './jedi/languageServerProxy';
 import { JediLanguageServerManager } from './jedi/manager';
 import { MultiplexingJediLanguageServerActivator } from './jedi/multiplexingActivator';
@@ -195,10 +194,6 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, JediLanguageClientFactory);
         serviceManager.add<ILanguageServerManager>(ILanguageServerManager, JediLanguageServerManager);
         serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, JediLanguageServerProxy);
-        serviceManager.addSingleton<ILanguageServerPackageService>(
-            ILanguageServerPackageService,
-            JediLanguageServerPackageService
-        );
     } else if (languageServerType === LanguageServerType.None) {
         serviceManager.add<ILanguageServerActivator>(
             ILanguageServerActivator,

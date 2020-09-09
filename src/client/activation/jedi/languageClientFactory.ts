@@ -27,7 +27,7 @@ export class JediLanguageClientFactory implements ILanguageClientFactory {
         const jediServerModulePath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'runJediLanguageServer.py');
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         const pythonPath = interpreter ? interpreter.path : 'python';
-        const args = [`${jediServerModulePath}`];
+        const args = [jediServerModulePath];
         const serverOptions: ServerOptions = {
             command: pythonPath,
             args
