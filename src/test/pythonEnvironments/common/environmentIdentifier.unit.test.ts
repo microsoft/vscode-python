@@ -25,7 +25,7 @@ suite('Environment Identifier', () => {
 
     suite('Windows Store', () => {
         let getEnvVar: sinon.SinonStub;
-        const fakeLocalAppDataPath = 'X:\\users\\user\\AppData\\Local';
+        const fakeLocalAppDataPath = path.join(TEST_LAYOUT_ROOT, 'storeApps');
         const fakeProgramFilesPath = 'X:\\Program Files';
         const executable = ['python.exe', 'python3.exe', 'python3.8.exe'];
         suiteSetup(() => {
@@ -95,5 +95,9 @@ suite('Environment Identifier', () => {
                 assert.deepEqual(envType, EnvironmentType.WindowsStore);
             });
         });
+    });
+
+    suite('Venv', () => {
+
     });
 });
