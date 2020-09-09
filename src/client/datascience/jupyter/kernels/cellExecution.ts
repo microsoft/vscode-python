@@ -125,7 +125,10 @@ export class CellExecution {
         this.started = true;
         // Ensure we clear the cell state and trigger a change.
         clearCellForExecution(this.cell);
-        this.cell.metadata.runStartTime = new Date().getTime();
+        new WorkspaceEdit().replaceCellMetadata(this.cell.notebook.uri, this.cell.notebook.cells.indexOf(this.cell), {
+            ...this.cell.metadata,
+            runStartTime: new Date().getTime()
+        });
         this.stopWatch.reset();
         // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
@@ -160,7 +163,10 @@ export class CellExecution {
 
     private completedWithErrors(error: Partial<Error>) {
         this.sendPerceivedCellExecute();
-        this.cell.metadata.lastRunDuration = this.stopWatch.elapsedTime;
+        new WorkspaceEdit().replaceCellMetadata(this.cell.notebook.uri, this.cell.notebook.cells.indexOf(this.cell), {
+            ...this.cell.metadata,
+            lastRunDuration: this.stopWatch.elapsedTime
+        });
         updateCellWithErrorStatus(this.cell, error);
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
         this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
