@@ -76,7 +76,7 @@ suite('Interpreters - Locators Helper', () => {
             // Treat 'mac' as as mac interpreter.
             interpreterServiceHelper
                 .setup((i) => i.isMacDefaultPythonPath(TypeMoq.It.isValue(interpreter.path)))
-                .returns(() => name === 'mac')
+                .returns(() => Promise.resolve(name === 'mac'))
                 .verifiable(TypeMoq.Times.never());
         });
 
@@ -93,7 +93,9 @@ suite('Interpreters - Locators Helper', () => {
     });
     getNamesAndValues<OS>(OS).forEach((os) => {
         test(`Ensure duplicates are removed (same version and same interpreter directory on ${os.name})`, async () => {
-            interpreterServiceHelper.setup((i) => i.isMacDefaultPythonPath(TypeMoq.It.isAny())).returns(() => false);
+            interpreterServiceHelper
+                .setup((i) => i.isMacDefaultPythonPath(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(false));
             platform.setup((p) => p.isWindows).returns(() => os.value === OS.Windows);
             platform.setup((p) => p.isLinux).returns(() => os.value === OS.Linux);
             platform.setup((p) => p.isMac).returns(() => os.value === OS.Mac);
@@ -158,7 +160,9 @@ suite('Interpreters - Locators Helper', () => {
     });
     getNamesAndValues<OS>(OS).forEach((os) => {
         test(`Ensure interpreter types are identified from other locators (${os.name})`, async () => {
-            interpreterServiceHelper.setup((i) => i.isMacDefaultPythonPath(TypeMoq.It.isAny())).returns(() => false);
+            interpreterServiceHelper
+                .setup((i) => i.isMacDefaultPythonPath(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(false));
             platform.setup((p) => p.isWindows).returns(() => os.value === OS.Windows);
             platform.setup((p) => p.isLinux).returns(() => os.value === OS.Linux);
             platform.setup((p) => p.isMac).returns(() => os.value === OS.Mac);

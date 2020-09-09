@@ -53,7 +53,7 @@ export interface IWindowsStoreInterpreter {
      * @returns {boolean}
      * @memberof WindowsStoreInterpreter
      */
-    isWindowsStoreInterpreter(pythonPath: string): boolean;
+    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;
     /**
      * Whether this is a python executable in a windows app store folder that is internal and can be hidden from users.
      *

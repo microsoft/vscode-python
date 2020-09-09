@@ -191,15 +191,6 @@ class ComponentAdapter implements IComponentAdapter {
 
     // IInterpreterService
 
-    // A result of `undefined` means "Fall back to the old code!"
-    public get hasInterpreters(): Promise<boolean | undefined> {
-        if (!this.enabled) {
-            return Promise.resolve(undefined);
-        }
-        const iterator = this.api.iterEnvs();
-        return iterator.next().then((res) => !res.done);
-    }
-
     // We use the same getInterpreters() here as for IInterpreterLocatorService.
 
     // A result of `undefined` means "Fall back to the old code!"
@@ -273,6 +264,15 @@ class ComponentAdapter implements IComponentAdapter {
     }
 
     // IInterpreterLocatorService
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public get hasInterpreters(): Promise<boolean | undefined> {
+        if (!this.enabled) {
+            return Promise.resolve(undefined);
+        }
+        const iterator = this.api.iterEnvs();
+        return iterator.next().then((res) => !res.done);
+    }
 
     // A result of `undefined` means "Fall back to the old code!"
     public async getInterpreters(

@@ -32,7 +32,9 @@ suite('Interpreters from Windows Registry (unit)', () => {
         fs = TypeMoq.Mock.ofType<IFileSystem>();
         windowsStoreInterpreter = TypeMoq.Mock.ofType<IWindowsStoreInterpreter>();
         windowsStoreInterpreter.setup((w) => w.isHiddenInterpreter(TypeMoq.It.isAny())).returns(() => false);
-        windowsStoreInterpreter.setup((w) => w.isWindowsStoreInterpreter(TypeMoq.It.isAny())).returns(() => false);
+        windowsStoreInterpreter
+            .setup((w) => w.isWindowsStoreInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(false));
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IPersistentStateFactory)))
             .returns(() => stateFactory.object);
@@ -331,7 +333,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
             .verifiable(TypeMoq.Times.atLeastOnce());
         windowsStoreInterpreter
             .setup((w) => w.isWindowsStoreInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
-            .returns(() => true)
+            .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.atLeastOnce());
 
         const interpreters = await winRegistry.getInterpreters();
