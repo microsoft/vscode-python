@@ -20,14 +20,6 @@ suite('getType()', () => {
     let finders: TypeMoq.IMock<IFinders>;
     setup(() => {
         finders = TypeMoq.Mock.ofType<IFinders>(undefined, TypeMoq.MockBehavior.Strict);
-
-        // not found
-        finders
-            .setup((f) => f.pipenv(TypeMoq.It.isAnyString()))
-            .returns(() => Promise.resolve(undefined));
-        finders
-            .setup((f) => f.virtualenv(TypeMoq.It.isAnyString()))
-            .returns(() => Promise.resolve(undefined));
     });
     function verifyAll() {
         finders.verifyAll();
@@ -39,10 +31,6 @@ suite('getType()', () => {
             .setup((f) => f.venv(python))
             // found
             .returns(() => Promise.resolve(EnvironmentType.Venv));
-        finders
-            .setup((f) => f.pyenv(python))
-            // not found
-            .returns(() => Promise.resolve(undefined));
 
         const result = await sut.getType(python, [
             (p: string) => finders.object.venv(p),
