@@ -13,8 +13,7 @@ import type {
     NotebookCellData,
     NotebookCellMetadata,
     NotebookData,
-    NotebookDocument,
-    NotebookEditor
+    NotebookDocument
 } from 'vscode-proposed';
 import { NotebookCellRunState } from '../../../../../typings/vscode-proposed';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
@@ -27,7 +26,6 @@ import { JupyterNotebookView } from '../constants';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
-import { url } from 'inspector';
 import cloneDeep = require('lodash/cloneDeep');
 import { WorkspaceEdit } from 'vscode';
 import { isUntitledFile } from '../../../common/utils/misc';

@@ -58,7 +58,7 @@ export function handleUpdateDisplayDataMessage(
             }
 
             const vscCell = document.cells[index];
-            updateCellOutput(editor, vscCell, changedOutputs);
+            updateCellOutput(vscCell, changedOutputs);
             return true;
         }).length > 0
     );
