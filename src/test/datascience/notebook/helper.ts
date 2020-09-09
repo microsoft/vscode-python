@@ -61,7 +61,9 @@ export async function insertMarkdownCell(source: string) {
     ]);
 
     await waitForCondition(
-        async () => activeEditor?.document.cells[0].document.getText().trim() === source.trim(),
+        async () =>
+            activeEditor?.document.cells[activeEditor.document.cells.length - 1].document.getText().trim() ===
+            source.trim(),
         5_000,
         'Cell not inserted'
     );
@@ -83,7 +85,9 @@ export async function insertPythonCell(source: string) {
         }
     ]);
     await waitForCondition(
-        async () => activeEditor?.document.cells[0].document.getText().trim() === source.trim(),
+        async () =>
+            activeEditor?.document.cells[activeEditor.document.cells.length - 1].document.getText().trim() ===
+            source.trim(),
         5_000,
         'Cell not inserted'
     );
