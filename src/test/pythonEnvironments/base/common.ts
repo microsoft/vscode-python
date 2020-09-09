@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createDeferred, flattenIterator, NEVER } from '../../../client/common/utils/async';
+import { createDeferred, flattenIterator, iterable, mapToIterator } from '../../../client/common/utils/async';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EMPTY_VERSION, parseBasicVersionInfo } from '../../../client/common/utils/version';
 import {
@@ -123,17 +123,12 @@ export class SimpleLocator extends Locator {
                 await callbacks.before;
             }
             if (callbacks?.beforeEach !== undefined) {
-                const pending: Promise<[PythonEnvInfo, number]>[] = [];
-                for (const env of envs) {
-                    const closure = env;
-                    const index = pending.length;
-                    pending.push(
-                        callbacks.beforeEach(env).then(() => [closure, index])
-                    );
-                }
-                for (const _ of pending) {
-                    const [env, index] = await Promise.race(pending);
-                    pending[index] = NEVER as Promise<[PythonEnvInfo, number]>;
+                // The results will likely come in a different order.
+                const mapped = mapToIterator(envs, async (env) => {
+                    await callbacks.beforeEach!(env);
+                    return env;
+                });
+                for await (const env of iterable(mapped)) {
                     yield env;
                     if (callbacks?.afterEach !== undefined) {
                         await callbacks.afterEach(env);
