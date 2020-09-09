@@ -95,13 +95,13 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
             options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
 
             this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
-            this.disposables.push(this.languageClient!.start());
+            this.disposables.push(this.languageClient.start());
             await this.serverReady();
             if (this.disposed) {
                 // Check if it got disposed in the interim.
                 return;
             }
-            const progressReporting = new ProgressReporting(this.languageClient!);
+            const progressReporting = new ProgressReporting(this.languageClient);
             this.disposables.push(progressReporting);
 
             if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
@@ -111,7 +111,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
                         // the workspace configurations (to then pick up pythonPath set in the middleware).
                         // This is needed as interpreter changes via the interpreter path service happen
                         // outside of VS Code's settings (which would mean VS Code sends the config updates itself).
-                        this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {
+                        this.languageClient?.sendNotification(DidChangeConfigurationNotification.type, {
                             settings: null
                         });
                     })
@@ -161,6 +161,6 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
         if (!this.languageClient) {
             throw new Error('languageClient not initialized');
         }
-        await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient!));
+        await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient));
     }
 }
