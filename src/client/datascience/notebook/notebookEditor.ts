@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel, WorkspaceEdit } from 'vscode';
 import type { NotebookCell, NotebookDocument } from 'vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -133,29 +133,26 @@ export class NotebookEditor implements INotebookEditor {
             return;
         }
         const defaultLanguage = getDefaultCodeLanguage(this.model);
-        this.vscodeNotebook.activeNotebookEditor.edit((editor) => {
-            const totalLength = this.document.cells.length;
-            editor.insert(
-                this.document.cells.length,
-                '',
-                defaultLanguage,
-                vscodeNotebookEnums.CellKind.Code,
-                [],
-                undefined
-            );
-            for (let i = totalLength - 1; i >= 0; i = i - 1) {
-                editor.delete(i);
+        new WorkspaceEdit().replaceCells(this.document.uri, 0, 0, [
+            {
+                cellKind: vscodeNotebookEnums.CellKind.Code,
+                language: defaultLanguage,
+                metadata: {},
+                outputs: [],
+                source: ''
             }
-        });
+        ]);
     }
     public expandAllCells(): void {
         if (!this.vscodeNotebook.activeNotebookEditor) {
             return;
         }
-        const cells = this.vscodeNotebook.activeNotebookEditor.document.cells;
-        this.vscodeNotebook.activeNotebookEditor.edit((edit) => {
-            cells.forEach((cell, index) => {
-                edit.replaceMetadata(index, { ...cell.metadata, inputCollapsed: false, outputCollapsed: false });
+        const notebook = this.vscodeNotebook.activeNotebookEditor.document;
+        notebook.cells.forEach((cell, index) => {
+            new WorkspaceEdit().replaceCellMetadata(notebook.uri, index, {
+                ...cell.metadata,
+                inputCollapsed: false,
+                outputCollapsed: false
             });
         });
     }
@@ -163,10 +160,12 @@ export class NotebookEditor implements INotebookEditor {
         if (!this.vscodeNotebook.activeNotebookEditor) {
             return;
         }
-        const cells = this.vscodeNotebook.activeNotebookEditor.document.cells;
-        this.vscodeNotebook.activeNotebookEditor.edit((edit) => {
-            cells.forEach((cell, index) => {
-                edit.replaceMetadata(index, { ...cell.metadata, inputCollapsed: true, outputCollapsed: true });
+        const notebook = this.vscodeNotebook.activeNotebookEditor.document;
+        notebook.cells.forEach((cell, index) => {
+            new WorkspaceEdit().replaceCellMetadata(notebook.uri, index, {
+                ...cell.metadata,
+                inputCollapsed: true,
+                outputCollapsed: true
             });
         });
     }

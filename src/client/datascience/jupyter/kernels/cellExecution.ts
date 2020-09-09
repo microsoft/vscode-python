@@ -5,7 +5,14 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
-import { CancellationToken, CellOutputKind, CellStreamOutput, NotebookCell, NotebookCellRunState } from 'vscode';
+import {
+    CancellationToken,
+    CellOutputKind,
+    CellStreamOutput,
+    NotebookCell,
+    NotebookCellRunState,
+    WorkspaceEdit
+} from 'vscode';
 import type { NotebookEditor as VSCNotebookEditor } from '../../../../../types/vscode-proposed';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
@@ -166,23 +173,31 @@ export class CellExecution {
 
     private completedSuccessfully() {
         this.sendPerceivedCellExecute();
+        let statusMessage = '';
         // If we requested a cancellation, then assume it did not even run.
         // If it did, then we'd get an interrupt error in the output.
-        this.cell.metadata.runState = this.token.isCancellationRequested
+        let runState = this.token.isCancellationRequested
             ? vscodeNotebookEnums.NotebookCellRunState.Idle
             : vscodeNotebookEnums.NotebookCellRunState.Success;
 
-        this.cell.metadata.statusMessage = '';
-        this.cell.metadata.lastRunDuration = this.stopWatch.elapsedTime;
-        updateCellExecutionTimes(this.editor, this.cell, {
+        updateCellExecutionTimes(this.cell, {
             startTime: this.cell.metadata.runStartTime,
+            lastRunDuration: this.stopWatch.elapsedTime,
             duration: this.cell.metadata.lastRunDuration
         });
+
         // If there are any errors in the cell, then change status to error.
         if (this.cell.outputs.some((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error)) {
-            this.cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Error;
-            this.cell.metadata.statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(this.cell.outputs);
+            runState = vscodeNotebookEnums.NotebookCellRunState.Error;
+            statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(this.cell.outputs);
         }
+
+        const cellIndex = this.editor.document.cells.indexOf(this.cell);
+        new WorkspaceEdit().replaceCellMetadata(this.cell.notebook.uri, cellIndex, {
+            ...this.cell.metadata,
+            runState,
+            statusMessage
+        });
 
         this._completed = true;
         this._result.resolve(this.cell.metadata.runState);
@@ -209,12 +224,16 @@ export class CellExecution {
      * At this point we revert cell state & indicate that it has nto started & it is not busy.
      */
     private dequeue() {
-        if (this.oldCellRunState === vscodeNotebookEnums.NotebookCellRunState.Running) {
-            this.cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
-        } else {
-            this.cell.metadata.runState = this.oldCellRunState;
-        }
+        const runState =
+            this.oldCellRunState === vscodeNotebookEnums.NotebookCellRunState.Running
+                ? vscodeNotebookEnums.NotebookCellRunState.Idle
+                : this.oldCellRunState;
         this.cell.metadata.runStartTime = undefined;
+        new WorkspaceEdit().replaceCellMetadata(this.cell.notebook.uri, this.cell.notebook.cells.indexOf(this.cell), {
+            ...this.cell.metadata,
+            runStartTime: undefined,
+            runState
+        });
         this._completed = true;
         this._result.resolve(this.cell.metadata.runState);
         // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
@@ -226,7 +245,10 @@ export class CellExecution {
      * (mark it as busy).
      */
     private enqueue() {
-        this.cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Running;
+        new WorkspaceEdit().replaceCellMetadata(this.cell.notebook.uri, this.cell.notebook.cells.indexOf(this.cell), {
+            ...this.cell.metadata,
+            runState: vscodeNotebookEnums.NotebookCellRunState.Running
+        });
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
     }
 
