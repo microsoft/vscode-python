@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.8.5 (10 September 2020)
+## 2020.8.5 (9 September 2020)
 
 ### Fixes
 
