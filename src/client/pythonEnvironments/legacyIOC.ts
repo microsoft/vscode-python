@@ -190,9 +190,19 @@ class ComponentAdapter implements IComponentAdapter {
         return env.kind === PythonEnvKind.Conda;
     }
 
-    public async getCondaEnvironment(_interpreterPath: string): Promise<CondaEnvironmentInfo | undefined> {
-        return undefined;
-        // ...
+    public async getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined> {
+        const env = await this.api.resolveEnv(interpreterPath);
+        if (env === undefined) {
+            return undefined;
+        }
+        if (env.kind !== PythonEnvKind.Conda) {
+            return undefined;
+        }
+        if (env.name !== '') {
+            return { name: env.name, path: '' };
+        } else {
+            return { name: '', path: env.location };
+        }
     }
 
     // IWindowsStoreInterpreter
