@@ -137,7 +137,7 @@ async function getNext<T>(it: AsyncIterator<T, T | void>, indexMaybe?: number): 
 }
 
 // tslint:disable-next-line:promise-must-complete no-empty
-const NEVER: Promise<unknown> = new Promise(() => {});
+export const NEVER: Promise<unknown> = new Promise(() => {});
 
 /**
  * Yield everything produced by the given iterators as soon as each is ready.
@@ -179,6 +179,43 @@ export async function* chain<T>(
             yield result!.value as T;
         }
     }
+}
+
+/**
+ * Map the async function onto the items and yield the results.
+ *
+ * @param items - the items to map onto and iterate
+ * @param func - the async function to apply for each item
+ * @param race - if `true` (the default) then results are yielded
+ *               potentially out of order, as soon as each is ready
+ */
+export async function* mapToIterator<T, R = T>(
+    items: T[],
+    func: (item: T) => Promise<R>,
+    race = true
+): AsyncIterator<R, void> {
+    if (race) {
+        const iterators = items.map((item) => {
+            async function* generator() {
+                yield func(item);
+            }
+            return generator();
+        });
+        yield* iterable(chain(iterators));
+    } else {
+        yield* items.map(func);
+    }
+}
+
+/**
+ * Convert an iterator into an iterable, if it isn't one already.
+ */
+export function iterable<T>(iterator: AsyncIterator<T, void>): AsyncIterableIterator<T> {
+    const it = iterator as AsyncIterableIterator<T>;
+    if (it[Symbol.asyncIterator] === undefined) {
+        it[Symbol.asyncIterator] = () => it;
+    }
+    return it;
 }
 
 /**

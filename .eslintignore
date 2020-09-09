@@ -456,6 +456,7 @@ src/test/application/diagnostics/commands/ignore.unit.test.ts
 src/test/application/diagnostics/commands/launchBrowser.unit.test.ts
 src/test/application/diagnostics/commands/execVSCCommands.unit.test.ts
 src/test/application/diagnostics/commands/factory.unit.test.ts
+src/test/application/misc/joinMailingListPrompt.unit.test.ts
 
 src/test/performance/load.perf.test.ts
 
@@ -1243,6 +1244,7 @@ src/client/application/diagnostics/commands/factory.ts
 src/client/application/diagnostics/commands/execVSCCommand.ts
 src/client/application/diagnostics/commands/types.ts
 src/client/application/diagnostics/commands/launchBrowser.ts
+src/client/application/misc/joinMailingListPrompt.ts
 
 src/client/datascience/baseJupyterSession.ts
 src/client/datascience/data-viewing/jupyterVariableDataProviderFactory.ts

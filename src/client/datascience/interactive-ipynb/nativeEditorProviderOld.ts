@@ -378,7 +378,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             (editorUri) =>
                 editorUri.document &&
                 editorUri.document.uri.scheme === 'git' &&
-                this.fs.arePathsSame(editorUri.document.uri, editor.document.uri)
+                editorUri.document.uri.fsPath === editor.document.uri.fsPath
         );
 
         if (!gitSchemeEditor) {

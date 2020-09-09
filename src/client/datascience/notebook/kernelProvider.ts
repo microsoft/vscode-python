@@ -54,10 +54,10 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
 
 @injectable()
 export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
-    public get onDidChangeKernels(): Event<void> {
+    public get onDidChangeKernels(): Event<NotebookDocument | undefined> {
         return this._onDidChangeKernels.event;
     }
-    private readonly _onDidChangeKernels = new EventEmitter<void>();
+    private readonly _onDidChangeKernels = new EventEmitter<NotebookDocument | undefined>();
     private notebookKernelChangeHandled = new WeakSet<INotebook>();
     constructor(
         @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
@@ -70,7 +70,19 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
-        this.kernelSelectionProvider.SelectionsChanged(() => this._onDidChangeKernels.fire(), this, disposables);
+        this.kernelSelectionProvider.onDidChangeSelections(
+            (e) => {
+                if (e) {
+                    const doc = this.notebook.notebookDocuments.find((d) => d.uri.fsPath === e.fsPath);
+                    if (doc) {
+                        return this._onDidChangeKernels.fire(doc);
+                    }
+                }
+                this._onDidChangeKernels.fire(undefined);
+            },
+            this,
+            disposables
+        );
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
     }
     public async provideKernels(

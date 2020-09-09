@@ -222,7 +222,6 @@ export interface NotebookDocument {
     readonly isUntitled: boolean;
     readonly cells: ReadonlyArray<NotebookCell>;
     languages: string[];
-    displayOrder?: GlobPattern[];
     metadata: NotebookDocumentMetadata;
 }
 
@@ -280,6 +279,27 @@ export interface NotebookEditorCellEdit {
     delete(index: number): void;
 }
 
+export interface NotebookCellRange {
+    readonly start: number;
+    readonly end: number;
+}
+
+export enum NotebookEditorRevealType {
+    /**
+     * The range will be revealed with as little scrolling as possible.
+     */
+    Default = 0,
+    /**
+     * The range will always be revealed in the center of the viewport.
+     */
+    InCenter = 1,
+    /**
+     * If the range is outside the viewport, it will be revealed in the center of the viewport.
+     * Otherwise, it will be revealed with as little scrolling as possible.
+     */
+    InCenterIfOutsideViewport = 2
+}
+
 export interface NotebookEditor {
     /**
      * The document associated with this notebook editor.
@@ -290,6 +310,11 @@ export interface NotebookEditor {
      * The primary selected cell on this notebook editor.
      */
     readonly selection?: NotebookCell;
+
+    /**
+     * The current visible ranges in the editor (vertically).
+     */
+    readonly visibleRanges: NotebookCellRange[];
 
     /**
      * The column in which this editor shows.
@@ -335,6 +360,8 @@ export interface NotebookEditor {
     asWebviewUri(localResource: Uri): Uri;
 
     edit(callback: (editBuilder: NotebookEditorCellEdit) => void): Thenable<boolean>;
+
+    revealRange(range: NotebookCellRange, revealType?: NotebookEditorRevealType): void;
 }
 
 export interface NotebookOutputSelector {
@@ -396,6 +423,11 @@ export interface NotebookCellMetadataChangeEvent {
 export interface NotebookEditorSelectionChangeEvent {
     readonly notebookEditor: NotebookEditor;
     readonly selection?: NotebookCell;
+}
+
+export interface NotebookEditorVisibleRangesChangeEvent {
+    readonly notebookEditor: NotebookEditor;
+    readonly visibleRanges: ReadonlyArray<NotebookCellRange>;
 }
 
 export interface NotebookCellData {
@@ -529,6 +561,7 @@ export interface NotebookKernel {
     readonly id?: string;
     label: string;
     description?: string;
+    detail?: string;
     isPreferred?: boolean;
     preloads?: Uri[];
     executeCell(document: NotebookDocument, cell: NotebookCell): void;
@@ -538,13 +571,12 @@ export interface NotebookKernel {
 }
 
 export interface NotebookDocumentFilter {
-    viewType?: string;
-    filenamePattern?: GlobPattern;
-    excludeFileNamePattern?: GlobPattern;
+    viewType?: string | string[];
+    filenamePattern?: GlobPattern | { include: GlobPattern; exclude: GlobPattern };
 }
 
 export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKernel> {
-    onDidChangeKernels?: Event<void>;
+    onDidChangeKernels?: Event<NotebookDocument | undefined>;
     provideKernels(document: NotebookDocument, token: CancellationToken): ProviderResult<T[]>;
     resolveKernel?(
         kernel: T,
@@ -605,8 +637,6 @@ export namespace notebook {
         provider: NotebookKernelProvider
     ): Disposable;
 
-    export function registerNotebookKernel(id: string, selectors: GlobPattern[], kernel: NotebookKernel): Disposable;
-
     export const onDidOpenNotebookDocument: Event<NotebookDocument>;
     export const onDidCloseNotebookDocument: Event<NotebookDocument>;
     export const onDidSaveNotebookDocument: Event<NotebookDocument>;
@@ -622,6 +652,7 @@ export namespace notebook {
     export const activeNotebookEditor: NotebookEditor | undefined;
     export const onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     export const onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
+    export const onDidChangeNotebookEditorVisibleRanges: Event<NotebookEditorVisibleRangesChangeEvent>;
     export const onDidChangeNotebookCells: Event<NotebookCellsChangeEvent>;
     export const onDidChangeCellOutputs: Event<NotebookCellOutputsChangeEvent>;
     export const onDidChangeCellLanguage: Event<NotebookCellLanguageChangeEvent>;

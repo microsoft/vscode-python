@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createDeferred, flattenIterator } from '../../../client/common/utils/async';
+import { createDeferred, flattenIterator, iterable, mapToIterator } from '../../../client/common/utils/async';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EMPTY_VERSION, parseBasicVersionInfo } from '../../../client/common/utils/version';
 import {
@@ -122,14 +122,24 @@ export class SimpleLocator extends Locator {
             if (callbacks?.before !== undefined) {
                 await callbacks.before;
             }
-            //yield* envs;
-            for (const env of envs) {
-                if (callbacks?.beforeEach !== undefined) {
-                    await callbacks.beforeEach(env);
+            if (callbacks?.beforeEach !== undefined) {
+                // The results will likely come in a different order.
+                const mapped = mapToIterator(envs, async (env) => {
+                    await callbacks.beforeEach!(env);
+                    return env;
+                });
+                for await (const env of iterable(mapped)) {
+                    yield env;
+                    if (callbacks?.afterEach !== undefined) {
+                        await callbacks.afterEach(env);
+                    }
                 }
-                yield env;
-                if (callbacks?.afterEach !== undefined) {
-                    await callbacks.afterEach(env);
+            } else {
+                for (const env of envs) {
+                    yield env;
+                    if (callbacks?.afterEach !== undefined) {
+                        await callbacks.afterEach(env);
+                    }
                 }
             }
             if (callbacks?.after!== undefined) {

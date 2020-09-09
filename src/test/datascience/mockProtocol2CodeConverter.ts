@@ -38,7 +38,10 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
         if (!value) {
             return undefined;
         }
-        return new code.Range(this.asPosition(value.start), this.asPosition(value.end));
+        return new code.Range(
+            this.asPosition(value.start as proto.Position),
+            this.asPosition(value.end as proto.Position)
+        );
     }
     public asDiagnosticSeverity(_value: number | null | undefined): code.DiagnosticSeverity {
         throw new Error('Method not implemented.');
