@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { injectable } from 'inversify';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -51,9 +52,29 @@ import { EnvironmentInfoService, IEnvironmentInfoService } from './info/environm
 
 import { PythonEnvironments } from '.';
 
+export const IComponentAdapter = Symbol('IComponentAdapter');
+export interface IComponentAdapter {
+    // We will fill in the API separately.
+}
+
+@injectable()
+class ComponentAdapter implements IComponentAdapter {
+    constructor(
+        // The adapter only wraps one thing: the component API.
+        private readonly api: PythonEnvironments
+    ) {
+        // For the moment we use this placeholder to exercise the property.
+        if (this.api.onChanged) {
+            this.api.onChanged((_event) => {
+                // do nothing
+            });
+        }
+    }
+}
+
 export function registerForIOC(serviceManager: IServiceManager, serviceContainer: IServiceContainer, api: PythonEnvironments): void {
-    // tslint:disable-next-line:no-unused-expression
-    api;
+    const adapter = new ComponentAdapter(api);
+    serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, adapter);
 
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterLocatorService>(
