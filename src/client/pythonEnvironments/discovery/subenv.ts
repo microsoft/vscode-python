@@ -4,6 +4,9 @@
 import { EnvironmentType } from '../info';
 import { getPyenvTypeFinder } from './globalenv';
 
+// tslint:disable-next-line: no-single-line-block-comment
+/* eslint-disable no-await-in-loop, no-restricted-syntax */
+
 type ExecFunc = (cmd: string, args: string[]) => Promise<{ stdout: string }>;
 
 type NameFinderFunc = (python: string) => Promise<string | undefined>;
@@ -19,9 +22,13 @@ type PipenvFinderFunc = (python: string) => Promise<EnvironmentType.Pipenv | und
  * @param finders - the functions specific to different Python environment types
  */
 export async function getName(python: string, finders: NameFinderFunc[]): Promise<string | undefined> {
-    const envNames = await Promise.all(finders.map((find) => find(python)));
-
-    return envNames.find((name) => name && name !== '');
+    for (const find of finders) {
+        const found = await find(python);
+        if (found && found !== '') {
+            return found;
+        }
+    }
+    return undefined;
 }
 
 /**
@@ -31,9 +38,13 @@ export async function getName(python: string, finders: NameFinderFunc[]): Promis
  * @param finders - the functions specific to different Python environment types
  */
 export async function getType(python: string, finders: TypeFinderFunc[]): Promise<EnvironmentType | undefined> {
-    const envTypes = await Promise.all(finders.map((find) => find(python)));
-
-    return envTypes.find((type) => type && type !== EnvironmentType.Unknown);
+    for (const find of finders) {
+        const found = await find(python);
+        if (found && found !== EnvironmentType.Unknown) {
+            return found;
+        }
+    }
+    return undefined;
 }
 
 // ======= default sets ========
@@ -126,12 +137,11 @@ export function getVenvTypeFinder(
         const dir = pathDirname(python);
         const VENVFILES = ['pyvenv.cfg', pathJoin('..', 'pyvenv.cfg')];
         const cfgFiles = VENVFILES.map((file) => pathJoin(dir, file));
-        const files = await Promise.all(cfgFiles.map(fileExists));
-
-        if (files.find((file) => file)) {
-            return EnvironmentType.Venv;
+        for (const file of cfgFiles) {
+            if (await fileExists(file)) {
+                return EnvironmentType.Venv;
+            }
         }
-
         return undefined;
     };
 }
@@ -156,11 +166,13 @@ export function getVenvExecutableFinder(
     return async (python: string) => {
         // Generated scripts are found in the same directory as the interpreter.
         const binDir = pathDirname(python);
-        const filenames = basenames.map((name) => pathJoin(binDir, name));
-        const names = await Promise.all(filenames.map(fileExists));
-
-        // Return undefined if there are no matches.
-        return filenames.find((_, index) => names[index]);
+        for (const name of basenames) {
+            const filename = pathJoin(binDir, name);
+            if (await fileExists(filename)) {
+                return filename;
+            }
+        }
+        // No matches so return undefined.
     };
 }
 
