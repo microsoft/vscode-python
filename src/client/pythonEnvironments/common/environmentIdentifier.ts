@@ -5,6 +5,7 @@ import * as path from 'path';
 import { isWindowsStoreEnvironment } from '../discovery/locators/services/windowsStoreLocator';
 import { EnvironmentType } from '../info';
 import { pathExists } from './externalDependencies';
+import { isVenvEnvironment } from '../discovery/locators/services/venvLocator';
 
 /**
  * Checks if the given interpreter path belongs to a conda environment. Using
@@ -87,6 +88,10 @@ export async function identifyEnvironment(interpreterPath: string): Promise<Envi
 
     if (await isWindowsStoreEnvironment(interpreterPath)) {
         return EnvironmentType.WindowsStore;
+    }
+
+    if (await isVenvEnvironment(interpreterPath)) {
+        return EnvironmentType.Venv;
     }
 
     // additional identifiers go here

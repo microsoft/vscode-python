@@ -98,6 +98,15 @@ suite('Environment Identifier', () => {
     });
 
     suite('Venv', () => {
-
+        test('Pyvenv.cfg is in the same directory as the interpreter', async () => {
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'venv1', 'python');
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepEqual(envType, EnvironmentType.Venv);
+        });
+        test('Pyvenv.cfg is in the same directory as the interpreter', async () => {
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'venv2', 'bin', 'python');
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepEqual(envType, EnvironmentType.Venv);
+        });
     });
 });
