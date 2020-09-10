@@ -108,7 +108,7 @@ async function getPipfileIfGlobal(interpreterPath: string): Promise<string | und
     // |__ Pipfile  <--- check if Pipfile exists here and return it
     // The name of the project (directory where Pipfile resides) is used as a prefix in the environment folder
     const envFolderName = path.basename(envFolder);
-    if (envFolderName.match(new RegExp(`^${path.basename(projectDir)}-[0-9a-fA-F]+$`)) === null) {
+    if (!envFolderName.startsWith(`${path.basename(projectDir)}-`)) {
         return undefined;
     }
 
