@@ -12,8 +12,6 @@ type ExecFunc = (cmd: string, args: string[]) => Promise<{ stdout: string }>;
 type NameFinderFunc = (python: string) => Promise<string | undefined>;
 type TypeFinderFunc = (python: string) => Promise<EnvironmentType | undefined>;
 type ExecutableFinderFunc = (python: string) => Promise<string | undefined>;
-type VirtualEnvFinderFunc = (python: string) => Promise<EnvironmentType.VirtualEnv | undefined>;
-type PipenvFinderFunc = (python: string) => Promise<EnvironmentType.Pipenv | undefined>;
 
 /**
  * Determine the environment name for the given Python executable.
@@ -194,7 +192,7 @@ export function getVirtualenvTypeFinder(
     pathJoin: (...parts: string[]) => string,
     // </path>
     fileExists: (n: string) => Promise<boolean>,
-): VirtualEnvFinderFunc {
+): TypeFinderFunc {
     const find = getVenvExecutableFinder(scripts, pathDirname, pathJoin, fileExists);
     return async (python: string) => {
         const found = await find(python);
@@ -213,7 +211,7 @@ export function getVirtualenvTypeFinder(
 export function getPipenvTypeFinder(
     getCurDir: () => Promise<string | undefined>,
     isPipenvRoot: (dir: string, python: string) => Promise<boolean>,
-): PipenvFinderFunc {
+): TypeFinderFunc {
     return async (python: string) => {
         const curDir = await getCurDir();
         if (curDir && (await isPipenvRoot(curDir, python))) {
