@@ -698,10 +698,10 @@ export function updateVSCNotebookAfterTrustingNotebook(document: NotebookDocumen
                 runnable: true
             });
             // Restore the output once we trust the notebook.
-            // tslint:disable-next-line: no-any
             workspaceEdit.replaceCellOutput(
                 document.uri,
                 index,
+                // tslint:disable-next-line: no-any
                 createVSCCellOutputsFromOutputs(originalCells[index].data.outputs as any)
             );
         }
