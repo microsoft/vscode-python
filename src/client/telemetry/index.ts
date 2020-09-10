@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import type { JSONObject } from '@phosphor/coreutils';
-import * as stackTrace from 'stack-trace';
 // tslint:disable-next-line: import-name
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 

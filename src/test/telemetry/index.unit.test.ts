@@ -11,7 +11,6 @@ import { instance, mock, verify, when } from 'ts-mockito';
 import { WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
-import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import {
     _resetSharedProperties,
     clearTelemetryReporter,
