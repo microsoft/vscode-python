@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as platformApis from '../../../client/common/utils/platform';
 import { identifyEnvironment } from '../../../client/pythonEnvironments/common/environmentIdentifier';
+import * as externalDependencies from '../../../client/pythonEnvironments/common/externalDependencies';
 import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 import { TEST_LAYOUT_ROOT } from './commonTestConstants';
 
@@ -20,6 +21,40 @@ suite('Environment Identifier', () => {
             const interpreterPath: string = path.join(TEST_LAYOUT_ROOT, 'conda2', 'bin', 'python');
             const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
             assert.deepEqual(envType, EnvironmentType.Conda);
+        });
+    });
+
+    suite('Pipenv', () => {
+        let getEnvVar: sinon.SinonStub;
+        let readFile: sinon.SinonStub;
+        setup(() => {
+            getEnvVar = sinon.stub(platformApis, 'getEnvironmentVariable');
+            readFile = sinon.stub(externalDependencies, 'readFile');
+        });
+
+        teardown(() => {
+            readFile.restore();
+            getEnvVar.restore();
+        });
+
+        test('Path to a global pipenv environment', async () => {
+            const expectedDotProjectFile = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'globalEnvironments', 'project2-vnNIWe9P', '.project');
+            const expectedProjectFile = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2');
+            readFile.withArgs(expectedDotProjectFile).resolves(expectedProjectFile);
+            const interpreterPath: string = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'globalEnvironments', 'project2-vnNIWe9P', 'bin', 'python');
+
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+
+            assert.equal(envType, EnvironmentType.Pipenv);
+        });
+
+        test('Path to a local pipenv environment with a custom Pipfile name', async () => {
+            getEnvVar.withArgs('PIPENV_PIPFILE').returns('CustomPipfileName');
+            const interpreterPath: string = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe');
+
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+
+            assert.equal(envType, EnvironmentType.Pipenv);
         });
     });
 
