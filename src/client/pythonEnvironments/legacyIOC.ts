@@ -117,14 +117,7 @@ class ComponentAdapter implements IComponentAdapter {
     constructor(
         // The adapter only wraps one thing: the component API.
         private readonly api: PythonEnvironments
-    ) {
-        // For the moment we use this placeholder to exercise the property.
-        if (this.api.onChanged) {
-            this.api.onChanged((_event) => {
-                // do nothing
-            });
-        }
-    }
+    ) {}
 
     // IInterpreterHelper
 
