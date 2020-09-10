@@ -5,7 +5,7 @@
 
 // tslint:disable:max-func-body-length
 
-import { fail } from 'assert';
+import { strictEqual } from 'assert';
 import { expect } from 'chai';
 import { spawnSync } from 'child_process';
 import * as typeMoq from 'typemoq';
@@ -72,17 +72,13 @@ suite('ArgsService: Common', () => {
                 const options = argumentsService.getKnownOptions();
                 const optionsNotFound = expectedWithArgs.filter((item) => options.withArgs.indexOf(item) === -1);
 
-                if (optionsNotFound.length > 0) {
-                    fail('', optionsNotFound.join(', '), 'Options not found');
-                }
+                strictEqual(optionsNotFound.length, 0, `unhandled flags: ${optionsNotFound.join(',')}`);
             });
             test('Check for new/unrecognized options without values', () => {
                 const options = argumentsService.getKnownOptions();
                 const optionsNotFound = expectedWithoutArgs.filter((item) => options.withoutArgs.indexOf(item) === -1);
 
-                if (optionsNotFound.length > 0) {
-                    fail('', optionsNotFound.join(', '), 'Options not found');
-                }
+                strictEqual(optionsNotFound.length, 0, `unhandled flags: ${optionsNotFound.join(',')}`);
             });
             test('Test getting value for an option with a single value', () => {
                 for (const option of expectedWithArgs) {
@@ -145,7 +141,7 @@ function getOptions(product: Product, moduleName: string, withValues: boolean) {
     const knownOptionsWithoutArgs: string[] = [];
     const knownOptionsWithArgs: string[] = [];
     if (product === Product.pytest) {
-        knownOptionsWithArgs.push(...['-c', '-p', '-r']);
+        knownOptionsWithArgs.push(...['-c', '-k', '-p', '-r']);
     }
 
     if (withValues) {

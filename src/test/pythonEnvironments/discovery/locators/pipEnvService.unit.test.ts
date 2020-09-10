@@ -10,7 +10,9 @@ import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import * as sinon from 'sinon';
-import { anything, instance, mock, when } from 'ts-mockito';
+import {
+    anything, instance, mock, when,
+} from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../../client/common/application/types';
@@ -21,7 +23,7 @@ import {
     ICurrentProcess,
     IPersistentState,
     IPersistentStateFactory,
-    IPythonSettings
+    IPythonSettings,
 } from '../../../../client/common/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IEnvironmentVariablesProvider } from '../../../../client/common/variables/types';
@@ -172,15 +174,12 @@ suite('Interpreters - PipEnv', () => {
                     const env = {};
                     currentProcess.setup((c) => c.env).returns(() => env);
                     processService
-                        .setup((p) =>
-                            p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())
-                        )
+                        .setup((p) => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
                         .returns(() => Promise.reject(''));
                     fileSystem
                         .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
                         .returns(() => Promise.resolve(true));
-                    const warningMessage =
-                        "Workspace contains Pipfile but 'pipenv' was not found. Make sure 'pipenv' is on the PATH.";
+                    const warningMessage = "Workspace contains Pipfile but 'pipenv' was not found. Make sure 'pipenv' is on the PATH.";
                     appShell
                         .setup((a) => a.showWarningMessage(warningMessage))
                         .returns(() => Promise.resolve(''))
@@ -194,20 +193,15 @@ suite('Interpreters - PipEnv', () => {
                     const env = {};
                     currentProcess.setup((c) => c.env).returns(() => env);
                     processService
-                        .setup((p) =>
-                            p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())
-                        )
+                        .setup((p) => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
                         .returns(() => Promise.resolve({ stderr: '', stdout: 'pipenv, version 2018.11.26' }));
                     processService
-                        .setup((p) =>
-                            p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--venv']), TypeMoq.It.isAny())
-                        )
+                        .setup((p) => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--venv']), TypeMoq.It.isAny()))
                         .returns(() => Promise.resolve({ stderr: 'Aborted!', stdout: '' }));
                     fileSystem
                         .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
                         .returns(() => Promise.resolve(true));
-                    const warningMessage =
-                        'Workspace contains Pipfile but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.';
+                    const warningMessage = 'Workspace contains Pipfile but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.';
                     appShell
                         .setup((a) => a.showWarningMessage(warningMessage))
                         .returns(() => Promise.resolve(''))
@@ -248,7 +242,7 @@ suite('Interpreters - PipEnv', () => {
                 test(`Should return interpreter information using PipFile defined in Env variable${testSuffix}`, async () => {
                     const envPipFile = 'XYZ';
                     const env = {
-                        PIPENV_PIPFILE: envPipFile
+                        PIPENV_PIPFILE: envPipFile,
                     };
                     const pythonPath = 'one';
                     envVarsProvider
@@ -316,7 +310,7 @@ suite('Interpreters - PipEnv', () => {
                 });
 
                 test('Executable getter should return an empty string', () => {
-                    const executable = pipEnvService.executable;
+                    const { executable } = pipEnvService;
 
                     expect(executable).to.be.equal('', 'The executable getter should return an empty string.');
                 });

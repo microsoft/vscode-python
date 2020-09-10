@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
+import { isNil } from 'lodash';
 import { ConfigurationTarget, Memento, QuickPickItem, Uri } from 'vscode';
 import { IClipboard, ICommandManager } from '../../common/application/types';
 import { GLOBAL_MEMENTO, IConfigurationService, IMemento } from '../../common/types';
@@ -26,6 +27,7 @@ const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f35477
 interface ISelectUriQuickPickItem extends QuickPickItem {
     newChoice: boolean;
     provider?: IJupyterUriProvider;
+    url?: string;
 }
 
 @injectable()
@@ -66,7 +68,7 @@ export class JupyterServerSelector {
         if (item.label === this.localLabel) {
             await this.setJupyterURIToLocal();
         } else if (!item.newChoice && !item.provider) {
-            await this.setJupyterURIToRemote(item.label);
+            await this.setJupyterURIToRemote(!isNil(item.url) ? item.url : item.label);
         } else if (!item.provider) {
             return this.selectRemoteURI.bind(this);
         } else {
@@ -208,9 +210,10 @@ export class JupyterServerSelector {
             if (uriItem.uri) {
                 const uriDate = new Date(uriItem.time);
                 items.push({
-                    label: uriItem.uri,
+                    label: !isNil(uriItem.displayName) ? uriItem.displayName : uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
-                    newChoice: false
+                    newChoice: false,
+                    url: uriItem.uri
                 });
             }
         });

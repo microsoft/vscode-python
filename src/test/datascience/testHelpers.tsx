@@ -178,6 +178,49 @@ export function getLastOutputCell(
     return getOutputCell(wrapper, cellType, foundResult.length - count)!;
 }
 
+export function verifyCellSource(
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    cellType: 'NativeCell' | 'InteractiveCell',
+    source: string,
+    cellIndex: number | CellPosition
+) {
+    wrapper.update();
+
+    const foundResult = wrapper.find(cellType);
+    assert.ok(foundResult.length >= 1, "Didn't find any cells being rendered");
+    let targetCell: ReactWrapper;
+    let index = 0;
+    // Get the correct result that we are dealing with
+    if (typeof cellIndex === 'number') {
+        if (cellIndex >= 0 && cellIndex <= foundResult.length - 1) {
+            targetCell = foundResult.at(cellIndex);
+        }
+    } else if (typeof cellIndex === 'string') {
+        switch (cellIndex) {
+            case CellPosition.First:
+                targetCell = foundResult.first();
+                break;
+
+            case CellPosition.Last:
+                // Skip the input cell on these checks.
+                targetCell = getLastOutputCell(wrapper, cellType);
+                index = foundResult.length - 1;
+                break;
+
+            default:
+                // Fall through, targetCell check will fail out
+                break;
+        }
+    }
+
+    // ! is ok here to get rid of undefined type check as we want a fail here if we have not initialized targetCell
+    assert.ok(targetCell!, "Target cell doesn't exist");
+
+    const editor = cellType === 'InteractiveCell' ? getInteractiveEditor(wrapper) : getNativeEditor(wrapper, index);
+    const inst = editor!.instance() as MonacoEditor;
+    assert.deepStrictEqual(inst.state.model?.getValue(), source, 'Source does not match on cell');
+}
+
 export function verifyHtmlOnCell(
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
     cellType: 'NativeCell' | 'InteractiveCell',

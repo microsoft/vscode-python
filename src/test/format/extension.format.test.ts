@@ -83,11 +83,11 @@ suite('Formatting - General', () => {
         ioc.registerFormatterTypes();
         ioc.registerInterpreterStorageTypes();
 
-        registerForIOC(ioc.serviceManager);
-
         // Mocks.
         ioc.registerMockProcessTypes();
         ioc.registerMockInterpreterTypes();
+
+        registerForIOC(ioc.serviceManager, ioc.serviceContainer);
     }
 
     async function injectFormatOutput(outputFileName: string) {

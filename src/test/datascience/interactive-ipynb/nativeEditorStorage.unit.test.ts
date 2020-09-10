@@ -13,12 +13,12 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import {
     IDocumentManager,
-    IWebPanelMessageListener,
-    IWebPanelProvider,
+    IWebviewPanelMessageListener,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../../client/common/application/types';
-import { WebPanel } from '../../../client/common/application/webPanels/webPanel';
-import { WebPanelProvider } from '../../../client/common/application/webPanels/webPanelProvider';
+import { WebviewPanel } from '../../../client/common/application/webviewPanels/webviewPanel';
+import { WebviewPanelProvider } from '../../../client/common/application/webviewPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
@@ -58,7 +58,7 @@ suite('DataScience - Native Editor Storage', () => {
     let fileSystem: typemoq.IMock<IDataScienceFileSystem>;
     let docManager: IDocumentManager;
     let interpreterService: IInterpreterService;
-    let webPanelProvider: IWebPanelProvider;
+    let webPanelProvider: IWebviewPanelProvider;
     let executionProvider: IJupyterExecution;
     let globalMemento: MockMemento;
     let localMemento: MockMemento;
@@ -255,7 +255,7 @@ suite('DataScience - Native Editor Storage', () => {
         docManager = mock(DocumentManager);
         workspace = mock(WorkspaceService);
         interpreterService = mock(InterpreterService);
-        webPanelProvider = mock(WebPanelProvider);
+        webPanelProvider = mock(WebviewPanelProvider);
         executionProvider = mock(JupyterExecutionFactory);
         trustService = mock(TrustService);
         const settings = mock(PythonSettings);
@@ -283,13 +283,15 @@ suite('DataScience - Native Editor Storage', () => {
         when(executionProvider.serverStarted).thenReturn(serverStartedEvent.event);
 
         when(trustService.isNotebookTrusted(anything(), anything())).thenReturn(Promise.resolve(true));
-        when(trustService.trustNotebook(anything(), anything())).thenReturn(Promise.resolve());
+        when(trustService.trustNotebook(anything(), anything())).thenCall(() => {
+            return Promise.resolve();
+        });
 
         testIndex += 1;
         when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
 
-        let listener: IWebPanelMessageListener;
-        const webPanel = mock(WebPanel);
+        let listener: IWebviewPanelMessageListener;
+        const webPanel = mock(WebviewPanel);
         const startTime = Date.now();
         class WebPanelCreateMatcher extends Matcher {
             public match(value: any) {
@@ -351,7 +353,7 @@ suite('DataScience - Native Editor Storage', () => {
             context.object,
             globalMemento,
             localMemento,
-            trustService,
+            instance(trustService),
             new NotebookModelFactory(false)
         );
 

@@ -53,7 +53,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             return this.skip();
         }
         await closeNotebooksAndCleanUpAfterTests();
-        await startJupyter();
+        await startJupyter(true);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);

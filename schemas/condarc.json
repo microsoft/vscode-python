@@ -1,7 +1,7 @@
 {
     "title": ".condarc",
     "description": "The conda configuration file; https://conda.io/docs/user-guide/configuration/use-condarc.html",
-    "id": "https://raw.githubusercontent.com/Microsoft/vscode-python/master/schemas/condarc.json",
+    "id": "https://raw.githubusercontent.com/Microsoft/vscode-python/main/schemas/condarc.json",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "definitions": {
         "channel": {

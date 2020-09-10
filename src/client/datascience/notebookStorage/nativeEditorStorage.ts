@@ -26,12 +26,8 @@ import {
 import detectIndent = require('detect-indent');
 import { VSCodeNotebookModel } from './vscNotebookModel';
 
-const KeyPrefix = 'notebook-storage-';
+export const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
-
-export function isUntitled(model?: INotebookModel): boolean {
-    return isUntitledFile(model?.file);
-}
 
 export function getNextUntitledCounter(file: Uri | undefined, currentValue: number): number {
     if (file && isUntitledFile(file)) {
@@ -182,21 +178,29 @@ export class NativeEditorStorage implements INotebookStorage {
         // Keep track of the time when this data was saved.
         // This way when we retrieve the data we can compare it against last modified date of the file.
         const specialContents = contents ? JSON.stringify({ contents, lastModifiedTimeMs: Date.now() }) : undefined;
-        return this.writeToStorage(filePath, specialContents, cancelToken);
+        return this.writeToStorage(model.file, filePath, specialContents, cancelToken);
     }
 
     private async clearHotExit(file: Uri, backupId?: string): Promise<void> {
         const key = backupId || this.getStaticStorageKey(file);
         const filePath = this.getHashedFileName(key);
-        await this.writeToStorage(filePath);
+        await this.writeToStorage(undefined, filePath);
     }
 
-    private async writeToStorage(filePath: string, contents?: string, cancelToken?: CancellationToken): Promise<void> {
+    private async writeToStorage(
+        owningFile: Uri | undefined,
+        filePath: string,
+        contents?: string,
+        cancelToken?: CancellationToken
+    ): Promise<void> {
         try {
             if (!cancelToken?.isCancellationRequested) {
                 if (contents) {
                     await this.fs.createLocalDirectory(path.dirname(filePath));
                     if (!cancelToken?.isCancellationRequested) {
+                        if (owningFile) {
+                            this.trustService.trustNotebook(owningFile, contents).ignoreErrors();
+                        }
                         await this.fs.writeLocalFile(filePath, contents);
                     }
                 } else {
@@ -348,9 +352,11 @@ export class NativeEditorStorage implements INotebookStorage {
             };
         });
 
-        // Make sure at least one
-        if (remapped.length === 0) {
-            remapped.splice(0, 0, this.createEmptyCell(uuid()));
+        if (!forVSCodeNotebook) {
+            // Make sure at least one
+            if (remapped.length === 0) {
+                remapped.splice(0, 0, this.createEmptyCell(uuid()));
+            }
         }
         const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
 
@@ -376,6 +382,8 @@ export class NativeEditorStorage implements INotebookStorage {
             if (isNotebookTrusted) {
                 model.trust();
             }
+        } else {
+            model.trust();
         }
 
         return model;
@@ -409,9 +417,10 @@ export class NativeEditorStorage implements INotebookStorage {
     }
 
     private async getStoredContentsFromFile(file: Uri, key: string): Promise<string | undefined> {
+        const filePath = this.getHashedFileName(key);
         try {
             // Use this to read from the extension global location
-            const contents = await this.fs.readLocalFile(file.fsPath);
+            const contents = await this.fs.readLocalFile(filePath);
             const data = JSON.parse(contents);
             // Check whether the file has been modified since the last time the contents were saved.
             if (data && data.lastModifiedTimeMs && file.scheme === 'file') {

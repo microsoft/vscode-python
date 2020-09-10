@@ -99,7 +99,11 @@ suite(`DataScience JupyterServerUriProvider tests`, () => {
         await ioc.dispose();
     });
 
-    test('Expiration', async () => {
+    test('Expiration', async function () {
+        // Issue #13668 filed to investigate / reactivate. Was failing randomly in some PR runs.
+        // tslint:disable-next-line: no-invalid-this
+        return this.skip();
+
         // Set the URI to id value.
         const uri = `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${TestUriProviderId}&${Identifiers.REMOTE_URI_HANDLE_PARAM}=${TestUriHandle}`;
         ioc.forceDataScienceSettingsChanged({

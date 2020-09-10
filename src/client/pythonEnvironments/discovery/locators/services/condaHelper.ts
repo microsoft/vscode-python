@@ -29,12 +29,10 @@ export function getDisplayName(condaInfo: CondaInfo = {}): string {
         const displayName = sysVersionParts[1].trim();
         if (isIdentifiableAsAnaconda(displayName)) {
             return displayName;
-        } else {
-            return `${displayName} : ${AnacondaDisplayName}`;
         }
-    } else {
-        return AnacondaDisplayName;
+        return `${displayName} : ${AnacondaDisplayName}`;
     }
+    return AnacondaDisplayName;
 }
 
 /**
@@ -54,7 +52,7 @@ export function getDisplayName(condaInfo: CondaInfo = {}): string {
  *                          "/Users/donjayamanne/anaconda3/envs/seven "
  */
 export function parseCondaEnvFileContents(
-    condaEnvFileContents: string
+    condaEnvFileContents: string,
 ): { name: string; path: string; isActive: boolean }[] | undefined {
     // Don't trim the lines. `path` portion of the line can end with a space.
     const lines = condaEnvFileContents.splitLines({ trim: false });

@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import {
     NotebookCell,
@@ -12,19 +14,22 @@ import {
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { areKernelConnectionsEqual } from '../jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { getKernelConnectionId, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebook, INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, updateKernelInNotebookMetadata } from './helpers/helpers';
-import { INotebookContentProvider } from './types';
 
 class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     get preloads(): Uri[] {
         return [];
+    }
+    get id() {
+        return getKernelConnectionId(this.selection);
     }
     constructor(
         public readonly label: string,
@@ -34,10 +39,10 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly kernelProvider: IKernelProvider
     ) {}
     public executeCell(_: NotebookDocument, cell: NotebookCell) {
-        this.kernelProvider.get(cell.notebook.uri)?.executeCell(cell); // NOSONAR
+        this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection })?.executeCell(cell); // NOSONAR
     }
     public executeAllCells(document: NotebookDocument) {
-        this.kernelProvider.get(document.uri)?.executeAllCells(document); // NOSONAR
+        this.kernelProvider.getOrCreate(document.uri, { metadata: this.selection })?.executeAllCells(document); // NOSONAR
     }
     public cancelCellExecution(_: NotebookDocument, cell: NotebookCell) {
         this.kernelProvider.get(cell.notebook.uri)?.interrupt(); // NOSONAR
@@ -49,10 +54,10 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
 
 @injectable()
 export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
-    public get onDidChangeKernels(): Event<void> {
+    public get onDidChangeKernels(): Event<NotebookDocument | undefined> {
         return this._onDidChangeKernels.event;
     }
-    private readonly _onDidChangeKernels = new EventEmitter<void>();
+    private readonly _onDidChangeKernels = new EventEmitter<NotebookDocument | undefined>();
     private notebookKernelChangeHandled = new WeakSet<INotebook>();
     constructor(
         @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
@@ -62,25 +67,46 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
-        @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
-        this.kernelSelectionProvider.SelectionsChanged(() => this._onDidChangeKernels.fire(), this, disposables);
+        this.kernelSelectionProvider.onDidChangeSelections(
+            (e) => {
+                if (e) {
+                    const doc = this.notebook.notebookDocuments.find((d) => d.uri.fsPath === e.fsPath);
+                    if (doc) {
+                        return this._onDidChangeKernels.fire(doc);
+                    }
+                }
+                this._onDidChangeKernels.fire(undefined);
+            },
+            this,
+            disposables
+        );
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
     }
     public async provideKernels(
         document: NotebookDocument,
         token: CancellationToken
     ): Promise<VSCodeNotebookKernelMetadata[]> {
-        const [preferredKernel, kernels] = await Promise.all([
+        const [preferredKernel, kernels, activeInterpreter] = await Promise.all([
             this.getPreferredKernel(document, token),
-            this.kernelSelectionProvider.getKernelSelectionsForLocalSession(document.uri, 'raw', undefined, token)
+            this.kernelSelectionProvider.getKernelSelectionsForLocalSession(document.uri, 'raw', undefined, token),
+            this.interpreterService.getActiveInterpreter(document.uri)
         ]);
         if (token.isCancellationRequested) {
             return [];
         }
 
-        return kernels.map((kernel) => {
+        // Default the interpreter to the local interpreter (if none is provided).
+        const withInterpreter = kernels.map((kernel) => {
+            const selection = cloneDeep(kernel.selection); // Always clone, so we can make changes to this.
+            selection.interpreter = selection.interpreter || activeInterpreter;
+            return { ...kernel, selection };
+        });
+
+        // Turn this into our preferred list.
+        const mapped = withInterpreter.map((kernel) => {
             return new VSCodeNotebookKernelMetadata(
                 kernel.label,
                 kernel.description || kernel.detail || '',
@@ -89,20 +115,96 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                 this.kernelProvider
             );
         });
+
+        // If no preferred kernel set but we have a language, use that to set preferred instead.
+        if (!mapped.find((v) => v.isPreferred) && document.cells.length) {
+            const languages = document.cells.map((c) => c.language);
+            // Find the first that matches on language
+            const indexOfKernelMatchingDocumentLanguage = kernels.findIndex((k) =>
+                languages.find((l) => l === k.selection.kernelSpec?.language)
+            );
+
+            // If we have a preferred kernel, then add that to the list, & put it on top of the list.
+            const preferredKernelMetadata = this.createNotebookKernelMetadataFromPreferredKernel(preferredKernel);
+            if (preferredKernelMetadata) {
+                mapped.splice(0, 0, preferredKernelMetadata);
+            } else if (indexOfKernelMatchingDocumentLanguage >= 0) {
+                const kernel = kernels[indexOfKernelMatchingDocumentLanguage];
+                mapped.splice(
+                    indexOfKernelMatchingDocumentLanguage,
+                    1,
+                    new VSCodeNotebookKernelMetadata(
+                        kernel.label,
+                        kernel.description || kernel.detail || '',
+                        kernel.selection,
+                        true,
+                        this.kernelProvider
+                    )
+                );
+            }
+        }
+        mapped.sort((a, b) => {
+            if (a.label > b.label) {
+                return 1;
+            } else if (a.label === b.label) {
+                return 0;
+            } else {
+                return -1;
+            }
+        });
+        return mapped;
+    }
+    private createNotebookKernelMetadataFromPreferredKernel(
+        preferredKernel?: KernelConnectionMetadata
+    ): VSCodeNotebookKernelMetadata | undefined {
+        if (!preferredKernel) {
+            return;
+        } else if (preferredKernel.kind === 'startUsingDefaultKernel') {
+            return;
+        } else if (preferredKernel.kind === 'startUsingPythonInterpreter') {
+            return new VSCodeNotebookKernelMetadata(
+                preferredKernel.interpreter?.displayName || preferredKernel.interpreter.path,
+                preferredKernel.interpreter.path,
+                preferredKernel,
+                true,
+                this.kernelProvider
+            );
+        } else if (preferredKernel.kind === 'connectToLiveKernel') {
+            return new VSCodeNotebookKernelMetadata(
+                preferredKernel.kernelModel?.display_name || preferredKernel.kernelModel?.name,
+                preferredKernel.kernelModel?.name,
+                preferredKernel,
+                true,
+                this.kernelProvider
+            );
+        } else {
+            return new VSCodeNotebookKernelMetadata(
+                preferredKernel.kernelSpec.display_name,
+                preferredKernel.kernelSpec.name,
+                preferredKernel,
+                true,
+                this.kernelProvider
+            );
+        }
     }
     private async getPreferredKernel(document: NotebookDocument, token: CancellationToken) {
         // If we already have a kernel selected, then return that.
-        const editor = this.notebook.notebookEditors.find((e) => e.document === document);
+        const editor =
+            this.notebook.notebookEditors.find((e) => e.document === document) ||
+            (this.notebook.activeNotebookEditor?.document === document
+                ? this.notebook.activeNotebookEditor
+                : undefined);
         if (editor && editor.kernel && editor.kernel instanceof VSCodeNotebookKernelMetadata) {
             return editor.kernel.selection;
         }
-        return this.kernelSelector.getKernelForLocalConnection(
+        return this.kernelSelector.getPreferredKernelForLocalConnection(
             document.uri,
             'raw',
             undefined,
             getNotebookMetadata(document),
             true,
-            token
+            token,
+            true
         );
     }
     private async onDidChangeActiveNotebookKernel({
@@ -135,7 +237,9 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
         // This way other parts of extension have access to this kernel immediately after event is handled.
-        this.kernelProvider.getOrCreate(document.uri, { metadata: selectedKernelConnectionMetadata });
+        this.kernelProvider.getOrCreate(document.uri, {
+            metadata: selectedKernelConnectionMetadata
+        });
 
         // Change kernel and update metadata.
         const notebook = await this.notebookProvider.getOrCreateNotebook({
@@ -153,15 +257,20 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                         if (notebook.disposed) {
                             return;
                         }
-                        updateKernelInNotebookMetadata(document, e, this.notebookContentProvider);
+                        updateKernelInNotebookMetadata(document, e);
                     },
                     this,
                     this.disposables
                 );
             }
+            // tslint:disable-next-line: no-suspicious-comment
+            // TODO: https://github.com/microsoft/vscode-python/issues/13514
+            // We need to handle these exceptions in `siwthKernelWithRetry`.
+            // We shouldn't handle them here, as we're already handling some errors in the `siwthKernelWithRetry` method.
+            // Adding comment here, so we have context for the requirement.
             this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
         } else {
-            updateKernelInNotebookMetadata(document, selectedKernelConnectionMetadata, this.notebookContentProvider);
+            updateKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
         }
     }
 }

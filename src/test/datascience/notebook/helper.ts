@@ -190,7 +190,7 @@ export async function trustAllNotebooks() {
     }
     dsSettings.alwaysTrustNotebooks = true;
 }
-export async function startJupyter() {
+export async function startJupyter(closeInitialEditor: boolean) {
     const { editorProvider, vscodeNotebook } = await getServices();
     await closeActiveWindows();
 
@@ -201,9 +201,13 @@ export async function startJupyter() {
         const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
         await executeActiveDocument();
         // Wait for Jupyter to start.
-        await waitForCondition(async () => cell.outputs.length > 0, 30_000, 'Cell not executed');
+        await waitForCondition(async () => cell.outputs.length > 0, 60_000, 'Cell not executed');
 
-        await closeActiveWindows();
+        if (closeInitialEditor) {
+            await closeActiveWindows();
+        } else {
+            await deleteCell(0);
+        }
     } finally {
         disposables.forEach((d) => d.dispose());
     }
@@ -233,20 +237,16 @@ export async function waitForExecutionOrderInVSCCell(cell: NotebookCell, executi
         `Execution count not '${executionOrder}' for Cell ${cell.notebook.cells.indexOf(cell) + 1}`
     );
 }
-export async function waitForExecutionOrderInCell(
-    cell: ICell,
-    executionOrder: number | undefined,
-    model: INotebookModel
-) {
+export async function waitForExecutionOrderInCell(cell: NotebookCell, executionOrder: number | undefined) {
     await waitForCondition(
         async () => {
             if (executionOrder === undefined || executionOrder === null) {
-                return cell.data.execution_count === null;
+                return cell.metadata.executionOrder === undefined;
             }
-            return cell.data.execution_count === executionOrder;
+            return cell.metadata.executionOrder === executionOrder;
         },
-        1_000,
-        `Execution count not '${executionOrder}' for ICell ${model.cells.indexOf(cell) + 1}`
+        15_000,
+        `Execution count not '${executionOrder}' for Cell ${cell.notebook.cells.indexOf(cell)}`
     );
 }
 export function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
@@ -421,12 +421,15 @@ export function createNotebookDocument(
     model: VSCodeNotebookModel,
     viewType: string = JupyterNotebookView
 ): NotebookDocument {
+    const cells: NotebookCell[] = [];
     const doc: NotebookDocument = {
-        cells: [],
+        cells,
+        version: 1,
         fileName: model.file.fsPath,
         isDirty: false,
         languages: [],
         uri: model.file,
+        isUntitled: false,
         viewType,
         metadata: {
             cellEditable: model.isTrusted,
@@ -439,12 +442,15 @@ export function createNotebookDocument(
     model.cells.forEach((cell, index) => {
         const vscCell = createVSCNotebookCellDataFromCell(model, cell)!;
         const vscDocumentCell: NotebookCell = {
-            ...vscCell,
+            cellKind: vscCell.cellKind,
+            language: vscCell.language,
+            metadata: vscCell.metadata || {},
             uri: model.file.with({ fragment: `cell${index}` }),
             notebook: doc,
-            document: instance(mock<TextDocument>())
+            document: instance(mock<TextDocument>()),
+            outputs: vscCell.outputs
         };
-        doc.cells.push(vscDocumentCell);
+        cells.push(vscDocumentCell);
     });
     model.associateNotebookDocument(doc);
     return doc;

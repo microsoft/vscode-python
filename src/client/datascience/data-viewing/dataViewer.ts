@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ViewColumn } from 'vscode';
 
-import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, Resource } from '../../common/types';
@@ -18,7 +18,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
 import { ICodeCssGenerator, IThemeFinder } from '../types';
-import { WebViewHost } from '../webViewHost';
+import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
     DataViewerMessages,
@@ -31,14 +31,14 @@ import {
 
 const dataExplorereDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
-export class DataViewer extends WebViewHost<IDataViewerMapping> implements IDataViewer, IDisposable {
+export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements IDataViewer, IDisposable {
     private dataProvider: IDataViewerDataProvider | undefined;
     private rowsTimer: StopWatch | undefined;
     private pendingRowsCount: number = 0;
     private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
 
     constructor(
-        @inject(IWebPanelProvider) provider: IWebPanelProvider,
+        @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,

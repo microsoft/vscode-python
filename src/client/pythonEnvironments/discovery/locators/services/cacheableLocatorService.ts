@@ -5,7 +5,9 @@
 
 import { injectable, unmanaged } from 'inversify';
 import * as md5 from 'md5';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import {
+    Disposable, Event, EventEmitter, Uri,
+} from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import '../../../../common/extensions';
 import { traceDecorators, traceVerbose } from '../../../../common/logger';
@@ -27,15 +29,19 @@ import { GetInterpreterLocatorOptions } from '../types';
  */
 export class CacheableLocatorPromiseCache {
     private static useStatic = false;
+
     private static staticMap = new Map<string, Deferred<PythonEnvironment[]>>();
+
     private normalMap = new Map<string, Deferred<PythonEnvironment[]>>();
 
     public static forceUseStatic() {
         CacheableLocatorPromiseCache.useStatic = true;
     }
+
     public static forceUseNormal() {
         CacheableLocatorPromiseCache.useStatic = false;
     }
+
     public get(key: string): Deferred<PythonEnvironment[]> | undefined {
         if (CacheableLocatorPromiseCache.useStatic) {
             return CacheableLocatorPromiseCache.staticMap.get(key);
@@ -63,16 +69,21 @@ export class CacheableLocatorPromiseCache {
 @injectable()
 export abstract class CacheableLocatorService implements IInterpreterLocatorService {
     protected readonly _hasInterpreters: Deferred<boolean>;
+
     private readonly promisesPerResource = new CacheableLocatorPromiseCache();
+
     private readonly handlersAddedToResource = new Set<string>();
+
     private readonly cacheKeyPrefix: string;
+
     private readonly locating = new EventEmitter<Promise<PythonEnvironment[]>>();
+
     private _didTriggerInterpreterSuggestions: boolean;
 
     constructor(
         @unmanaged() private readonly name: string,
         @unmanaged() protected readonly serviceContainer: IServiceContainer,
-        @unmanaged() private cachePerWorkspace: boolean = false
+        @unmanaged() private cachePerWorkspace: boolean = false,
     ) {
         this._hasInterpreters = createDeferred<boolean>();
         this.cacheKeyPrefix = `INTERPRETERS_CACHE_v3_${name}`;
@@ -90,10 +101,13 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     public get onLocating(): Event<Promise<PythonEnvironment[]>> {
         return this.locating.event;
     }
+
     public get hasInterpreters(): Promise<boolean> {
         return this._hasInterpreters.completed ? this._hasInterpreters.promise : Promise.resolve(false);
     }
+
     public abstract dispose(): void;
+
     @traceDecorators.verbose('Get Interpreters in CacheableLocatorService')
     public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]> {
         const cacheKey = this.getCacheKey(resource);
@@ -109,12 +123,12 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                 .then(async (items) => {
                     await this.cacheInterpreters(items, resource);
                     traceVerbose(
-                        `Interpreters returned by ${this.name} are of count ${Array.isArray(items) ? items.length : 0}`
+                        `Interpreters returned by ${this.name} are of count ${Array.isArray(items) ? items.length : 0}`,
                     );
                     traceVerbose(`Interpreters returned by ${this.name} are ${JSON.stringify(items)}`);
                     sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
                         locator: this.name,
-                        interpreters: Array.isArray(items) ? items.length : 0
+                        interpreters: Array.isArray(items) ? items.length : 0,
                     });
                     deferred!.resolve(items);
                 })
@@ -123,7 +137,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                         EventName.PYTHON_INTERPRETER_DISCOVERY,
                         stopWatch.elapsedTime,
                         { locator: this.name },
-                        ex
+                        ex,
                     );
                     deferred!.reject(ex);
                 });
@@ -141,6 +155,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         const cachedInterpreters = options?.ignoreCache ? undefined : this.getCachedInterpreters(resource);
         return Array.isArray(cachedInterpreters) ? cachedInterpreters : deferred.promise;
     }
+
     protected async addHandlersForInterpreterWatchers(cacheKey: string, resource: Uri | undefined): Promise<void> {
         if (this.handlersAddedToResource.has(cacheKey)) {
             return;
@@ -156,40 +171,42 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                     this.getInterpreters(resource).ignoreErrors();
                 },
                 this,
-                disposableRegisry
+                disposableRegisry,
             );
         });
     }
+
     protected async getInterpreterWatchers(_resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
         return [];
     }
 
     protected abstract getInterpretersImplementation(resource?: Uri): Promise<PythonEnvironment[]>;
+
     protected createPersistenceStore(resource?: Uri) {
         const cacheKey = this.getCacheKey(resource);
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         if (this.cachePerWorkspace) {
             return persistentFactory.createWorkspacePersistentState<PythonEnvironment[]>(cacheKey, undefined as any);
-        } else {
-            return persistentFactory.createGlobalPersistentState<PythonEnvironment[]>(cacheKey, undefined as any);
         }
+        return persistentFactory.createGlobalPersistentState<PythonEnvironment[]>(cacheKey, undefined as any);
     }
+
     protected getCachedInterpreters(resource?: Uri): PythonEnvironment[] | undefined {
         const persistence = this.createPersistenceStore(resource);
         if (!Array.isArray(persistence.value)) {
             return;
         }
-        return persistence.value.map((item) => {
-            return {
-                ...item,
-                cachedEntry: true
-            };
-        });
+        return persistence.value.map((item) => ({
+            ...item,
+            cachedEntry: true,
+        }));
     }
+
     protected async cacheInterpreters(interpreters: PythonEnvironment[], resource?: Uri) {
         const persistence = this.createPersistenceStore(resource);
         await persistence.updateValue(interpreters);
     }
+
     protected getCacheKey(resource?: Uri) {
         if (!resource || !this.cachePerWorkspace) {
             return this.cacheKeyPrefix;

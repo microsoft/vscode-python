@@ -22,17 +22,21 @@ suite('DataScience - NativeNotebook Renderer Extension', () => {
     const disposables: IDisposable[] = [];
     const jupyterNotebook: NotebookDocument = {
         cells: [],
+        version: 1,
         uri: Uri.file('one.ipynb'),
         fileName: '',
         isDirty: false,
         languages: [],
         metadata: {},
+        isUntitled: false,
         viewType: JupyterNotebookView
     };
     const nonJupyterNotebook: NotebookDocument = {
         cells: [],
+        version: 1,
         uri: Uri.file('one.xyz'),
         fileName: '',
+        isUntitled: false,
         isDirty: false,
         languages: [],
         metadata: {},

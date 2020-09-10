@@ -13,7 +13,8 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { anything, objectContaining, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
+import { CustomEditorProvider, Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 import {
     IApplicationShell,
     ICommandManager,
@@ -22,12 +23,14 @@ import {
     IWorkspaceService
 } from '../../client/common/application/types';
 import { LocalZMQKernel } from '../../client/common/experiments/groups';
+import { ICryptoUtils, IExtensionContext } from '../../client/common/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Commands, Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor as NativeEditorWebView } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { IKernelSpecQuickPickItem } from '../../client/datascience/jupyter/kernels/types';
+import { KeyPrefix } from '../../client/datascience/notebookStorage/nativeEditorStorage';
 import {
     ICell,
     IDataScienceErrorHandler,
@@ -79,8 +82,10 @@ import {
     srcDirectory,
     typeCode,
     verifyCellIndex,
+    verifyCellSource,
     verifyHtmlOnCell
 } from './testHelpers';
+import { ITestNativeEditorProvider } from './testNativeEditorProvider';
 
 use(chaiAsPromised);
 
@@ -235,6 +240,137 @@ suite('DataScience Native Editor', () => {
                         verifyHtmlOnCell(mount.wrapper, 'NativeCell', '<span>1</span>', 1);
                     } else {
                         context.skip();
+                    }
+                });
+
+                runMountedTest('Save on close', async (_context) => {
+                    // Close should cause the save as to come up. Remap appshell so we can check
+                    const dummyDisposable = {
+                        dispose: () => {
+                            return;
+                        }
+                    };
+                    const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+                    appShell
+                        .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                        .returns((e) => {
+                            throw e;
+                        });
+                    appShell
+                        .setup((a) =>
+                            a.showInformationMessage(
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                            )
+                        )
+                        .returns((_a1, _a2, a3, _a4) => Promise.resolve(a3));
+                    appShell
+                        .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
+                        .returns(() => {
+                            return Promise.resolve(Uri.file(tempNotebookFile.filePath));
+                        });
+                    appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+                    ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+
+                    // Create an editor
+                    const ne = await createNewEditor(ioc);
+
+                    // Add a cell
+                    await addCell(ne.mount, 'a=1\na');
+
+                    // Close the editor. It should ask for save as (if not custom editor)
+                    if (useCustomEditorApi) {
+                        // For custom editor do what VS code would do on close
+                        const notebookEditorProvider = ioc.get<ITestNativeEditorProvider>(INotebookEditorProvider);
+                        const customDoc = notebookEditorProvider.getCustomDocument(ne.editor.file);
+                        assert.ok(customDoc, 'No custom document for new notebook');
+                        const customEditorProvider = (notebookEditorProvider as any) as CustomEditorProvider;
+                        await customEditorProvider.saveCustomDocumentAs(
+                            customDoc!,
+                            Uri.file(tempNotebookFile.filePath),
+                            CancellationToken.None
+                        );
+                    }
+                    await ne.editor.dispose();
+
+                    // Open the temp file to make sure it has the new cell
+                    const opened = await openEditor(ioc, '', tempNotebookFile.filePath);
+
+                    verifyCellSource(opened.mount.wrapper, 'NativeCell', 'a=1\na', CellPosition.Last);
+                });
+
+                function getHashedFileName(file: Uri): string {
+                    const crypto = ioc.get<ICryptoUtils>(ICryptoUtils);
+                    const context = ioc.get<IExtensionContext>(IExtensionContext);
+                    const key = `${KeyPrefix}${file.toString()}`;
+                    const name = `${crypto.createHash(key, 'string')}.ipynb`;
+                    return path.join(context.globalStoragePath, name);
+                }
+
+                runMountedTest('Save on shutdown', async (context) => {
+                    // Skip this test is using custom editor. VS code handles this situation
+                    if (useCustomEditorApi) {
+                        context.skip();
+                    } else {
+                        // When we dispose act like user wasn't able to hit anything
+                        const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+                        appShell
+                            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                            .returns((e) => {
+                                throw e;
+                            });
+                        appShell
+                            .setup((a) =>
+                                a.showInformationMessage(
+                                    TypeMoq.It.isAny(),
+                                    TypeMoq.It.isAny(),
+                                    TypeMoq.It.isAny(),
+                                    TypeMoq.It.isAny()
+                                )
+                            )
+                            .returns((_a1, _a2, _a3, _a4) => Promise.resolve(undefined));
+                        appShell
+                            .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
+                            .returns(() => {
+                                return Promise.resolve(Uri.file(tempNotebookFile.filePath));
+                            });
+                        ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+
+                        // Turn off auto save so that backup works.
+                        await updateFileConfig(ioc, 'autoSave', 'off');
+
+                        // Create an editor with a specific path
+                        const ne = await openEditor(ioc, '', tempNotebookFile.filePath);
+
+                        // Figure out the backup file name
+                        const deferred = createDeferred<boolean>();
+                        const backupFileName = getHashedFileName(Uri.file(tempNotebookFile.filePath));
+                        fs.watchFile(backupFileName, (c, p) => {
+                            if (p.mtime < c.mtime) {
+                                deferred.resolve(true);
+                            }
+                        });
+
+                        try {
+                            // Add a cell
+                            await addCell(ne.mount, 'a=1\na');
+
+                            // Wait for write. It should have written to backup
+                            const result = await waitForPromise(deferred.promise, 5000);
+                            assert.ok(result, 'Backup file did not write');
+
+                            // Prevent reopen (we want to act like shutdown)
+                            (ne.editor as any).reopen = noop;
+                            await closeNotebook(ioc, ne.editor);
+                        } finally {
+                            fs.unwatchFile(backupFileName);
+                        }
+
+                        // Reopen and verify
+                        const opened = await openEditor(ioc, '', tempNotebookFile.filePath);
+                        verifyCellSource(opened.mount.wrapper, 'NativeCell', 'a=1\na', CellPosition.Last);
                     }
                 });
 

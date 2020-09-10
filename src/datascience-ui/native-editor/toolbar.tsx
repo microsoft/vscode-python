@@ -4,6 +4,7 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { NativeMouseCommandTelemetry } from '../../client/datascience/constants';
+import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { JupyterInfo } from '../interactive-common/jupyterInfo';
 import {
     getSelectedAndFocusedInfo,
@@ -28,6 +29,7 @@ type INativeEditorDataProps = {
     kernel: IServerState;
     selectionFocusedInfo: SelectionAndFocusedInfo;
     variablesVisible: boolean;
+    settings?: IDataScienceExtraSettings;
 };
 export type INativeEditorToolbarProps = INativeEditorDataProps & {
     sendCommand: typeof actionCreators.sendCommand;
@@ -266,6 +268,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                         shouldShowTrustMessage={true}
                         isNotebookTrusted={this.props.isNotebookTrusted}
                         launchNotebookTrustPrompt={launchNotebookTrustPrompt}
+                        settings={this.props.settings}
                     />
                 </div>
                 <div className="toolbar-divider" />

@@ -86,8 +86,7 @@ class JediCompletion(object):
         return path
 
     def _generate_signature(self, completion):
-        """Generate signature with function arguments.
-        """
+        """Generate signature with function arguments."""
         if completion.type in ["module"] or not hasattr(completion, "params"):
             return ""
         return "%s(%s)" % (
@@ -551,8 +550,8 @@ class JediCompletion(object):
 
     def _normalize_request_path(self, request):
         """Normalize any Windows paths received by a *nix build of
-           Python. Does not alter the reverse os.path.sep=='\\',
-           i.e. *nix paths received by a Windows build of Python.
+        Python. Does not alter the reverse os.path.sep=='\\',
+        i.e. *nix paths received by a Windows build of Python.
         """
         if "path" in request:
             if not self.drive_mount:
@@ -569,8 +568,7 @@ class JediCompletion(object):
                 request["path"] = newPath
 
     def _process_request(self, request):
-        """Accept serialized request from VSCode and write response.
-        """
+        """Accept serialized request from VSCode and write response."""
         request = self._deserialize(request)
 
         self._set_request_config(request.get("config", {}))

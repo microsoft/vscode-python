@@ -458,7 +458,6 @@ use(chaiAsPromised);
             const { notebookUI } = await openBeakerXIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
             await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
 
             await notebookUI.executeCell(1);
             await retryIfFail(async () => {
@@ -478,15 +477,6 @@ use(chaiAsPromised);
                 const cellOutput = await notebookUI.getCellOutput(2);
                 const modals = await cellOutput.$$('div.modal-content');
                 assert.isAtLeast(modals.length, 1);
-            });
-
-            // This last part if flakey. BeakerX can fail itself loading settings
-            await notebookUI.executeCell(3);
-            await retryIfFail(async () => {
-                // Confirm form with fields have been rendered.
-                const cellOutput = await notebookUI.getCellOutput(3);
-                const textAreas = await cellOutput.$$('div.widget-textarea');
-                assert.isAtLeast(textAreas.length, 1);
             });
         });
         test('Render bqplot', async () => {

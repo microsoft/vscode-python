@@ -22,6 +22,7 @@ export interface IPipEnvServiceHelper {
  * @export
  * @interface IInterpreterHashProviderFactory
  */
+export const IInterpreterHashProviderFactory = Symbol('IInterpreterHashProviderFactory');
 export interface IInterpreterHashProviderFactory {
     create(options: { pythonPath: string } | { resource: Uri }): Promise<IInterpreterHashProvider>;
 }

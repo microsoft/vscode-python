@@ -296,4 +296,79 @@ suite('Experimentation service', () => {
             sinon.assert.notCalled(isCachedFlightEnabledStub);
         });
     });
+
+    suite('Experiment value retrieval', () => {
+        const experiment = 'Test Experiment - experiment';
+        let getTreatmentVariableAsyncStub: sinon.SinonStub;
+
+        setup(() => {
+            getTreatmentVariableAsyncStub = sinon.stub().returns(Promise.resolve('value'));
+            sinon.stub(tasClient, 'getExperimentationService').returns({
+                getTreatmentVariableAsync: getTreatmentVariableAsyncStub
+                // tslint:disable-next-line: no-any
+            } as any);
+
+            configureApplicationEnvironment('stable', extensionVersion);
+        });
+
+        test('If the service is enabled and the opt-out array is empty,return the value from the experimentation framework for a given experiment', async () => {
+            configureSettings(true, [], []);
+
+            const experimentService = new ExperimentService(
+                instance(configurationService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel
+            );
+            const result = await experimentService.getExperimentValue(experiment);
+
+            assert.equal(result, 'value');
+            sinon.assert.calledOnce(getTreatmentVariableAsyncStub);
+        });
+
+        test('If the experiment setting is disabled, getExperimentValue should return undefined', async () => {
+            configureSettings(false, [], []);
+
+            const experimentService = new ExperimentService(
+                instance(configurationService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel
+            );
+            const result = await experimentService.getExperimentValue(experiment);
+
+            assert.isUndefined(result);
+            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
+        });
+
+        test('If the opt-out setting contains "All", getExperimentValue should return undefined', async () => {
+            configureSettings(true, [], ['All']);
+
+            const experimentService = new ExperimentService(
+                instance(configurationService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel
+            );
+            const result = await experimentService.getExperimentValue(experiment);
+
+            assert.isUndefined(result);
+            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
+        });
+
+        test('If the opt-out setting contains the experiment name, igetExperimentValue should return undefined', async () => {
+            configureSettings(true, [], [experiment]);
+
+            const experimentService = new ExperimentService(
+                instance(configurationService),
+                instance(appEnvironment),
+                globalMemento,
+                outputChannel
+            );
+            const result = await experimentService.getExperimentValue(experiment);
+
+            assert.isUndefined(result);
+            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
+        });
+    });
 });

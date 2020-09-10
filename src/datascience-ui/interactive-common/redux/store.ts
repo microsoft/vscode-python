@@ -31,6 +31,7 @@ import { forceLoad } from '../transforms';
 import { isAllowedAction, isAllowedMessage, postActionToExtension } from './helpers';
 import { generatePostOfficeSendReducer } from './postOffice';
 import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
+import { CommonActionType } from './reducers/types';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
 
 function generateDefaultState(
@@ -109,19 +110,21 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
         }
 
         // If cell vm count changed or selected cell changed, send the message
-        const currentSelection = getSelectedAndFocusedInfo(afterState.main);
-        if (
-            prevState.main.cellVMs.length !== afterState.main.cellVMs.length ||
-            getSelectedAndFocusedInfo(prevState.main).selectedCellId !== currentSelection.selectedCellId ||
-            prevState.main.undoStack.length !== afterState.main.undoStack.length ||
-            prevState.main.redoStack.length !== afterState.main.redoStack.length
-        ) {
-            postActionToExtension({ queueAction: store.dispatch }, InteractiveWindowMessages.SendInfo, {
-                cellCount: afterState.main.cellVMs.length,
-                undoCount: afterState.main.undoStack.length,
-                redoCount: afterState.main.redoStack.length,
-                selectedCell: currentSelection.selectedCellId
-            });
+        if (!action.type || action.type !== CommonActionType.UNMOUNT) {
+            const currentSelection = getSelectedAndFocusedInfo(afterState.main);
+            if (
+                prevState.main.cellVMs.length !== afterState.main.cellVMs.length ||
+                getSelectedAndFocusedInfo(prevState.main).selectedCellId !== currentSelection.selectedCellId ||
+                prevState.main.undoStack.length !== afterState.main.undoStack.length ||
+                prevState.main.redoStack.length !== afterState.main.redoStack.length
+            ) {
+                postActionToExtension({ queueAction: store.dispatch }, InteractiveWindowMessages.SendInfo, {
+                    cellCount: afterState.main.cellVMs.length,
+                    undoCount: afterState.main.undoStack.length,
+                    redoCount: afterState.main.redoStack.length,
+                    selectedCell: currentSelection.selectedCellId
+                });
+            }
         }
         return res;
     };
@@ -159,21 +162,26 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             });
         };
 
-        // Special case for focusing a cell
-        const previousSelection = getSelectedAndFocusedInfo(prevState.main);
-        const currentSelection = getSelectedAndFocusedInfo(afterState.main);
-        if (previousSelection.focusedCellId !== currentSelection.focusedCellId && currentSelection.focusedCellId) {
-            // Send async so happens after render state changes (so our enzyme wrapper is up to date)
-            sendMessage(InteractiveWindowMessages.FocusedCellEditor, { cellId: action.payload.cellId });
-        }
-        if (previousSelection.selectedCellId !== currentSelection.selectedCellId && currentSelection.selectedCellId) {
-            // Send async so happens after render state changes (so our enzyme wrapper is up to date)
-            sendMessage(InteractiveWindowMessages.SelectedCell, { cellId: action.payload.cellId });
-        }
-        // Special case for unfocusing a cell
-        if (previousSelection.focusedCellId !== currentSelection.focusedCellId && !currentSelection.focusedCellId) {
-            // Send async so happens after render state changes (so our enzyme wrapper is up to date)
-            sendMessage(InteractiveWindowMessages.UnfocusedCellEditor);
+        if (!action.type || action.type !== CommonActionType.UNMOUNT) {
+            // Special case for focusing a cell
+            const previousSelection = getSelectedAndFocusedInfo(prevState.main);
+            const currentSelection = getSelectedAndFocusedInfo(afterState.main);
+            if (previousSelection.focusedCellId !== currentSelection.focusedCellId && currentSelection.focusedCellId) {
+                // Send async so happens after render state changes (so our enzyme wrapper is up to date)
+                sendMessage(InteractiveWindowMessages.FocusedCellEditor, { cellId: action.payload.cellId });
+            }
+            if (
+                previousSelection.selectedCellId !== currentSelection.selectedCellId &&
+                currentSelection.selectedCellId
+            ) {
+                // Send async so happens after render state changes (so our enzyme wrapper is up to date)
+                sendMessage(InteractiveWindowMessages.SelectedCell, { cellId: action.payload.cellId });
+            }
+            // Special case for unfocusing a cell
+            if (previousSelection.focusedCellId !== currentSelection.focusedCellId && !currentSelection.focusedCellId) {
+                // Send async so happens after render state changes (so our enzyme wrapper is up to date)
+                sendMessage(InteractiveWindowMessages.UnfocusedCellEditor);
+            }
         }
 
         // Indicate settings updates
@@ -218,7 +226,10 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             sendMessage(InteractiveWindowMessages.ExecutionRendered);
         }
 
-        if (!action.type || action.type !== InteractiveWindowMessages.FinishCell) {
+        if (
+            !action.type ||
+            (action.type !== InteractiveWindowMessages.FinishCell && action.type !== CommonActionType.UNMOUNT)
+        ) {
             // Might be a non finish but still update cells (like an undo or a delete)
             const prevFinished = prevState.main.cellVMs
                 .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)

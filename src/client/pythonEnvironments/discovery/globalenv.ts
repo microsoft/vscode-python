@@ -25,7 +25,7 @@ export function getPyenvTypeFinder(
     pathJoin: (...parts: string[]) => string,
     // </path>
     getEnvVar: (name: string) => string | undefined,
-    exec: ExecFunc
+    exec: ExecFunc,
 ): TypeFinderFunc {
     const find = getPyenvRootFinder(homedir, pathJoin, getEnvVar, exec);
     return async (python) => {
@@ -49,7 +49,7 @@ export function getPyenvRootFinder(
     homedir: string,
     pathJoin: (...parts: string[]) => string,
     getEnvVar: (name: string) => string | undefined,
-    exec: ExecFunc
+    exec: ExecFunc,
 ): RootFinderFunc {
     return async () => {
         const root = getEnvVar('PYENV_ROOT');

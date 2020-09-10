@@ -3,6 +3,8 @@
 
 'use strict';
 
+import { EnvironmentVariables } from '../variables/types';
+
 export enum Architecture {
     Unknown = 1,
     x86 = 2,
@@ -26,4 +28,20 @@ export function getOSType(platform: string = process.platform): OSType {
     } else {
         return OSType.Unknown;
     }
+}
+
+export function getEnvironmentVariable(key: string): string | undefined {
+    // tslint:disable-next-line: no-any
+    return ((process.env as any) as EnvironmentVariables)[key];
+}
+
+export function getPathEnvironmentVariable(): string | undefined {
+    return getEnvironmentVariable('Path') || getEnvironmentVariable('PATH');
+}
+
+export function getUserHomeDir(): string | undefined {
+    if (getOSType() === OSType.Windows) {
+        return getEnvironmentVariable('USERPROFILE');
+    }
+    return getEnvironmentVariable('HOME') || getEnvironmentVariable('HOMEPATH');
 }

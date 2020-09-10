@@ -161,7 +161,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 // Get hold of the kernelspec and corresponding (matching) interpreter that'll be used as the spec.
                 // We can do this in parallel, while starting the server (faster).
                 traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
-                kernelConnectionMetadataPromise = this.kernelSelector.getKernelForLocalConnection(
+                kernelConnectionMetadataPromise = this.kernelSelector.getPreferredKernelForLocalConnection(
                     undefined,
                     'jupyter',
                     undefined,
@@ -200,7 +200,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             IJupyterSessionManagerFactory
                         );
                         const sessionManager = await sessionManagerFactory.create(connection);
-                        kernelConnectionMetadata = await this.kernelSelector.getKernelForRemoteConnection(
+                        kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForRemoteConnection(
                             undefined,
                             sessionManager,
                             options?.metadata,

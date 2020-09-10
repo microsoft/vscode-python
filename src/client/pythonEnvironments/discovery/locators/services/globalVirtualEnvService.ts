@@ -21,8 +21,8 @@ export class GlobalVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
         @inject(IVirtualEnvironmentsSearchPathProvider)
         @named('global')
-        globalVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
+            globalVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
     ) {
         super(globalVirtualEnvPathProvider, serviceContainer, 'VirtualEnvService');
     }
@@ -31,7 +31,9 @@ export class GlobalVirtualEnvService extends BaseVirtualEnvService {
 @injectable()
 export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvironmentsSearchPathProvider {
     private readonly config: IConfigurationService;
+
     private readonly currentProcess: ICurrentProcess;
+
     private readonly virtualEnvMgr: IVirtualEnvironmentManager;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
@@ -47,7 +49,7 @@ export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvi
             '.pyenv',
             '.direnv',
             '.virtualenvs',
-            ...this.config.getSettings(resource).venvFolders
+            ...this.config.getSettings(resource).venvFolders,
         ];
         const folders = [...new Set(venvFolders.map((item) => path.join(homedir, item)))];
 

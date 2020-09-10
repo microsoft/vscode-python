@@ -28,7 +28,7 @@ export function execCode(code: string, isolated = true): string[] {
 export function execModule(name: string, moduleArgs: string[], isolated = true): string[] {
     const args = ['-m', name, ...moduleArgs];
     if (isolated) {
-        args[0] = ISOLATED; // replace
+        args[0] = ISOLATED.fileToCommandArgument();
     }
     // "code" isn't specific enough to know how to parse it,
     // so we only return the args.

@@ -41,6 +41,20 @@ export async function usingAsync<T extends IAsyncDisposable, R>(
     }
 }
 
+/**
+ * Like `Readonly<>`, but recursive.
+ *
+ * See https://github.com/Microsoft/TypeScript/pull/21316.
+ */
+// tslint:disable-next-line:no-any
+export type DeepReadonly<T> = T extends any[] ? IDeepReadonlyArray<T[number]> : DeepReadonlyNonArray<T>;
+type DeepReadonlyNonArray<T> = T extends object ? DeepReadonlyObject<T> : T;
+interface IDeepReadonlyArray<T> extends ReadonlyArray<DeepReadonly<T>> {}
+type DeepReadonlyObject<T> = {
+    readonly [P in NonFunctionPropertyNames<T>]: DeepReadonly<T[P]>;
+};
+type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
+
 // Information about a traced function/method call.
 export type TraceInfo = {
     elapsed: number; // milliseconds

@@ -5,15 +5,14 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter } from 'vscode';
 import type {
     notebook,
+    NotebookCellMetadata,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookDocument,
     NotebookDocumentFilter,
     NotebookEditor,
     NotebookKernel,
-    NotebookKernelProvider,
-    NotebookOutputRenderer,
-    NotebookOutputSelector
+    NotebookKernelProvider
 } from 'vscode-proposed';
 import { UseProposedApi } from '../constants';
 import { IDisposableRegistry } from '../types';
@@ -98,21 +97,21 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.canUseNotebookApi = true;
         }
     }
-    public registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable {
-        return this.notebook.registerNotebookContentProvider(notebookType, provider);
+    public registerNotebookContentProvider(
+        notebookType: string,
+        provider: NotebookContentProvider,
+        options?: {
+            transientOutputs: boolean;
+            transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
+        }
+    ): Disposable {
+        return this.notebook.registerNotebookContentProvider(notebookType, provider, options);
     }
     public registerNotebookKernelProvider(
         selector: NotebookDocumentFilter,
         provider: NotebookKernelProvider
     ): Disposable {
         return this.notebook.registerNotebookKernelProvider(selector, provider);
-    }
-    public registerNotebookOutputRenderer(
-        id: string,
-        outputSelector: NotebookOutputSelector,
-        renderer: NotebookOutputRenderer
-    ): Disposable {
-        return this.notebook.registerNotebookOutputRenderer(id, outputSelector, renderer);
     }
     private addEventHandlers() {
         if (this.addedEventHandlers) {

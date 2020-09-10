@@ -7,7 +7,9 @@
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { instance, mock, verify, when } from 'ts-mockito';
+import {
+    instance, mock, verify, when,
+} from 'ts-mockito';
 import { Uri } from 'vscode';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
 import { IConfigurationService } from '../../../../client/common/types';
@@ -33,7 +35,7 @@ suite('Interpretersx - Interpreter Hash Provider Factory', () => {
             instance(configService),
             windowsStoreInstance,
             windowsStoreInstance,
-            instance(standardHashProvider)
+            instance(standardHashProvider),
         );
     });
     test('When provided python path is not a window store interpreter return standard hash provider', async () => {

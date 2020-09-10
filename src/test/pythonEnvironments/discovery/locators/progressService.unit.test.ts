@@ -6,7 +6,9 @@
 // tslint:disable:no-any max-classes-per-file max-func-body-length
 
 import { expect } from 'chai';
-import { anything, instance, mock, when } from 'ts-mockito';
+import {
+    anything, instance, mock, when,
+} from 'ts-mockito';
 import { Disposable, Uri } from 'vscode';
 import { createDeferred } from '../../../../client/common/utils/async';
 import { noop } from '../../../../client/common/utils/misc';
@@ -21,18 +23,22 @@ suite('Interpreters - Locator Progress', () => {
         public get hasInterpreters(): Promise<boolean> {
             return Promise.resolve(true);
         }
+
         public locatingCallback?: (e: Promise<PythonEnvironment[]>) => any;
+
         public onLocating(
             listener: (e: Promise<PythonEnvironment[]>) => any,
             _thisArgs?: any,
-            _disposables?: Disposable[]
+            _disposables?: Disposable[],
         ): Disposable {
             this.locatingCallback = listener;
             return { dispose: noop };
         }
+
         public getInterpreters(_resource?: Uri): Promise<PythonEnvironment[]> {
             return Promise.resolve([]);
         }
+
         public dispose() {
             noop();
         }

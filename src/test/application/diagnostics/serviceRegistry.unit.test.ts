@@ -4,7 +4,7 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
-import { LanguageServerType } from '../../../client/activation/types';
+import { IExtensionSingleActivationService, LanguageServerType } from '../../../client/activation/types';
 import { ApplicationDiagnostics } from '../../../client/application/diagnostics/applicationDiagnostics';
 import {
     EnvironmentPathVariableDiagnosticsService,
@@ -56,6 +56,7 @@ import {
     IDiagnosticHandlerService,
     IDiagnosticsService
 } from '../../../client/application/diagnostics/types';
+import { JoinMailingListPrompt } from '../../../client/application/misc/joinMailingListPrompt';
 import { IApplicationDiagnostics } from '../../../client/application/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';
@@ -148,5 +149,11 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
             )
         );
         verify(serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics));
+        verify(
+            serviceManager.addSingleton<IExtensionSingleActivationService>(
+                IExtensionSingleActivationService,
+                JoinMailingListPrompt
+            )
+        );
     });
 });

@@ -103,7 +103,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
 
         // Add in a new server
         const serverA1 = { uri: 'ServerA', time: 1, date: new Date(1) };
-        addToUriList(mockStorage, serverA1.uri, serverA1.time);
+        addToUriList(mockStorage, serverA1.uri, serverA1.time, serverA1.uri);
 
         await ds.selectJupyterURI(true);
         assert.equal(quickPick?.items.length, 3, 'Wrong number of items in the quick pick');
@@ -111,7 +111,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
 
         // Add in a second server, the newer server should be higher in the list due to newer time
         const serverB1 = { uri: 'ServerB', time: 2, date: new Date(2) };
-        addToUriList(mockStorage, serverB1.uri, serverB1.time);
+        addToUriList(mockStorage, serverB1.uri, serverB1.time, serverB1.uri);
         await ds.selectJupyterURI(true);
         assert.equal(quickPick?.items.length, 4, 'Wrong number of items in the quick pick');
         quickPickCheck(quickPick?.items[2], serverB1);
@@ -119,7 +119,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
 
         // Reconnect to server A with a new time, it should now be higher in the list
         const serverA3 = { uri: 'ServerA', time: 3, date: new Date(3) };
-        addToUriList(mockStorage, serverA3.uri, serverA3.time);
+        addToUriList(mockStorage, serverA3.uri, serverA3.time, serverA3.uri);
         await ds.selectJupyterURI(true);
         assert.equal(quickPick?.items.length, 4, 'Wrong number of items in the quick pick');
         quickPickCheck(quickPick?.items[3], serverB1);
@@ -127,7 +127,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
 
         // Verify that we stick to our settings limit
         for (let i = 0; i < Settings.JupyterServerUriListMax + 10; i = i + 1) {
-            addToUriList(mockStorage, i.toString(), i);
+            addToUriList(mockStorage, i.toString(), i, i.toString());
         }
 
         await ds.selectJupyterURI(true);

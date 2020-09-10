@@ -137,7 +137,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             instance(mock(InterpreterService))
         );
         ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
-        registerForIOC(ioc.serviceManager);
+        registerForIOC(ioc.serviceManager, ioc.serviceContainer);
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 

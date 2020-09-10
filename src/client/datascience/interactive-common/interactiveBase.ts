@@ -29,7 +29,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
@@ -37,6 +37,7 @@ import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../comm
 import { RemoveKernelToolbarInInteractiveWindow, RunByLine } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
+import { isNil } from 'lodash';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -104,11 +105,11 @@ import {
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
-import { WebViewHost } from '../webViewHost';
+import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
 
-export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {
+export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindowMapping> implements IInteractiveBase {
     public get notebook(): INotebook | undefined {
         return this._notebook;
     }
@@ -146,7 +147,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         liveShare: ILiveShareApi,
         protected applicationShell: IApplicationShell,
         protected documentManager: IDocumentManager,
-        provider: IWebPanelProvider,
+        provider: IWebviewPanelProvider,
         private disposables: IDisposableRegistry,
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
@@ -1168,10 +1169,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             if (serverConnection.localLaunch) {
                 localizedUri = localize.DataScience.localJupyterServer();
             } else {
-                localizedUri = serverConnection.displayName;
-
                 // Log this remote URI into our MRU list
-                addToUriList(this.globalStorage, localizedUri, Date.now());
+                addToUriList(
+                    this.globalStorage,
+                    !isNil(serverConnection.url) ? serverConnection.url : serverConnection.displayName,
+                    Date.now(),
+                    serverConnection.displayName
+                );
             }
         }
 

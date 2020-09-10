@@ -3,11 +3,16 @@
 
 // tslint:disable:max-func-body-length chai-vague-errors
 
-import { expect } from 'chai';
+import { expect, use } from 'chai';
 import * as fs from 'fs-extra';
 import { TemporaryFileSystem } from '../../../client/common/platform/fs-temp';
 import { TemporaryFile } from '../../../client/common/platform/types';
 import { assertDoesNotExist, assertExists, FSFixture, WINDOWS } from './utils';
+
+// tslint:disable:no-require-imports no-var-requires
+const assertArrays = require('chai-arrays');
+use(require('chai-as-promised'));
+use(assertArrays);
 
 suite('FileSystem - TemporaryFileSystem', () => {
     let tmpfs: TemporaryFileSystem;

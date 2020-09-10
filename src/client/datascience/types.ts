@@ -74,6 +74,7 @@ export interface IJupyterConnection extends Disposable {
     readonly hostName: string;
     localProcExitCode: number | undefined;
     readonly rootDirectory: string; // Directory where the notebook server was started.
+    readonly url?: string;
     // tslint:disable-next-line: no-any
     getAuthHeader?(): any; // Snould be a json object
 }
@@ -173,6 +174,7 @@ export interface INotebook extends IAsyncDisposable {
     readonly identity: Uri;
     readonly status: ServerStatus;
     readonly disposed: boolean;
+    readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
     onSessionStatusChanged: Event<ServerStatus>;
     onDisposed: Event<void>;
     onKernelChanged: Event<KernelConnectionMetadata>;
@@ -316,6 +318,7 @@ export interface IJupyterPasswordConnect {
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
+    onIoPubMessage: Event<KernelMessage.IIOPubMessage>;
     readonly status: ServerStatus;
     readonly workingDirectory: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
@@ -584,6 +587,8 @@ export interface INotebookEditor extends Disposable {
     undoCells(): void;
     redoCells(): void;
     removeAllCells(): void;
+    expandAllCells(): void;
+    collapseAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
 }

@@ -158,9 +158,9 @@ suite('DataScience notebook tests', () => {
                 assert.equal(cells.length, 1, `Wrong number of cells returned`);
                 const data = extractDataOutput(cells[0]);
                 if (pathVerify) {
-                    // For a path comparison normalize output and add single quotes on expected value
-                    const normalizedOutput = path.normalize(data).toUpperCase();
-                    const normalizedTarget = `'${path.normalize(expectedValue).toUpperCase()}'`;
+                    // For a path comparison normalize output
+                    const normalizedOutput = path.normalize(data).toUpperCase().replace(/'/g, '');
+                    const normalizedTarget = path.normalize(expectedValue).toUpperCase().replace(/'/g, '');
                     assert.equal(normalizedOutput, normalizedTarget, 'Cell path values does not match');
                 } else {
                     assert.equal(data, expectedValue, 'Cell value does not match');
@@ -1208,6 +1208,8 @@ plt.show()`,
             });
 
             class DyingProcess implements ChildProcess {
+                public readonly exitCode: number | null = null;
+                public readonly signalCode: number | null = null;
                 public stdin: Writable;
                 public stdout: Readable;
                 public stderr: Readable;
@@ -1474,7 +1476,7 @@ plt.show()`,
                 });
 
                 assert.ok(notebook, 'did not create notebook');
-                await verifySimple(notebook, `import os\nos.getcwd()`, escapedPath);
+                await verifySimple(notebook, `import os\nos.getcwd()`, escapedPath, true);
             });
         });
     });

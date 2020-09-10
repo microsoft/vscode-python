@@ -16,12 +16,16 @@ import { PythonEnvironment } from '../../info';
 @injectable()
 export class InterpreterLocatorProgressService implements IInterpreterLocatorProgressService {
     private deferreds: Deferred<PythonEnvironment[]>[] = [];
+
     private readonly refreshing = new EventEmitter<void>();
+
     private readonly refreshed = new EventEmitter<void>();
+
     private readonly locators: IInterpreterLocatorService[] = [];
+
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) private readonly disposables: Disposable[]
+        @inject(IDisposableRegistry) private readonly disposables: Disposable[],
     ) {
         this.locators = serviceContainer.getAll<IInterpreterLocatorService>(IInterpreterLocatorService);
     }
@@ -29,28 +33,34 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
     public get onRefreshing(): Event<void> {
         return this.refreshing.event;
     }
+
     public get onRefreshed(): Event<void> {
         return this.refreshed.event;
     }
+
     public register(): void {
         this.locators.forEach((locator) => {
             locator.onLocating(this.handleProgress, this, this.disposables);
         });
     }
+
     @traceDecorators.verbose('Detected refreshing of Interpreters')
     private handleProgress(promise: Promise<PythonEnvironment[]>) {
         this.deferreds.push(createDeferredFrom(promise));
         this.notifyRefreshing();
         this.checkProgress();
     }
+
     @traceDecorators.verbose('All locators have completed locating')
     private notifyCompleted() {
         this.refreshed.fire();
     }
+
     @traceDecorators.verbose('Notify locators are locating')
     private notifyRefreshing() {
         this.refreshing.fire();
     }
+
     private checkProgress() {
         if (this.deferreds.length === 0) {
             return;
@@ -63,6 +73,7 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
             .then(() => this.checkProgress())
             .ignoreErrors();
     }
+
     @traceDecorators.verbose('Checking whether locactors have completed locating')
     private areAllItemsComplete() {
         this.deferreds = this.deferreds.filter((item) => !item.completed);

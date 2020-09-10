@@ -5,6 +5,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
+import { cloneDeep } from 'lodash';
 import type { CellOutput } from 'vscode-proposed';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -48,10 +49,14 @@ suite('DataScience - NativeNotebook helpers', () => {
         const notebook = notebookModelToVSCNotebookData(model as any);
 
         assert.isOk(notebook);
-        assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
+        assert.deepEqual(notebook.languages, ['*']);
         // ignore metadata we add.
-        notebook.cells.forEach((cell) => delete cell.metadata.custom);
-        assert.deepEqual(notebook.cells, [
+        const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
+            const cellToCompareWith = cloneDeep(cell);
+            delete cellToCompareWith.metadata?.custom;
+            return cellToCompareWith;
+        });
+        assert.deepEqual(cellsWithoutCustomMetadata, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Code,
                 language: PYTHON_LANGUAGE,
@@ -253,8 +258,6 @@ suite('DataScience - NativeNotebook helpers', () => {
 
         ['display_data', 'execute_result'].forEach((output_type) => {
             suite(`Rich output for output_type = ${output_type}`, () => {
-                // If `output_type` === `exeucte_result` then we must have an execution_count.
-                const additionalMetadata = output_type === 'execute_result' ? { execution_count: undefined } : {};
                 test('Text mimeType output', async () => {
                     validateCellOutputTranslation(
                         [
@@ -274,7 +277,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                                 metadata: {
                                     custom: {
                                         vscode: {
-                                            ...additionalMetadata,
                                             outputType: output_type
                                         }
                                     }
@@ -305,7 +307,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                                 metadata: {
                                     custom: {
                                         vscode: {
-                                            ...additionalMetadata,
                                             outputType: output_type
                                         }
                                     }
@@ -337,7 +338,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     custom: {
                                         needs_background: 'light',
                                         vscode: {
-                                            ...additionalMetadata,
                                             outputType: output_type
                                         }
                                     }
@@ -369,7 +369,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     custom: {
                                         needs_background: 'dark',
                                         vscode: {
-                                            ...additionalMetadata,
                                             outputType: output_type
                                         }
                                     }
@@ -401,7 +400,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                                     custom: {
                                         'image/png': { height: '111px', width: '999px' },
                                         vscode: {
-                                            ...additionalMetadata,
                                             outputType: output_type
                                         }
                                     }
@@ -435,7 +433,6 @@ suite('DataScience - NativeNotebook helpers', () => {
                                         unconfined: true,
                                         'image/png': { width: '999px' },
                                         vscode: {
-                                            ...additionalMetadata,
                                             outputType: output_type
                                         }
                                     }

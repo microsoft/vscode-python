@@ -14,7 +14,7 @@ suite('Interpreters - Filter', () => {
         'python3.8.exe',
         'C:\\Users\\SomeUser\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe',
         '%USERPROFILE%\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe',
-        '%LOCALAPPDATA%\\Microsoft\\WindowsApps\\python.exe'
+        '%LOCALAPPDATA%\\Microsoft\\WindowsApps\\python.exe',
     ];
     const hideThesePaths = [
         '%USERPROFILE%\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.8_qbz5n2kfra8p0\\python.exe',
@@ -25,7 +25,7 @@ suite('Interpreters - Filter', () => {
         '%LOCALAPPDATA%\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\python.exe',
         'C:\\Program Files\\WindowsApps\\python.exe',
         'C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.8_qbz5n2kfra8p0\\python.exe',
-        'C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation\\python.exe'
+        'C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation\\python.exe',
     ];
 
     function getInterpreterFromPath(interpreterPath: string): PythonEnvironment {
@@ -39,7 +39,7 @@ suite('Interpreters - Filter', () => {
             envType: EnvironmentType.WindowsStore,
             envName: '',
             envPath: '',
-            cachedEntry: false
+            cachedEntry: false,
         };
     }
 

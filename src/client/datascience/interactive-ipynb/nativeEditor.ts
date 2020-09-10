@@ -21,7 +21,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
@@ -153,7 +153,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         liveShare: ILiveShareApi,
         applicationShell: IApplicationShell,
         documentManager: IDocumentManager,
-        provider: IWebPanelProvider,
+        provider: IWebviewPanelProvider,
         disposables: IDisposableRegistry,
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
@@ -354,6 +354,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get owningResource(): Resource {
         // Resource to use for loading and our identity are the same.
         return this.notebookIdentity.resource;
+    }
+
+    public expandAllCells(): void {
+        throw Error('Not implemented Exception');
+    }
+    public collapseAllCells(): void {
+        throw Error('Not implemented Exception');
     }
 
     protected addSysInfo(reason: SysInfoReason): Promise<void> {

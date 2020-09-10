@@ -3,7 +3,7 @@
 
 'use strict';
 
-import type { KernelMessage, Session } from '@jupyterlab/services';
+import type { Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type { CancellationToken, Event, QuickPickItem, Uri } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../../types/vscode-proposed';
@@ -82,6 +82,24 @@ export type KernelConnectionMetadata =
     | PythonKernelConnectionMetadata
     | DefaultKernelConnectionMetadata;
 
+/**
+ * Returns a string that can be used to uniquely identify a Kernel Connection.
+ */
+export function getKernelConnectionId(kernelConnection: KernelConnectionMetadata) {
+    switch (kernelConnection.kind) {
+        case 'connectToLiveKernel':
+            return `${kernelConnection.kind}#${kernelConnection.kernelModel.name}.${kernelConnection.kernelModel.session.id}.${kernelConnection.kernelModel.session.name}`;
+        case 'startUsingDefaultKernel':
+            return `${kernelConnection.kind}#${kernelConnection}`;
+        case 'startUsingKernelSpec':
+            return `${kernelConnection.kind}#${kernelConnection.kernelSpec.name}.${kernelConnection.kernelSpec.display_name}`;
+        case 'startUsingPythonInterpreter':
+            return `${kernelConnection.kind}#${kernelConnection.interpreter.path}`;
+        default:
+            throw new Error(`Unsupported Kernel Connection ${kernelConnection}`);
+    }
+}
+
 export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata>
     extends QuickPickItem {
     selection: T;
@@ -118,10 +136,9 @@ export interface IKernel extends IAsyncDisposable {
     restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<void>;
     executeAllCells(document: NotebookDocument): Promise<void>;
-    registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
 }
 
-export type KernelOptions = { metadata: KernelConnectionMetadata; waitForIdleTimeout?: number; launchingFile?: string };
+export type KernelOptions = { metadata: KernelConnectionMetadata };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider {
     /**

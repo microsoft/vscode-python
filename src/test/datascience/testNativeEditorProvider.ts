@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Uri, WebviewPanel } from 'vscode';
+import { CustomDocument, Uri, WebviewPanel } from 'vscode';
 
 import {
     ICommandManager,
@@ -35,6 +35,7 @@ import { mountConnectedMainPanel } from './testHelpers';
 export interface ITestNativeEditorProvider extends INotebookEditorProvider {
     getMountedWebView(window: INotebookEditor | undefined): IMountedWebView;
     waitForMessage(file: Uri | undefined, message: string, options?: WaitForMessageOptions): Promise<void>;
+    getCustomDocument(file: Uri): CustomDocument | undefined;
 }
 
 // Mixin class to provide common functionality between the two different native editor providers.
@@ -68,6 +69,10 @@ function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>
             // Otherwise pend for the next create.
             this.pendingMessageWaits.push({ message, options, deferred: createDeferred() });
             return this.pendingMessageWaits[this.pendingMessageWaits.length - 1].deferred.promise;
+        }
+
+        public getCustomDocument(file: Uri) {
+            return this.customDocuments.get(file.fsPath);
         }
 
         protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): NativeEditor {
@@ -125,7 +130,8 @@ export class TestNativeEditorProvider extends TestNativeEditorProviderMixin(Nati
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(ICustomEditorService) customEditorService: ICustomEditorService,
         @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
-        @inject(INotebookProvider) notebookProvider: INotebookProvider
+        @inject(INotebookProvider) notebookProvider: INotebookProvider,
+        @inject(IDataScienceFileSystem) fs: IDataScienceFileSystem
     ) {
         super(
             serviceContainer,
@@ -135,7 +141,8 @@ export class TestNativeEditorProvider extends TestNativeEditorProviderMixin(Nati
             configuration,
             customEditorService,
             storage,
-            notebookProvider
+            notebookProvider,
+            fs
         );
     }
 }

@@ -7,7 +7,9 @@
 
 import { expect } from 'chai';
 import * as md5 from 'md5';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import {
+    anything, instance, mock, verify, when,
+} from 'ts-mockito';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
@@ -25,18 +27,23 @@ suite('Interpreters - Cacheable Locator Service', () => {
             constructor(name: string, serviceCcontainer: IServiceContainer, private readonly mockLocator: MockLocator) {
                 super(name, serviceCcontainer);
             }
+
             public dispose() {
                 noop();
             }
+
             protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
                 return this.mockLocator.getInterpretersImplementation();
             }
+
             protected getCachedInterpreters(_resource?: Uri): PythonEnvironment[] | undefined {
                 return this.mockLocator.getCachedInterpreters();
             }
+
             protected async cacheInterpreters(_interpreters: PythonEnvironment[], _resource?: Uri) {
                 return this.mockLocator.cacheInterpreters();
             }
+
             protected getCacheKey(_resource?: Uri) {
                 return this.mockLocator.getCacheKey();
             }
@@ -45,12 +52,15 @@ suite('Interpreters - Cacheable Locator Service', () => {
             public async getInterpretersImplementation(): Promise<PythonEnvironment[]> {
                 return [];
             }
+
             public getCachedInterpreters(): PythonEnvironment[] | undefined {
-                return;
+                return undefined;
             }
+
             public async cacheInterpreters() {
-                return;
+                return undefined;
             }
+
             public getCacheKey(): string {
                 return '';
             }
@@ -66,7 +76,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const locator = new (class extends Locator {
                 protected async addHandlersForInterpreterWatchers(
                     _cacheKey: string,
-                    _resource: Resource
+                    _resource: Resource,
                 ): Promise<void> {
                     noop();
                 }
@@ -79,7 +89,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const [items1, items2, items3] = await Promise.all([
                 locator.getInterpreters(),
                 locator.getInterpreters(),
-                locator.getInterpreters()
+                locator.getInterpreters(),
             ]);
             expect(items1).to.be.deep.equal(expectedInterpreters);
             expect(items2).to.be.deep.equal(expectedInterpreters);
@@ -96,7 +106,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
                 public onDidCreate(
                     _listener: (e: Resource) => any,
                     _thisArgs?: any,
-                    _disposables?: Disposable[]
+                    _disposables?: Disposable[],
                 ): Disposable {
                     return { dispose: noop };
                 }
@@ -119,14 +129,16 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const mockedLocatorForVerification = mock(MockLocator);
             class Watcher implements IInterpreterWatcher {
                 private listner?: (e: Resource) => any;
+
                 public onDidCreate(
                     listener: (e: Resource) => any,
                     _thisArgs?: any,
-                    _disposables?: Disposable[]
+                    _disposables?: Disposable[],
                 ): Disposable {
                     this.listner = listener;
                     return { dispose: noop };
                 }
+
                 public invokeListeners() {
                     this.listner!(undefined);
                 }
@@ -146,7 +158,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const [items1, items2, items3] = await Promise.all([
                 locator.getInterpreters(),
                 locator.getInterpreters(),
-                locator.getInterpreters()
+                locator.getInterpreters(),
             ]);
             expect(items1).to.be.deep.equal(expectedInterpreters);
             expect(items2).to.be.deep.equal(expectedInterpreters);
@@ -161,7 +173,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const [items4, items5, items6] = await Promise.all([
                 locator.getInterpreters(),
                 locator.getInterpreters(),
-                locator.getInterpreters()
+                locator.getInterpreters(),
             ]);
             expect(items4).to.be.deep.equal(expectedInterpreters);
             expect(items5).to.be.deep.equal(expectedInterpreters);
@@ -195,16 +207,20 @@ suite('Interpreters - Cacheable Locator Service', () => {
             public dispose() {
                 noop();
             }
+
             // tslint:disable-next-line:no-unnecessary-override
             public getCacheKey(resource?: Uri) {
                 return super.getCacheKey(resource);
             }
+
             protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonEnvironment[]> {
                 return [];
             }
+
             protected getCachedInterpreters(_resource?: Uri): PythonEnvironment[] | undefined {
                 return [];
             }
+
             protected async cacheInterpreters(_interpreters: PythonEnvironment[], _resource?: Uri) {
                 noop();
             }
@@ -231,7 +247,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             when(workspace.getWorkspaceFolder(anything())).thenReturn(workspaceFolder);
             when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspace));
             when(serviceContainer.get<IWorkspaceService>(IWorkspaceService, anything())).thenReturn(
-                instance(workspace)
+                instance(workspace),
             );
 
             const locator = new Locator('hello-World', instance(serviceContainer), false);
@@ -252,7 +268,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             when(workspace.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
             when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspace));
             when(serviceContainer.get<IWorkspaceService>(IWorkspaceService, anything())).thenReturn(
-                instance(workspace)
+                instance(workspace),
             );
 
             const locator = new Locator('hello-World', instance(serviceContainer), true);

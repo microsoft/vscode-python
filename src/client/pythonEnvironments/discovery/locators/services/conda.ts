@@ -30,7 +30,7 @@ export async function parseCondaInfo(
     info: CondaInfo,
     getPythonPath: (condaEnv: string) => string,
     fileExists: (filename: string) => Promise<boolean>,
-    getPythonInfo: (python: string) => Promise<Partial<PythonEnvironment> | undefined>
+    getPythonInfo: (python: string) => Promise<Partial<PythonEnvironment> | undefined>,
 ) {
     // The root of the conda environment is itself a Python interpreter
     // envs reported as e.g.: /Users/bob/miniconda3/envs/someEnv.
@@ -55,15 +55,15 @@ export async function parseCondaInfo(
             path: pythonPath,
             companyDisplayName: AnacondaCompanyName,
             envType: EnvironmentType.Conda,
-            envPath
+            envPath,
         };
     });
 
     return (
         Promise.all(promises)
-            .then((interpreters) =>
-                interpreters.filter((interpreter) => interpreter !== null && interpreter !== undefined)
-            )
+            .then((interpreters) => interpreters.filter(
+                (interpreter) => interpreter !== null && interpreter !== undefined,
+            ))
             // tslint:disable-next-line:no-non-null-assertion
             .then((interpreters) => interpreters.map((interpreter) => interpreter!))
     );

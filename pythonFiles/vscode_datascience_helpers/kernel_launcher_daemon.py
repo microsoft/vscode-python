@@ -29,8 +29,7 @@ class PythonDaemon(JupyterDaemon):
         self.log.info("DataScience Kernel Launcher Daemon init")
 
     def close(self):
-        """Ensure we kill the kernel when shutting down the daemon.
-        """
+        """Ensure we kill the kernel when shutting down the daemon."""
         try:
             self.m_kill_kernel()
             """ We don't care about exceptions coming back from killing the kernel, so pass here """
@@ -78,8 +77,7 @@ class PythonDaemon(JupyterDaemon):
 
     @error_decorator
     def m_prewarm_kernel(self):
-        """Starts the kernel process with the module
-        """
+        """Starts the kernel process with the module"""
         self.log.info("Pre-Warm DS Kernel in DS Kernel Launcher Daemon")
         isolated_runner = os.path.join(
             os.path.dirname(__file__), "..", "pyvsc-run-isolated.py"
@@ -97,8 +95,7 @@ class PythonDaemon(JupyterDaemon):
 
     @error_decorator
     def m_start_prewarmed_kernel(self, args=[]):
-        """Starts the pre-warmed kernel process.
-        """
+        """Starts the pre-warmed kernel process."""
         self.log.info(
             "Start pre-warmed Kernel in DS Kernel Launcher Daemon %s with args %s",
             self.kernel.pid,
@@ -172,7 +169,8 @@ class PythonDaemon(JupyterDaemon):
 
     def _start_kernel_observable_in_background(self, cmd, cwd=None, env=None):
         self.log.info(
-            "Exec in DS Kernel Launcher Daemon (observable) %s", cmd,
+            "Exec in DS Kernel Launcher Daemon (observable) %s",
+            cmd,
         )
         # As the kernel is launched from this same python executable, ensure the kernel variables
         # are merged with the variables of this current environment.

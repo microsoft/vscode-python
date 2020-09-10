@@ -16,76 +16,61 @@ __webpack_public_path__ = getPublicPath();
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import type { NotebookOutputEventParams } from 'vscode-notebook-renderer';
 import '../../client/common/extensions';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { handleLinkClick } from '../interactive-common/handlers';
 import { JupyterNotebookRenderer } from './constants';
 import { CellOutput } from './render';
 
 const notebookApi = acquireNotebookRendererApi(JupyterNotebookRenderer);
 
-notebookApi.onDidCreateOutput(({ element }) => renderOutput(element.querySelector('script')!));
+notebookApi.onDidCreateOutput(renderOutput);
 
 /**
  * Called from renderer to render output.
  * This will be exposed as a public method on window for renderer to render output.
  */
-function renderOutput(tag: HTMLScriptElement) {
-    let container: HTMLElement;
-    const mimeType = tag.dataset.mimeType as string;
+function renderOutput(request: NotebookOutputEventParams) {
     try {
-        const output = JSON.parse(tag.innerHTML) as nbformat.IExecuteResult | nbformat.IDisplayData;
         // tslint:disable-next-line: no-console
-        console.log(`Rendering mimeType ${mimeType}`, output);
+        console.error('request', request);
+        const output = convertVSCodeOutputToExecutResultOrDisplayData(request);
+        // tslint:disable-next-line: no-console
+        console.log(`Rendering mimeType ${request.mimeType}`, output);
+        // tslint:disable-next-line: no-console
+        console.error('request output', output);
 
-        // Create an element to render in, or reuse a previous element.
-        const maybeOldContainer = tag.previousElementSibling;
-        if (maybeOldContainer instanceof HTMLDivElement && maybeOldContainer.dataset.renderer) {
-            container = maybeOldContainer;
-            // tslint:disable-next-line: no-inner-html
-            container.innerHTML = '';
-        } else {
-            container = document.createElement('div');
-            tag.parentNode?.insertBefore(container, tag.nextSibling);
-        }
-
-        ReactDOM.render(React.createElement(CellOutput, { mimeType, output }, null), container);
+        ReactDOM.render(React.createElement(CellOutput, { mimeType: request.mimeType, output }, null), request.element);
     } catch (ex) {
         // tslint:disable-next-line: no-console
-        console.error(`Failed to render mime type ${mimeType}`, ex);
+        console.error(`Failed to render mime type ${request.mimeType}`, ex);
     }
 }
 
-/**
- * Possible the pre-render scripts load late, after we have attempted to render output from notebook.
- * At this point look through all such scripts and render the output.
- */
-function renderOnLoad() {
-    document
-        .querySelectorAll<HTMLScriptElement>('script[type="application/vscode-jupyter+json"]')
-        .forEach(renderOutput);
-}
-
-// tslint:disable-next-line: no-any
-function postToExtension(type: string, payload: any) {
-    notebookApi.postMessage({ type, payload });
-}
-function linkHandler(href: string) {
-    if (href.startsWith('data:image/png')) {
-        postToExtension(InteractiveWindowMessages.SavePng, href);
-    } else {
-        postToExtension(InteractiveWindowMessages.OpenLink, href);
+function convertVSCodeOutputToExecutResultOrDisplayData(
+    request: NotebookOutputEventParams
+): nbformat.IExecuteResult | nbformat.IDisplayData {
+    // tslint:disable-next-line: no-any
+    const metadata: Record<string, any> = {};
+    // Send metadata only for the mimeType we are interested in.
+    const customMetadata = request.output.metadata?.custom;
+    if (customMetadata) {
+        if (customMetadata[request.mimeType]) {
+            metadata[request.mimeType] = customMetadata[request.mimeType];
+        }
+        if (customMetadata.needs_background) {
+            metadata.needs_background = customMetadata.needs_background;
+        }
+        if (customMetadata.unconfined) {
+            metadata.unconfined = customMetadata.unconfined;
+        }
     }
-}
 
-// tslint:disable-next-line: no-any
-function initialize() {
-    document.addEventListener('click', (e) => handleLinkClick(e, linkHandler), true);
-    // Possible this (pre-render script loaded after notebook attempted to render something).
-    // At this point we need to go and render the existing output.
-    renderOnLoad();
+    return {
+        data: {
+            [request.mimeType]: request.output.data[request.mimeType]
+        },
+        metadata,
+        execution_count: null,
+        output_type: request.output.metadata?.custom?.vscode?.outputType || 'execute_result'
+    };
 }
-
-// tslint:disable-next-line: no-console
-console.log('Pre-Render scripts loaded');
-initialize();

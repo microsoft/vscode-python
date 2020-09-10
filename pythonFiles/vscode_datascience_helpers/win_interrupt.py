@@ -38,6 +38,5 @@ def create_interrupt_event():
 
 
 def send_interrupt(interrupt_handle):
-    """ Sends an interrupt event using the specified handle.
-    """
+    """Sends an interrupt event using the specified handle."""
     ctypes.windll.kernel32.SetEvent(interrupt_handle)
