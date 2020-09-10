@@ -50,15 +50,22 @@ export async function insertMarkdownCell(source: string) {
         assert.fail('No active editor');
         return;
     }
-    new WorkspaceEdit().replaceCells(activeEditor.document.uri, activeEditor.document.cells.length, 0, [
-        {
-            cellKind: vscodeNotebookEnums.CellKind.Markdown,
-            language: MARKDOWN_LANGUAGE,
-            source,
-            metadata: {},
-            outputs: []
-        }
-    ]);
+    new WorkspaceEdit().replaceCells(
+        activeEditor.document.uri,
+        activeEditor.document.cells.length - 1,
+        activeEditor.document.cells.length - 1,
+        [
+            {
+                cellKind: vscodeNotebookEnums.CellKind.Markdown,
+                language: MARKDOWN_LANGUAGE,
+                source,
+                metadata: {
+                    hasExecutionOrder: false
+                },
+                outputs: []
+            }
+        ]
+    );
 
     await waitForCondition(
         async () =>
@@ -75,15 +82,22 @@ export async function insertPythonCell(source: string) {
         assert.fail('No active editor');
         return;
     }
-    new WorkspaceEdit().replaceCells(activeEditor.document.uri, activeEditor.document.cells.length, 0, [
-        {
-            cellKind: vscodeNotebookEnums.CellKind.Code,
-            language: PYTHON_LANGUAGE,
-            source,
-            metadata: {},
-            outputs: []
-        }
-    ]);
+    new WorkspaceEdit().replaceCells(
+        activeEditor.document.uri,
+        activeEditor.document.cells.length - 1,
+        activeEditor.document.cells.length - 1,
+        [
+            {
+                cellKind: vscodeNotebookEnums.CellKind.Code,
+                language: PYTHON_LANGUAGE,
+                source,
+                metadata: {
+                    hasExecutionOrder: false
+                },
+                outputs: []
+            }
+        ]
+    );
     await waitForCondition(
         async () =>
             activeEditor?.document.cells[activeEditor.document.cells.length - 1].document.getText().trim() ===
@@ -108,7 +122,7 @@ export async function deleteCell(index: number = 0) {
         assert.fail('No active editor');
         return;
     }
-    new WorkspaceEdit().replaceCells(activeEditor.document.uri, index, 1, []);
+    new WorkspaceEdit().replaceCells(activeEditor.document.uri, index, index, []);
 }
 export async function deleteAllCellsAndWait() {
     const { vscodeNotebook } = await getServices();
@@ -116,7 +130,7 @@ export async function deleteAllCellsAndWait() {
     if (!activeEditor || activeEditor.document.cells.length === 0) {
         return;
     }
-    new WorkspaceEdit().replaceCells(activeEditor.document.uri, 0, activeEditor.document.cells.length, []);
+    new WorkspaceEdit().replaceCells(activeEditor.document.uri, 0, activeEditor.document.cells.length - 1, []);
     // Wait for cell to get deleted.
     await waitForCondition(async () => activeEditor.document.cells.length === 0, 1_000, 'Cell not deleted');
 }
