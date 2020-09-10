@@ -116,12 +116,17 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
 class ComponentAdapter implements IComponentAdapter {
     constructor(
         // The adapter only wraps one thing: the component API.
-        private readonly api: PythonEnvironments
+        private readonly api: PythonEnvironments,
+        // For now we effecitvely disable the component.
+        private readonly enabled = false
     ) {}
 
     // IInterpreterHelper
 
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
+        if (!this.enabled) {
+            return undefined;
+        }
         const env = await this.api.resolveEnv(pythonPath);
         if (env === undefined) {
             return undefined;
@@ -130,6 +135,9 @@ class ComponentAdapter implements IComponentAdapter {
     }
 
     public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
         const env = await this.api.resolveEnv(pythonPath);
         if (env === undefined) {
             return undefined;
@@ -139,7 +147,10 @@ class ComponentAdapter implements IComponentAdapter {
 
     // IInterpreterService
 
-    public get hasInterpreters(): Promise<boolean> {
+    public get hasInterpreters(): Promise<boolean> | undefined {
+        if (!this.enabled) {
+            return undefined;
+        }
         const iterator = this.api.iterEnvs();
         return iterator.next().then((res) => {
             return !res.done;
@@ -149,6 +160,9 @@ class ComponentAdapter implements IComponentAdapter {
     //public async getInterpreters(_resource?: vscode.Uri, _options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
 
     public async getInterpreterDetails(pythonPath: string, _resource?: vscode.Uri): Promise<undefined | PythonEnvironment> {
+        if (!this.enabled) {
+            return undefined;
+        }
         const env = await this.api.resolveEnv(pythonPath);
         if (env === undefined) {
             return undefined;
@@ -159,6 +173,9 @@ class ComponentAdapter implements IComponentAdapter {
     // ICondaService
 
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
         const env = await this.api.resolveEnv(interpreterPath);
         if (env === undefined) {
             return undefined;
@@ -167,6 +184,9 @@ class ComponentAdapter implements IComponentAdapter {
     }
 
     public async getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
         const env = await this.api.resolveEnv(interpreterPath);
         if (env === undefined) {
             return undefined;
@@ -184,6 +204,9 @@ class ComponentAdapter implements IComponentAdapter {
     // IWindowsStoreInterpreter
 
     public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
         const env = await this.api.resolveEnv(pythonPath);
         if (env === undefined) {
             return undefined;
@@ -196,7 +219,10 @@ class ComponentAdapter implements IComponentAdapter {
     public async getInterpreters(
         resource?: vscode.Uri,
         _options?: GetInterpreterLocatorOptions
-    ): Promise<PythonEnvironment[]> {
+    ): Promise<PythonEnvironment[] | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
         // We ignore the options:
         //{
         //    ignoreCache?: boolean

@@ -34,8 +34,8 @@ export interface IVirtualEnvironmentsSearchPathProvider {
 export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
     // IInterpreterLocatorService
-    hasInterpreters: Promise<boolean>;
-    getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]>;
+    hasInterpreters: Promise<boolean> | undefined;
+    getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[] | undefined>;
     // IInterpreterService
     getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment>;
     // IInterpreterHelper
