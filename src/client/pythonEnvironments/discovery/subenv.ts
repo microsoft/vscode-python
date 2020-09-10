@@ -173,6 +173,7 @@ export function getVenvExecutableFinder(
             }
         }
         // No matches so return undefined.
+        return undefined;
     };
 }
 
