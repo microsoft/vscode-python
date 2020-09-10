@@ -9,6 +9,7 @@ import {
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
     GLOBAL_VIRTUAL_ENV_SERVICE,
+    IComponentAdapter,
     ICondaService,
     IInterpreterLocatorHelper,
     IInterpreterLocatorProgressService,
@@ -109,24 +110,6 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     // or info.defaultDisplayName.
 
     return env;
-}
-
-export const IComponentAdapter = Symbol('IComponentAdapter');
-export interface IComponentAdapter {
-    // IInterpreterService
-    hasInterpreters: Promise<boolean>;
-    //getInterpreters(_resource?: vscode.Uri, _options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
-    getInterpreterDetails(pythonPath: string, _resource?: vscode.Uri): Promise<undefined | PythonEnvironment>;
-    // IInterpreterLocatorService
-    getInterpreters(resource?: vscode.Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]>;
-    // IInterpreterHelper
-    getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
-    isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined>;
-    // ICondaService
-    isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined>;
-    getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
-    // IWindowsStoreInterpreter
-    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined>;
 }
 
 @injectable()
