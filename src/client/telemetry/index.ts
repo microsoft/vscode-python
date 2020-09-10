@@ -126,7 +126,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         // Assume we have 10 events all with their own properties.
         // As we have errors for each event, those properties are treated as new data items.
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
-        customProperties = { originalEventName: eventName as string, stackTrace: serializeStackTrace(ex) };
+        customProperties = { originalEventName: eventName as string };
         reporter.sendTelemetryException(ex, customProperties, measures);
     } else {
         if (properties) {
@@ -287,40 +287,6 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
     } else {
         throw new Error('Method is neither a Promise nor a Theneable');
     }
-}
-
-function serializeStackTrace(ex: Error): string {
-    // We aren't showing the error message (ex.message) since it might contain PII.
-    let trace = '';
-    for (const frame of stackTrace.parse(ex)) {
-        const filename = frame.getFileName();
-        if (filename) {
-            const lineno = frame.getLineNumber();
-            const colno = frame.getColumnNumber();
-            trace += `\n\tat ${getCallsite(frame)} ${filename}:${lineno}:${colno}`;
-        } else {
-            trace += '\n\tat <anonymous>';
-        }
-    }
-    // Ensure we always use `/` as path separators.
-    // This way stack traces (with relative paths) coming from different OS will always look the same.
-    return trace.trim().replace(/\\/g, '/');
-}
-
-function getCallsite(frame: stackTrace.StackFrame) {
-    const parts: string[] = [];
-    if (typeof frame.getTypeName() === 'string' && frame.getTypeName().length > 0) {
-        parts.push(frame.getTypeName());
-    }
-    if (typeof frame.getMethodName() === 'string' && frame.getMethodName().length > 0) {
-        parts.push(frame.getMethodName());
-    }
-    if (typeof frame.getFunctionName() === 'string' && frame.getFunctionName().length > 0) {
-        if (parts.length !== 2 || parts.join('.') !== frame.getFunctionName()) {
-            parts.push(frame.getFunctionName());
-        }
-    }
-    return parts.join('.');
 }
 
 /**
