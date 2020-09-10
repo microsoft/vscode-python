@@ -126,7 +126,12 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                         // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
                         method: telemetryEvent.Properties.method?.replace(/\//g, '.')
                     };
-                    sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
+                    sendTelemetryEvent(
+                        eventName,
+                        telemetryEvent.Measurements,
+                        formattedProperties,
+                        telemetryEvent.Exception
+                    );
                 });
             }
             await this.registerTestServices();

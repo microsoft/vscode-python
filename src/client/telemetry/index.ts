@@ -118,7 +118,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
     let customProperties: Record<string, string> = {};
-    let eventNameSent = eventName as string;
+    const eventNameSent = eventName as string;
 
     if (ex) {
         // When sending telemetry events for exceptions no need to send custom properties.
@@ -126,9 +126,8 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         // Assume we have 10 events all with their own properties.
         // As we have errors for each event, those properties are treated as new data items.
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
-        eventNameSent = 'ERROR';
         customProperties = { originalEventName: eventName as string, stackTrace: serializeStackTrace(ex) };
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
+        reporter.sendTelemetryException(ex, customProperties, measures);
     } else {
         if (properties) {
             const data = properties as any;
