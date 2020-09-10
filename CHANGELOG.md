@@ -2522,7 +2522,7 @@ part of!
    ([#8000](https://github.com/Microsoft/vscode-python/issues/8000))
 1. Prompt to open exported `Notebook` in the `Notebook Editor`.
    ([#8078](https://github.com/Microsoft/vscode-python/issues/8078))
-1. Add commands translation for Farsi locale.
+1. Add commands translation for Persian locale.
    (thanks [Nikronic](https://github.com/Nikronic))
    ([#8092](https://github.com/Microsoft/vscode-python/issues/8092))
 1. Enhance "select a workspace" message when selecting interpreter.

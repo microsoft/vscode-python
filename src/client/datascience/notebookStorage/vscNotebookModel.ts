@@ -123,7 +123,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
                 return {
                     ...cell,
                     metadata
-                    // tslint:disable-next-line: no-any (because ts-node sucks).
+                    // tslint:disable-next-line: no-any
                 } as any;
             });
         }
