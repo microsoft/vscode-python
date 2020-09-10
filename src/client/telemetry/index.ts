@@ -1413,6 +1413,15 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ACTIVATION_SURVEY_PROMPT]: never | undefined;
     /**
+     * Telemetry sent back when join mailing list prompt is shown.
+     */
+    [EventName.JOIN_MAILING_LIST_PROMPT]: {
+        /**
+         * Carries the selection of user when they are asked to join the mailing list.
+         */
+        selection: 'Yes' | 'No' | undefined;
+    };
+    /**
      * Telemetry event sent when 'Extract Method' command is invoked
      */
     [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;

@@ -5,7 +5,7 @@ name: '$(Year:yyyy).$(Month).0.$(BuildID)-nightly'
 # Not the CI build, see `vscode-python-ci.yaml`.
 trigger: none
 
-# Not the PR build for merges to master and release.
+# Not the PR build for merges to main and release.
 pr: none
 
 schedules:
@@ -14,7 +14,6 @@ schedules:
     displayName: Nightly build
     branches:
       include:
-        - master
         - main
         - release*
     always: true

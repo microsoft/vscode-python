@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function
 import unittest
 
 from testing_tools.adapter.util import fix_path, fix_relpath
-from testing_tools.adapter.info import TestInfo, TestPath, ParentInfo
+from testing_tools.adapter.info import SingleTestInfo, SingleTestPath, ParentInfo
 from testing_tools.adapter.discovery import fix_nodeid, DiscoveredTests
 
 
@@ -23,11 +23,11 @@ class DiscoveredTestsTests(unittest.TestCase):
         testroot = fix_path("/a/b/c")
         relfile = fix_path("./test_spam.py")
         tests = [
-            TestInfo(
+            SingleTestInfo(
                 # missing "./":
                 id="test_spam.py::test_each[10-10]",
                 name="test_each[10-10]",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=relfile,
                     func="test_each",
@@ -38,10 +38,10 @@ class DiscoveredTestsTests(unittest.TestCase):
                 # missing "./":
                 parentid="test_spam.py::test_each",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id="test_spam.py::All::BasicTests::test_first",
                 name="test_first",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=relfile,
                     func="All.BasicTests.test_first",
@@ -85,10 +85,10 @@ class DiscoveredTestsTests(unittest.TestCase):
         testroot = fix_path("/a/b/c")
         discovered = DiscoveredTests()
         discovered.add_test(
-            TestInfo(
+            SingleTestInfo(
                 id="./test_spam.py::test_each",
                 name="test_each",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile="test_spam.py",
                     func="test_each",
@@ -114,11 +114,11 @@ class DiscoveredTestsTests(unittest.TestCase):
         testroot = fix_path("/a/b/c")
         relfile = fix_path("x/y/z/test_spam.py")
         tests = [
-            TestInfo(
+            SingleTestInfo(
                 # missing "./", using pathsep:
                 id=relfile + "::test_each[10-10]",
                 name="test_each[10-10]",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=fix_relpath(relfile),
                     func="test_each",
@@ -129,11 +129,11 @@ class DiscoveredTestsTests(unittest.TestCase):
                 # missing "./", using pathsep:
                 parentid=relfile + "::test_each",
             ),
-            TestInfo(
+            SingleTestInfo(
                 # missing "./", using pathsep:
                 id=relfile + "::All::BasicTests::test_first",
                 name="test_first",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=fix_relpath(relfile),
                     func="All.BasicTests.test_first",
@@ -237,11 +237,11 @@ class DiscoveredTestsTests(unittest.TestCase):
     def test_add_test_simple(self):
         testroot = fix_path("/a/b/c")
         relfile = "test_spam.py"
-        test = TestInfo(
+        test = SingleTestInfo(
             # missing "./":
             id=relfile + "::test_spam",
             name="test_spam",
-            path=TestPath(
+            path=SingleTestPath(
                 root=testroot,
                 # missing "./":
                 relfile=relfile,
@@ -297,11 +297,11 @@ class DiscoveredTestsTests(unittest.TestCase):
         testroot1 = fix_path("/a/b/c")
         relfile1 = "test_spam.py"
         alltests = [
-            TestInfo(
+            SingleTestInfo(
                 # missing "./":
                 id=relfile1 + "::test_spam",
                 name="test_spam",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot1,
                     relfile=fix_relpath(relfile1),
                     func="test_spam",
@@ -324,10 +324,10 @@ class DiscoveredTestsTests(unittest.TestCase):
         relfile2 = fix_path("w/test_eggs.py")
         alltests.extend(
             [
-                TestInfo(
+                SingleTestInfo(
                     id=relfile2 + "::BasicTests::test_first",
                     name="test_first",
-                    path=TestPath(
+                    path=SingleTestPath(
                         root=testroot2,
                         relfile=fix_relpath(relfile2),
                         func="BasicTests.test_first",
@@ -361,10 +361,10 @@ class DiscoveredTestsTests(unittest.TestCase):
             tests,
             [
                 # the first root
-                TestInfo(
+                SingleTestInfo(
                     id="./test_spam.py::test_spam",
                     name="test_spam",
-                    path=TestPath(
+                    path=SingleTestPath(
                         root=testroot1,
                         relfile=fix_relpath(relfile1),
                         func="test_spam",
@@ -374,10 +374,10 @@ class DiscoveredTestsTests(unittest.TestCase):
                     parentid="./test_spam.py",
                 ),
                 # the secondroot
-                TestInfo(
+                SingleTestInfo(
                     id="./w/test_eggs.py::BasicTests::test_first",
                     name="test_first",
-                    path=TestPath(
+                    path=SingleTestPath(
                         root=testroot2,
                         relfile=fix_relpath(relfile2),
                         func="BasicTests.test_first",
@@ -442,10 +442,10 @@ class DiscoveredTestsTests(unittest.TestCase):
         doctestfile = fix_path("./x/test_doctest.txt")
         relfile = fix_path("./x/y/z/test_eggs.py")
         alltests = [
-            TestInfo(
+            SingleTestInfo(
                 id=doctestfile + "::test_doctest.txt",
                 name="test_doctest.txt",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=doctestfile,
                     func=None,
@@ -455,10 +455,10 @@ class DiscoveredTestsTests(unittest.TestCase):
                 parentid=doctestfile,
             ),
             # With --doctest-modules
-            TestInfo(
+            SingleTestInfo(
                 id=relfile + "::test_eggs",
                 name="test_eggs",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=relfile,
                     func=None,
@@ -467,10 +467,10 @@ class DiscoveredTestsTests(unittest.TestCase):
                 markers=[],
                 parentid=relfile,
             ),
-            TestInfo(
+            SingleTestInfo(
                 id=relfile + "::test_eggs.TestSpam",
                 name="test_eggs.TestSpam",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=relfile,
                     func=None,
@@ -479,10 +479,10 @@ class DiscoveredTestsTests(unittest.TestCase):
                 markers=[],
                 parentid=relfile,
             ),
-            TestInfo(
+            SingleTestInfo(
                 id=relfile + "::test_eggs.TestSpam.TestEggs",
                 name="test_eggs.TestSpam.TestEggs",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=relfile,
                     func=None,
@@ -589,10 +589,10 @@ class DiscoveredTestsTests(unittest.TestCase):
         testroot = fix_path("/a/b/c")
         relfile = fix_path("./test_eggs.py")
         alltests = [
-            TestInfo(
+            SingleTestInfo(
                 id=relfile + "::TestOuter::TestInner::test_spam",
                 name="test_spam",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=relfile,
                     func="TestOuter.TestInner.test_spam",
@@ -601,10 +601,10 @@ class DiscoveredTestsTests(unittest.TestCase):
                 markers=None,
                 parentid=relfile + "::TestOuter::TestInner",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id=relfile + "::TestOuter::TestInner::test_eggs",
                 name="test_eggs",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=relfile,
                     func="TestOuter.TestInner.test_eggs",

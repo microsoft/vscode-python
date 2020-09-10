@@ -234,7 +234,7 @@ def foo():pass
 
 ### [Debugging](https://code.visualstudio.com/docs/python/debugging)
 
--   [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work (see [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) and the `"configurationSnippets"` section for all of the possible configurations)
+-   [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work (see [`package.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) and the `"configurationSnippets"` section for all of the possible configurations)
 -   [ ] Running code from start to finish w/ no special debugging options (e.g. no breakpoints)
 -   [ ] Breakpoint-like things
     -   [ ] Breakpoint

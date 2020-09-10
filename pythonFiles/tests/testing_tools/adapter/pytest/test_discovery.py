@@ -5,28 +5,28 @@ from __future__ import print_function, unicode_literals
 
 try:
     from io import StringIO
-except ImportError:  # 2.7
-    from StringIO import StringIO
-from os import name as OS_NAME
-from os import write
+except ImportError:
+    from StringIO import StringIO  # type: ignore (for Pylance)
+import os
 import sys
 import tempfile
 import unittest
+import warnings
 
 import pytest
 import _pytest.doctest
 
-from ....util import Stub, StubProxy
-from testing_tools.adapter.util import fix_path, fix_relpath, fix_fileid, PATH_JOIN
-from testing_tools.adapter.info import TestInfo, TestPath, ParentInfo
+from .... import util
+from testing_tools.adapter import util as adapter_util
 from testing_tools.adapter.pytest import _pytest_item as pytest_item
-from testing_tools.adapter.pytest._discovery import discover, TestCollector
+from testing_tools.adapter import info
+from testing_tools.adapter.pytest import _discovery
 
 # In Python 3.8 __len__ is called twice, which impacts some of the test assertions we do below.
 PYTHON_38_OR_LATER = sys.version_info[0] >= 3 and sys.version_info[1] >= 8
 
 
-class StubPyTest(StubProxy):
+class StubPyTest(util.StubProxy):
     def __init__(self, stub=None):
         super(StubPyTest, self).__init__(stub, "pytest")
         self.return_main = 0
@@ -36,7 +36,7 @@ class StubPyTest(StubProxy):
         return self.return_main
 
 
-class StubPlugin(StubProxy):
+class StubPlugin(util.StubProxy):
 
     _started = True
 
@@ -56,7 +56,7 @@ class StubPlugin(StubProxy):
         return func
 
 
-class StubDiscoveredTests(StubProxy):
+class StubDiscoveredTests(util.StubProxy):
 
     NOT_FOUND = object()
 
@@ -95,7 +95,7 @@ class FakeMarker(object):
         self.name = name
 
 
-class StubPytestItem(StubProxy):
+class StubPytestItem(util.StubProxy):
 
     _debugging = False
     _hasfunc = True
@@ -146,11 +146,31 @@ class StubFunctionItem(StubSubtypedItem, pytest.Function):
         return self.__dict__.get("function")
 
 
+def create_stub_function_item(*args, **kwargs):
+    # StubFunctionItem should not be calling __init__(), but instead from_parent().
+    # Unfortunately the detangling is massive due to the complexity of the test
+    # harness, so we are punting in hopes that we rewrite test discovery before
+    # pytest removes this functionality.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return StubFunctionItem(*args, **kwargs)
+
+
 class StubDoctestItem(StubSubtypedItem, _pytest.doctest.DoctestItem):
     pass
 
 
-class StubPytestSession(StubProxy):
+def create_stub_doctest_item(*args, **kwargs):
+    # StubDoctestItem should not be calling __init__(), but instead from_parent().
+    # Unfortunately the detangling is massive due to the complexity of the test
+    # harness, so we are punting in hopes that we rewrite test discovery before
+    # pytest removes this functionality.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return StubDoctestItem(*args, **kwargs)
+
+
+class StubPytestSession(util.StubProxy):
     def __init__(self, stub=None):
         super(StubPytestSession, self).__init__(stub, "pytest.Session")
 
@@ -163,7 +183,7 @@ class StubPytestSession(StubProxy):
         return func
 
 
-class StubPytestConfig(StubProxy):
+class StubPytestConfig(util.StubProxy):
     def __init__(self, stub=None):
         super(StubPytestConfig, self).__init__(stub, "pytest.Config")
 
@@ -187,7 +207,7 @@ def generate_parse_item(pathsep):
         raise NotImplementedError
     ##########
     def _fix_fileid(*args):
-        return fix_fileid(
+        return adapter_util.fix_fileid(
             *args,
             **dict(
                 _normcase=normcase,
@@ -281,7 +301,7 @@ def fake_pytest_main(stub, use_fd, pytest_stdout):
     def ret(args, plugins):
         stub.add_call("pytest.main", None, {"args": args, "plugins": plugins})
         if use_fd:
-            write(sys.stdout.fileno(), pytest_stdout.encode())
+            os.write(sys.stdout.fileno(), pytest_stdout.encode())
         else:
             print(pytest_stdout, end="")
         return 0
@@ -296,7 +316,7 @@ class DiscoverTests(unittest.TestCase):
     ]
 
     def test_basic(self):
-        stub = Stub()
+        stub = util.Stub()
         stubpytest = StubPyTest(stub)
         plugin = StubPlugin(stub)
         expected = []
@@ -312,20 +332,22 @@ class DiscoverTests(unittest.TestCase):
         if PYTHON_38_OR_LATER:
             calls.insert(3, ("discovered.__len__", None, None))
 
-        parents, tests = discover([], _pytest_main=stubpytest.main, _plugin=plugin)
+        parents, tests = _discovery.discover(
+            [], _pytest_main=stubpytest.main, _plugin=plugin
+        )
 
         self.assertEqual(parents, [])
         self.assertEqual(tests, expected)
         self.assertEqual(stub.calls, calls)
 
     def test_failure(self):
-        stub = Stub()
+        stub = util.Stub()
         pytest = StubPyTest(stub)
         pytest.return_main = 2
         plugin = StubPlugin(stub)
 
         with self.assertRaises(Exception):
-            discover([], _pytest_main=pytest.main, _plugin=plugin)
+            _discovery.discover([], _pytest_main=pytest.main, _plugin=plugin)
 
         self.assertEqual(
             stub.calls,
@@ -335,7 +357,7 @@ class DiscoverTests(unittest.TestCase):
         )
 
     def test_no_tests_found(self):
-        stub = Stub()
+        stub = util.Stub()
         pytest = StubPyTest(stub)
         pytest.return_main = 5
         plugin = StubPlugin(stub)
@@ -352,14 +374,16 @@ class DiscoverTests(unittest.TestCase):
         if PYTHON_38_OR_LATER:
             calls.insert(3, ("discovered.__len__", None, None))
 
-        parents, tests = discover([], _pytest_main=pytest.main, _plugin=plugin)
+        parents, tests = _discovery.discover(
+            [], _pytest_main=pytest.main, _plugin=plugin
+        )
 
         self.assertEqual(parents, [])
         self.assertEqual(tests, expected)
         self.assertEqual(stub.calls, calls)
 
     def test_stdio_hidden_file(self):
-        stub = Stub()
+        stub = util.Stub()
 
         plugin = StubPlugin(stub)
         plugin.discovered = []
@@ -380,7 +404,7 @@ class DiscoverTests(unittest.TestCase):
         with tempfile.TemporaryFile("r+") as mock:
             sys.stdout = mock
             try:
-                discover(
+                _discovery.discover(
                     [],
                     hidestdio=True,
                     _pytest_main=fake_pytest_main(stub, False, pytest_stdout),
@@ -398,25 +422,26 @@ class DiscoverTests(unittest.TestCase):
     def test_stdio_hidden_fd(self):
         # simulate cases where stdout comes from the lower layer than sys.stdout
         # via file descriptors (e.g., from cython)
-        stub = Stub()
+        stub = util.Stub()
         plugin = StubPlugin(stub)
         pytest_stdout = "spamspamspamspamspamspamspammityspam"
 
-        sys.stdio = StringIO()
+        # Replace with contextlib.redirect_stdout() once Python 2.7 support is dropped.
+        sys.stdout = StringIO()
         try:
-            discover(
+            _discovery.discover(
                 [],
                 hidestdio=True,
                 _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
                 _plugin=plugin,
             )
-        finally:
             captured = sys.stdout.read()
+            self.assertEqual(captured, "")
+        finally:
             sys.stdout = sys.__stdout__
-        self.assertEqual(captured, b"")
 
     def test_stdio_not_hidden_file(self):
-        stub = Stub()
+        stub = util.Stub()
 
         plugin = StubPlugin(stub)
         plugin.discovered = []
@@ -436,7 +461,7 @@ class DiscoverTests(unittest.TestCase):
 
         sys.stdout = buf
         try:
-            discover(
+            _discovery.discover(
                 [],
                 hidestdio=False,
                 _pytest_main=fake_pytest_main(stub, False, pytest_stdout),
@@ -452,14 +477,14 @@ class DiscoverTests(unittest.TestCase):
     def test_stdio_not_hidden_fd(self):
         # simulate cases where stdout comes from the lower layer than sys.stdout
         # via file descriptors (e.g., from cython)
-        stub = Stub()
+        stub = util.Stub()
         plugin = StubPlugin(stub)
         pytest_stdout = "spamspamspamspamspamspamspammityspam"
         stub.calls = []
         with tempfile.TemporaryFile("r+") as mock:
             sys.stdout = mock
             try:
-                discover(
+                _discovery.discover(
                     [],
                     hidestdio=False,
                     _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
@@ -474,66 +499,66 @@ class DiscoverTests(unittest.TestCase):
 
 class CollectorTests(unittest.TestCase):
     def test_modifyitems(self):
-        stub = Stub()
+        stub = util.Stub()
         discovered = StubDiscoveredTests(stub)
         session = StubPytestSession(stub)
         config = StubPytestConfig(stub)
-        collector = TestCollector(tests=discovered)
+        collector = _discovery.TestCollector(tests=discovered)
 
-        testroot = fix_path("/a/b/c")
-        relfile1 = fix_path("./test_spam.py")
-        relfile2 = fix_path("x/y/z/test_eggs.py")
+        testroot = adapter_util.fix_path("/a/b/c")
+        relfile1 = adapter_util.fix_path("./test_spam.py")
+        relfile2 = adapter_util.fix_path("x/y/z/test_eggs.py")
 
         collector.pytest_collection_modifyitems(
             session,
             config,
             [
-                StubFunctionItem(
+                create_stub_function_item(
                     stub,
                     nodeid="test_spam.py::SpamTests::test_one",
                     name="test_one",
                     location=("test_spam.py", 12, "SpamTests.test_one"),
-                    fspath=PATH_JOIN(testroot, "test_spam.py"),
+                    fspath=adapter_util.PATH_JOIN(testroot, "test_spam.py"),
                     function=FakeFunc("test_one"),
                 ),
-                StubFunctionItem(
+                create_stub_function_item(
                     stub,
                     nodeid="test_spam.py::SpamTests::test_other",
                     name="test_other",
                     location=("test_spam.py", 19, "SpamTests.test_other"),
-                    fspath=PATH_JOIN(testroot, "test_spam.py"),
+                    fspath=adapter_util.PATH_JOIN(testroot, "test_spam.py"),
                     function=FakeFunc("test_other"),
                 ),
-                StubFunctionItem(
+                create_stub_function_item(
                     stub,
                     nodeid="test_spam.py::test_all",
                     name="test_all",
                     location=("test_spam.py", 144, "test_all"),
-                    fspath=PATH_JOIN(testroot, "test_spam.py"),
+                    fspath=adapter_util.PATH_JOIN(testroot, "test_spam.py"),
                     function=FakeFunc("test_all"),
                 ),
-                StubFunctionItem(
+                create_stub_function_item(
                     stub,
                     nodeid="test_spam.py::test_each[10-10]",
                     name="test_each[10-10]",
                     location=("test_spam.py", 273, "test_each[10-10]"),
-                    fspath=PATH_JOIN(testroot, "test_spam.py"),
+                    fspath=adapter_util.PATH_JOIN(testroot, "test_spam.py"),
                     function=FakeFunc("test_each"),
                 ),
-                StubFunctionItem(
+                create_stub_function_item(
                     stub,
                     nodeid=relfile2 + "::All::BasicTests::test_first",
                     name="test_first",
                     location=(relfile2, 31, "All.BasicTests.test_first"),
-                    fspath=PATH_JOIN(testroot, relfile2),
+                    fspath=adapter_util.PATH_JOIN(testroot, relfile2),
                     function=FakeFunc("test_first"),
                 ),
-                StubFunctionItem(
+                create_stub_function_item(
                     stub,
                     nodeid=relfile2 + "::All::BasicTests::test_each[1+2-3]",
                     name="test_each[1+2-3]",
                     location=(relfile2, 62, "All.BasicTests.test_each[1+2-3]"),
-                    fspath=PATH_JOIN(testroot, relfile2),
+                    fspath=adapter_util.PATH_JOIN(testroot, relfile2),
                     function=FakeFunc("test_each"),
                     own_markers=[
                         FakeMarker(v)
@@ -570,10 +595,10 @@ class CollectorTests(unittest.TestCase):
                             ("./test_spam.py", "test_spam.py", "file"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./test_spam.py::SpamTests::test_one",
                             name="test_one",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=relfile1,
                                 func="SpamTests.test_one",
@@ -594,10 +619,10 @@ class CollectorTests(unittest.TestCase):
                             ("./test_spam.py", "test_spam.py", "file"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./test_spam.py::SpamTests::test_other",
                             name="test_other",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=relfile1,
                                 func="SpamTests.test_other",
@@ -617,10 +642,10 @@ class CollectorTests(unittest.TestCase):
                             ("./test_spam.py", "test_spam.py", "file"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./test_spam.py::test_all",
                             name="test_all",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=relfile1,
                                 func="test_all",
@@ -641,10 +666,10 @@ class CollectorTests(unittest.TestCase):
                             ("./test_spam.py", "test_spam.py", "file"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./test_spam.py::test_each[10-10]",
                             name="test_each[10-10]",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=relfile1,
                                 func="test_each",
@@ -673,16 +698,18 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::All::BasicTests::test_first",
                             name="test_first",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
-                                relfile=fix_relpath(relfile2),
+                                relfile=adapter_util.fix_relpath(relfile2),
                                 func="All.BasicTests.test_first",
                                 sub=None,
                             ),
-                            source="{}:{}".format(fix_relpath(relfile2), 32),
+                            source="{}:{}".format(
+                                adapter_util.fix_relpath(relfile2), 32
+                            ),
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::All::BasicTests",
                         ),
@@ -710,16 +737,18 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::All::BasicTests::test_each[1+2-3]",
                             name="test_each[1+2-3]",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
-                                relfile=fix_relpath(relfile2),
+                                relfile=adapter_util.fix_relpath(relfile2),
                                 func="All.BasicTests.test_each",
                                 sub=["[1+2-3]"],
                             ),
-                            source="{}:{}".format(fix_relpath(relfile2), 63),
+                            source="{}:{}".format(
+                                adapter_util.fix_relpath(relfile2), 63
+                            ),
                             markers=["expected-failure", "skip", "skip-if"],
                             parentid="./x/y/z/test_eggs.py::All::BasicTests::test_each",
                         ),
@@ -729,22 +758,22 @@ class CollectorTests(unittest.TestCase):
         )
 
     def test_finish(self):
-        stub = Stub()
+        stub = util.Stub()
         discovered = StubDiscoveredTests(stub)
         session = StubPytestSession(stub)
-        testroot = fix_path("/a/b/c")
-        relfile = fix_path("x/y/z/test_eggs.py")
+        testroot = adapter_util.fix_path("/a/b/c")
+        relfile = adapter_util.fix_path("x/y/z/test_eggs.py")
         session.items = [
-            StubFunctionItem(
+            create_stub_function_item(
                 stub,
                 nodeid=relfile + "::SpamTests::test_spam",
                 name="test_spam",
                 location=(relfile, 12, "SpamTests.test_spam"),
-                fspath=PATH_JOIN(testroot, relfile),
+                fspath=adapter_util.PATH_JOIN(testroot, relfile),
                 function=FakeFunc("test_spam"),
             ),
         ]
-        collector = TestCollector(tests=discovered)
+        collector = _discovery.TestCollector(tests=discovered)
 
         collector.pytest_collection_finish(session)
 
@@ -765,16 +794,18 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam",
                             name="test_spam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
-                                relfile=fix_relpath(relfile),
+                                relfile=adapter_util.fix_relpath(relfile),
                                 func="SpamTests.test_spam",
                                 sub=None,
                             ),
-                            source="{}:{}".format(fix_relpath(relfile), 13),
+                            source="{}:{}".format(
+                                adapter_util.fix_relpath(relfile), 13
+                            ),
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests",
                         ),
@@ -784,44 +815,44 @@ class CollectorTests(unittest.TestCase):
         )
 
     def test_doctest(self):
-        stub = Stub()
+        stub = util.Stub()
         discovered = StubDiscoveredTests(stub)
         session = StubPytestSession(stub)
-        testroot = fix_path("/a/b/c")
-        doctestfile = fix_path("x/test_doctest.txt")
-        relfile = fix_path("x/y/z/test_eggs.py")
+        testroot = adapter_util.fix_path("/a/b/c")
+        doctestfile = adapter_util.fix_path("x/test_doctest.txt")
+        relfile = adapter_util.fix_path("x/y/z/test_eggs.py")
         session.items = [
-            StubDoctestItem(
+            create_stub_doctest_item(
                 stub,
                 nodeid=doctestfile + "::test_doctest.txt",
                 name="test_doctest.txt",
                 location=(doctestfile, 0, "[doctest] test_doctest.txt"),
-                fspath=PATH_JOIN(testroot, doctestfile),
+                fspath=adapter_util.PATH_JOIN(testroot, doctestfile),
             ),
             # With --doctest-modules
-            StubDoctestItem(
+            create_stub_doctest_item(
                 stub,
                 nodeid=relfile + "::test_eggs",
                 name="test_eggs",
                 location=(relfile, 0, "[doctest] test_eggs"),
-                fspath=PATH_JOIN(testroot, relfile),
+                fspath=adapter_util.PATH_JOIN(testroot, relfile),
             ),
-            StubDoctestItem(
+            create_stub_doctest_item(
                 stub,
                 nodeid=relfile + "::test_eggs.TestSpam",
                 name="test_eggs.TestSpam",
                 location=(relfile, 12, "[doctest] test_eggs.TestSpam"),
-                fspath=PATH_JOIN(testroot, relfile),
+                fspath=adapter_util.PATH_JOIN(testroot, relfile),
             ),
-            StubDoctestItem(
+            create_stub_doctest_item(
                 stub,
                 nodeid=relfile + "::test_eggs.TestSpam.TestEggs",
                 name="test_eggs.TestSpam.TestEggs",
                 location=(relfile, 27, "[doctest] test_eggs.TestSpam.TestEggs"),
-                fspath=PATH_JOIN(testroot, relfile),
+                fspath=adapter_util.PATH_JOIN(testroot, relfile),
             ),
         ]
-        collector = TestCollector(tests=discovered)
+        collector = _discovery.TestCollector(tests=discovered)
 
         collector.pytest_collection_finish(session)
 
@@ -839,15 +870,17 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/test_doctest.txt::test_doctest.txt",
                             name="test_doctest.txt",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
-                                relfile=fix_relpath(doctestfile),
+                                relfile=adapter_util.fix_relpath(doctestfile),
                                 func=None,
                             ),
-                            source="{}:{}".format(fix_relpath(doctestfile), 1),
+                            source="{}:{}".format(
+                                adapter_util.fix_relpath(doctestfile), 1
+                            ),
                             markers=[],
                             parentid="./x/test_doctest.txt",
                         ),
@@ -864,15 +897,15 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::test_eggs",
                             name="test_eggs",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
-                                relfile=fix_relpath(relfile),
+                                relfile=adapter_util.fix_relpath(relfile),
                                 func=None,
                             ),
-                            source="{}:{}".format(fix_relpath(relfile), 1),
+                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 1),
                             markers=[],
                             parentid="./x/y/z/test_eggs.py",
                         ),
@@ -889,15 +922,17 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::test_eggs.TestSpam",
                             name="test_eggs.TestSpam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
-                                relfile=fix_relpath(relfile),
+                                relfile=adapter_util.fix_relpath(relfile),
                                 func=None,
                             ),
-                            source="{}:{}".format(fix_relpath(relfile), 13),
+                            source="{}:{}".format(
+                                adapter_util.fix_relpath(relfile), 13
+                            ),
                             markers=[],
                             parentid="./x/y/z/test_eggs.py",
                         ),
@@ -914,15 +949,17 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::test_eggs.TestSpam.TestEggs",
                             name="test_eggs.TestSpam.TestEggs",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
-                                relfile=fix_relpath(relfile),
+                                relfile=adapter_util.fix_relpath(relfile),
                                 func=None,
                             ),
-                            source="{}:{}".format(fix_relpath(relfile), 28),
+                            source="{}:{}".format(
+                                adapter_util.fix_relpath(relfile), 28
+                            ),
                             markers=[],
                             parentid="./x/y/z/test_eggs.py",
                         ),
@@ -932,22 +969,22 @@ class CollectorTests(unittest.TestCase):
         )
 
     def test_nested_brackets(self):
-        stub = Stub()
+        stub = util.Stub()
         discovered = StubDiscoveredTests(stub)
         session = StubPytestSession(stub)
-        testroot = fix_path("/a/b/c")
-        relfile = fix_path("x/y/z/test_eggs.py")
+        testroot = adapter_util.fix_path("/a/b/c")
+        relfile = adapter_util.fix_path("x/y/z/test_eggs.py")
         session.items = [
-            StubFunctionItem(
+            create_stub_function_item(
                 stub,
                 nodeid=relfile + "::SpamTests::test_spam[a-[b]-c]",
                 name="test_spam[a-[b]-c]",
                 location=(relfile, 12, "SpamTests.test_spam[a-[b]-c]"),
-                fspath=PATH_JOIN(testroot, relfile),
+                fspath=adapter_util.PATH_JOIN(testroot, relfile),
                 function=FakeFunc("test_spam"),
             ),
         ]
-        collector = TestCollector(tests=discovered)
+        collector = _discovery.TestCollector(tests=discovered)
 
         collector.pytest_collection_finish(session)
 
@@ -973,16 +1010,18 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam[a-[b]-c]",
                             name="test_spam[a-[b]-c]",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
-                                relfile=fix_relpath(relfile),
+                                relfile=adapter_util.fix_relpath(relfile),
                                 func="SpamTests.test_spam",
                                 sub=["[a-[b]-c]"],
                             ),
-                            source="{}:{}".format(fix_relpath(relfile), 13),
+                            source="{}:{}".format(
+                                adapter_util.fix_relpath(relfile), 13
+                            ),
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests::test_spam",
                         ),
@@ -992,22 +1031,22 @@ class CollectorTests(unittest.TestCase):
         )
 
     def test_nested_suite(self):
-        stub = Stub()
+        stub = util.Stub()
         discovered = StubDiscoveredTests(stub)
         session = StubPytestSession(stub)
-        testroot = fix_path("/a/b/c")
-        relfile = fix_path("x/y/z/test_eggs.py")
+        testroot = adapter_util.fix_path("/a/b/c")
+        relfile = adapter_util.fix_path("x/y/z/test_eggs.py")
         session.items = [
-            StubFunctionItem(
+            create_stub_function_item(
                 stub,
                 nodeid=relfile + "::SpamTests::Ham::Eggs::test_spam",
                 name="test_spam",
                 location=(relfile, 12, "SpamTests.Ham.Eggs.test_spam"),
-                fspath=PATH_JOIN(testroot, relfile),
+                fspath=adapter_util.PATH_JOIN(testroot, relfile),
                 function=FakeFunc("test_spam"),
             ),
         ]
-        collector = TestCollector(tests=discovered)
+        collector = _discovery.TestCollector(tests=discovered)
 
         collector.pytest_collection_finish(session)
 
@@ -1034,16 +1073,18 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::Ham::Eggs::test_spam",
                             name="test_spam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
-                                relfile=fix_relpath(relfile),
+                                relfile=adapter_util.fix_relpath(relfile),
                                 func="SpamTests.Ham.Eggs.test_spam",
                                 sub=None,
                             ),
-                            source="{}:{}".format(fix_relpath(relfile), 13),
+                            source="{}:{}".format(
+                                adapter_util.fix_relpath(relfile), 13
+                            ),
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests::Ham::Eggs",
                         ),
@@ -1053,7 +1094,7 @@ class CollectorTests(unittest.TestCase):
         )
 
     def test_windows(self):
-        stub = Stub()
+        stub = util.Stub()
         discovered = StubDiscoveredTests(stub)
         session = StubPytestSession(stub)
         testroot = r"C:\A\B\C"
@@ -1061,7 +1102,7 @@ class CollectorTests(unittest.TestCase):
         relfile = r"X\Y\Z\test_Eggs.py"
         session.items = [
             # typical:
-            StubFunctionItem(
+            create_stub_function_item(
                 stub,
                 # pytest always uses "/" as the path separator in node IDs:
                 nodeid="X/Y/Z/test_Eggs.py::SpamTests::test_spam",
@@ -1094,7 +1135,7 @@ class CollectorTests(unittest.TestCase):
             elif fspath == "\\":
                 fspath = (testroot + "/" + fileid).replace("/", "\\")
             session.items.append(
-                StubFunctionItem(
+                create_stub_function_item(
                     stub,
                     nodeid=fileid + "::test_spam",
                     name="test_spam",
@@ -1103,8 +1144,8 @@ class CollectorTests(unittest.TestCase):
                     function=FakeFunc("test_spam"),
                 )
             )
-        collector = TestCollector(tests=discovered)
-        if OS_NAME != "nt":
+        collector = _discovery.TestCollector(tests=discovered)
+        if os.name != "nt":
             collector.parse_item = generate_parse_item("\\")
 
         collector.pytest_collection_finish(session)
@@ -1126,10 +1167,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/Y/Z/test_Eggs.py::SpamTests::test_spam",
                             name="test_spam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,  # not normalized
                                 relfile=r".\X\Y\Z\test_Eggs.py",  # not normalized
                                 func="SpamTests.test_spam",
@@ -1154,10 +1195,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_a.py::test_spam",
                             name="test_spam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=r".\X\test_a.py",
                                 func="test_spam",
@@ -1179,10 +1220,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", altroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_b.py::test_spam",
                             name="test_spam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=altroot,
                                 relfile=r"./X/test_b.py",
                                 func="test_spam",
@@ -1204,10 +1245,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_c.py::test_spam",
                             name="test_spam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=r".\X\test_c.py",
                                 func="test_spam",
@@ -1229,10 +1270,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", altroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_d.py::test_spam",
                             name="test_spam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=altroot,
                                 relfile=r"./X/test_d.py",
                                 func="test_spam",
@@ -1254,10 +1295,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_e.py::test_spam",
                             name="test_spam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=r".\X\test_e.py",
                                 func="test_spam",
@@ -1279,10 +1320,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", altroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_f.py::test_spam",
                             name="test_spam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=altroot,
                                 relfile=r"./X/test_f.py",
                                 func="test_spam",
@@ -1304,10 +1345,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_g.py::test_spam",
                             name="test_spam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
                                 relfile=r".\X\test_g.py",
                                 func="test_spam",
@@ -1329,10 +1370,10 @@ class CollectorTests(unittest.TestCase):
                             (r"./X", "X", "folder"),
                             (".", altroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id=r"./X/test_h.py::test_spam",
                             name="test_spam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=altroot,
                                 relfile=r"./X/test_h.py",
                                 func="test_spam",
@@ -1348,22 +1389,22 @@ class CollectorTests(unittest.TestCase):
         )
 
     def test_mysterious_parens(self):
-        stub = Stub()
+        stub = util.Stub()
         discovered = StubDiscoveredTests(stub)
         session = StubPytestSession(stub)
-        testroot = fix_path("/a/b/c")
-        relfile = fix_path("x/y/z/test_eggs.py")
+        testroot = adapter_util.fix_path("/a/b/c")
+        relfile = adapter_util.fix_path("x/y/z/test_eggs.py")
         session.items = [
-            StubFunctionItem(
+            create_stub_function_item(
                 stub,
                 nodeid=relfile + "::SpamTests::()::()::test_spam",
                 name="test_spam",
                 location=(relfile, 12, "SpamTests.test_spam"),
-                fspath=PATH_JOIN(testroot, relfile),
+                fspath=adapter_util.PATH_JOIN(testroot, relfile),
                 function=FakeFunc("test_spam"),
             ),
         ]
-        collector = TestCollector(tests=discovered)
+        collector = _discovery.TestCollector(tests=discovered)
 
         collector.pytest_collection_finish(session)
 
@@ -1384,16 +1425,18 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam",
                             name="test_spam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
-                                relfile=fix_relpath(relfile),
+                                relfile=adapter_util.fix_relpath(relfile),
                                 func="SpamTests.test_spam",
                                 sub=[],
                             ),
-                            source="{}:{}".format(fix_relpath(relfile), 13),
+                            source="{}:{}".format(
+                                adapter_util.fix_relpath(relfile), 13
+                            ),
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests",
                         ),
@@ -1405,31 +1448,31 @@ class CollectorTests(unittest.TestCase):
     def test_imported_test(self):
         # pytest will even discover tests that were imported from
         # another module!
-        stub = Stub()
+        stub = util.Stub()
         discovered = StubDiscoveredTests(stub)
         session = StubPytestSession(stub)
-        testroot = fix_path("/a/b/c")
-        relfile = fix_path("x/y/z/test_eggs.py")
-        srcfile = fix_path("x/y/z/_extern.py")
+        testroot = adapter_util.fix_path("/a/b/c")
+        relfile = adapter_util.fix_path("x/y/z/test_eggs.py")
+        srcfile = adapter_util.fix_path("x/y/z/_extern.py")
         session.items = [
-            StubFunctionItem(
+            create_stub_function_item(
                 stub,
                 nodeid=relfile + "::SpamTests::test_spam",
                 name="test_spam",
                 location=(srcfile, 12, "SpamTests.test_spam"),
-                fspath=PATH_JOIN(testroot, relfile),
+                fspath=adapter_util.PATH_JOIN(testroot, relfile),
                 function=FakeFunc("test_spam"),
             ),
-            StubFunctionItem(
+            create_stub_function_item(
                 stub,
                 nodeid=relfile + "::test_ham",
                 name="test_ham",
                 location=(srcfile, 3, "test_ham"),
-                fspath=PATH_JOIN(testroot, relfile),
+                fspath=adapter_util.PATH_JOIN(testroot, relfile),
                 function=FakeFunc("test_spam"),
             ),
         ]
-        collector = TestCollector(tests=discovered)
+        collector = _discovery.TestCollector(tests=discovered)
 
         collector.pytest_collection_finish(session)
 
@@ -1450,16 +1493,18 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam",
                             name="test_spam",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
-                                relfile=fix_relpath(relfile),
+                                relfile=adapter_util.fix_relpath(relfile),
                                 func="SpamTests.test_spam",
                                 sub=None,
                             ),
-                            source="{}:{}".format(fix_relpath(srcfile), 13),
+                            source="{}:{}".format(
+                                adapter_util.fix_relpath(srcfile), 13
+                            ),
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests",
                         ),
@@ -1476,16 +1521,16 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=TestInfo(
+                        test=info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::test_ham",
                             name="test_ham",
-                            path=TestPath(
+                            path=info.SingleTestPath(
                                 root=testroot,
-                                relfile=fix_relpath(relfile),
+                                relfile=adapter_util.fix_relpath(relfile),
                                 func="test_ham",
                                 sub=None,
                             ),
-                            source="{}:{}".format(fix_relpath(srcfile), 4),
+                            source="{}:{}".format(adapter_util.fix_relpath(srcfile), 4),
                             markers=None,
                             parentid="./x/y/z/test_eggs.py",
                         ),

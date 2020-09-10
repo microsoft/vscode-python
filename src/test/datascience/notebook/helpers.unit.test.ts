@@ -49,7 +49,7 @@ suite('DataScience - NativeNotebook helpers', () => {
         const notebook = notebookModelToVSCNotebookData(model as any);
 
         assert.isOk(notebook);
-        assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
+        assert.deepEqual(notebook.languages, ['*']);
         // ignore metadata we add.
         const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
             const cellToCompareWith = cloneDeep(cell);

@@ -95,6 +95,7 @@ export class WidgetManager extends jupyterlab.WidgetManager {
         // This throws errors if enabled, can be added later.
     }
 
+    // @ts-ignore https://devblogs.microsoft.com/typescript/announcing-typescript-4-0-rc/#properties-overridding-accessors-and-vice-versa-is-an-error
     public get onUnhandledIOPubMessage() {
         return super.onUnhandledIOPubMessage;
     }

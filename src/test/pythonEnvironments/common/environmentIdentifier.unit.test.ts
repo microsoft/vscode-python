@@ -7,28 +7,17 @@ import * as sinon from 'sinon';
 import * as platformApis from '../../../client/common/utils/platform';
 import { identifyEnvironment } from '../../../client/pythonEnvironments/common/environmentIdentifier';
 import { EnvironmentType } from '../../../client/pythonEnvironments/info';
+import { TEST_LAYOUT_ROOT } from './commonTestConstants';
 
 suite('Environment Identifier', () => {
-    const testLayoutsRoot = path.join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        '..',
-        'src',
-        'test',
-        'pythonEnvironments',
-        'common',
-        'envlayouts',
-    );
     suite('Conda', () => {
         test('Conda layout with conda-meta and python binary in the same directory', async () => {
-            const interpreterPath: string = path.join(testLayoutsRoot, 'conda1', 'python.exe');
+            const interpreterPath: string = path.join(TEST_LAYOUT_ROOT, 'conda1', 'python.exe');
             const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
             assert.deepEqual(envType, EnvironmentType.Conda);
         });
         test('Conda layout with conda-meta and python binary in a sub directory', async () => {
-            const interpreterPath: string = path.join(testLayoutsRoot, 'conda2', 'bin', 'python');
+            const interpreterPath: string = path.join(TEST_LAYOUT_ROOT, 'conda2', 'bin', 'python');
             const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
             assert.deepEqual(envType, EnvironmentType.Conda);
         });
@@ -36,7 +25,7 @@ suite('Environment Identifier', () => {
 
     suite('Windows Store', () => {
         let getEnvVar: sinon.SinonStub;
-        const fakeLocalAppDataPath = 'X:\\users\\user\\AppData\\Local';
+        const fakeLocalAppDataPath = path.join(TEST_LAYOUT_ROOT, 'storeApps');
         const fakeProgramFilesPath = 'X:\\Program Files';
         const executable = ['python.exe', 'python3.exe', 'python3.8.exe'];
         suiteSetup(() => {
@@ -105,6 +94,19 @@ suite('Environment Identifier', () => {
                 const envType: EnvironmentType = await identifyEnvironment(`\\\\?\\${interpreterPath}`);
                 assert.deepEqual(envType, EnvironmentType.WindowsStore);
             });
+        });
+    });
+
+    suite('Venv', () => {
+        test('Pyvenv.cfg is in the same directory as the interpreter', async () => {
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'venv1', 'python');
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepEqual(envType, EnvironmentType.Venv);
+        });
+        test('Pyvenv.cfg is in the same directory as the interpreter', async () => {
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'venv2', 'bin', 'python');
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepEqual(envType, EnvironmentType.Venv);
         });
     });
 });

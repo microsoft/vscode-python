@@ -99,7 +99,7 @@ import pytest
 import _pytest.doctest
 import _pytest.unittest
 
-from ..info import TestInfo, TestPath
+from ..info import SingleTestInfo, SingleTestPath
 from ..util import fix_fileid, PATH_SEP, NORMCASE
 
 
@@ -207,10 +207,10 @@ def parse_item(
             markers.add("expected-failure")
         # We can add support for other markers as we need them?
 
-    test = TestInfo(
+    test = SingleTestInfo(
         id=nodeid,
         name=item.name,
-        path=TestPath(
+        path=SingleTestPath(
             root=testroot,
             relfile=relfile,
             func=testfunc,

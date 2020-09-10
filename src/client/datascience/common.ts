@@ -96,8 +96,11 @@ export function pruneCell(cell: nbformat.ICell): nbformat.ICell {
 
     // Remove outputs and execution_count from non code cells
     if (result.cell_type !== 'code') {
-        delete result.outputs;
-        delete result.execution_count;
+        // Map to any so nyc will build.
+        // tslint:disable-next-line: no-any
+        delete (<any>result).outputs;
+        // tslint:disable-next-line: no-any
+        delete (<any>result).execution_count;
     } else {
         // Clean outputs from code cells
         result.outputs = result.outputs ? (result.outputs as nbformat.IOutput[]).map(fixupOutput) : [];

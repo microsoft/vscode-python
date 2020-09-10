@@ -98,3 +98,10 @@ export enum SurveyAndInterpreterTipNotification {
     tipExperiment = 'pythonTipPromptWording',
     surveyExperiment = 'pythonMailingListPromptWording'
 }
+
+// Experiment to show a prompt asking users to join python mailing list.
+export enum JoinMailingListPromptVariants {
+    variant1 = 'pythonJoinMailingListVar1',
+    variant2 = 'pythonJoinMailingListVar2',
+    variant3 = 'pythonJoinMailingListVar3'
+}

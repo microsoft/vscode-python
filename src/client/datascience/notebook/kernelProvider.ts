@@ -23,7 +23,6 @@ import { getKernelConnectionId, IKernelProvider, KernelConnectionMetadata } from
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebook, INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, updateKernelInNotebookMetadata } from './helpers/helpers';
-import { INotebookContentProvider } from './types';
 
 class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     get preloads(): Uri[] {
@@ -55,10 +54,10 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
 
 @injectable()
 export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
-    public get onDidChangeKernels(): Event<void> {
+    public get onDidChangeKernels(): Event<NotebookDocument | undefined> {
         return this._onDidChangeKernels.event;
     }
-    private readonly _onDidChangeKernels = new EventEmitter<void>();
+    private readonly _onDidChangeKernels = new EventEmitter<NotebookDocument | undefined>();
     private notebookKernelChangeHandled = new WeakSet<INotebook>();
     constructor(
         @inject(KernelSelectionProvider) private readonly kernelSelectionProvider: KernelSelectionProvider,
@@ -68,11 +67,22 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
-        @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
-        this.kernelSelectionProvider.SelectionsChanged(() => this._onDidChangeKernels.fire(), this, disposables);
+        this.kernelSelectionProvider.onDidChangeSelections(
+            (e) => {
+                if (e) {
+                    const doc = this.notebook.notebookDocuments.find((d) => d.uri.fsPath === e.fsPath);
+                    if (doc) {
+                        return this._onDidChangeKernels.fire(doc);
+                    }
+                }
+                this._onDidChangeKernels.fire(undefined);
+            },
+            this,
+            disposables
+        );
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
     }
     public async provideKernels(
@@ -247,7 +257,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                         if (notebook.disposed) {
                             return;
                         }
-                        updateKernelInNotebookMetadata(document, e, this.notebookContentProvider);
+                        updateKernelInNotebookMetadata(document, e);
                     },
                     this,
                     this.disposables
@@ -260,7 +270,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             // Adding comment here, so we have context for the requirement.
             this.kernelSwitcher.switchKernelWithRetry(notebook, selectedKernelConnectionMetadata).catch(noop);
         } else {
-            updateKernelInNotebookMetadata(document, selectedKernelConnectionMetadata, this.notebookContentProvider);
+            updateKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
         }
     }
 }

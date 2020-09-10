@@ -27,10 +27,10 @@ import { JupyterNotebookView } from '../constants';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { isUntitledFile } from '../../../common/utils/misc';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
-import { INotebookContentProvider } from '../types';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 export interface IBaseCellVSCodeMetadata {
@@ -53,6 +53,8 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     }
 }
 
+const kernelInformationForNotebooks = new WeakMap<NotebookDocument, KernelConnectionMetadata | undefined>();
+
 export function getNotebookMetadata(document: NotebookDocument): nbformat.INotebookMetadata | undefined {
     // tslint:disable-next-line: no-any
     let notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
@@ -66,24 +68,26 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
         // tslint:disable-next-line: no-any
         notebookContent = { ...content, metadata: { ...metadata, language_info } } as any;
     }
-    return notebookContent?.metadata;
+    notebookContent = cloneDeep(notebookContent);
+    if (kernelInformationForNotebooks.has(document)) {
+        updateNotebookMetadata(notebookContent.metadata, kernelInformationForNotebooks.get(document));
+    }
+
+    return notebookContent.metadata;
 }
+
+/**
+ * No need to update the notebook metadata just yet.
+ * When users open a blank notebook and a kernel is auto selected, document is marked as dirty. Hence as soon as you create a blank notebook it is dr ity.
+ * Similarly, if you open an existing notebook, it is marked as dirty.
+ *
+ * Solution: Store the metadata in some place, when saving, take the metadata & store in the file.
+ */
 export function updateKernelInNotebookMetadata(
     document: NotebookDocument,
-    kernelConnection: KernelConnectionMetadata | undefined,
-    notebookContentProvider: INotebookContentProvider
+    kernelConnection: KernelConnectionMetadata | undefined
 ) {
-    // tslint:disable-next-line: no-any
-    const notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
-    if (!notebookContent || !notebookContent.metadata) {
-        traceError('VSCode Notebook does not have custom metadata', notebookContent);
-        throw new Error('VSCode Notebook does not have custom metadata');
-    }
-    const info = updateNotebookMetadata(notebookContent.metadata, kernelConnection);
-
-    if (info.changed) {
-        notebookContentProvider.notifyChangesToDocument(document);
-    }
+    kernelInformationForNotebooks.set(document, kernelConnection);
 }
 /**
  * Converts a NotebookModel into VSCode friendly format.
@@ -95,9 +99,18 @@ export function notebookModelToVSCNotebookData(model: VSCodeNotebookModel): Note
         .map((item) => item!);
 
     const defaultLanguage = getDefaultCodeLanguage(model);
+    if (cells.length === 0 && isUntitledFile(model.file)) {
+        cells.push({
+            cellKind: vscodeNotebookEnums.CellKind.Code,
+            language: defaultLanguage,
+            metadata: {},
+            outputs: [],
+            source: ''
+        });
+    }
     return {
         cells,
-        languages: [defaultLanguage],
+        languages: ['*'],
         metadata: {
             custom: model.notebookContentWithoutCells,
             cellEditable: model.isTrusted,

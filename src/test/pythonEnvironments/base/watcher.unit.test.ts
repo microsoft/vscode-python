@@ -6,7 +6,6 @@ import { Uri } from 'vscode';
 import { PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
 import {
     BasicPythonEnvsChangedEvent,
-    BasicPythonEnvsWatcher,
     PythonEnvsChangedEvent,
     PythonEnvsWatcher
 } from '../../../client/pythonEnvironments/base/watcher';
@@ -21,75 +20,7 @@ const KINDS_TO_TEST = [
     PythonEnvKind.OtherVirtual
 ];
 
-suite('pyenvs watcher - BasicPythonEnvsWatcher', () => {
-    suite('fire()', () => {
-        test('empty event', () => {
-            const expected: BasicPythonEnvsChangedEvent = {};
-            const watcher = new BasicPythonEnvsWatcher();
-            let event: BasicPythonEnvsChangedEvent | undefined;
-            watcher.onChanged((e) => {
-                event = e;
-            });
-
-            watcher.fire(expected);
-
-            assert.equal(event, expected);
-        });
-
-        KINDS_TO_TEST.forEach((kind) => {
-            test(`non-empty event ("${kind}")`, () => {
-                const expected: BasicPythonEnvsChangedEvent = {
-                    kind: kind
-                };
-                const watcher = new BasicPythonEnvsWatcher();
-                let event: BasicPythonEnvsChangedEvent | undefined;
-                watcher.onChanged((e) => {
-                    event = e;
-                });
-
-                watcher.fire(expected);
-
-                assert.equal(event, expected);
-            });
-        });
-    });
-
-    suite('trigger()', () => {
-        test('empty event', () => {
-            const expected: BasicPythonEnvsChangedEvent = {
-                kind: undefined
-            };
-            const watcher = new BasicPythonEnvsWatcher();
-            let event: BasicPythonEnvsChangedEvent | undefined;
-            watcher.onChanged((e) => {
-                event = e;
-            });
-
-            watcher.trigger();
-
-            assert.deepEqual(event, expected);
-        });
-
-        KINDS_TO_TEST.forEach((kind) => {
-            test(`non-empty event ("${kind}")`, () => {
-                const expected: BasicPythonEnvsChangedEvent = {
-                    kind: kind
-                };
-                const watcher = new BasicPythonEnvsWatcher();
-                let event: BasicPythonEnvsChangedEvent | undefined;
-                watcher.onChanged((e) => {
-                    event = e;
-                });
-
-                watcher.trigger(kind);
-
-                assert.deepEqual(event, expected);
-            });
-        });
-    });
-});
-
-suite('pyenvs watcher - PythonEnvsWatcher', () => {
+suite('Python envs watcher - PythonEnvsWatcher', () => {
     const location = Uri.file('some-dir');
 
     suite('fire()', () => {
@@ -123,40 +54,62 @@ suite('pyenvs watcher - PythonEnvsWatcher', () => {
                 assert.equal(event, expected);
             });
         });
-    });
 
-    suite('trigger()', () => {
-        test('empty event', () => {
-            const expected: PythonEnvsChangedEvent = {
-                kind: undefined,
-                searchLocation: undefined
-            };
+        test('kind-only', () => {
+            const expected: PythonEnvsChangedEvent = { kind: PythonEnvKind.Venv };
             const watcher = new PythonEnvsWatcher();
             let event: PythonEnvsChangedEvent | undefined;
             watcher.onChanged((e) => {
                 event = e;
             });
 
-            watcher.trigger();
+            watcher.fire(expected);
 
-            assert.deepEqual(event, expected);
+            assert.equal(event, expected);
+        });
+
+        test('searchLocation-only', () => {
+            const expected: PythonEnvsChangedEvent = { searchLocation: Uri.file('foo') };
+            const watcher = new PythonEnvsWatcher();
+            let event: PythonEnvsChangedEvent | undefined;
+            watcher.onChanged((e) => {
+                event = e;
+            });
+
+            watcher.fire(expected);
+
+            assert.equal(event, expected);
+        });
+    });
+
+    suite('using BasicPythonEnvsChangedEvent', () => {
+        test('empty event', () => {
+            const expected: BasicPythonEnvsChangedEvent = {};
+            const watcher = new PythonEnvsWatcher<BasicPythonEnvsChangedEvent>();
+            let event: BasicPythonEnvsChangedEvent | undefined;
+            watcher.onChanged((e) => {
+                event = e;
+            });
+
+            watcher.fire(expected);
+
+            assert.equal(event, expected);
         });
 
         KINDS_TO_TEST.forEach((kind) => {
             test(`non-empty event ("${kind}")`, () => {
-                const expected: PythonEnvsChangedEvent = {
-                    kind: kind,
-                    searchLocation: location
+                const expected: BasicPythonEnvsChangedEvent = {
+                    kind: kind
                 };
-                const watcher = new PythonEnvsWatcher();
-                let event: PythonEnvsChangedEvent | undefined;
+                const watcher = new PythonEnvsWatcher<BasicPythonEnvsChangedEvent>();
+                let event: BasicPythonEnvsChangedEvent | undefined;
                 watcher.onChanged((e) => {
                     event = e;
                 });
 
-                watcher.trigger(kind, location);
+                watcher.fire(expected);
 
-                assert.deepEqual(event, expected);
+                assert.equal(event, expected);
             });
         });
     });
