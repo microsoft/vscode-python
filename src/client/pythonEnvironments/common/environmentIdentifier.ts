@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+import { isVenvEnvironment } from '../discovery/locators/services/venvLocator';
 import { isWindowsStoreEnvironment } from '../discovery/locators/services/windowsStoreLocator';
 import { EnvironmentType } from '../info';
 import { pathExists } from './externalDependencies';
-import { isVenvEnvironment } from '../discovery/locators/services/venvLocator';
 
 /**
  * Checks if the given interpreter path belongs to a conda environment. Using
