@@ -133,7 +133,7 @@ export class NotebookEditor implements INotebookEditor {
             return;
         }
         const defaultLanguage = getDefaultCodeLanguage(this.model);
-        new WorkspaceEdit().replaceCells(this.document.uri, 0, 0, [
+        new WorkspaceEdit().replaceCells(this.document.uri, 0, this.document.cells.length - 1, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Code,
                 language: defaultLanguage,
