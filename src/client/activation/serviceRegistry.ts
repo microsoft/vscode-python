@@ -20,7 +20,11 @@ import { DownloadBetaChannelRule, DownloadDailyChannelRule } from './common/down
 import { LanguageServerDownloader } from './common/downloader';
 import { LanguageServerDownloadChannel } from './common/packageRepository';
 import { ExtensionSurveyPrompt } from './extensionSurvey';
-import { JediExtensionActivator } from './jedi';
+import { JediLanguageServerAnalysisOptions } from './jedi/analysisOptions';
+import { JediLanguageClientFactory } from './jedi/languageClientFactory';
+import { JediLanguageServerProxy } from './jedi/languageServerProxy';
+import { JediLanguageServerManager } from './jedi/manager';
+import { MultiplexingJediLanguageServerActivator } from './jedi/multiplexingActivator';
 import { DotNetLanguageServerActivator } from './languageServer/activator';
 import { DotNetLanguageServerAnalysisOptions } from './languageServer/analysisOptions';
 import { DotNetLanguageClientFactory } from './languageServer/languageClientFactory';
@@ -77,12 +81,6 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
     serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
-
-    serviceManager.add<ILanguageServerActivator>(
-        ILanguageServerActivator,
-        JediExtensionActivator,
-        LanguageServerType.Jedi
-    );
 
     serviceManager.addSingleton<IPythonExtensionBanner>(
         IPythonExtensionBanner,
@@ -180,6 +178,22 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
             ILanguageServerPackageService,
             NodeLanguageServerPackageService
         );
+    } else if (languageServerType === LanguageServerType.Jedi) {
+        serviceManager.add<ILanguageServerActivator>(
+            ILanguageServerActivator,
+            MultiplexingJediLanguageServerActivator,
+            LanguageServerType.Jedi
+        );
+
+        // Note: These other services are required when using the Jedi LSP.
+        serviceManager.add<ILanguageServerAnalysisOptions>(
+            ILanguageServerAnalysisOptions,
+            JediLanguageServerAnalysisOptions,
+            LanguageServerType.Jedi
+        );
+        serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, JediLanguageClientFactory);
+        serviceManager.add<ILanguageServerManager>(ILanguageServerManager, JediLanguageServerManager);
+        serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, JediLanguageServerProxy);
     } else if (languageServerType === LanguageServerType.None) {
         serviceManager.add<ILanguageServerActivator>(
             ILanguageServerActivator,

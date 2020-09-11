@@ -22,11 +22,12 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
 import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
+import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import { ProgressReporting } from '../progress';
-import { ILanguageClientFactory, ILanguageServerFolderService, ILanguageServerProxy } from '../types';
+import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 
 @injectable()
-export class NodeLanguageServerProxy implements ILanguageServerProxy {
+export class JediLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
     private startupCompleted: Deferred<void>;
     private cancellationStrategy: FileBasedCancellationStrategy | undefined;
@@ -38,14 +39,13 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService
     ) {
         this.startupCompleted = createDeferred<void>();
     }
 
-    private static versionTelemetryProps(instance: NodeLanguageServerProxy) {
+    private static versionTelemetryProps(instance: JediLanguageServerProxy) {
         return {
             lsVersion: instance.lsVersion
         };
@@ -79,7 +79,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         undefined,
         true,
         undefined,
-        NodeLanguageServerProxy.versionTelemetryProps
+        JediLanguageServerProxy.versionTelemetryProps
     )
     public async start(
         resource: Resource,
@@ -87,20 +87,21 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         options: LanguageClientOptions
     ): Promise<void> {
         if (!this.languageClient) {
-            const directory = await this.folderService.getCurrentLanguageServerDirectory();
-            this.lsVersion = directory?.version.format();
+            this.lsVersion =
+                (options.middleware ? (<LanguageClientMiddleware>options.middleware).serverVersion : undefined) ??
+                '0.19.3';
 
             this.cancellationStrategy = new FileBasedCancellationStrategy();
             options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
 
             this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
-            this.disposables.push(this.languageClient!.start());
+            this.disposables.push(this.languageClient.start());
             await this.serverReady();
             if (this.disposed) {
                 // Check if it got disposed in the interim.
                 return;
             }
-            const progressReporting = new ProgressReporting(this.languageClient!);
+            const progressReporting = new ProgressReporting(this.languageClient);
             this.disposables.push(progressReporting);
 
             if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
@@ -110,7 +111,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                         // the workspace configurations (to then pick up pythonPath set in the middleware).
                         // This is needed as interpreter changes via the interpreter path service happen
                         // outside of VS Code's settings (which would mean VS Code sends the config updates itself).
-                        this.languageClient!.sendNotification(DidChangeConfigurationNotification.type, {
+                        this.languageClient?.sendNotification(DidChangeConfigurationNotification.type, {
                             settings: null
                         });
                     })
@@ -143,7 +144,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         undefined,
         true,
         undefined,
-        NodeLanguageServerProxy.versionTelemetryProps
+        JediLanguageServerProxy.versionTelemetryProps
     )
     protected async serverReady(): Promise<void> {
         while (this.languageClient && !this.languageClient.initializeResult) {
@@ -155,11 +156,11 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         this.startupCompleted.resolve();
     }
 
-    @swallowExceptions('Activating Unit Tests Manager for Pylance language server')
+    @swallowExceptions('Activating Unit Tests Manager for Jedi language server')
     protected async registerTestServices() {
         if (!this.languageClient) {
             throw new Error('languageClient not initialized');
         }
-        await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient!));
+        await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient));
     }
 }

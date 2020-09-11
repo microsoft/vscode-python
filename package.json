@@ -2108,6 +2108,7 @@
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
                             "tryPylance",
+                            "jediLSP",
                             "All"
                         ]
                     },
@@ -2132,6 +2133,7 @@
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
                             "tryPylance",
+                            "jediLSP",
                             "All"
                         ]
                     },
@@ -3458,6 +3460,8 @@
         "test:cover:report": "nyc --nycrc-path build/.nycrc  report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
         "testDebugger": "node ./out/test/testBootstrap.js ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",
+        "preTestJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js",
+        "testJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js && cross-env CODE_TESTS_WORKSPACE=src/test VSC_PYTHON_CI_TEST_GREP='Language Server:' node ./out/test/testBootstrap.js ./out/test/standardTest.js && node ./out/test/languageServers/jedi/lspTeardown.js",
         "pretestDataScience": "node ./out/test/datascience/dsTestSetup.js",
         "testDataScience": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_PYTHON_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=ds.test VSC_PYTHON_FORCE_LOGGING=1 VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testMultiWorkspace": "node ./out/test/testBootstrap.js ./out/test/multiRootTest.js",

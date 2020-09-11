@@ -24,7 +24,9 @@
         "noImplicitThis": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "noFallthroughCasesInSwitch": true
+        "noFallthroughCasesInSwitch": true,
+        "resolveJsonModule": true,
+        "removeComments": true
     },
     "exclude": [
         "node_modules",
