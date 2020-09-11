@@ -7,6 +7,7 @@ import * as sinon from 'sinon';
 import * as platformApis from '../../../client/common/utils/platform';
 import { identifyEnvironment } from '../../../client/pythonEnvironments/common/environmentIdentifier';
 import { EnvironmentType } from '../../../client/pythonEnvironments/info';
+import { getOSType as getOSTypeForTest, OSType } from '../../common';
 import { TEST_LAYOUT_ROOT } from './commonTestConstants';
 
 suite('Environment Identifier', () => {
@@ -126,16 +127,28 @@ suite('Environment Identifier', () => {
             getOsTypeStub.restore();
         });
 
-        test('WORKON_HOME is set to its default value ~/.virtualenvs on non-Windows', async () => {
+        test('WORKON_HOME is set to its default value ~/.virtualenvs on non-Windows', async function () {
+            if (getOSTypeForTest() === OSType.Windows) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
+
             const interpreterPath = path.join(homeDir, '.virtualenvs', 'myenv', 'python');
 
             getEnvVarStub.withArgs('WORKON_HOME').returns(undefined);
 
             const envType = await identifyEnvironment(interpreterPath);
             assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
+
+            return undefined;
         });
 
-        test('WORKON_HOME is set to its default value %USERPROFILE%\\Envs on Windows', async () => {
+        test('WORKON_HOME is set to its default value %USERPROFILE%\\Envs on Windows', async function () {
+            if (getOSTypeForTest() !== OSType.Windows) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
+
             const interpreterPath = path.join(homeDir, 'Envs', 'myenv', 'python');
 
             getEnvVarStub.withArgs('WORKON_HOME').returns(undefined);
@@ -143,6 +156,8 @@ suite('Environment Identifier', () => {
 
             const envType = await identifyEnvironment(interpreterPath);
             assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
+
+            return undefined;
         });
 
         test('WORKON_HOME is set to a custom value', async () => {
