@@ -6,7 +6,7 @@ import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
 
-function getDefaultVirtualenvwrapperDir(): string {
+export function getDefaultVirtualenvwrapperDir(): string {
     const homeDir = getUserHomeDir() || '';
 
     // In Windows, the default path for WORKON_HOME is %USERPROFILE%\Envs.

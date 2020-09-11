@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as platformUtils from '../../../../client/common/utils/platform';
-import { isVirtualenvwrapperEnvironment } from '../../../../client/pythonEnvironments/discovery/locators/services/virtualenvwrapperLocator';
+import { getDefaultVirtualenvwrapperDir, isVirtualenvwrapperEnvironment } from '../../../../client/pythonEnvironments/discovery/locators/services/virtualenvwrapperLocator';
 
 suite('Virtualenvwrapper Locator Tests', () => {
     const envDirectory = 'myenv';
@@ -47,21 +47,19 @@ suite('Virtualenvwrapper Locator Tests', () => {
         assert.deepStrictEqual(isVirtualenvwrapperEnvironment(interpreter), false);
     });
 
-    test('WORKON_HOME is not set on non-Windows, and the interpreter is in a subfolder', () => {
-        const interpreter = path.join(homeDir, '.virtualenvs', envDirectory, 'python');
-
-        getEnvVariableStub.withArgs('WORKON_HOME').returns(undefined);
+    test('Default virtualenvwrapper directory on non-Windows should be ~/.virtualenvs', () => {
         getOsTypeStub.returns(platformUtils.OSType.Linux);
 
-        assert.ok(isVirtualenvwrapperEnvironment(interpreter));
+        const directory = getDefaultVirtualenvwrapperDir();
+
+        assert.deepStrictEqual(directory, path.join(homeDir, '.virtualenvs'));
     });
 
-    test('WORKON_HOME is not set on Windows, and the interpreter is in a subfolder', () => {
-        const interpreter = path.join(homeDir, 'Envs', envDirectory, 'python');
-
-        getEnvVariableStub.withArgs('WORKON_HOME').returns(undefined);
+    test('Default virtualenvwrapper directory on Windows should be %USERPROFILE%\\Envs', () => {
         getOsTypeStub.returns(platformUtils.OSType.Windows);
 
-        assert.ok(isVirtualenvwrapperEnvironment(interpreter));
+        const directory = getDefaultVirtualenvwrapperDir();
+
+        assert.deepStrictEqual(directory, path.join(homeDir, 'Envs'));
     });
 });
