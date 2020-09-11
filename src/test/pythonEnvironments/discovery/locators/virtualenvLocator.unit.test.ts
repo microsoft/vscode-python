@@ -21,13 +21,13 @@ suite('Virtualenv Locator Tests', () => {
     });
 
     test('Interpreter folder contains an activate file', async () => {
-        readDirStub.callsFake(() => Promise.resolve(['activate', 'python']));
+        readDirStub.resolves(['activate', 'python']);
 
         assert.ok(await isVirtualenvEnvironment(interpreter));
     });
 
     test('Interpreter folder does not contain any activate.* files', async () => {
-        readDirStub.callsFake(() => Promise.resolve(['mymodule', 'python']));
+        readDirStub.resolves(['mymodule', 'python']);
 
         assert.strictEqual(await isVirtualenvEnvironment(interpreter), false);
     });
