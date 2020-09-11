@@ -7,9 +7,8 @@ import * as path from 'path';
 import { ConfigurationTarget, EventEmitter, Uri, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { Commands, Telemetry } from '../../datascience/constants';
+import { Telemetry } from '../../datascience/constants';
 import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../../datascience/types';
-import { WebviewPanelHost } from '../../datascience/webviews/webviewPanelHost';
 import { sendTelemetryEvent } from '../../telemetry';
 import {
     IApplicationEnvironment,
@@ -25,6 +24,7 @@ import * as localize from '../utils/localize';
 import { StopWatch } from '../utils/stopWatch';
 import { StartPageMessageListener } from './startPageMessageListener';
 import { IStartPage, IStartPageMapping, StartPageMessages } from './types';
+import { WebviewPanelHost } from './webviewPanelHost';
 
 const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
@@ -156,7 +156,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                     content: `#%%\nprint("${localize.StartPage.helloWorld()}")`
                 });
                 await this.documentManager.showTextDocument(doc2, 1, true);
-                await this.commandManager.executeCommand(Commands.RunAllCells, Uri.parse(''));
+                await this.commandManager.executeCommand('python.datascience.runallcells', Uri.parse(''));
                 break;
             case StartPageMessages.OpenCommandPalette:
                 sendTelemetryEvent(Telemetry.StartPageOpenCommandPalette);

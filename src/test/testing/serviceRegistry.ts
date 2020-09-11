@@ -4,20 +4,6 @@
 import { Uri } from 'vscode';
 
 import { IProcessServiceFactory } from '../../client/common/process/types';
-import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
-import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
-import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
-import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
-import { JupyterServerWrapper } from '../../client/datascience/jupyter/jupyterServerWrapper';
-import {
-    ICodeCssGenerator,
-    IInteractiveWindow,
-    IInteractiveWindowProvider,
-    IJupyterExecution,
-    INotebookImporter,
-    INotebookServer
-} from '../../client/datascience/types';
 import { InterpreterEvaluation } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
 import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
 import { InterpreterSecurityStorage } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
@@ -182,17 +168,5 @@ export class UnitTestIocContainer extends IocContainer {
 
     public registerMockUnitTestSocketServer() {
         this.serviceManager.addSingleton<IUnitTestSocketServer>(IUnitTestSocketServer, MockUnitTestSocketServer);
-    }
-
-    public registerDataScienceTypes() {
-        this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
-        this.serviceManager.addSingleton<IInteractiveWindowProvider>(
-            IInteractiveWindowProvider,
-            InteractiveWindowProvider
-        );
-        this.serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
-        this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
-        this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
-        this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
     }
 }

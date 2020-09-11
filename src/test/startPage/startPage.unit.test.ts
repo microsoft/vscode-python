@@ -13,12 +13,12 @@ import {
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../client/common/application/types';
+import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
 import { StartPage } from '../../client/common/startPage/startPage';
 import { IStartPage } from '../../client/common/startPage/types';
 import { IConfigurationService, IExtensionContext } from '../../client/common/types';
-import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../../client/datascience/types';
-import { MockPythonSettings } from '../datascience/mockPythonSettings';
+// import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../../client/datascience/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
 suite('StartPage tests', () => {
@@ -36,7 +36,7 @@ suite('StartPage tests', () => {
     let context: typemoq.IMock<IExtensionContext>;
     let appEnvironment: typemoq.IMock<IApplicationEnvironment>;
     let memento: typemoq.IMock<Memento>;
-    const dummySettings = new MockPythonSettings(undefined, new MockAutoSelectionService());
+    const dummySettings = new PythonSettings(undefined, new MockAutoSelectionService());
 
     function setupVersions(savedVersion: string, actualVersion: string) {
         context.setup((c) => c.globalState).returns(() => memento.object);

@@ -4,12 +4,9 @@ import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
-import * as localize from '../../common/utils/localize';
-import { Telemetry } from '../../datascience/constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
@@ -28,16 +25,9 @@ import {
     Product,
     ProductType
 } from '../types';
-import { isResource, noop } from '../utils/misc';
-import { StopWatch } from '../utils/stopWatch';
+import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
-import {
-    IInstallationChannelManager,
-    IModuleInstaller,
-    InterpreterUri,
-    IProductPathService,
-    IProductService
-} from './types';
+import { IInstallationChannelManager, InterpreterUri, IProductPathService, IProductService } from './types';
 
 export { Product } from '../types';
 
@@ -352,80 +342,6 @@ export class RefactoringLibraryInstaller extends BaseInstaller {
     }
 }
 
-export class DataScienceInstaller extends BaseInstaller {
-    // Override base installer to support a more DS-friendly streamlined installation.
-    public async install(
-        product: Product,
-        interpreterUri?: InterpreterUri,
-        cancel?: CancellationToken
-    ): Promise<InstallerResponse> {
-        // Precondition
-        if (isResource(interpreterUri)) {
-            throw new Error('All data science packages require an interpreter be passed in');
-        }
-
-        // At this point we know that `interpreterUri` is of type PythonInterpreter
-        const interpreter = interpreterUri as PythonEnvironment;
-
-        // Get a list of known installation channels, pip, conda, etc.
-        const channels: IModuleInstaller[] = await this.serviceContainer
-            .get<IInstallationChannelManager>(IInstallationChannelManager)
-            .getInstallationChannels();
-
-        // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
-        let installerModule;
-        if (interpreter.envType === 'Conda') {
-            installerModule = channels.find((v) => v.name === 'Conda');
-        } else {
-            installerModule = channels.find((v) => v.name === 'Pip');
-        }
-
-        const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
-        if (!installerModule) {
-            this.appShell
-                .showErrorMessage(localize.DataScience.couldNotInstallLibrary().format(moduleName))
-                .then(noop, noop);
-            return InstallerResponse.Ignore;
-        }
-
-        await installerModule
-            .installModule(moduleName, interpreter, cancel)
-            .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
-
-        return this.isInstalled(product, interpreter).then((isInstalled) =>
-            isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
-        );
-    }
-    protected async promptToInstallImplementation(
-        product: Product,
-        resource?: InterpreterUri,
-        cancel?: CancellationToken
-    ): Promise<InstallerResponse> {
-        const productName = ProductNames.get(product)!;
-        const item = await this.appShell.showErrorMessage(
-            localize.DataScience.libraryNotInstalled().format(productName),
-            'Yes',
-            'No'
-        );
-        if (item === 'Yes') {
-            const stopWatch = new StopWatch();
-            try {
-                const response = await this.install(product, resource, cancel);
-                const event =
-                    product === Product.jupyter ? Telemetry.UserInstalledJupyter : Telemetry.UserInstalledModule;
-                sendTelemetryEvent(event, stopWatch.elapsedTime, { product: productName });
-                return response;
-            } catch (e) {
-                if (product === Product.jupyter) {
-                    sendTelemetryEvent(Telemetry.JupyterInstallFailed);
-                }
-                throw e;
-            }
-        }
-        return InstallerResponse.Ignore;
-    }
-}
-
 @injectable()
 export class ProductInstaller implements IInstaller {
     private readonly productService: IProductService;
@@ -480,8 +396,6 @@ export class ProductInstaller implements IInstaller {
                 return new TestFrameworkInstaller(this.serviceContainer, this.outputChannel);
             case ProductType.RefactoringLibrary:
                 return new RefactoringLibraryInstaller(this.serviceContainer, this.outputChannel);
-            case ProductType.DataScience:
-                return new DataScienceInstaller(this.serviceContainer, this.outputChannel);
             default:
                 break;
         }

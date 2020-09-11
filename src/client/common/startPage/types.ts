@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { SharedMessages } from '../../datascience/messages';
 
 export const IStartPage = Symbol('IStartPage');
 export interface IStartPage {
@@ -13,8 +12,8 @@ export interface ISettingPackage {
 }
 
 export namespace StartPageMessages {
-    export const Started = SharedMessages.Started;
-    export const UpdateSettings = SharedMessages.UpdateSettings;
+    export const Started = 'started';
+    export const UpdateSettings = 'update_settings';
     export const RequestShowAgainSetting = 'RequestShowAgainSetting';
     export const SendSetting = 'SendSetting';
     export const OpenBlankNotebook = 'OpenBlankNotebook';

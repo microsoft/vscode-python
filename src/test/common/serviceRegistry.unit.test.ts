@@ -25,7 +25,6 @@ import {
     IDebugService,
     IDocumentManager,
     ILanguageService,
-    ILiveShareApi,
     ITerminalManager,
     IWorkspaceService
 } from '../../client/common/application/types';
@@ -101,7 +100,6 @@ import {
 } from '../../client/common/types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { Random } from '../../client/common/utils/random';
-import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
 import { IServiceManager } from '../../client/ioc/types';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
@@ -135,7 +133,6 @@ suite('Common - Service Registry', () => {
             [INugetService, NugetService],
             [ITerminalActivator, TerminalActivator],
             [ITerminalActivationHandler, PowershellTerminalActivationFailedHandler],
-            [ILiveShareApi, LiveShareApi],
             [ICryptoUtils, CryptoUtils],
             [IExperimentsManager, ExperimentsManager],
             [ITerminalHelper, TerminalHelper],

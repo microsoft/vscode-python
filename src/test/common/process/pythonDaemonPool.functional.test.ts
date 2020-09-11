@@ -30,7 +30,6 @@ import { sleep } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { JupyterDaemonModule } from '../../../client/datascience/constants';
 import { PythonVersionInfo } from '../../../client/pythonEnvironments/info';
 import { parsePythonVersion } from '../../../client/pythonEnvironments/info/pythonVersion';
 import { isPythonVersion, PYTHON_PATH, waitForCondition } from '../../common';
@@ -93,7 +92,6 @@ suite('Daemon - Python Daemon Pool', () => {
         });
         const options = {
             pythonPath: fullyQualifiedPythonPath,
-            daemonModule: JupyterDaemonModule,
             daemonCount: 2,
             observableDaemonCount: 1
         };

@@ -31,9 +31,6 @@ import {
 import { OutputChannelNames } from './common/utils/localize';
 import { noop } from './common/utils/misc';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
-import { JUPYTER_OUTPUT_CHANNEL } from './datascience/constants';
-import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
-import { IDataScience } from './datascience/types';
 import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
@@ -96,10 +93,8 @@ async function activateLegacy(
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
     addOutputChannelLogging(standardOutputChannel);
     const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
-    const jupyterOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, jupyterOutputChannel, JUPYTER_OUTPUT_CHANNEL);
 
     // Core registrations (non-feature specific).
     commonRegisterTypes(serviceManager);
@@ -131,10 +126,6 @@ async function activateLegacy(
 
     const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     await abExperiments.activate();
-
-    // Register datascience types after experiments have loaded.
-    // To ensure we can register types based on experiments.
-    dataScienceRegisterTypes(serviceManager);
 
     const languageServerType = configuration.getSettings().languageServer;
 
@@ -187,10 +178,6 @@ async function activateLegacy(
     interpreterManager
         .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
         .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
-
-    // Activate data science features
-    const dataScience = serviceManager.get<IDataScience>(IDataScience);
-    dataScience.activate().ignoreErrors();
 
     context.subscriptions.push(new LinterCommands(serviceManager));
 

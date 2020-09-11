@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IExperimentService, IFileDownloader, IHttpClient, IInterpreterPathService } from '../common/types';
-import { LiveShareApi } from '../datascience/liveshare/liveshare';
-import { INotebookExecutionLogger } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
@@ -31,7 +29,6 @@ import {
     IDebugService,
     IDocumentManager,
     ILanguageService,
-    ILiveShareApi,
     ITerminalManager,
     IVSCodeNotebook,
     IWorkspaceService
@@ -147,7 +144,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         ITerminalActivationHandler,
         PowershellTerminalActivationFailedHandler
     );
-    serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, LiveShareApi);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
@@ -184,7 +180,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
     serviceManager.addBinding(IImportTracker, IExtensionSingleActivationService);
-    serviceManager.addBinding(IImportTracker, INotebookExecutionLogger);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, SettingsShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, UserEnvironmentShellDetector);
