@@ -122,7 +122,7 @@ suite('Environment Identifier', () => {
                 const interpreterPath = path.join(TEST_LAYOUT_ROOT, folder, 'bin', 'python');
                 const envType = await identifyEnvironment(interpreterPath);
 
-                assert.deepEqual(envType, EnvironmentType.VirtualEnv);
+                assert.deepStrictEqual(envType, EnvironmentType.VirtualEnv);
             });
         });
     });
