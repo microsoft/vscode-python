@@ -164,14 +164,14 @@
     {
         "name": "CustomEditorSupport - control",
         "salt": "CustomEditorSupport",
-        "min": 0,
+        "min": 20,
         "max": 100
     },
     {
         "name": "CustomEditorSupport - experiment",
         "salt": "CustomEditorSupport",
-        "max": 0,
-        "min": 0
+        "min": 0,
+        "max": 20
     },
     {
         "name": "NativeNotebook - experiment",
