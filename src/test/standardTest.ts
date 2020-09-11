@@ -26,7 +26,7 @@ function start() {
     runTests({
         extensionDevelopmentPath: extensionDevelopmentPath,
         extensionTestsPath: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'out', 'test', 'index'),
-        launchArgs: ['--disable-gpu', '--disable-extensions', workspacePath]
+        launchArgs: ['--disable-extensions', workspacePath]
             .concat(channel === 'insiders' ? ['--enable-proposed-api'] : [])
             .concat(['--timeout', '5000']),
         version: channel,
