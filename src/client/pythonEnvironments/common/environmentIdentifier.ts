@@ -3,6 +3,7 @@
 
 import { isCondaEnvironment } from '../discovery/locators/services/condaLocator';
 import { isVenvEnvironment } from '../discovery/locators/services/venvLocator';
+import { isVirtualenvwrapperEnvironment } from '../discovery/locators/services/virtualenvwrapperLocator';
 import { isWindowsStoreEnvironment } from '../discovery/locators/services/windowsStoreLocator';
 import { EnvironmentType } from '../info';
 
@@ -40,6 +41,10 @@ export async function identifyEnvironment(interpreterPath: string): Promise<Envi
 
     if (await isVenvEnvironment(interpreterPath)) {
         return EnvironmentType.Venv;
+    }
+
+    if (isVirtualenvwrapperEnvironment(interpreterPath)) {
+        return EnvironmentType.VirtualEnvWrapper;
     }
 
     // additional identifiers go here

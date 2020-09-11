@@ -109,4 +109,50 @@ suite('Environment Identifier', () => {
             assert.deepEqual(envType, EnvironmentType.Venv);
         });
     });
+
+    suite('Virtualenvwrapper', () => {
+        const homeDir = platformApis.getUserHomeDir() || path.join('path', 'to', 'home');
+
+        let getEnvVarStub: sinon.SinonStub;
+        let getOsTypeStub: sinon.SinonStub;
+
+        suiteSetup(() => {
+            getEnvVarStub = sinon.stub(platformApis, 'getEnvironmentVariable');
+            getOsTypeStub = sinon.stub(platformApis, 'getOSType');
+        });
+
+        suiteTeardown(() => {
+            getEnvVarStub.restore();
+            getOsTypeStub.restore();
+        });
+
+        test('WORKON_HOME is set to its default value ~/.virtualenvs on non-Windows', async () => {
+            const interpreterPath = path.join(homeDir, '.virtualenvs', 'myenv', 'python');
+
+            getEnvVarStub.withArgs('WORKON_HOME').returns(undefined);
+
+            const envType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
+        });
+
+        test('WORKON_HOME is set to its default value %USERPROFILE%\\Envs on Windows', async () => {
+            const interpreterPath = path.join(homeDir, 'Envs', 'myenv', 'python');
+
+            getEnvVarStub.withArgs('WORKON_HOME').returns(undefined);
+            getOsTypeStub.returns(platformApis.OSType.Windows);
+
+            const envType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
+        });
+
+        test('WORKON_HOME is set to a custom value', async () => {
+            const workonHomeDir = path.join('path', 'to', 'envs');
+            const interpreterPath = path.join(workonHomeDir, 'myenv', 'python');
+
+            getEnvVarStub.withArgs('WORKON_HOME').returns(workonHomeDir);
+
+            const envType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
+        });
+    });
 });
