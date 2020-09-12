@@ -837,10 +837,6 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
         enableDuringDebugger: boolean;
     };
 
-    webviewExperiments: {
-        removeKernelToolbarInInteractiveWindow: boolean;
-    };
-
     gatherIsInstalled: boolean;
 }
 

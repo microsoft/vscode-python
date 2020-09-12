@@ -2272,12 +2272,6 @@
                     "description": "Automatically scroll the interactive window to show the output of the last statement executed. If false, the interactive window will only automatically scroll if the bottom of the prior cell is visible.",
                     "scope": "resource"
                 },
-                "python.dataScience.showKernelSelectionOnInteractiveWindow": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "When set to true, enables the kernel selector in the Interactive Window. By default, the Interactive Window will use your Python Interpreters kernel.",
-                    "scope": "resource"
-                },
                 "python.dataScience.enableScrollingForCellOutputs": {
                     "type": "boolean",
                     "default": true,

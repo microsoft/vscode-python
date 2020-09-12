@@ -65,8 +65,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
             localize.StartPage.getStarted(),
             ViewColumn.One,
             false,
-            false,
-            Promise.resolve(false)
+            false
         );
         this.timer = new StopWatch();
     }

@@ -6,7 +6,6 @@ import { Identifiers } from '../../client/datascience/constants';
 import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
-import { JupyterInfo } from '../interactive-common/jupyterInfo';
 import { ICellViewModel } from '../interactive-common/mainState';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
@@ -216,45 +215,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                             />
                         </ImageButton>
                     </div>
-                    {this.renderKernelSelection()}
                 </div>
             </div>
-        );
-    }
-
-    private renderKernelSelection() {
-        if (
-            this.props.settings &&
-            this.props.settings.webviewExperiments &&
-            this.props.settings.webviewExperiments.removeKernelToolbarInInteractiveWindow
-        ) {
-            if (this.props.settings.showKernelSelectionOnInteractiveWindow) {
-                return (
-                    <JupyterInfo
-                        baseTheme={this.props.baseTheme}
-                        font={this.props.font}
-                        kernel={this.props.kernel}
-                        selectServer={this.props.selectServer}
-                        selectKernel={this.props.selectKernel}
-                        shouldShowTrustMessage={false}
-                        settings={this.props.settings}
-                    />
-                );
-            } else if (this.props.kernel.localizedUri === getLocString('DataScience.localJupyterServer', 'local')) {
-                return;
-            }
-        }
-
-        return (
-            <JupyterInfo
-                baseTheme={this.props.baseTheme}
-                font={this.props.font}
-                kernel={this.props.kernel}
-                selectServer={this.props.selectServer}
-                selectKernel={this.props.selectKernel}
-                shouldShowTrustMessage={false}
-                settings={this.props.settings}
-            />
         );
     }
 

@@ -18,7 +18,6 @@ import { traceError } from '../../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager,
     InteractiveWindowMode,
     IPersistentStateFactory,
@@ -125,7 +124,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         experimentsManager: IExperimentsManager,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
-        expService: IExperimentService,
         private exportUtil: ExportUtil,
         owner: Resource,
         mode: InteractiveWindowMode,
@@ -167,7 +165,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             experimentsManager,
             notebookProvider,
             useCustomEditorApi,
-            expService,
             selector
         );
 
