@@ -74,29 +74,30 @@ export class JupyterExtensionIntegration {
             return;
         }
         await jupyterExtension.activate();
-        if (jupyterExtension.isActive) {
-            const jupyterExtensionApi = jupyterExtension.exports;
-            jupyterExtensionApi.registerPythonApi({
-                onDidChangeInterpreter: this.interpreterService.onDidChangeInterpreter,
-                getActiveInterpreter: async (resource?: Uri) => this.interpreterService.getActiveInterpreter(resource),
-                getInterpreterDetails: async (pythonPath: string) =>
-                    this.interpreterService.getInterpreterDetails(pythonPath),
-                getInterpreters: async (resource: Uri | undefined) => this.interpreterService.getInterpreters(resource),
-                getActivatedEnvironmentVariables: async (
-                    resource: Resource,
-                    interpreter?: PythonEnvironment,
-                    allowExceptions?: boolean
-                ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
-                isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> =>
-                    this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath),
-                getSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
-                    this.interpreterSelector.getSuggestions(resource),
-                install: async (
-                    product: Product,
-                    resource?: InterpreterUri,
-                    cancel?: CancellationToken
-                ): Promise<InstallerResponse> => this.installer.install(product, resource, cancel)
-            });
+        if (!jupyterExtension.isActive) {
+            return;
         }
+        const jupyterExtensionApi = jupyterExtension.exports;
+        jupyterExtensionApi.registerPythonApi({
+            onDidChangeInterpreter: this.interpreterService.onDidChangeInterpreter,
+            getActiveInterpreter: async (resource?: Uri) => this.interpreterService.getActiveInterpreter(resource),
+            getInterpreterDetails: async (pythonPath: string) =>
+                this.interpreterService.getInterpreterDetails(pythonPath),
+            getInterpreters: async (resource: Uri | undefined) => this.interpreterService.getInterpreters(resource),
+            getActivatedEnvironmentVariables: async (
+                resource: Resource,
+                interpreter?: PythonEnvironment,
+                allowExceptions?: boolean
+            ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
+            isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> =>
+                this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath),
+            getSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
+                this.interpreterSelector.getSuggestions(resource),
+            install: async (
+                product: Product,
+                resource?: InterpreterUri,
+                cancel?: CancellationToken
+            ): Promise<InstallerResponse> => this.installer.install(product, resource, cancel)
+        });
     }
 }
