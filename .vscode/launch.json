@@ -132,6 +132,26 @@
             "skipFiles": ["<node_internals>/**"]
         },
         {
+            "name": "Jedi LSP tests",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/test",
+                "--disable-extensions",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "env": {
+                "VSC_PYTHON_CI_TEST_GREP": "Language Server:" 
+            },
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
+            "preLaunchTask": "preTestJediLSP",
+            "skipFiles": ["<node_internals>/**"]
+        },
+        {
             "name": "Tests (DataScience, *.ds.test.ts)",
             "type": "extensionHost",
             "request": "launch",

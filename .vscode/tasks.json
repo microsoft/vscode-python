@@ -55,6 +55,12 @@
                 "build/debug/replaceWithWebBrowserPanel.js"
             ],
             "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "preTestJediLSP",
+            "problemMatcher": [],
+            "label": "preTestJediLSP"
         }
     ]
 }

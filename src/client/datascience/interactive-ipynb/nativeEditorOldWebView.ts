@@ -41,6 +41,7 @@ import {
     IJupyterVariables,
     INotebookEditorProvider,
     INotebookExporter,
+    INotebookExtensibility,
     INotebookImporter,
     INotebookModel,
     INotebookProvider,
@@ -103,7 +104,8 @@ export class NativeEditorOldWebView extends NativeEditor {
         expService: IExperimentService,
         model: INotebookModel,
         webviewPanel: WebviewPanel | undefined,
-        selector: KernelSelector
+        selector: KernelSelector,
+        notebookExtensibility: INotebookExtensibility
     ) {
         super(
             listeners,
@@ -138,7 +140,8 @@ export class NativeEditorOldWebView extends NativeEditor {
             expService,
             model,
             webviewPanel,
-            selector
+            selector,
+            notebookExtensibility
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.

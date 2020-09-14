@@ -269,6 +269,7 @@ import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFin
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelFinder, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
 import { NotebookAndInteractiveWindowUsageTracker } from '../../client/datascience/notebookAndInteractiveTracker';
+import { NotebookExtensibility } from '../../client/datascience/notebookExtensibility';
 import { NotebookModelFactory } from '../../client/datascience/notebookStorage/factory';
 import { NativeEditorStorage } from '../../client/datascience/notebookStorage/nativeEditorStorage';
 import {
@@ -320,6 +321,7 @@ import {
     INotebookEditorProvider,
     INotebookExecutionLogger,
     INotebookExporter,
+    INotebookExtensibility,
     INotebookImporter,
     INotebookProvider,
     INotebookServer,
@@ -589,6 +591,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IInterpreterHashProviderFactory,
             InterpeterHashProviderFactory
         );
+        this.serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
         this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
         this.serviceManager.addSingleton<ExportDependencyChecker>(ExportDependencyChecker, ExportDependencyChecker);
         this.serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);

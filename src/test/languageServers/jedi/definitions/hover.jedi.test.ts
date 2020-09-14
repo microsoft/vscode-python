@@ -22,7 +22,7 @@ const fileHover = path.join(autoCompPath, 'hoverTest.py');
 const fileStringFormat = path.join(hoverPath, 'functionHover.py');
 
 // tslint:disable-next-line:max-func-body-length
-suite('Hover Definition (Jedi)', () => {
+suite('Language Server: Hover Definition (Jedi)', () => {
     let isPy38: boolean;
     suiteSetup(async () => {
         await initialize();
