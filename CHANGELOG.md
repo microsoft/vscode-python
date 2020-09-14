@@ -1,5 +1,6 @@
 # Changelog
 
+<<<<<<< HEAD
 ## 2020.9.0 (14 September 2020)
 
 ### Enhancements
@@ -82,6 +83,13 @@
    ([#13729](https://github.com/Microsoft/vscode-python/issues/13729))
 1. Fix nighly failure with beakerx.
    ([#13734](https://github.com/Microsoft/vscode-python/issues/13734))
+=======
+## 2020.8.6 (15 September 2020)
+
+### Fixes
+
+1. Workaround problem caused by https://github.com/microsoft/vscode/issues/106547
+>>>>>>> 83b8b23... Up release version for new release (#13928)
 
 ### Thanks
 
