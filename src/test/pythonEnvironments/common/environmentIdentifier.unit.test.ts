@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as platformApis from '../../../client/common/utils/platform';
 import { identifyEnvironment } from '../../../client/pythonEnvironments/common/environmentIdentifier';
+import * as fileApis from '../../../client/pythonEnvironments/common/externalDependencies';
 import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 import { getOSType as getOSTypeForTest, OSType } from '../../common';
 import { TEST_LAYOUT_ROOT } from './commonTestConstants';
@@ -116,15 +117,18 @@ suite('Environment Identifier', () => {
 
         let getEnvVarStub: sinon.SinonStub;
         let getOsTypeStub: sinon.SinonStub;
+        let pathExistsStub:sinon.SinonStub;
 
         suiteSetup(() => {
             getEnvVarStub = sinon.stub(platformApis, 'getEnvironmentVariable');
             getOsTypeStub = sinon.stub(platformApis, 'getOSType');
+            pathExistsStub = sinon.stub(fileApis, 'pathExists');
         });
 
         suiteTeardown(() => {
             getEnvVarStub.restore();
             getOsTypeStub.restore();
+            pathExistsStub.restore();
         });
 
         test('WORKON_HOME is set to its default value ~/.virtualenvs on non-Windows', async function () {
@@ -136,6 +140,7 @@ suite('Environment Identifier', () => {
             const interpreterPath = path.join(homeDir, '.virtualenvs', 'myenv', 'python');
 
             getEnvVarStub.withArgs('WORKON_HOME').returns(undefined);
+            pathExistsStub.withArgs(path.join(homeDir, '.virtualenvs')).resolves(true);
 
             const envType = await identifyEnvironment(interpreterPath);
             assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
@@ -153,6 +158,7 @@ suite('Environment Identifier', () => {
 
             getEnvVarStub.withArgs('WORKON_HOME').returns(undefined);
             getOsTypeStub.returns(platformApis.OSType.Windows);
+            pathExistsStub.withArgs(path.join(homeDir, 'Envs')).resolves(true);
 
             const envType = await identifyEnvironment(interpreterPath);
             assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
@@ -165,6 +171,7 @@ suite('Environment Identifier', () => {
             const interpreterPath = path.join(workonHomeDir, 'myenv', 'python');
 
             getEnvVarStub.withArgs('WORKON_HOME').returns(workonHomeDir);
+            pathExistsStub.withArgs(workonHomeDir).resolves(true);
 
             const envType = await identifyEnvironment(interpreterPath);
             assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);

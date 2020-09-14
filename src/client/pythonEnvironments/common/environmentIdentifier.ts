@@ -43,7 +43,7 @@ export async function identifyEnvironment(interpreterPath: string): Promise<Envi
         return EnvironmentType.Venv;
     }
 
-    if (isVirtualenvwrapperEnvironment(interpreterPath)) {
+    if (await isVirtualenvwrapperEnvironment(interpreterPath)) {
         return EnvironmentType.VirtualEnvWrapper;
     }
 

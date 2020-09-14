@@ -5,6 +5,7 @@ import * as path from 'path';
 import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
+import { pathExists } from '../../../common/externalDependencies';
 
 export function getDefaultVirtualenvwrapperDir(): string {
     const homeDir = getUserHomeDir() || '';
@@ -21,11 +22,15 @@ export function getDefaultVirtualenvwrapperDir(): string {
  * @param {string} interpreterPath: Absolute path to the python interpreter.
  * @returns {boolean} : Returns true if the interpreter belongs to a virtualenvWrapper environment.
  */
-export function isVirtualenvwrapperEnvironment(interpreterPath:string): boolean {
+export async function isVirtualenvwrapperEnvironment(interpreterPath:string): Promise<boolean> {
     // The WORKON_HOME variable contains the path to the root directory of all virtualenvwrapper environments.
     // If the interpreter path belongs to one of them then it is a virtualenvwrapper type of environment.
 
     const workonHomeFolder = getEnvironmentVariable('WORKON_HOME') || getDefaultVirtualenvwrapperDir();
+
+    if (!await pathExists(workonHomeFolder)) {
+        return false;
+    }
 
     return interpreterPath.toUpperCase().startsWith(workonHomeFolder.toUpperCase());
 }
