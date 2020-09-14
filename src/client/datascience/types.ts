@@ -23,6 +23,7 @@ import {
     Uri
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import type { NotebookCell } from 'vscode-proposed';
 import type { Data as WebSocketData } from 'ws';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
@@ -566,6 +567,7 @@ export interface INotebookEditor extends Disposable {
     readonly executed: Event<INotebookEditor>;
     readonly modified: Event<INotebookEditor>;
     readonly saved: Event<INotebookEditor>;
+    readonly notebookExtensibility: INotebookExtensibility;
     /**
      * Is this notebook representing an untitled file which has never been saved yet.
      */
@@ -591,6 +593,15 @@ export interface INotebookEditor extends Disposable {
     collapseAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
+}
+
+export const INotebookExtensibility = Symbol('INotebookExtensibility');
+
+export interface INotebookExtensibility {
+    readonly onKernelPostExecute: Event<NotebookCell>;
+    readonly onKernelRestart: Event<void>;
+    fireKernelRestart(): void;
+    fireKernelPostExecute(cell: NotebookCell): void;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');

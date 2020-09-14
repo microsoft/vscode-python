@@ -194,7 +194,7 @@ export class CellExecution {
         if (editor && !(editor instanceof NotebookEditor)) {
             throw new Error('Executing Notebook with another Editor');
         }
-        editor.notifyExecution(this.cell.document.getText());
+        editor.notifyExecution(this.cell);
     }
 
     /**

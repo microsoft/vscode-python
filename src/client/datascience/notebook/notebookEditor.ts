@@ -4,7 +4,7 @@
 'use strict';
 
 import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
-import type { NotebookDocument } from 'vscode-proposed';
+import type { NotebookCell, NotebookDocument } from 'vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -17,6 +17,7 @@ import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
     INotebook,
     INotebookEditor,
+    INotebookExtensibility,
     INotebookModel,
     INotebookProvider,
     InterruptResult,
@@ -62,6 +63,9 @@ export class NotebookEditor implements INotebookEditor {
     public get onExecutedCode(): Event<string> {
         return this.executedCode.event;
     }
+    public get notebookExtensibility(): INotebookExtensibility {
+        return this.nbExtensibility;
+    }
     public notebook?: INotebook | undefined;
 
     private changedViewState = new EventEmitter<void>();
@@ -81,7 +85,8 @@ export class NotebookEditor implements INotebookEditor {
         private readonly statusProvider: IStatusProvider,
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
-        disposables: IDisposableRegistry
+        disposables: IDisposableRegistry,
+        private readonly nbExtensibility: INotebookExtensibility
     ) {
         disposables.push(model.onDidEdit(() => this._modified.fire(this)));
         disposables.push(
@@ -161,9 +166,10 @@ export class NotebookEditor implements INotebookEditor {
             cell.metadata.outputCollapsed = true;
         });
     }
-    public notifyExecution(code: string) {
+    public notifyExecution(cell: NotebookCell) {
         this._executed.fire(this);
-        this.executedCode.fire(code);
+        this.executedCode.fire(cell.document.getText());
+        this.nbExtensibility.fireKernelPostExecute(cell);
     }
     public async interruptKernel(): Promise<void> {
         if (this.restartingKernel) {
@@ -235,6 +241,7 @@ export class NotebookEditor implements INotebookEditor {
 
         try {
             await kernel.restart();
+            this.nbExtensibility.fireKernelRestart();
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.

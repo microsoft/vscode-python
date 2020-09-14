@@ -48,6 +48,7 @@ import {
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
+    INotebookExtensibility,
     INotebookImporter,
     INotebookModel,
     INotebookProvider,
@@ -228,7 +229,8 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.serviceContainer.get<IExperimentService>(IExperimentService),
             model,
             panel,
-            this.serviceContainer.get<KernelSelector>(KernelSelector)
+            this.serviceContainer.get<KernelSelector>(KernelSelector),
+            this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility)
         );
         this.activeEditors.set(model.file.fsPath, editor);
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));

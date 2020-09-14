@@ -99,6 +99,10 @@ export enum SurveyAndInterpreterTipNotification {
     surveyExperiment = 'pythonMailingListPromptWording'
 }
 
+// Experiment to switch Jedi to use an LSP instead of direct providers
+export enum JediLSP {
+    experiment = 'jediLSP'
+}
 // Experiment to show a prompt asking users to join python mailing list.
 export enum JoinMailingListPromptVariants {
     variant1 = 'pythonJoinMailingListVar1',
