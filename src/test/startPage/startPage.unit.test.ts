@@ -16,9 +16,8 @@ import {
 import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
 import { StartPage } from '../../client/common/startPage/startPage';
-import { IStartPage } from '../../client/common/startPage/types';
+import { ICodeCssGenerator, IStartPage, IThemeFinder } from '../../client/common/startPage/types';
 import { IConfigurationService, IExtensionContext } from '../../client/common/types';
-// import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../../client/datascience/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
 suite('StartPage tests', () => {
@@ -29,7 +28,6 @@ suite('StartPage tests', () => {
     let configuration: typemoq.IMock<IConfigurationService>;
     let workspaceService: typemoq.IMock<IWorkspaceService>;
     let file: typemoq.IMock<IFileSystem>;
-    let notebookEditorProvider: typemoq.IMock<INotebookEditorProvider>;
     let commandManager: typemoq.IMock<ICommandManager>;
     let documentManager: typemoq.IMock<IDocumentManager>;
     let appShell: typemoq.IMock<IApplicationShell>;
@@ -63,7 +61,6 @@ suite('StartPage tests', () => {
         configuration = typemoq.Mock.ofType<IConfigurationService>();
         workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
         file = typemoq.Mock.ofType<IFileSystem>();
-        notebookEditorProvider = typemoq.Mock.ofType<INotebookEditorProvider>();
         commandManager = typemoq.Mock.ofType<ICommandManager>();
         documentManager = typemoq.Mock.ofType<IDocumentManager>();
         appShell = typemoq.Mock.ofType<IApplicationShell>();
@@ -80,7 +77,6 @@ suite('StartPage tests', () => {
             configuration.object,
             workspaceService.object,
             file.object,
-            notebookEditorProvider.object,
             commandManager.object,
             documentManager.object,
             appShell.object,

@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+// tslint:disable-next-line: no-single-line-block-comment
+/* eslint-disable */
 
 'use strict';
 
@@ -8,21 +10,16 @@ import '../extensions';
 import { injectable, unmanaged } from 'inversify';
 import { ConfigurationChangeEvent, extensions, Uri, WorkspaceConfiguration } from 'vscode';
 
+import { captureTelemetry } from '../../telemetry';
 import { IWebview, IWorkspaceService } from '../application/types';
-import { isTestExecution, DefaultTheme, GatherExtension, Telemetry } from '../constants';
-import {
-    IConfigurationService,
-    IDisposable,
-    Resource,
-    ICodeCssGenerator,
-    IDataScienceExtraSettings,
-    IThemeFinder
-} from './types';
 import { createDeferred, Deferred } from '../utils/async';
 import * as localize from '../utils/localize';
-import { captureTelemetry } from '../../telemetry';
+import { DefaultTheme, GatherExtension, Telemetry } from './constants';
+import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from './types';
 
-import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
+import { isTestExecution } from '../constants';
+import { IConfigurationService, IDisposable, Resource } from '../types';
+import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
@@ -42,8 +39,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
         @unmanaged() protected readonly useCustomEditorApi: boolean,
-        @unmanaged() private readonly enableVariablesDuringDebugging: boolean,
-        @unmanaged() private readonly hideKernelToolbarInInteractiveWindow: Promise<boolean>
+        @unmanaged() private readonly enableVariablesDuringDebugging: boolean
     ) {
         // Listen for settings changes from vscode.
         this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
@@ -54,7 +50,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         );
     }
 
-    public dispose() {
+    public dispose(): void {
         if (!this.disposed) {
             this.disposed = true;
             this.themeIsDarkPromise = undefined;
@@ -64,7 +60,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         this.webviewInit = undefined;
     }
 
-    public setTheme(isDark: boolean) {
+    public setTheme(isDark: boolean): void {
         if (this.themeIsDarkPromise && !this.themeIsDarkPromise.resolved) {
             this.themeIsDarkPromise.resolve(isDark);
         } else {
@@ -74,13 +70,13 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     }
 
     // Post a message to our webview and update our new datascience settings
-    protected onDataScienceSettingsChanged = async () => {
+    protected onDataScienceSettingsChanged = async (): Promise<void> => {
         // Stringify our settings to send over to the panel
         const dsSettings = JSON.stringify(await this.generateDataScienceExtraSettings());
         this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
     };
 
-    protected asWebviewUri(localResource: Uri) {
+    protected asWebviewUri(localResource: Uri): Uri {
         if (!this.webview) {
             throw new Error('asWebViewUri called too early');
         }
@@ -95,7 +91,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     }
 
     // tslint:disable-next-line:no-any
-    protected onMessage(message: string, payload: any) {
+    protected onMessage(message: string, payload: any): void {
         switch (message) {
             case CssMessages.GetCssRequest:
                 this.handleCssRequest(payload as IGetCssRequest).ignoreErrors();
@@ -155,9 +151,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             },
             variableOptions: {
                 enableDuringDebugger: this.enableVariablesDuringDebugging
-            },
-            webviewExperiments: {
-                removeKernelToolbarInInteractiveWindow: await this.hideKernelToolbarInInteractiveWindow
             },
             gatherIsInstalled: !!ext
         };

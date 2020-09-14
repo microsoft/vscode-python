@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+// tslint:disable-next-line: no-single-line-block-comment
+/* eslint-disable */
 
 'use strict';
 
@@ -16,19 +18,17 @@ import {
 } from '../application/types';
 // import { Telemetry } from '../constants';
 import { traceInfo } from '../logger';
-// import { SharedMessages } from '../messages';
-// import { sendTelemetryEvent } from '../telemetry';
-import {
-    ICodeCssGenerator,
-    IConfigurationService,
-    IDisposable,
-    IThemeFinder,
-    WebViewViewChangeEventArgs
-} from '../types';
 import { createDeferred } from '../utils/async';
 import { noop } from '../utils/misc';
 import { StopWatch } from '../utils/stopWatch';
+// import { SharedMessages } from '../messages';
+// import { sendTelemetryEvent } from '../telemetry';
+import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs } from './types';
 
+import { sendTelemetryEvent } from '../../telemetry';
+import { IConfigurationService, IDisposable } from '../types';
+import { Telemetry } from './constants';
+import { SharedMessages } from './messages';
 import { WebviewHost } from './webviewHost';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
@@ -62,8 +62,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         @unmanaged() private _title: string,
         @unmanaged() private viewColumn: ViewColumn,
         @unmanaged() protected readonly useCustomEditorApi: boolean,
-        @unmanaged() enableVariablesDuringDebugging: boolean,
-        @unmanaged() hideKernelToolbarInInteractiveWindow: Promise<boolean>
+        @unmanaged() enableVariablesDuringDebugging: boolean
     ) {
         super(
             configService,
@@ -71,8 +70,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
             themeFinder,
             workspaceService,
             useCustomEditorApi,
-            enableVariablesDuringDebugging,
-            hideKernelToolbarInInteractiveWindow
+            enableVariablesDuringDebugging
         );
 
         // Create our message listener for our web panel.
