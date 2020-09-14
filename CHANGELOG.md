@@ -1,5 +1,142 @@
 # Changelog
 
+## 2020.9.0 (14 September 2020)
+
+### Enhancements
+
+1. Docstrings are added to `class` and `def` snippets (thanks [alannt777](https://github.com/alannt777/)).
+   ([#5578](https://github.com/Microsoft/vscode-python/issues/5578))
+1. Upgraded isort to `5.3.2`.
+   ([#12932](https://github.com/Microsoft/vscode-python/issues/12932))
+1. Remove default "--no-reload" from debug configurations.
+   (thanks [ian910297](https://github.com/ian910297))
+   ([#13061](https://github.com/Microsoft/vscode-python/issues/13061))
+1. Update API to expose events for cell excecution and kernel restart.
+   ([#13306](https://github.com/Microsoft/vscode-python/issues/13306))
+1. Show a general warning prompt pointing to the upgrade guide when users attempt to run isort5 using deprecated settings.
+   ([#13716](https://github.com/Microsoft/vscode-python/issues/13716))
+1. Upgrade isort to `5.5.2`.
+   ([#13831](https://github.com/Microsoft/vscode-python/issues/13831))
+1. Enable custom editor support in stable VS code at 20%.
+   ([#13890](https://github.com/Microsoft/vscode-python/issues/13890))
+
+### Fixes
+
+1. Fixed the output being trimmed. Tables that start with empty space will now display correctly.
+   ([#10270](https://github.com/Microsoft/vscode-python/issues/10270))
+1. #11729
+   Prevent test discovery from picking up stdout from low level file descriptors.
+   (thanks [Ryo Miyajima](https://github.com/sergeant-wizard))
+   ([#11729](https://github.com/Microsoft/vscode-python/issues/11729))
+1. Fix opening new blank notebooks when using the VS code custom editor API.
+   ([#12245](https://github.com/Microsoft/vscode-python/issues/12245))
+1. Support starting kernels with the same directory as the notebook.
+   ([#12760](https://github.com/Microsoft/vscode-python/issues/12760))
+1. Fixed `Sort imports` command with setuptools version `49.2`.
+   ([#12949](https://github.com/Microsoft/vscode-python/issues/12949))
+1. Do not fail interpreter discovery if accessing Windows registry fails.
+   ([#12962](https://github.com/Microsoft/vscode-python/issues/12962))
+1. Show error output from nbconvert when exporting a notebook fails.
+   ([#13229](https://github.com/Microsoft/vscode-python/issues/13229))
+1. Prevent daemon from trying to prewarm an execution service.
+   ([#13258](https://github.com/Microsoft/vscode-python/issues/13258))
+1. Respect stop on error setting for executing cells in native notebook.
+   ([#13338](https://github.com/Microsoft/vscode-python/issues/13338))
+1. Native notebook launch doesn't hang if the kernel does not start, and notifies the user of the failure. Also does not show the first cell as executing until the kernel is actually started and connected.
+   ([#13409](https://github.com/Microsoft/vscode-python/issues/13409))
+1. Fix path to isolated script on Windows shell_exec.
+   ([#13493](https://github.com/Microsoft/vscode-python/issues/13493))
+1. Updating other cells with display.update does not work in native notebooks.
+   ([#13509](https://github.com/Microsoft/vscode-python/issues/13509))
+1. Fix for notebook using the first kernel every time. It will now use the language in the notebook to determine the most appropriate kernel.
+   ([#13520](https://github.com/Microsoft/vscode-python/issues/13520))
+1. Shift+enter should execute current cell and select the next cell.
+   ([#13553](https://github.com/Microsoft/vscode-python/issues/13553))
+1. Fixes typo in export command registration.
+   (thanks [Anton Kosyakov](https://github.com/akosyakov/))
+   ([#13612](https://github.com/Microsoft/vscode-python/issues/13612))
+1. Fix the behavior of the 'python.showStartPage' setting.
+   ([#13706](https://github.com/Microsoft/vscode-python/issues/13706))
+
+### Code Health
+
+1. Fix bandit issues in vscode_datascience_helpers.
+   ([#13103](https://github.com/Microsoft/vscode-python/issues/13103))
+1. Cast type to `any` to get around issues with `ts-node` (`ts-node` is used by `nyc` for code coverage).
+   ([#13411](https://github.com/Microsoft/vscode-python/issues/13411))
+1. Drop support for Python 3.5 (it reaches end-of-life on September 13, 2020 and isort 5 does not support it).
+   ([#13459](https://github.com/Microsoft/vscode-python/issues/13459))
+1. Fix nightly flake test issue with timeout waiting for kernel.
+   ([#13501](https://github.com/Microsoft/vscode-python/issues/13501))
+1. Disable sorting tests for Python 2.7 as isort5 is not compatible with Python 2.7.
+   ([#13542](https://github.com/Microsoft/vscode-python/issues/13542))
+1. Fix nightly flake test current directory failing test.
+   ([#13605](https://github.com/Microsoft/vscode-python/issues/13605))
+1. Rename the `master` branch to `main`.
+   ([#13645](https://github.com/Microsoft/vscode-python/issues/13645))
+1. Remove usage of the terms "blacklist" and "whitelist".
+   ([#13647](https://github.com/Microsoft/vscode-python/issues/13647))
+1. Fix a test failure and warning when running test adapter tests under pytest 5.
+   ([#13726](https://github.com/Microsoft/vscode-python/issues/13726))
+1. Remove unused imports from data science ipython test files.
+   ([#13729](https://github.com/Microsoft/vscode-python/issues/13729))
+1. Fix nighly failure with beakerx.
+   ([#13734](https://github.com/Microsoft/vscode-python/issues/13734))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2020.8.5 (9 September 2020)
 
 ### Fixes
