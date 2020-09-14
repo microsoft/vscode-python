@@ -27,5 +27,5 @@ export function isVirtualenvwrapperEnvironment(interpreterPath:string): boolean 
 
     const workonHomeFolder = getEnvironmentVariable('WORKON_HOME') || getDefaultVirtualenvwrapperDir();
 
-    return interpreterPath.startsWith(workonHomeFolder);
+    return interpreterPath.toUpperCase().startsWith(workonHomeFolder.toUpperCase());
 }
