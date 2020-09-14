@@ -163,10 +163,10 @@ export class ExperimentsManager implements IExperimentsManager {
                 ) {
                     continue;
                 }
-                // User cannot belong to CustomEditor Experiment if they are not using Insiders.
+                // User cannot belong to CustomEditor Experiment if they are using Insiders.
                 if (
                     experiment.name === NotebookEditorSupport.customEditorExperiment &&
-                    this.appEnvironment.channel === 'stable'
+                    this.appEnvironment.channel === 'insiders'
                 ) {
                     continue;
                 }

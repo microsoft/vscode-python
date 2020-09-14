@@ -102,7 +102,8 @@
         "onCommand:python.enableSourceMapSupport",
         "onNotebookEditor:jupyter-notebook",
         "workspaceContains:mspythonconfig.json",
-        "workspaceContains:pyproject.toml"
+        "workspaceContains:pyproject.toml",
+        "onCustomEditor:ms-python.python.notebook.ipynb"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -3433,6 +3434,18 @@
                 ],
                 "priority": "option"
             }
+        ],
+        "customEditors": [
+            {
+                "viewType": "ms-python.python.notebook.ipynb",
+                "displayName": "Jupyter Notebook",
+                "selector": [
+                    {
+                        "filenamePattern": "*.ipynb"
+                    }
+                ],
+                "priority": "option"
+            }
         ]
     },
     "scripts": {
@@ -3440,7 +3453,7 @@
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
-        "compile-webviews-watch": "gulp compile-ipywidgets && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
+        "compile-webviews-watch": "gulp compile-ipywidgets && gulp compile-renderers && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
         "compile-webviews-watchd": "deemon npm run compile-webviews-watch",
         "kill-compile-webviews-watchd": "deemon --kill npm run compile-webviews-watch",
         "build-ipywidgets": "npm run build-ipywidgets-clean && npm run build-ipywidgets-compile && npm run build-ipywidgets-webpack",
