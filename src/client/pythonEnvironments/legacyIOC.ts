@@ -59,52 +59,65 @@ import { EnvironmentType, PythonEnvironment } from './info';
 import { EnvironmentInfoService, IEnvironmentInfoService } from './info/environmentInfoService';
 
 function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
+    const {
+        name,
+        location,
+        executable,
+        arch,
+        kind,
+        searchLocation,
+        version,
+        distro,
+    } = info;
+    const { filename, sysPrefix } = executable;
     const env: PythonEnvironment = {
+        sysPrefix,
         envType: EnvironmentType.Unknown,
-        envName: info.name,
-        envPath: info.location,
-        path: info.executable.filename,
-        architecture: info.arch,
-        sysPrefix: info.executable.sysPrefix,
+        envName: name,
+        envPath: location,
+        path: filename,
+        architecture: arch,
     };
 
-    if (info.kind === PythonEnvKind.System) {
+    if (kind === PythonEnvKind.System) {
         env.envType = EnvironmentType.System;
-    } else if (info.kind === PythonEnvKind.MacDefault) {
+    } else if (kind === PythonEnvKind.MacDefault) {
         env.envType = EnvironmentType.System;
-    } else if (info.kind === PythonEnvKind.WindowsStore) {
+    } else if (kind === PythonEnvKind.WindowsStore) {
         env.envType = EnvironmentType.WindowsStore;
-    } else if (info.kind === PythonEnvKind.Pyenv) {
+    } else if (kind === PythonEnvKind.Pyenv) {
         env.envType = EnvironmentType.Pyenv;
-    } else if (info.kind === PythonEnvKind.Conda) {
+    } else if (kind === PythonEnvKind.Conda) {
         env.envType = EnvironmentType.Conda;
-    } else if (info.kind === PythonEnvKind.CondaBase) {
+    } else if (kind === PythonEnvKind.CondaBase) {
         env.envType = EnvironmentType.Conda;
-    } else if (info.kind === PythonEnvKind.VirtualEnv) {
+    } else if (kind === PythonEnvKind.VirtualEnv) {
         env.envType = EnvironmentType.VirtualEnv;
-    } else if (info.kind === PythonEnvKind.Pipenv) {
+    } else if (kind === PythonEnvKind.Pipenv) {
         env.envType = EnvironmentType.Pipenv;
-        if (info.searchLocation !== undefined) {
-            env.pipEnvWorkspaceFolder = info.searchLocation.fsPath;
+        if (searchLocation !== undefined) {
+            env.pipEnvWorkspaceFolder = searchLocation.fsPath;
         }
-    } else if (info.kind === PythonEnvKind.Venv) {
+    } else if (kind === PythonEnvKind.Venv) {
         env.envType = EnvironmentType.Venv;
     }
     // Otherwise it stays Unknown.
 
-    if (info.version !== undefined) {
-        const releaseStr = info.version.release.level === PythonReleaseLevel.Final
+    if (version !== undefined) {
+        const { release, sysVersion } = version;
+        const { level, serial } = release;
+        const releaseStr = level === PythonReleaseLevel.Final
             ? 'final'
-            : `${info.version.release.level}${info.version.release.serial}`;
-        const versionStr = `${getVersionString(info.version)}-${releaseStr}`;
+            : `${level}${serial}`;
+        const versionStr = `${getVersionString(version)}-${releaseStr}`;
         env.version = parseVersion(versionStr);
-        env.sysVersion = info.version.sysVersion;
+        env.sysVersion = sysVersion;
     }
 
-    if (info.distro !== undefined && info.distro.org !== '') {
-        env.companyDisplayName = info.distro.org;
+    if (distro !== undefined && distro.org !== '') {
+        env.companyDisplayName = distro.org;
     }
-    // We do not worry about using info.distro.defaultDisplayName
+    // We do not worry about using distro.defaultDisplayName
     // or info.defaultDisplayName.
 
     return env;
