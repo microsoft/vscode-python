@@ -27,7 +27,7 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
-import { PythonLocatorQuery } from './base/locator';
+import { ILocator, PythonLocatorQuery } from './base/locator';
 import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
@@ -57,8 +57,6 @@ import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services
 import { GetInterpreterLocatorOptions } from './discovery/locators/types';
 import { EnvironmentType, PythonEnvironment } from './info';
 import { EnvironmentInfoService, IEnvironmentInfoService } from './info/environmentInfoService';
-
-import { PythonEnvironments } from '.';
 
 function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     const env: PythonEnvironment = {
@@ -112,11 +110,13 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     return env;
 }
 
+interface IPythonEnvironments extends ILocator {}
+
 @injectable()
 class ComponentAdapter implements IComponentAdapter {
     constructor(
         // The adapter only wraps one thing: the component API.
-        private readonly api: PythonEnvironments,
+        private readonly api: IPythonEnvironments,
         // For now we effecitvely disable the component.
         private readonly enabled = false,
     ) {}
@@ -251,7 +251,7 @@ class ComponentAdapter implements IComponentAdapter {
 export function registerForIOC(
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer,
-    api: PythonEnvironments,
+    api: IPythonEnvironments,
 ): void {
     const adapter = new ComponentAdapter(api);
     serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, adapter);
