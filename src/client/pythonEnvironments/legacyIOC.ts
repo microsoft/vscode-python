@@ -67,7 +67,7 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
         envPath: info.location,
         path: info.executable.filename,
         architecture: info.arch,
-        sysPrefix: info.executable.sysPrefix
+        sysPrefix: info.executable.sysPrefix,
     };
 
     if (info.kind === PythonEnvKind.System) {
@@ -118,7 +118,7 @@ class ComponentAdapter implements IComponentAdapter {
         // The adapter only wraps one thing: the component API.
         private readonly api: PythonEnvironments,
         // For now we effecitvely disable the component.
-        private readonly enabled = false
+        private readonly enabled = false,
     ) {}
 
     // IInterpreterHelper
@@ -152,14 +152,15 @@ class ComponentAdapter implements IComponentAdapter {
             return undefined;
         }
         const iterator = this.api.iterEnvs();
-        return iterator.next().then((res) => {
-            return !res.done;
-        });
+        return iterator.next().then((res) => !res.done);
     }
 
-    //public async getInterpreters(_resource?: vscode.Uri, _options?: GetInterpreterOptions): Promise<PythonEnvironment[]>;
+    // We use the same getInterpreters() here as for IInterpreterLocatorService.
 
-    public async getInterpreterDetails(pythonPath: string, _resource?: vscode.Uri): Promise<undefined | PythonEnvironment> {
+    public async getInterpreterDetails(
+        pythonPath: string,
+        _resource?: vscode.Uri, // eslint-disable-line @typescript-eslint/no-unused-vars
+    ): Promise<undefined | PythonEnvironment> {
         if (!this.enabled) {
             return undefined;
         }
@@ -196,9 +197,9 @@ class ComponentAdapter implements IComponentAdapter {
         }
         if (env.name !== '') {
             return { name: env.name, path: '' };
-        } else {
-            return { name: '', path: env.location };
         }
+        // else
+        return { name: '', path: env.location };
     }
 
     // IWindowsStoreInterpreter
@@ -218,16 +219,16 @@ class ComponentAdapter implements IComponentAdapter {
 
     public async getInterpreters(
         resource?: vscode.Uri,
-        _options?: GetInterpreterLocatorOptions
+        _options?: GetInterpreterLocatorOptions, // eslint-disable-line @typescript-eslint/no-unused-vars
     ): Promise<PythonEnvironment[] | undefined> {
         if (!this.enabled) {
             return undefined;
         }
         // We ignore the options:
-        //{
-        //    ignoreCache?: boolean
-        //    onSuggestion?: boolean;
-        //}
+        // {
+        //     ignoreCache?: boolean
+        //     onSuggestion?: boolean;
+        // }
         const query: PythonLocatorQuery = {};
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
@@ -241,13 +242,17 @@ class ComponentAdapter implements IComponentAdapter {
         let res = await iterator.next();
         while (!res.done) {
             envs.push(convertEnvInfo(res.value));
-            res = await iterator.next();
+            res = await iterator.next(); // eslint-disable-line no-await-in-loop
         }
         return envs;
     }
 }
 
-export function registerForIOC(serviceManager: IServiceManager, serviceContainer: IServiceContainer, api: PythonEnvironments): void {
+export function registerForIOC(
+    serviceManager: IServiceManager,
+    serviceContainer: IServiceContainer,
+    api: PythonEnvironments,
+): void {
     const adapter = new ComponentAdapter(api);
     serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, adapter);
 
