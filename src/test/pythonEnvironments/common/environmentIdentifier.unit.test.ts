@@ -174,4 +174,21 @@ suite('Environment Identifier', () => {
             assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
         });
     });
+
+    suite('Virtualenv', () => {
+        const activateFiles = [
+            { folder: 'virtualenv1', file: 'activate' },
+            { folder: 'virtualenv2', file: 'activate.sh' },
+            { folder: 'virtualenv3', file: 'activate.ps1' },
+        ];
+
+        activateFiles.forEach(({ folder, file }) => {
+            test(`Folder contains ${file}`, async () => {
+                const interpreterPath = path.join(TEST_LAYOUT_ROOT, folder, 'bin', 'python');
+                const envType = await identifyEnvironment(interpreterPath);
+
+                assert.deepStrictEqual(envType, EnvironmentType.VirtualEnv);
+            });
+        });
+    });
 });

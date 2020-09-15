@@ -20,7 +20,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -101,7 +100,6 @@ export class NativeEditorOldWebView extends NativeEditor {
         useCustomEditorApi: boolean,
         private readonly storage: INotebookStorageProvider,
         trustService: ITrustService,
-        expService: IExperimentService,
         model: INotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
@@ -137,7 +135,6 @@ export class NativeEditorOldWebView extends NativeEditor {
             notebookProvider,
             useCustomEditorApi,
             trustService,
-            expService,
             model,
             webviewPanel,
             selector,

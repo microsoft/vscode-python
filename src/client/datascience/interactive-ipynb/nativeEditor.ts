@@ -31,7 +31,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager,
     Resource
 } from '../../common/types';
@@ -182,7 +181,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private trustService: ITrustService,
-        expService: IExperimentService,
         private _model: INotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
@@ -223,7 +221,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             experimentsManager,
             notebookProvider,
             useCustomEditorApi,
-            expService,
             selector
         );
         asyncRegistry.push(this);

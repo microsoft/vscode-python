@@ -58,8 +58,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             localize.DataScience.dataExplorerTitle(),
             ViewColumn.One,
             useCustomEditorApi,
-            false,
-            Promise.resolve(false)
+            false
         );
     }
 

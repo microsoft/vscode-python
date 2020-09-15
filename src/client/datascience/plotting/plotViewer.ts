@@ -48,8 +48,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             localize.DataScience.plotViewerTitle(),
             ViewColumn.One,
             useCustomEditorApi,
-            false,
-            Promise.resolve(false)
+            false
         );
         // Load the web panel using our current directory as we don't expect to load any other files
         super.loadWebPanel(process.cwd()).catch(traceError);

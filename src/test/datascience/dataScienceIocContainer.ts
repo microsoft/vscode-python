@@ -375,6 +375,7 @@ import { registerInterpreterTypes } from '../../client/interpreter/serviceRegist
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ProposePylanceBanner } from '../../client/languageServices/proposeLanguageServerBanner';
+import { PythonEnvironments } from '../../client/pythonEnvironments';
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
 import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
@@ -436,6 +437,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     // tslint:disable-next-line:no-any
     public datascience!: TypeMoq.IMock<IDataScience>;
     public shouldMockJupyter: boolean;
+    public readonly pythonEnvs: PythonEnvironments;
     private commandManager: MockCommandManager = new MockCommandManager();
     private setContexts: Record<string, boolean> = {};
     private contextSetEvent: EventEmitter<{ name: string; value: boolean }> = new EventEmitter<{
@@ -481,6 +483,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     constructor(private readonly uiTest: boolean = false) {
         super();
+        this.pythonEnvs = mock(PythonEnvironments);
         this.useVSCodeAPI = false;
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
         this.shouldMockJupyter = !isRollingBuild;
@@ -1067,7 +1070,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             when(this.kernelServiceMock.getKernelSpecs(anything(), anything())).thenResolve([]);
             this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
 
-            registerForIOC(this.serviceManager, this.serviceContainer);
+            registerForIOC(this.serviceManager, this.serviceContainer, instance(this.pythonEnvs));
 
             this.serviceManager.addSingleton<IInterpreterSecurityService>(
                 IInterpreterSecurityService,
@@ -1125,7 +1128,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
             // Make sure full interpreter services are available.
             registerInterpreterTypes(this.serviceManager);
-            registerForIOC(this.serviceManager, this.serviceContainer);
+            registerForIOC(this.serviceManager, this.serviceContainer, instance(this.pythonEnvs));
 
             // Rebind the interpreter display as we don't want to use the real one
             this.serviceManager.rebindInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);

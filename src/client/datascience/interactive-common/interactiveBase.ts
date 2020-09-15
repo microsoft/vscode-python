@@ -34,16 +34,11 @@ import {
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { RemoveKernelToolbarInInteractiveWindow, RunByLine } from '../../common/experiments/groups';
+import { RunByLine } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
 import { isNil } from 'lodash';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentService,
-    IExperimentsManager
-} from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { isUntitledFile, noop } from '../../common/utils/misc';
@@ -171,7 +166,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         experimentsManager: IExperimentsManager,
         private readonly notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
-        expService: IExperimentService,
         private selector: KernelSelector
     ) {
         super(
@@ -186,8 +180,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             title,
             viewColumn,
             useCustomEditorApi,
-            experimentsManager.inExperiment(RunByLine.experiment),
-            expService.inExperiment(RemoveKernelToolbarInInteractiveWindow.experiment)
+            experimentsManager.inExperiment(RunByLine.experiment)
         );
 
         // Create our unique id. We use this to skip messages we send to other interactive windows
