@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as platformApis from '../../../client/common/utils/platform';
 import { identifyEnvironment } from '../../../client/pythonEnvironments/common/environmentIdentifier';
-import * as fileApis from '../../../client/pythonEnvironments/common/externalDependencies';
+import * as virtualenvwrapperUtils from '../../../client/pythonEnvironments/common/virtualenvwrapperUtils';
 import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 import { getOSType as getOSTypeForTest, OSType } from '../../common';
 import { TEST_LAYOUT_ROOT } from './commonTestConstants';
@@ -113,22 +113,20 @@ suite('Environment Identifier', () => {
     });
 
     suite('Virtualenvwrapper', () => {
-        const homeDir = platformApis.getUserHomeDir() || path.join('path', 'to', 'home');
-
         let getEnvVarStub: sinon.SinonStub;
         let getOsTypeStub: sinon.SinonStub;
-        let pathExistsStub:sinon.SinonStub;
+        let defaultDirStub: sinon.SinonStub;
 
         suiteSetup(() => {
             getEnvVarStub = sinon.stub(platformApis, 'getEnvironmentVariable');
             getOsTypeStub = sinon.stub(platformApis, 'getOSType');
-            pathExistsStub = sinon.stub(fileApis, 'pathExists');
+            defaultDirStub = sinon.stub(virtualenvwrapperUtils, 'getDefaultVirtualenvwrapperDir');
         });
 
         suiteTeardown(() => {
             getEnvVarStub.restore();
             getOsTypeStub.restore();
-            pathExistsStub.restore();
+            defaultDirStub.restore();
         });
 
         test('WORKON_HOME is set to its default value ~/.virtualenvs on non-Windows', async function () {
@@ -137,10 +135,10 @@ suite('Environment Identifier', () => {
                 return this.skip();
             }
 
-            const interpreterPath = path.join(homeDir, '.virtualenvs', 'myenv', 'python');
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'virtualenvwrapper1', '.virtualenvs', 'myenv', 'bin', 'python');
 
             getEnvVarStub.withArgs('WORKON_HOME').returns(undefined);
-            pathExistsStub.withArgs(path.join(homeDir, '.virtualenvs')).resolves(true);
+            defaultDirStub.returns(path.join(TEST_LAYOUT_ROOT, 'virtualenvwrapper1', '.virtualenvs'));
 
             const envType = await identifyEnvironment(interpreterPath);
             assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
@@ -154,11 +152,11 @@ suite('Environment Identifier', () => {
                 return this.skip();
             }
 
-            const interpreterPath = path.join(homeDir, 'Envs', 'myenv', 'python');
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'virtualenvwrapper1', 'Envs', 'myenv', 'Scripts', 'python');
 
             getEnvVarStub.withArgs('WORKON_HOME').returns(undefined);
             getOsTypeStub.returns(platformApis.OSType.Windows);
-            pathExistsStub.withArgs(path.join(homeDir, 'Envs')).resolves(true);
+            defaultDirStub.returns(path.join(TEST_LAYOUT_ROOT, 'virtualenvwrapper1', 'Envs'));
 
             const envType = await identifyEnvironment(interpreterPath);
             assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
@@ -167,11 +165,10 @@ suite('Environment Identifier', () => {
         });
 
         test('WORKON_HOME is set to a custom value', async () => {
-            const workonHomeDir = path.join('path', 'to', 'envs');
-            const interpreterPath = path.join(workonHomeDir, 'myenv', 'python');
+            const workonHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualenvwrapper2');
+            const interpreterPath = path.join(workonHomeDir, 'myenv', 'bin', 'python');
 
             getEnvVarStub.withArgs('WORKON_HOME').returns(workonHomeDir);
-            pathExistsStub.withArgs(workonHomeDir).resolves(true);
 
             const envType = await identifyEnvironment(interpreterPath);
             assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
