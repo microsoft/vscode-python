@@ -31,7 +31,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager,
     Resource
 } from '../../common/types';
@@ -65,6 +64,7 @@ import {
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
+    INotebookExtensibility,
     INotebookImporter,
     INotebookMetadataLive,
     INotebookModel,
@@ -92,6 +92,9 @@ const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', '
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
+    }
+    public get notebookExtensibility(): INotebookExtensibility {
+        return this.nbExtensibility;
     }
 
     public get visible(): boolean {
@@ -178,10 +181,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private trustService: ITrustService,
-        expService: IExperimentService,
         private _model: INotebookModel,
         webviewPanel: WebviewPanel | undefined,
-        selector: KernelSelector
+        selector: KernelSelector,
+        private nbExtensibility: INotebookExtensibility
     ) {
         super(
             listeners,
@@ -218,7 +221,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             experimentsManager,
             notebookProvider,
             useCustomEditorApi,
-            expService,
             selector
         );
         asyncRegistry.push(this);

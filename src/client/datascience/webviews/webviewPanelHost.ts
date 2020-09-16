@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
 import '../../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
@@ -28,9 +30,13 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
     protected get isDisposed(): boolean {
         return this.disposed;
     }
+
     protected viewState: { visible: boolean; active: boolean } = { visible: false, active: false };
+
     private webPanel: IWebviewPanel | undefined;
+
     private messageListener: IWebviewPanelMessageListener;
+
     private startupStopwatch = new StopWatch();
 
     constructor(
@@ -50,8 +56,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         @unmanaged() private _title: string,
         @unmanaged() private viewColumn: ViewColumn,
         @unmanaged() protected readonly useCustomEditorApi: boolean,
-        @unmanaged() enableVariablesDuringDebugging: boolean,
-        @unmanaged() hideKernelToolbarInInteractiveWindow: Promise<boolean>
+        @unmanaged() enableVariablesDuringDebugging: boolean
     ) {
         super(
             configService,
@@ -59,8 +64,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
             themeFinder,
             workspaceService,
             useCustomEditorApi,
-            enableVariablesDuringDebugging,
-            hideKernelToolbarInInteractiveWindow
+            enableVariablesDuringDebugging
         );
 
         // Create our message listener for our web panel.
@@ -97,6 +101,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
 
         super.dispose();
     }
+
     public get title() {
         return this._title;
     }
@@ -108,7 +113,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         }
     }
 
-    //tslint:disable-next-line:no-any
+    // tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case SharedMessages.Started:

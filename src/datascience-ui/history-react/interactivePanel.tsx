@@ -223,26 +223,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     }
 
     private renderKernelSelection() {
-        if (
-            this.props.settings &&
-            this.props.settings.webviewExperiments &&
-            this.props.settings.webviewExperiments.removeKernelToolbarInInteractiveWindow
-        ) {
-            if (this.props.settings.showKernelSelectionOnInteractiveWindow) {
-                return (
-                    <JupyterInfo
-                        baseTheme={this.props.baseTheme}
-                        font={this.props.font}
-                        kernel={this.props.kernel}
-                        selectServer={this.props.selectServer}
-                        selectKernel={this.props.selectKernel}
-                        shouldShowTrustMessage={false}
-                        settings={this.props.settings}
-                    />
-                );
-            } else if (this.props.kernel.localizedUri === getLocString('DataScience.localJupyterServer', 'local')) {
-                return;
-            }
+        if (this.props.kernel.localizedUri === getLocString('DataScience.localJupyterServer', 'local')) {
+            return;
         }
 
         return (

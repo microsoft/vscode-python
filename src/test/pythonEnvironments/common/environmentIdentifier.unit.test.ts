@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as platformApis from '../../../client/common/utils/platform';
 import { identifyEnvironment } from '../../../client/pythonEnvironments/common/environmentIdentifier';
+import * as externalDependencies from '../../../client/pythonEnvironments/common/externalDependencies';
 import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 import { TEST_LAYOUT_ROOT } from './commonTestConstants';
 
@@ -23,9 +24,43 @@ suite('Environment Identifier', () => {
         });
     });
 
+    suite('Pipenv', () => {
+        let getEnvVar: sinon.SinonStub;
+        let readFile: sinon.SinonStub;
+        setup(() => {
+            getEnvVar = sinon.stub(platformApis, 'getEnvironmentVariable');
+            readFile = sinon.stub(externalDependencies, 'readFile');
+        });
+
+        teardown(() => {
+            readFile.restore();
+            getEnvVar.restore();
+        });
+
+        test('Path to a global pipenv environment', async () => {
+            const expectedDotProjectFile = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'globalEnvironments', 'project2-vnNIWe9P', '.project');
+            const expectedProjectFile = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2');
+            readFile.withArgs(expectedDotProjectFile).resolves(expectedProjectFile);
+            const interpreterPath: string = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'globalEnvironments', 'project2-vnNIWe9P', 'bin', 'python');
+
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+
+            assert.equal(envType, EnvironmentType.Pipenv);
+        });
+
+        test('Path to a local pipenv environment with a custom Pipfile name', async () => {
+            getEnvVar.withArgs('PIPENV_PIPFILE').returns('CustomPipfileName');
+            const interpreterPath: string = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project1', '.venv', 'Scripts', 'python.exe');
+
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+
+            assert.equal(envType, EnvironmentType.Pipenv);
+        });
+    });
+
     suite('Windows Store', () => {
         let getEnvVar: sinon.SinonStub;
-        const fakeLocalAppDataPath = 'X:\\users\\user\\AppData\\Local';
+        const fakeLocalAppDataPath = path.join(TEST_LAYOUT_ROOT, 'storeApps');
         const fakeProgramFilesPath = 'X:\\Program Files';
         const executable = ['python.exe', 'python3.exe', 'python3.8.exe'];
         suiteSetup(() => {
@@ -93,6 +128,36 @@ suite('Environment Identifier', () => {
                     .replace('\\', '/');
                 const envType: EnvironmentType = await identifyEnvironment(`\\\\?\\${interpreterPath}`);
                 assert.deepEqual(envType, EnvironmentType.WindowsStore);
+            });
+        });
+    });
+
+    suite('Venv', () => {
+        test('Pyvenv.cfg is in the same directory as the interpreter', async () => {
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'venv1', 'python');
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepEqual(envType, EnvironmentType.Venv);
+        });
+        test('Pyvenv.cfg is in the same directory as the interpreter', async () => {
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'venv2', 'bin', 'python');
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepEqual(envType, EnvironmentType.Venv);
+        });
+    });
+
+    suite('Virtualenv', () => {
+        const activateFiles = [
+            { folder: 'virtualenv1', file: 'activate' },
+            { folder: 'virtualenv2', file: 'activate.sh' },
+            { folder: 'virtualenv3', file: 'activate.ps1' },
+        ];
+
+        activateFiles.forEach(({ folder, file }) => {
+            test(`Folder contains ${file}`, async () => {
+                const interpreterPath = path.join(TEST_LAYOUT_ROOT, folder, 'bin', 'python');
+                const envType = await identifyEnvironment(interpreterPath);
+
+                assert.deepStrictEqual(envType, EnvironmentType.VirtualEnv);
             });
         });
     });

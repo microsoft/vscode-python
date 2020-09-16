@@ -22,7 +22,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager,
     IMemento,
     WORKSPACE_MEMENTO
@@ -48,6 +47,7 @@ import {
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
+    INotebookExtensibility,
     INotebookImporter,
     INotebookModel,
     INotebookProvider,
@@ -225,10 +225,10 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
             this.serviceContainer.get<INotebookStorageProvider>(INotebookStorageProvider),
             this.serviceContainer.get<ITrustService>(ITrustService),
-            this.serviceContainer.get<IExperimentService>(IExperimentService),
             model,
             panel,
-            this.serviceContainer.get<KernelSelector>(KernelSelector)
+            this.serviceContainer.get<KernelSelector>(KernelSelector),
+            this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility)
         );
         this.activeEditors.set(model.file.fsPath, editor);
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));

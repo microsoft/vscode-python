@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
 import '../../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
@@ -19,20 +21,22 @@ import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from '../t
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
     protected webview?: IWebview;
-    protected disposed: boolean = false;
+
+    protected disposed = false;
 
     protected themeIsDarkPromise: Deferred<boolean> | undefined = createDeferred<boolean>();
+
     protected webviewInit: Deferred<void> | undefined = createDeferred<void>();
 
     protected readonly _disposables: IDisposable[] = [];
+
     constructor(
         @unmanaged() protected configService: IConfigurationService,
         @unmanaged() private cssGenerator: ICodeCssGenerator,
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
         @unmanaged() protected readonly useCustomEditorApi: boolean,
-        @unmanaged() private readonly enableVariablesDuringDebugging: boolean,
-        @unmanaged() private readonly hideKernelToolbarInInteractiveWindow: Promise<boolean>
+        @unmanaged() private readonly enableVariablesDuringDebugging: boolean
     ) {
         // Listen for settings changes from vscode.
         this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
@@ -83,7 +87,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         return this.postMessageInternal(type.toString(), payload);
     }
 
-    //tslint:disable-next-line:no-any
+    // tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case CssMessages.GetCssRequest:
@@ -124,7 +128,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                     fontSize: this.getValue(editor, 'fontSize', 14),
                     fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
                 },
-                theme: theme,
+                theme,
                 useCustomEditorApi: this.useCustomEditorApi
             },
             intellisenseOptions: {
@@ -145,10 +149,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             variableOptions: {
                 enableDuringDebugger: this.enableVariablesDuringDebugging
             },
-            webviewExperiments: {
-                removeKernelToolbarInInteractiveWindow: await this.hideKernelToolbarInInteractiveWindow
-            },
-            gatherIsInstalled: ext ? true : false
+            gatherIsInstalled: !!ext
         };
     }
 
@@ -164,7 +165,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             await this.webviewInit.promise;
 
             // Then send it the message
-            this.webview?.postMessage({ type: type.toString(), payload: payload });
+            this.webview?.postMessage({ type: type.toString(), payload });
         }
     }
 
