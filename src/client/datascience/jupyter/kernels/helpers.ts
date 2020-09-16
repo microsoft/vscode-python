@@ -64,7 +64,12 @@ export function getDisplayNameOrNameOfKernelConnection(
         kernelConnection.kind === 'connectToLiveKernel'
             ? kernelConnection.kernelModel.name
             : kernelConnection.kernelSpec?.name;
-    return displayName || name || defaultValue;
+
+    const interpeterName =
+        kernelConnection.kind === 'startUsingPythonInterpreter' ? kernelConnection.interpreter.displayName : undefined;
+
+    const defaultKernelName = kernelConnection.kind === 'startUsingDefaultKernel' ? 'Python 3' : undefined;
+    return displayName || name || interpeterName || defaultKernelName || defaultValue;
 }
 
 export function getNameOfKernelConnection(

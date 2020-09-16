@@ -268,7 +268,6 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                         shouldShowTrustMessage={true}
                         isNotebookTrusted={this.props.isNotebookTrusted}
                         launchNotebookTrustPrompt={launchNotebookTrustPrompt}
-                        settings={this.props.settings}
                     />
                 </div>
                 <div className="toolbar-divider" />
