@@ -9,12 +9,14 @@ import { BasicPythonEnvsChangedEvent, IPythonEnvsWatcher, PythonEnvsChangedEvent
 /**
  * An async iterator of `PythonEnvInfo`.
  */
-export type PythonEnvsIterator = AsyncIterator<PythonEnvInfo, void>;
+export interface IPythonEnvsIterator extends AsyncIterator<PythonEnvInfo, void> {
+    // extra info goes here
+}
 
 /**
  * An empty Python envs iterator.
  */
-export const NOOP_ITERATOR: PythonEnvsIterator = iterEmpty<PythonEnvInfo>();
+export const NOOP_ITERATOR: IPythonEnvsIterator = iterEmpty<PythonEnvInfo>();
 
 /**
  * The most basic info to send to a locator when requesting environments.
@@ -68,7 +70,7 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
      *
      * @param query - if provided, the locator will limit results to match
      */
-    iterEnvs(query?: QueryForEvent<E>): PythonEnvsIterator;
+    iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
 
     /**
      * Find the given Python environment and fill in as much missing info as possible.
@@ -111,7 +113,7 @@ export abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = Python
         this.onChanged = watcher.onChanged;
     }
 
-    public abstract iterEnvs(query?: QueryForEvent<E>): PythonEnvsIterator;
+    public abstract iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
 
     public async resolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return undefined;

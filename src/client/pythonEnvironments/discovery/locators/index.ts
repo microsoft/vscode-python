@@ -21,7 +21,7 @@ import {
 } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { PythonEnvInfo } from '../../base/info';
-import { ILocator, Locator, NOOP_ITERATOR, PythonEnvsIterator, PythonLocatorQuery } from '../../base/locator';
+import { ILocator, IPythonEnvsIterator, Locator, NOOP_ITERATOR, PythonLocatorQuery } from '../../base/locator';
 import { DisableableLocator, Locators } from '../../base/locators';
 import { PythonEnvironment } from '../../info';
 import { isHiddenInterpreter } from './services/interpreterFilter';
@@ -83,7 +83,7 @@ export class WorkspaceLocators extends Locator {
         folders.onRemoved((root: Uri) => this.removeRoot(root));
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): PythonEnvsIterator {
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const iterators = Object.keys(this.locators).map((key) => {
             if (query?.searchLocations) {
                 const root = this.roots[key];

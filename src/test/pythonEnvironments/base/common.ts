@@ -10,7 +10,7 @@ import {
     PythonReleaseLevel,
     PythonVersion
 } from '../../../client/pythonEnvironments/base/info';
-import { Locator, PythonEnvsIterator, PythonLocatorQuery } from '../../../client/pythonEnvironments/base/locator';
+import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
 
 export function createEnv(
@@ -111,7 +111,7 @@ export class SimpleLocator extends Locator {
     public fire(event: PythonEnvsChangedEvent) {
         this.emitter.fire(event);
     }
-    public iterEnvs(query?: PythonLocatorQuery): PythonEnvsIterator {
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const deferred = this.deferred;
         const callbacks = this.callbacks;
         let envs = this.envs;
@@ -161,6 +161,6 @@ export class SimpleLocator extends Locator {
     }
 }
 
-export async function getEnvs(iterator: PythonEnvsIterator): Promise<PythonEnvInfo[]> {
+export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvInfo[]> {
     return flattenIterator(iterator);
 }

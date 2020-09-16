@@ -3,7 +3,7 @@
 
 import { chain } from '../../common/utils/async';
 import { PythonEnvInfo } from './info';
-import { ILocator, NOOP_ITERATOR, PythonEnvsIterator, PythonLocatorQuery } from './locator';
+import { ILocator, IPythonEnvsIterator, NOOP_ITERATOR, PythonLocatorQuery } from './locator';
 import { DisableableEnvsWatcher, PythonEnvsWatchers } from './watchers';
 
 /**
@@ -19,7 +19,7 @@ export class Locators extends PythonEnvsWatchers implements ILocator {
         super(locators);
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): PythonEnvsIterator {
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const iterators = this.locators.map((loc) => loc.iterEnvs(query));
         return chain(iterators);
     }
@@ -50,7 +50,7 @@ export class DisableableLocator extends DisableableEnvsWatcher implements ILocat
         super(locator);
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): PythonEnvsIterator {
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         if (!this.enabled) {
             return NOOP_ITERATOR;
         }
