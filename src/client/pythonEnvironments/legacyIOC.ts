@@ -164,6 +164,7 @@ class ComponentAdapter implements IComponentAdapter {
 
     // IInterpreterHelper
 
+    // A result of `undefined` means "Fall back to the old code!"
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
         if (!this.enabled) {
             return undefined;
@@ -175,6 +176,7 @@ class ComponentAdapter implements IComponentAdapter {
         return convertEnvInfo(env);
     }
 
+    // A result of `undefined` means "Fall back to the old code!"
     public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined> {
         if (!this.enabled) {
             return undefined;
@@ -188,9 +190,10 @@ class ComponentAdapter implements IComponentAdapter {
 
     // IInterpreterService
 
-    public get hasInterpreters(): Promise<boolean> | undefined {
+    // A result of `undefined` means "Fall back to the old code!"
+    public get hasInterpreters(): Promise<boolean | undefined> {
         if (!this.enabled) {
-            return undefined;
+            return Promise.resolve(undefined);
         }
         const iterator = this.api.iterEnvs();
         return iterator.next().then((res) => !res.done);
@@ -198,6 +201,7 @@ class ComponentAdapter implements IComponentAdapter {
 
     // We use the same getInterpreters() here as for IInterpreterLocatorService.
 
+    // A result of `undefined` means "Fall back to the old code!"
     public async getInterpreterDetails(
         pythonPath: string,
         resource?: vscode.Uri,
@@ -222,6 +226,7 @@ class ComponentAdapter implements IComponentAdapter {
 
     // ICondaService
 
+    // A result of `undefined` means "Fall back to the old code!"
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined> {
         if (!this.enabled) {
             return undefined;
@@ -233,6 +238,7 @@ class ComponentAdapter implements IComponentAdapter {
         return env.kind === PythonEnvKind.Conda;
     }
 
+    // A result of `undefined` means "Fall back to the old code!"
     public async getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined> {
         if (!this.enabled) {
             return undefined;
@@ -253,6 +259,7 @@ class ComponentAdapter implements IComponentAdapter {
 
     // IWindowsStoreInterpreter
 
+    // A result of `undefined` means "Fall back to the old code!"
     public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined> {
         if (!this.enabled) {
             return undefined;
@@ -266,6 +273,7 @@ class ComponentAdapter implements IComponentAdapter {
 
     // IInterpreterLocatorService
 
+    // A result of `undefined` means "Fall back to the old code!"
     public async getInterpreters(
         resource?: vscode.Uri,
         // Currently we have no plans to support GetInterpreterLocatorOptions:
