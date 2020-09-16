@@ -1116,6 +1116,10 @@ export namespace DataScience {
     );
     export const connected = localize('DataScience.connected', 'Connected');
     export const disconnected = localize('DataScience.disconnected', 'Disconnected');
+    export const ipykernelNotInstalled = localize(
+        'DataScience.ipykernelNotInstalled',
+        'IPyKernel not installed into interpreter {0}'
+    );
 }
 
 export namespace StartPage {

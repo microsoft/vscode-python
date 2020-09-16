@@ -11,7 +11,7 @@ import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IPlatformService } from '../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
-import { IExtensionContext, IInstaller, IPathUtils, Resource } from '../../client/common/types';
+import { IExtensionContext, IPathUtils, Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { defaultKernelSpecName } from '../../client/datascience/jupyter/kernels/helpers';
@@ -30,7 +30,6 @@ suite('Kernel Finder', () => {
     let pathUtils: typemoq.IMock<IPathUtils>;
     let context: typemoq.IMock<IExtensionContext>;
     let envVarsProvider: typemoq.IMock<IEnvironmentVariablesProvider>;
-    let installer: IInstaller;
     let workspaceService: IWorkspaceService;
     let kernelFinder: IKernelFinder;
     let activeInterpreter: PythonEnvironment;
@@ -82,9 +81,6 @@ suite('Kernel Finder', () => {
         context = typemoq.Mock.ofType<IExtensionContext>();
         context.setup((c) => c.globalStoragePath).returns(() => './');
         fileSystem = typemoq.Mock.ofType<IDataScienceFileSystem>();
-
-        installer = mock<IInstaller>();
-        when(installer.isInstalled(anything(), anything())).thenResolve(true);
 
         platformService = typemoq.Mock.ofType<IPlatformService>();
         platformService.setup((ps) => ps.isWindows).returns(() => true);
@@ -325,7 +321,6 @@ suite('Kernel Finder', () => {
                 platformService.object,
                 fileSystem.object,
                 pathUtils.object,
-                instance(installer),
                 context.object,
                 instance(workspaceService),
                 instance(executionFactory),
@@ -408,7 +403,6 @@ suite('Kernel Finder', () => {
                 platformService.object,
                 fileSystem.object,
                 pathUtils.object,
-                instance(installer),
                 context.object,
                 instance(workspaceService),
                 instance(executionFactory),

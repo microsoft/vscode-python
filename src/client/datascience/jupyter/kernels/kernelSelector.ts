@@ -553,6 +553,8 @@ export class KernelSelector implements IKernelSelectionUsage {
         return { kernelSpec, interpreter, kind: 'startUsingPythonInterpreter' };
     }
 
+    // If we need to install our dependencies now (for non-native scenarios)
+    // then install ipykernel into the interpreter or throw error
     private async installDependenciesIntoInterpreter(
         interpreter: PythonEnvironment,
         ignoreDependencyCheck?: boolean,
@@ -563,7 +565,9 @@ export class KernelSelector implements IKernelSelectionUsage {
                 (await this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken)) !==
                 KernelInterpreterDependencyResponse.ok
             ) {
-                throw new Error(`IPyKernel not installed into interpreter ${interpreter.displayName}'`);
+                throw new Error(
+                    localize.DataScience.ipykernelNotInstalled().format(interpreter.displayName || interpreter.path)
+                );
             }
         }
     }

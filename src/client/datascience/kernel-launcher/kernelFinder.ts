@@ -5,23 +5,20 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { IExtensionContext, IInstaller, InstallerResponse, IPathUtils, Product, Resource } from '../../common/types';
+import { IExtensionContext, IPathUtils, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterLocatorService, IInterpreterService, KNOWN_PATH_SERVICE } from '../../interpreter/contracts';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { getRealPath } from '../common';
 import { Telemetry } from '../constants';
 import { defaultKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import { IDataScienceFileSystem, IJupyterKernelSpec } from '../types';
-import { getKernelInterpreter } from './helpers';
 import { IKernelFinder } from './types';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
@@ -57,7 +54,6 @@ export class KernelFinder implements IKernelFinder {
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(IInstaller) private installer: IInstaller,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonExecutionFactory) private readonly exeFactory: IPythonExecutionFactory,
