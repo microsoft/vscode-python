@@ -158,7 +158,7 @@ class ComponentAdapter implements IComponentAdapter {
     constructor(
         // The adapter only wraps one thing: the component API.
         private readonly api: IPythonEnvironments,
-        // For now we effecitvely disable the component.
+        // For now we effectively disable the component.
         private readonly enabled = false,
     ) {}
 
