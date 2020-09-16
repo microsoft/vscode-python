@@ -1,4 +1,6 @@
+/* eslint-disable max-classes-per-file */
 import { inject, injectable } from 'inversify';
+import { flatten } from 'lodash';
 import {
     Disposable, Event, EventEmitter, Uri,
 } from 'vscode';
@@ -37,9 +39,6 @@ import { PythonEnvironment } from '../../info';
 import { isHiddenInterpreter } from './services/interpreterFilter';
 import { GetInterpreterLocatorOptions } from './types';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
-const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
-
 /**
  * A wrapper around all locators used by the extension.
  */
@@ -49,7 +48,7 @@ export class ExtensionLocators extends Locators {
         nonWorkspace: ILocator[],
         // This is expected to be a locator wrapping any found in
         // the workspace (i.e. WorkspaceLocators).
-        workspace: ILocator
+        workspace: ILocator,
     ) {
         super([...nonWorkspace, workspace]);
     }
@@ -72,10 +71,12 @@ type RootURI = string;
  */
 export class WorkspaceLocators extends Locator {
     private readonly locators: Record<RootURI, DisableableLocator> = {};
+
     private readonly roots: Record<RootURI, Uri> = {};
+
     constructor(
         // used to produce the per-root locators:
-        private readonly factories: WorkspaceLocatorFactory[]
+        private readonly factories: WorkspaceLocatorFactory[],
     ) {
         super();
     }
@@ -85,10 +86,10 @@ export class WorkspaceLocators extends Locator {
      *
      * @param folders - the info used to keep track of the workspace folders
      */
-    public activate(folders: IWorkspaceFolders) {
-        for (const root of folders.roots) {
+    public activate(folders: IWorkspaceFolders):void {
+        folders.roots.forEach((root) => {
             this.addRoot(root);
-        }
+        });
         folders.onAdded((root: Uri) => this.addRoot(root));
         folders.onRemoved((root: Uri) => this.removeRoot(root));
     }
@@ -116,7 +117,11 @@ export class WorkspaceLocators extends Locator {
             }
         }
         // Fall back to checking all the roots.
+        // The eslint disable below should be removed after we have a
+        // better solution for these. We need asyncFind for this.
+        // eslint-disable-next-line no-restricted-syntax
         for (const key of Object.keys(this.locators)) {
+            // eslint-disable-next-line no-await-in-loop
             const resolved = await this.locators[key].resolveEnv(env);
             if (resolved !== undefined) {
                 return resolved;
@@ -130,9 +135,9 @@ export class WorkspaceLocators extends Locator {
         this.removeRoot(root);
         // Create the root's locator, wrapping each factory-generated locator.
         const locators: ILocator[] = [];
-        for (const create of this.factories) {
+        this.factories.forEach((create) => {
             locators.push(...create(root));
-        }
+        });
         const locator = new DisableableLocator(new Locators(locators));
         // Cache it.
         const key = root.toString();
@@ -168,17 +173,18 @@ export class WorkspaceLocators extends Locator {
  * or the URI must be a parent of one of the candidates.
  */
 function matchURI(uri: Uri, ...candidates: Uri[]): boolean {
-    const uriPath = uri.path.endsWith('/') ? uri.path : `{uri.path}/`;
-    for (const candidate of candidates) {
+    const uriPath = uri.path.endsWith('/') ? uri.path : '{uri.path}/';
+    const matchedUri = candidates.find((candidate) => {
         if (candidate.scheme === uri.scheme) {
             if (candidate.path === uri.path) {
                 return true;
-            } else if (candidate.path.startsWith(uriPath)) {
+            } if (candidate.path.startsWith(uriPath)) {
                 return true;
             }
         }
-    }
-    return false;
+        return false;
+    });
+    return matchedUri !== undefined;
 }
 
 /**
@@ -196,6 +202,9 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
 
     private readonly _hasInterpreters: Deferred<boolean>;
 
+    private readonly onLocatingEmitter:EventEmitter<Promise<PythonEnvironment[]>> =
+        new EventEmitter<Promise<PythonEnvironment[]>>();
+
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this._hasInterpreters = createDeferred<boolean>();
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
@@ -206,14 +215,14 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
 
     /**
      * This class should never emit events when we're locating.
-     * The events will be fired by the indivitual locators retrieved in `getLocators`.
+     * The events will be fired by the individual locators retrieved in `getLocators`.
      *
      * @readonly
      * @type {Event<Promise<PythonEnvironment[]>>}
      * @memberof PythonInterpreterLocatorService
      */
     public get onLocating(): Event<Promise<PythonEnvironment[]>> {
-        return new EventEmitter<Promise<PythonEnvironment[]>>().event;
+        return this.onLocatingEmitter.event;
     }
 
     public get hasInterpreters(): Promise<boolean> {
@@ -225,7 +234,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      *
      * Called by VS Code to indicate it is done with the resource.
      */
-    public dispose() {
+    public dispose():void {
         this.disposables.forEach((disposable) => disposable.dispose());
     }
 
@@ -286,7 +295,9 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         // Set it to true the first time the user selects an interpreter
         if (!this.didTriggerInterpreterSuggestions && options?.onSuggestion === true) {
             this.didTriggerInterpreterSuggestions = true;
-            locators.forEach((locator) => (locator.didTriggerInterpreterSuggestions = true));
+            locators.forEach((locator) => {
+                locator.didTriggerInterpreterSuggestions = true;
+            });
         }
 
         return locators;
