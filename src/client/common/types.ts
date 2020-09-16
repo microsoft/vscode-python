@@ -398,7 +398,6 @@ export interface IDataScienceSettings {
     jupyterCommandLineArguments: string[];
     widgetScriptSources: WidgetCDNs[];
     alwaysScrollOnNewCell?: boolean;
-    showKernelSelectionOnInteractiveWindow?: boolean;
     interactiveWindowMode: InteractiveWindowMode;
 }
 

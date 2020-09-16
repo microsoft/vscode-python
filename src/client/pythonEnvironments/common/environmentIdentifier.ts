@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 import { isCondaEnvironment } from '../discovery/locators/services/condaLocator';
+import { isPipenvEnvironment } from '../discovery/locators/services/pipEnvHelper';
 import { isVenvEnvironment } from '../discovery/locators/services/venvLocator';
+import { isVirtualenvEnvironment } from '../discovery/locators/services/virtualenvLocator';
 import { isWindowsStoreEnvironment } from '../discovery/locators/services/windowsStoreLocator';
 import { EnvironmentType } from '../info';
 
@@ -38,8 +40,16 @@ export async function identifyEnvironment(interpreterPath: string): Promise<Envi
         return EnvironmentType.WindowsStore;
     }
 
+    if (await isPipenvEnvironment(interpreterPath)) {
+        return EnvironmentType.Pipenv;
+    }
+
     if (await isVenvEnvironment(interpreterPath)) {
         return EnvironmentType.Venv;
+    }
+
+    if (await isVirtualenvEnvironment(interpreterPath)) {
+        return EnvironmentType.VirtualEnv;
     }
 
     // additional identifiers go here

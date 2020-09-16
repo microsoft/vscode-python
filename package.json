@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2020.9.0-dev",
+    "version": "2020.10.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -102,7 +102,8 @@
         "onCommand:python.enableSourceMapSupport",
         "onNotebookEditor:jupyter-notebook",
         "workspaceContains:mspythonconfig.json",
-        "workspaceContains:pyproject.toml"
+        "workspaceContains:pyproject.toml",
+        "onCustomEditor:ms-python.python.notebook.ipynb"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -2271,12 +2272,6 @@
                     "description": "Automatically scroll the interactive window to show the output of the last statement executed. If false, the interactive window will only automatically scroll if the bottom of the prior cell is visible.",
                     "scope": "resource"
                 },
-                "python.dataScience.showKernelSelectionOnInteractiveWindow": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "When set to true, enables the kernel selector in the Interactive Window. By default, the Interactive Window will use your Python Interpreters kernel.",
-                    "scope": "resource"
-                },
                 "python.dataScience.enableScrollingForCellOutputs": {
                     "type": "boolean",
                     "default": true,
@@ -3419,13 +3414,26 @@
                     "image/jpeg",
                     "text/latex",
                     "text/vnd.plotly.v1+html"
-                ]
+                ],
+                "viewType": "jupyter-notebook"
             }
         ],
         "notebookProvider": [
             {
                 "viewType": "jupyter-notebook",
                 "displayName": "Jupyter Notebook (preview)",
+                "selector": [
+                    {
+                        "filenamePattern": "*.ipynb"
+                    }
+                ],
+                "priority": "option"
+            }
+        ],
+        "customEditors": [
+            {
+                "viewType": "ms-python.python.notebook.ipynb",
+                "displayName": "Jupyter Notebook",
                 "selector": [
                     {
                         "filenamePattern": "*.ipynb"

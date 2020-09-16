@@ -3,18 +3,60 @@
 
 import * as vscode from 'vscode';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
-import { ILocator } from './base/locator';
+import { PythonEnvInfo } from './base/info';
+import { ILocator, PythonEnvsIterator, PythonLocatorQuery } from './base/locator';
+import { PythonEnvsChangedEvent } from './base/watcher';
 import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
 import { registerForIOC } from './legacyIOC';
 
+/**
+ * Activate the Python environments component (during extension activation).'
+ */
 export function activate(serviceManager: IServiceManager, serviceContainer: IServiceContainer) {
-    registerForIOC(serviceManager, serviceContainer);
+    const [api, activateAPI] = createAPI();
+    registerForIOC(serviceManager, serviceContainer, api);
+    activateAPI();
+}
 
+/**
+ * The public API for the Python environments component.
+ *
+ * Note that this is composed of sub-components.
+ */
+export class PythonEnvironments implements ILocator {
+    constructor(
+        // These are the sub-components the full component is composed of:
+        private readonly locators: ILocator
+    ) {}
+
+    public get onChanged(): vscode.Event<PythonEnvsChangedEvent> {
+        return this.locators.onChanged;
+    }
+
+    public iterEnvs(query?: PythonLocatorQuery): PythonEnvsIterator {
+        return this.locators.iterEnvs(query);
+    }
+
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        return this.locators.resolveEnv(env);
+    }
+}
+
+/**
+ * Initialize everything needed for the API and provide the API object.
+ *
+ * An activation function is also returned, which should be called soon.
+ */
+export function createAPI(): [PythonEnvironments, () => void] {
     const [locators, activateLocators] = initLocators();
-    activateLocators();
-    // We will pass the locators into the component API.
-    // tslint:disable-next-line:no-unused-expression
-    locators;
+
+    return [
+        new PythonEnvironments(locators),
+        () => {
+            activateLocators();
+            // Any other activation needed for the API will go here later.
+        }
+    ];
 }
 
 function initLocators(): [ExtensionLocators, () => void] {
