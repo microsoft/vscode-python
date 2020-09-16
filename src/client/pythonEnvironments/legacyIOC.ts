@@ -55,7 +55,6 @@ import {
     WorkspaceVirtualEnvService,
 } from './discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
-import { GetInterpreterLocatorOptions } from './discovery/locators/types';
 import { EnvironmentType, PythonEnvironment } from './info';
 import { EnvironmentInfoService, IEnvironmentInfoService } from './info/environmentInfoService';
 
@@ -269,16 +268,15 @@ class ComponentAdapter implements IComponentAdapter {
 
     public async getInterpreters(
         resource?: vscode.Uri,
-        _options?: GetInterpreterLocatorOptions, // eslint-disable-line @typescript-eslint/no-unused-vars
-    ): Promise<PythonEnvironment[] | undefined> {
-        if (!this.enabled) {
-            return undefined;
-        }
-        // We ignore the options:
+        // Currently we have no plans to support GetInterpreterLocatorOptions:
         // {
         //     ignoreCache?: boolean
         //     onSuggestion?: boolean;
         // }
+    ): Promise<PythonEnvironment[] | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
         const query: PythonLocatorQuery = {};
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);

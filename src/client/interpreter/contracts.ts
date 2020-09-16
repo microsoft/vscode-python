@@ -35,7 +35,7 @@ export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
     // IInterpreterLocatorService
     hasInterpreters: Promise<boolean> | undefined;
-    getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[] | undefined>;
+    getInterpreters(resource?: Uri): Promise<PythonEnvironment[] | undefined>;
     // IInterpreterService
     getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment>;
     // IInterpreterHelper
