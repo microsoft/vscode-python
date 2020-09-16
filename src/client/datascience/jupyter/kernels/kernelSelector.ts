@@ -27,7 +27,8 @@ import {
     IJupyterSessionManagerFactory,
     IKernelDependencyService,
     INotebookMetadataLive,
-    INotebookProviderConnection
+    INotebookProviderConnection,
+    KernelInterpreterDependencyResponse
 } from '../../types';
 import { createDefaultKernelSpec, getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { KernelSelectionProvider } from './kernelSelections';
@@ -504,9 +505,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         if (!kernelSpec && !activeInterpreter) {
             return;
         } else if (!kernelSpec && activeInterpreter) {
-            if (!ignoreDependencyCheck) {
-                await this.kernelDependencyService.installMissingDependencies(activeInterpreter, cancelToken);
-            }
+            await this.installDependenciesIntoInterpreter(activeInterpreter, ignoreDependencyCheck, cancelToken);
 
             // Return current interpreter.
             return {
@@ -517,8 +516,8 @@ export class KernelSelector implements IKernelSelectionUsage {
             // Locate the interpreter that matches our kernelspec
             const interpreter = await this.kernelService.findMatchingInterpreter(kernelSpec, cancelToken);
 
-            if (!ignoreDependencyCheck && interpreter) {
-                await this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken);
+            if (interpreter) {
+                await this.installDependenciesIntoInterpreter(interpreter, ignoreDependencyCheck, cancelToken);
             }
 
             return { kind: 'startUsingKernelSpec', kernelSpec, interpreter };
@@ -552,6 +551,21 @@ export class KernelSelector implements IKernelSelectionUsage {
     private async useInterpreterAndDefaultKernel(interpreter: PythonEnvironment): Promise<KernelConnectionMetadata> {
         const kernelSpec = createDefaultKernelSpec(interpreter.displayName);
         return { kernelSpec, interpreter, kind: 'startUsingPythonInterpreter' };
+    }
+
+    private async installDependenciesIntoInterpreter(
+        interpreter: PythonEnvironment,
+        ignoreDependencyCheck?: boolean,
+        cancelToken?: CancellationToken
+    ) {
+        if (!ignoreDependencyCheck) {
+            if (
+                (await this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken)) !==
+                KernelInterpreterDependencyResponse.ok
+            ) {
+                throw new Error(`IPyKernel not installed into interpreter ${interpreter.displayName}'`);
+            }
+        }
     }
 
     /**

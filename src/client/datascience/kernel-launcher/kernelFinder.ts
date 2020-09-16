@@ -66,9 +66,7 @@ export class KernelFinder implements IKernelFinder {
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernelSpec(
         resource: Resource,
-        kernelSpecMetadata?: nbformat.IKernelspecMetadata,
-        cancelToken?: CancellationToken,
-        ignoreDependencyCheck?: boolean
+        kernelSpecMetadata?: nbformat.IKernelspecMetadata
     ): Promise<IJupyterKernelSpec | undefined> {
         await this.readCache();
         let foundKernel: IJupyterKernelSpec | undefined;
@@ -109,8 +107,6 @@ export class KernelFinder implements IKernelFinder {
 
         this.writeCache().ignoreErrors();
 
-        // Verify that ipykernel is installed into the given kernelspec interpreter
-        //return ignoreDependencyCheck || !foundKernel ? foundKernel : this.verifyIpyKernel(foundKernel, cancelToken);
         return foundKernel;
     }
 
@@ -318,52 +314,6 @@ export class KernelFinder implements IKernelFinder {
             });
 
         return flatten(fullPathResults);
-    }
-
-    // For the given kernelspec return back the kernelspec with ipykernel installed into it or error
-    private async verifyIpyKernel(
-        kernelSpec: IJupyterKernelSpec,
-        cancelToken?: CancellationToken
-    ): Promise<IJupyterKernelSpec> {
-        const interpreter = await getKernelInterpreter(kernelSpec, this.interpreterService);
-
-        await this.verifyIpyKernelInterpreter(interpreter, cancelToken);
-
-        return kernelSpec;
-
-        //if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
-        //return kernelSpec;
-        //} else {
-        //const token = new CancellationTokenSource();
-        //const response = await this.installer.promptToInstall(
-        //Product.ipykernel,
-        //interpreter,
-        //wrapCancellationTokens(cancelToken, token.token)
-        //);
-        //if (response === InstallerResponse.Installed) {
-        //return kernelSpec;
-        //}
-        //}
-
-        //throw new Error(`IPyKernel not installed into interpreter ${interpreter.displayName}`);
-    }
-
-    private async verifyIpyKernelInterpreter(interpreter: PythonEnvironment, cancelToken?: CancellationToken) {
-        if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
-            return;
-        } else {
-            const token = new CancellationTokenSource();
-            const response = await this.installer.promptToInstall(
-                Product.ipykernel,
-                interpreter,
-                wrapCancellationTokens(cancelToken, token.token)
-            );
-            if (response === InstallerResponse.Installed) {
-                return;
-            }
-        }
-
-        throw new Error(`IPyKernel not installed into interpreter ${interpreter.displayName}`);
     }
 
     private async getKernelSpecFromActiveInterpreter(
