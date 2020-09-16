@@ -280,13 +280,6 @@ export namespace Linters {
     );
 }
 
-export namespace InteractiveShiftEnterBanner {
-    export const bannerMessage = localize(
-        'InteractiveShiftEnterBanner.bannerMessage',
-        'Would you like shift-enter to send code to the new Interactive Window experience?'
-    );
-}
-
 export namespace DataScienceSurveyBanner {
     export const bannerMessage = localize(
         'DataScienceSurveyBanner.bannerMessage',

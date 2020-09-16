@@ -520,8 +520,6 @@ export interface IPythonExtensionBanner {
     showBanner(): Promise<void>;
 }
 export const BANNER_NAME_PROPOSE_LS: string = 'ProposePylance';
-export const BANNER_NAME_DS_SURVEY: string = 'DSSurveyBanner';
-export const BANNER_NAME_INTERACTIVE_SHIFTENTER: string = 'InteractiveShiftEnterBanner';
 
 export type DeprecatedSettingAndValue = {
     setting: string;

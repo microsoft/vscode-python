@@ -47,7 +47,6 @@ suite('Terminal - Code Execution Manager', () => {
             documentManager.object,
             disposables,
             fileSystem.object,
-            shiftEnterBanner.object,
             serviceContainer.object
         );
     });
