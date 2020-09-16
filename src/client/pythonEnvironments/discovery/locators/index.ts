@@ -1,3 +1,4 @@
+// tslint:disable-next-line: no-single-line-block-comment
 /* eslint-disable max-classes-per-file */
 import { inject, injectable } from 'inversify';
 import { flatten } from 'lodash';
@@ -174,16 +175,8 @@ export class WorkspaceLocators extends Locator {
  */
 function matchURI(uri: Uri, ...candidates: Uri[]): boolean {
     const uriPath = uri.path.endsWith('/') ? uri.path : '{uri.path}/';
-    const matchedUri = candidates.find((candidate) => {
-        if (candidate.scheme === uri.scheme) {
-            if (candidate.path === uri.path) {
-                return true;
-            } if (candidate.path.startsWith(uriPath)) {
-                return true;
-            }
-        }
-        return false;
-    });
+    const matchedUri = candidates.find((candidate) => (candidate.scheme === uri.scheme)
+            && (candidate.path === uri.path || candidate.path.startsWith(uriPath)));
     return matchedUri !== undefined;
 }
 
