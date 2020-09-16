@@ -3,6 +3,7 @@
 
 import { injectable } from 'inversify';
 import * as vscode from 'vscode';
+import { Architecture } from '../common/utils/platform';
 import { getVersionString, parseVersion } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -123,6 +124,34 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     return env;
 }
 
+function buildEmptyEnvInfo(): PythonEnvInfo {
+    return {
+        id: '',
+        kind: PythonEnvKind.Unknown,
+        executable: {
+            filename: '',
+            sysPrefix: '',
+            ctime: -1,
+            mtime: -1,
+        },
+        name: '',
+        location: '',
+        version: {
+            major: -1,
+            minor: -1,
+            micro: -1,
+            release: {
+                level: PythonReleaseLevel.Final,
+                serial: 0,
+            },
+        },
+        arch: Architecture.Unknown,
+        distro: {
+            org: '',
+        },
+    };
+}
+
 interface IPythonEnvironments extends ILocator {}
 
 @injectable()
@@ -172,12 +201,20 @@ class ComponentAdapter implements IComponentAdapter {
 
     public async getInterpreterDetails(
         pythonPath: string,
-        _resource?: vscode.Uri, // eslint-disable-line @typescript-eslint/no-unused-vars
+        resource?: vscode.Uri,
     ): Promise<undefined | PythonEnvironment> {
         if (!this.enabled) {
             return undefined;
         }
-        const env = await this.api.resolveEnv(pythonPath);
+        const info = buildEmptyEnvInfo();
+        info.executable.filename = pythonPath;
+        if (resource !== undefined) {
+            const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
+            if (wsFolder !== undefined) {
+                info.searchLocation = wsFolder.uri;
+            }
+        }
+        const env = await this.api.resolveEnv(info);
         if (env === undefined) {
             return undefined;
         }
