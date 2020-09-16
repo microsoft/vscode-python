@@ -25,9 +25,6 @@ export abstract class BaseProductPathsService implements IProductPathService {
     }
     public abstract getExecutableNameFromSettings(product: Product, resource?: Uri): string;
     public isExecutableAModule(product: Product, resource?: Uri): Boolean {
-        if (product === Product.kernelspec) {
-            return false;
-        }
         let moduleName: string | undefined;
         try {
             moduleName = this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
@@ -97,16 +94,6 @@ export class TestFrameworkProductPathService extends BaseProductPathsService {
 
 @injectable()
 export class RefactoringLibraryProductPathService extends BaseProductPathsService {
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer);
-    }
-    public getExecutableNameFromSettings(product: Product, _?: Uri): string {
-        return this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
-    }
-}
-
-@injectable()
-export class DataScienceProductPathService extends BaseProductPathsService {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }

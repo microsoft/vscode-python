@@ -15,7 +15,6 @@ import { ProductInstaller } from '../../../client/common/installer/productInstal
 import {
     BaseProductPathsService,
     CTagsProductPathService,
-    DataScienceProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
@@ -90,53 +89,27 @@ suite('Product Path', () => {
                 return;
             }
             suite('Method isExecutableAModule()', () => {
-                if (product.value === Product.ipykernel) {
-                    test('Returns true if product is ipykernel', () => {
-                        const productPathService = new TestBaseProductPathsService(serviceContainer.object);
-                        expect(productPathService.isExecutableAModule(product.value)).to.equal(true, 'Should be true');
-                    });
-                } else if (product.value === Product.nbconvert) {
-                    test('Returns true if product is nbconvert', () => {
-                        const productPathService = new TestBaseProductPathsService(serviceContainer.object);
-                        expect(productPathService.isExecutableAModule(product.value)).to.equal(true, 'Should be true');
-                    });
-                } else if (product.value === Product.kernelspec) {
-                    test('Returns true if product is kernelspec', () => {
-                        const productPathService = new TestBaseProductPathsService(serviceContainer.object);
-                        expect(productPathService.isExecutableAModule(product.value)).to.equal(
-                            false,
-                            'Should be false'
-                        );
-                    });
-                } else {
-                    test('Returns true if User has customized the executable name', () => {
-                        productInstaller.translateProductToModuleName = () => 'moduleName';
-                        const productPathService = new TestBaseProductPathsService(serviceContainer.object);
-                        productPathService.getExecutableNameFromSettings = () => 'executableName';
-                        expect(productPathService.isExecutableAModule(product.value)).to.equal(true, 'Should be true');
-                    });
-                    test('Returns false if User has customized the full path to executable', () => {
-                        productInstaller.translateProductToModuleName = () => 'moduleName';
-                        const productPathService = new TestBaseProductPathsService(serviceContainer.object);
-                        productPathService.getExecutableNameFromSettings = () => 'path/to/executable';
-                        expect(productPathService.isExecutableAModule(product.value)).to.equal(
-                            false,
-                            'Should be false'
-                        );
-                    });
-                    test('Returns false if translating product to module name fails with error', () => {
-                        productInstaller.translateProductToModuleName = () => {
-                            // tslint:disable-next-line: no-any
-                            return new Error('Kaboom') as any;
-                        };
-                        const productPathService = new TestBaseProductPathsService(serviceContainer.object);
-                        productPathService.getExecutableNameFromSettings = () => 'executableName';
-                        expect(productPathService.isExecutableAModule(product.value)).to.equal(
-                            false,
-                            'Should be false'
-                        );
-                    });
-                }
+                test('Returns true if User has customized the executable name', () => {
+                    productInstaller.translateProductToModuleName = () => 'moduleName';
+                    const productPathService = new TestBaseProductPathsService(serviceContainer.object);
+                    productPathService.getExecutableNameFromSettings = () => 'executableName';
+                    expect(productPathService.isExecutableAModule(product.value)).to.equal(true, 'Should be true');
+                });
+                test('Returns false if User has customized the full path to executable', () => {
+                    productInstaller.translateProductToModuleName = () => 'moduleName';
+                    const productPathService = new TestBaseProductPathsService(serviceContainer.object);
+                    productPathService.getExecutableNameFromSettings = () => 'path/to/executable';
+                    expect(productPathService.isExecutableAModule(product.value)).to.equal(false, 'Should be false');
+                });
+                test('Returns false if translating product to module name fails with error', () => {
+                    productInstaller.translateProductToModuleName = () => {
+                        // tslint:disable-next-line: no-any
+                        return new Error('Kaboom') as any;
+                    };
+                    const productPathService = new TestBaseProductPathsService(serviceContainer.object);
+                    productPathService.getExecutableNameFromSettings = () => 'executableName';
+                    expect(productPathService.isExecutableAModule(product.value)).to.equal(false, 'Should be false');
+                });
             });
             const productType = new ProductService().getProductType(product.value);
             switch (productType) {
@@ -286,21 +259,6 @@ suite('Product Path', () => {
                         );
                         expect(value).to.be.equal(moduleName);
                         testHelper.verifyAll();
-                    });
-                    break;
-                }
-                case ProductType.DataScience: {
-                    test(`Ensure path is returned for ${product.name} (${
-                        resource ? 'With a resource' : 'without a resource'
-                    })`, async () => {
-                        const productPathService = new DataScienceProductPathService(serviceContainer.object);
-
-                        const value = productPathService.getExecutableNameFromSettings(product.value, resource);
-                        const moduleName = productInstaller.translateProductToModuleName(
-                            product.value,
-                            ModuleNamePurpose.run
-                        );
-                        expect(value).to.be.equal(moduleName);
                     });
                     break;
                 }

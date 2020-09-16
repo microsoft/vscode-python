@@ -77,8 +77,7 @@ export enum ProductType {
     Formatter = 'Formatter',
     TestFramework = 'TestFramework',
     RefactoringLibrary = 'RefactoringLibrary',
-    WorkspaceSymbols = 'WorkspaceSymbols',
-    DataScience = 'DataScience'
+    WorkspaceSymbols = 'WorkspaceSymbols'
 }
 
 export enum Product {
@@ -98,13 +97,7 @@ export enum Product {
     rope = 14,
     isort = 15,
     black = 16,
-    bandit = 17,
-    jupyter = 18,
-    ipykernel = 19,
-    notebook = 20,
-    kernelspec = 21,
-    nbconvert = 22,
-    pandas = 23
+    bandit = 17
 }
 
 export enum ModuleNamePurpose {

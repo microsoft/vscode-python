@@ -80,13 +80,7 @@ suite('Module Installer - Invalid Paths', () => {
                     case Product.isort:
                     case Product.ctags:
                     case Product.rope:
-                    case Product.unittest:
-                    case Product.ipykernel:
-                    case Product.kernelspec:
-                    case Product.nbconvert:
-                    case Product.notebook:
-                    case Product.pandas:
-                    case Product.jupyter: {
+                    case Product.unittest: {
                         return;
                     }
                     default: {

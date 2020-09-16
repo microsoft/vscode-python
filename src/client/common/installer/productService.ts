@@ -28,12 +28,6 @@ export class ProductService implements IProductService {
         this.ProductTypes.set(Product.black, ProductType.Formatter);
         this.ProductTypes.set(Product.yapf, ProductType.Formatter);
         this.ProductTypes.set(Product.rope, ProductType.RefactoringLibrary);
-        this.ProductTypes.set(Product.jupyter, ProductType.DataScience);
-        this.ProductTypes.set(Product.notebook, ProductType.DataScience);
-        this.ProductTypes.set(Product.ipykernel, ProductType.DataScience);
-        this.ProductTypes.set(Product.nbconvert, ProductType.DataScience);
-        this.ProductTypes.set(Product.kernelspec, ProductType.DataScience);
-        this.ProductTypes.set(Product.pandas, ProductType.DataScience);
     }
     public getProductType(product: Product): ProductType {
         return this.ProductTypes.get(product)!;

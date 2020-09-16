@@ -49,7 +49,6 @@ import { InstallationChannelManager } from '../../client/common/installer/channe
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import {
     CTagsProductPathService,
-    DataScienceProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
@@ -209,11 +208,6 @@ suite('Installer', () => {
             RefactoringLibraryProductPathService,
             ProductType.RefactoringLibrary
         );
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            DataScienceProductPathService,
-            ProductType.DataScience
-        );
 
         ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
         ioc.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
@@ -340,17 +334,7 @@ suite('Installer', () => {
                 new MockModuleInstaller('two', true)
             );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
-            if (
-                prod.value === Product.ctags ||
-                prod.value === Product.unittest ||
-                prod.value === Product.isort ||
-                prod.value === Product.jupyter ||
-                prod.value === Product.notebook ||
-                prod.value === Product.pandas ||
-                prod.value === Product.kernelspec ||
-                prod.value === Product.nbconvert ||
-                prod.value === Product.ipykernel
-            ) {
+            if (prod.value === Product.ctags || prod.value === Product.unittest || prod.value === Product.isort) {
                 return;
             }
             await testCheckingIfProductIsInstalled(prod.value);
@@ -383,17 +367,7 @@ suite('Installer', () => {
                 new MockModuleInstaller('two', true)
             );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
-            if (
-                prod.value === Product.unittest ||
-                prod.value === Product.ctags ||
-                prod.value === Product.isort ||
-                prod.value === Product.jupyter ||
-                prod.value === Product.notebook ||
-                prod.value === Product.pandas ||
-                prod.value === Product.ipykernel ||
-                prod.value === Product.kernelspec ||
-                prod.value === Product.nbconvert
-            ) {
+            if (prod.value === Product.unittest || prod.value === Product.ctags || prod.value === Product.isort) {
                 return;
             }
             await testInstallingProduct(prod.value);

@@ -14,7 +14,6 @@ import { PipInstaller } from '../../../client/common/installer/pipInstaller';
 import { PoetryInstaller } from '../../../client/common/installer/poetryInstaller';
 import {
     CTagsProductPathService,
-    DataScienceProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
@@ -103,13 +102,6 @@ suite('Common installer Service Registry', () => {
                 IProductPathService,
                 RefactoringLibraryProductPathService,
                 ProductType.RefactoringLibrary
-            )
-        ).once();
-        verify(
-            serviceManager.addSingleton<IProductPathService>(
-                IProductPathService,
-                DataScienceProductPathService,
-                ProductType.DataScience
             )
         ).once();
         verify(serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider)).once();
