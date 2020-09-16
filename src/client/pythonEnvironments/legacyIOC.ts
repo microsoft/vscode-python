@@ -58,6 +58,18 @@ import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services
 import { EnvironmentType, PythonEnvironment } from './info';
 import { EnvironmentInfoService, IEnvironmentInfoService } from './info/environmentInfoService';
 
+const convertedKinds = new Map(Object.entries({
+    [PythonEnvKind.System]: EnvironmentType.System,
+    [PythonEnvKind.MacDefault]: EnvironmentType.System,
+    [PythonEnvKind.WindowsStore]: EnvironmentType.WindowsStore,
+    [PythonEnvKind.Pyenv]: EnvironmentType.Pyenv,
+    [PythonEnvKind.Conda]: EnvironmentType.Conda,
+    [PythonEnvKind.CondaBase]: EnvironmentType.Conda,
+    [PythonEnvKind.VirtualEnv]: EnvironmentType.VirtualEnv,
+    [PythonEnvKind.Pipenv]: EnvironmentType.Pipenv,
+    [PythonEnvKind.Venv]: EnvironmentType.Venv,
+}));
+
 function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     const {
         name,
@@ -79,29 +91,17 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
         architecture: arch,
     };
 
-    if (kind === PythonEnvKind.System) {
-        env.envType = EnvironmentType.System;
-    } else if (kind === PythonEnvKind.MacDefault) {
-        env.envType = EnvironmentType.System;
-    } else if (kind === PythonEnvKind.WindowsStore) {
-        env.envType = EnvironmentType.WindowsStore;
-    } else if (kind === PythonEnvKind.Pyenv) {
-        env.envType = EnvironmentType.Pyenv;
-    } else if (kind === PythonEnvKind.Conda) {
-        env.envType = EnvironmentType.Conda;
-    } else if (kind === PythonEnvKind.CondaBase) {
-        env.envType = EnvironmentType.Conda;
-    } else if (kind === PythonEnvKind.VirtualEnv) {
-        env.envType = EnvironmentType.VirtualEnv;
-    } else if (kind === PythonEnvKind.Pipenv) {
-        env.envType = EnvironmentType.Pipenv;
-        if (searchLocation !== undefined) {
-            env.pipEnvWorkspaceFolder = searchLocation.fsPath;
-        }
-    } else if (kind === PythonEnvKind.Venv) {
-        env.envType = EnvironmentType.Venv;
+    const envType = convertedKinds.get(kind);
+    if (envType !== undefined) {
+        env.envType = envType;
     }
     // Otherwise it stays Unknown.
+
+    if (searchLocation !== undefined) {
+        if (kind === PythonEnvKind.Pipenv) {
+            env.pipEnvWorkspaceFolder = searchLocation.fsPath;
+        }
+    }
 
     if (version !== undefined) {
         const { release, sysVersion } = version;
