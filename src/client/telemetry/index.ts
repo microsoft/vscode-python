@@ -1691,6 +1691,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.WebviewStyleUpdate]: never | undefined;
     [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
     [Telemetry.WebviewStartup]: { type: string };
+    [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
+    [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
+    [Telemetry.ShiftEnterBannerShown]: never | undefined;
 
     // Start Page Events
     [Telemetry.StartPageViewed]: never | undefined;

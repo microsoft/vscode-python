@@ -68,6 +68,10 @@ import { PathUtils } from './platform/pathUtils';
 import { CurrentProcess } from './process/currentProcess';
 import { ProcessLogger } from './process/logger';
 import { IProcessLogger } from './process/types';
+import { CodeCssGenerator } from './startPage/codeCssGenerator';
+import { StartPage } from './startPage/startPage';
+import { ThemeFinder } from './startPage/themeFinder';
+import { ICodeCssGenerator, IStartPage, IThemeFinder } from './startPage/types';
 import { TerminalActivator } from './terminal/activator';
 import { PowershellTerminalActivationFailedHandler } from './terminal/activator/powershellFailedHandler';
 import { Bash } from './terminal/environmentActivationProviders/bash';
@@ -214,4 +218,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         DebugSessionTelemetry
     );
     serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
+    serviceManager.addSingleton<IStartPage>(IStartPage, StartPage, undefined, [IExtensionSingleActivationService]);
+    serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
+    serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
 }

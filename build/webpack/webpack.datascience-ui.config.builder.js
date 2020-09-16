@@ -22,20 +22,9 @@ const isProdBuild = constants.isCI || process.argv.includes('--mode');
 
 function getEntry(bundle) {
     switch (bundle) {
-        case 'notebook':
-            return {
-                nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
-                interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`]
-            };
-        case 'renderers':
-            return {
-                renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`]
-            };
         case 'viewers':
             return {
-                plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
-                dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`],
-                startPage: ['babel-polyfill', `./src/datascience-ui/startPage/index.tsx`]
+                startPage: ['babel-polyfill', `./src/startpage-ui/startPage/index.tsx`]
             };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
@@ -47,7 +36,7 @@ function getPlugins(bundle) {
         new ForkTsCheckerWebpackPlugin({
             checkSyntacticErrors: true,
             tsconfig: configFileName,
-            reportFiles: ['src/datascience-ui/**/*.{ts,tsx}'],
+            reportFiles: ['src/startpage-ui/**/*.{ts,tsx}'],
             memoryLimit: 9096
         })
     ];
@@ -55,38 +44,6 @@ function getPlugins(bundle) {
         plugins.push(...common.getDefaultPlugins(bundle));
     }
     switch (bundle) {
-        case 'notebook':
-            plugins.push(
-                new MonacoWebpackPlugin({
-                    languages: [] // force to empty so onigasm will be used
-                }),
-                new HtmlWebpackPlugin({
-                    template: path.join(__dirname, '/nativeOrInteractivePicker.html'),
-                    chunks: [],
-                    filename: 'index.html'
-                }),
-                new HtmlWebpackPlugin({
-                    template: 'src/datascience-ui/native-editor/index.html',
-                    chunks: ['monaco', 'commons', 'nativeEditor'],
-                    filename: 'index.nativeEditor.html'
-                }),
-                new HtmlWebpackPlugin({
-                    template: 'src/datascience-ui/history-react/index.html',
-                    chunks: ['monaco', 'commons', 'interactiveWindow'],
-                    filename: 'index.interactiveWindow.html'
-                })
-            );
-            break;
-        case 'renderers': {
-            const definePlugin = new webpack.DefinePlugin({
-                'process.env': {
-                    NODE_ENV: JSON.stringify('production')
-                }
-            });
-
-            plugins.push(...(isProdBuild ? [definePlugin] : []));
-            break;
-        }
         case 'viewers': {
             const definePlugin = new webpack.DefinePlugin({
                 'process.env': {
@@ -98,19 +55,7 @@ function getPlugins(bundle) {
                 ...(isProdBuild ? [definePlugin] : []),
                 ...[
                     new HtmlWebpackPlugin({
-                        template: 'src/datascience-ui/plot/index.html',
-                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                        chunks: ['commons', 'plotViewer'],
-                        filename: 'index.plotViewer.html'
-                    }),
-                    new HtmlWebpackPlugin({
-                        template: 'src/datascience-ui/data-explorer/index.html',
-                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                        chunks: ['commons', 'dataExplorer'],
-                        filename: 'index.dataExplorer.html'
-                    }),
-                    new HtmlWebpackPlugin({
-                        template: 'src/datascience-ui/startPage/index.html',
+                        template: 'src/startpage-ui/startPage/index.html',
                         indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'startPage'],
                         filename: 'index.startPage.html'
@@ -136,11 +81,11 @@ function buildConfiguration(bundle) {
             ...[
                 {
                     from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/dist/ipywidgets.js'),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                    to: path.join(constants.ExtensionRootDir, 'out', 'startpage-ui', bundleFolder)
                 },
                 {
                     from: path.join(constants.ExtensionRootDir, 'node_modules/font-awesome/**/*'),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder, 'node_modules')
+                    to: path.join(constants.ExtensionRootDir, 'out', 'startpage-ui', bundleFolder, 'node_modules')
                 }
             ]
         );
@@ -149,7 +94,7 @@ function buildConfiguration(bundle) {
         context: constants.ExtensionRootDir,
         entry: getEntry(bundle),
         output: {
-            path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
+            path: path.join(constants.ExtensionRootDir, 'out', 'startpage-ui', bundleFolder),
             filename: '[name].js',
             chunkFilename: `[name].bundle.js`
         },
@@ -238,7 +183,7 @@ function buildConfiguration(bundle) {
                     { from: './**/*theme*.json', to: '.' },
                     {
                         from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
-                        to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                        to: path.join(constants.ExtensionRootDir, 'out', 'startpage-ui', bundleFolder)
                     },
                     ...filesToCopy
                 ],
@@ -277,7 +222,7 @@ function buildConfiguration(bundle) {
                                 configFile: configFileName,
                                 // Faster (turn on only on CI, for dev we don't need this).
                                 transpileOnly: true,
-                                reportFiles: ['src/datascience-ui/**/*.{ts,tsx}']
+                                reportFiles: ['src/startpage-ui/**/*.{ts,tsx}']
                             }
                         }
                     ]
@@ -334,6 +279,4 @@ function buildConfiguration(bundle) {
     return config;
 }
 
-exports.notebooks = buildConfiguration('notebook');
 exports.viewers = buildConfiguration('viewers');
-exports.renderers = buildConfiguration('renderers');

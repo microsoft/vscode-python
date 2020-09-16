@@ -3,6 +3,8 @@
 
 import { interfaces } from 'inversify';
 import { IExtensionSingleActivationService } from '../activation/types';
+import { InteractiveShiftEnterBanner } from '../common/startPage/shiftEnterBanner';
+import { BANNER_NAME_INTERACTIVE_SHIFTENTER, IPythonExtensionBanner } from '../common/types';
 import { ClassType } from '../ioc/types';
 import { ExtensionActivationForTerminalActivation, TerminalAutoActivation } from './activation';
 import { CodeExecutionManager } from './codeExecution/codeExecutionManager';
@@ -24,6 +26,11 @@ export function registerTypes(serviceManager: IServiceRegistry) {
     serviceManager.addSingleton<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
 
     serviceManager.addSingleton<ICodeExecutionManager>(ICodeExecutionManager, CodeExecutionManager);
+    serviceManager.addSingleton<IPythonExtensionBanner>(
+        IPythonExtensionBanner,
+        InteractiveShiftEnterBanner,
+        BANNER_NAME_INTERACTIVE_SHIFTENTER
+    );
 
     serviceManager.addSingleton<ICodeExecutionService>(
         ICodeExecutionService,
