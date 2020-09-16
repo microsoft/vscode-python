@@ -504,6 +504,10 @@ export class KernelSelector implements IKernelSelectionUsage {
         if (!kernelSpec && !activeInterpreter) {
             return;
         } else if (!kernelSpec && activeInterpreter) {
+            if (!ignoreDependencyCheck) {
+                await this.kernelDependencyService.installMissingDependencies(activeInterpreter, cancelToken);
+            }
+
             // Return current interpreter.
             return {
                 kind: 'startUsingPythonInterpreter',
@@ -512,6 +516,11 @@ export class KernelSelector implements IKernelSelectionUsage {
         } else if (kernelSpec) {
             // Locate the interpreter that matches our kernelspec
             const interpreter = await this.kernelService.findMatchingInterpreter(kernelSpec, cancelToken);
+
+            if (!ignoreDependencyCheck && interpreter) {
+                await this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken);
+            }
+
             return { kind: 'startUsingKernelSpec', kernelSpec, interpreter };
         }
     }
