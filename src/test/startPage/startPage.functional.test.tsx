@@ -6,8 +6,8 @@ import * as assert from 'assert';
 import { ComponentClass, mount, ReactWrapper } from 'enzyme';
 import * as React from 'react';
 import { IStartPage } from '../../client/common/startPage/types';
-import { StartPage } from '../../datascience-ui/startPage/startPage';
-import { DataScienceIocContainer } from '../datascience/dataScienceIocContainer';
+import { StartPage } from '../../startpage-ui/startPage/startPage';
+import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 suite('StartPage tests', () => {
     let start: IStartPage;

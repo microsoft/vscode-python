@@ -3,14 +3,8 @@
 
 import { registerTypes as registerDotNetTypes } from '../common/dotnet/serviceRegistry';
 import { INugetRepository } from '../common/nuget/types';
-import {
-    BANNER_NAME_DS_SURVEY,
-    BANNER_NAME_INTERACTIVE_SHIFTENTER,
-    BANNER_NAME_PROPOSE_LS,
-    IPythonExtensionBanner
-} from '../common/types';
+import { BANNER_NAME_DS_SURVEY, BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../common/types';
 import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner';
-import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
 import { ProposePylanceBanner } from '../languageServices/proposeLanguageServerBanner';
 import { AATesting } from './aaTesting';
@@ -92,11 +86,11 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         DataScienceSurveyBanner,
         BANNER_NAME_DS_SURVEY
     );
-    serviceManager.addSingleton<IPythonExtensionBanner>(
-        IPythonExtensionBanner,
-        InteractiveShiftEnterBanner,
-        BANNER_NAME_INTERACTIVE_SHIFTENTER
-    );
+    // serviceManager.addSingleton<IPythonExtensionBanner>(
+    //     IPythonExtensionBanner,
+    //     InteractiveShiftEnterBanner,
+    //     BANNER_NAME_INTERACTIVE_SHIFTENTER
+    // );
 
     if (languageServerType === LanguageServerType.Microsoft) {
         serviceManager.add<ILanguageServerAnalysisOptions>(

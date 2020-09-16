@@ -1,7 +1,7 @@
+import { JSONObject } from '@phosphor/coreutils';
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import type { JSONObject } from '@phosphor/coreutils';
 import * as stackTrace from 'stack-trace';
 // tslint:disable-next-line: import-name
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
@@ -11,6 +11,7 @@ import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
+import { Telemetry } from '../common/startPage/constants';
 import { TerminalShellType } from '../common/terminal/types';
 import { Architecture } from '../common/utils/platform';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -18,7 +19,6 @@ import {
     JupyterCommands,
     NativeKeyboardCommandTelemetry,
     NativeMouseCommandTelemetry,
-    Telemetry,
     VSCodeNativeTelemetry
 } from '../datascience/constants';
 import { ExportFormat } from '../datascience/export/types';
@@ -806,29 +806,6 @@ export interface IEventNamePropertyMapping {
          * @type {string}
          */
         hashedName: string;
-    };
-    [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
-    [Telemetry.HashedNotebookCellOutputMimeTypePerf]: never | undefined;
-    [Telemetry.HashedCellOutputMimeType]: {
-        /**
-         * Hash of the cell output mimetype
-         *
-         * @type {string}
-         */
-        hashedName: string;
-        hasText: boolean;
-        hasLatex: boolean;
-        hasHtml: boolean;
-        hasSvg: boolean;
-        hasXml: boolean;
-        hasJson: boolean;
-        hasImage: boolean;
-        hasGeo: boolean;
-        hasPlotly: boolean;
-        hasVega: boolean;
-        hasWidget: boolean;
-        hasJupyter: boolean;
-        hasVnd: boolean;
     };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**
@@ -1662,6 +1639,115 @@ export interface IEventNamePropertyMapping {
      * Telemetry sent when providing workspace symbols doing Project-wide search for a symbol matching the given query string
      */
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
+    /*
+    Telemetry event sent with details of Jedi Memory usage.
+    mem_use - Memory usage of Process in kb.
+    limit - Upper bound for memory usage of Jedi process.
+    isUserDefinedLimit - Whether the user has configfured the upper bound limit.
+    restart - Whether to restart the Jedi Process (i.e. memory > limit).
+    */
+    [EventName.JEDI_MEMORY]: { mem_use: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
+    /*
+    Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
+    This information is useful in determining how well we identify shells on users machines.
+    This impacts executing code in terminals and activation of environments in terminal.
+    So, the better this works, the better it is for the user.
+    failed - If true, indicates we have failed to identify the shell. Note this impacts impacts ability to activate environments in the terminal & code.
+    shellIdentificationSource - How was the shell identified. One of 'terminalName' | 'settings' | 'environment' | 'default'
+                                If terminalName, then this means we identified the type of the shell based on the name of the terminal.
+                                If settings, then this means we identified the type of the shell based on user settings in VS Code.
+                                If environment, then this means we identified the type of the shell based on their environment (env variables, etc).
+                                    I.e. their default OS Shell.
+                                If default, then we reverted to OS defaults (cmd on windows, and bash on the rest).
+                                    This is the worst case scenario.
+                                    I.e. we could not identify the shell at all.
+    terminalProvided - If true, we used the terminal provided to detec the shell. If not provided, we use the default shell on user machine.
+    hasCustomShell - If undefined (not set), we didn't check.
+                     If true, user has customzied their shell in VSC Settings.
+    hasShellInEnv - If undefined (not set), we didn't check.
+                    If true, user has a shell in their environment.
+                    If false, user does not have a shell in their environment.
+    */
+    [EventName.TERMINAL_SHELL_IDENTIFICATION]: {
+        failed: boolean;
+        terminalProvided: boolean;
+        shellIdentificationSource: 'terminalName' | 'settings' | 'environment' | 'default' | 'vscode';
+        hasCustomShell: undefined | boolean;
+        hasShellInEnv: undefined | boolean;
+    };
+    /**
+     * Telemetry event sent when getting environment variables for an activated environment has failed.
+     *
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED]: {
+        /**
+         * Whether the activation commands contain the name `conda`.
+         *
+         * @type {boolean}
+         */
+        isPossiblyCondaEnv: boolean;
+        /**
+         * The type of terminal shell created: powershell, cmd, zsh, bash etc.
+         *
+         * @type {TerminalShellType}
+         */
+        terminal: TerminalShellType;
+    };
+
+    [Telemetry.WebviewStyleUpdate]: never | undefined;
+    [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
+    [Telemetry.WebviewStartup]: { type: string };
+    [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
+    [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
+    [Telemetry.ShiftEnterBannerShown]: never | undefined;
+
+    // Start Page Events
+    [Telemetry.StartPageViewed]: never | undefined;
+    [Telemetry.StartPageOpenedFromCommandPalette]: never | undefined;
+    [Telemetry.StartPageOpenedFromNewInstall]: never | undefined;
+    [Telemetry.StartPageOpenedFromNewUpdate]: never | undefined;
+    [Telemetry.StartPageWebViewError]: never | undefined;
+    [Telemetry.StartPageTime]: never | undefined;
+    [Telemetry.StartPageClickedDontShowAgain]: never | undefined;
+    [Telemetry.StartPageClosedWithoutAction]: never | undefined;
+    [Telemetry.StartPageUsedAnActionOnFirstTime]: never | undefined;
+    [Telemetry.StartPageOpenBlankNotebook]: never | undefined;
+    [Telemetry.StartPageOpenBlankPythonFile]: never | undefined;
+    [Telemetry.StartPageOpenInteractiveWindow]: never | undefined;
+    [Telemetry.StartPageOpenCommandPalette]: never | undefined;
+    [Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected]: never | undefined;
+    [Telemetry.StartPageOpenSampleNotebook]: never | undefined;
+    [Telemetry.StartPageOpenFileBrowser]: never | undefined;
+    [Telemetry.StartPageOpenFolder]: never | undefined;
+    [Telemetry.StartPageOpenWorkspace]: never | undefined;
+
+    // DS Events
+    [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
+    [Telemetry.HashedNotebookCellOutputMimeTypePerf]: never | undefined;
+    [Telemetry.HashedCellOutputMimeType]: {
+        /**
+         * Hash of the cell output mimetype
+         *
+         * @type {string}
+         */
+        hashedName: string;
+        hasText: boolean;
+        hasLatex: boolean;
+        hasHtml: boolean;
+        hasSvg: boolean;
+        hasXml: boolean;
+        hasJson: boolean;
+        hasImage: boolean;
+        hasGeo: boolean;
+        hasPlotly: boolean;
+        hasVega: boolean;
+        hasWidget: boolean;
+        hasJupyter: boolean;
+        hasVnd: boolean;
+    };
+
     // Data Science
     [Telemetry.AddCellBelow]: never | undefined;
     [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
@@ -1885,62 +1971,7 @@ export interface IEventNamePropertyMapping {
     [NativeMouseCommandTelemetry.SelectKernel]: never | undefined;
     [NativeMouseCommandTelemetry.SelectServer]: never | undefined;
     [NativeMouseCommandTelemetry.ToggleVariableExplorer]: never | undefined;
-    /*
-    Telemetry event sent with details of Jedi Memory usage.
-    mem_use - Memory usage of Process in kb.
-    limit - Upper bound for memory usage of Jedi process.
-    isUserDefinedLimit - Whether the user has configfured the upper bound limit.
-    restart - Whether to restart the Jedi Process (i.e. memory > limit).
-    */
-    [EventName.JEDI_MEMORY]: { mem_use: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
-    /*
-    Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
-    This information is useful in determining how well we identify shells on users machines.
-    This impacts executing code in terminals and activation of environments in terminal.
-    So, the better this works, the better it is for the user.
-    failed - If true, indicates we have failed to identify the shell. Note this impacts impacts ability to activate environments in the terminal & code.
-    shellIdentificationSource - How was the shell identified. One of 'terminalName' | 'settings' | 'environment' | 'default'
-                                If terminalName, then this means we identified the type of the shell based on the name of the terminal.
-                                If settings, then this means we identified the type of the shell based on user settings in VS Code.
-                                If environment, then this means we identified the type of the shell based on their environment (env variables, etc).
-                                    I.e. their default OS Shell.
-                                If default, then we reverted to OS defaults (cmd on windows, and bash on the rest).
-                                    This is the worst case scenario.
-                                    I.e. we could not identify the shell at all.
-    terminalProvided - If true, we used the terminal provided to detec the shell. If not provided, we use the default shell on user machine.
-    hasCustomShell - If undefined (not set), we didn't check.
-                     If true, user has customzied their shell in VSC Settings.
-    hasShellInEnv - If undefined (not set), we didn't check.
-                    If true, user has a shell in their environment.
-                    If false, user does not have a shell in their environment.
-    */
-    [EventName.TERMINAL_SHELL_IDENTIFICATION]: {
-        failed: boolean;
-        terminalProvided: boolean;
-        shellIdentificationSource: 'terminalName' | 'settings' | 'environment' | 'default' | 'vscode';
-        hasCustomShell: undefined | boolean;
-        hasShellInEnv: undefined | boolean;
-    };
-    /**
-     * Telemetry event sent when getting environment variables for an activated environment has failed.
-     *
-     * @type {(undefined | never)}
-     * @memberof IEventNamePropertyMapping
-     */
-    [EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED]: {
-        /**
-         * Whether the activation commands contain the name `conda`.
-         *
-         * @type {boolean}
-         */
-        isPossiblyCondaEnv: boolean;
-        /**
-         * The type of terminal shell created: powershell, cmd, zsh, bash etc.
-         *
-         * @type {TerminalShellType}
-         */
-        terminal: TerminalShellType;
-    };
+
     /**
      * Telemetry event sent once done searching for kernel spec and interpreter for a local connection.
      *

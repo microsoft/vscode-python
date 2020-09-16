@@ -7,8 +7,6 @@ import { UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/consta
 import { NotebookEditorSupport } from '../common/experiments/groups';
 import { FileSystemPathUtils } from '../common/platform/fs-paths';
 import { IFileSystemPathUtils } from '../common/platform/types';
-import { StartPage } from '../common/startPage/startPage';
-import { IStartPage } from '../common/startPage/types';
 import { IExperimentsManager } from '../common/types';
 import { ProtocolParser } from '../debugger/extension/helpers/protocolParser';
 import { IProtocolParser } from '../debugger/extension/types';
@@ -297,7 +295,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
     serviceManager.addSingleton<INotebookAndInteractiveWindowUsageTracker>(INotebookAndInteractiveWindowUsageTracker, NotebookAndInteractiveWindowUsageTracker);
     serviceManager.addSingleton<KernelDaemonPreWarmer>(KernelDaemonPreWarmer, KernelDaemonPreWarmer);
-    serviceManager.addSingleton<IStartPage>(IStartPage, StartPage, undefined, [IExtensionSingleActivationService]);
     serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, MultiplexingDebugService, Identifiers.MULTIPLEXING_DEBUGSERVICE);
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, JupyterDebugService, Identifiers.RUN_BY_LINE_DEBUGSERVICE);

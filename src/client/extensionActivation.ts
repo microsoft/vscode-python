@@ -20,6 +20,8 @@ import { registerTypes as platformRegisterTypes } from './common/platform/servic
 import { IFileSystem } from './common/platform/types';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
+import { StartPage } from './common/startPage/startPage';
+import { IStartPage } from './common/startPage/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -96,9 +98,11 @@ async function activateLegacy(
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
     addOutputChannelLogging(standardOutputChannel);
     const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
-    const jupyterOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
+
+    // DS
+    const jupyterOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, jupyterOutputChannel, JUPYTER_OUTPUT_CHANNEL);
 
     // Core registrations (non-feature specific).
@@ -156,6 +160,8 @@ async function activateLegacy(
     const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
     const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
+    const startPage = serviceManager.get<StartPage>(IStartPage);
+    cmdManager.registerCommand(Commands.OpenStartPage, () => startPage.open());
     cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
 
     // Display progress of interpreter refreshes only after extension has activated.

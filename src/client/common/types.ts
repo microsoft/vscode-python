@@ -398,6 +398,7 @@ export interface IDataScienceSettings {
     jupyterCommandLineArguments: string[];
     widgetScriptSources: WidgetCDNs[];
     alwaysScrollOnNewCell?: boolean;
+    showKernelSelectionOnInteractiveWindow?: boolean;
     interactiveWindowMode: InteractiveWindowMode;
 }
 
@@ -655,4 +656,64 @@ export interface IInterpreterPathService {
     inspect(resource: Resource): InspectInterpreterSettingType;
     update(resource: Resource, configTarget: ConfigurationTarget, value: string | undefined): Promise<void>;
     copyOldInterpreterStorageValuesToNew(resource: Uri | undefined): Promise<void>;
+}
+
+export interface IDataScienceSettings {
+    allowImportFromNotebook: boolean;
+    alwaysTrustNotebooks: boolean;
+    enabled: boolean;
+    jupyterInterruptTimeout: number;
+    jupyterLaunchTimeout: number;
+    jupyterLaunchRetries: number;
+    jupyterServerURI: string;
+    notebookFileRoot: string;
+    changeDirOnImportExport: boolean;
+    useDefaultConfigForJupyter: boolean;
+    searchForJupyter: boolean;
+    allowInput: boolean;
+    showCellInputCode: boolean;
+    collapseCellInputCodeByDefault: boolean;
+    maxOutputSize: number;
+    enableScrollingForCellOutputs: boolean;
+    gatherToScript?: boolean;
+    gatherSpecPath?: string;
+    sendSelectionToInteractiveWindow: boolean;
+    markdownRegularExpression: string;
+    codeRegularExpression: string;
+    allowLiveShare?: boolean;
+    errorBackgroundColor: string;
+    ignoreVscodeTheme?: boolean;
+    variableExplorerExclude?: string;
+    liveShareConnectionTimeout?: number;
+    decorateCells?: boolean;
+    enableCellCodeLens?: boolean;
+    askForLargeDataFrames?: boolean;
+    enableAutoMoveToNextCell?: boolean;
+    allowUnauthorizedRemoteConnection?: boolean;
+    askForKernelRestart?: boolean;
+    enablePlotViewer?: boolean;
+    codeLenses?: string;
+    debugCodeLenses?: string;
+    debugpyDistPath?: string;
+    stopOnFirstLineWhileDebugging?: boolean;
+    textOutputLimit?: number;
+    magicCommandsAsComments?: boolean;
+    stopOnError?: boolean;
+    remoteDebuggerPort?: number;
+    colorizeInputBox?: boolean;
+    addGotoCodeLenses?: boolean;
+    useNotebookEditor?: boolean;
+    runMagicCommands?: string;
+    runStartupCommands: string | string[];
+    debugJustMyCode: boolean;
+    defaultCellMarker?: string;
+    verboseLogging?: boolean;
+    themeMatplotlibPlots?: boolean;
+    useWebViewServer?: boolean;
+    variableQueries: IVariableQuery[];
+    disableJupyterAutoStart?: boolean;
+    jupyterCommandLineArguments: string[];
+    widgetScriptSources: WidgetCDNs[];
+    alwaysScrollOnNewCell?: boolean;
+    interactiveWindowMode: InteractiveWindowMode;
 }

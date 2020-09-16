@@ -5,13 +5,13 @@
 
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/commands';
-import { Commands as DSCommands } from '../../datascience/constants';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
 import { INotebookModel, ISwitchKernelOptions } from '../../datascience/types';
 import { CommandSource } from '../../testing/common/constants';
 import { TestFunction, TestsToRun } from '../../testing/common/types';
 import { TestDataItem, TestWorkspaceFolder } from '../../testing/types';
 import { Commands } from '../constants';
+import { Commands as DSCommands } from '../startPage/constants';
 import { Channel } from './types';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
@@ -52,6 +52,11 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Tests_Ask_To_Stop_Test]: [];
     [Commands.Tests_Discovering]: [];
     [Commands.PickLocalProcess]: [];
+    [Commands.OpenStartPage]: [];
+    [LSCommands.ClearAnalyisCache]: [];
+    [LSCommands.RestartLS]: [];
+
+    // DS commands
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
     [DSCommands.ExecSelectionInInteractiveWindow]: [];
@@ -75,9 +80,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
     [DSCommands.CreateNewNotebook]: [];
-    [Commands.OpenStartPage]: [];
-    [LSCommands.ClearAnalyisCache]: [];
-    [LSCommands.RestartLS]: [];
 }
 
 /**
@@ -150,6 +152,10 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.navigateToTestFile]: [Uri, TestDataItem, boolean];
     [Commands.navigateToTestFunction]: [Uri, TestDataItem, boolean];
     [Commands.navigateToTestSuite]: [Uri, TestDataItem, boolean];
+    [DSCommands.OpenNotebook]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.RunAllCells]: [Uri];
+
+    // DS Commands
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];

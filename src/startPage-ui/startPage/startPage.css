@@ -1,0 +1,93 @@
+.main-page {
+    margin: 50px;
+    font-family: var(--font-family);
+    min-width: 700px;
+}
+
+.title-icon {
+    display: inline-block;
+    vertical-align: top;
+    width: 40px;
+    margin-right: 10px;
+}
+
+.icon {
+    display: inline-block;
+    width: 45px;
+    padding: 20px 25px 20px 25px;
+    margin-right: 30px;
+    background-color: var(--vscode-titleBar-activeBackground);
+}
+
+.icon:hover,
+.text:hover {
+    background-color: var(--vscode-editorIndentGuide-activeBackground);
+    cursor: pointer;
+}
+
+.title {
+    display: inline-block;
+    vertical-align: top;
+    font-size: xx-large;
+}
+
+.title-row {
+    display: block;
+    height: 80px;
+}
+
+.text {
+    font-weight: 100;
+    font-size: x-large;
+    width: fit-content;
+}
+
+.block {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.row {
+    display: block;
+    min-height: 120px;
+    white-space: nowrap;
+}
+
+.releaseNotesRow {
+    display: block;
+    min-height: 50px;
+    white-space: nowrap;
+}
+
+.link {
+    display: inline;
+    color: var(--vscode-debugIcon-continueForeground);
+    text-decoration: none;
+}
+
+.link:hover {
+    cursor: pointer;
+    color: var(--vscode-button-hoverBackground);
+}
+
+.italics {
+    display: inline;
+    font-style: italic;
+}
+
+.checkbox {
+    margin: 1em 1em 1em 0em;
+}
+
+.paragraph {
+    display: block;
+    margin-block-start: 5px;
+    margin-block-end: 5px;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+}
+
+.list {
+    line-height: 1.5;
+    white-space: initial;
+}

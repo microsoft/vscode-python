@@ -4,4 +4,4 @@
 'use strict';
 
 const builder = require('./webpack.datascience-ui.config.builder');
-module.exports = [builder.notebooks, builder.viewers];
+module.exports = [builder.viewers];
