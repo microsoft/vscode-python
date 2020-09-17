@@ -751,8 +751,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             if (!this.notebook && metadata?.kernelspec) {
                 this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                     jupyterServerStatus: ServerStatus.NotStarted,
-                    localizedUri: '',
-                    displayName: metadata.kernelspec.display_name ?? metadata.kernelspec.name,
+                    serverName: await this.getServerDisplayName(undefined),
+                    kernelName: metadata.kernelspec.display_name ?? metadata.kernelspec.name,
                     language: translateKernelLanguageToMonaco(
                         (metadata.kernelspec.language as string) ?? PYTHON_LANGUAGE
                     )

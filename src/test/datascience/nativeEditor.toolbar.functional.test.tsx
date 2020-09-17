@@ -45,9 +45,9 @@ suite('DataScience Native Toolbar', () => {
             font: { family: '', size: 1 },
             interruptKernel: sinon.stub(),
             kernel: {
-                displayName: '',
+                kernelName: '',
                 jupyterServerStatus: ServerStatus.Busy,
-                localizedUri: '',
+                serverName: '',
                 language: PYTHON_LANGUAGE
             },
             restartKernel: sinon.stub(),
@@ -245,9 +245,9 @@ suite('DataScience Native Toolbar', () => {
                 font: { family: '', size: 1 },
                 interruptKernel: sinon.stub(),
                 kernel: {
-                    displayName: '',
+                    kernelName: '',
                     jupyterServerStatus: ServerStatus.Busy,
-                    localizedUri: '',
+                    serverName: '',
                     language: PYTHON_LANGUAGE
                 },
                 restartKernel: sinon.stub(),

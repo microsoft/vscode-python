@@ -223,7 +223,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     }
 
     private renderKernelSelection() {
-        if (this.props.kernel.localizedUri === getLocString('DataScience.localJupyterServer', 'local')) {
+        if (this.props.kernel.serverName === getLocString('DataScience.localJupyterServer', 'local')) {
             return;
         }
 
@@ -235,7 +235,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                 selectServer={this.props.selectServer}
                 selectKernel={this.props.selectKernel}
                 shouldShowTrustMessage={false}
-                settings={this.props.settings}
             />
         );
     }
