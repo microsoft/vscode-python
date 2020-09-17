@@ -32,7 +32,6 @@
     "python.command.python.switchToDailyChannel.title": "切換至 Insiders 每日頻道",
     "python.command.python.switchToWeeklyChannel.title": "切換至 Insiders 每週頻道",
     "python.command.python.viewOutput.title": "顯示輸出",
-    "python.command.python.datascience.viewJupyterOutput.title": "顯示 Jupyter 輸出",
     "python.command.python.viewLanguageServerOutput.title": "顯示語言伺服器輸出",
     "python.command.python.discoveringTests.title": "正在探索...",
     "python.command.python.stopTests.title": "停止",

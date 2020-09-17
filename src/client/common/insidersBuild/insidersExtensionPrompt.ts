@@ -9,7 +9,7 @@ import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager } from '../application/types';
 import { traceDecorators } from '../logger';
 import { IPersistentState, IPersistentStateFactory } from '../types';
-import { Common, DataScienceSurveyBanner, ExtensionChannels } from '../utils/localize';
+import { Common, ExtensionChannels, ExtensionSurveyBanner } from '../utils/localize';
 import { noop } from '../utils/misc';
 import { IExtensionChannelService, IInsiderExtensionPrompt } from './types';
 
@@ -35,7 +35,7 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            DataScienceSurveyBanner.bannerLabelNo()
+            ExtensionSurveyBanner.bannerLabelNo()
         ];
         const telemetrySelections: ['Yes, weekly', 'Yes, daily', 'No, thanks'] = [
             'Yes, weekly',

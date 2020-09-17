@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+// tslint:disable-next-line: no-single-line-block-comment
+/* eslint-disable */
 'use strict';
 import '../../extensions';
 
@@ -125,7 +127,7 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
                     this.panelOptions.listener.onChangeViewState(this);
                 } else {
                     // Indicate that we can't load the file path
-                    const badPanelString = localize.DataScience.badWebPanelFormatString();
+                    const badPanelString = localize.StartPage.badWebPanelFormatString();
                     this.panel.webview.html = badPanelString.format(this.panelOptions.scripts.join(', '));
                 }
             }
