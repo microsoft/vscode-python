@@ -6,11 +6,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { join } from 'path';
+import { dirname } from 'path';
 import { CancellationToken, Event, Uri } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
 import { IExtensions, IInstaller, InstallerResponse, Product, Resource } from '../../common/types';
-import { EXTENSION_ROOT_DIR } from '../../constants';
+import { getDebugpyPackagePath } from '../../debugger/extension/adapter/remoteLaunchers';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../interpreter/configuration/types';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -104,7 +104,7 @@ export class JupyterExtensionIntegration {
                 resource?: InterpreterUri,
                 cancel?: CancellationToken
             ): Promise<InstallerResponse> => this.installer.install(product, resource, cancel),
-            getDebuggerPath: async () => join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')
+            getDebuggerPath: async () => dirname(getDebugpyPackagePath())
         });
     }
 }
