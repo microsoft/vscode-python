@@ -1,4 +1,5 @@
-import { Event, NotebookCell, QuickPickItem } from 'vscode';
+import { QuickPickItem } from 'vscode';
+import { IDisposable } from '../common/types';
 
 export interface IJupyterServerUri {
     baseUrl: string;
@@ -26,11 +27,34 @@ export interface IJupyterUriProviderRegistration {
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
 
-export const INotebookExtensibility = Symbol('INotebookExtensibility');
+export interface IDataViewerDataProvider {
+    dispose(): void;
+    getDataFrameInfo(): Promise<IDataFrameInfo>;
+    getAllRows(): Promise<IRowsResponse>;
+    getRows(start: number, end: number): Promise<IRowsResponse>;
+}
 
-export interface INotebookExtensibility {
-    readonly onKernelPostExecute: Event<NotebookCell>;
-    readonly onKernelRestart: Event<void>;
-    fireKernelRestart(): void;
-    fireKernelPostExecute(cell: NotebookCell): void;
+export interface IDataFrameInfo {
+    columns?: { key: string; type: ColumnType }[];
+    indexColumn?: string;
+    rowCount?: number;
+}
+
+export enum ColumnType {
+    String = 'string',
+    Number = 'number',
+    Bool = 'bool'
+}
+
+// tslint:disable-next-line: no-any
+export type IRowsResponse = any[];
+
+export const IDataViewerFactory = Symbol('IDataViewerFactory');
+export interface IDataViewerFactory {
+    create(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer>;
+}
+
+export const IDataViewer = Symbol('IDataViewer');
+export interface IDataViewer extends IDisposable {
+    showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
 }

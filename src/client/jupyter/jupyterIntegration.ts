@@ -8,15 +8,15 @@
 import { inject, injectable } from 'inversify';
 import { dirname } from 'path';
 import { CancellationToken, Event, Uri } from 'vscode';
-import { InterpreterUri } from '../../common/installer/types';
-import { IExtensions, IInstaller, InstallerResponse, Product, Resource } from '../../common/types';
-import { getDebugpyPackagePath } from '../../debugger/extension/adapter/remoteLaunchers';
-import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../interpreter/configuration/types';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
-import { WindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { InterpreterUri } from '../common/installer/types';
+import { IExtensions, IInstaller, InstallerResponse, Product, Resource } from '../common/types';
+import { getDebugpyPackagePath } from '../debugger/extension/adapter/remoteLaunchers';
+import { IEnvironmentActivationService } from '../interpreter/activation/types';
+import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
+import { IInterpreterService } from '../interpreter/contracts';
+import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
+import { WindowsStoreInterpreter } from '../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 
 type PythonApiForJupyterExtension = {
     /**
