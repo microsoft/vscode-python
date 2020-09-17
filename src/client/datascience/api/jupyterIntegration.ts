@@ -79,10 +79,10 @@ export class JupyterExtensionIntegration {
         if (!jupyterExtension) {
             return;
         }
-        if (!jupyterExtension.isActive) {
-            await jupyterExtension.activate();
-        }
         await jupyterExtension.activate();
+        if (!jupyterExtension.isActive) {
+            return;
+        }
         if (jupyterExtension.isActive) {
             const jupyterExtensionApi = jupyterExtension.exports;
             jupyterExtensionApi.registerPythonApi({
