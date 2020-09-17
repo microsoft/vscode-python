@@ -595,5 +595,6 @@
     "DataScience.interactiveWindowModeBannerTitle": "Do you want to open a new Python Interactive window for this file? [More Information](command:workbench.action.openSettings?%5B%22python.dataScience.interactiveWindowMode%22%5D).",
     "DataScience.interactiveWindowModeBannerSwitchYes": "Yes",
     "DataScience.interactiveWindowModeBannerSwitchAlways": "Always",
-    "DataScience.interactiveWindowModeBannerSwitchNo": "No"
+    "DataScience.interactiveWindowModeBannerSwitchNo": "No",
+    "DataScience.ipykernelNotInstalled": "IPyKernel not installed into interpreter {0}"
 }

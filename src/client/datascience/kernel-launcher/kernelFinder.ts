@@ -5,13 +5,12 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { IExtensionContext, IInstaller, InstallerResponse, IPathUtils, Product, Resource } from '../../common/types';
+import { IExtensionContext, IPathUtils, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterLocatorService, IInterpreterService, KNOWN_PATH_SERVICE } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
@@ -20,7 +19,6 @@ import { Telemetry } from '../constants';
 import { defaultKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import { IDataScienceFileSystem, IJupyterKernelSpec } from '../types';
-import { getKernelInterpreter } from './helpers';
 import { IKernelFinder } from './types';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
@@ -56,7 +54,6 @@ export class KernelFinder implements IKernelFinder {
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(IInstaller) private installer: IInstaller,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonExecutionFactory) private readonly exeFactory: IPythonExecutionFactory,
@@ -65,9 +62,7 @@ export class KernelFinder implements IKernelFinder {
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernelSpec(
         resource: Resource,
-        kernelSpecMetadata?: nbformat.IKernelspecMetadata,
-        cancelToken?: CancellationToken,
-        ignoreDependencyCheck?: boolean
+        kernelSpecMetadata?: nbformat.IKernelspecMetadata
     ): Promise<IJupyterKernelSpec | undefined> {
         await this.readCache();
         let foundKernel: IJupyterKernelSpec | undefined;
@@ -108,8 +103,7 @@ export class KernelFinder implements IKernelFinder {
 
         this.writeCache().ignoreErrors();
 
-        // Verify that ipykernel is installed into the given kernelspec interpreter
-        return ignoreDependencyCheck || !foundKernel ? foundKernel : this.verifyIpyKernel(foundKernel, cancelToken);
+        return foundKernel;
     }
 
     // Search all our local file system locations for installed kernel specs and return them
@@ -316,30 +310,6 @@ export class KernelFinder implements IKernelFinder {
             });
 
         return flatten(fullPathResults);
-    }
-
-    // For the given kernelspec return back the kernelspec with ipykernel installed into it or error
-    private async verifyIpyKernel(
-        kernelSpec: IJupyterKernelSpec,
-        cancelToken?: CancellationToken
-    ): Promise<IJupyterKernelSpec> {
-        const interpreter = await getKernelInterpreter(kernelSpec, this.interpreterService);
-
-        if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
-            return kernelSpec;
-        } else {
-            const token = new CancellationTokenSource();
-            const response = await this.installer.promptToInstall(
-                Product.ipykernel,
-                interpreter,
-                wrapCancellationTokens(cancelToken, token.token)
-            );
-            if (response === InstallerResponse.Installed) {
-                return kernelSpec;
-            }
-        }
-
-        throw new Error(`IPyKernel not installed into interpreter ${interpreter.displayName}`);
     }
 
     private async getKernelSpecFromActiveInterpreter(
