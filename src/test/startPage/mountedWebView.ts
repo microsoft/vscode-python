@@ -1,5 +1,5 @@
-// tslint:disable-next-line: no-single-line-block-comment
-/* eslint-disable */
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 import { ReactWrapper } from 'enzyme';
 import { noop } from 'lodash';
 import { Event, EventEmitter, Uri } from 'vscode';

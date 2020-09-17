@@ -7,16 +7,16 @@ import { ComponentClass, mount, ReactWrapper } from 'enzyme';
 import * as React from 'react';
 import { IStartPage } from '../../client/common/startPage/types';
 import { StartPage } from '../../startpage-ui/startPage/startPage';
-import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { StartPageIocContainer } from './startPageIocContainer';
 
 suite('StartPage tests', () => {
     let start: IStartPage;
-    let ioc: DataScienceIocContainer;
+    let ioc: StartPageIocContainer;
 
     setup(async () => {
         process.env.UITEST_DISABLE_INSIDERS = '1';
-        ioc = new DataScienceIocContainer();
-        ioc.registerDataScienceTypes();
+        ioc = new StartPageIocContainer();
+        ioc.registerStartPageTypes();
     });
 
     teardown(async () => {

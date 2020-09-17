@@ -3389,66 +3389,14 @@
                     "when": "testsDiscovered"
                 }
             ]
-        },
-        "notebookOutputRenderer": [
-            {
-                "id": "jupyter-notebook-renderer",
-                "entrypoint": "./out/datascience-ui/renderers/renderers.js",
-                "displayName": "Jupyter Notebook Renderer",
-                "mimeTypes": [
-                    "application/geo+json",
-                    "application/vdom.v1+json",
-                    "application/vnd.dataresource+json",
-                    "application/vnd.plotly.v1+json",
-                    "application/vnd.vega.v2+json",
-                    "application/vnd.vega.v3+json",
-                    "application/vnd.vega.v4+json",
-                    "application/vnd.vega.v5+json",
-                    "application/vnd.vegalite.v1+json",
-                    "application/vnd.vegalite.v2+json",
-                    "application/vnd.vegalite.v3+json",
-                    "application/vnd.vegalite.v4+json",
-                    "application/x-nteract-model-debug+json",
-                    "image/gif",
-                    "image/png",
-                    "image/jpeg",
-                    "text/latex",
-                    "text/vnd.plotly.v1+html"
-                ],
-                "viewType": "jupyter-notebook"
-            }
-        ],
-        "notebookProvider": [
-            {
-                "viewType": "jupyter-notebook",
-                "displayName": "Jupyter Notebook (preview)",
-                "selector": [
-                    {
-                        "filenamePattern": "*.ipynb"
-                    }
-                ],
-                "priority": "option"
-            }
-        ],
-        "customEditors": [
-            {
-                "viewType": "ms-python.python.notebook.ipynb",
-                "displayName": "Jupyter Notebook",
-                "selector": [
-                    {
-                        "filenamePattern": "*.ipynb"
-                    }
-                ],
-                "priority": "option"
-            }
-        ]
+        }
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
-        "compile-webviews-watch": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
+        "compile-webviews-watch": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.startpage-ui.config.js --watch",
         "compile-webviews-watchd": "deemon npm run compile-webviews-watch",
         "kill-compile-webviews-watchd": "deemon --kill npm run compile-webviews-watch",
         "build-ipywidgets": "npm run build-ipywidgets-clean && npm run build-ipywidgets-compile && npm run build-ipywidgets-webpack",

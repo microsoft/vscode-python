@@ -3,5 +3,5 @@
 
 'use strict';
 
-const builder = require('./webpack.datascience-ui.config.builder');
-module.exports = [builder.renderers];
+const builder = require('./webpack.startpage-ui.config.builder');
+module.exports = [builder.viewers];

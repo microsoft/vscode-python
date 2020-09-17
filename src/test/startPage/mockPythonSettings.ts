@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 // tslint:disable:trailing-comma no-any
-// tslint:disable-next-line: no-single-line-block-comment
-/* eslint-disable */
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { IExperimentsManager, IInterpreterPathService, Resource } from '../../client/common/types';

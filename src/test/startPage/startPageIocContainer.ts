@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 // tslint:disable:trailing-comma no-any
-// tslint:disable-next-line: no-single-line-block-comment
-/* eslint-disable */
 import * as child_process from 'child_process';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
@@ -89,10 +87,13 @@ import { IMountedWebView } from './mountedWebView';
 import { IMountedWebViewFactory, MountedWebViewFactory } from './mountedWebViewFactory';
 import { WebBrowserPanelProvider } from './webBrowserPanelProvider';
 
-export class DataScienceIocContainer extends UnitTestIocContainer {
+export class StartPageIocContainer extends UnitTestIocContainer {
     private static foundPythonPath: string | undefined;
+
     public shouldMockJupyter: boolean;
+
     public applicationShell!: ApplicationShell;
+
     public platformService!: PlatformService;
 
     private asyncRegistry: AsyncDisposableRegistry;
@@ -106,20 +107,30 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private extensionRootPath: string | undefined;
 
     private pendingWebPanel: IMountedWebView | undefined;
+
     private configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
+
     private worksaceFoldersChangedEvent = new EventEmitter<WorkspaceFoldersChangeEvent>();
+
     private emptyConfig = new MockWorkspaceConfiguration();
+
     private configMap = new Map<string, MockWorkspaceConfiguration>();
+
     private languageServerType: LanguageServerType = LanguageServerType.Microsoft;
+
     private disposed = false;
+
     private defaultPythonPath: string | undefined;
 
     private workspaceFolders: MockWorkspaceFolder[] = [];
+
     private commandManager: MockCommandManager = new MockCommandManager();
+
     // public get onContextSet(): Event<{ name: string; value: boolean }> {
     //     return this.contextSetEvent.event;
     // }
     private setContexts: Record<string, boolean> = {};
+
     private documentManager = new MockDocumentManager();
 
     private contextSetEvent: EventEmitter<{ name: string; value: boolean }> = new EventEmitter<{
@@ -177,11 +188,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     // tslint:disable:max-func-body-length
-    public registerDataScienceTypes() {
+    public registerStartPageTypes() {
         this.defaultPythonPath = this.findPythonPath();
 
-        // this.serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
-        this.serviceManager.addSingletonInstance<DataScienceIocContainer>(DataScienceIocContainer, this);
+        this.serviceManager.addSingletonInstance<StartPageIocContainer>(StartPageIocContainer, this);
 
         // Inform the cacheable locator service to use a static map so that it stays in memory in between tests
         CacheableLocatorPromiseCache.forceUseStatic();
@@ -226,7 +236,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
             this.setContexts[name] = value;
-            this.contextSetEvent.fire({ name: name, value: value });
+            this.contextSetEvent.fire({ name, value });
         });
         this.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, this.commandManager);
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
@@ -340,21 +350,27 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private createWorkspaceService() {
         class MockFileSystemWatcher implements FileSystemWatcher {
-            public ignoreCreateEvents: boolean = false;
-            public ignoreChangeEvents: boolean = false;
-            public ignoreDeleteEvents: boolean = false;
-            //tslint:disable-next-line:no-any
+            public ignoreCreateEvents = false;
+
+            public ignoreChangeEvents = false;
+
+            public ignoreDeleteEvents = false;
+
+            // tslint:disable-next-line:no-any
             public onDidChange(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
-            //tslint:disable-next-line:no-any
+
+            // tslint:disable-next-line:no-any
             public onDidDelete(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
-            //tslint:disable-next-line:no-any
+
+            // tslint:disable-next-line:no-any
             public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
+
             public dispose() {
                 noop();
             }
@@ -426,16 +442,16 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private findPythonPath(): string {
         try {
             // Use a static variable so we don't have to recompute this on subsequenttests
-            if (!DataScienceIocContainer.foundPythonPath) {
+            if (!StartPageIocContainer.foundPythonPath) {
                 // Give preference to the CI test python (could also be set in launch.json for debugging).
                 const output = child_process.execFileSync(
                     process.env.CI_PYTHON_PATH || 'python',
                     ['-c', 'import sys;print(sys.executable)'],
                     { encoding: 'utf8' }
                 );
-                DataScienceIocContainer.foundPythonPath = output.replace(/\r?\n/g, '');
+                StartPageIocContainer.foundPythonPath = output.replace(/\r?\n/g, '');
             }
-            return DataScienceIocContainer.foundPythonPath;
+            return StartPageIocContainer.foundPythonPath;
         } catch (ex) {
             return 'python';
         }

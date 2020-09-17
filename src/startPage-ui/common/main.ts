@@ -1,7 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-// tslint:disable-next-line: no-single-line-block-comment
-/* eslint-disable */
 
 declare let __webpack_public_path__: string;
 

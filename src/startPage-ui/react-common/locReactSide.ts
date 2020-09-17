@@ -1,7 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-// tslint:disable-next-line: no-single-line-block-comment
-/* eslint-disable */
 
 'use strict';
 // The react code can't use the localize.ts module because it reads from

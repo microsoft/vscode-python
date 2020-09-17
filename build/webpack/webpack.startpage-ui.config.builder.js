@@ -72,7 +72,7 @@ function getPlugins(bundle) {
 }
 
 function buildConfiguration(bundle) {
-    // Folder inside `datascience-ui` that will be created and where the files will be dumped.
+    // Folder inside `startpage-ui` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
     const filesToCopy = [];
     if (bundle === 'notebook') {
