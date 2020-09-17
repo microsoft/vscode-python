@@ -3,50 +3,97 @@
 // tslint:disable:trailing-comma no-any
 // tslint:disable-next-line: no-single-line-block-comment
 /* eslint-disable */
+import * as child_process from 'child_process';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import { interfaces } from 'inversify';
 import * as os from 'os';
+import * as path from 'path';
 import { anything, instance, mock, reset, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { promisify } from 'util';
+import {
+    ConfigurationChangeEvent,
+    Disposable,
+    EventEmitter,
+    FileSystemWatcher,
+    Uri,
+    WorkspaceFolder,
+    WorkspaceFoldersChangeEvent
+} from 'vscode';
 import * as vsls from 'vsls/vscode';
+import { LanguageServerType } from '../../client/activation/types';
 
-import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
+import { ApplicationShell } from '../../client/common/application/applicationShell';
 import {
     IApplicationEnvironment,
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
     ILiveShareApi,
     ILiveShareTestingApi,
     IWebviewPanelOptions,
-    IWebviewPanelProvider
+    IWebviewPanelProvider,
+    IWorkspaceService
 } from '../../client/common/application/types';
 import { WebviewPanelProvider } from '../../client/common/application/webviewPanels/webviewPanelProvider';
+import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
+import { PythonSettings } from '../../client/common/configSettings';
+import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { LocalZMQKernel } from '../../client/common/experiments/groups';
 import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { IInstallationChannelManager } from '../../client/common/installer/types';
 import { HttpClient } from '../../client/common/net/httpClient';
+import { IS_WINDOWS } from '../../client/common/platform/constants';
+import { FileSystem } from '../../client/common/platform/fileSystem';
+import { PathUtils } from '../../client/common/platform/pathUtils';
+import { PlatformService } from '../../client/common/platform/platformService';
+import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
+import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { CodeCssGenerator } from '../../client/common/startPage/codeCssGenerator';
 import { StartPage } from '../../client/common/startPage/startPage';
 import { ThemeFinder } from '../../client/common/startPage/themeFinder';
 import { ICodeCssGenerator, IStartPage, IThemeFinder } from '../../client/common/startPage/types';
-import { IExperimentService, IExtensionContext, IHttpClient } from '../../client/common/types';
+import {
+    IConfigurationService,
+    ICurrentProcess,
+    IExperimentService,
+    IExtensionContext,
+    IExtensions,
+    IHttpClient,
+    IPathUtils,
+    IPythonSettings,
+    IsWindows,
+    Resource
+} from '../../client/common/types';
 import { sleep } from '../../client/common/utils/async';
+import { noop } from '../../client/common/utils/misc';
 
 import { EnvironmentActivationServiceCache } from '../../client/interpreter/activation/service';
 
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
+import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
+import { MockCommandManager } from './mockCommandManager';
+import { MockDocumentManager } from './mockDocumentManager';
+import { MockExtensions } from './mockExtensions';
+import { MockPythonSettings } from './mockPythonSettings';
+import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
+import { MockWorkspaceFolder } from './mockWorkspaceFolder';
 import { IMountedWebView } from './mountedWebView';
-import { IMountedWebViewFactory } from './mountedWebViewFactory';
+import { IMountedWebViewFactory, MountedWebViewFactory } from './mountedWebViewFactory';
 import { WebBrowserPanelProvider } from './webBrowserPanelProvider';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
+    private static foundPythonPath: string | undefined;
     public shouldMockJupyter: boolean;
+    public applicationShell!: ApplicationShell;
+    public platformService!: PlatformService;
 
     private asyncRegistry: AsyncDisposableRegistry;
 
@@ -59,6 +106,26 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private extensionRootPath: string | undefined;
 
     private pendingWebPanel: IMountedWebView | undefined;
+    private configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
+    private worksaceFoldersChangedEvent = new EventEmitter<WorkspaceFoldersChangeEvent>();
+    private emptyConfig = new MockWorkspaceConfiguration();
+    private configMap = new Map<string, MockWorkspaceConfiguration>();
+    private languageServerType: LanguageServerType = LanguageServerType.Microsoft;
+    private disposed = false;
+    private defaultPythonPath: string | undefined;
+
+    private workspaceFolders: MockWorkspaceFolder[] = [];
+    private commandManager: MockCommandManager = new MockCommandManager();
+    // public get onContextSet(): Event<{ name: string; value: boolean }> {
+    //     return this.contextSetEvent.event;
+    // }
+    private setContexts: Record<string, boolean> = {};
+    private documentManager = new MockDocumentManager();
+
+    private contextSetEvent: EventEmitter<{ name: string; value: boolean }> = new EventEmitter<{
+        name: string;
+        value: boolean;
+    }>();
 
     constructor(private readonly uiTest: boolean = false) {
         super();
@@ -70,6 +137,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public async dispose(): Promise<void> {
+        this.commandManager.dispose();
+
         try {
             // Make sure to delete any temp files written by native editor storage
             const globPr = promisify(glob);
@@ -84,6 +153,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
         await this.asyncRegistry.dispose();
         await super.dispose();
+        this.disposed = true;
 
         if (!this.uiTest) {
             // Blur window focus so we don't have editors polling
@@ -95,35 +165,21 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Bounce this so that our editor has time to shutdown
         await sleep(150);
 
-        if (!this.uiTest) {
-            // Clear out the monaco global services. Some of these services are preventing shutdown.
-            // tslint:disable: no-require-imports
-            const services = require('monaco-editor/esm/vs/editor/standalone/browser/standaloneServices') as any;
-            if (services.StaticServices) {
-                const keys = Object.keys(services.StaticServices);
-                keys.forEach((k) => {
-                    const service = services.StaticServices[k] as any;
-                    if (service && service._value && service._value.dispose) {
-                        if (typeof service._value.dispose === 'function') {
-                            service._value.dispose();
-                        }
-                    }
-                });
-            }
-            // This file doesn't have an export so we can't force a dispose. Instead it has a 5 second timeout
-            const config = require('monaco-editor/esm/vs/editor/browser/config/configuration') as any;
-            if (config.getCSSBasedConfiguration) {
-                config.getCSSBasedConfiguration().dispose();
-            }
-        }
-
         // Because there are outstanding promises holding onto this object, clear out everything we can
+        this.workspaceFolders = [];
         this.settingsMap.clear();
+        this.configMap.clear();
+        this.setContexts = {};
         reset(this.webPanelProvider);
+
+        CacheableLocatorPromiseCache.forceUseNormal();
+        EnvironmentActivationServiceCache.forceUseNormal();
     }
 
     // tslint:disable:max-func-body-length
     public registerDataScienceTypes() {
+        this.defaultPythonPath = this.findPythonPath();
+
         // this.serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
         this.serviceManager.addSingletonInstance<DataScienceIocContainer>(DataScienceIocContainer, this);
 
@@ -132,6 +188,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Do the same thing for the environment variable activation service.
         EnvironmentActivationServiceCache.forceUseStatic();
+
+        // Create the workspace service first as it's used to set config values.
+        this.createWorkspaceService();
+
+        // tslint:disable-next-line: no-require-imports
+        const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
+        reactHelpers.setUpDomEnvironment();
 
         // Setup our webpanel provider to create our dummy web panel
         when(this.webPanelProvider.create(anything())).thenCall(this.onCreateWebPanel.bind(this));
@@ -146,6 +209,36 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         this.serviceManager.add<IStartPage>(IStartPage, StartPage);
+        this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
+        this.serviceManager.addSingleton<IExtensions>(IExtensions, MockExtensions);
+
+        const currentProcess = new CurrentProcess();
+        this.serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, currentProcess);
+        this.serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
+
+        const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
+        configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(this.getSettings.bind(this));
+        this.serviceManager.addSingletonInstance<IConfigurationService>(
+            IConfigurationService,
+            configurationService.object
+        );
+
+        // Setup our command list
+        this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
+            this.setContexts[name] = value;
+            this.contextSetEvent.fire({ name: name, value: value });
+        });
+        this.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, this.commandManager);
+        this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
+
+        this.applicationShell = mock(ApplicationShell);
+        this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, instance(this.applicationShell));
+
+        this.platformService = mock(PlatformService);
+        this.serviceManager.addSingletonInstance<IPlatformService>(IPlatformService, this.platformService);
+
+        this.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
+        this.serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
 
         const experimentService = mock(ExperimentService);
         this.serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, instance(experimentService));
@@ -178,15 +271,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
     }
 
-    public async activate(): Promise<void> {
-        // Activate all of the extension activation services
-        const activationServices = this.serviceManager.getAll<IExtensionSingleActivationService>(
-            IExtensionSingleActivationService
-        );
-
-        await Promise.all(activationServices.map((a) => a.activate()));
-    }
-
     // tslint:disable:any
     public createWebView(
         mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
@@ -208,6 +292,43 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return this.serviceManager.get<T>(serviceIdentifier, name);
     }
 
+    public getSettings(resource?: Uri): IPythonSettings {
+        const key = this.getResourceKey(resource);
+        let setting = this.settingsMap.get(key);
+        if (!setting && !this.disposed) {
+            // Make sure we have the default config for this resource first.
+            this.getWorkspaceConfig('python', resource);
+            setting = new MockPythonSettings(
+                resource,
+                new MockAutoSelectionService(),
+                this.serviceManager.get<IWorkspaceService>(IWorkspaceService)
+            );
+            this.settingsMap.set(key, setting);
+        } else if (this.disposed) {
+            setting = this.generatePythonSettings(this.languageServerType);
+        }
+        return setting;
+    }
+
+    public getWorkspaceConfig(section: string | undefined, resource?: Resource): MockWorkspaceConfiguration {
+        if (!section || section !== 'python') {
+            return this.emptyConfig;
+        }
+        const key = this.getResourceKey(resource);
+        let result = this.configMap.get(key);
+        if (!result) {
+            result = this.generatePythonWorkspaceConfig(this.languageServerType);
+            this.configMap.set(key, result);
+        }
+        return result;
+    }
+
+    public addWorkspaceFolder(folderPath: string) {
+        const workspaceFolder = new MockWorkspaceFolder(folderPath, this.workspaceFolders.length);
+        this.workspaceFolders.push(workspaceFolder);
+        return workspaceFolder;
+    }
+
     private async onCreateWebPanel(options: IWebviewPanelOptions) {
         if (!this.pendingWebPanel) {
             throw new Error('Creating web panel without a mount');
@@ -215,5 +336,108 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const panel = this.pendingWebPanel;
         panel.attach(options);
         return panel;
+    }
+
+    private createWorkspaceService() {
+        class MockFileSystemWatcher implements FileSystemWatcher {
+            public ignoreCreateEvents: boolean = false;
+            public ignoreChangeEvents: boolean = false;
+            public ignoreDeleteEvents: boolean = false;
+            //tslint:disable-next-line:no-any
+            public onDidChange(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                return { dispose: noop };
+            }
+            //tslint:disable-next-line:no-any
+            public onDidDelete(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                return { dispose: noop };
+            }
+            //tslint:disable-next-line:no-any
+            public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                return { dispose: noop };
+            }
+            public dispose() {
+                noop();
+            }
+        }
+
+        const workspaceService = mock(WorkspaceService);
+        this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, instance(workspaceService));
+        when(workspaceService.onDidChangeConfiguration).thenReturn(this.configChangeEvent.event);
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);
+
+        // Create another config for other parts of the workspace config.
+        when(workspaceService.getConfiguration(anything())).thenCall(this.getWorkspaceConfig.bind(this));
+        when(workspaceService.getConfiguration(anything(), anything())).thenCall(this.getWorkspaceConfig.bind(this));
+        const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'startPage');
+
+        when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(
+            new MockFileSystemWatcher()
+        );
+        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(new MockFileSystemWatcher());
+        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+        when(workspaceService.workspaceFolders).thenReturn(this.workspaceFolders);
+        when(workspaceService.rootPath).thenReturn(testWorkspaceFolder);
+        when(workspaceService.getWorkspaceFolder(anything())).thenCall(this.getWorkspaceFolder.bind(this));
+        this.addWorkspaceFolder(testWorkspaceFolder);
+        return workspaceService;
+    }
+
+    private getResourceKey(resource: Resource): string {
+        if (!this.disposed) {
+            const workspace = this.serviceManager.get<IWorkspaceService>(IWorkspaceService);
+            const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
+            return workspaceFolderUri ? workspaceFolderUri.fsPath : '';
+        }
+        return '';
+    }
+
+    private generatePythonWorkspaceConfig(languageServerType: LanguageServerType): MockWorkspaceConfiguration {
+        const pythonSettings = this.generatePythonSettings(languageServerType);
+
+        // Use these settings to default all of the settings in a python configuration
+        return new MockWorkspaceConfiguration(pythonSettings);
+    }
+
+    private generatePythonSettings(languageServerType: LanguageServerType) {
+        // Create a dummy settings just to setup the workspace config
+        const pythonSettings = new MockPythonSettings(undefined, new MockAutoSelectionService());
+        pythonSettings.pythonPath = this.defaultPythonPath!;
+        pythonSettings.downloadLanguageServer = false;
+        const folders = ['Envs', '.virtualenvs'];
+        pythonSettings.venvFolders = folders;
+        pythonSettings.venvPath = path.join('~', 'foo');
+        pythonSettings.terminal = {
+            executeInFileDir: false,
+            launchArgs: [],
+            activateEnvironment: true,
+            activateEnvInCurrentTerminal: false
+        };
+        pythonSettings.languageServer = languageServerType;
+        return pythonSettings;
+    }
+
+    private getWorkspaceFolder(uri: Resource): WorkspaceFolder | undefined {
+        if (uri) {
+            return this.workspaceFolders.find((w) => w.ownedResources.has(uri.toString()));
+        }
+        return undefined;
+    }
+
+    private findPythonPath(): string {
+        try {
+            // Use a static variable so we don't have to recompute this on subsequenttests
+            if (!DataScienceIocContainer.foundPythonPath) {
+                // Give preference to the CI test python (could also be set in launch.json for debugging).
+                const output = child_process.execFileSync(
+                    process.env.CI_PYTHON_PATH || 'python',
+                    ['-c', 'import sys;print(sys.executable)'],
+                    { encoding: 'utf8' }
+                );
+                DataScienceIocContainer.foundPythonPath = output.replace(/\r?\n/g, '');
+            }
+            return DataScienceIocContainer.foundPythonPath;
+        } catch (ex) {
+            return 'python';
+        }
     }
 }

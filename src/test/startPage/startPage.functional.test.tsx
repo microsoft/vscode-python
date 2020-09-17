@@ -17,7 +17,6 @@ suite('StartPage tests', () => {
         process.env.UITEST_DISABLE_INSIDERS = '1';
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-        await ioc.activate();
     });
 
     teardown(async () => {
