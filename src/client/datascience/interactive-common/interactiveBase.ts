@@ -47,7 +47,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { addToUriList, translateKernelLanguageToMonaco } from '../common';
-import { Commands, Identifiers, Telemetry } from '../constants';
+import { Commands, Identifiers, Settings, Telemetry } from '../constants';
 import { ColumnWarningSize, IDataViewerFactory } from '../data-viewing/types';
 import {
     IAddedSysInfo,
@@ -869,18 +869,31 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             // Just send a kernel update so it shows something
             this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: ServerStatus.NotStarted,
-                serverName: this.getServerDisplayName(undefined),
+                serverName: await this.getServerDisplayName(undefined),
                 kernelName: '',
                 language: PYTHON_LANGUAGE
             }).ignoreErrors();
         }
     }
 
-    protected getServerDisplayName(serverConnection: INotebookProviderConnection | undefined): string {
+    protected async getServerDisplayName(serverConnection: INotebookProviderConnection | undefined): Promise<string> {
+        // If we don't have a server connection, make one if remote. We need the remote connection in order
+        // to compute the display name. However only do this if the user is allowing auto start.
+        if (
+            !serverConnection &&
+            this.configService.getSettings(this.owningResource).datascience.jupyterServerURI !==
+                Settings.JupyterServerLocalLaunch &&
+            !this.configService.getSettings(this.owningResource).datascience.disableJupyterAutoStart
+        ) {
+            serverConnection = await this.notebookProvider.connect({ disableUI: true });
+        }
+
         let displayName =
             serverConnection?.displayName ||
             (!serverConnection?.localLaunch ? serverConnection?.url : undefined) ||
-            this.configService.getSettings().datascience.jupyterServerURI;
+            (this.configService.getSettings().datascience.jupyterServerURI === Settings.JupyterServerLocalLaunch
+                ? localize.DataScience.localJupyterServer()
+                : localize.DataScience.serverNotStarted());
 
         if (serverConnection) {
             // Determine the connection URI of the connected server to display
@@ -1193,7 +1206,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
             await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: status,
-                serverName: this.getServerDisplayName(notebook.connection),
+                serverName: await this.getServerDisplayName(notebook.connection),
                 kernelName: name,
                 language: translateKernelLanguageToMonaco(
                     getKernelConnectionLanguage(connectionMetadata) || PYTHON_LANGUAGE
@@ -1216,7 +1229,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             // While waiting make the notebook look busy
             this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: ServerStatus.Busy,
-                serverName: this.getServerDisplayName(serverConnection),
+                serverName: await this.getServerDisplayName(serverConnection),
                 kernelName: '',
                 language: PYTHON_LANGUAGE
             }).ignoreErrors();
@@ -1245,7 +1258,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             // No notebook, send update to UI anyway
             this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: ServerStatus.NotStarted,
-                serverName: this.getServerDisplayName(undefined),
+                serverName: await this.getServerDisplayName(undefined),
                 kernelName: getDisplayNameOrNameOfKernelConnection(data.kernelConnection),
                 language: translateKernelLanguageToMonaco(
                     getKernelConnectionLanguage(data.kernelConnection) || PYTHON_LANGUAGE
