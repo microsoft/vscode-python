@@ -119,7 +119,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
                 enableFindWidget: true,
                 retainContextWhenHidden: true
             },
-            supportsMultipleEditorsPerDocument: true
+            supportsMultipleEditorsPerDocument: false
         });
     }
 
