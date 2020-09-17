@@ -4,6 +4,7 @@
 import { Uri } from 'vscode';
 import { Architecture } from '../../../common/utils/platform';
 import { BasicVersionInfo, VersionInfo } from '../../../common/utils/version';
+import { arePathsSame } from '../../common/externalDependencies';
 
 /**
  * IDs for the various supported Python environments.
@@ -143,3 +144,22 @@ export type PythonEnvInfo = _PythonEnvInfo & {
     defaultDisplayName?: string;
     searchLocation?: Uri;
 };
+
+/**
+ * Determine if the given infos correspond to the same env.
+ *
+ * @param environment1 - one of the two envs to compare
+ * @param environment2 - one of the two envs to compare
+ */
+export function areSameEnvironment(
+    environment1: PythonEnvInfo,
+    environment2: PythonEnvInfo,
+): boolean {
+    if (!environment1 || !environment2) {
+        return false;
+    }
+    if (arePathsSame(environment1.executable.filename, environment2.executable.filename)) {
+        return true;
+    }
+    return false;
+}
