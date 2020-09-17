@@ -11,12 +11,6 @@ import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extens
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
-import {
-    IDataViewerDataProvider,
-    IDataViewerFactory,
-    IJupyterUriProvider,
-    IJupyterUriProviderRegistration
-} from './jupyter/types';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -84,19 +78,6 @@ export interface IExtensionApi {
             execCommand: string[] | undefined;
         };
     };
-    datascience: {
-        /**
-         * Launches Data Viewer component.
-         * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
-         * @param {string} title Data Viewer title
-         */
-        showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
-        /**
-         * Registers a remote server provider component that's used to pick remote jupyter server URIs
-         * @param serverProvider object called back when picking jupyter server URI
-         */
-        registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
-    };
 }
 
 export function buildApi(
@@ -140,18 +121,6 @@ export function buildApi(
                 const pythonPath = configurationService.getSettings(resource).pythonPath;
                 // If pythonPath equals an empty string, no interpreter is set.
                 return { execCommand: pythonPath === '' ? undefined : [pythonPath] };
-            }
-        },
-        datascience: {
-            async showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
-                const dataViewerProviderService = serviceContainer.get<IDataViewerFactory>(IDataViewerFactory);
-                await dataViewerProviderService.create(dataProvider, title);
-            },
-            registerRemoteServerProvider(picker: IJupyterUriProvider): void {
-                const container = serviceContainer.get<IJupyterUriProviderRegistration>(
-                    IJupyterUriProviderRegistration
-                );
-                container.registerProvider(picker);
             }
         }
     };
