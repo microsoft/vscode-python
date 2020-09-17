@@ -221,6 +221,15 @@ export function verifyCellSource(
     assert.deepStrictEqual(inst.state.model?.getValue(), source, 'Source does not match on cell');
 }
 
+export function verifyServerStatus(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, statusText: string) {
+    wrapper.update();
+
+    const foundResult = wrapper.find('div.kernel-status-server');
+    assert.ok(foundResult.length >= 1, "Didn't find server status");
+    const html = foundResult.html();
+    assert.ok(html.includes(statusText), `${statusText} not found in server status`);
+}
+
 export function verifyHtmlOnCell(
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
     cellType: 'NativeCell' | 'InteractiveCell',
