@@ -6,9 +6,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import { join } from 'path';
 import { CancellationToken, Event, Uri } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
 import { IExtensions, IInstaller, InstallerResponse, Product, Resource } from '../../common/types';
+import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../interpreter/configuration/types';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -51,6 +53,10 @@ type PythonApiForJupyterExtension = {
      * IInstaller
      */
     install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
+    /**
+     * Returns path to where `debugpy` is. In python extension this is `/pythonFiles/lib/python`.
+     */
+    getDebuggerPath(): Promise<string>;
 };
 
 type JupyterExtensionApi = {
@@ -73,31 +79,34 @@ export class JupyterExtensionIntegration {
         if (!jupyterExtension) {
             return;
         }
-        await jupyterExtension.activate();
         if (!jupyterExtension.isActive) {
-            return;
+            await jupyterExtension.activate();
         }
-        const jupyterExtensionApi = jupyterExtension.exports;
-        jupyterExtensionApi.registerPythonApi({
-            onDidChangeInterpreter: this.interpreterService.onDidChangeInterpreter,
-            getActiveInterpreter: async (resource?: Uri) => this.interpreterService.getActiveInterpreter(resource),
-            getInterpreterDetails: async (pythonPath: string) =>
-                this.interpreterService.getInterpreterDetails(pythonPath),
-            getInterpreters: async (resource: Uri | undefined) => this.interpreterService.getInterpreters(resource),
-            getActivatedEnvironmentVariables: async (
-                resource: Resource,
-                interpreter?: PythonEnvironment,
-                allowExceptions?: boolean
-            ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
-            isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> =>
-                this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath),
-            getSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
-                this.interpreterSelector.getSuggestions(resource),
-            install: async (
-                product: Product,
-                resource?: InterpreterUri,
-                cancel?: CancellationToken
-            ): Promise<InstallerResponse> => this.installer.install(product, resource, cancel)
-        });
+        await jupyterExtension.activate();
+        if (jupyterExtension.isActive) {
+            const jupyterExtensionApi = jupyterExtension.exports;
+            jupyterExtensionApi.registerPythonApi({
+                onDidChangeInterpreter: this.interpreterService.onDidChangeInterpreter,
+                getActiveInterpreter: async (resource?: Uri) => this.interpreterService.getActiveInterpreter(resource),
+                getInterpreterDetails: async (pythonPath: string) =>
+                    this.interpreterService.getInterpreterDetails(pythonPath),
+                getInterpreters: async (resource: Uri | undefined) => this.interpreterService.getInterpreters(resource),
+                getActivatedEnvironmentVariables: async (
+                    resource: Resource,
+                    interpreter?: PythonEnvironment,
+                    allowExceptions?: boolean
+                ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
+                isWindowsStoreInterpreter: async (pythonPath: string): Promise<boolean> =>
+                    this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath),
+                getSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
+                    this.interpreterSelector.getSuggestions(resource),
+                install: async (
+                    product: Product,
+                    resource?: InterpreterUri,
+                    cancel?: CancellationToken
+                ): Promise<InstallerResponse> => this.installer.install(product, resource, cancel),
+                getDebuggerPath: async () => join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')
+            });
+        }
     }
 }
