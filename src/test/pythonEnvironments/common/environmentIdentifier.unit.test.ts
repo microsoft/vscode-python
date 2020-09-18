@@ -133,6 +133,64 @@ suite('Environment Identifier', () => {
         });
     });
 
+    suite('Pyenv', () => {
+        let getEnvVarStub: sinon.SinonStub;
+        let getOsTypeStub: sinon.SinonStub;
+        let getUserHomeDirStub: sinon.SinonStub;
+
+        suiteSetup(() => {
+            getEnvVarStub = sinon.stub(platformApis, 'getEnvironmentVariable');
+            getOsTypeStub = sinon.stub(platformApis, 'getOSType');
+            getUserHomeDirStub = sinon.stub(platformApis, 'getUserHomeDir');
+        });
+
+        suiteTeardown(() => {
+            getEnvVarStub.restore();
+            getOsTypeStub.restore();
+            getUserHomeDirStub.restore();
+        });
+
+        test('PYENV_ROOT is not set on non-Windows, fallback to the default value ~/.pyenv', async () => {
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv1', '.pyenv', 'versions', '3.6.9', 'bin', 'python');
+
+            getUserHomeDirStub.returns(path.join(TEST_LAYOUT_ROOT, 'pyenv1'));
+            getEnvVarStub.withArgs('PYENV_ROOT').returns(undefined);
+
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.Pyenv);
+        });
+
+        test('PYENV is not set on Windows, fallback to the default value %USERPROFILE%\\.pyenv\\pyenv-win', async () => {
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv2', '.pyenv', 'pyenv-win', 'versions', '3.6.9', 'bin', 'python.exe');
+
+            getUserHomeDirStub.returns(path.join(TEST_LAYOUT_ROOT, 'pyenv2'));
+            getEnvVarStub.withArgs('PYENV').returns(undefined);
+            getOsTypeStub.returns(platformApis.OSType.Windows);
+
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.Pyenv);
+        });
+
+        test('PYENV_ROOT is set to a custom value on non-Windows', async () => {
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv3', 'versions', '3.6.9', 'bin', 'python');
+
+            getEnvVarStub.withArgs('PYENV_ROOT').returns(path.join(TEST_LAYOUT_ROOT, 'pyenv3'));
+
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.Pyenv);
+        });
+
+        test('PYENV is set to a custom value on Windows', async () => {
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv3', 'versions', '3.6.9', 'bin', 'python.exe');
+
+            getEnvVarStub.withArgs('PYENV').returns(path.join(TEST_LAYOUT_ROOT, 'pyenv3'));
+            getOsTypeStub.returns(platformApis.OSType.Windows);
+
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.Pyenv);
+        });
+    });
+
     suite('Venv', () => {
         test('Pyvenv.cfg is in the same directory as the interpreter', async () => {
             const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'venv1', 'python');

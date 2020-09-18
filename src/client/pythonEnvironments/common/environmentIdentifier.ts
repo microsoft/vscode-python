@@ -3,6 +3,7 @@
 
 import { isCondaEnvironment } from '../discovery/locators/services/condaLocator';
 import { isPipenvEnvironment } from '../discovery/locators/services/pipEnvHelper';
+import { isPyenvEnvironment } from '../discovery/locators/services/pyenvLocator';
 import { isVenvEnvironment } from '../discovery/locators/services/venvLocator';
 import { isVirtualenvEnvironment } from '../discovery/locators/services/virtualenvLocator';
 import { isVirtualenvwrapperEnvironment } from '../discovery/locators/services/virtualenvwrapperLocator';
@@ -43,6 +44,10 @@ export async function identifyEnvironment(interpreterPath: string): Promise<Envi
 
     if (await isPipenvEnvironment(interpreterPath)) {
         return EnvironmentType.Pipenv;
+    }
+
+    if (await isPyenvEnvironment(interpreterPath)) {
+        return EnvironmentType.Pyenv;
     }
 
     if (await isVenvEnvironment(interpreterPath)) {
