@@ -251,7 +251,9 @@ export class NativeEditorStorage implements INotebookStorage {
             }
 
             // See if this file was stored in storage prior to shutdown
-            const dirtyContents = await this.getStoredContents(options.file, backupId);
+            const dirtyContents = options.skipLoadingDirtyContents
+                ? undefined
+                : await this.getStoredContents(options.file, backupId);
             if (dirtyContents) {
                 // This means we're dirty. Indicate dirty and load from this content
                 return this.loadContents(options.file, dirtyContents, true, options.isNative);
