@@ -8,8 +8,9 @@ import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
 import { ExecutionResult } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
+import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
+import { parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
 import * as ExternalDep from '../../../client/pythonEnvironments/common/externalDependencies';
-import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import {
     EnvironmentInfoService,
     EnvironmentInfoServiceQueuePriority,
@@ -18,27 +19,39 @@ import {
 suite('Environment Info Service', () => {
     let stubShellExec: sinon.SinonStub;
 
-    function createExpectedEnvInfo(path: string): PythonEnvironment {
+    function createEnvInfo(executable: string): PythonEnvInfo {
         return {
-            path,
-            architecture: Architecture.x64,
-            sysVersion: undefined,
-            sysPrefix: 'path',
-            pipEnvWorkspaceFolder: undefined,
-            version: {
-                build: [],
-                major: 3,
-                minor: 8,
-                patch: 3,
-                prerelease: ['final'],
-                raw: '3.8.3-final',
+            id: '',
+            kind: PythonEnvKind.Unknown,
+            version: parseVersion('0.0.0'),
+            name: '',
+            location: '',
+            arch: Architecture.x64,
+            executable: {
+                filename: executable,
+                sysPrefix: '',
+                mtime: -1,
+                ctime: -1,
             },
-            companyDisplayName: '',
-            displayName: '',
-            envType: EnvironmentType.Unknown,
-            envName: '',
-            envPath: '',
-            cachedEntry: false,
+            distro: { org: '' },
+        };
+    }
+
+    function createExpectedEnvInfo(executable: string): PythonEnvInfo {
+        return {
+            id: '',
+            kind: PythonEnvKind.Unknown,
+            version: parseVersion('3.8.3-final'),
+            name: '',
+            location: '',
+            arch: Architecture.x64,
+            executable: {
+                filename: executable,
+                sysPrefix: 'path',
+                mtime: -1,
+                ctime: -1,
+            },
+            distro: { org: '' },
         };
     }
 
@@ -59,14 +72,16 @@ suite('Environment Info Service', () => {
     });
     test('Add items to queue and get results', async () => {
         const envService = new EnvironmentInfoService();
-        const promises: Promise<PythonEnvironment | undefined>[] = [];
-        const expected: PythonEnvironment[] = [];
+        const promises: Promise<PythonEnvInfo | undefined>[] = [];
+        const expected: PythonEnvInfo[] = [];
         for (let i = 0; i < 10; i = i + 1) {
             const path = `any-path${i}`;
             if (i < 5) {
-                promises.push(envService.getEnvironmentInfo(path));
+                promises.push(envService.getEnvironmentInfo(createEnvInfo(path)));
             } else {
-                promises.push(envService.getEnvironmentInfo(path, EnvironmentInfoServiceQueuePriority.High));
+                promises.push(
+                    envService.getEnvironmentInfo(createEnvInfo(path), EnvironmentInfoServiceQueuePriority.High),
+                );
             }
             expected.push(createExpectedEnvInfo(path));
         }
@@ -82,17 +97,17 @@ suite('Environment Info Service', () => {
 
     test('Add same item to queue', async () => {
         const envService = new EnvironmentInfoService();
-        const promises: Promise<PythonEnvironment | undefined>[] = [];
-        const expected: PythonEnvironment[] = [];
+        const promises: Promise<PythonEnvInfo | undefined>[] = [];
+        const expected: PythonEnvInfo[] = [];
 
         const path = 'any-path';
         // Clear call counts
         stubShellExec.resetHistory();
         // Evaluate once so the result is cached.
-        await envService.getEnvironmentInfo(path);
+        await envService.getEnvironmentInfo(createEnvInfo(path));
 
         for (let i = 0; i < 10; i = i + 1) {
-            promises.push(envService.getEnvironmentInfo(path));
+            promises.push(envService.getEnvironmentInfo(createEnvInfo(path)));
             expected.push(createExpectedEnvInfo(path));
         }
 

@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { EnvironmentType, PythonEnvironment } from '.';
 import { createWorkerPool, IWorkerPool, QueuePosition } from '../../common/utils/workerPool';
+import { PythonEnvInfo } from '../base/info';
+import { getInterpreterInfo } from '../base/info/interpreter';
 import { shellExecute } from '../common/externalDependencies';
 import { buildPythonExecInfo } from '../exec';
-import { getInterpreterInfo } from './interpreter';
 
 export enum EnvironmentInfoServiceQueuePriority {
     Default,
@@ -16,39 +16,24 @@ export enum EnvironmentInfoServiceQueuePriority {
 export const IEnvironmentInfoService = Symbol('IEnvironmentInfoService');
 export interface IEnvironmentInfoService {
     getEnvironmentInfo(
-        interpreterPath: string,
+        environment: PythonEnvInfo,
         priority?: EnvironmentInfoServiceQueuePriority
-    ): Promise<PythonEnvironment | undefined>;
+    ): Promise<PythonEnvInfo | undefined>;
 }
 
-async function buildEnvironmentInfo(interpreterPath: string): Promise<PythonEnvironment | undefined> {
-    const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(interpreterPath), shellExecute);
+async function buildEnvironmentInfo(environment: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    const interpreterInfo = await getInterpreterInfo(
+        buildPythonExecInfo(environment.executable.filename),
+        shellExecute,
+    );
     if (interpreterInfo === undefined || interpreterInfo.version === undefined) {
         return undefined;
     }
-    return {
-        path: interpreterInfo.path,
-        // Have to do this because the type returned by getInterpreterInfo is SemVer
-        // But we expect this to be PythonVersion
-        version: {
-            raw: interpreterInfo.version.raw,
-            major: interpreterInfo.version.major,
-            minor: interpreterInfo.version.minor,
-            patch: interpreterInfo.version.patch,
-            build: interpreterInfo.version.build,
-            prerelease: interpreterInfo.version.prerelease,
-        },
-        sysVersion: interpreterInfo.sysVersion,
-        architecture: interpreterInfo.architecture,
-        sysPrefix: interpreterInfo.sysPrefix,
-        pipEnvWorkspaceFolder: interpreterInfo.pipEnvWorkspaceFolder,
-        companyDisplayName: '',
-        displayName: '',
-        envType: EnvironmentType.Unknown, // Code to handle This will be added later.
-        envName: '',
-        envPath: '',
-        cachedEntry: false,
-    };
+    environment.version = interpreterInfo.version;
+    environment.executable.filename = interpreterInfo.executable.filename;
+    environment.executable.sysPrefix = interpreterInfo.executable.sysPrefix;
+    environment.arch = interpreterInfo.arch;
+    return environment;
 }
 
 @injectable()
@@ -57,26 +42,27 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
     // path again and again in a given session. This information will likely not change in a given
     // session. There are definitely cases where this will change. But a simple reload should address
     // those.
-    private readonly cache: Map<string, PythonEnvironment> = new Map<string, PythonEnvironment>();
+    private readonly cache: Map<string, PythonEnvInfo> = new Map<string, PythonEnvInfo>();
 
-    private readonly workerPool: IWorkerPool<string, PythonEnvironment | undefined>;
+    private readonly workerPool: IWorkerPool<PythonEnvInfo, PythonEnvInfo | undefined>;
 
     public constructor() {
-        this.workerPool = createWorkerPool<string, PythonEnvironment | undefined>(buildEnvironmentInfo);
+        this.workerPool = createWorkerPool<PythonEnvInfo, PythonEnvInfo | undefined>(buildEnvironmentInfo);
     }
 
     public async getEnvironmentInfo(
-        interpreterPath: string,
+        environment: PythonEnvInfo,
         priority?: EnvironmentInfoServiceQueuePriority,
-    ): Promise<PythonEnvironment | undefined> {
+    ): Promise<PythonEnvInfo | undefined> {
+        const interpreterPath = environment.executable.filename;
         const result = this.cache.get(interpreterPath);
         if (result !== undefined) {
             return result;
         }
 
         return (priority === EnvironmentInfoServiceQueuePriority.High
-            ? this.workerPool.addToQueue(interpreterPath, QueuePosition.Front)
-            : this.workerPool.addToQueue(interpreterPath, QueuePosition.Back)
+            ? this.workerPool.addToQueue(environment, QueuePosition.Front)
+            : this.workerPool.addToQueue(environment, QueuePosition.Back)
         ).then((r) => {
             if (r !== undefined) {
                 this.cache.set(interpreterPath, r);
