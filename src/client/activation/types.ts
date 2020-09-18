@@ -18,6 +18,7 @@ import {
     TextDocumentContentChangeEvent
 } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
+import * as vscodeprotocol from 'vscode-languageserver-protocol';
 import { NugetPackage } from '../common/nuget/types';
 import { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
@@ -95,7 +96,10 @@ export interface ILanguageServer
         SignatureHelpProvider,
         Partial<DocumentHandler>,
         Partial<LanguageServerCommandHandler>,
-        IDisposable {}
+        IDisposable {
+    readonly connection?: vscodeprotocol.ProtocolConnection;
+    readonly capabilities?: vscodeprotocol.ServerCapabilities;
+}
 
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
 export interface ILanguageServerActivator extends ILanguageServer {
