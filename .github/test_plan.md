@@ -496,6 +496,7 @@ def test_failure():
     1. Create a brand new folder on your machine
     1. Create a new venv in that folder via command line / terminal `python3 -m venv .newEnv`
     1. Open that folder in VS Code and copy the manual test file there
+    1. Select the newly created venv by running Ctrl+Shift+P, typing 'Python: Select Interpreter' into the VS Code command palette, and selecting the new venv from the dropdown. If the new venv doesn't appear in the quickpick you may need to reload VS Code and reattempt this step.
     1. Execute the manual test file, you should be prompted to install ipykernel in `.newEnv`
     1. After ipykernel is installed execution of the file should continue successfully
 
