@@ -1106,6 +1106,14 @@ export interface INotebookModel {
     trust(): void;
 }
 
+export interface IModelLoadOptions {
+    isNative?: boolean;
+    file: Uri;
+    possibleContents?: string;
+    backupId?: string;
+    skipLoadingDirtyContents?: boolean;
+}
+
 export const INotebookStorage = Symbol('INotebookStorage');
 
 export interface INotebookStorage {
@@ -1114,19 +1122,7 @@ export interface INotebookStorage {
     saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
     backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string): Promise<void>;
     get(file: Uri): INotebookModel | undefined;
-    getOrCreateModel(
-        file: Uri,
-        contents?: string,
-        backupId?: string,
-        forVSCodeNotebook?: boolean
-    ): Promise<INotebookModel>;
-    getOrCreateModel(
-        file: Uri,
-        contents?: string,
-        // tslint:disable-next-line: unified-signatures
-        skipDirtyContents?: boolean,
-        forVSCodeNotebook?: boolean
-    ): Promise<INotebookModel>;
+    getOrCreateModel(options: IModelLoadOptions): Promise<INotebookModel>;
     revert(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     deleteBackup(model: INotebookModel, backupId?: string): Promise<void>;
 }

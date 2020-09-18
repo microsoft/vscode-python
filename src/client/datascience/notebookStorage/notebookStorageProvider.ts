@@ -9,7 +9,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { IWorkspaceService } from '../../common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { generateNewNotebookUri } from '../common';
-import { INotebookModel, INotebookStorage } from '../types';
+import { IModelLoadOptions, INotebookModel, INotebookStorage } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';
 import { VSCodeNotebookModel } from './vscNotebookModel';
 
@@ -66,35 +66,15 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         return this.resolvedStorageAndModels.get(file.toString());
     }
 
-    public getOrCreateModel(
-        file: Uri,
-        contents?: string,
-        backupId?: string,
-        forVSCodeNotebook?: boolean
-    ): Promise<INotebookModel>;
-    public getOrCreateModel(
-        file: Uri,
-        contents?: string,
-        // tslint:disable-next-line: unified-signatures
-        skipDirtyContents?: boolean,
-        forVSCodeNotebook?: boolean
-    ): Promise<INotebookModel>;
-
-    public getOrCreateModel(
-        file: Uri,
-        contents?: string,
-        // tslint:disable-next-line: no-any
-        options?: any,
-        forVSCodeNotebook?: boolean
-    ): Promise<INotebookModel> {
-        const key = file.toString();
+    public getOrCreateModel(options: IModelLoadOptions): Promise<INotebookModel> {
+        const key = options.file.toString();
         if (!this.storageAndModels.has(key)) {
             // Every time we load a new untitled file, up the counter past the max value for this counter
             NotebookStorageProvider.untitledCounter = getNextUntitledCounter(
-                file,
+                options.file,
                 NotebookStorageProvider.untitledCounter
             );
-            const promise = this.storage.getOrCreateModel(file, contents, options, forVSCodeNotebook);
+            const promise = this.storage.getOrCreateModel(options);
             this.storageAndModels.set(key, promise.then(this.trackModel.bind(this)));
         }
         return this.storageAndModels.get(key)!;
@@ -105,12 +85,12 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         }
     }
 
-    public async createNew(contents?: string, forVSCodeNotebooks?: boolean): Promise<INotebookModel> {
+    public async createNew(possibleContents?: string, forVSCodeNotebooks?: boolean): Promise<INotebookModel> {
         // Create a new URI for the dummy file using our root workspace path
         const uri = this.getNextNewNotebookUri(forVSCodeNotebooks);
 
         // Always skip loading from the hot exit file. When creating a new file we want a new file.
-        return this.getOrCreateModel(uri, contents, true, forVSCodeNotebooks);
+        return this.getOrCreateModel({ file: uri, possibleContents, skipLoadingDirtyContents: true });
     }
 
     private getNextNewNotebookUri(forVSCodeNotebooks?: boolean): Uri {

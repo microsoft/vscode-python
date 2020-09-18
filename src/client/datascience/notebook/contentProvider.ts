@@ -70,9 +70,12 @@ export class NotebookContentProvider implements INotebookContentProvider {
             };
         }
         // If there's no backup id, then skip loading dirty contents.
-        const model = await (openContext.backupId
-            ? this.notebookStorage.getOrCreateModel(uri, undefined, openContext.backupId, true)
-            : this.notebookStorage.getOrCreateModel(uri, undefined, true, true));
+        const model = await this.notebookStorage.getOrCreateModel({
+            file: uri,
+            backupId: openContext.backupId,
+            isNative: true,
+            skipLoadingDirtyContents: openContext.backupId === undefined
+        });
         if (!(model instanceof VSCodeNotebookModel)) {
             throw new Error('Incorrect NotebookModel, expected VSCodeNotebookModel');
         }
@@ -82,7 +85,7 @@ export class NotebookContentProvider implements INotebookContentProvider {
     }
     @captureTelemetry(Telemetry.Save, undefined, true)
     public async saveNotebook(document: NotebookDocument, cancellation: CancellationToken) {
-        const model = await this.notebookStorage.getOrCreateModel(document.uri, undefined, undefined, true);
+        const model = await this.notebookStorage.getOrCreateModel({ file: document.uri, isNative: true });
         if (cancellation.isCancellationRequested) {
             return;
         }
@@ -94,7 +97,7 @@ export class NotebookContentProvider implements INotebookContentProvider {
         document: NotebookDocument,
         cancellation: CancellationToken
     ): Promise<void> {
-        const model = await this.notebookStorage.getOrCreateModel(document.uri, undefined, undefined, true);
+        const model = await this.notebookStorage.getOrCreateModel({ file: document.uri, isNative: true });
         if (!cancellation.isCancellationRequested) {
             await this.notebookStorage.saveAs(model, targetResource);
         }
@@ -104,7 +107,7 @@ export class NotebookContentProvider implements INotebookContentProvider {
         _context: NotebookDocumentBackupContext,
         cancellation: CancellationToken
     ): Promise<NotebookDocumentBackup> {
-        const model = await this.notebookStorage.getOrCreateModel(document.uri, undefined, undefined, true);
+        const model = await this.notebookStorage.getOrCreateModel({ file: document.uri, isNative: true });
         const id = this.notebookStorage.generateBackupId(model);
         await this.notebookStorage.backup(model, cancellation, id);
         return {

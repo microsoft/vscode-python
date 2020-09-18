@@ -145,7 +145,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             return;
         }
         const uri = doc.uri;
-        const model = await this.storage.getOrCreateModel(uri, undefined, undefined, true);
+        const model = await this.storage.getOrCreateModel({ file: uri, isNative: true });
         if (model instanceof VSCodeNotebookModel) {
             model.associateNotebookDocument(doc);
         }
