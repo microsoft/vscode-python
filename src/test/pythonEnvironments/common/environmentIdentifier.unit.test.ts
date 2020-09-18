@@ -150,7 +150,12 @@ suite('Environment Identifier', () => {
             getUserHomeDirStub.restore();
         });
 
-        test('PYENV_ROOT is not set on non-Windows, fallback to the default value ~/.pyenv', async () => {
+        test('PYENV_ROOT is not set on non-Windows, fallback to the default value ~/.pyenv', async function () {
+            if (getOSTypeForTest() === OSType.Windows) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
+
             const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv1', '.pyenv', 'versions', '3.6.9', 'bin', 'python');
 
             getUserHomeDirStub.returns(path.join(TEST_LAYOUT_ROOT, 'pyenv1'));
@@ -158,9 +163,16 @@ suite('Environment Identifier', () => {
 
             const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
             assert.deepStrictEqual(envType, EnvironmentType.Pyenv);
+
+            return undefined;
         });
 
-        test('PYENV is not set on Windows, fallback to the default value %USERPROFILE%\\.pyenv\\pyenv-win', async () => {
+        test('PYENV is not set on Windows, fallback to the default value %USERPROFILE%\\.pyenv\\pyenv-win', async function () {
+            if (getOSTypeForTest() !== OSType.Windows) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
+
             const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv2', '.pyenv', 'pyenv-win', 'versions', '3.6.9', 'bin', 'python.exe');
 
             getUserHomeDirStub.returns(path.join(TEST_LAYOUT_ROOT, 'pyenv2'));
@@ -169,18 +181,32 @@ suite('Environment Identifier', () => {
 
             const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
             assert.deepStrictEqual(envType, EnvironmentType.Pyenv);
+
+            return undefined;
         });
 
-        test('PYENV_ROOT is set to a custom value on non-Windows', async () => {
+        test('PYENV_ROOT is set to a custom value on non-Windows', async function () {
+            if (getOSTypeForTest() === OSType.Windows) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
+
             const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv3', 'versions', '3.6.9', 'bin', 'python');
 
             getEnvVarStub.withArgs('PYENV_ROOT').returns(path.join(TEST_LAYOUT_ROOT, 'pyenv3'));
 
             const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
             assert.deepStrictEqual(envType, EnvironmentType.Pyenv);
+
+            return undefined;
         });
 
-        test('PYENV is set to a custom value on Windows', async () => {
+        test('PYENV is set to a custom value on Windows', async function () {
+            if (getOSTypeForTest() !== OSType.Windows) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
+
             const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv3', 'versions', '3.6.9', 'bin', 'python.exe');
 
             getEnvVarStub.withArgs('PYENV').returns(path.join(TEST_LAYOUT_ROOT, 'pyenv3'));
@@ -188,6 +214,8 @@ suite('Environment Identifier', () => {
 
             const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
             assert.deepStrictEqual(envType, EnvironmentType.Pyenv);
+
+            return undefined;
         });
     });
 
