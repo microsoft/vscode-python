@@ -18,7 +18,7 @@ export async function isPyenvEnvironment(interpreterPath:string): Promise<boolea
 
     if (!pyenvDir) {
         const homeDir = getUserHomeDir() || '';
-        pyenvDir = isWindows ? path.join(homeDir, '.pyenv') : path.join(homeDir, '.pyenv', 'pyenv-win');
+        pyenvDir = isWindows ? path.join(homeDir, '.pyenv', 'pyenv-win') : path.join(homeDir, '.pyenv');
     }
 
     if (!await pathExists(pyenvDir)) {
