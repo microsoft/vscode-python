@@ -46,7 +46,7 @@ export class PythonEnvsReducer implements ILocator {
                     const old = seen.find((s) => areSameEnvironment(s, event.old));
                     if (old !== undefined) {
                         state.pending += 1;
-                        resolveDifferencesInBackground(old, event.new, { seen, ...state }, didUpdate).ignoreErrors();
+                        resolveDifferencesInBackground(old, event.new, state, didUpdate, seen).ignoreErrors();
                     }
                 }
             });
@@ -58,7 +58,7 @@ export class PythonEnvsReducer implements ILocator {
             const old = seen.find((s) => areSameEnvironment(s, currEnv));
             if (old !== undefined) {
                 state.pending += 1;
-                resolveDifferencesInBackground(old, currEnv, { seen, ...state }, didUpdate).ignoreErrors();
+                resolveDifferencesInBackground(old, currEnv, state, didUpdate, seen).ignoreErrors();
             } else {
                 yield currEnv;
                 seen.push(currEnv);
@@ -68,6 +68,7 @@ export class PythonEnvsReducer implements ILocator {
         }
         if (iterator.onUpdated === undefined) {
             state.done = true;
+            checkIfFinishedAndNotify(state, didUpdate);
         }
     }
 }
@@ -75,13 +76,14 @@ export class PythonEnvsReducer implements ILocator {
 async function resolveDifferencesInBackground(
     oldEnv: PythonEnvInfo,
     newEnv: PythonEnvInfo,
-    state: { seen: PythonEnvInfo[]; done: boolean; pending: number },
+    state: { done: boolean; pending: number },
     didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
+    seen: PythonEnvInfo[],
 ) {
     const merged = mergeEnvironments(oldEnv, newEnv);
     didUpdate.fire({ old: oldEnv, new: merged });
+    seen[seen.indexOf(oldEnv)] = merged;
     state.pending -= 1;
-    state.seen[state.seen.indexOf(oldEnv)] = merged;
     checkIfFinishedAndNotify(state, didUpdate);
 }
 

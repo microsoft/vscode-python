@@ -1,14 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { createDeferred, flattenIterator, iterable, mapToIterator } from '../../../client/common/utils/async';
+import { Event } from 'vscode';
+import {
+    createDeferred, flattenIterator, iterable, mapToIterator,
+} from '../../../client/common/utils/async';
 import { Architecture } from '../../../client/common/utils/platform';
 import {
     PythonEnvInfo,
     PythonEnvKind,
 } from '../../../client/pythonEnvironments/base/info';
 import { parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
-import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../../client/pythonEnvironments/base/locator';
+import {
+    IPythonEnvsIterator, Locator, PythonEnvUpdatedEvent, PythonLocatorQuery,
+} from '../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
 
 export function createEnv(
@@ -66,6 +71,7 @@ export class SimpleLocator extends Locator {
             resolve?: null | ((env: PythonEnvInfo) => Promise<PythonEnvInfo | undefined>);
             before?: Promise<void>;
             after?: Promise<void>;
+            onUpdated?: Event<PythonEnvUpdatedEvent | null>;
             beforeEach?(e: PythonEnvInfo): Promise<void>;
             afterEach?(e: PythonEnvInfo): Promise<void>;
             onQuery?(query: PythonLocatorQuery | undefined, envs: PythonEnvInfo[]): Promise<PythonEnvInfo[]>;
@@ -83,7 +89,7 @@ export class SimpleLocator extends Locator {
         const deferred = this.deferred;
         const callbacks = this.callbacks;
         let envs = this.envs;
-        async function* iterator() {
+        const iterator: IPythonEnvsIterator = async function*() {
             if (callbacks?.onQuery !== undefined) {
                 envs = await callbacks.onQuery(query, envs);
             }
@@ -114,8 +120,9 @@ export class SimpleLocator extends Locator {
                 await callbacks.after;
             }
             deferred.resolve();
-        }
-        return iterator();
+        }();
+        iterator.onUpdated = this.callbacks?.onUpdated;
+        return iterator;
     }
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const envInfo: PythonEnvInfo = typeof env === 'string' ? createEnv('', '', undefined, env) : env;
