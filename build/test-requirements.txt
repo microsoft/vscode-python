@@ -16,6 +16,6 @@ flask
 django
 isort
  # Python 2.7 compatibility (pytest)
-pytest==4.6.9; python_version == '2.7'
+pytest==6.0.2; python_version == '2.7'
 pathlib2>=2.2.0; python_version == '2.7'
 py==1.8.1; python_version == '2.7'

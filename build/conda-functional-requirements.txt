@@ -10,7 +10,7 @@ pylint
 pycodestyle
 pydocstyle
 nose
-pytest==4.6.9 # Last version of pytest with Python 2.7 support
+pytest==6.0.2 # Last version of pytest with Python 2.7 support
 rope
 flask
 django
