@@ -60,7 +60,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
             'notebook',
             'testJsonContents.ipynb'
         );
-        const model = await storageProvider.getOrCreateModel(Uri.file(file));
+        const model = await storageProvider.getOrCreateModel({ file: Uri.file(file) });
         disposables.push(model);
         model.trust();
         const jsonStr = fs.readFileSync(file, { encoding: 'utf8' });

@@ -256,7 +256,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 break;
 
             case InteractiveWindowMessages.ExportNotebookAs:
-                this.handleMessage(message, payload, this.exportAs);
+                this.handleMessage(message, payload, this.exportAs.bind);
                 break;
 
             case InteractiveWindowMessages.HasCellResponse:

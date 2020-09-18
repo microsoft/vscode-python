@@ -299,7 +299,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         this.activeEditors.set(e.file.fsPath, e);
 
         // Remove backup storage
-        this.loadModel(Uri.file(oldPath))
+        this.loadModel({ file: Uri.file(oldPath) })
             .then((m) => this.storage.deleteBackup(m))
             .ignoreErrors();
     }
@@ -347,7 +347,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
      * I.e. document is already opened in a VSC Notebook.
      */
     private async isDocumentOpenedInVSCodeNotebook(document: TextDocument): Promise<boolean> {
-        const model = await this.loadModel(document.uri);
+        const model = await this.loadModel({ file: document.uri });
         // This is temporary code.
         return model instanceof VSCodeNotebookModel;
     }

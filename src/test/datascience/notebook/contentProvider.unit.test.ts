@@ -55,9 +55,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         ]
                     }
                 );
-                when(storageProvider.getOrCreateModel(anything(), anything(), anything(), anything())).thenResolve(
-                    model
-                );
+                when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
 
                 const notebook = await contentProvider.openNotebook(fileUri, {});
 
@@ -135,9 +133,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         ]
                     }
                 );
-                when(storageProvider.getOrCreateModel(anything(), anything(), anything(), anything())).thenResolve(
-                    model
-                );
+                when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
 
                 const notebook = await contentProvider.openNotebook(fileUri, {});
 
