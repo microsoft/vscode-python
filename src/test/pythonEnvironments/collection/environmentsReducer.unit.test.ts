@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert, expect } from 'chai';
+import * as path from 'path';
 import { EventEmitter } from 'vscode';
 import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
 import { PythonEnvUpdatedEvent } from '../../../client/pythonEnvironments/base/locator';
@@ -16,11 +17,11 @@ import { createEnv, getEnvs, SimpleLocator } from '../base/common';
 suite('Environments Reducer', () => {
     suite('iterEnvs()', () => {
         test('Iterator only yields unique environments', async () => {
-            const env1 = createEnv('env1', '3.5.12b1', PythonEnvKind.Venv, 'path/to/exec1');
-            const env2 = createEnv('env2', '3.8.1', PythonEnvKind.Conda, 'path/to/exec2');
-            const env3 = createEnv('env3', '2.7', PythonEnvKind.System, 'path/to/exec3');
-            const env4 = createEnv('env4', '3.9.0rc2', PythonEnvKind.Unknown, 'path/to/exec2'); // Same as env2
-            const env5 = createEnv('env5', '3.8', PythonEnvKind.Venv, 'path/to/exec1'); // Same as env1
+            const env1 = createEnv('env1', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
+            const env2 = createEnv('env2', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec2'));
+            const env3 = createEnv('env3', '2.7', PythonEnvKind.System, path.join('path', 'to', 'exec3'));
+            const env4 = createEnv('env4', '3.9.0rc2', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2')); // Same as env2
+            const env5 = createEnv('env5', '3.8', PythonEnvKind.Venv, path.join('path', 'to', 'exec1')); // Same as env1
             const environmentsToBeIterated = [env1, env2, env3, env4, env5]; // Contains 3 unique environments
             const pythonEnvManager = new SimpleLocator(environmentsToBeIterated);
             const reducer = new PythonEnvsReducer(pythonEnvManager);
@@ -34,11 +35,11 @@ suite('Environments Reducer', () => {
 
         test('Single updates for multiple environments are sent correctly followed by the null event', async () => {
             // Arrange
-            const env1 = createEnv('env1', '3.5.12b1', PythonEnvKind.Unknown, 'path/to/exec1');
-            const env2 = createEnv('env2', '3.8.1', PythonEnvKind.Unknown, 'path/to/exec2');
-            const env3 = createEnv('env3', '2.7', PythonEnvKind.System, 'path/to/exec3');
-            const env4 = createEnv('env4', '3.9.0rc2', PythonEnvKind.Conda, 'path/to/exec2'); // Same as env2
-            const env5 = createEnv('env5', '3.8', PythonEnvKind.Venv, 'path/to/exec1'); // Same as env1
+            const env1 = createEnv('env1', '3.5.12b1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec1'));
+            const env2 = createEnv('env2', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
+            const env3 = createEnv('env3', '2.7', PythonEnvKind.System, path.join('path', 'to', 'exec3'));
+            const env4 = createEnv('env4', '3.9.0rc2', PythonEnvKind.Conda, path.join('path', 'to', 'exec2')); // Same as env2;
+            const env5 = createEnv('env5', '3.8', PythonEnvKind.Venv, path.join('path', 'to', 'exec1')); // Same as env1;
             const environmentsToBeIterated = [env1, env2, env3, env4, env5]; // Contains 3 unique environments
             const pythonEnvManager = new SimpleLocator(environmentsToBeIterated);
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
@@ -71,9 +72,9 @@ suite('Environments Reducer', () => {
 
         test('Multiple updates for the same environment are sent correctly followed by the null event', async () => {
             // Arrange
-            const env1 = createEnv('env1', '3.8', PythonEnvKind.Unknown, 'path/to/exec');
-            const env2 = createEnv('env2', '3.8.1', PythonEnvKind.System, 'path/to/exec');
-            const env3 = createEnv('env3', '3.8.1', PythonEnvKind.Conda, 'path/to/exec');
+            const env1 = createEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
+            const env2 = createEnv('env2', '3.8.1', PythonEnvKind.System, path.join('path', 'to', 'exec'));
+            const env3 = createEnv('env3', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec'));
             const environmentsToBeIterated = [env1, env2, env3]; // All refer to the same environment
             const pythonEnvManager = new SimpleLocator(environmentsToBeIterated);
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
@@ -107,8 +108,8 @@ suite('Environments Reducer', () => {
 
         test('Updates to environments from the incoming iterator are passed on correctly followed by the null event', async () => {
             // Arrange
-            const env1 = createEnv('env1', '3.8', PythonEnvKind.Unknown, 'path/to/exec');
-            const env2 = createEnv('env2', '3.8.1', PythonEnvKind.System, 'path/to/exec');
+            const env1 = createEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
+            const env2 = createEnv('env2', '3.8.1', PythonEnvKind.System, path.join('path', 'to', 'exec'));
             const environmentsToBeIterated = [env1];
             const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
             const pythonEnvManager = new SimpleLocator(environmentsToBeIterated, { onUpdated: didUpdate.event });
@@ -157,7 +158,7 @@ suite('Environments Reducer', () => {
     });
 
     test('Calls locator manager to resolves environments', async () => {
-        const env = createEnv('env1', '3.8', PythonEnvKind.Unknown, 'path/to/exec');
+        const env = createEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
         const resolvedEnv = createEnv('env1', '3.8.1', PythonEnvKind.Conda, 'resolved/path/to/exec');
         const pythonEnvManager = new SimpleLocator([], {
             resolve: async (e: PythonEnvInfo) => {
