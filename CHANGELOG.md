@@ -59,6 +59,8 @@
    ([#13706](https://github.com/Microsoft/vscode-python/issues/13706))
 1. Correctly install ipykernel when launching from an interpreter.
    ([#13956](https://github.com/Microsoft/vscode-python/issues/13956))
+1. Backup on custom editors is being ignored.
+   ([#13981](https://github.com/Microsoft/vscode-python/issues/13981))   
 
 ### Code Health
 
