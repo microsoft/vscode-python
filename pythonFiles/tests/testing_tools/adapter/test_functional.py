@@ -141,6 +141,7 @@ class PytestTests(unittest.TestCase):
             ],
         )
 
+    @pytest.mark.skip(reason="https://github.com/microsoft/vscode-python/issues/14023")
     def test_discover_complex_default(self):
         projroot, testroot = resolve_testroot("complex")
         expected = self.complex(projroot)
@@ -161,6 +162,7 @@ class PytestTests(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(result, expected)
 
+    @pytest.mark.skip(reason="https://github.com/microsoft/vscode-python/issues/14023")
     def test_discover_complex_doctest(self):
         projroot, _ = resolve_testroot("complex")
         expected = self.complex(projroot)
