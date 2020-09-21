@@ -59,7 +59,9 @@ export class MockLanguageServer implements ILanguageServer {
     }
 
     public get capabilities() {
-        return {};
+        return {
+            textDocumentSync: 2 // This is increment value. Means we support changes
+        } as any;
     }
 
     public provideRenameEdits(
@@ -137,8 +139,10 @@ export class MockLanguageServer implements ILanguageServer {
         noop();
     }
 
-    private sendNotification(method: string, params: any): void {
-        if (method === vscodeLanguageClient.DidChangeTextDocumentNotification.type.method) {
+    private sendNotification(method: any, params: any): void {
+        if (method === vscodeLanguageClient.DidChangeTextDocumentNotification.type) {
+            const doc = params.textDocument;
+            this.versionId = doc.version;
             const changes = params.contentChanges;
             this.applyChanges(changes);
             this.resolveNotificationPromise();
@@ -147,11 +151,23 @@ export class MockLanguageServer implements ILanguageServer {
 
     private applyChanges(changes: TextDocumentContentChangeEvent[]) {
         changes.forEach((c) => {
-            const before = this.contents.substr(0, c.rangeOffset);
-            const after = this.contents.substr(c.rangeOffset + c.rangeLength);
+            const offset = this.computeOffset(c);
+            const before = this.contents.substr(0, offset);
+            const after = this.contents.substr(offset + c.rangeLength);
             this.contents = `${before}${c.text}${after}`;
         });
         this.versionId = this.versionId + 1;
+    }
+
+    private computeOffset(c: TextDocumentContentChangeEvent): number {
+        // range offset is no longer available. Have to compute it using the contents
+        const lines = this.contents.splitLines({ trim: false, removeEmptyEntries: false });
+        let offset = 0;
+        for (let i = 0; i < c.range.start.line; i += 1) {
+            offset += lines[i].length + 1; // + 1 for the linefeed
+        }
+        offset += c.range.start.character;
+        return offset;
     }
 
     private resolveNotificationPromise() {
