@@ -1,13 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { isEqual } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
+import { traceVerbose } from '../../common/logger';
 import { areSameEnvironment, PythonEnvInfo, PythonEnvKind } from '../base/info';
 import {
     ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, QueryForEvent,
 } from '../base/locator';
 import { PythonEnvsChangedEvent } from '../base/watcher';
 
+/**
+ * Combines duplicate environments received from the incoming locator into one and passes on unique environments
+ */
 export class PythonEnvsReducer implements ILocator {
     public get onChanged(): Event<PythonEnvsChangedEvent> {
         return this.pythonEnvsManager.onChanged;
@@ -21,68 +26,75 @@ export class PythonEnvsReducer implements ILocator {
 
     public iterEnvs(query?: QueryForEvent<PythonEnvsChangedEvent>): IPythonEnvsIterator {
         const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
-        const iterator: IPythonEnvsIterator = this.iterEnvsIterator(didUpdate, query);
+        const incomingIterator = this.pythonEnvsManager.iterEnvs(query);
+        const iterator: IPythonEnvsIterator = iterEnvsIterator(incomingIterator, didUpdate);
         iterator.onUpdated = didUpdate.event;
         return iterator;
     }
+}
 
-    private async* iterEnvsIterator(
-        didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
-        query?: QueryForEvent<PythonEnvsChangedEvent>,
-    ): AsyncIterator<PythonEnvInfo, void> {
-        const state = {
-            done: false,
-            pending: 0,
-        };
-        const seen: PythonEnvInfo[] = [];
-        const iterator = this.pythonEnvsManager.iterEnvs(query);
+async function* iterEnvsIterator(
+    iterator: IPythonEnvsIterator,
+    didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
+): AsyncIterator<PythonEnvInfo, void> {
+    const state = {
+        done: false,
+        pending: 0,
+    };
+    const seen: PythonEnvInfo[] = [];
 
-        if (iterator.onUpdated !== undefined) {
-            iterator.onUpdated((event) => {
-                if (event === null) {
-                    state.done = true;
-                    checkIfFinishedAndNotify(state, didUpdate);
-                } else {
-                    const old = seen.find((s) => areSameEnvironment(s, event.old));
-                    if (old !== undefined) {
-                        state.pending += 1;
-                        resolveDifferencesInBackground(old, event.new, state, didUpdate, seen).ignoreErrors();
-                    }
-                }
-            });
-        }
-
-        let result = await iterator.next();
-        while (!result.done) {
-            const currEnv = result.value;
-            const old = seen.find((s) => areSameEnvironment(s, currEnv));
-            if (old !== undefined) {
-                state.pending += 1;
-                resolveDifferencesInBackground(old, currEnv, state, didUpdate, seen).ignoreErrors();
+    if (iterator.onUpdated !== undefined) {
+        iterator.onUpdated((event) => {
+            if (event === null) {
+                state.done = true;
+                checkIfFinishedAndNotify(state, didUpdate);
             } else {
-                yield currEnv;
-                seen.push(currEnv);
+                const oldIndex = seen.findIndex((s) => areSameEnvironment(s, event.old));
+                if (oldIndex !== -1) {
+                    state.pending += 1;
+                    resolveDifferencesInBackground(oldIndex, event.new, state, didUpdate, seen).ignoreErrors();
+                } else {
+                    // This implies a problem in a downstream locator
+                    traceVerbose(`Expected already iterated env, got ${event.old}`);
+                }
             }
-            // eslint-disable-next-line no-await-in-loop
-            result = await iterator.next();
+        });
+    }
+
+    let result = await iterator.next();
+    while (!result.done) {
+        const currEnv = result.value;
+        const oldIndex = seen.findIndex((s) => areSameEnvironment(s, currEnv));
+        if (oldIndex !== -1) {
+            state.pending += 1;
+            resolveDifferencesInBackground(oldIndex, currEnv, state, didUpdate, seen).ignoreErrors();
+        } else {
+            // We haven't yielded a matching env so yield this one as-is.
+            yield currEnv;
+            seen.push(currEnv);
         }
-        if (iterator.onUpdated === undefined) {
-            state.done = true;
-            checkIfFinishedAndNotify(state, didUpdate);
-        }
+        // eslint-disable-next-line no-await-in-loop
+        result = await iterator.next();
+    }
+    if (iterator.onUpdated === undefined) {
+        state.done = true;
+        checkIfFinishedAndNotify(state, didUpdate);
     }
 }
 
 async function resolveDifferencesInBackground(
-    oldEnv: PythonEnvInfo,
+    oldIndex: number,
     newEnv: PythonEnvInfo,
     state: { done: boolean; pending: number },
     didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
     seen: PythonEnvInfo[],
 ) {
+    const oldEnv = seen[oldIndex];
     const merged = mergeEnvironments(oldEnv, newEnv);
-    didUpdate.fire({ old: oldEnv, new: merged });
-    seen[seen.indexOf(oldEnv)] = merged;
+    if (!isEqual(oldEnv, merged)) {
+        didUpdate.fire({ old: oldEnv, new: merged });
+        seen[oldIndex] = merged;
+    }
     state.pending -= 1;
     checkIfFinishedAndNotify(state, didUpdate);
 }
