@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as path from 'path';
 import { Event } from 'vscode';
 import {
     createDeferred, flattenIterator, iterable, mapToIterator,
@@ -16,18 +17,20 @@ import {
 } from '../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
 
+export function fixPath(filename: string): string {
+    return path.normalize(filename);
+}
+
 export function createEnv(
     name: string,
     versionStr: string,
     kind?: PythonEnvKind,
-    executable?: string,
+    execStr = 'python',
 ): PythonEnvInfo {
     if (kind === undefined) {
         kind = PythonEnvKind.Unknown;
     }
-    if (executable === undefined || executable === '') {
-        executable = 'python';
-    }
+    const executable = execStr === '' ? 'python' : fixPath(execStr);
     const version = parseVersion(versionStr);
     return {
         kind,
@@ -46,14 +49,44 @@ export function createEnv(
 }
 
 export function createLocatedEnv(
-    location: string,
+    locationStr: string,
     versionStr: string,
     kind = PythonEnvKind.Unknown,
-    executable = 'python',
+    execStr = 'python',
 ): PythonEnvInfo {
+    const location = fixPath(locationStr);
+    const normalizedExecutable = fixPath(execStr);
+    const executable = path.isAbsolute(normalizedExecutable)
+        ? normalizedExecutable
+        : path.join(location, 'bin', normalizedExecutable);
     const env = createEnv('', versionStr, kind, executable);
     env.location = location;
     return env;
+}
+
+export function copyEnv(
+    env: PythonEnvInfo,
+    updates?: {
+        kind?: PythonEnvKind,
+    },
+): PythonEnvInfo {
+    const copied = { ...env };
+    copied.version = { ...env.version };
+    copied.version.release = { ...env.version.release };
+    copied.executable = { ...env.executable };
+    copied.distro = { ...env.distro };
+    if (copied.distro.version !== undefined) {
+        copied.distro.version = { ...env.distro.version! };
+    }
+    // We don't bother with env.searchLocation.
+
+    // Apply updates.
+    if (updates !== undefined) {
+        if (updates.kind !== undefined) {
+            copied.kind = updates.kind;
+        }
+    }
+    return copied;
 }
 
 export class SimpleLocator extends Locator {
