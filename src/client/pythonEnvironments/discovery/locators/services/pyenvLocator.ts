@@ -12,6 +12,10 @@ import { pathExists } from '../../../common/externalDependencies';
  * @returns {boolean}: Returns true if the interpreter belongs to a pyenv environment.
  */
 export async function isPyenvEnvironment(interpreterPath:string): Promise<boolean> {
+    // Check if the pyenv environment variables exist: PYENV on Windows, PYENV_ROOT on Unix.
+    // They contain the path to pyenv's installation folder.
+    // If they don't exist, use the default path: ~/.pyenv/pyenv-win on Windows, ~/.pyenv on Unix.
+    // If the interpreter path starts with the path to the pyenv folder, then it is a pyenv environment.
     const isWindows = getOSType() === OSType.Windows;
     const envVariable = isWindows ? 'PYENV' : 'PYENV_ROOT';
     let pyenvDir = getEnvironmentVariable(envVariable);
