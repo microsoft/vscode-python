@@ -21,6 +21,7 @@ import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/nod
 import * as vscodeprotocol from 'vscode-languageserver-protocol';
 import { NugetPackage } from '../common/nuget/types';
 import { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
+import { ILanguageServerConnection } from '../datascience/api/jupyterIntegration';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
@@ -97,7 +98,7 @@ export interface ILanguageServer
         Partial<DocumentHandler>,
         Partial<LanguageServerCommandHandler>,
         IDisposable {
-    readonly connection?: vscodeprotocol.ProtocolConnection;
+    readonly connection?: ILanguageServerConnection;
     readonly capabilities?: vscodeprotocol.ServerCapabilities;
 }
 

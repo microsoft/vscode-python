@@ -24,7 +24,6 @@ import {
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
 
 import { injectable } from 'inversify';
-import { noop } from 'lodash';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -76,9 +75,6 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
     public get connection() {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
-            const dummyDisposable = {
-                dispose: noop
-            };
             // Return an object that looks like a connection
             return {
                 sendNotification: languageClient.sendNotification.bind(languageClient),
@@ -86,15 +82,7 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
                 sendProgress: languageClient.sendProgress.bind(languageClient),
                 onRequest: languageClient.onRequest.bind(languageClient),
                 onNotification: languageClient.onNotification.bind(languageClient),
-                onProgress: languageClient.onProgress.bind(languageClient),
-                // tslint:disable-next-line: no-any
-                trace: (v: any) => (languageClient.trace = v),
-                onError: () => dummyDisposable,
-                onClose: () => dummyDisposable,
-                onDispose: () => dummyDisposable,
-                onUnhandledNotification: () => dummyDisposable,
-                dispose: this.manager.dispose.bind(this.manager),
-                listen: noop
+                onProgress: languageClient.onProgress.bind(languageClient)
             };
         }
     }

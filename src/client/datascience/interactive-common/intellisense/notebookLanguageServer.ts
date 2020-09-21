@@ -15,7 +15,7 @@ import * as vscodeprotocol from 'vscode-languageserver-protocol';
 import { Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { JupyterExtensionIntegration, LanguageServerConnection } from '../../api/jupyterIntegration';
+import { ILanguageServer, ILanguageServerConnection, JupyterExtensionIntegration } from '../../api/jupyterIntegration';
 
 /**
  * Class that wraps a language server for use by webview based notebooks
@@ -23,10 +23,10 @@ import { JupyterExtensionIntegration, LanguageServerConnection } from '../../api
 export class NotebookLanguageServer implements Disposable {
     private code2ProtocolConverter = c2p.createConverter();
     private protocol2CodeConverter = p2c.createConverter();
-    private connection: vscodeprotocol.ProtocolConnection;
+    private connection: ILanguageServerConnection;
     private capabilities: vscodeprotocol.ServerCapabilities;
     private disposeConnection: () => void;
-    private constructor(ls: LanguageServerConnection) {
+    private constructor(ls: ILanguageServer) {
         this.connection = ls.connection;
         this.capabilities = ls.capabilities;
         this.disposeConnection = ls.dispose.bind(ls);
@@ -41,7 +41,7 @@ export class NotebookLanguageServer implements Disposable {
         const deferred = createDeferred<NotebookLanguageServer | undefined>();
         jupyterApiProvider.registerApi({
             registerPythonApi: (api) => {
-                api.getLanguageServerConnection(interpreter ? interpreter : resource)
+                api.getLanguageServer(interpreter ? interpreter : resource)
                     .then((c) => {
                         if (c) {
                             deferred.resolve(new NotebookLanguageServer(c));
