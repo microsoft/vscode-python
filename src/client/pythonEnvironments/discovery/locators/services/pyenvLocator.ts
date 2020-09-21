@@ -16,6 +16,8 @@ export async function isPyenvEnvironment(interpreterPath:string): Promise<boolea
     // They contain the path to pyenv's installation folder.
     // If they don't exist, use the default path: ~/.pyenv/pyenv-win on Windows, ~/.pyenv on Unix.
     // If the interpreter path starts with the path to the pyenv folder, then it is a pyenv environment.
+    // See https://github.com/pyenv/pyenv#locating-the-python-installation for general usage,
+    // And https://github.com/pyenv-win/pyenv-win for Windows specifics.
     const isWindows = getOSType() === OSType.Windows;
     const envVariable = isWindows ? 'PYENV' : 'PYENV_ROOT';
     let pyenvDir = getEnvironmentVariable(envVariable);
