@@ -276,8 +276,10 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             // Get the model
             const model = await this.loadModel({ file: resource });
 
-            // Load it (should already be visible)
-            return this.createNotebookEditor(model, panel);
+            // Load it
+            const resultEditor = this.createNotebookEditor(model, panel);
+            await resultEditor.show(); // Make sure we are shown and run our show code
+            return resultEditor;
         } catch (exc) {
             // Send telemetry indicating a failure
             sendTelemetryEvent(Telemetry.OpenNotebookFailure);
