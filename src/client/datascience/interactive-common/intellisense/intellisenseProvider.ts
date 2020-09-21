@@ -102,7 +102,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private notebookType: 'interactive' | 'native' = 'interactive';
     private potentialResource: Uri | undefined;
     private sentOpenDocument: boolean = false;
-    private languageServer: ILanguageServer | undefined;
+    private languageServer: NotebookLanguageServer | undefined;
     private resource: Resource;
     private interpreter: PythonEnvironment | undefined;
 
@@ -383,12 +383,12 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         if (document) {
             // Broadcast an update to the language server
             const languageServer = await this.getLanguageServer(CancellationToken.None);
-            if (languageServer && languageServer.handleChanges && languageServer.handleOpen) {
+            if (languageServer) {
                 if (!this.sentOpenDocument) {
                     this.sentOpenDocument = true;
-                    return languageServer.handleOpen(document);
+                    return languageServer.sendOpen(document);
                 } else {
-                    return languageServer.handleChanges(document, changes);
+                    return languageServer.sendChanges(document, changes);
                 }
             }
         }

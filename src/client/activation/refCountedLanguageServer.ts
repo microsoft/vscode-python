@@ -65,6 +65,14 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
         this.impl.clearAnalysisCache ? this.impl.clearAnalysisCache() : noop();
     }
 
+    public get connection() {
+        return this.impl.connection;
+    }
+
+    public get capabilities() {
+        return this.impl.capabilities;
+    }
+
     public handleChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]) {
         this.impl.handleChanges ? this.impl.handleChanges(document, changes) : noop();
     }

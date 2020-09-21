@@ -1,6 +1,16 @@
-import { Disposable } from 'vscode';
+import {
+    CancellationToken,
+    CompletionContext,
+    CompletionItem,
+    Disposable,
+    Position,
+    SignatureHelpContext,
+    TextDocument,
+    TextDocumentContentChangeEvent
+} from 'vscode';
 import * as c2p from 'vscode-languageclient/lib/common/codeConverter';
 import * as p2c from 'vscode-languageclient/lib/common/protocolConverter';
+import * as vscodeLanguageClient from 'vscode-languageclient/node';
 import * as vscodeprotocol from 'vscode-languageserver-protocol';
 import { Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
@@ -9,11 +19,17 @@ import { JupyterExtensionIntegration, LanguageServerConnection } from '../../api
 
 /**
  * Class that wraps a language server for use by webview based notebooks
- * */
+ */
 export class NotebookLanguageServer implements Disposable {
-    private code2p = c2p.createConverter();
-    private prot2c = p2c.createConverter();
-    private constructor(private connection: LanguageServerConnection) {
+    private code2ProtocolConverter = c2p.createConverter();
+    private protocol2CodeConverter = p2c.createConverter();
+    private connection: vscodeprotocol.ProtocolConnection;
+    private capabilities: vscodeprotocol.ServerCapabilities;
+    private disposeConnection: () => void;
+    private constructor(ls: LanguageServerConnection) {
+        this.connection = ls.connection;
+        this.capabilities = ls.capabilities;
+        this.disposeConnection = ls.dispose.bind(ls);
     }
 
     public static async create(
@@ -40,20 +56,82 @@ export class NotebookLanguageServer implements Disposable {
     }
 
     public dispose() {
-        this.connection.dispose();
+        this.disposeConnection();
     }
 
-    public sendOpen() {}
+    public sendOpen(document: TextDocument) {
+        this.connection.sendNotification(
+            vscodeLanguageClient.DidOpenTextDocumentNotification.type,
+            this.code2ProtocolConverter.asOpenTextDocumentParams(document)
+        );
+    }
 
-    public sendChanged() {}
+    public sendChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]) {
+        // If the language client doesn't support incremental, just send the whole document
+        if (this.capabilities.textDocumentSync === vscodeLanguageClient.TextDocumentSyncKind.Full) {
+            this.connection.sendNotification(
+                vscodeLanguageClient.DidChangeTextDocumentNotification.type,
+                this.code2ProtocolConverter.asChangeTextDocumentParams(document)
+            );
+        } else {
+            this.connection.sendNotification(
+                vscodeLanguageClient.DidChangeTextDocumentNotification.type,
+                this.code2ProtocolConverter.asChangeTextDocumentParams({
+                    document,
+                    contentChanges: changes
+                })
+            );
+        }
+    }
 
-    public provideCompletionItems() {}
+    public async provideCompletionItems(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        context: CompletionContext
+    ) {
+        const args = this.code2ProtocolConverter.asCompletionParams(document, position, context);
+        const result = await this.connection.sendRequest(vscodeLanguageClient.CompletionRequest.type, args, token);
+        if (result) {
+            return this.protocol2CodeConverter.asCompletionResult(result);
+        }
+    }
 
-    public provideSignatureHelp() {}
+    public async provideSignatureHelp(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        _context: SignatureHelpContext
+    ) {
+        const args: vscodeLanguageClient.TextDocumentPositionParams = {
+            textDocument: this.code2ProtocolConverter.asTextDocumentIdentifier(document),
+            position: this.code2ProtocolConverter.asPosition(position)
+        };
+        const result = await this.connection.sendRequest(vscodeLanguageClient.SignatureHelpRequest.type, args, token);
+        if (result) {
+            return this.protocol2CodeConverter.asSignatureHelp(result);
+        }
+    }
 
-    public provideHover() {}
+    public async provideHover(document: TextDocument, position: Position, token: CancellationToken) {
+        const args: vscodeLanguageClient.TextDocumentPositionParams = {
+            textDocument: this.code2ProtocolConverter.asTextDocumentIdentifier(document),
+            position: this.code2ProtocolConverter.asPosition(position)
+        };
+        const result = await this.connection.sendRequest(vscodeLanguageClient.HoverRequest.type, args, token);
+        if (result) {
+            return this.protocol2CodeConverter.asHover(result);
+        }
+    }
 
-    public resolveCompletionItem() {
-        if (this.connection.capabilities.);
+    public async resolveCompletionItem(item: CompletionItem, token: CancellationToken) {
+        const result = await this.connection.sendRequest(
+            vscodeLanguageClient.CompletionResolveRequest.type,
+            this.code2ProtocolConverter.asCompletionItem(item),
+            token
+        );
+        if (result) {
+            return this.protocol2CodeConverter.asCompletionItem(result);
+        }
     }
 }
