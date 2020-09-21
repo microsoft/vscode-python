@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { createWorkerPool, IWorkerPool, QueuePosition } from '../../common/utils/workerPool';
 import { PythonEnvInfo } from '../base/info';
 import { getInterpreterInfo } from '../base/info/interpreter';
@@ -44,7 +45,7 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
     // path again and again in a given session. This information will likely not change in a given
     // session. There are definitely cases where this will change. But a simple reload should address
     // those.
-    private readonly cache: Map<string, PythonEnvInfo> = new Map<string, PythonEnvInfo>();
+    private readonly cache: Map<string, Deferred<PythonEnvInfo>> = new Map<string, Deferred<PythonEnvInfo>>();
 
     private readonly workerPool: IWorkerPool<PythonEnvInfo, PythonEnvInfo | undefined>;
 
@@ -59,15 +60,19 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
         const interpreterPath = environment.executable.filename;
         const result = this.cache.get(interpreterPath);
         if (result !== undefined) {
-            return result;
+            // Another call for this environment has already been made, return its result
+            return result.promise;
         }
-
+        const deferred = createDeferred<PythonEnvInfo>();
+        this.cache.set(interpreterPath, deferred);
         return (priority === EnvironmentInfoServiceQueuePriority.High
             ? this.workerPool.addToQueue(environment, QueuePosition.Front)
             : this.workerPool.addToQueue(environment, QueuePosition.Back)
         ).then((r) => {
             if (r !== undefined) {
-                this.cache.set(interpreterPath, r);
+                deferred.resolve(r);
+            } else {
+                this.cache.delete(interpreterPath);
             }
             return r;
         });
