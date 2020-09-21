@@ -22,7 +22,9 @@ export interface IEnvironmentInfoService {
 }
 
 async function buildEnvironmentInfo(interpreterPath: string): Promise<InterpreterInformation | undefined> {
-    const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(interpreterPath), shellExecute);
+    const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(interpreterPath), shellExecute).catch(
+        () => undefined,
+    );
     if (interpreterInfo === undefined || interpreterInfo.version === undefined) {
         return undefined;
     }

@@ -26,7 +26,7 @@ export type InterpreterInformation = {
  * @param python - the path to the Python executable
  * @param raw - the information returned by the `interpreterInfo.py` script
  */
-export function extractPythonEnvInfo(python: string, raw: PythonEnvInfo): InterpreterInformation {
+function extractInterpreterInfo(python: string, raw: PythonEnvInfo): InterpreterInformation {
     const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`;
     const version = parseVersion(rawVersion);
     version.sysVersion = raw.sysVersion;
@@ -89,5 +89,5 @@ export async function getInterpreterInfo(
     if (logger) {
         logger.info(`Found interpreter for ${argv}`);
     }
-    return extractPythonEnvInfo(python.pythonExecutable, json);
+    return extractInterpreterInfo(python.pythonExecutable, json);
 }
