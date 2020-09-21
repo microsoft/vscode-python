@@ -3,9 +3,11 @@
 
 import * as vscode from 'vscode';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
+import { EmptyCache } from './base/cache';
 import { PythonEnvInfoCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from './base/locator';
+import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsChangedEvent } from './base/watcher';
 import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
 import { registerForIOC } from './legacyIOC';
@@ -13,7 +15,7 @@ import { registerForIOC } from './legacyIOC';
 /**
  * Activate the Python environments component (during extension activation).'
  */
-export function activate(serviceManager: IServiceManager, serviceContainer: IServiceContainer) {
+export function activate(serviceManager: IServiceManager, serviceContainer: IServiceContainer): void {
     const [api, activateAPI] = createAPI();
     registerForIOC(serviceManager, serviceContainer, api);
     activateAPI();
@@ -27,7 +29,7 @@ export function activate(serviceManager: IServiceManager, serviceContainer: ISer
 export class PythonEnvironments implements ILocator {
     constructor(
         // These are the sub-components the full component is composed of:
-        private readonly locators: ILocator
+        private readonly locators: ILocator,
     ) {}
 
     public get onChanged(): vscode.Event<PythonEnvsChangedEvent> {
@@ -53,11 +55,15 @@ export function createAPI(): [PythonEnvironments, () => void] {
 
     // Update this to pass in an actual function that checks for env info completeness.
     const envsCache = new PythonEnvInfoCache(() => true);
+    // XXX For now we use a noop cache.
+    const cache = new EmptyCache();
+    const cachingLocator = new CachingLocator(cache, locators);
 
     return [
-        new PythonEnvironments(locators),
+        new PythonEnvironments(cachingLocator),
         () => {
             activateLocators();
+            cachingLocator.initialize().ignoreErrors();
             // Any other activation needed for the API will go here later.
             envsCache.initialize();
         },
@@ -81,7 +87,7 @@ function initLocators(): [ExtensionLocators, () => void] {
         () => {
             // Any non-workspace locator activation goes here.
             workspaceLocators.activate(getWorkspaceFolders());
-        }
+        },
     ];
 }
 
@@ -89,9 +95,11 @@ function getWorkspaceFolders() {
     const rootAdded = new vscode.EventEmitter<vscode.Uri>();
     const rootRemoved = new vscode.EventEmitter<vscode.Uri>();
     vscode.workspace.onDidChangeWorkspaceFolders((event) => {
+        // eslint-disable-next-line no-restricted-syntax
         for (const root of event.removed) {
             rootRemoved.fire(root.uri);
         }
+        // eslint-disable-next-line no-restricted-syntax
         for (const root of event.added) {
             rootAdded.fire(root.uri);
         }
@@ -100,6 +108,6 @@ function getWorkspaceFolders() {
     return {
         roots: folders ? folders.map((f) => f.uri) : [],
         onAdded: rootAdded.event,
-        onRemoved: rootRemoved.event
+        onRemoved: rootRemoved.event,
     };
 }
