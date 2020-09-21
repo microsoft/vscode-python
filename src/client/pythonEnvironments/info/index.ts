@@ -92,7 +92,7 @@ export function normalizeEnvironment(environment: PartialPythonEnvironment): voi
 /**
  * Convert the Python environment type to a user-facing name.
  */
-export function getEnvironmentTypeName(environmentType: EnvironmentType) {
+export function getEnvironmentTypeName(environmentType: EnvironmentType): string {
     switch (environmentType) {
         case EnvironmentType.Conda: {
             return 'conda';
@@ -109,6 +109,12 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType) {
         case EnvironmentType.VirtualEnv: {
             return 'virtualenv';
         }
+        case EnvironmentType.WindowsStore: {
+            return 'windows store';
+        }
+        case EnvironmentType.Poetry: {
+            return 'poetry';
+        }
         default: {
             return '';
         }
@@ -121,7 +127,7 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType) {
  * @param environment1 - one of the two envs to compare
  * @param environment2 - one of the two envs to compare
  */
-export function areSameEnvironment(
+export function areSamePartialEnvironment(
     environment1: PartialPythonEnvironment | undefined,
     environment2: PartialPythonEnvironment | undefined,
     fs: IFileSystem,
@@ -185,7 +191,7 @@ export function mergeEnvironments(
     fs: IFileSystem,
 ): PartialPythonEnvironment[] {
     return environments.reduce<PartialPythonEnvironment[]>((accumulator, current) => {
-        const existingItem = accumulator.find((item) => areSameEnvironment(current, item, fs));
+        const existingItem = accumulator.find((item) => areSamePartialEnvironment(current, item, fs));
         if (!existingItem) {
             const copied: PartialPythonEnvironment = { ...current };
             normalizeEnvironment(copied);
