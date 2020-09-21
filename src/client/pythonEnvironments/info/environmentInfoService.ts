@@ -29,11 +29,13 @@ async function buildEnvironmentInfo(environment: PythonEnvInfo): Promise<PythonE
     if (interpreterInfo === undefined || interpreterInfo.version === undefined) {
         return undefined;
     }
-    environment.version = interpreterInfo.version;
-    environment.executable.filename = interpreterInfo.executable.filename;
-    environment.executable.sysPrefix = interpreterInfo.executable.sysPrefix;
-    environment.arch = interpreterInfo.arch;
-    return environment;
+    // Deep copy into a new object
+    const resolvedEnv = JSON.parse(JSON.stringify(environment)) as PythonEnvInfo;
+    resolvedEnv.version = interpreterInfo.version;
+    resolvedEnv.executable.filename = interpreterInfo.executable.filename;
+    resolvedEnv.executable.sysPrefix = interpreterInfo.executable.sysPrefix;
+    resolvedEnv.arch = interpreterInfo.arch;
+    return resolvedEnv;
 }
 
 @injectable()
