@@ -76,7 +76,13 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
             }
             if (versionInfo.minor >= CondaRequiredMinor) {
                 // New version.
-                const interpreterPath = await this.condaService.getCondaFileFromInterpreter(pythonPath, envInfo.name);
+                const envNamePos = envInfo.name ? pythonPath.indexOf(envInfo.name) : -1;
+                const scriptsDir = this.platform.isWindows ? 'Scripts' : 'bin';
+                const interpreterPath =
+                    (await this.condaService.getCondaFileFromInterpreter(pythonPath, envInfo.name)) ||
+                    // On Fedora or related distros, binaries lay in each env directory
+                    path.join(pythonPath.slice(0, envNamePos + envInfo.name.length), scriptsDir);
+
                 if (interpreterPath) {
                     const activatePath = path.join(path.dirname(interpreterPath), 'activate').fileToCommandArgument();
                     const firstActivate = this.platform.isWindows ? activatePath : `source ${activatePath}`;
