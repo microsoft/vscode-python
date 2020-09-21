@@ -50,7 +50,7 @@ export class SimpleLocator extends Locator {
     private deferred = createDeferred<void>();
     constructor(
         private envs: PythonEnvInfo[],
-        private callbacks?: {
+        public callbacks: {
             resolve?: null | ((env: PythonEnvInfo) => Promise<PythonEnvInfo | undefined>);
             before?: Promise<void>;
             after?: Promise<void>;
@@ -58,7 +58,7 @@ export class SimpleLocator extends Locator {
             beforeEach?(e: PythonEnvInfo): Promise<void>;
             afterEach?(e: PythonEnvInfo): Promise<void>;
             onQuery?(query: PythonLocatorQuery | undefined, envs: PythonEnvInfo[]): Promise<PythonEnvInfo[]>;
-        }
+        } = {},
     ) {
         super();
     }
