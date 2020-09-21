@@ -20,7 +20,9 @@ export async function isPyenvEnvironment(interpreterPath:string): Promise<boolea
     // And https://github.com/pyenv-win/pyenv-win for Windows specifics.
     const isWindows = getOSType() === OSType.Windows;
     const envVariable = isWindows ? 'PYENV' : 'PYENV_ROOT';
+
     let pyenvDir = getEnvironmentVariable(envVariable);
+    let pathToCheck = interpreterPath;
 
     if (!pyenvDir) {
         const homeDir = getUserHomeDir() || '';
@@ -35,5 +37,10 @@ export async function isPyenvEnvironment(interpreterPath:string): Promise<boolea
         pyenvDir += path.sep;
     }
 
-    return interpreterPath.startsWith(pyenvDir);
+    if (getOSType() === OSType.Windows) {
+        pyenvDir = pyenvDir.toUpperCase();
+        pathToCheck = pyenvDir.toUpperCase();
+    }
+
+    return pathToCheck.startsWith(pyenvDir);
 }
