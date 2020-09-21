@@ -34,6 +34,8 @@ import { EnvironmentType } from '../info';
  * Last category is globally installed python, or system python.
  */
 export async function identifyEnvironment(interpreterPath: string): Promise<EnvironmentType> {
+    const notImplemented = () => false;
+
     if (await isCondaEnvironment(interpreterPath)) {
         return EnvironmentType.Conda;
     }
