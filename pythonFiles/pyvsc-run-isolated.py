@@ -16,7 +16,7 @@ def normalize(path):
 # We "isolate" the script/module (sys.argv[1]) by removing current working
 # directory or '' in sys.path and then sending the target on to runpy.
 cwd = normalize(os.getcwd())
-sys.path = list(p for p in sys.path if p != '' and normalize(p) != cwd)
+sys.path[:] = (p for p in sys.path if p != '' and normalize(p) != cwd)
 del sys.argv[0]
 module = sys.argv[0]
 if module == "-c":
