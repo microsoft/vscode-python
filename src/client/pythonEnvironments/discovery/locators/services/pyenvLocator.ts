@@ -39,7 +39,7 @@ export async function isPyenvEnvironment(interpreterPath:string): Promise<boolea
 
     if (getOSType() === OSType.Windows) {
         pyenvDir = pyenvDir.toUpperCase();
-        pathToCheck = pyenvDir.toUpperCase();
+        pathToCheck = pathToCheck.toUpperCase();
     }
 
     return pathToCheck.startsWith(pyenvDir);
