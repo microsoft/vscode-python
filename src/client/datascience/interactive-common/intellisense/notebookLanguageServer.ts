@@ -68,7 +68,7 @@ export class NotebookLanguageServer implements Disposable {
 
     public sendChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]) {
         // If the language client doesn't support incremental, just send the whole document
-        if (this.capabilities.textDocumentSync === vscodeLanguageClient.TextDocumentSyncKind.Full) {
+        if (this.textDocumentSyncKind === vscodeLanguageClient.TextDocumentSyncKind.Full) {
             this.connection.sendNotification(
                 vscodeLanguageClient.DidChangeTextDocumentNotification.type,
                 this.code2ProtocolConverter.asChangeTextDocumentParams(document)
@@ -133,5 +133,21 @@ export class NotebookLanguageServer implements Disposable {
         if (result) {
             return this.protocol2CodeConverter.asCompletionItem(result);
         }
+    }
+
+    private get textDocumentSyncKind(): vscodeLanguageClient.TextDocumentSyncKind {
+        if (this.capabilities.textDocumentSync) {
+            const syncOptions = this.capabilities.textDocumentSync;
+            const syncKind =
+                syncOptions !== undefined && syncOptions.hasOwnProperty('change')
+                    ? (syncOptions as vscodeLanguageClient.TextDocumentSyncOptions).change
+                    : syncOptions;
+            if (syncKind !== undefined) {
+                return syncKind as vscodeLanguageClient.TextDocumentSyncKind;
+            }
+        }
+
+        // Default is full if not provided
+        return vscodeLanguageClient.TextDocumentSyncKind.Full;
     }
 }

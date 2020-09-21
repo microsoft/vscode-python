@@ -21,6 +21,7 @@ import {
     TextDocumentContentChangeEvent,
     WorkspaceEdit
 } from 'vscode';
+import * as vscodeLanguageClient from 'vscode-languageclient/node';
 
 import { ILanguageServer } from '../../client/activation/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
@@ -45,14 +46,20 @@ export class MockLanguageServer implements ILanguageServer {
         return this.versionId;
     }
 
-    public handleChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]) {
-        this.versionId = document.version;
-        this.applyChanges(changes);
-        this.resolveNotificationPromise();
+    public get connection() {
+        // Return an object that looks like a connection
+        return {
+            sendNotification: this.sendNotification.bind(this) as any,
+            sendRequest: noop as any,
+            sendProgress: noop as any,
+            onRequest: noop as any,
+            onNotification: noop as any,
+            onProgress: noop as any
+        };
     }
 
-    public handleOpen(_document: TextDocument) {
-        noop();
+    public get capabilities() {
+        return {};
     }
 
     public provideRenameEdits(
@@ -128,6 +135,14 @@ export class MockLanguageServer implements ILanguageServer {
 
     public reconnect(): void {
         noop();
+    }
+
+    private sendNotification(method: string, params: any): void {
+        if (method === vscodeLanguageClient.DidChangeTextDocumentNotification.type.method) {
+            const changes = params.contentChanges;
+            this.applyChanges(changes);
+            this.resolveNotificationPromise();
+        }
     }
 
     private applyChanges(changes: TextDocumentContentChangeEvent[]) {

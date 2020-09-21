@@ -13,9 +13,7 @@ import {
     HoverProvider,
     ReferenceProvider,
     RenameProvider,
-    SignatureHelpProvider,
-    TextDocument,
-    TextDocumentContentChangeEvent
+    SignatureHelpProvider
 } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
 import * as vscodeprotocol from 'vscode-languageserver-protocol';
@@ -76,12 +74,6 @@ export const DotNetLanguageServerFolder = 'languageServer';
 export const NodeLanguageServerFolder = 'nodeLanguageServer';
 
 // tslint:disable-next-line: interface-name
-export interface DocumentHandler {
-    handleOpen(document: TextDocument): void;
-    handleChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]): void;
-}
-
-// tslint:disable-next-line: interface-name
 export interface LanguageServerCommandHandler {
     clearAnalysisCache(): void;
 }
@@ -95,7 +87,6 @@ export interface ILanguageServer
         CodeLensProvider,
         DocumentSymbolProvider,
         SignatureHelpProvider,
-        Partial<DocumentHandler>,
         Partial<LanguageServerCommandHandler>,
         IDisposable {
     readonly connection?: ILanguageServerConnection;

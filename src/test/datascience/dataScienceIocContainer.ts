@@ -186,6 +186,7 @@ import { Architecture } from '../../client/common/utils/platform';
 import { EnvironmentVariablesService } from '../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../client/common/variables/types';
+import { JupyterExtensionIntegration } from '../../client/datascience/api/jupyterIntegration';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { JupyterCommandLineSelectorCommand } from '../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../client/datascience/commands/commandRegistry';
@@ -759,6 +760,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ITerminalActivationCommandProvider,
             PipEnvActivationCommandProvider,
             TerminalActivationProviders.pipenv
+        );
+        this.serviceManager.addSingleton<JupyterExtensionIntegration>(
+            JupyterExtensionIntegration,
+            JupyterExtensionIntegration
         );
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
         this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy);
