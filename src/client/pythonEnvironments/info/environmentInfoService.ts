@@ -16,7 +16,7 @@ export enum EnvironmentInfoServiceQueuePriority {
 export const IEnvironmentInfoService = Symbol('IEnvironmentInfoService');
 export interface IEnvironmentInfoService {
     getEnvironmentInfo(
-        environment: PythonEnvInfo,
+        interpreterPath: string,
         priority?: EnvironmentInfoServiceQueuePriority
     ): Promise<InterpreterInformation | undefined>;
 }
@@ -49,7 +49,7 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
     }
 
     public async getEnvironmentInfo(
-        environment: PythonEnvInfo,
+        interpreterPath: string,
         priority?: EnvironmentInfoServiceQueuePriority,
     ): Promise<InterpreterInformation | undefined> {
         const result = this.cache.get(interpreterPath);
@@ -60,8 +60,8 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
         const deferred = createDeferred<InterpreterInformation>();
         this.cache.set(interpreterPath, deferred);
         return (priority === EnvironmentInfoServiceQueuePriority.High
-            ? this.workerPool.addToQueue(environment, QueuePosition.Front)
-            : this.workerPool.addToQueue(environment, QueuePosition.Back)
+            ? this.workerPool.addToQueue(interpreterPath, QueuePosition.Front)
+            : this.workerPool.addToQueue(interpreterPath, QueuePosition.Back)
         ).then((r) => {
             deferred.resolve(r);
             if (r === undefined) {

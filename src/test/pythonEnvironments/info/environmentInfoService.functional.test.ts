@@ -54,11 +54,9 @@ suite('Environment Info Service', () => {
         for (let i = 0; i < 10; i = i + 1) {
             const path = `any-path${i}`;
             if (i < 5) {
-                promises.push(envService.getEnvironmentInfo(createEnvInfo(path)));
+                promises.push(envService.getEnvironmentInfo(path));
             } else {
-                promises.push(
-                    envService.getEnvironmentInfo(createEnvInfo(path), EnvironmentInfoServiceQueuePriority.High),
-                );
+                promises.push(envService.getEnvironmentInfo(path, EnvironmentInfoServiceQueuePriority.High));
             }
             expected.push(createExpectedEnvInfo(path));
         }
@@ -81,10 +79,10 @@ suite('Environment Info Service', () => {
         // Clear call counts
         stubShellExec.resetHistory();
         // Evaluate once so the result is cached.
-        await envService.getEnvironmentInfo(createEnvInfo(path));
+        await envService.getEnvironmentInfo(path);
 
         for (let i = 0; i < 10; i = i + 1) {
-            promises.push(envService.getEnvironmentInfo(createEnvInfo(path)));
+            promises.push(envService.getEnvironmentInfo(path));
             expected.push(createExpectedEnvInfo(path));
         }
 
