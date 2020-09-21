@@ -4,8 +4,7 @@
 import { injectable } from 'inversify';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { createWorkerPool, IWorkerPool, QueuePosition } from '../../common/utils/workerPool';
-import { PythonEnvInfo } from '../base/info';
-import { getInterpreterInfo } from '../base/info/interpreter';
+import { getInterpreterInfo, InterpreterInformation } from '../base/info/interpreter';
 import { shellExecute } from '../common/externalDependencies';
 import { buildPythonExecInfo } from '../exec';
 
@@ -17,26 +16,17 @@ export enum EnvironmentInfoServiceQueuePriority {
 export const IEnvironmentInfoService = Symbol('IEnvironmentInfoService');
 export interface IEnvironmentInfoService {
     getEnvironmentInfo(
-        environment: PythonEnvInfo,
+        interpreterPath: string,
         priority?: EnvironmentInfoServiceQueuePriority
-    ): Promise<PythonEnvInfo | undefined>;
+    ): Promise<InterpreterInformation | undefined>;
 }
 
-async function buildEnvironmentInfo(environment: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-    const interpreterInfo = await getInterpreterInfo(
-        buildPythonExecInfo(environment.executable.filename),
-        shellExecute,
-    );
+async function buildEnvironmentInfo(interpreterPath: string): Promise<InterpreterInformation | undefined> {
+    const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(interpreterPath), shellExecute);
     if (interpreterInfo === undefined || interpreterInfo.version === undefined) {
         return undefined;
     }
-    // Deep copy into a new object
-    const resolvedEnv = JSON.parse(JSON.stringify(environment)) as PythonEnvInfo;
-    resolvedEnv.version = interpreterInfo.version;
-    resolvedEnv.executable.filename = interpreterInfo.executable.filename;
-    resolvedEnv.executable.sysPrefix = interpreterInfo.executable.sysPrefix;
-    resolvedEnv.arch = interpreterInfo.arch;
-    return resolvedEnv;
+    return interpreterInfo;
 }
 
 @injectable()
@@ -45,33 +35,34 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
     // path again and again in a given session. This information will likely not change in a given
     // session. There are definitely cases where this will change. But a simple reload should address
     // those.
-    private readonly cache: Map<string, Deferred<PythonEnvInfo>> = new Map<string, Deferred<PythonEnvInfo>>();
+    private readonly cache: Map<string, Deferred<InterpreterInformation>> = new Map<
+        string,
+        Deferred<InterpreterInformation>
+    >();
 
-    private readonly workerPool: IWorkerPool<PythonEnvInfo, PythonEnvInfo | undefined>;
+    private readonly workerPool: IWorkerPool<string, InterpreterInformation | undefined>;
 
     public constructor() {
-        this.workerPool = createWorkerPool<PythonEnvInfo, PythonEnvInfo | undefined>(buildEnvironmentInfo);
+        this.workerPool = createWorkerPool<string, InterpreterInformation | undefined>(buildEnvironmentInfo);
     }
 
     public async getEnvironmentInfo(
-        environment: PythonEnvInfo,
+        interpreterPath: string,
         priority?: EnvironmentInfoServiceQueuePriority,
-    ): Promise<PythonEnvInfo | undefined> {
-        const interpreterPath = environment.executable.filename;
+    ): Promise<InterpreterInformation | undefined> {
         const result = this.cache.get(interpreterPath);
         if (result !== undefined) {
             // Another call for this environment has already been made, return its result
             return result.promise;
         }
-        const deferred = createDeferred<PythonEnvInfo>();
+        const deferred = createDeferred<InterpreterInformation>();
         this.cache.set(interpreterPath, deferred);
         return (priority === EnvironmentInfoServiceQueuePriority.High
-            ? this.workerPool.addToQueue(environment, QueuePosition.Front)
-            : this.workerPool.addToQueue(environment, QueuePosition.Back)
+            ? this.workerPool.addToQueue(interpreterPath, QueuePosition.Front)
+            : this.workerPool.addToQueue(interpreterPath, QueuePosition.Back)
         ).then((r) => {
-            if (r !== undefined) {
-                deferred.resolve(r);
-            } else {
+            deferred.resolve(r);
+            if (r === undefined) {
                 this.cache.delete(interpreterPath);
             }
             return r;

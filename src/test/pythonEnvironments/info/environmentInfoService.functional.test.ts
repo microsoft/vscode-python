@@ -8,7 +8,7 @@ import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
 import { ExecutionResult } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
+import { InterpreterInformation } from '../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
 import * as ExternalDep from '../../../client/pythonEnvironments/common/externalDependencies';
 import {
@@ -19,31 +19,9 @@ import {
 suite('Environment Info Service', () => {
     let stubShellExec: sinon.SinonStub;
 
-    function createEnvInfo(executable: string): PythonEnvInfo {
+    function createExpectedEnvInfo(executable: string): InterpreterInformation {
         return {
-            id: '',
-            kind: PythonEnvKind.Unknown,
-            version: parseVersion('0.0.0'),
-            name: '',
-            location: '',
-            arch: Architecture.x64,
-            executable: {
-                filename: executable,
-                sysPrefix: '',
-                mtime: -1,
-                ctime: -1,
-            },
-            distro: { org: '' },
-        };
-    }
-
-    function createExpectedEnvInfo(executable: string): PythonEnvInfo {
-        return {
-            id: '',
-            kind: PythonEnvKind.Unknown,
             version: parseVersion('3.8.3-final'),
-            name: '',
-            location: '',
             arch: Architecture.x64,
             executable: {
                 filename: executable,
@@ -51,7 +29,6 @@ suite('Environment Info Service', () => {
                 mtime: -1,
                 ctime: -1,
             },
-            distro: { org: '' },
         };
     }
 
@@ -72,16 +49,14 @@ suite('Environment Info Service', () => {
     });
     test('Add items to queue and get results', async () => {
         const envService = new EnvironmentInfoService();
-        const promises: Promise<PythonEnvInfo | undefined>[] = [];
-        const expected: PythonEnvInfo[] = [];
+        const promises: Promise<InterpreterInformation | undefined>[] = [];
+        const expected: InterpreterInformation[] = [];
         for (let i = 0; i < 10; i = i + 1) {
             const path = `any-path${i}`;
             if (i < 5) {
-                promises.push(envService.getEnvironmentInfo(createEnvInfo(path)));
+                promises.push(envService.getEnvironmentInfo(path));
             } else {
-                promises.push(
-                    envService.getEnvironmentInfo(createEnvInfo(path), EnvironmentInfoServiceQueuePriority.High),
-                );
+                promises.push(envService.getEnvironmentInfo(path, EnvironmentInfoServiceQueuePriority.High));
             }
             expected.push(createExpectedEnvInfo(path));
         }
@@ -97,17 +72,17 @@ suite('Environment Info Service', () => {
 
     test('Add same item to queue', async () => {
         const envService = new EnvironmentInfoService();
-        const promises: Promise<PythonEnvInfo | undefined>[] = [];
-        const expected: PythonEnvInfo[] = [];
+        const promises: Promise<InterpreterInformation | undefined>[] = [];
+        const expected: InterpreterInformation[] = [];
 
         const path = 'any-path';
         // Clear call counts
         stubShellExec.resetHistory();
         // Evaluate once so the result is cached.
-        await envService.getEnvironmentInfo(createEnvInfo(path));
+        await envService.getEnvironmentInfo(path);
 
         for (let i = 0; i < 10; i = i + 1) {
-            promises.push(envService.getEnvironmentInfo(createEnvInfo(path)));
+            promises.push(envService.getEnvironmentInfo(path));
             expected.push(createExpectedEnvInfo(path));
         }
 

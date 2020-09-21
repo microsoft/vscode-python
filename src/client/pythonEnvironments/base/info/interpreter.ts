@@ -7,7 +7,7 @@ import { Architecture } from '../../../common/utils/platform';
 import { copyPythonExecInfo, PythonExecInfo } from '../../exec';
 import { parseVersion } from './pythonVersion';
 
-type PythonEnvInformation = {
+export type InterpreterInformation = {
     arch: Architecture;
     executable: {
         filename: string;
@@ -26,7 +26,7 @@ type PythonEnvInformation = {
  * @param python - the path to the Python executable
  * @param raw - the information returned by the `interpreterInfo.py` script
  */
-export function extractPythonEnvInfo(python: string, raw: PythonEnvInfo): PythonEnvInformation {
+export function extractPythonEnvInfo(python: string, raw: PythonEnvInfo): InterpreterInformation {
     const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`;
     const version = parseVersion(rawVersion);
     version.sysVersion = raw.sysVersion;
@@ -64,7 +64,7 @@ export async function getInterpreterInfo(
     python: PythonExecInfo,
     shellExec: ShellExecFunc,
     logger?: Logger,
-): Promise<PythonEnvInformation | undefined> {
+): Promise<InterpreterInformation | undefined> {
     const [args, parse] = getInterpreterInfoCommand();
     const info = copyPythonExecInfo(python, args);
     const argv = [info.command, ...info.args];
