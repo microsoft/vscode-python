@@ -20,10 +20,12 @@ export async function isVirtualenvwrapperEnvironment(interpreterPath:string): Pr
     const environmentName = path.basename(path.dirname(path.dirname(interpreterPath)));
 
     let environmentDir = path.join(workonHomeDir, environmentName);
+    let pathToCheck = interpreterPath;
 
     if (getOSType() === OSType.Windows) {
         environmentDir = environmentDir.toUpperCase();
+        pathToCheck = interpreterPath.toUpperCase();
     }
 
-    return await pathExists(environmentDir) && interpreterPath.startsWith(`${environmentDir}${path.sep}`);
+    return await pathExists(environmentDir) && pathToCheck.startsWith(`${environmentDir}${path.sep}`);
 }
