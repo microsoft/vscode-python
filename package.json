@@ -62,11 +62,6 @@
         "onCommand:python.viewLanguageServerOutput",
         "onCommand:python.viewTestOutput",
         "onCommand:python.viewOutput",
-        "onCommand:python.datascience.viewJupyterOutput",
-        "onCommand:python.datascience.export",
-        "onCommand:python.datascience.exportAsPythonScript",
-        "onCommand:python.datascience.exportToHTML",
-        "onCommand:python.datascience.exportToPDF",
         "onCommand:python.selectAndRunTestMethod",
         "onCommand:python.selectAndDebugTestMethod",
         "onCommand:python.selectAndRunTestFile",
@@ -87,18 +82,7 @@
         "onCommand:python.switchToWeeklyChannel",
         "onCommand:python.clearWorkspaceInterpreter",
         "onCommand:python.resetInterpreterSecurityStorage",
-        "onCommand:python.datascience.createnewnotebook",
         "onCommand:python.startPage.open",
-        "onCommand:python.datascience.createnewinteractive",
-        "onCommand:python.datascience.importnotebook",
-        "onCommand:python.datascience.importnotebookfile",
-        "onCommand:python.datascience.opennotebook",
-        "onCommand:python.datascience.opennotebookInPreviewEditor",
-        "onCommand:python.datascience.selectjupyteruri",
-        "onCommand:python.datascience.exportfileasnotebook",
-        "onCommand:python.datascience.exportfileandoutputasnotebook",
-        "onCommand:python.datascience.selectJupyterInterpreter",
-        "onCommand:python.datascience.selectjupytercommandline",
         "onCommand:python.enableSourceMapSupport",
         "onNotebookEditor:jupyter-notebook",
         "workspaceContains:mspythonconfig.json",
@@ -117,184 +101,7 @@
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
-                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !python.datascience.ownsSelection && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.execSelectionInteractive",
-                "key": "shift+enter",
-                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && python.datascience.ownsSelection && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.runcurrentcelladvance",
-                "key": "shift+enter",
-                "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.runcurrentcell",
-                "key": "ctrl+enter",
-                "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.runcurrentcellandaddbelow",
-                "key": "alt+enter",
-                "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "mac": "F",
-                "win": "F",
-                "linux": "F",
-                "key": "F",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
-                "command": "notebook.find"
-            },
-            {
-                "mac": "K",
-                "win": "K",
-                "linux": "K",
-                "key": "K",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
-                "command": "list.focusUp"
-            },
-            {
-                "mac": "J",
-                "win": "J",
-                "linux": "J",
-                "key": "J",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
-                "command": "list.focusDown"
-            },
-            {
-                "mac": "A",
-                "win": "A",
-                "linux": "A",
-                "key": "A",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
-                "command": "notebook.cell.insertCodeCellAbove"
-            },
-            {
-                "mac": "B",
-                "win": "B",
-                "linux": "B",
-                "key": "B",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
-                "command": "notebook.cell.insertCodeCellBelow"
-            },
-            {
-                "mac": "D D",
-                "win": "D D",
-                "linux": "D D",
-                "key": "D D",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
-                "command": "notebook.cell.delete"
-            },
-            {
-                "mac": "Z",
-                "win": "Z",
-                "linux": "Z",
-                "key": "Z",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
-                "command": "notebook.undo"
-            },
-            {
-                "mac": "C",
-                "win": "C",
-                "linux": "C",
-                "key": "C",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
-                "command": "notebook.cell.copy"
-            },
-            {
-                "mac": "X",
-                "win": "X",
-                "linux": "X",
-                "key": "X",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
-                "command": "notebook.cell.cut"
-            },
-            {
-                "mac": "V",
-                "win": "V",
-                "linux": "V",
-                "key": "V",
-                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook",
-                "command": "notebook.cell.paste"
-            },
-            {
-                "mac": "ctrl+shift+-",
-                "win": "ctrl+shift+-",
-                "linux": "ctrl+shift+-",
-                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookViewType == jupyter-notebook",
-                "command": "notebook.cell.split"
-            },
-            {
-                "command": "python.datascience.insertCellBelowPosition",
-                "key": "ctrl+; s",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.insertCellBelow",
-                "key": "ctrl+; b",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.insertCellAbove",
-                "key": "ctrl+; a",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.deleteCells",
-                "key": "ctrl+; x",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.extendSelectionByCellAbove",
-                "key": "ctrl+alt+shift+[",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.extendSelectionByCellBelow",
-                "key": "ctrl+alt+shift+]",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.moveCellsUp",
-                "key": "ctrl+; u",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.moveCellsDown",
-                "key": "ctrl+; d",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.changeCellToMarkdown",
-                "key": "ctrl+; m",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.changeCellToCode",
-                "key": "ctrl+; c",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.gotoNextCellInFile",
-                "key": "ctrl+alt+]",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.gotoPrevCellInFile",
-                "key": "ctrl+alt+[",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.selectCellContents",
-                "key": "ctrl+alt+\\",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
-            },
-            {
-                "command": "python.datascience.selectCell",
-                "key": "ctrl+alt+shift+\\",
-                "when": "editorTextFocus && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
+                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed"
             }
         ],
         "commands": [
@@ -429,41 +236,6 @@
                 }
             },
             {
-                "command": "python.datascience.viewJupyterOutput",
-                "title": "%python.command.python.datascience.viewJupyterOutput.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.export",
-                "title": "%DataScience.notebookExportAs%",
-                "category": "Python",
-                "icon": {
-                    "light": "resources/light/export_to_python.svg",
-                    "dark": "resources/dark/export_to_python.svg"
-                },
-                "enablement": "notebookViewType == jupyter-notebook && python.datascience.isnotebooktrusted"
-            },
-            {
-                "command": "python.datascience.exportAsPythonScript",
-                "title": "%python.command.python.datascience.exportAsPythonScript.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.exportToHTML",
-                "title": "%python.command.python.datascience.exportToHTML.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.exportToPDF",
-                "title": "%python.command.python.datascience.exportToPDF.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.selectJupyterInterpreter",
-                "title": "%python.command.python.datascience.selectJupyterInterpreter.title%",
-                "category": "Python"
-            },
-            {
                 "command": "python.viewLanguageServerOutput",
                 "title": "%python.command.python.viewLanguageServerOutput.title%",
                 "category": "Python",
@@ -567,66 +339,6 @@
             {
                 "command": "python.runLinting",
                 "title": "%python.command.python.runLinting.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.runcurrentcell",
-                "title": "%python.command.python.datascience.runcurrentcell.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.debugcell",
-                "title": "%python.command.python.datascience.debugcell.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.debugstepover",
-                "title": "%python.command.python.datascience.debugstepover.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.debugstop",
-                "title": "%python.command.python.datascience.debugstop.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.debugcontinue",
-                "title": "%python.command.python.datascience.debugcontinue.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.insertCellBelowPosition",
-                "title": "%python.command.python.datascience.insertCellBelowPosition.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.insertCellBelow",
-                "title": "%python.command.python.datascience.insertCellBelow.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.insertCellAbove",
-                "title": "%python.command.python.datascience.insertCellAbove.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.deleteCells",
-                "title": "%python.command.python.datascience.deleteCells.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.selectCell",
-                "title": "%python.command.python.datascience.selectCell.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.selectCellContents",
-                "title": "%python.command.python.datascience.selectCellContents.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.datascience.extendSelectionByCellAbove",
-                "title": "%python.command.python.datascience.extendSelectionByCellAbove.title%",
                 "category": "Python"
             },
             {
