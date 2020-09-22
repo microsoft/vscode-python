@@ -19,13 +19,22 @@ import { ServiceContainer } from '../../../../client/ioc/container';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { WindowsStoreInterpreter } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
+// We use this for mocking.
+class ComponentAdapter {
+    public async isWindowsStoreInterpreter(_pythonPath: string): Promise<boolean | undefined> {
+        return undefined;
+    }
+}
+
 suite('Interpreters - Windows Store Interpreter', () => {
     let windowsStoreInterpreter: WindowsStoreInterpreter;
+    let pyenvs: ComponentAdapter;
     let fs: IFileSystem;
     let persistanceStateFactory: IPersistentStateFactory;
     let executionFactory: IPythonExecutionFactory;
     let serviceContainer: IServiceContainer;
     setup(() => {
+        pyenvs = mock(ComponentAdapter);
         fs = mock(FileSystem);
         persistanceStateFactory = mock(PersistentStateFactory);
         executionFactory = mock(PythonExecutionFactory);
@@ -33,10 +42,12 @@ suite('Interpreters - Windows Store Interpreter', () => {
         when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(
             instance(executionFactory),
         );
+        when(pyenvs.isWindowsStoreInterpreter(anything())).thenReturn(Promise.resolve(undefined));
         windowsStoreInterpreter = new WindowsStoreInterpreter(
             instance(serviceContainer),
             instance(persistanceStateFactory),
             instance(fs),
+            instance(pyenvs)
         );
     });
     const windowsStoreInterpreters = [
@@ -51,23 +62,23 @@ suite('Interpreters - Windows Store Interpreter', () => {
         'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe',
     ];
     for (const interpreter of windowsStoreInterpreters) {
-        test(`${interpreter} must be identified as a windows store interpter`, () => {
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(true, 'Must be true');
+        test(`${interpreter} must be identified as a windows store interpter`, async () => {
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(true, 'Must be true');
         });
-        test(`${interpreter.toLowerCase()} must be identified as a windows store interpter (ignoring case)`, () => {
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toLowerCase())).to.equal(
+        test(`${interpreter.toLowerCase()} must be identified as a windows store interpter (ignoring case)`, async () => {
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toLowerCase())).to.equal(
                 true,
                 'Must be true',
             );
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(
                 true,
                 'Must be true',
             );
         });
         test(`D${interpreter.substring(
             1,
-        )} must be identified as a windows store interpter (ignoring driver letter)`, () => {
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(
+        )} must be identified as a windows store interpter (ignoring driver letter)`, async () => {
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(
                 true,
                 'Must be true',
             );
@@ -75,8 +86,8 @@ suite('Interpreters - Windows Store Interpreter', () => {
         test(`${interpreter.replace(
             /\\/g,
             '/',
-        )} must be identified as a windows store interpter (ignoring path separator)`, () => {
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
+        )} must be identified as a windows store interpter (ignoring path separator)`, async () => {
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
                 true,
                 'Must be true',
             );
@@ -97,14 +108,14 @@ suite('Interpreters - Windows Store Interpreter', () => {
         'C:\\Apps\\Python.exe',
     ];
     for (const interpreter of nonWindowsStoreInterpreters) {
-        test(`${interpreter} must not be identified as a windows store interpter`, () => {
+        test(`${interpreter} must not be identified as a windows store interpter`, async () => {
             expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter)).to.equal(false, 'Must be false');
             expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
                 false,
                 'Must be false',
             );
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(false, 'Must be false');
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(false, 'Must be false');
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
                 false,
                 'Must be false',
             );
@@ -112,11 +123,11 @@ suite('Interpreters - Windows Store Interpreter', () => {
                 false,
                 'Must be false',
             );
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(
                 false,
                 'Must be false',
             );
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(
                 false,
                 'Must be false',
             );

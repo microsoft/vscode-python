@@ -217,7 +217,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
-                when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(true);
+                when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(Promise.resolve(true));
 
                 const service = await factory.create({ resource });
 
