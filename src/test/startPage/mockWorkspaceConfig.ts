@@ -19,11 +19,6 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
         if (defaultSettings && defaultSettings.pythonPath) {
             this.values.set('pythonPath', defaultSettings.pythonPath);
         }
-
-        // Special case datascience. Not the same case
-        if (defaultSettings && defaultSettings.datascience) {
-            this.values.set('dataScience', defaultSettings.datascience);
-        }
     }
 
     public get<T>(key: string, defaultValue?: T): T | undefined {

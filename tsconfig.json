@@ -38,7 +38,6 @@
         "src/client/src/typings",
         "src/ipywidgets",
         "src/smoke",
-        "src/test/datascience/extensionapi",
         "build",
         "out",
         "ipywidgets",

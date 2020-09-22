@@ -37,7 +37,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['workbench.action.closeActiveEditor']: [];
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
-    ['python.datascience.selectJupyterInterpreter']: [];
     [Commands.ViewOutput]: [];
     [Commands.Set_Linter]: [];
     [Commands.Start_REPL]: [];

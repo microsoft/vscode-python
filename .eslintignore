@@ -26,8 +26,6 @@ build/webpack/loaders/externalizeDependencies.js
 build/tslint-rules/messagesMustBeLocalizedRule.js
 build/tslint-rules/baseRuleWalker.js
 
-build/debug/replaceWithWebBrowserPanel.js
-
 src/test/mocks/mementos.ts
 src/test/mocks/process.ts
 src/test/mocks/moduleInstaller.ts
@@ -47,7 +45,6 @@ src/test/mocks/vsc/index.ts
 src/test/mocks/vsc/arrays.ts
 
 src/test/smoke/common.ts
-src/test/smoke/datascience.smoke.test.ts
 src/test/smoke/runInTerminal.smoke.test.ts
 src/test/smoke/languageServer.smoke.test.ts
 
@@ -833,7 +830,6 @@ src/client/common/process/pythonDaemon.ts
 src/client/common/process/pythonToolService.ts
 src/client/common/process/internal/python.ts
 src/client/common/process/internal/scripts/testing_tools.ts
-src/client/common/process/internal/scripts/vscode_datascience_helpers.ts
 src/client/common/process/internal/scripts/index.ts
 src/client/common/process/pythonDaemonPool.ts
 src/client/common/process/pythonDaemonFactory.ts

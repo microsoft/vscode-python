@@ -143,37 +143,12 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "Language Server:" 
+                "VSC_PYTHON_CI_TEST_GREP": "Language Server:"
             },
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "preTestJediLSP",
-            "skipFiles": ["<node_internals>/**"]
-        },
-        {
-            "name": "Tests (DataScience, *.ds.test.ts)",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "${workspaceFolder}/src/test/datascience",
-                "--disable-extensions",
-                "--enable-proposed-api",
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
-            ],
-            "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "", // Modify this to run a subset of the single workspace tests
-                "VSC_PYTHON_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
-
-                "VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "true",
-                "TEST_FILES_SUFFIX": "ds.test"
-            },
-            "stopOnEntry": false,
-            "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
-            "preLaunchTask": "Compile",
             "skipFiles": ["<node_internals>/**"]
         },
         {

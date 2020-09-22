@@ -29,7 +29,6 @@ import * as internalPython from './process/internal/python';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
-    IDataScienceSettings,
     IExperiments,
     IExperimentsManager,
     IFormattingSettings,
@@ -110,7 +109,6 @@ export class PythonSettings implements IPythonSettings {
     public globalModuleInstallation = false;
     public analysis!: IAnalysisSettings;
     public autoUpdateLanguageServer: boolean = true;
-    public datascience!: IDataScienceSettings;
     public insidersChannel!: ExtensionChannels;
     public experiments!: IExperiments;
     public languageServer: LanguageServerType = LanguageServerType.Microsoft;
@@ -534,15 +532,6 @@ export class PythonSettings implements IPythonSettings {
                   optInto: [],
                   optOutFrom: []
               };
-
-        const dataScienceSettings = systemVariables.resolveAny(
-            pythonSettings.get<IDataScienceSettings>('dataScience')
-        )!;
-        if (this.datascience) {
-            Object.assign<IDataScienceSettings, IDataScienceSettings>(this.datascience, dataScienceSettings);
-        } else {
-            this.datascience = dataScienceSettings;
-        }
 
         const showStartPage = pythonSettings.get<boolean>('showStartPage');
         if (showStartPage !== undefined) {

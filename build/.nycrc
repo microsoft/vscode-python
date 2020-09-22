@@ -3,7 +3,7 @@
     "all": true,
     "include": [
         "src/client/**/*.ts", "src/test/**/*.js",
-        "src/datascience-ui/**/*.ts", "src/datascience-ui/**/*.js"
+        "src/startPage-ui/**/*.ts", "src/startPage-ui/**/*.js"
     ],
     "exclude": ["src/test/**/*.ts", "src/test/**/*.js"]
 }

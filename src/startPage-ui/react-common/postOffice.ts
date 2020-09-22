@@ -86,7 +86,7 @@ export class PostOffice implements IDisposable {
             try {
                 // For testing, we might use a  browser to load  the stuff.
                 // In such instances the `acquireVSCodeApi` will return the event handler to get messages from extension.
-                // See ./src/datascience-ui/native-editor/index.html
+                // See ./src/startPage-ui/startPage/index.html
                 // tslint:disable-next-line: no-any
                 const api = (this.vscodeApi as any) as { handleMessage?: Function };
                 if (api.handleMessage) {

@@ -143,9 +143,6 @@ suite('Localization', () => {
             if (askedFor[key]) {
                 return;
             }
-            if (key.toLowerCase().indexOf('datascience') >= 0) {
-                return;
-            }
             extra[key] = nlsCollection[key];
         });
 

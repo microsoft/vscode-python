@@ -14,7 +14,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const constants = require('../constants');
-const configFileName = 'tsconfig.datascience-ui.json';
+const configFileName = 'tsconfig.startpage-ui.json';
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 // Any build on the CI is considered production mode.

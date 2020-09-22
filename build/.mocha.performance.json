@@ -7,6 +7,5 @@
     "recursive": true,
     "colors": true,
     "exit": true,
-    "timeout": 30000,
-    "grep": "DataScience"
+    "timeout": 30000
 }

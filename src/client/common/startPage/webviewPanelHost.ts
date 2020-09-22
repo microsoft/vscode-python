@@ -59,17 +59,9 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         @unmanaged() private scripts: string[],
         @unmanaged() private _title: string,
         @unmanaged() private viewColumn: ViewColumn,
-        @unmanaged() protected readonly useCustomEditorApi: boolean,
-        @unmanaged() enableVariablesDuringDebugging: boolean
+        @unmanaged() protected readonly useCustomEditorApi: boolean
     ) {
-        super(
-            configService,
-            cssGenerator,
-            themeFinder,
-            workspaceService,
-            useCustomEditorApi,
-            enableVariablesDuringDebugging
-        );
+        super(configService, cssGenerator, themeFinder, workspaceService, useCustomEditorApi);
 
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(
@@ -159,7 +151,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         // Create our web panel (it's the UI that shows up for the history)
         if (this.webPanel === undefined) {
             // Get our settings to pass along to the react control
-            const settings = await this.generateDataScienceExtraSettings();
+            const settings = await this.generateExtraSettings();
 
             traceInfo('Loading web view...');
 
@@ -189,7 +181,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         }
 
         // Send the first settings message
-        this.onDataScienceSettingsChanged().ignoreErrors();
+        this.onSettingsChanged().ignoreErrors();
 
         // Send the loc strings (skip during testing as it takes up a lot of memory)
         this.sendLocStrings().ignoreErrors();
@@ -224,6 +216,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
 
         // On started, resend our init data.
         this.sendLocStrings().ignoreErrors();
-        this.onDataScienceSettingsChanged().ignoreErrors();
+        this.onSettingsChanged().ignoreErrors();
     }
 }

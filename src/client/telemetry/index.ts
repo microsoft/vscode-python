@@ -146,17 +146,6 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         // Add shared properties to telemetry props (we may overwrite existing ones).
         Object.assign(customProperties, sharedProperties);
 
-        // Remove shared DS properties from core extension telemetry.
-        Object.keys(sharedProperties).forEach((shareProperty) => {
-            if (
-                customProperties[shareProperty] &&
-                shareProperty.startsWith('ds_') &&
-                !(eventNameSent.startsWith('DS_') || eventNameSent.startsWith('DATASCIENCE'))
-            ) {
-                delete customProperties[shareProperty];
-            }
-        });
-
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
 

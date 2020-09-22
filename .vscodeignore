@@ -21,7 +21,6 @@ CONTRIBUTING - LANGUAGE SERVER.md
 coverconfig.json
 cucumber-report.json
 gulpfile.js
-package.datascience-ui.dependencies.json
 package-lock.json
 packageExtension.cmd
 pvsc-dev-ext.py

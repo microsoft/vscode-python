@@ -12,8 +12,6 @@ import { IWorkspaceService } from '../application/types';
 import { traceError, traceInfo, traceWarning } from '../logger';
 
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, Resource } from '../types';
-import { DefaultTheme } from './constants';
 import { ICodeCssGenerator, IThemeFinder } from './types';
 
 // tslint:disable:no-any
@@ -100,20 +98,18 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     constructor(
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IThemeFinder) private themeFinder: IThemeFinder,
-        @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) private fs: IFileSystem
-    ) {}
+    ) { }
 
-    public generateThemeCss(resource: Resource, isDark: boolean, theme: string): Promise<string> {
-        return this.applyThemeData(resource, isDark, theme, '', this.generateCss.bind(this));
+    public generateThemeCss(isDark: boolean, theme: string): Promise<string> {
+        return this.applyThemeData(isDark, theme, '', this.generateCss.bind(this));
     }
 
-    public generateMonacoTheme(resource: Resource, isDark: boolean, theme: string): Promise<JSONObject> {
-        return this.applyThemeData(resource, isDark, theme, {} as any, this.generateMonacoThemeObject.bind(this));
+    public generateMonacoTheme(isDark: boolean, theme: string): Promise<JSONObject> {
+        return this.applyThemeData(isDark, theme, {} as any, this.generateMonacoThemeObject.bind(this));
     }
 
     private async applyThemeData<T>(
-        resource: Resource,
         isDark: boolean,
         theme: string,
         defaultT: T,
@@ -121,15 +117,12 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     ): Promise<T> {
         let result = defaultT;
         try {
-            // First compute our current theme.
-            const ignoreTheme = !!this.configService.getSettings(resource).datascience.ignoreVscodeTheme;
-            theme = ignoreTheme ? DefaultTheme : theme;
             const editor = this.workspaceService.getConfiguration('editor', undefined);
             const fontFamily = editor
                 ? editor.get<string>('fontFamily', "Consolas, 'Courier New', monospace")
                 : "Consolas, 'Courier New', monospace";
             const fontSize = editor ? editor.get<number>('fontSize', 14) : 14;
-            const isDarkUpdated = ignoreTheme ? false : isDark;
+            const isDarkUpdated = isDark;
 
             // Then we have to find where the theme resources are loaded from
             if (theme) {
@@ -146,7 +139,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                         fontFamily,
                         fontSize,
                         isDark: isDarkUpdated,
-                        defaultStyle: ignoreTheme ? LightTheme : undefined
+                        defaultStyle: LightTheme
                     });
                 } else if (tokenColors === null && fontFamily && fontSize) {
                     // No colors found. See if we can figure out what type of theme we have

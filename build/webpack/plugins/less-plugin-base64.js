@@ -47,7 +47,7 @@ class Base64Visitor {
  * Example:
  * url("./foo.svg")
  * becomes
- * url("./src/datascience-ui/history-react/images/foo.svg")
+ * url("./src/startPage-ui/react-common/images/foo.svg")
  */
 class Base64Plugin {
     constructor() {}

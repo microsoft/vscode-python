@@ -63,7 +63,6 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
             [path.join(startPageDir, 'commons.initial.bundle.js'), path.join(startPageDir, 'startPage.js')],
             localize.StartPage.getStarted(),
             ViewColumn.One,
-            false,
             false
         );
         this.timer = new StopWatch();

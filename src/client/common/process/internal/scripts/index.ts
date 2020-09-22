@@ -34,7 +34,6 @@ const ISOLATED = _ISOLATED;
 //  * install_debugpy.py  (used only for extension development)
 
 export * as testing_tools from './testing_tools';
-export * as vscode_datascience_helpers from './vscode_datascience_helpers';
 
 //============================
 // interpreterInfo.py
