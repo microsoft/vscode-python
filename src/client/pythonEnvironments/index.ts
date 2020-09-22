@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonEnvInfo } from './base/info';
-import { ILocator, PythonEnvsIterator, PythonLocatorQuery } from './base/locator';
+import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from './base/locator';
 import { PythonEnvsChangedEvent } from './base/watcher';
 import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
 import { registerForIOC } from './legacyIOC';
@@ -33,7 +33,7 @@ export class PythonEnvironments implements ILocator {
         return this.locators.onChanged;
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): PythonEnvsIterator {
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         return this.locators.iterEnvs(query);
     }
 

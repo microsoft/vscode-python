@@ -3,14 +3,12 @@
 
 import { createDeferred, flattenIterator, iterable, mapToIterator } from '../../../client/common/utils/async';
 import { Architecture } from '../../../client/common/utils/platform';
-import { EMPTY_VERSION, parseBasicVersionInfo } from '../../../client/common/utils/version';
 import {
     PythonEnvInfo,
     PythonEnvKind,
-    PythonReleaseLevel,
-    PythonVersion
 } from '../../../client/pythonEnvironments/base/info';
-import { Locator, PythonEnvsIterator, PythonLocatorQuery } from '../../../client/pythonEnvironments/base/locator';
+import { parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
+import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
 
 export function createEnv(
@@ -43,36 +41,6 @@ export function createEnv(
         },
         distro: { org: '' }
     };
-}
-
-function parseVersion(versionStr: string): PythonVersion {
-    const parsed = parseBasicVersionInfo<PythonVersion>(versionStr);
-    if (!parsed) {
-        if (versionStr === '') {
-            return EMPTY_VERSION as PythonVersion;
-        }
-        throw Error(`invalid version ${versionStr}`);
-    }
-    const { version, after } = parsed;
-    const match = after.match(/^(a|b|rc)(\d+)$/);
-    if (match) {
-        const [, levelStr, serialStr ] = match;
-        let level: PythonReleaseLevel;
-        if (levelStr === 'a') {
-            level = PythonReleaseLevel.Alpha;
-        } else if (levelStr === 'b') {
-            level = PythonReleaseLevel.Beta;
-        } else if (levelStr === 'rc') {
-            level = PythonReleaseLevel.Candidate;
-        } else {
-            throw Error('unreachable!');
-        }
-        version.release = {
-            level,
-            serial: parseInt(serialStr, 10)
-        };
-    }
-    return version;
 }
 
 export function createLocatedEnv(
@@ -111,7 +79,7 @@ export class SimpleLocator extends Locator {
     public fire(event: PythonEnvsChangedEvent) {
         this.emitter.fire(event);
     }
-    public iterEnvs(query?: PythonLocatorQuery): PythonEnvsIterator {
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const deferred = this.deferred;
         const callbacks = this.callbacks;
         let envs = this.envs;
@@ -161,6 +129,6 @@ export class SimpleLocator extends Locator {
     }
 }
 
-export async function getEnvs(iterator: PythonEnvsIterator): Promise<PythonEnvInfo[]> {
+export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvInfo[]> {
     return flattenIterator(iterator);
 }

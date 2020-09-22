@@ -64,6 +64,8 @@ export function initialize() {
     };
 }
 
+mockedVSCode.MarkdownString = vscodeMocks.vscMock.MarkdownString;
+mockedVSCode.Hover = vscodeMocks.vscMock.Hover;
 mockedVSCode.Disposable = vscodeMocks.vscMock.Disposable as any;
 mockedVSCode.ExtensionKind = vscodeMocks.vscMock.ExtensionKind;
 mockedVSCode.CodeAction = vscodeMocks.vscMock.CodeAction;
@@ -96,6 +98,8 @@ mockedVSCode.TextEditorRevealType = vscodeMocks.vscMockExtHostedTypes.TextEditor
 mockedVSCode.TreeItem = vscodeMocks.vscMockExtHostedTypes.TreeItem;
 mockedVSCode.TreeItemCollapsibleState = vscodeMocks.vscMockExtHostedTypes.TreeItemCollapsibleState;
 mockedVSCode.CodeActionKind = vscodeMocks.vscMock.CodeActionKind;
+mockedVSCode.CompletionItemKind = vscodeMocks.vscMock.CompletionItemKind;
+mockedVSCode.CompletionTriggerKind = vscodeMocks.vscMock.CompletionTriggerKind;
 mockedVSCode.DebugAdapterExecutable = vscodeMocks.vscMock.DebugAdapterExecutable;
 mockedVSCode.DebugAdapterServer = vscodeMocks.vscMock.DebugAdapterServer;
 mockedVSCode.QuickInputButtons = vscodeMocks.vscMockExtHostedTypes.QuickInputButtons;
