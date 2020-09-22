@@ -5,8 +5,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { Architecture } from '../../../common/utils/platform';
 import { BasicVersionInfo, VersionInfo } from '../../../common/utils/version';
-import { arePathsSame, pathExists } from '../../common/externalDependencies';
-import { EnvironmentType } from '../../info';
+import { arePathsSame } from '../../common/externalDependencies';
 
 /**
  * IDs for the various supported Python environments.
@@ -158,45 +157,6 @@ export function areSameVersion(left: PythonVersion, right:PythonVersion): boolea
     );
 }
 
-export function getPrioritizedEnvironmentKind(): PythonEnvKind[] {
-    return [
-        PythonEnvKind.CondaBase,
-        PythonEnvKind.Conda,
-        PythonEnvKind.WindowsStore,
-        PythonEnvKind.Pipenv,
-        PythonEnvKind.Pyenv,
-        PythonEnvKind.Poetry,
-        PythonEnvKind.Venv,
-        PythonEnvKind.VirtualEnvWrapper,
-        PythonEnvKind.VirtualEnv,
-        PythonEnvKind.MacDefault,
-        PythonEnvKind.System,
-        PythonEnvKind.Custom,
-        PythonEnvKind.OtherVirtual,
-        PythonEnvKind.OtherGlobal,
-        PythonEnvKind.Unknown,
-    ];
-}
-
-/**
- * @deprecated
- */
-export function getPrioritizedEnvironmentType():EnvironmentType[] {
-    return [
-        EnvironmentType.Conda,
-        EnvironmentType.WindowsStore,
-        EnvironmentType.Pipenv,
-        EnvironmentType.Pyenv,
-        EnvironmentType.Poetry,
-        EnvironmentType.Venv,
-        EnvironmentType.VirtualEnvWrapper,
-        EnvironmentType.VirtualEnv,
-        EnvironmentType.Global,
-        EnvironmentType.System,
-        EnvironmentType.Unknown,
-    ];
-}
-
 export function areSameEnvironment(left: PythonEnvInfo, right: PythonEnvInfo): boolean {
     if (arePathsSame(left.executable.filename, right.executable.filename)) {
         return true;
@@ -268,6 +228,26 @@ function getExecutableInfoHeuristic(executable:PythonExecutableInfo): number {
     }
 
     return infoLevel;
+}
+
+export function getPrioritizedEnvironmentKind(): PythonEnvKind[] {
+    return [
+        PythonEnvKind.CondaBase,
+        PythonEnvKind.Conda,
+        PythonEnvKind.WindowsStore,
+        PythonEnvKind.Pipenv,
+        PythonEnvKind.Pyenv,
+        PythonEnvKind.Poetry,
+        PythonEnvKind.Venv,
+        PythonEnvKind.VirtualEnvWrapper,
+        PythonEnvKind.VirtualEnv,
+        PythonEnvKind.MacDefault,
+        PythonEnvKind.System,
+        PythonEnvKind.Custom,
+        PythonEnvKind.OtherVirtual,
+        PythonEnvKind.OtherGlobal,
+        PythonEnvKind.Unknown,
+    ];
 }
 
 /**
