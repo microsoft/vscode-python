@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { PythonVersion } from '.';
+import { PythonExecutableInfo, PythonVersion } from '.';
 import { interpreterInfo as getInterpreterInfoCommand, PythonEnvInfo } from '../../../common/process/internal/scripts';
 import { Architecture } from '../../../common/utils/platform';
 import { copyPythonExecInfo, PythonExecInfo } from '../../exec';
@@ -9,12 +9,7 @@ import { parseVersion } from './pythonVersion';
 
 export type InterpreterInformation = {
     arch: Architecture;
-    executable: {
-        filename: string;
-        sysPrefix: string;
-        mtime: number;
-        ctime: number;
-    };
+    executable: PythonExecutableInfo;
     version: PythonVersion;
 };
 
@@ -28,8 +23,6 @@ export type InterpreterInformation = {
  */
 function extractInterpreterInfo(python: string, raw: PythonEnvInfo): InterpreterInformation {
     const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`;
-    const version = parseVersion(rawVersion);
-    version.sysVersion = raw.sysVersion;
     return {
         arch: raw.is64Bit ? Architecture.x64 : Architecture.x86,
         executable: {
@@ -38,7 +31,10 @@ function extractInterpreterInfo(python: string, raw: PythonEnvInfo): Interpreter
             mtime: -1,
             ctime: -1,
         },
-        version: parseVersion(rawVersion),
+        version: {
+            ...parseVersion(rawVersion),
+            sysVersion: raw.sysVersion,
+        },
     };
 }
 
