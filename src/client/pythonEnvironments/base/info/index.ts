@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { Architecture } from '../../../common/utils/platform';
@@ -167,7 +168,7 @@ export function areSameEnvironment(left: PythonEnvInfo, right: PythonEnvInfo): b
     if (arePathsSame(path.dirname(left.executable.filename), path.dirname(right.executable.filename))) {
         return true;
     }
-    return true;
+    return false;
 }
 
 /**
@@ -274,15 +275,12 @@ export function mergeEnvironments(left: PythonEnvInfo, right: PythonEnvInfo): Py
         ? left.executable : right.executable
     );
     const preferredEnv:PythonEnvInfo = left.kind === kind ? left : right;
+    const merged = cloneDeep(preferredEnv);
+    merged.version = cloneDeep(version);
+    merged.executable = cloneDeep(executable);
 
-    return {
-        ...preferredEnv,
-        id: '', // should we copy id from the preferred env?
-        executable: { ...executable },
-        version: {
-            ...version,
-            release: { ...version.release },
-        },
-        distro: { ...preferredEnv.distro },
-    };
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: compute id for the merged environment
+    merged.id = '';
+    return merged;
 }
