@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { isEqual } from 'lodash';
+import { cloneDeep, isEqual } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../common/logger';
 import { areSameEnvironment, PythonEnvInfo, PythonEnvKind } from '../base/info';
@@ -115,10 +115,11 @@ function checkIfFinishedAndNotify(
 }
 
 export function mergeEnvironments(environment: PythonEnvInfo, other: PythonEnvInfo): PythonEnvInfo {
+    const result = cloneDeep(environment);
     // Preserve type information.
     // Possible we identified environment as unknown, but a later provider has identified env type.
     if (environment.kind === PythonEnvKind.Unknown && other.kind && other.kind !== PythonEnvKind.Unknown) {
-        environment.kind = other.kind;
+        result.kind = other.kind;
     }
     const props: (keyof PythonEnvInfo)[] = [
         'version',
@@ -131,11 +132,11 @@ export function mergeEnvironments(environment: PythonEnvInfo, other: PythonEnvIn
         'searchLocation',
     ];
     props.forEach((prop) => {
-        if (!environment[prop] && other[prop]) {
+        if (!result[prop] && other[prop]) {
             // tslint:disable: no-any
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (environment as any)[prop] = other[prop];
+            (result as any)[prop] = other[prop];
         }
     });
-    return environment;
+    return result;
 }

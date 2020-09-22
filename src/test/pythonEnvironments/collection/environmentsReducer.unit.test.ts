@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert, expect } from 'chai';
+import { isEqual } from 'lodash';
 import * as path from 'path';
 import { EventEmitter } from 'vscode';
 import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
@@ -98,12 +99,14 @@ suite('Environments Reducer', () => {
 
             // Assert
             const env12 = mergeEnvironments(env1, env2);
-            const expectedUpdates = [
-                { old: env1, new: env12 },
-                { old: env12, new: mergeEnvironments(env12, env3) },
-                null,
-            ];
-            assert.deepEqual(expectedUpdates, onUpdatedEvents);
+            const env123 = mergeEnvironments(env12, env3);
+            const expectedUpdates: (PythonEnvUpdatedEvent | null)[] = [];
+            if (isEqual(env12, env123)) {
+                expectedUpdates.push({ old: env1, new: env12 }, null);
+            } else {
+                expectedUpdates.push({ old: env1, new: env12 }, { old: env12, new: env123 }, null);
+            }
+            assert.deepEqual(onUpdatedEvents, expectedUpdates);
         });
 
         test('Updates to environments from the incoming iterator are passed on correctly followed by the null event', async () => {
