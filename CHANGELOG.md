@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.9.0 (14 September 2020)
+## 2020.9.0 (22 September 2020)
 
 ### Enhancements
 
@@ -19,6 +19,8 @@
    ([#13831](https://github.com/Microsoft/vscode-python/issues/13831))
 1. Enable custom editor support in stable VS code at 20%.
    ([#13890](https://github.com/Microsoft/vscode-python/issues/13890))
+1. Upgraded to isort `5.5.3`.
+   ([#14027](https://github.com/Microsoft/vscode-python/issues/14027))
 
 ### Fixes
 
@@ -60,7 +62,7 @@
 1. Correctly install ipykernel when launching from an interpreter.
    ([#13956](https://github.com/Microsoft/vscode-python/issues/13956))
 1. Backup on custom editors is being ignored.
-   ([#13981](https://github.com/Microsoft/vscode-python/issues/13981))   
+   ([#13981](https://github.com/Microsoft/vscode-python/issues/13981))
 
 ### Code Health
 
