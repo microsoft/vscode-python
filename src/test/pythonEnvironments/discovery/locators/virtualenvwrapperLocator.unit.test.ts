@@ -31,7 +31,7 @@ suite('Virtualenvwrapper Locator Tests', () => {
         getDefaultDirStub.restore();
     });
 
-    test('WORKON_HOME is not set, and the interpreter is is in a subfolder of virtualenvwrapper', async () => {
+    test('WORKON_HOME is not set, and the interpreter is in a subfolder of virtualenvwrapper', async () => {
         const interpreter = path.join(homeDir, envDirectory, 'bin', 'python');
 
         getEnvVariableStub.withArgs('WORKON_HOME').returns(undefined);
