@@ -12,10 +12,11 @@ import * as c2p from 'vscode-languageclient/lib/common/codeConverter';
 import * as p2c from 'vscode-languageclient/lib/common/protocolConverter';
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
 import * as lsp from 'vscode-languageserver-protocol';
+import { ILanguageServerConnection } from '../../../activation/types';
 import { Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { ILanguageServer, ILanguageServerConnection, JupyterExtensionIntegration } from '../../api/jupyterIntegration';
+import { ILanguageServer, JupyterExtensionIntegration } from '../../api/jupyterIntegration';
 
 /**
  * Class that wraps a language server for use by webview based notebooks

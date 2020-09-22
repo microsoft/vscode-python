@@ -19,7 +19,6 @@ import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/nod
 import * as lsp from 'vscode-languageserver-protocol';
 import { NugetPackage } from '../common/nuget/types';
 import { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
-import { ILanguageServerConnection } from '../datascience/api/jupyterIntegration';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
@@ -77,6 +76,15 @@ export const NodeLanguageServerFolder = 'nodeLanguageServer';
 export interface LanguageServerCommandHandler {
     clearAnalysisCache(): void;
 }
+
+/**
+ * This interface is a subset of the vscode-protocol connection interface.
+ * It's the minimum set of functions needed in order to talk to a language server.
+ */
+export type ILanguageServerConnection = Pick<
+    lsp.ProtocolConnection,
+    'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'
+>;
 
 export interface ILanguageServer
     extends RenameProvider,

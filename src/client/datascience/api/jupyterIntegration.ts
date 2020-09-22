@@ -9,7 +9,7 @@ import { inject, injectable } from 'inversify';
 import { dirname } from 'path';
 import { CancellationToken, Disposable, Event, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
-import { ILanguageServerCache } from '../../activation/types';
+import { ILanguageServerCache, ILanguageServerConnection } from '../../activation/types';
 import { InterpreterUri } from '../../common/installer/types';
 import { IExtensions, IInstaller, InstallerResponse, Product, Resource } from '../../common/types';
 import { isResource } from '../../common/utils/misc';
@@ -20,15 +20,6 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { WindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-
-/**
- * This interface is a subset of the vscode-protocol connection interface.
- * It's the minimum set of functions needed in order to talk to a language server.
- */
-export type ILanguageServerConnection = Pick<
-    lsp.ProtocolConnection,
-    'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'
->;
 
 export interface ILanguageServer extends Disposable {
     readonly connection: ILanguageServerConnection;
