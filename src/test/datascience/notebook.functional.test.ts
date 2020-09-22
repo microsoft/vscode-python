@@ -161,7 +161,7 @@ suite('DataScience notebook tests', () => {
                 const data = extractDataOutput(cells[0]);
                 if (pathVerify) {
                     // For a path comparison normalize output
-                    const normalizedOutput = path.normalize(data).toUpperCase().replace(/'/g, '');
+                    const normalizedOutput = path.normalize(data).toUpperCase().replace(/&#39;/g, '');
                     const normalizedTarget = path.normalize(expectedValue).toUpperCase().replace(/'/g, '');
                     assert.equal(normalizedOutput, normalizedTarget, 'Cell path values does not match');
                 } else {
