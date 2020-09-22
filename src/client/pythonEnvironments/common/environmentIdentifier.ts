@@ -11,7 +11,7 @@ import { isWindowsStoreEnvironment } from '../discovery/locators/services/window
 import { EnvironmentType } from '../info';
 
 /**
- * Gets a prioritizes list of environment types for identification.
+ * Gets a prioritized list of environment types for identification.
  * @deprecated
  *
  * Remarks: This is the order of detection based on how the various distributions and tools
