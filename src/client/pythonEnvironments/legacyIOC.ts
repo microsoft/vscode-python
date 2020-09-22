@@ -126,7 +126,6 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
 
 function buildEmptyEnvInfo(): PythonEnvInfo {
     return {
-        id: '',
         kind: PythonEnvKind.Unknown,
         executable: {
             filename: '',

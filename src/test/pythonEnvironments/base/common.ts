@@ -21,7 +21,6 @@ export function createEnv(
     versionStr: string,
     kind?: PythonEnvKind,
     executable?: string,
-    idStr?: string
 ): PythonEnvInfo {
     if (kind === undefined) {
         kind = PythonEnvKind.Unknown;
@@ -29,10 +28,8 @@ export function createEnv(
     if (executable === undefined || executable === '') {
         executable = 'python';
     }
-    const id = idStr ? idStr : `${kind}-${name}`;
     const version = parseVersion(versionStr);
     return {
-        id,
         kind,
         version,
         name,
@@ -53,12 +50,8 @@ export function createLocatedEnv(
     versionStr: string,
     kind = PythonEnvKind.Unknown,
     executable = 'python',
-    idStr?: string
 ): PythonEnvInfo {
-    if (!idStr) {
-        idStr = `${kind}-${location}`;
-    }
-    const env = createEnv('', versionStr, kind, executable, idStr);
+    const env = createEnv('', versionStr, kind, executable);
     env.location = location;
     return env;
 }
