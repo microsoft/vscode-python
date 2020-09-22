@@ -11,7 +11,7 @@ import {
 import * as c2p from 'vscode-languageclient/lib/common/codeConverter';
 import * as p2c from 'vscode-languageclient/lib/common/protocolConverter';
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
-import * as vscodeprotocol from 'vscode-languageserver-protocol';
+import * as lsp from 'vscode-languageserver-protocol';
 import { Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -24,7 +24,7 @@ export class NotebookLanguageServer implements Disposable {
     private code2ProtocolConverter = c2p.createConverter();
     private protocol2CodeConverter = p2c.createConverter();
     private connection: ILanguageServerConnection;
-    private capabilities: vscodeprotocol.ServerCapabilities;
+    private capabilities: lsp.ServerCapabilities;
     private disposeConnection: () => void;
     private constructor(ls: ILanguageServer) {
         this.connection = ls.connection;

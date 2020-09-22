@@ -16,7 +16,7 @@ import {
     SignatureHelpProvider
 } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
-import * as vscodeprotocol from 'vscode-languageserver-protocol';
+import * as lsp from 'vscode-languageserver-protocol';
 import { NugetPackage } from '../common/nuget/types';
 import { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
 import { ILanguageServerConnection } from '../datascience/api/jupyterIntegration';
@@ -90,7 +90,7 @@ export interface ILanguageServer
         Partial<LanguageServerCommandHandler>,
         IDisposable {
     readonly connection?: ILanguageServerConnection;
-    readonly capabilities?: vscodeprotocol.ServerCapabilities;
+    readonly capabilities?: lsp.ServerCapabilities;
 }
 
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
