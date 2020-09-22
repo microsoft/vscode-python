@@ -35,6 +35,8 @@ import {
 import { IKernel } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
+// tslint:disable-next-line: no-require-imports
+import escape = require('lodash/escape');
 
 export class CellExecutionFactory {
     constructor(
@@ -406,6 +408,11 @@ export class CellExecution {
     // See this for docs on the messages:
     // https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter
     private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: RefBool) {
+        // Escape text output
+        if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
+            msg.content.data['text/plain'] = escape(msg.content.data['text/plain'] as string);
+        }
+
         this.addToCellData(
             {
                 output_type: 'execute_result',
@@ -429,7 +436,7 @@ export class CellExecution {
                             // Mark as stream output so the text is formatted because it likely has ansi codes in it.
                             output_type: 'stream',
                             // tslint:disable-next-line: no-any
-                            text: (o.data as any)['text/plain'].toString(),
+                            text: escape((o.data as any)['text/plain'].toString()),
                             metadata: {},
                             execution_count: reply.execution_count
                         },
@@ -463,10 +470,10 @@ export class CellExecution {
             lastOutput && lastOutput.outputKind === CellOutputKind.Text ? lastOutput : undefined;
         if (existing) {
             // tslint:disable-next-line:restrict-plus-operands
-            existing.text = formatStreamText(concatMultilineString(existing.text + msg.content.text));
+            existing.text = formatStreamText(concatMultilineString(existing.text + escape(msg.content.text)));
             this.cell.outputs = [...this.cell.outputs]; // This is necessary to get VS code to update (for now)
         } else {
-            const originalText = formatStreamText(concatMultilineString(msg.content.text));
+            const originalText = formatStreamText(concatMultilineString(escape(msg.content.text)));
             // Create a new stream entry
             const output: nbformat.IStream = {
                 output_type: 'stream',
@@ -478,6 +485,11 @@ export class CellExecution {
     }
 
     private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool) {
+        // Escape text output
+        if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
+            msg.content.data['text/plain'] = escape(msg.content.data['text/plain'] as string);
+        }
+
         const output: nbformat.IDisplayData = {
             output_type: 'display_data',
             data: msg.content.data,

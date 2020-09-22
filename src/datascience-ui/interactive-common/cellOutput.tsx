@@ -314,26 +314,34 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             input = JSON.stringify(output.data);
             renderWithScrollbars = true;
             isText = true;
+        } else if (output.output_type === 'execute_result' && input && input.hasOwnProperty('text/plain')) {
+            // Plain text should actually be shown as html so that escaped HTML shows up correctly
+            mimeType = 'text/html';
+            isText = true;
+            isError = false;
+            renderWithScrollbars = true;
+            // tslint:disable-next-line: no-any
+            const text = (input as any)['text/plain'];
+            input = {
+                'text/html': text // XML tags should have already been escaped.
+            };
         } else if (output.output_type === 'stream') {
-            // Stream output needs to be wrapped in xmp so it
-            // show literally. Otherwise < chars start a new html element.
             mimeType = 'text/html';
             isText = true;
             isError = false;
             renderWithScrollbars = true;
             // Sonar is wrong, TS won't compile without this AS
             const stream = output as nbformat.IStream; // NOSONAR
-            const formatted = concatMultilineString(stream.text);
+            const concatted = concatMultilineString(stream.text);
             input = {
-                'text/html': formatted.includes('<') ? `<xmp>${formatted}</xmp>` : `<div>${formatted}</div>`
+                'text/html': concatted // XML tags should have already been escaped.
             };
 
-            // Output may have goofy ascii colorization chars in it. Try
-            // colorizing if we don't have html that needs <xmp> around it (ex. <type ='string'>)
+            // Output may have ascii colorization chars in it.
             try {
-                if (ansiRegex().test(formatted)) {
+                if (ansiRegex().test(concatted)) {
                     const converter = new CellOutput.ansiToHtmlClass(CellOutput.getAnsiToHtmlOptions());
-                    const html = converter.toHtml(formatted);
+                    const html = converter.toHtml(concatted);
                     input = {
                         'text/html': html
                     };
