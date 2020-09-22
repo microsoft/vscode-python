@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { PythonExecutableInfo, PythonVersion } from '.';
-import { interpreterInfo as getInterpreterInfoCommand, PythonEnvInfo } from '../../../common/process/internal/scripts';
+import { interpreterInfo as getInterpreterInfoCommand, InterpreterInfoJson } from '../../../common/process/internal/scripts';
 import { Architecture } from '../../../common/utils/platform';
 import { copyPythonExecInfo, PythonExecInfo } from '../../exec';
 import { parseVersion } from './pythonVersion';
@@ -21,7 +21,7 @@ export type InterpreterInformation = {
  * @param python - the path to the Python executable
  * @param raw - the information returned by the `interpreterInfo.py` script
  */
-function extractInterpreterInfo(python: string, raw: PythonEnvInfo): InterpreterInformation {
+function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): InterpreterInformation {
     const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`;
     return {
         arch: raw.is64Bit ? Architecture.x64 : Architecture.x86,
@@ -46,6 +46,7 @@ type ShellExecFunc = (command: string, timeout: number) => Promise<ShellExecResu
 
 type Logger = {
     info(msg: string): void;
+
     error(msg: string): void;
 };
 
