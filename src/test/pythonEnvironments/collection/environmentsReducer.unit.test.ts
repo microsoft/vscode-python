@@ -18,11 +18,11 @@ import { createEnv, getEnvs, SimpleLocator } from '../base/common';
 suite('Environments Reducer', () => {
     suite('iterEnvs()', () => {
         test('Iterator only yields unique environments', async () => {
-            const env1 = createEnv('env1', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
-            const env2 = createEnv('env2', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec2'));
+            const env1 = createEnv('env1', '3.5', PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
+            const env2 = createEnv('env2', '3.8', PythonEnvKind.Conda, path.join('path', 'to', 'exec2'));
             const env3 = createEnv('env3', '2.7', PythonEnvKind.System, path.join('path', 'to', 'exec3'));
-            const env4 = createEnv('env4', '3.9.0rc2', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2')); // Same as env2
-            const env5 = createEnv('env5', '3.8', PythonEnvKind.Venv, path.join('path', 'to', 'exec1')); // Same as env1
+            const env4 = createEnv('env4', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2')); // Same as env2
+            const env5 = createEnv('env5', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1')); // Same as env1
             const environmentsToBeIterated = [env1, env2, env3, env4, env5]; // Contains 3 unique environments
             const pythonEnvManager = new SimpleLocator(environmentsToBeIterated);
             const reducer = new PythonEnvsReducer(pythonEnvManager);
@@ -36,11 +36,11 @@ suite('Environments Reducer', () => {
 
         test('Single updates for multiple environments are sent correctly followed by the null event', async () => {
             // Arrange
-            const env1 = createEnv('env1', '3.5.12b1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec1'));
-            const env2 = createEnv('env2', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
+            const env1 = createEnv('env1', '3.5', PythonEnvKind.Unknown, path.join('path', 'to', 'exec1'));
+            const env2 = createEnv('env2', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
             const env3 = createEnv('env3', '2.7', PythonEnvKind.System, path.join('path', 'to', 'exec3'));
-            const env4 = createEnv('env4', '3.9.0rc2', PythonEnvKind.Conda, path.join('path', 'to', 'exec2')); // Same as env2;
-            const env5 = createEnv('env5', '3.8', PythonEnvKind.Venv, path.join('path', 'to', 'exec1')); // Same as env1;
+            const env4 = createEnv('env4', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec2')); // Same as env2;
+            const env5 = createEnv('env5', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1')); // Same as env1;
             const environmentsToBeIterated = [env1, env2, env3, env4, env5]; // Contains 3 unique environments
             const pythonEnvManager = new SimpleLocator(environmentsToBeIterated);
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
@@ -160,21 +160,59 @@ suite('Environments Reducer', () => {
         assert.deepEqual(events, expected);
     });
 
-    test('Calls locator manager to resolves environments', async () => {
-        const env = createEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
-        const resolvedEnv = createEnv('env1', '3.8.1', PythonEnvKind.Conda, 'resolved/path/to/exec');
-        const pythonEnvManager = new SimpleLocator([], {
-            resolve: async (e: PythonEnvInfo) => {
-                if (e === env) {
-                    return resolvedEnv;
-                }
-                return undefined;
-            },
+    suite('resolveEnv()', () => {
+        test('Iterates environments from the reducer to get resolved environment, then calls into locator manager to resolve environment further and return it', async () => {
+            const env1 = createEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
+            const env2 = createEnv('env2', '2.7', PythonEnvKind.System, path.join('path', 'to', 'exec3'));
+            const env3 = createEnv('env3', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec'));
+            const env4 = createEnv('env4', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec2'));
+            const env5 = createEnv('env5', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
+            const env6 = createEnv('env6', '3.8.1', PythonEnvKind.System, path.join('path', 'to', 'exec'));
+            const environmentsToBeIterated = [env1, env2, env3, env4, env5, env6]; // env1 env3 env6 are same
+
+            const env13 = mergeEnvironments(env1, env3);
+            const env136 = mergeEnvironments(env13, env6);
+            const expectedResolvedEnv = createEnv('resolvedEnv', '3.8.1', PythonEnvKind.Conda, 'resolved/path/to/exec');
+            const pythonEnvManager = new SimpleLocator(environmentsToBeIterated, {
+                resolve: async (e: PythonEnvInfo) => {
+                    if (isEqual(e, env136)) {
+                        return expectedResolvedEnv;
+                    }
+                    return undefined;
+                },
+            });
+            const reducer = new PythonEnvsReducer(pythonEnvManager);
+
+            // Trying to resolve the environment corresponding to env1 env3 env6
+            const expected = await reducer.resolveEnv(path.join('path', 'to', 'exec'));
+
+            assert.deepEqual(expected, expectedResolvedEnv);
         });
-        const reducer = new PythonEnvsReducer(pythonEnvManager);
 
-        const expected = await reducer.resolveEnv(env);
+        test("If the reducer isn't able to resolve environment, return undefined", async () => {
+            const env1 = createEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
+            const env2 = createEnv('env2', '2.7', PythonEnvKind.System, path.join('path', 'to', 'exec3'));
+            const env3 = createEnv('env3', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec'));
+            const env4 = createEnv('env4', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec2'));
+            const env5 = createEnv('env5', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
+            const env6 = createEnv('env6', '3.8.1', PythonEnvKind.System, path.join('path', 'to', 'exec'));
+            const environmentsToBeIterated = [env1, env2, env3, env4, env5, env6]; // env1 env3 env6 are same
 
-        assert.deepEqual(expected, resolvedEnv);
+            const env13 = mergeEnvironments(env1, env3);
+            const env136 = mergeEnvironments(env13, env6);
+            const pythonEnvManager = new SimpleLocator(environmentsToBeIterated, {
+                resolve: async (e: PythonEnvInfo) => {
+                    if (isEqual(e, env136)) {
+                        return createEnv('resolvedEnv', '3.8.1', PythonEnvKind.Conda, 'resolved/path/to/exec');
+                    }
+                    return undefined;
+                },
+            });
+            const reducer = new PythonEnvsReducer(pythonEnvManager);
+
+            const expected = await reducer.resolveEnv(path.join('path', 'to', 'execNeverSeenBefore'));
+
+            assert.deepEqual(expected, undefined);
+        });
     });
 });

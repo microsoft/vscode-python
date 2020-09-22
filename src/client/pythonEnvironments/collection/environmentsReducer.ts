@@ -4,6 +4,7 @@
 import { cloneDeep, isEqual } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../common/logger';
+import { createDeferred } from '../../common/utils/async';
 import { areSameEnvironment, PythonEnvInfo, PythonEnvKind } from '../base/info';
 import {
     ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, QueryForEvent,
@@ -20,8 +21,30 @@ export class PythonEnvsReducer implements ILocator {
 
     constructor(private readonly pythonEnvsManager: ILocator) {}
 
-    public resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        return this.pythonEnvsManager.resolveEnv(env);
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        let environment: PythonEnvInfo | undefined;
+        const waitForUpdatesDeferred = createDeferred<void>();
+        const iterator = this.iterEnvs();
+        iterator.onUpdated!((event) => {
+            if (event === null) {
+                waitForUpdatesDeferred.resolve();
+            } else if (environment && areSameEnvironment(environment, event.new)) {
+                environment = event.new;
+            }
+        });
+        let result = await iterator.next();
+        while (!result.done) {
+            if (areSameEnvironment(result.value, env)) {
+                environment = result.value;
+            }
+            // eslint-disable-next-line no-await-in-loop
+            result = await iterator.next();
+        }
+        if (!environment) {
+            return undefined;
+        }
+        await waitForUpdatesDeferred.promise;
+        return this.pythonEnvsManager.resolveEnv(environment);
     }
 
     public iterEnvs(query?: QueryForEvent<PythonEnvsChangedEvent>): IPythonEnvsIterator {
