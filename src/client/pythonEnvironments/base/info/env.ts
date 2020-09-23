@@ -47,6 +47,36 @@ export function buildEmptyEnvInfo(): PythonEnvInfo {
 }
 
 /**
+ * Return a deep copy of the given env info.
+ *
+ * @param updates - if provided, these values are applied to the copy
+ */
+export function copyEnvInfo(
+    env: PythonEnvInfo,
+    updates?: {
+        kind?: PythonEnvKind,
+    },
+): PythonEnvInfo {
+    const copied = { ...env };
+    copied.version = { ...env.version };
+    copied.version.release = { ...env.version.release };
+    copied.executable = { ...env.executable };
+    copied.distro = { ...env.distro };
+    if (copied.distro.version !== undefined) {
+        copied.distro.version = { ...env.distro.version! };
+    }
+    // We don't bother with env.searchLocation.
+
+    // Apply updates.
+    if (updates !== undefined) {
+        if (updates.kind !== undefined) {
+            copied.kind = updates.kind;
+        }
+    }
+    return copied;
+}
+
+/**
  * Checks if two environments are same.
  * @param {string | PythonEnvInfo} left: environment to compare.
  * @param {string | PythonEnvInfo} right: environment to compare.
