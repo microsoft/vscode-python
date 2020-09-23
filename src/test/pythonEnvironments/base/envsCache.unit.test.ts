@@ -9,7 +9,7 @@ import * as externalDeps from '../../../client/pythonEnvironments/common/externa
 
 suite('Environment Info cache', () => {
     let createGlobalPersistentStoreStub: sinon.SinonStub;
-    let updatedValues: PythonEnvInfo[] = [];
+    let updatedValues: PythonEnvInfo[] | undefined;
 
     const allEnvsComplete: CompleteEnvInfoFunction = () => true;
     const envInfoArray = [
@@ -37,7 +37,7 @@ suite('Environment Info cache', () => {
 
     teardown(() => {
         createGlobalPersistentStoreStub.restore();
-        updatedValues = [];
+        updatedValues = undefined;
     });
 
     test('`initialize` reads from persistent storage', () => {
@@ -46,6 +46,16 @@ suite('Environment Info cache', () => {
         envsCache.initialize();
 
         assert.ok(createGlobalPersistentStoreStub.calledOnce);
+    });
+
+    test('The in-memory env info array is undefined if there is no value in persistent storage when initializing the cache', () => {
+        const envsCache = new PythonEnvInfoCache(allEnvsComplete);
+
+        createGlobalPersistentStoreStub.returns({ value: undefined });
+        envsCache.initialize();
+        const result = envsCache.getAllEnvs();
+
+        assert.strictEqual(result, undefined);
     });
 
     test('`getAllEnvs` should return undefined if nothing has been set', () => {
@@ -108,12 +118,20 @@ suite('Environment Info cache', () => {
         assert.deepStrictEqual(updatedValues, expected);
     });
 
+    test('`flush` should not write to persistent storage if there are no environment info objects in-memory', async () => {
+        const envsCache = new PythonEnvInfoCache((env) => env.kind === PythonEnvKind.MacDefault);
+
+        await envsCache.flush();
+
+        assert.strictEqual(updatedValues, undefined);
+    });
+
     test('`flush` should not write to persistent storage if there are no complete environment info objects', async () => {
         const envsCache = new PythonEnvInfoCache((env) => env.kind === PythonEnvKind.MacDefault);
 
         envsCache.initialize();
         await envsCache.flush();
 
-        assert.deepStrictEqual(updatedValues, []);
+        assert.strictEqual(updatedValues, undefined);
     });
 });
