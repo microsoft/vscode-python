@@ -20,5 +20,5 @@
         "noUnusedParameters": false,
         "strict": true
     },
-    "exclude": [".vscode-test", ".vscode test", "src/test", "src/server", "src/client", "build"]
+    "exclude": [".vscode-test", ".vscode test", "src/test", "build"]
 }
