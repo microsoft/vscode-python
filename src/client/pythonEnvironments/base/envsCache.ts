@@ -55,7 +55,7 @@ export class PythonEnvInfoCache implements IEnvsCache {
     constructor(private readonly isComplete: CompleteEnvInfoFunction) {}
 
     public initialize(): void {
-        this.persistentStorage = createGlobalPersistentStore<PythonEnvInfo[]>('mykey');
+        this.persistentStorage = createGlobalPersistentStore<PythonEnvInfo[]>('PYTHON_ENV_INFO_CACHE');
         this.envsList = this.persistentStorage?.value;
     }
 
@@ -84,7 +84,7 @@ export class PythonEnvInfoCache implements IEnvsCache {
     public async flush(): Promise<void> {
         const completeEnvs = this.envsList?.filter(this.isComplete);
 
-        if (completeEnvs) {
+        if (completeEnvs?.length) {
             await this.persistentStorage?.updateValue(completeEnvs);
         }
     }
