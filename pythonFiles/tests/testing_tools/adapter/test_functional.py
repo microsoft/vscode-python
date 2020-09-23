@@ -89,6 +89,7 @@ def sorted_object(obj):
     else:
         return obj
 
+
 # Note that these tests are skipped if util.PATH_SEP is not os.path.sep.
 # This is because the functional tests should reflect the actual
 # operating environment.
