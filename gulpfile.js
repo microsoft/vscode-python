@@ -102,7 +102,6 @@ gulp.task('output:clean', () => del(['coverage']));
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/startpage-ui', 'out/server']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
 gulp.task('clean:out', () => del(['out']));
-gulp.task('clean:ipywidgets', () => spawnAsync('npm', ['run', 'build-ipywidgets-clean'], webpackEnv));
 
 gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
 
@@ -113,18 +112,8 @@ gulp.task('checkNativeDependencies', (done) => {
     done();
 });
 
-gulp.task('compile-ipywidgets', () => buildIPyWidgets());
 
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
-
-async function buildIPyWidgets() {
-    // if the output ipywidgest file exists, then no need to re-build.
-    // Barely changes. If making changes, then re-build manually.
-    if (!isCI && fs.existsSync(path.join(__dirname, 'out/ipywidgets/dist/ipywidgets.js'))) {
-        return;
-    }
-    await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
-}
 
 gulp.task('compile-viewers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.startpage-ui-viewers.config.js');
@@ -142,9 +131,6 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
 gulp.task('webpack', async () => {
     // Build node_modules.
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
-    // Build DS stuff (separately as it uses far too much memory and slows down CI).
-    // Individually is faster on CI.
-    await buildIPyWidgets();
     await buildWebPackForDevOrProduction('./build/webpack/webpack.startpage-ui-viewers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
 });

@@ -41,7 +41,6 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { LocalZMQKernel } from '../../client/common/experiments/groups';
 import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
@@ -270,10 +269,6 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         when(experimentManager.inExperiment(anything())).thenCall((exp) => {
             const setState = this.experimentState.get(exp);
             if (setState === undefined) {
-                if (this.shouldMockJupyter) {
-                    // RawKernel doesn't currently have a mock layer
-                    return exp !== LocalZMQKernel.experiment;
-                }
                 // All experiments to true by default if not mocking jupyter
                 return true;
             }

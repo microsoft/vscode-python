@@ -80,10 +80,6 @@ function buildConfiguration(bundle) {
         filesToCopy.push(
             ...[
                 {
-                    from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/dist/ipywidgets.js'),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'startpage-ui', bundleFolder)
-                },
-                {
                     from: path.join(constants.ExtensionRootDir, 'node_modules/font-awesome/**/*'),
                     to: path.join(constants.ExtensionRootDir, 'out', 'startpage-ui', bundleFolder, 'node_modules')
                 }

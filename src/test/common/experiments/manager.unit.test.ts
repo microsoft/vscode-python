@@ -14,7 +14,6 @@ import { IApplicationEnvironment } from '../../../client/common/application/type
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../client/common/crypto';
-import { NotebookEditorSupport } from '../../../client/common/experiments/groups';
 import {
     configUri,
     downloadedExperimentStorageKey,
@@ -892,39 +891,6 @@ suite('A/B experiments', () => {
                 expManager.populateUserExperiments();
                 assert.deepEqual(expManager.userExperiments, testParams.expectedResult);
             });
-        });
-        test('NativeNotebook Experiment are not loaded in VSC Insiders', async () => {
-            const storageValue = [
-                { name: NotebookEditorSupport.control, salt: 'salt', min: 0, max: 0 },
-                { name: NotebookEditorSupport.customEditorExperiment, salt: 'salt', min: 0, max: 0 },
-                { name: NotebookEditorSupport.nativeNotebookExperiment, salt: 'salt', min: 0, max: 100 }
-            ];
-            experimentStorage.setup((n) => n.value).returns(() => storageValue);
-            when(appEnvironment.machineId).thenReturn('101');
-            when(appEnvironment.channel).thenReturn('stable');
-            when(crypto.createHash(anything(), 'number', anything())).thenReturn(8187);
-            expManager.populateUserExperiments();
-            assert.deepEqual(expManager.userExperiments, []);
-        });
-        test('NativeNotebook Experiment is loaded in VSC Insiders', async () => {
-            const storageValue = [
-                { name: NotebookEditorSupport.control, salt: 'salt', min: 0, max: 0 },
-                { name: NotebookEditorSupport.customEditorExperiment, salt: 'salt', min: 0, max: 0 },
-                { name: NotebookEditorSupport.nativeNotebookExperiment, salt: 'salt', min: 0, max: 100 }
-            ];
-            experimentStorage.setup((n) => n.value).returns(() => storageValue);
-            when(appEnvironment.machineId).thenReturn('101');
-            when(appEnvironment.channel).thenReturn('insiders');
-            when(crypto.createHash(anything(), 'number', anything())).thenReturn(8187);
-            expManager.populateUserExperiments();
-            assert.deepEqual(expManager.userExperiments, [
-                {
-                    min: 0,
-                    max: 100,
-                    name: 'NativeNotebook - experiment',
-                    salt: 'salt'
-                }
-            ]);
         });
     });
 

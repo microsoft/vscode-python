@@ -36,11 +36,9 @@
         "src/client/node_modules",
         "src/server/src/typings",
         "src/client/src/typings",
-        "src/ipywidgets",
         "src/smoke",
         "build",
         "out",
-        "ipywidgets",
         "tmp"
     ]
 }

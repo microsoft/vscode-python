@@ -28,7 +28,6 @@ import {
 import { sleep } from '../utils/async';
 import { swallowExceptions } from '../utils/decorators';
 import { Experiments } from '../utils/localize';
-import { NotebookEditorSupport } from './groups';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 export const isDownloadedStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
@@ -156,20 +155,6 @@ export class ExperimentsManager implements IExperimentsManager {
             const remainingExpriments: ABExperiments = [];
             // First process experiments in order of user preference (if they have opted out or opted in).
             for (const experiment of this.experimentStorage.value) {
-                // User cannot belong to NotebookExperiment if they are not using Insiders.
-                if (
-                    experiment.name === NotebookEditorSupport.nativeNotebookExperiment &&
-                    this.appEnvironment.channel === 'stable'
-                ) {
-                    continue;
-                }
-                // User cannot belong to CustomEditor Experiment if they are using Insiders.
-                if (
-                    experiment.name === NotebookEditorSupport.customEditorExperiment &&
-                    this.appEnvironment.channel === 'insiders'
-                ) {
-                    continue;
-                }
                 try {
                     if (
                         this._experimentsOptedOutFrom.includes('All') ||

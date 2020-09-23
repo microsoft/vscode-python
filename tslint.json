@@ -1,8 +1,5 @@
 {
     "rulesDirectory": ["./build/tslint-rules"],
-    "linterOptions": {
-        "exclude": ["src/ipywidgets"]
-    },
     "extends": ["tslint-eslint-rules", "tslint-microsoft-contrib", "tslint-plugin-prettier", "tslint-config-prettier"],
     "rules": {
         "prettier": true,
