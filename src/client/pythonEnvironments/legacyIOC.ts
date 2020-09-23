@@ -3,7 +3,6 @@
 
 import { injectable } from 'inversify';
 import * as vscode from 'vscode';
-import { createDeferred } from '../common/utils/async';
 import { getVersionString, parseVersion } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -30,6 +29,7 @@ import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
 import { buildEmptyEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
+import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
@@ -266,39 +266,9 @@ class ComponentAdapter implements IComponentAdapter {
             }
         }
 
-        const deferred = createDeferred<PythonEnvironment[]>();
-        const envs: PythonEnvironment[] = [];
-        const executableToLegacy: Record<string, PythonEnvironment> = {};
         const iterator = this.api.iterEnvs(query);
-
-        if (iterator.onUpdated !== undefined) {
-            iterator.onUpdated((event) => {
-                if (event === null) {
-                    deferred.resolve(envs);
-                } else {
-                    // Replace the old one.
-                    const old = executableToLegacy[event.old.executable.filename];
-                    if (old !== undefined) {
-                        const index = envs.indexOf(old);
-                        if (index !== -1) {
-                            envs[index] = convertEnvInfo(event.new);
-                        }
-                    }
-                }
-            });
-        } else {
-            deferred.resolve(envs);
-        }
-
-        let res = await iterator.next();
-        while (!res.done) {
-            const env = convertEnvInfo(res.value);
-            envs.push(env);
-            executableToLegacy[env.path] = env;
-            res = await iterator.next(); // eslint-disable-line no-await-in-loop
-        }
-
-        return deferred.promise;
+        const envs = await getEnvs(iterator);
+        return envs.map(convertEnvInfo);
     }
 }
 
