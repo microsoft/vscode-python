@@ -2,15 +2,23 @@
 // Licensed under the MIT License.
 
 import { createDeferred, Deferred } from '../../common/utils/async';
+import { Architecture } from '../../common/utils/platform';
 import { createWorkerPool, IWorkerPool, QueuePosition } from '../../common/utils/workerPool';
+import { PythonExecutableInfo, PythonVersion } from '../base/info';
+import { getEnvInfo } from '../base/info/tool';
 import { shellExecute } from '../common/externalDependencies';
 import { buildPythonExecInfo } from '../exec';
-import { getInterpreterInfo, InterpreterInformation } from './tool';
 
 export enum EnvironmentInfoServiceQueuePriority {
     Default,
     High
 }
+
+export type InterpreterInformation = {
+    arch: Architecture;
+    executable: PythonExecutableInfo;
+    version: PythonVersion;
+};
 
 export interface IEnvironmentInfoService {
     getEnvironmentInfo(
@@ -21,7 +29,8 @@ export interface IEnvironmentInfoService {
 }
 
 async function buildEnvironmentInfo(interpreterPath: string): Promise<InterpreterInformation | undefined> {
-    const interpreterInfo = await getInterpreterInfo(buildPythonExecInfo(interpreterPath), shellExecute).catch(
+    const python = buildPythonExecInfo(interpreterPath);
+    const interpreterInfo = await getEnvInfo(python, shellExecute).catch(
         () => undefined,
     );
     if (interpreterInfo === undefined || interpreterInfo.version === undefined) {

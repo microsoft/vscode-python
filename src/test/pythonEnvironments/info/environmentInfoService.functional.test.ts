@@ -13,8 +13,8 @@ import * as ExternalDep from '../../../client/pythonEnvironments/common/external
 import {
     EnvironmentInfoService,
     EnvironmentInfoServiceQueuePriority,
+    InterpreterInformation,
 } from '../../../client/pythonEnvironments/info/environmentInfoService';
-import { InterpreterInformation } from '../../../client/pythonEnvironments/info/tool';
 
 suite('Environment Info Service', () => {
     let stubShellExec: sinon.SinonStub;

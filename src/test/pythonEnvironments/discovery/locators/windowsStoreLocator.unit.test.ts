@@ -13,7 +13,7 @@ import {
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 import * as externalDep from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { getWindowsStorePythonExes, WindowsStoreLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
-import { InterpreterInformation } from '../../../../client/pythonEnvironments/info/tool';
+import { InterpreterInformation } from '../../../../client/pythonEnvironments/info/environmentInfoService';
 import { getEnvs } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';

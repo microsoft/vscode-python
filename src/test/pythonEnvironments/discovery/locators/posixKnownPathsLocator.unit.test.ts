@@ -11,7 +11,7 @@ import {
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PosixKnownPathsLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/posixKnownPathsLocator';
-import { InterpreterInformation } from '../../../../client/pythonEnvironments/info/tool';
+import { InterpreterInformation } from '../../../../client/pythonEnvironments/info/environmentInfoService';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
