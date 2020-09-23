@@ -52,18 +52,7 @@ export function buildEnvInfo(init?: {
         },
     };
     if (init !== undefined) {
-        if (init.kind !== undefined) {
-            env.kind = init.kind;
-        }
-        if (init.executable !== undefined) {
-            env.executable.filename = init.executable;
-        }
-        if (init.location !== undefined) {
-            env.location = init.location;
-        }
-        if (init.version !== undefined) {
-            env.version = init.version;
-        }
+        updateEnv(env, init);
     }
     return env;
 }
@@ -91,11 +80,29 @@ export function copyEnvInfo(
 
     // Apply updates.
     if (updates !== undefined) {
-        if (updates.kind !== undefined) {
-            copied.kind = updates.kind;
-        }
+        updateEnv(copied, updates);
     }
     return copied;
+}
+
+function updateEnv(env: PythonEnvInfo, updates: {
+    kind?: PythonEnvKind;
+    executable?: string;
+    location?: string;
+    version?: PythonVersion;
+}): void {
+    if (updates.kind !== undefined) {
+        env.kind = updates.kind;
+    }
+    if (updates.executable !== undefined) {
+        env.executable.filename = updates.executable;
+    }
+    if (updates.location !== undefined) {
+        env.location = updates.location;
+    }
+    if (updates.version !== undefined) {
+        env.version = updates.version;
+    }
 }
 
 /**
