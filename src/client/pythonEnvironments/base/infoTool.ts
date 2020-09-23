@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { interpreterInfo as getInterpreterInfoCommand } from '../../../common/process/internal/scripts';
-import { Architecture } from '../../../common/utils/platform';
-import { copyPythonExecInfo, PythonExecInfo } from '../../exec';
-import { buildEnvInfo } from './env';
-import { parseVersion } from './pythonVersion';
-
-import { PythonEnvInfo } from '.';
+import { interpreterInfo as getInterpreterInfoCommand } from '../../common/process/internal/scripts';
+import { Architecture } from '../../common/utils/platform';
+import { copyPythonExecInfo, PythonExecInfo } from './exec';
+import { PythonEnvInfo } from './info';
+import { buildEnvInfo } from './info/env';
+import { parseVersion } from './info/pythonVersion';
 
 type ShellExecResult = {
     stdout: string;

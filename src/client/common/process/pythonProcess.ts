@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { PythonExecInfo } from '../../pythonEnvironments/exec';
+import { PythonExecInfo } from '../../pythonEnvironments/base/exec';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
 import * as internalPython from './internal/python';

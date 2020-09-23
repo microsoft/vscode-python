@@ -4,7 +4,7 @@
 import { InterpreterInformation } from '.';
 import { interpreterInfo as getInterpreterInfoCommand, InterpreterInfoJson } from '../../common/process/internal/scripts';
 import { Architecture } from '../../common/utils/platform';
-import { copyPythonExecInfo, PythonExecInfo } from '../exec';
+import { copyPythonExecInfo, PythonExecInfo } from '../base/exec';
 import { parsePythonVersion } from './pythonVersion';
 
 /**

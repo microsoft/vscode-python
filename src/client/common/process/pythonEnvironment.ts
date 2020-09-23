@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/base/exec';
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
-import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getExecutablePath } from '../../pythonEnvironments/info/executable';
 import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter';

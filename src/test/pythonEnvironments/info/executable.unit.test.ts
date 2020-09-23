@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { join as pathJoin } from 'path';
 import { IMock, Mock, MockBehavior } from 'typemoq';
 import { StdErrError } from '../../../client/common/process/types';
-import { buildPythonExecInfo } from '../../../client/pythonEnvironments/exec';
+import { buildPythonExecInfo } from '../../../client/pythonEnvironments/base/exec';
 import { getExecutablePath } from '../../../client/pythonEnvironments/info/executable';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 

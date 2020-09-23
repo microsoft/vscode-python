@@ -4,10 +4,10 @@
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Architecture } from '../../common/utils/platform';
 import { createWorkerPool, IWorkerPool, QueuePosition } from '../../common/utils/workerPool';
+import { buildPythonExecInfo } from '../base/exec';
 import { PythonExecutableInfo, PythonVersion } from '../base/info';
-import { getEnvInfo } from '../base/info/tool';
+import { getEnvInfo } from '../base/infoTool';
 import { shellExecute } from '../common/externalDependencies';
-import { buildPythonExecInfo } from '../exec';
 
 export enum EnvironmentInfoServiceQueuePriority {
     Default,

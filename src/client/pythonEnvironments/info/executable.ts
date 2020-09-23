@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { getExecutable as getPythonExecutableCommand } from '../../common/process/internal/python';
-import { copyPythonExecInfo, PythonExecInfo } from '../exec';
+import { copyPythonExecInfo, PythonExecInfo } from '../base/exec';
 
 type ExecResult = {
     stdout: string;
