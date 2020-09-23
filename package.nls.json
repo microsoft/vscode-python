@@ -59,6 +59,8 @@
     "python.command.python.datascience.debugFileInteractive.title": "Debug Current File in Python Interactive Window",
     "python.command.python.datascience.runallcells.title": "Run All Cells",
     "python.command.python.datascience.notebookeditor.runallcells.title": "Run All Notebook Cells",
+    "python.command.python.datascience.notebookeditor.expandallcells.title": "Expand All Notebook Cells",
+    "python.command.python.datascience.notebookeditor.collapseallcells.title": "Collapse All Notebook Cells",
     "python.command.python.datascience.runallcellsabove.title": "Run Above",
     "python.command.python.datascience.runcellandallbelow.title": "Run Below",
     "python.command.python.datascience.runallcellsabove.palette.title": "Run Cells Above Current Cell",

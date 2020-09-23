@@ -6,6 +6,8 @@ import { assert } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { injectable } from 'inversify';
+// tslint:disable-next-line: no-require-imports
+import escape = require('lodash/escape');
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
@@ -159,7 +161,7 @@ suite('DataScience notebook tests', () => {
                 const data = extractDataOutput(cells[0]);
                 if (pathVerify) {
                     // For a path comparison normalize output
-                    const normalizedOutput = path.normalize(data).toUpperCase().replace(/'/g, '');
+                    const normalizedOutput = path.normalize(data).toUpperCase().replace(/&#39;/g, '');
                     const normalizedTarget = path.normalize(expectedValue).toUpperCase().replace(/'/g, '');
                     assert.equal(normalizedOutput, normalizedTarget, 'Cell path values does not match');
                 } else {
@@ -1024,6 +1026,15 @@ a`,
                 },
                 {
                     markdownRegEx: undefined,
+                    code: `a="<a href=f>"
+a`,
+                    mimeType: 'text/plain',
+                    cellType: 'code',
+                    result: `<a href=f>`,
+                    verifyValue: (d) => assert.equal(d, escape(`<a href=f>`), 'XML not escaped')
+                },
+                {
+                    markdownRegEx: undefined,
                     code: `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`,
@@ -1032,7 +1043,7 @@ df.head()`,
                     cellType: 'error',
                     // tslint:disable-next-line:quotemark
                     verifyValue: (d) =>
-                        assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
+                        assert.ok((d as string).includes(escape("has no attribute 'read'")), 'Unexpected error result')
                 },
                 {
                     markdownRegEx: undefined,

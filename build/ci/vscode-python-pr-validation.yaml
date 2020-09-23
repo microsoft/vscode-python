@@ -63,7 +63,7 @@ stages:
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-20.04'
         steps:
           - template: templates/test_phases.yml
 
@@ -82,7 +82,7 @@ stages:
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-20.04'
         steps:
           - template: templates/test_phases.yml
 

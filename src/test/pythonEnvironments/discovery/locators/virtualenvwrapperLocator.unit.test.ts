@@ -22,8 +22,7 @@ suite('Virtualenvwrapper Locator Tests', () => {
         pathExistsStub = sinon.stub(fileUtils, 'pathExists');
         getDefaultDirStub = sinon.stub(virtualenvwrapperUtils, 'getDefaultVirtualenvwrapperDir');
 
-        pathExistsStub.withArgs(path.join(homeDir, envDirectory)).resolves(true);
-        pathExistsStub.resolves(false);
+        pathExistsStub.resolves(true);
     });
 
     teardown(() => {
@@ -32,7 +31,7 @@ suite('Virtualenvwrapper Locator Tests', () => {
         getDefaultDirStub.restore();
     });
 
-    test('WORKON_HOME is not set, and the interpreter is is in a subfolder', async () => {
+    test('WORKON_HOME is not set, and the interpreter is in a subfolder of virtualenvwrapper', async () => {
         const interpreter = path.join(homeDir, envDirectory, 'bin', 'python');
 
         getEnvVariableStub.withArgs('WORKON_HOME').returns(undefined);
@@ -56,7 +55,6 @@ suite('Virtualenvwrapper Locator Tests', () => {
         const interpreter = path.join('some', 'path', envDirectory, 'bin', 'python');
 
         getEnvVariableStub.withArgs('WORKON_HOME').returns(workonHomeDirectory);
-        pathExistsStub.withArgs(path.join(workonHomeDirectory, envDirectory)).resolves(false);
 
         assert.deepStrictEqual(await isVirtualenvwrapperEnvironment(interpreter), false);
     });

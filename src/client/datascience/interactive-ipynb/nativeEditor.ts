@@ -240,7 +240,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.previouslyNotTrusted = !this._model.isTrusted;
     }
 
-    public async show(preserveFocus?: boolean) {
+    public async show(preserveFocus: boolean = true) {
         await this.loadPromise;
         return super.show(preserveFocus);
     }
