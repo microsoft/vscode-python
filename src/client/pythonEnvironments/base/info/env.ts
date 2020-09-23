@@ -3,14 +3,48 @@
 
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import {
-    FileInfo,
-    PythonDistroInfo,
-    PythonEnvInfo, PythonEnvKind, PythonVersion,
-} from '.';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
 import { areEqualVersions, areEquivalentVersions } from './pythonVersion';
+
+import {
+    FileInfo,
+    PythonDistroInfo,
+    PythonEnvInfo,
+    PythonEnvKind,
+    PythonReleaseLevel,
+    PythonVersion,
+} from '.';
+
+/**
+ * Create a new info object with all values empty.
+ */
+export function buildEmptyEnvInfo(): PythonEnvInfo {
+    return {
+        kind: PythonEnvKind.Unknown,
+        executable: {
+            filename: '',
+            sysPrefix: '',
+            ctime: -1,
+            mtime: -1,
+        },
+        name: '',
+        location: '',
+        version: {
+            major: -1,
+            minor: -1,
+            micro: -1,
+            release: {
+                level: PythonReleaseLevel.Final,
+                serial: 0,
+            },
+        },
+        arch: Architecture.Unknown,
+        distro: {
+            org: '',
+        },
+    };
+}
 
 /**
  * Checks if two environments are same.

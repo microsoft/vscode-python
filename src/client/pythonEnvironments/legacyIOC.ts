@@ -4,7 +4,6 @@
 import { injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { createDeferred } from '../common/utils/async';
-import { Architecture } from '../common/utils/platform';
 import { getVersionString, parseVersion } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -29,6 +28,7 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
+import { buildEmptyEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
@@ -122,33 +122,6 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     // or info.defaultDisplayName.
 
     return env;
-}
-
-function buildEmptyEnvInfo(): PythonEnvInfo {
-    return {
-        kind: PythonEnvKind.Unknown,
-        executable: {
-            filename: '',
-            sysPrefix: '',
-            ctime: -1,
-            mtime: -1,
-        },
-        name: '',
-        location: '',
-        version: {
-            major: -1,
-            minor: -1,
-            micro: -1,
-            release: {
-                level: PythonReleaseLevel.Final,
-                serial: 0,
-            },
-        },
-        arch: Architecture.Unknown,
-        distro: {
-            org: '',
-        },
-    };
 }
 
 interface IPythonEnvironments extends ILocator {}
