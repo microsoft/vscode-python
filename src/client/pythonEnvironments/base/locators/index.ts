@@ -1,16 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable-next-line:no-single-line-block-comment
+/* eslint-disable max-classes-per-file */
+
 import { EventEmitter } from 'vscode';
-import { chain } from '../../common/utils/async';
-import { PythonEnvInfo } from './info';
+import { chain } from '../../../common/utils/async';
+import { PythonEnvInfo } from '../info';
 import {
     ILocator,
     IPythonEnvsIterator,
+    NOOP_ITERATOR,
     PythonEnvUpdatedEvent,
     PythonLocatorQuery,
-} from './locator';
-import { PythonEnvsWatchers } from './watchers';
+} from '../locator';
+import { DisableableEnvsWatcher, PythonEnvsWatchers } from '../watchers';
 
 /**
  * Combine the `onUpdated` event of the given iterators into a single event.
@@ -68,5 +72,35 @@ export class Locators extends PythonEnvsWatchers implements ILocator {
             }
         }
         return undefined;
+    }
+}
+
+/**
+ * A locator wrapper that can be disabled.
+ *
+ * If disabled, events emitted by the wrapped locator are discarded,
+ * `iterEnvs()` yields nothing, and `resolveEnv()` already returns
+ * `undefined`.
+ */
+export class DisableableLocator extends DisableableEnvsWatcher implements ILocator {
+    constructor(
+        // To wrapp more than one use `Locators`.
+        private readonly locator: ILocator,
+    ) {
+        super(locator);
+    }
+
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+        if (!this.enabled) {
+            return NOOP_ITERATOR;
+        }
+        return this.locator.iterEnvs(query);
+    }
+
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
+        return this.locator.resolveEnv(env);
     }
 }
