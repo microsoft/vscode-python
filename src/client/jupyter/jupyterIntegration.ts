@@ -5,13 +5,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { dirname } from 'path';
-import { CancellationToken, Disposable, Event, Uri } from 'vscode';
+import { CancellationToken, Disposable, Event, Memento, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
 import { ILanguageServerCache, ILanguageServerConnection } from '../activation/types';
 import { InterpreterUri } from '../common/installer/types';
-import { IExtensions, IInstaller, InstallerResponse, Product, Resource } from '../common/types';
+import {
+    GLOBAL_MEMENTO,
+    IExtensions,
+    IInstaller,
+    IMemento,
+    InstallerResponse,
+    Product,
+    Resource
+} from '../common/types';
 import { isResource } from '../common/utils/misc';
 import { getDebugpyPackagePath } from '../debugger/extension/adapter/remoteLaunchers';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
@@ -66,6 +74,10 @@ type PythonApiForJupyterExtension = {
      */
     getDebuggerPath(): Promise<string>;
     /**
+     * Retrieve interpreter path selected for Jupyter server from Python memento storage
+     */
+    getInterpreterPathSelectedForJupyterServer(): string | undefined;
+    /**
      * Returns a ILanguageServer that can be used for communicating with a language server process.
      * @param resource file that determines which connection to return
      */
@@ -85,7 +97,8 @@ export class JupyterExtensionIntegration {
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
-        @inject(ILanguageServerCache) private readonly languageServerCache: ILanguageServerCache
+        @inject(ILanguageServerCache) private readonly languageServerCache: ILanguageServerCache,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi) {
@@ -110,6 +123,8 @@ export class JupyterExtensionIntegration {
                 cancel?: CancellationToken
             ): Promise<InstallerResponse> => this.installer.install(product, resource, cancel),
             getDebuggerPath: async () => dirname(getDebugpyPackagePath()),
+            getInterpreterPathSelectedForJupyterServer: () =>
+                this.globalState.get<string | undefined>('INTERPRETER_PATH_SELECTED_FOR_JUPYTER_SERVER'),
             getLanguageServer: async (r) => {
                 const resource = isResource(r) ? r : undefined;
                 const interpreter = !isResource(r) ? r : undefined;
