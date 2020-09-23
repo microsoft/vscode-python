@@ -10,8 +10,6 @@ import subprocess
 import sys
 import unittest
 
-import pytest
-
 from ...__main__ import TESTING_TOOLS_ROOT
 from testing_tools.adapter.util import fix_path, PATH_SEP
 
@@ -149,7 +147,6 @@ class PytestTests(unittest.TestCase):
             ],
         )
 
-    @pytest.mark.skip(reason="https://github.com/microsoft/vscode-python/issues/14023")
     def test_discover_complex_default(self):
         projroot, testroot = resolve_testroot("complex")
         expected = self.complex(projroot)
@@ -170,7 +167,6 @@ class PytestTests(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(sorted_object(result), sorted_object(expected))
 
-    @pytest.mark.skip(reason="https://github.com/microsoft/vscode-python/issues/14023")
     def test_discover_complex_doctest(self):
         projroot, _ = resolve_testroot("complex")
         expected = self.complex(projroot)
