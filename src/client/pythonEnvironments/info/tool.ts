@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { PythonExecutableInfo, PythonVersion } from '.';
-import { interpreterInfo as getInterpreterInfoCommand, InterpreterInfoJson } from '../../../common/process/internal/scripts';
-import { Architecture } from '../../../common/utils/platform';
-import { copyPythonExecInfo, PythonExecInfo } from '../../exec';
-import { parseVersion } from './pythonVersion';
+import { interpreterInfo as getInterpreterInfoCommand, InterpreterInfoJson } from '../../common/process/internal/scripts';
+import { Architecture } from '../../common/utils/platform';
+import { PythonExecutableInfo, PythonVersion } from '../base/info';
+import { parseVersion } from '../base/info/pythonVersion';
+import { copyPythonExecInfo, PythonExecInfo } from '../exec';
 
 export type InterpreterInformation = {
     arch: Architecture;

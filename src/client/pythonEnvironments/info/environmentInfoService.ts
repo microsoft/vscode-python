@@ -3,9 +3,9 @@
 
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { createWorkerPool, IWorkerPool, QueuePosition } from '../../common/utils/workerPool';
-import { getInterpreterInfo, InterpreterInformation } from '../base/info/interpreter';
 import { shellExecute } from '../common/externalDependencies';
 import { buildPythonExecInfo } from '../exec';
+import { getInterpreterInfo, InterpreterInformation } from './tool';
 
 export enum EnvironmentInfoServiceQueuePriority {
     Default,

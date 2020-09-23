@@ -8,13 +8,13 @@ import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
 import { ExecutionResult } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
-import { InterpreterInformation } from '../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
 import * as ExternalDep from '../../../client/pythonEnvironments/common/externalDependencies';
 import {
     EnvironmentInfoService,
     EnvironmentInfoServiceQueuePriority,
 } from '../../../client/pythonEnvironments/info/environmentInfoService';
+import { InterpreterInformation } from '../../../client/pythonEnvironments/info/tool';
 
 suite('Environment Info Service', () => {
     let stubShellExec: sinon.SinonStub;
