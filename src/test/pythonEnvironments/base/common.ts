@@ -50,8 +50,6 @@ export function createNamedEnv(
     return env;
 }
 
-export const createEnv = createLocatedEnv;
-
 export class SimpleLocator extends Locator {
     private deferred = createDeferred<void>();
     constructor(
@@ -114,7 +112,7 @@ export class SimpleLocator extends Locator {
         return iterator;
     }
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const envInfo: PythonEnvInfo = typeof env === 'string' ? createEnv('', '', undefined, env) : env;
+        const envInfo: PythonEnvInfo = typeof env === 'string' ? createLocatedEnv('', '', undefined, env) : env;
         if (this.callbacks?.resolve === undefined) {
             return envInfo;
         } else if (this.callbacks?.resolve === null) {

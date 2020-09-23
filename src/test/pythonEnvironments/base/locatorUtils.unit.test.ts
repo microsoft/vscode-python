@@ -14,8 +14,8 @@ import {
 } from '../../../client/pythonEnvironments/base/locator';
 import { getEnvs, getQueryFilter } from '../../../client/pythonEnvironments/base/locatorUtils';
 import {
-    createEnv,
     createLocatedEnv,
+    createNamedEnv,
     fixPath,
 } from './common';
 
@@ -30,21 +30,21 @@ function setSearchLocation(env: PythonEnvInfo, location?: string): void {
     env.searchLocation = Uri.file(locationStr);
 }
 
-const env1 = createEnv('env1', '3.8', PythonEnvKind.System, '/usr/bin/python3.8');
-const env2 = createEnv('env2', '3.8.1rc2', PythonEnvKind.Pyenv, '/pyenv/3.8.1rc2/bin/python');
-const env3 = createEnv('env3', '3.9.1b2', PythonEnvKind.Unknown, 'python3.9');
-const env4 = createEnv('env4', '2.7.11', PythonEnvKind.Pyenv, '/pyenv/2.7.11/bin/python');
-const env5 = createEnv('env5', '2.7', PythonEnvKind.System, 'python2');
-const env6 = createEnv('env6', '3.7.4', PythonEnvKind.Conda, 'python');
+const env1 = createNamedEnv('env1', '3.8', PythonEnvKind.System, '/usr/bin/python3.8');
+const env2 = createNamedEnv('env2', '3.8.1rc2', PythonEnvKind.Pyenv, '/pyenv/3.8.1rc2/bin/python');
+const env3 = createNamedEnv('env3', '3.9.1b2', PythonEnvKind.Unknown, 'python3.9');
+const env4 = createNamedEnv('env4', '2.7.11', PythonEnvKind.Pyenv, '/pyenv/2.7.11/bin/python');
+const env5 = createNamedEnv('env5', '2.7', PythonEnvKind.System, 'python2');
+const env6 = createNamedEnv('env6', '3.7.4', PythonEnvKind.Conda, 'python');
 const plainEnvs = [env1, env2, env3, env4, env5, env6];
 
 const envL1 = createLocatedEnv('/.venvs/envL1', '3.9.0', PythonEnvKind.Venv);
 const envL2 = createLocatedEnv('/conda/envs/envL2', '3.8.3', PythonEnvKind.Conda);
 const locatedEnvs = [envL1, envL2];
 
-const envS1 = createEnv('env S1', '3.9', PythonEnvKind.OtherVirtual, `${homeDir}/some-dir/bin/python`);
+const envS1 = createNamedEnv('env S1', '3.9', PythonEnvKind.OtherVirtual, `${homeDir}/some-dir/bin/python`);
 setSearchLocation(envS1, homeDir);
-const envS2 = createEnv('env S2', '3.9', PythonEnvKind.OtherVirtual, `${homeDir}/some-dir2/bin/python`);
+const envS2 = createNamedEnv('env S2', '3.9', PythonEnvKind.OtherVirtual, `${homeDir}/some-dir2/bin/python`);
 setSearchLocation(envS2, homeDir);
 const rootedEnvs = [envS1, envS2];
 
