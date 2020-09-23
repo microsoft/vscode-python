@@ -99,7 +99,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IThemeFinder) private themeFinder: IThemeFinder,
         @inject(IFileSystem) private fs: IFileSystem
-    ) { }
+    ) {}
 
     public generateThemeCss(isDark: boolean, theme: string): Promise<string> {
         return this.applyThemeData(isDark, theme, '', this.generateCss.bind(this));
