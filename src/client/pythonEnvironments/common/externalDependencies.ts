@@ -4,6 +4,7 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
+import { IPersistentState, IPersistentStateFactory } from '../../common/types';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 
@@ -36,4 +37,14 @@ export function arePathsSame(path1: string, path2: string): boolean {
         return path1.toUpperCase() === path2.toUpperCase();
     }
     return path1 === path2;
+}
+
+function getPersistentStateFactory(): IPersistentStateFactory {
+    return internalServiceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+}
+
+export function createGlobalPersistentStore<T>(key: string): IPersistentState<T> {
+    const factory = getPersistentStateFactory();
+
+    return factory.createGlobalPersistentState<T>(key, undefined);
 }
