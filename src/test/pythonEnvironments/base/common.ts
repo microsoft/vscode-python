@@ -11,9 +11,7 @@ import {
     PythonEnvKind,
 } from '../../../client/pythonEnvironments/base/info';
 import { parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
-import {
-    IPythonEnvsIterator, Locator, PythonEnvUpdatedEvent, PythonLocatorQuery,
-} from '../../../client/pythonEnvironments/base/locator';
+import { IPythonEnvsIterator, Locator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
 
 export function createEnv(
