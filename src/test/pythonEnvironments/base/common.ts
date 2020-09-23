@@ -11,6 +11,7 @@ import {
     PythonEnvInfo,
     PythonEnvKind,
 } from '../../../client/pythonEnvironments/base/info';
+import { buildEnvInfo } from '../../../client/pythonEnvironments/base/info/env';
 import { parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
 import {
     IPythonEnvsIterator, Locator, PythonEnvUpdatedEvent, PythonLocatorQuery,
@@ -21,33 +22,6 @@ export function fixPath(filename: string): string {
     return path.normalize(filename);
 }
 
-export function createEnv(
-    name: string,
-    versionStr: string,
-    kind?: PythonEnvKind,
-    execStr = 'python',
-): PythonEnvInfo {
-    if (kind === undefined) {
-        kind = PythonEnvKind.Unknown;
-    }
-    const executable = execStr === '' ? 'python' : fixPath(execStr);
-    const version = parseVersion(versionStr);
-    return {
-        kind,
-        version,
-        name,
-        location: '',
-        arch: Architecture.x86,
-        executable: {
-            filename: executable,
-            sysPrefix: '',
-            mtime: -1,
-            ctime: -1
-        },
-        distro: { org: '' }
-    };
-}
-
 export function createLocatedEnv(
     locationStr: string,
     versionStr: string,
@@ -56,38 +30,27 @@ export function createLocatedEnv(
 ): PythonEnvInfo {
     const location = fixPath(locationStr);
     const normalizedExecutable = fixPath(execStr);
-    const executable = path.isAbsolute(normalizedExecutable)
+    const executable = location === '' || path.isAbsolute(normalizedExecutable)
         ? normalizedExecutable
         : path.join(location, 'bin', normalizedExecutable);
-    const env = createEnv('', versionStr, kind, executable);
-    env.location = location;
+    const version = parseVersion(versionStr);
+    const env = buildEnvInfo({ kind, executable, location, version });
+    env.arch = Architecture.x86;
     return env;
 }
 
-export function copyEnv(
-    env: PythonEnvInfo,
-    updates?: {
-        kind?: PythonEnvKind,
-    },
+export function createNamedEnv(
+    name: string,
+    versionStr: string,
+    kind?: PythonEnvKind,
+    execStr = 'python',
 ): PythonEnvInfo {
-    const copied = { ...env };
-    copied.version = { ...env.version };
-    copied.version.release = { ...env.version.release };
-    copied.executable = { ...env.executable };
-    copied.distro = { ...env.distro };
-    if (copied.distro.version !== undefined) {
-        copied.distro.version = { ...env.distro.version! };
-    }
-    // We don't bother with env.searchLocation.
-
-    // Apply updates.
-    if (updates !== undefined) {
-        if (updates.kind !== undefined) {
-            copied.kind = updates.kind;
-        }
-    }
-    return copied;
+    const env = createLocatedEnv('', versionStr, kind, execStr);
+    env.name = name;
+    return env;
 }
+
+export const createEnv = createLocatedEnv;
 
 export class SimpleLocator extends Locator {
     private deferred = createDeferred<void>();

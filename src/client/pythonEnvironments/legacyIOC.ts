@@ -27,7 +27,7 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
-import { buildEmptyEnvInfo } from './base/info/env';
+import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies } from './common/externalDependencies';
@@ -173,8 +173,7 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
-        const info = buildEmptyEnvInfo();
-        info.executable.filename = pythonPath;
+        const info = buildEnvInfo({ executable: pythonPath });
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
             if (wsFolder !== undefined) {

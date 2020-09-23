@@ -18,9 +18,16 @@ import {
 
 /**
  * Create a new info object with all values empty.
+ *
+ * @param init - if provided, these values are applied to the new object
  */
-export function buildEmptyEnvInfo(): PythonEnvInfo {
-    return {
+export function buildEnvInfo(init?: {
+    kind?: PythonEnvKind;
+    executable?: string;
+    location?: string;
+    version?: PythonVersion;
+}): PythonEnvInfo {
+    const env = {
         kind: PythonEnvKind.Unknown,
         executable: {
             filename: '',
@@ -44,6 +51,21 @@ export function buildEmptyEnvInfo(): PythonEnvInfo {
             org: '',
         },
     };
+    if (init !== undefined) {
+        if (init.kind !== undefined) {
+            env.kind = init.kind;
+        }
+        if (init.executable !== undefined) {
+            env.executable.filename = init.executable;
+        }
+        if (init.location !== undefined) {
+            env.location = init.location;
+        }
+        if (init.version !== undefined) {
+            env.version = init.version;
+        }
+    }
+    return env;
 }
 
 /**
