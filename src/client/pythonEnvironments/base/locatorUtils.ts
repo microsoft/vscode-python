@@ -3,7 +3,6 @@
 
 import { createDeferred } from '../../common/utils/async';
 import { PythonEnvInfo } from './info';
-import { isSameEnv } from './info/env';
 import {
     IPythonEnvsIterator,
     PythonEnvUpdatedEvent,
@@ -56,11 +55,11 @@ export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvI
                 updatesDone.resolve();
                 return;
             }
-            const oldEnv = envs.find((e) => isSameEnv(e, event.old));
+            const oldEnv = envs[event.index];
             if (oldEnv === undefined) {
                 // XXX log or fail
             } else {
-                envs[envs.indexOf(oldEnv)] = event.new;
+                envs[event.index] = event.update;
             }
         });
     }

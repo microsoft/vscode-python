@@ -297,7 +297,7 @@ suite('Python envs locator utils - getEnvs', () => {
         const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
         const iterator = (async function* () {
             yield old;
-            emitter.fire({ old, new: envSL2 });
+            emitter.fire({ index: 0, old, update: envSL2 });
             emitter.fire(null);
         }()) as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
@@ -336,16 +336,18 @@ suite('Python envs locator utils - getEnvs', () => {
         const expected = rootedLocatedEnvs;
         const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
         const iterator = (async function* () {
-            const kind = PythonEnvKind.Unknown;
             const original = [...expected];
-            original[1] = copyEnvInfo(expected[1], { kind });
-            original[2] = copyEnvInfo(expected[2], { kind });
-            original[4] = copyEnvInfo(expected[4], { kind });
+            const updated = [1, 2, 4];
+            const kind = PythonEnvKind.Unknown;
+            updated.forEach((index) => {
+                original[index] = copyEnvInfo(expected[index], { kind });
+            });
 
             yield* original;
-            emitter.fire({ old: original[1], new: expected[1] });
-            emitter.fire({ old: original[2], new: expected[2] });
-            emitter.fire({ old: original[4], new: expected[4] });
+
+            updated.forEach((index) => {
+                emitter.fire({ index, old: original[index], update: expected[index] });
+            });
             emitter.fire(null);
         }()) as IPythonEnvsIterator;
         iterator.onUpdated = emitter.event;
@@ -365,10 +367,12 @@ suite('Python envs locator utils - getEnvs', () => {
 
             yield original[0];
             yield original[1];
-            emitter.fire({ old: original[0], new: expected[0] });
+            emitter.fire({ index: 0, old: original[0], update: expected[0] });
             yield* original.slice(2);
-            original.slice(1).forEach((old, index) => {
-                emitter.fire({ old, new: expected[index] });
+            original.forEach((old, index) => {
+                if (index > 0) {
+                    emitter.fire({ index, old, update: expected[index] });
+                }
             });
             emitter.fire(null);
         }()) as IPythonEnvsIterator;

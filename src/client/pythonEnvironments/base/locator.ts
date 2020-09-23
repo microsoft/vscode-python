@@ -16,16 +16,17 @@ import {
  */
 export type PythonEnvUpdatedEvent = {
     /**
-     * The env info that was previously provided.
-     *
-     * If the event comes from `IPythonEnvsIterator.onUpdated` then
-     * `old` was previously yielded during iteration.
+     * The iteration index of The env info that was previously provided.
      */
-    old: PythonEnvInfo;
+    index: number;
+    /**
+     * The env info that was previously provided.
+     */
+    old?: PythonEnvInfo;
     /**
      * The env info that replaces the old info.
      */
-    new: PythonEnvInfo;
+    update: PythonEnvInfo;
 };
 
 /**
