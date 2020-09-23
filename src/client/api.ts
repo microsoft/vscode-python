@@ -8,6 +8,7 @@ import { NotebookCell } from 'vscode-proposed';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IConfigurationService, Resource } from './common/types';
+import { JupyterExtensionIntegration } from './datascience/api/jupyterIntegration';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
 import { IJupyterUriProvider, IJupyterUriProviderRegistration, INotebookExtensibility } from './datascience/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
@@ -26,6 +27,9 @@ export interface IExtensionApi {
      * @memberof IExtensionApi
      */
     ready: Promise<void>;
+    jupyter: {
+        registerHooks(): void;
+    };
     debug: {
         /**
          * Generate an array of strings for commands to pass to the Python executable to launch the debugger for remote debugging.
@@ -103,12 +107,17 @@ export function buildApi(
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const notebookExtensibility = serviceContainer.get<INotebookExtensibility>(INotebookExtensibility);
+    serviceManager.addSingleton<JupyterExtensionIntegration>(JupyterExtensionIntegration, JupyterExtensionIntegration);
+    const jupyterIntegration = serviceContainer.get<JupyterExtensionIntegration>(JupyterExtensionIntegration);
     const api: IExtensionApi = {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch((ex) => {
             traceError('Failure during activation.', ex);
             return Promise.reject(ex);
         }),
+        jupyter: {
+            registerHooks: () => jupyterIntegration.integrateWithJupyterExtension()
+        },
         debug: {
             async getRemoteLauncherCommand(
                 host: string,

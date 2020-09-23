@@ -2,7 +2,11 @@
 // Licensed under the MIT License.
 
 import { isCondaEnvironment } from '../discovery/locators/services/condaLocator';
+import { isPipenvEnvironment } from '../discovery/locators/services/pipEnvHelper';
+import { isPyenvEnvironment } from '../discovery/locators/services/pyenvLocator';
 import { isVenvEnvironment } from '../discovery/locators/services/venvLocator';
+import { isVirtualenvEnvironment } from '../discovery/locators/services/virtualenvLocator';
+import { isVirtualenvwrapperEnvironment } from '../discovery/locators/services/virtualenvwrapperLocator';
 import { isWindowsStoreEnvironment } from '../discovery/locators/services/windowsStoreLocator';
 import { EnvironmentType } from '../info';
 
@@ -38,8 +42,24 @@ export async function identifyEnvironment(interpreterPath: string): Promise<Envi
         return EnvironmentType.WindowsStore;
     }
 
+    if (await isPipenvEnvironment(interpreterPath)) {
+        return EnvironmentType.Pipenv;
+    }
+
+    if (await isPyenvEnvironment(interpreterPath)) {
+        return EnvironmentType.Pyenv;
+    }
+
     if (await isVenvEnvironment(interpreterPath)) {
         return EnvironmentType.Venv;
+    }
+
+    if (await isVirtualenvwrapperEnvironment(interpreterPath)) {
+        return EnvironmentType.VirtualEnvWrapper;
+    }
+
+    if (await isVirtualenvEnvironment(interpreterPath)) {
+        return EnvironmentType.VirtualEnv;
     }
 
     // additional identifiers go here

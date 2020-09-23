@@ -61,12 +61,13 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
         this.refreshing.fire();
     }
 
-    private checkProgress() {
+    private checkProgress(): void {
         if (this.deferreds.length === 0) {
             return;
         }
         if (this.areAllItemsComplete()) {
-            return this.notifyCompleted();
+            this.notifyCompleted();
+            return;
         }
         Promise.all(this.deferreds.map((item) => item.promise))
             .catch(noop)

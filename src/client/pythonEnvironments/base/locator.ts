@@ -4,17 +4,68 @@
 import { Event, Uri } from 'vscode';
 import { iterEmpty } from '../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind } from './info';
-import { BasicPythonEnvsChangedEvent, IPythonEnvsWatcher, PythonEnvsChangedEvent, PythonEnvsWatcher } from './watcher';
+import {
+    BasicPythonEnvsChangedEvent,
+    IPythonEnvsWatcher,
+    PythonEnvsChangedEvent,
+    PythonEnvsWatcher
+} from './watcher';
 
 /**
- * An async iterator of `PythonEnvInfo`.
+ * A single update to a previously provided Python env object.
  */
-export type PythonEnvsIterator = AsyncIterator<PythonEnvInfo, void>;
+export type PythonEnvUpdatedEvent = {
+    /**
+     * The env info that was previously provided.
+     *
+     * If the event comes from `IPythonEnvsIterator.onUpdated` then
+     * `old` was previously yielded during iteration.
+     */
+    old: PythonEnvInfo;
+    /**
+     * The env info that replaces the old info.
+     */
+    new: PythonEnvInfo;
+};
+
+/**
+ * A fast async iterator of Python envs, which may have incomplete info.
+ *
+ * Each object yielded by the iterator represents a unique Python
+ * environment.
+ *
+ * The iterator is not required to have provide all info about
+ * an environment.  However, each yielded item will at least
+ * include all the `PythonEnvBaseInfo` data.
+ *
+ * During iteration the information for an already
+ * yielded object may be updated.  Rather than updating the yielded
+ * object or yielding it again with updated info, the update is
+ * emitted by the iterator's `onUpdated` (event) property. Once there are no more updates, the event emits
+ * `null`.
+ *
+ * If the iterator does not have `onUpdated` then it means the
+ * provider does not support updates.
+ *
+ * Callers can usually ignore the update event entirely and rely on
+ * the locator to provide sufficiently complete information.
+ */
+export interface IPythonEnvsIterator extends AsyncIterator<PythonEnvInfo, void> {
+    /**
+     * Provides possible updates for already-iterated envs.
+     *
+     * Once there are no more updates, `null` is emitted.
+     *
+     * If this property is not provided then it means the iterator does
+     * not support updates.
+     */
+    onUpdated?: Event<PythonEnvUpdatedEvent | null>;
+}
 
 /**
  * An empty Python envs iterator.
  */
-export const NOOP_ITERATOR: PythonEnvsIterator = iterEmpty<PythonEnvInfo>();
+export const NOOP_ITERATOR: IPythonEnvsIterator = iterEmpty<PythonEnvInfo>();
 
 /**
  * The most basic info to send to a locator when requesting environments.
@@ -64,11 +115,18 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
      *
      * Locators are not required to have provide all info about
      * an environment.  However, each yielded item will at least
-     * include all the `PythonEnvBaseInfo` data.
+     * include all the `PythonEnvBaseInfo` data.  To ensure all
+     * possible information is filled in, call `ILocator.resolveEnv()`.
+     *
+     * Updates to yielded objects may be provided via the optional
+     * `onUpdated` property of the iterator.  However, callers can
+     * usually ignore the update event entirely and rely on the
+     * locator to provide sufficiently complete information.
      *
      * @param query - if provided, the locator will limit results to match
+     * @returns - the fast async iterator of Python envs, which may have incomplete info
      */
-    iterEnvs(query?: QueryForEvent<E>): PythonEnvsIterator;
+    iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
 
     /**
      * Find the given Python environment and fill in as much missing info as possible.
@@ -111,7 +169,7 @@ export abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = Python
         this.onChanged = watcher.onChanged;
     }
 
-    public abstract iterEnvs(query?: QueryForEvent<E>): PythonEnvsIterator;
+    public abstract iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
 
     public async resolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return undefined;

@@ -31,6 +31,23 @@ export interface IVirtualEnvironmentsSearchPathProvider {
     getSearchPaths(resource?: Uri): Promise<string[]>;
 }
 
+export const IComponentAdapter = Symbol('IComponentAdapter');
+export interface IComponentAdapter {
+    // IInterpreterLocatorService
+    hasInterpreters: Promise<boolean | undefined>;
+    getInterpreters(resource?: Uri): Promise<PythonEnvironment[] | undefined>;
+    // IInterpreterService
+    getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment>;
+    // IInterpreterHelper
+    getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
+    isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined>;
+    // ICondaService
+    isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined>;
+    getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
+    // IWindowsStoreInterpreter
+    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined>;
+}
+
 export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
 
 export interface IInterpreterLocatorService extends Disposable {
@@ -83,7 +100,7 @@ export const IInterpreterHelper = Symbol('IInterpreterHelper');
 export interface IInterpreterHelper {
     getActiveWorkspaceUri(resource: Resource): WorkspacePythonPath | undefined;
     getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
-    isMacDefaultPythonPath(pythonPath: string): Boolean;
+    isMacDefaultPythonPath(pythonPath: string): Promise<boolean>;
     getInterpreterTypeDisplayName(interpreterType: EnvironmentType): string | undefined;
     getBestInterpreter(interpreters?: PythonEnvironment[]): PythonEnvironment | undefined;
 }

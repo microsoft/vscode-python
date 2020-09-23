@@ -155,7 +155,7 @@ use(chaiAsPromised);
             await retryIfFail(async () => {
                 await assert.eventually.isTrue(notebookUI.cellHasOutput(0));
                 const outputHtml = await notebookUI.getCellOutputHTML(0);
-                assert.include(outputHtml, '<span>1</span>');
+                assert.include(outputHtml, '1');
             });
         });
 
