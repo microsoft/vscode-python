@@ -10,6 +10,7 @@ pr:
     include:
       - 'main'
       - 'release*'
+      - 'WIP/NoDS'
       - 'ds*'
       - 'logging-changes-and-drop-old-debugger'
   paths:
