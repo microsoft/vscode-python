@@ -68,17 +68,9 @@ export function copyEnvInfo(
         kind?: PythonEnvKind,
     },
 ): PythonEnvInfo {
-    const copied = { ...env };
-    copied.version = { ...env.version };
-    copied.version.release = { ...env.version.release };
-    copied.executable = { ...env.executable };
-    copied.distro = { ...env.distro };
-    if (copied.distro.version !== undefined) {
-        copied.distro.version = { ...env.distro.version! };
-    }
-    // We don't bother with env.searchLocation.
-
-    // Apply updates.
+    // We don't care whether or not extra/hidden properties
+    // get preserved, so we do the easy thing here.
+    const copied = cloneDeep(env);
     if (updates !== undefined) {
         updateEnv(copied, updates);
     }
