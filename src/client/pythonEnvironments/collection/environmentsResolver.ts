@@ -7,23 +7,23 @@ import { traceVerbose } from '../../common/logger';
 import { areSameEnvironment, PythonEnvInfo } from '../base/info';
 import { InterpreterInformation } from '../base/info/interpreter';
 import {
-    ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, QueryForEvent,
+    ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery,
 } from '../base/locator';
 import { PythonEnvsChangedEvent } from '../base/watcher';
 import { IEnvironmentInfoService } from '../info/environmentInfoService';
 
 export class PythonEnvsResolver implements ILocator {
     public get onChanged(): Event<PythonEnvsChangedEvent> {
-        return this.pythonEnvsReducer.onChanged;
+        return this.parentLocator.onChanged;
     }
 
     constructor(
-        private readonly pythonEnvsReducer: ILocator,
+        private readonly parentLocator: ILocator,
         private readonly environmentInfoService: IEnvironmentInfoService,
     ) {}
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const environment = await this.pythonEnvsReducer.resolveEnv(env);
+        const environment = await this.parentLocator.resolveEnv(env);
         if (!environment) {
             return undefined;
         }
@@ -34,9 +34,9 @@ export class PythonEnvsResolver implements ILocator {
         return getResolvedEnv(interpreterInfo, environment);
     }
 
-    public iterEnvs(query?: QueryForEvent<PythonEnvsChangedEvent>): IPythonEnvsIterator {
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
-        const incomingIterator = this.pythonEnvsReducer.iterEnvs(query);
+        const incomingIterator = this.parentLocator.iterEnvs(query);
         const iterator: IPythonEnvsIterator = this.iterEnvsIterator(incomingIterator, didUpdate);
         iterator.onUpdated = didUpdate.event;
         return iterator;

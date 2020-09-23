@@ -7,7 +7,7 @@ import { traceVerbose } from '../../common/logger';
 import { createDeferred } from '../../common/utils/async';
 import { areSameEnvironment, PythonEnvInfo, PythonEnvKind } from '../base/info';
 import {
-    ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, QueryForEvent,
+    ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery,
 } from '../base/locator';
 import { PythonEnvsChangedEvent } from '../base/watcher';
 
@@ -47,7 +47,7 @@ export class PythonEnvsReducer implements ILocator {
         return this.parentLocator.resolveEnv(environment);
     }
 
-    public iterEnvs(query?: QueryForEvent<PythonEnvsChangedEvent>): IPythonEnvsIterator {
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
         const incomingIterator = this.parentLocator.iterEnvs(query);
         const iterator: IPythonEnvsIterator = iterEnvsIterator(incomingIterator, didUpdate);

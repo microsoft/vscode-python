@@ -46,6 +46,7 @@ type ShellExecFunc = (command: string, timeout: number) => Promise<ShellExecResu
 
 type Logger = {
     info(msg: string): void;
+
     error(msg: string): void;
 };
 

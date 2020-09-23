@@ -58,10 +58,10 @@ suite('Environments Resolver', () => {
             const env3 = createEnv('env3', '2.7', PythonEnvKind.System, path.join('path', 'to', 'exec3'));
             const env4 = createEnv('env4', '3.9.0rc2', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
             const environmentsToBeIterated = [env1, env2, env3, env4];
-            const pythonEnvReducer = new SimpleLocator(environmentsToBeIterated);
-            const reducer = new PythonEnvsResolver(pythonEnvReducer, new EnvironmentInfoService());
+            const parentLocator = new SimpleLocator(environmentsToBeIterated);
+            const resolver = new PythonEnvsResolver(parentLocator, new EnvironmentInfoService());
 
-            const iterator = reducer.iterEnvs();
+            const iterator = resolver.iterEnvs();
             const envs = await getEnvs(iterator);
 
             assert.deepEqual(envs, environmentsToBeIterated);
@@ -72,11 +72,11 @@ suite('Environments Resolver', () => {
             const env1 = createEnv('env1', '3.5.12b1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec1'));
             const env2 = createEnv('env2', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
             const environmentsToBeIterated = [env1, env2];
-            const pythonEnvReducer = new SimpleLocator(environmentsToBeIterated);
+            const parentLocator = new SimpleLocator(environmentsToBeIterated);
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
-            const reducer = new PythonEnvsResolver(pythonEnvReducer, new EnvironmentInfoService());
+            const resolver = new PythonEnvsResolver(parentLocator, new EnvironmentInfoService());
 
-            const iterator = reducer.iterEnvs(); // Act
+            const iterator = resolver.iterEnvs(); // Act
 
             // Assert
             let { onUpdated } = iterator;
@@ -107,11 +107,11 @@ suite('Environments Resolver', () => {
             const updatedEnv = createEnv('env1', '3.8.1', PythonEnvKind.System, path.join('path', 'to', 'exec'));
             const environmentsToBeIterated = [env];
             const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
-            const pythonEnvReducer = new SimpleLocator(environmentsToBeIterated, { onUpdated: didUpdate.event });
+            const parentLocator = new SimpleLocator(environmentsToBeIterated, { onUpdated: didUpdate.event });
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
-            const reducer = new PythonEnvsResolver(pythonEnvReducer, new EnvironmentInfoService());
+            const resolver = new PythonEnvsResolver(parentLocator, new EnvironmentInfoService());
 
-            const iterator = reducer.iterEnvs(); // Act
+            const iterator = resolver.iterEnvs(); // Act
 
             // Assert
             let { onUpdated } = iterator;
@@ -143,18 +143,18 @@ suite('Environments Resolver', () => {
         });
     });
 
-    test('onChanged fires iff onChanged from reducer fires', () => {
-        const pythonEnvReducer = new SimpleLocator([]);
+    test('onChanged fires iff onChanged from resolver fires', () => {
+        const parentLocator = new SimpleLocator([]);
         const event1: PythonEnvsChangedEvent = {};
         const event2: PythonEnvsChangedEvent = { kind: PythonEnvKind.Unknown };
         const expected = [event1, event2];
-        const reducer = new PythonEnvsResolver(pythonEnvReducer, new EnvironmentInfoService());
+        const resolver = new PythonEnvsResolver(parentLocator, new EnvironmentInfoService());
 
         const events: PythonEnvsChangedEvent[] = [];
-        reducer.onChanged((e) => events.push(e));
+        resolver.onChanged((e) => events.push(e));
 
-        pythonEnvReducer.fire(event1);
-        pythonEnvReducer.fire(event2);
+        parentLocator.fire(event1);
+        parentLocator.fire(event2);
 
         assert.deepEqual(events, expected);
     });
@@ -178,7 +178,7 @@ suite('Environments Resolver', () => {
             stubShellExec.restore();
         });
 
-        test('Calls into reducer to get resolved environment, then calls environnment service to resolve environment further and return it', async () => {
+        test('Calls into parent locator to get resolved environment, then calls environnment service to resolve environment further and return it', async () => {
             const env = createEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
             const resolvedEnvReturnedByReducer = createEnv(
                 'env1',
@@ -186,22 +186,22 @@ suite('Environments Resolver', () => {
                 PythonEnvKind.Conda,
                 'resolved/path/to/exec',
             );
-            const pythonEnvReducer = new SimpleLocator([], {
+            const parentLocator = new SimpleLocator([], {
                 resolve: async (e: PythonEnvInfo) => {
                     if (e === env) {
                         return resolvedEnvReturnedByReducer;
                     }
-                    throw new Error('Incorrect environment sent to the reducer');
+                    throw new Error('Incorrect environment sent to the resolver');
                 },
             });
-            const reducer = new PythonEnvsResolver(pythonEnvReducer, new EnvironmentInfoService());
+            const resolver = new PythonEnvsResolver(parentLocator, new EnvironmentInfoService());
 
-            const expected = await reducer.resolveEnv(env);
+            const expected = await resolver.resolveEnv(env);
 
             assert.deepEqual(expected, createExpectedEnvInfo(resolvedEnvReturnedByReducer));
         });
 
-        test('If the reducer resolves environment, but fetching interpreter info returns undefined, return undefined', async () => {
+        test('If the parent locator resolves environment, but fetching interpreter info returns undefined, return undefined', async () => {
             stubShellExec.returns(
                 new Promise<ExecutionResult<string>>((_resolve, reject) => {
                     reject();
@@ -214,29 +214,29 @@ suite('Environments Resolver', () => {
                 PythonEnvKind.Conda,
                 'resolved/path/to/exec',
             );
-            const pythonEnvReducer = new SimpleLocator([], {
+            const parentLocator = new SimpleLocator([], {
                 resolve: async (e: PythonEnvInfo) => {
                     if (e === env) {
                         return resolvedEnvReturnedByReducer;
                     }
-                    throw new Error('Incorrect environment sent to the reducer');
+                    throw new Error('Incorrect environment sent to the resolver');
                 },
             });
-            const reducer = new PythonEnvsResolver(pythonEnvReducer, new EnvironmentInfoService());
+            const resolver = new PythonEnvsResolver(parentLocator, new EnvironmentInfoService());
 
-            const expected = await reducer.resolveEnv(env);
+            const expected = await resolver.resolveEnv(env);
 
             assert.deepEqual(expected, undefined);
         });
 
-        test("If the reducer isn't able to resolve environment, return undefined", async () => {
+        test("If the parent locator isn't able to resolve environment, return undefined", async () => {
             const env = createEnv('env', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
-            const pythonEnvReducer = new SimpleLocator([], {
+            const parentLocator = new SimpleLocator([], {
                 resolve: async () => undefined,
             });
-            const reducer = new PythonEnvsResolver(pythonEnvReducer, new EnvironmentInfoService());
+            const resolver = new PythonEnvsResolver(parentLocator, new EnvironmentInfoService());
 
-            const expected = await reducer.resolveEnv(env);
+            const expected = await resolver.resolveEnv(env);
 
             assert.deepEqual(expected, undefined);
         });
