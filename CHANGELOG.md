@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.9.0 (22 September 2020)
+## 2020.9.0 (23 September 2020)
 
 ### Enhancements
 
