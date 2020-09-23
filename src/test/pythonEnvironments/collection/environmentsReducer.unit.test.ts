@@ -24,8 +24,8 @@ suite('Environments Reducer', () => {
             const env4 = createEnv('env4', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2')); // Same as env2
             const env5 = createEnv('env5', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1')); // Same as env1
             const environmentsToBeIterated = [env1, env2, env3, env4, env5]; // Contains 3 unique environments
-            const pythonEnvManager = new SimpleLocator(environmentsToBeIterated);
-            const reducer = new PythonEnvsReducer(pythonEnvManager);
+            const parentLocator = new SimpleLocator(environmentsToBeIterated);
+            const reducer = new PythonEnvsReducer(parentLocator);
 
             const iterator = reducer.iterEnvs();
             const envs = await getEnvs(iterator);
@@ -42,9 +42,9 @@ suite('Environments Reducer', () => {
             const env4 = createEnv('env4', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec2')); // Same as env2;
             const env5 = createEnv('env5', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1')); // Same as env1;
             const environmentsToBeIterated = [env1, env2, env3, env4, env5]; // Contains 3 unique environments
-            const pythonEnvManager = new SimpleLocator(environmentsToBeIterated);
+            const parentLocator = new SimpleLocator(environmentsToBeIterated);
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
-            const reducer = new PythonEnvsReducer(pythonEnvManager);
+            const reducer = new PythonEnvsReducer(parentLocator);
 
             const iterator = reducer.iterEnvs(); // Act
 
@@ -77,9 +77,9 @@ suite('Environments Reducer', () => {
             const env2 = createEnv('env2', '3.8.1', PythonEnvKind.System, path.join('path', 'to', 'exec'));
             const env3 = createEnv('env3', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec'));
             const environmentsToBeIterated = [env1, env2, env3]; // All refer to the same environment
-            const pythonEnvManager = new SimpleLocator(environmentsToBeIterated);
+            const parentLocator = new SimpleLocator(environmentsToBeIterated);
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
-            const reducer = new PythonEnvsReducer(pythonEnvManager);
+            const reducer = new PythonEnvsReducer(parentLocator);
 
             const iterator = reducer.iterEnvs(); // Act
 
@@ -115,9 +115,9 @@ suite('Environments Reducer', () => {
             const env2 = createEnv('env2', '3.8.1', PythonEnvKind.System, path.join('path', 'to', 'exec'));
             const environmentsToBeIterated = [env1];
             const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
-            const pythonEnvManager = new SimpleLocator(environmentsToBeIterated, { onUpdated: didUpdate.event });
+            const parentLocator = new SimpleLocator(environmentsToBeIterated, { onUpdated: didUpdate.event });
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
-            const reducer = new PythonEnvsReducer(pythonEnvManager);
+            const reducer = new PythonEnvsReducer(parentLocator);
 
             const iterator = reducer.iterEnvs(); // Act
 
@@ -145,17 +145,17 @@ suite('Environments Reducer', () => {
     });
 
     test('onChanged fires iff onChanged from locator manager fires', () => {
-        const pythonEnvManager = new SimpleLocator([]);
+        const parentLocator = new SimpleLocator([]);
         const event1: PythonEnvsChangedEvent = {};
         const event2: PythonEnvsChangedEvent = { kind: PythonEnvKind.Unknown };
         const expected = [event1, event2];
-        const reducer = new PythonEnvsReducer(pythonEnvManager);
+        const reducer = new PythonEnvsReducer(parentLocator);
 
         const events: PythonEnvsChangedEvent[] = [];
         reducer.onChanged((e) => events.push(e));
 
-        pythonEnvManager.fire(event1);
-        pythonEnvManager.fire(event2);
+        parentLocator.fire(event1);
+        parentLocator.fire(event2);
 
         assert.deepEqual(events, expected);
     });
@@ -173,7 +173,7 @@ suite('Environments Reducer', () => {
             const env13 = mergeEnvironments(env1, env3);
             const env136 = mergeEnvironments(env13, env6);
             const expectedResolvedEnv = createEnv('resolvedEnv', '3.8.1', PythonEnvKind.Conda, 'resolved/path/to/exec');
-            const pythonEnvManager = new SimpleLocator(environmentsToBeIterated, {
+            const parentLocator = new SimpleLocator(environmentsToBeIterated, {
                 resolve: async (e: PythonEnvInfo) => {
                     if (isEqual(e, env136)) {
                         return expectedResolvedEnv;
@@ -181,7 +181,7 @@ suite('Environments Reducer', () => {
                     return undefined;
                 },
             });
-            const reducer = new PythonEnvsReducer(pythonEnvManager);
+            const reducer = new PythonEnvsReducer(parentLocator);
 
             // Trying to resolve the environment corresponding to env1 env3 env6
             const expected = await reducer.resolveEnv(path.join('path', 'to', 'exec'));
@@ -200,7 +200,7 @@ suite('Environments Reducer', () => {
 
             const env13 = mergeEnvironments(env1, env3);
             const env136 = mergeEnvironments(env13, env6);
-            const pythonEnvManager = new SimpleLocator(environmentsToBeIterated, {
+            const parentLocator = new SimpleLocator(environmentsToBeIterated, {
                 resolve: async (e: PythonEnvInfo) => {
                     if (isEqual(e, env136)) {
                         return createEnv('resolvedEnv', '3.8.1', PythonEnvKind.Conda, 'resolved/path/to/exec');
@@ -208,7 +208,7 @@ suite('Environments Reducer', () => {
                     return undefined;
                 },
             });
-            const reducer = new PythonEnvsReducer(pythonEnvManager);
+            const reducer = new PythonEnvsReducer(parentLocator);
 
             const expected = await reducer.resolveEnv(path.join('path', 'to', 'execNeverSeenBefore'));
 

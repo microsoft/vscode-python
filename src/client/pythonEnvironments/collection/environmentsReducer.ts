@@ -16,10 +16,10 @@ import { PythonEnvsChangedEvent } from '../base/watcher';
  */
 export class PythonEnvsReducer implements ILocator {
     public get onChanged(): Event<PythonEnvsChangedEvent> {
-        return this.pythonEnvsManager.onChanged;
+        return this.parentLocator.onChanged;
     }
 
-    constructor(private readonly pythonEnvsManager: ILocator) {}
+    constructor(private readonly parentLocator: ILocator) {}
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         let environment: PythonEnvInfo | undefined;
@@ -44,12 +44,12 @@ export class PythonEnvsReducer implements ILocator {
             return undefined;
         }
         await waitForUpdatesDeferred.promise;
-        return this.pythonEnvsManager.resolveEnv(environment);
+        return this.parentLocator.resolveEnv(environment);
     }
 
     public iterEnvs(query?: QueryForEvent<PythonEnvsChangedEvent>): IPythonEnvsIterator {
         const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
-        const incomingIterator = this.pythonEnvsManager.iterEnvs(query);
+        const incomingIterator = this.parentLocator.iterEnvs(query);
         const iterator: IPythonEnvsIterator = iterEnvsIterator(incomingIterator, didUpdate);
         iterator.onUpdated = didUpdate.event;
         return iterator;
