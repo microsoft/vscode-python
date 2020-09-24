@@ -45,6 +45,5 @@ function getPersistentStateFactory(): IPersistentStateFactory {
 
 export function createGlobalPersistentStore<T>(key: string): IPersistentState<T> {
     const factory = getPersistentStateFactory();
-
     return factory.createGlobalPersistentState<T>(key, undefined);
 }
