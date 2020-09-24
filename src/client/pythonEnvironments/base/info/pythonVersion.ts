@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { EMPTY_VERSION, parseBasicVersionInfo } from '../../../../client/common/utils/version';
+import { EMPTY_VERSION, parseBasicVersionInfo } from '../../../common/utils/version';
 
 import { PythonReleaseLevel, PythonVersion } from '.';
 

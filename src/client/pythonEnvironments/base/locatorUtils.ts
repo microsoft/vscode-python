@@ -30,28 +30,36 @@ export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) 
             }));
         }
     }
-    return (env) => {
-        if (kinds !== undefined) {
-            if (!kinds.includes(env.kind)) {
-                return false;
-            }
+    function checkKind(env: PythonEnvInfo): boolean {
+        if (kinds === undefined) {
+            return true;
         }
+        return kinds.includes(env.kind);
+    }
+    function checkSearchLocation(env: PythonEnvInfo): boolean {
         if (env.searchLocation === undefined) {
-            if (!includeGlobal) {
-                return false;
-            }
-        } else if (locationFilters === undefined) {
+            // It is not a "rooted" env.
+            return includeGlobal;
+        }
+
+        // It is a "rooted" env.
+        if (locationFilters === undefined) {
             if (query.searchLocations === null) {
+                // The caller explicitly refused rooted envs.
                 return false;
             }
-            if (query.searchLocations && query.searchLocations.length > 0) {
-                // Only envs without searchLocation set were requested?
-                return false;
-            }
-        } else {
-            if (!locationFilters.some((filter) => filter(env.searchLocation!))) {
-                return false;
-            }
+            // `query.searchLocations` only had `null` in it.
+            return !query.searchLocations || query.searchLocations.length === 0;
+        }
+        // Check against the requested roots.
+        return locationFilters.some((filter) => filter(env.searchLocation!));
+    }
+    return (env) => {
+        if (!checkKind(env)) {
+            return false;
+        }
+        if (!checkSearchLocation(env)) {
+            return false;
         }
         return true;
     };
