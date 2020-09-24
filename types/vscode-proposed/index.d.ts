@@ -651,11 +651,6 @@ export interface NotebookCellStatusBarItem {
     dispose(): void;
 }
 
-export interface NotebookDecorationRenderOptions {
-    backgroundColor?: string | ThemeColor;
-    borderColor?: string | ThemeColor;
-    top: ThemableDecorationAttachmentRenderOptions;
-}
 
 export interface NotebookEditorDecorationType {
     readonly key: string;
@@ -683,9 +678,6 @@ export namespace notebook {
         provider: NotebookKernelProvider
     ): Disposable;
 
-    export function createNotebookEditorDecorationType(
-        options: NotebookDecorationRenderOptions
-    ): NotebookEditorDecorationType;
     export const onDidOpenNotebookDocument: Event<NotebookDocument>;
     export const onDidCloseNotebookDocument: Event<NotebookDocument>;
     export const onDidSaveNotebookDocument: Event<NotebookDocument>;

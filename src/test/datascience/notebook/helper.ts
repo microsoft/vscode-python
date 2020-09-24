@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { instance, mock } from 'ts-mockito';
-import { commands, Memento, TextDocument, Uri, WorkspaceEdit } from 'vscode';
+import { commands, Memento, TextDocument, Uri } from 'vscode';
 import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
 import { CellDisplayOutput } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
@@ -50,11 +50,8 @@ export async function insertMarkdownCell(source: string) {
         assert.fail('No active editor');
         return;
     }
-    new WorkspaceEdit().replaceCells(
-        activeEditor.document.uri,
-        activeEditor.document.cells.length - 1,
-        activeEditor.document.cells.length - 1,
-        [
+    await activeEditor.edit((edit) =>
+        edit.replaceCells(activeEditor.document.cells.length - 1, activeEditor.document.cells.length - 1, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
@@ -64,7 +61,7 @@ export async function insertMarkdownCell(source: string) {
                 },
                 outputs: []
             }
-        ]
+        ])
     );
 
     await waitForCondition(
@@ -82,11 +79,8 @@ export async function insertPythonCell(source: string) {
         assert.fail('No active editor');
         return;
     }
-    new WorkspaceEdit().replaceCells(
-        activeEditor.document.uri,
-        activeEditor.document.cells.length - 1,
-        activeEditor.document.cells.length - 1,
-        [
+    await activeEditor.edit((edit) =>
+        edit.replaceCells(activeEditor.document.cells.length - 1, activeEditor.document.cells.length - 1, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Code,
                 language: PYTHON_LANGUAGE,
@@ -96,7 +90,7 @@ export async function insertPythonCell(source: string) {
                 },
                 outputs: []
             }
-        ]
+        ])
     );
     await waitForCondition(
         async () =>
@@ -122,7 +116,7 @@ export async function deleteCell(index: number = 0) {
         assert.fail('No active editor');
         return;
     }
-    new WorkspaceEdit().replaceCells(activeEditor.document.uri, index, index, []);
+    await activeEditor.edit((edit) => edit.replaceCells(index, index, []));
 }
 export async function deleteAllCellsAndWait() {
     const { vscodeNotebook } = await getServices();
@@ -130,7 +124,7 @@ export async function deleteAllCellsAndWait() {
     if (!activeEditor || activeEditor.document.cells.length === 0) {
         return;
     }
-    new WorkspaceEdit().replaceCells(activeEditor.document.uri, 0, activeEditor.document.cells.length - 1, []);
+    await activeEditor.edit((edit) => edit.replaceCells(0, activeEditor.document.cells.length - 1, []));
     // Wait for cell to get deleted.
     await waitForCondition(async () => activeEditor.document.cells.length === 0, 1_000, 'Cell not deleted');
 }
@@ -454,6 +448,23 @@ export function createNotebookDocument(
         uri: model.file,
         isUntitled: false,
         viewType,
+        contentOptions: {
+            transientOutputs: false,
+            transientMetadata: {
+                breakpointMargin: true,
+                editable: true,
+                hasExecutionOrder: true,
+                inputCollapsed: true,
+                lastRunDuration: true,
+                outputCollapsed: true,
+                runStartTime: true,
+                runnable: true,
+                executionOrder: false,
+                custom: false,
+                runState: false,
+                statusMessage: false
+            }
+        },
         metadata: {
             cellEditable: model.isTrusted,
             cellHasExecutionOrder: true,
@@ -470,6 +481,7 @@ export function createNotebookDocument(
             metadata: vscCell.metadata || {},
             uri: model.file.with({ fragment: `cell${index}` }),
             notebook: doc,
+            index,
             document: instance(mock<TextDocument>()),
             outputs: vscCell.outputs
         };

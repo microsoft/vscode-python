@@ -109,11 +109,11 @@ export class Kernel implements IKernel {
         await this.start({ disableUI: false, token: this.startCancellation.token });
         await this.kernelExecution.executeAllCells(document);
     }
-    public cancelCell(cell: NotebookCell) {
+    public async cancelCell(cell: NotebookCell) {
         this.startCancellation.cancel();
-        this.kernelExecution.cancelCell(cell);
+        await this.kernelExecution.cancelCell(cell);
     }
-    public cancelAllCells(document: NotebookDocument) {
+    public async cancelAllCells(document: NotebookDocument) {
         this.startCancellation.cancel();
         this.kernelExecution.cancelAllCells(document);
     }

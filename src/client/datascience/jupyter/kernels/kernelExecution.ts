@@ -105,35 +105,29 @@ export class KernelExecution implements IDisposable {
         );
 
         try {
-            let executingAPreviousCellHasFailed = false;
-            await codeCellsToExecute.reduce(
-                (previousPromise, cellToExecute) =>
-                    previousPromise.then((previousCellState) => {
-                        // If a previous cell has failed or execution cancelled, the get out.
-                        if (
-                            executingAPreviousCellHasFailed ||
-                            cancelTokenSource.token.isCancellationRequested ||
-                            previousCellState === vscodeNotebookEnums.NotebookCellRunState.Error
-                        ) {
-                            executingAPreviousCellHasFailed = true;
-                            codeCellsToExecute.forEach((cell) => cell.cancel()); // Cancel pending cells.
-                            return;
-                        }
-                        const result = this.executeIndividualCell(kernel, cellToExecute);
-                        result.finally(() => this.cellExecutions.delete(cellToExecute.cell)).catch(noop);
-                        return result;
-                    }),
-                Promise.resolve<NotebookCellRunState | undefined>(undefined)
-            );
+            for (const cellToExecute of codeCellsToExecute) {
+                const result = this.executeIndividualCell(kernel, cellToExecute);
+                result.finally(() => this.cellExecutions.delete(cellToExecute.cell)).catch(noop);
+                const executionResult = await result;
+                // If a cell has failed or execution cancelled, the get out.
+                if (
+                    cancelTokenSource.token.isCancellationRequested ||
+                    executionResult === vscodeNotebookEnums.NotebookCellRunState.Error
+                ) {
+                    await Promise.all(codeCellsToExecute.map((cell) => cell.cancel())); // Cancel pending cells.
+                    break;
+                }
+            }
         } finally {
+            await Promise.all(codeCellsToExecute.map((cell) => cell.cancel())); // Cancel pending cells.
             this.documentExecutions.delete(document);
             document.metadata.runState = vscodeNotebookEnums.NotebookRunState.Idle;
         }
     }
 
-    public cancelCell(cell: NotebookCell): void {
+    public async cancelCell(cell: NotebookCell) {
         if (this.cellExecutions.get(cell)) {
-            this.cellExecutions.get(cell)!.cancel();
+            await this.cellExecutions.get(cell)!.cancel();
         }
     }
 
@@ -167,12 +161,12 @@ export class KernelExecution implements IDisposable {
         return kernel;
     }
 
-    private onIoPubMessage(document: NotebookDocument, msg: KernelMessage.IIOPubMessage) {
+    private async onIoPubMessage(document: NotebookDocument, msg: KernelMessage.IIOPubMessage) {
         // tslint:disable-next-line:no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         const editor = this.vscNotebook.notebookEditors.find((e) => e.document === document);
         if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg) && editor) {
-            if (handleUpdateDisplayDataMessage(msg, editor)) {
+            if (await handleUpdateDisplayDataMessage(msg, editor)) {
                 this.contentProvider.notifyChangesToDocument(document);
             }
         }

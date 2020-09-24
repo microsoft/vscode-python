@@ -13,7 +13,8 @@ import type {
     NotebookCellData,
     NotebookCellMetadata,
     NotebookData,
-    NotebookDocument
+    NotebookDocument,
+    NotebookEditor
 } from 'vscode-proposed';
 import { NotebookCellRunState } from '../../../../../typings/vscode-proposed';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
@@ -27,7 +28,6 @@ import { JupyterNotebookView } from '../constants';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { WorkspaceEdit } from 'vscode';
 import { isUntitledFile } from '../../../common/utils/misc';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
@@ -339,25 +339,27 @@ export function createIOutputFromCellOutputs(cellOutputs: CellOutput[]): nbforma
         .map((output) => output!!);
 }
 
-export function clearCellForExecution(cell: NotebookCell) {
+export async function clearCellForExecution(editor: NotebookEditor, cell: NotebookCell) {
     const cellIndex = cell.notebook.cells.indexOf(cell);
-    new WorkspaceEdit().replaceCellMetadata(cell.notebook.uri, cellIndex, {
-        ...cell.metadata,
-        statusMessage: undefined,
-        executionOrder: undefined,
-        lastRunDuration: undefined,
-        runStartTime: undefined
+    await editor.edit((edit) => {
+        edit.replaceCellMetadata(cellIndex, {
+            ...cell.metadata,
+            statusMessage: undefined,
+            executionOrder: undefined,
+            lastRunDuration: undefined,
+            runStartTime: undefined
+        });
+        edit.replaceCellOutput(cellIndex, []);
     });
-    new WorkspaceEdit().replaceCellOutput(cell.notebook.uri, cellIndex, []);
-
-    updateCellExecutionTimes(cell);
+    await updateCellExecutionTimes(editor, cell);
 }
 
 /**
  * Store execution start and end times.
  * Stored as ISO for portability.
  */
-export function updateCellExecutionTimes(
+export async function updateCellExecutionTimes(
+    editor: NotebookEditor,
     cell: NotebookCell,
     times?: { startTime?: number; duration?: number; lastRunDuration?: number }
 ) {
@@ -375,7 +377,7 @@ export function updateCellExecutionTimes(
             updated = true;
         }
         if (updated) {
-            new WorkspaceEdit().replaceCellMetadata(cell.notebook.uri, cellIndex, { ...cellMetadata });
+            await editor.edit((edit) => edit.replaceCellMetadata(cellIndex, { ...cellMetadata }));
         }
         return;
     }
@@ -388,11 +390,13 @@ export function updateCellExecutionTimes(
     customMetadata.metadata.vscode.end_execution_time = endTimeISO;
     customMetadata.metadata.vscode.start_execution_time = startTimeISO;
     const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;
-    new WorkspaceEdit().replaceCellMetadata(cell.notebook.uri, cellIndex, {
-        ...cell.metadata,
-        custom: customMetadata,
-        lastRunDuration
-    });
+    await editor.edit((edit) =>
+        edit.replaceCellMetadata(cellIndex, {
+            ...cell.metadata,
+            custom: customMetadata,
+            lastRunDuration
+        })
+    );
 }
 
 function createCodeCellFromVSCNotebookCell(cell: NotebookCell): nbformat.ICodeCell {
@@ -663,7 +667,11 @@ export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: CellOu
 /**
  * Updates a notebook document as a result of trusting it.
  */
-export function updateVSCNotebookAfterTrustingNotebook(document: NotebookDocument, originalCells: ICell[]) {
+export async function updateVSCNotebookAfterTrustingNotebook(
+    editor: NotebookEditor,
+    document: NotebookDocument,
+    originalCells: ICell[]
+) {
     const areAllCellsEditableAndRunnable = document.cells.every((cell) => {
         if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
             return cell.metadata.editable;
@@ -687,23 +695,23 @@ export function updateVSCNotebookAfterTrustingNotebook(document: NotebookDocumen
     document.metadata.editable = true;
     document.metadata.runnable = true;
 
-    const workspaceEdit = new WorkspaceEdit();
-    document.cells.forEach((cell, index) => {
-        if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
-            workspaceEdit.replaceCellMetadata(document.uri, index, { ...cell.metadata, editable: true });
-        } else {
-            workspaceEdit.replaceCellMetadata(document.uri, index, {
-                ...cell.metadata,
-                editable: true,
-                runnable: true
-            });
-            // Restore the output once we trust the notebook.
-            workspaceEdit.replaceCellOutput(
-                document.uri,
-                index,
-                // tslint:disable-next-line: no-any
-                createVSCCellOutputsFromOutputs(originalCells[index].data.outputs as any)
-            );
-        }
+    await editor.edit((edit) => {
+        document.cells.forEach((cell, index) => {
+            if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
+                edit.replaceCellMetadata(index, { ...cell.metadata, editable: true });
+            } else {
+                edit.replaceCellMetadata(index, {
+                    ...cell.metadata,
+                    editable: true,
+                    runnable: true
+                });
+                // Restore the output once we trust the notebook.
+                edit.replaceCellOutput(
+                    index,
+                    // tslint:disable-next-line: no-any
+                    createVSCCellOutputsFromOutputs(originalCells[index].data.outputs as any)
+                );
+            }
+        });
     });
 }

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel, WorkspaceEdit } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
 import type { NotebookCell, NotebookDocument } from 'vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -133,41 +133,62 @@ export class NotebookEditor implements INotebookEditor {
             return;
         }
         const defaultLanguage = getDefaultCodeLanguage(this.model);
-        new WorkspaceEdit().replaceCells(this.document.uri, 0, this.document.cells.length - 1, [
-            {
-                cellKind: vscodeNotebookEnums.CellKind.Code,
-                language: defaultLanguage,
-                metadata: {},
-                outputs: [],
-                source: ''
-            }
-        ]);
+        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
+        if (editor) {
+            editor
+                .edit((edit) =>
+                    edit.replaceCells(0, this.document.cells.length - 1, [
+                        {
+                            cellKind: vscodeNotebookEnums.CellKind.Code,
+                            language: defaultLanguage,
+                            metadata: {},
+                            outputs: [],
+                            source: ''
+                        }
+                    ])
+                )
+                .then(noop, noop);
+        }
     }
     public expandAllCells(): void {
         if (!this.vscodeNotebook.activeNotebookEditor) {
             return;
         }
         const notebook = this.vscodeNotebook.activeNotebookEditor.document;
-        notebook.cells.forEach((cell, index) => {
-            new WorkspaceEdit().replaceCellMetadata(notebook.uri, index, {
-                ...cell.metadata,
-                inputCollapsed: false,
-                outputCollapsed: false
-            });
-        });
+        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
+        if (editor) {
+            editor
+                .edit((edit) => {
+                    notebook.cells.forEach((cell, index) => {
+                        edit.replaceCellMetadata(index, {
+                            ...cell.metadata,
+                            inputCollapsed: false,
+                            outputCollapsed: false
+                        });
+                    });
+                })
+                .then(noop, noop);
+        }
     }
     public collapseAllCells(): void {
         if (!this.vscodeNotebook.activeNotebookEditor) {
             return;
         }
         const notebook = this.vscodeNotebook.activeNotebookEditor.document;
-        notebook.cells.forEach((cell, index) => {
-            new WorkspaceEdit().replaceCellMetadata(notebook.uri, index, {
-                ...cell.metadata,
-                inputCollapsed: true,
-                outputCollapsed: true
-            });
-        });
+        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
+        if (editor) {
+            editor
+                .edit((edit) => {
+                    notebook.cells.forEach((cell, index) => {
+                        edit.replaceCellMetadata(index, {
+                            ...cell.metadata,
+                            inputCollapsed: true,
+                            outputCollapsed: true
+                        });
+                    });
+                })
+                .then(noop, noop);
+        }
     }
     public notifyExecution(cell: NotebookCell) {
         this._executed.fire(this);

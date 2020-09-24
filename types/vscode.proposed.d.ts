@@ -5,8 +5,6 @@
 declare module 'vscode' {
     //#region @rebornix: Notebook
 
-    //#region @rebornix: Notebook
-
     export enum CellKind {
         Markdown = 1,
         Code = 2

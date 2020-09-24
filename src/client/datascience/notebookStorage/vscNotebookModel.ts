@@ -99,7 +99,10 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     public trust() {
         super.trust();
         if (this.document) {
-            updateVSCNotebookAfterTrustingNotebook(this.document, this._cells);
+            const editor = this.vscodeNotebook?.notebookEditors.find((item) => item.document === this.document);
+            if (editor) {
+                updateVSCNotebookAfterTrustingNotebook(editor, this.document, this._cells);
+            }
             // We don't need old cells.
             this._cells = [];
         }
