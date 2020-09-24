@@ -98,7 +98,7 @@ export type PythonVersionRelease = {
  * @prop sysVersion - the raw text from `sys.version`
  */
 export type PythonVersion = BasicVersionInfo & {
-    release: PythonVersionRelease;
+    release?: PythonVersionRelease;
     sysVersion?: string;
 };
 

@@ -106,13 +106,19 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
 
     if (version !== undefined) {
         const { release, sysVersion } = version;
-        const { level, serial } = release;
-        const releaseStr = level === PythonReleaseLevel.Final
-            ? 'final'
-            : `${level}${serial}`;
-        const versionStr = `${getVersionString(version)}-${releaseStr}`;
-        env.version = parseVersion(versionStr);
-        env.sysVersion = sysVersion;
+        if (release === undefined) {
+            const versionStr = `${getVersionString(version)}-final`;
+            env.version = parseVersion(versionStr);
+            env.sysVersion = '';
+        } else {
+            const { level, serial } = release;
+            const releaseStr = level === PythonReleaseLevel.Final
+                ? 'final'
+                : `${level}${serial}`;
+            const versionStr = `${getVersionString(version)}-${releaseStr}`;
+            env.version = parseVersion(versionStr);
+            env.sysVersion = sysVersion;
+        }
     }
 
     if (distro !== undefined && distro.org !== '') {
