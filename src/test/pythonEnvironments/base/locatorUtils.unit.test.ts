@@ -16,17 +16,16 @@ import { getEnvs, getQueryFilter } from '../../../client/pythonEnvironments/base
 import {
     createLocatedEnv,
     createNamedEnv,
-    fixPath,
 } from './common';
 
-const homeDir = fixPath('/home/me');
+const homeDir = path.normalize('/home/me');
 const workspaceRoot = Uri.file('workspace-root');
-const doesNotExist = Uri.file(fixPath('does-not-exist'));
+const doesNotExist = Uri.file(path.normalize('does-not-exist'));
 
 function setSearchLocation(env: PythonEnvInfo, location?: string): void {
     const locationStr = location === undefined
         ? path.dirname(env.location)
-        : fixPath(location);
+        : path.normalize(location);
     env.searchLocation = Uri.file(locationStr);
 }
 

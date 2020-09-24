@@ -18,18 +18,14 @@ import {
 } from '../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
 
-export function fixPath(filename: string): string {
-    return path.normalize(filename);
-}
-
 export function createLocatedEnv(
     locationStr: string,
     versionStr: string,
     kind = PythonEnvKind.Unknown,
     execStr = 'python',
 ): PythonEnvInfo {
-    const location = fixPath(locationStr);
-    const normalizedExecutable = fixPath(execStr);
+    const location = locationStr === '' ? '' : path.normalize(locationStr);
+    const normalizedExecutable = path.normalize(execStr);
     const executable = location === '' || path.isAbsolute(normalizedExecutable)
         ? normalizedExecutable
         : path.join(location, 'bin', normalizedExecutable);
