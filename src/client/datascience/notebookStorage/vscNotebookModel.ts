@@ -6,6 +6,7 @@ import { Memento, Uri } from 'vscode';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { ICryptoUtils } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
     createCellFromVSCNotebookCell,
@@ -101,7 +102,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         if (this.document) {
             const editor = this.vscodeNotebook?.notebookEditors.find((item) => item.document === this.document);
             if (editor) {
-                updateVSCNotebookAfterTrustingNotebook(editor, this.document, this._cells);
+                updateVSCNotebookAfterTrustingNotebook(editor, this.document, this._cells).then(noop, noop);
             }
             // We don't need old cells.
             this._cells = [];

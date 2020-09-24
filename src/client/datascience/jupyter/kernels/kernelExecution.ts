@@ -207,7 +207,7 @@ export class KernelExecution implements IDisposable {
         );
 
         // Start execution
-        cellExecution.start(kernelPromise, this.notebook);
+        await cellExecution.start(kernelPromise, this.notebook);
 
         // The result promise will resolve when complete.
         try {
