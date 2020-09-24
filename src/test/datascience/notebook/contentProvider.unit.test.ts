@@ -84,7 +84,10 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
-                            runnable: isNotebookTrusted
+                            runnable: isNotebookTrusted,
+                            statusMessage: undefined,
+                            runStartTime: undefined,
+                            lastRunDuration: undefined
                         }
                     },
                     {
@@ -96,7 +99,10 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
-                            runnable: false
+                            runnable: false,
+                            statusMessage: undefined,
+                            runStartTime: undefined,
+                            lastRunDuration: undefined
                         }
                     }
                 ]);
@@ -163,7 +169,10 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
-                            runnable: isNotebookTrusted
+                            runnable: isNotebookTrusted,
+                            statusMessage: undefined,
+                            runStartTime: undefined,
+                            lastRunDuration: undefined
                         }
                     },
                     {
@@ -175,7 +184,10 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
-                            runnable: false
+                            runnable: false,
+                            statusMessage: undefined,
+                            runStartTime: undefined,
+                            lastRunDuration: undefined
                         }
                     }
                 ]);
