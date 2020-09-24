@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Uri } from 'vscode';
 import { createDeferred } from '../../common/utils/async';
+import { getURIFilter } from '../../common/utils/misc';
 import { PythonEnvInfo } from './info';
 import {
     IPythonEnvsIterator,
@@ -13,24 +15,40 @@ import {
  * Create a filter function to match the given query.
  */
 export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) => boolean {
-    const locations = (query.searchLocations !== undefined && query.searchLocations.length > 0)
-        ? query.searchLocations
-            .filter((loc) => loc !== undefined)
-            .map((loc) => loc.toString())
+    const kinds = (query.kinds !== undefined && query.kinds.length > 0)
+        ? query.kinds
         : undefined;
-
+    let includeGlobal = !query.searchLocations || query.searchLocations.length === 0;
+    let locationFilters: ((u: Uri) => boolean)[] | undefined;
+    if (!includeGlobal) {
+        const candidates = query.searchLocations!.filter((u) => !!u);
+        includeGlobal = candidates.length < query.searchLocations!.length;
+        if (candidates.length > 0) {
+            locationFilters = candidates.map((loc) => getURIFilter(loc!, {
+                checkExact: true,
+            }));
+        }
+    }
     return (env) => {
-        if (query.kinds !== undefined && query.kinds.length > 0) {
-            if (!query.kinds.includes(env.kind)) {
+        if (kinds !== undefined) {
+            if (!kinds.includes(env.kind)) {
                 return false;
             }
         }
-        if (locations !== undefined) {
-            if (env.searchLocation === undefined) {
+        if (env.searchLocation === undefined) {
+            if (!includeGlobal) {
                 return false;
             }
-            const loc = env.searchLocation.toString();
-            if (!locations.some((l) => l === loc)) {
+        } else if (locationFilters === undefined) {
+            if (query.searchLocations === null) {
+                return false;
+            }
+            if (query.searchLocations && query.searchLocations.length > 0) {
+                // Only envs without searchLocation set were requested?
+                return false;
+            }
+        } else {
+            if (!locationFilters.some((filter) => filter(env.searchLocation!))) {
                 return false;
             }
         }

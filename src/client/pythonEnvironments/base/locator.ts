@@ -87,10 +87,11 @@ export type BasicPythonLocatorQuery = {
  * emitted by watchers.
  *
  * @prop - searchLocations - if provided, results should be limited to
- *         within these locations
+ *         within these locations; `null` means "include envs that have
+ *         no search location"
  */
 export type PythonLocatorQuery = BasicPythonLocatorQuery & {
-    searchLocations?: Uri[];
+    searchLocations?: (Uri | null)[] | null;
 };
 
 type QueryForEvent<E> = E extends PythonEnvsChangedEvent ? PythonLocatorQuery : BasicPythonLocatorQuery;

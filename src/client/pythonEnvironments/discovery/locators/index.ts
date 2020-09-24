@@ -107,7 +107,9 @@ export class WorkspaceLocators extends Locator {
                 const root = this.roots[key];
                 // Match any related search location.
                 const filter = getURIFilter(root, { checkParent: true, checkChild: true, checkExact: true });
-                if (!query.searchLocations.some(filter)) {
+                // Ignore any requests for global envs.
+                const candidates: unknown = query.searchLocations.filter((u) => u !== null);
+                if (!(candidates as Uri[]).some(filter)) {
                     // This workspace folder did not match the query, so skip it!
                     return NOOP_ITERATOR;
                 }

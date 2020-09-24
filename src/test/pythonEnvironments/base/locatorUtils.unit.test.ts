@@ -191,10 +191,66 @@ suite('Python envs locator utils - getQueryFilter', () => {
             assert.deepEqual(filtered, expected);
         });
 
-        test('match all', () => {
+        test('match multiple (include non-searched envs)', () => {
+            const expected = [...plainEnvs, ...locatedEnvs, ...rootedLocatedEnvs];
+            const searchLocations = [null, ...rootedLocatedEnvs.map((env) => env.searchLocation!)];
+            searchLocations.push(doesNotExist);
+            const query: PythonLocatorQuery = { searchLocations };
+
+            const filter = getQueryFilter(query);
+            const filtered = envs.filter(filter);
+
+            assert.deepEqual(filtered, expected);
+        });
+
+        test('match all searched', () => {
             const expected = [...rootedEnvs, ...rootedLocatedEnvs];
             const searchLocations = expected.map((env) => env.searchLocation!);
             const query: PythonLocatorQuery = { searchLocations };
+
+            const filter = getQueryFilter(query);
+            const filtered = envs.filter(filter);
+
+            assert.deepEqual(filtered, expected);
+        });
+
+        test('match all (including non-searched)', () => {
+            const expected = envs;
+            const searchLocations = [null, ...expected.map((env) => env.searchLocation!)];
+            const query: PythonLocatorQuery = { searchLocations };
+
+            const filter = getQueryFilter(query);
+            const filtered = envs.filter(filter);
+
+            assert.deepEqual(filtered, expected);
+        });
+
+        test('match only non-searched envs (null location)', () => {
+            const expected = [...plainEnvs, ...locatedEnvs];
+            const searchLocations = [null];
+            const query: PythonLocatorQuery = { searchLocations };
+
+            const filter = getQueryFilter(query);
+            const filtered = envs.filter(filter);
+
+            assert.deepEqual(filtered, expected);
+        });
+
+        test('match only non-searched envs (with unmatched location)', () => {
+            const expected = [...plainEnvs, ...locatedEnvs];
+            const searchLocations: (Uri | null)[] = [null];
+            searchLocations.push(doesNotExist);
+            const query: PythonLocatorQuery = { searchLocations };
+
+            const filter = getQueryFilter(query);
+            const filtered = envs.filter(filter);
+
+            assert.deepEqual(filtered, expected);
+        });
+
+        test('match only non-searched envs (explicit null)', () => {
+            const expected = [...plainEnvs, ...locatedEnvs];
+            const query: PythonLocatorQuery = { searchLocations: null };
 
             const filter = getQueryFilter(query);
             const filtered = envs.filter(filter);
@@ -358,7 +414,6 @@ suite('Python envs locator utils - getEnvs', () => {
     });
 
     test('yield many, all updated', async () => {
-        return;
         const expected = rootedLocatedEnvs;
         const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
         const iterator = (async function* () {
