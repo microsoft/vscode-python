@@ -83,11 +83,11 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
+                            lastRunDuration: undefined,
+                            runStartTime: undefined,
                             runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
                             runnable: isNotebookTrusted,
-                            statusMessage: undefined,
-                            runStartTime: undefined,
-                            lastRunDuration: undefined
+                            statusMessage: undefined
                         }
                     },
                     {
@@ -99,10 +99,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
-                            runnable: false,
-                            statusMessage: undefined,
-                            runStartTime: undefined,
-                            lastRunDuration: undefined
+                            runnable: false
                         }
                     }
                 ]);
@@ -184,10 +181,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: undefined,
                             hasExecutionOrder: false,
-                            runnable: false,
-                            statusMessage: undefined,
-                            runStartTime: undefined,
-                            lastRunDuration: undefined
+                            runnable: false
                         }
                     }
                 ]);
