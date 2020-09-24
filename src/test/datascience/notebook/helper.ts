@@ -80,7 +80,7 @@ export async function insertPythonCell(source: string) {
         return;
     }
     await activeEditor.edit((edit) =>
-        edit.replaceCells(activeEditor.document.cells.length - 1, activeEditor.document.cells.length - 1, [
+        edit.replaceCells(activeEditor.document.cells.length, 0, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Code,
                 language: PYTHON_LANGUAGE,
