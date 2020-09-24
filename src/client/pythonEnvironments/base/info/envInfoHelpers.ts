@@ -7,7 +7,7 @@ import {
     PythonEnvInfo, PythonEnvKind, PythonExecutableInfo, PythonVersion,
 } from '.';
 import { arePathsSame } from '../../common/externalDependencies';
-import { areSameVersion } from './versionHelpers';
+import { areEqualVersions } from './versionHelpers';
 
 export function areSameEnvironment(
     left: string | PythonEnvInfo,
@@ -25,7 +25,7 @@ export function areSameEnvironment(
         const leftVersion = typeof left === 'string' ? undefined : left.version;
         const rightVersion = typeof right === 'string' ? undefined : right.version;
         if (leftVersion && rightVersion) {
-            if (areSameVersion(leftVersion, rightVersion)) {
+            if (areEqualVersions(leftVersion, rightVersion)) {
                 return true;
             }
 
