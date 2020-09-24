@@ -232,7 +232,6 @@ export class CellExecution {
             this.oldCellRunState === vscodeNotebookEnums.NotebookCellRunState.Running
                 ? vscodeNotebookEnums.NotebookCellRunState.Idle
                 : this.oldCellRunState;
-        this.cell.metadata.runStartTime = undefined;
         await this.editor.edit((edit) =>
             edit.replaceCellMetadata(this.cell.notebook.cells.indexOf(this.cell), {
                 ...this.cell.metadata,

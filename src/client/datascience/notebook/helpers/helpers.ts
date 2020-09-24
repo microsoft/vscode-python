@@ -278,17 +278,6 @@ function createVSCNotebookCellDataFromCodeCell(model: INotebookModel, cell: ICel
         runState = vscodeNotebookEnums.NotebookCellRunState.Success;
     }
 
-    const notebookCellMetadata: NotebookCellMetadata = {
-        editable: model.isTrusted,
-        executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
-        hasExecutionOrder: true,
-        runState,
-        runnable: model.isTrusted
-    };
-
-    if (statusMessage) {
-        notebookCellMetadata.statusMessage = statusMessage;
-    }
     const vscodeMetadata = (cell.data.metadata.vscode as unknown) as IBaseCellVSCodeMetadata | undefined;
     const startExecutionTime = vscodeMetadata?.start_execution_time
         ? new Date(Date.parse(vscodeMetadata.start_execution_time)).getTime()
@@ -297,10 +286,23 @@ function createVSCNotebookCellDataFromCodeCell(model: INotebookModel, cell: ICel
         ? new Date(Date.parse(vscodeMetadata.end_execution_time)).getTime()
         : undefined;
 
+    let runStartTime: undefined | number;
+    let lastRunDuration: undefined | number;
     if (startExecutionTime && typeof endExecutionTime === 'number') {
-        notebookCellMetadata.runStartTime = startExecutionTime;
-        notebookCellMetadata.lastRunDuration = endExecutionTime - startExecutionTime;
+        runStartTime = startExecutionTime;
+        lastRunDuration = endExecutionTime - startExecutionTime;
     }
+
+    const notebookCellMetadata: NotebookCellMetadata = {
+        editable: model.isTrusted,
+        executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
+        hasExecutionOrder: true,
+        runState,
+        runnable: model.isTrusted,
+        statusMessage,
+        runStartTime,
+        lastRunDuration
+    };
 
     updateVSCNotebookCellMetadata(notebookCellMetadata, cell);
 
@@ -690,12 +692,14 @@ export async function updateVSCNotebookAfterTrustingNotebook(
         return;
     }
 
-    document.metadata.cellEditable = true;
-    document.metadata.cellRunnable = true;
-    document.metadata.editable = true;
-    document.metadata.runnable = true;
-
     await editor.edit((edit) => {
+        edit.replaceMetadata({
+            ...document.metadata,
+            cellEditable: true,
+            cellRunnable: true,
+            editable: true,
+            runnable: true
+        });
         document.cells.forEach((cell, index) => {
             if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
                 edit.replaceCellMetadata(index, { ...cell.metadata, editable: true });

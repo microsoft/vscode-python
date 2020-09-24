@@ -100,65 +100,65 @@ export interface NotebookCellMetadata {
     /**
      * Controls whether a cell's editor is editable/readonly.
      */
-    editable?: boolean;
+    readonly editable?: boolean;
 
     /**
      * Controls if the cell is executable.
      * This metadata is ignored for markdown cell.
      */
-    runnable?: boolean;
+    readonly runnable?: boolean;
 
     /**
      * Controls if the cell has a margin to support the breakpoint UI.
      * This metadata is ignored for markdown cell.
      */
-    breakpointMargin?: boolean;
+    readonly breakpointMargin?: boolean;
 
     /**
      * Whether the [execution order](#NotebookCellMetadata.executionOrder) indicator will be displayed.
      * Defaults to true.
      */
-    hasExecutionOrder?: boolean;
+    readonly hasExecutionOrder?: boolean;
 
     /**
      * The order in which this cell was executed.
      */
-    executionOrder?: number;
+    readonly executionOrder?: number;
 
     /**
      * A status message to be shown in the cell's status bar
      */
-    statusMessage?: string;
+    readonly statusMessage?: string;
 
     /**
      * The cell's current run state
      */
-    runState?: NotebookCellRunState;
+    readonly runState?: NotebookCellRunState;
 
     /**
      * If the cell is running, the time at which the cell started running
      */
-    runStartTime?: number;
+    readonly runStartTime?: number;
 
     /**
      * The total duration of the cell's last run
      */
-    lastRunDuration?: number;
+    readonly lastRunDuration?: number;
 
     /**
      * Whether a code cell's editor is collapsed
      */
-    inputCollapsed?: boolean;
+    readonly inputCollapsed?: boolean;
 
     /**
      * Whether a code cell's outputs are collapsed
      */
-    outputCollapsed?: boolean;
+    readonly outputCollapsed?: boolean;
 
     /**
      * Additional attributes of a cell metadata.
      */
-    custom?: { [key: string]: any };
+    readonly custom?: { [key: string]: any };
 }
 
 export interface NotebookCell {
@@ -168,8 +168,8 @@ export interface NotebookCell {
     readonly cellKind: CellKind;
     readonly document: TextDocument;
     readonly language: string;
-    outputs: CellOutput[];
-    metadata: NotebookCellMetadata;
+    readonly outputs: CellOutput[];
+    readonly metadata: NotebookCellMetadata;
 }
 
 export interface NotebookDocumentMetadata {
@@ -177,43 +177,43 @@ export interface NotebookDocumentMetadata {
      * Controls if users can add or delete cells
      * Defaults to true
      */
-    editable?: boolean;
+    readonly editable?: boolean;
 
     /**
      * Controls whether the full notebook can be run at once.
      * Defaults to true
      */
-    runnable?: boolean;
+    readonly runnable?: boolean;
 
     /**
      * Default value for [cell editable metadata](#NotebookCellMetadata.editable).
      * Defaults to true.
      */
-    cellEditable?: boolean;
+    readonly cellEditable?: boolean;
 
     /**
      * Default value for [cell runnable metadata](#NotebookCellMetadata.runnable).
      * Defaults to true.
      */
-    cellRunnable?: boolean;
+    readonly cellRunnable?: boolean;
 
     /**
      * Default value for [cell hasExecutionOrder metadata](#NotebookCellMetadata.hasExecutionOrder).
      * Defaults to true.
      */
-    cellHasExecutionOrder?: boolean;
+    readonly cellHasExecutionOrder?: boolean;
 
-    displayOrder?: GlobPattern[];
+    readonly displayOrder?: GlobPattern[];
 
     /**
      * Additional attributes of the document metadata.
      */
-    custom?: { [key: string]: any };
+    readonly custom?: { [key: string]: any };
 
     /**
      * The document's current run state
      */
-    runState?: NotebookRunState;
+    readonly runState?: NotebookRunState;
 }
 
 export interface NotebookDocumentContentOptions {
@@ -221,13 +221,13 @@ export interface NotebookDocumentContentOptions {
      * Controls if outputs change will trigger notebook document content change and if it will be used in the diff editor
      * Default to false. If the content provider doesn't persisit the outputs in the file document, this should be set to true.
      */
-    transientOutputs: boolean;
+    readonly transientOutputs: boolean;
 
     /**
      * Controls if a meetadata property change will trigger notebook document content change and if it will be used in the diff editor
      * Default to false. If the content provider doesn't persisit a metadata property in the file document, it should be set to true.
      */
-    transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
+    readonly transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
 }
 
 export interface NotebookDocument {
@@ -238,9 +238,9 @@ export interface NotebookDocument {
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
     readonly cells: ReadonlyArray<NotebookCell>;
-    readonly contentOptions: NotebookDocumentContentOptions;
-    languages: string[];
-    metadata: NotebookDocumentMetadata;
+    readonly contentOptions: Readonly<NotebookDocumentContentOptions>;
+    readonly languages: string[];
+    readonly metadata: Readonly<NotebookDocumentMetadata>;
 }
 
 export interface NotebookConcatTextDocument {
