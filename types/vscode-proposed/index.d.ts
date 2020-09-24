@@ -158,7 +158,7 @@ export interface NotebookCellMetadata {
     /**
      * Additional attributes of a cell metadata.
      */
-    readonly custom?: { [key: string]: any };
+    custom?: { [key: string]: any };
 }
 
 export interface NotebookCell {

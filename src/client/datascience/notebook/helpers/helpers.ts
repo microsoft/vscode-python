@@ -178,21 +178,23 @@ export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INot
 }
 
 /**
- * Stores the Jupyter Cell metadata into the VSCode Cells.
+ * Identifies Jupyter Cell metadata that are to be stored in VSCode Cells.
  * This is used to facilitate:
  * 1. When a user copies and pastes a cell, then the corresponding metadata is also copied across.
  * 2. Diffing (VSC knows about metadata & stuff that contributes changes to a cell).
  */
-export function updateVSCNotebookCellMetadata(cellMetadata: NotebookCellMetadata, cell: ICell) {
-    cellMetadata.custom = cellMetadata.custom ?? {};
+export function getCustomNotebookCellMetadata(cell: ICell): Record<string, unknown> {
     // We put this only for VSC to display in diff view.
     // Else we don't use this.
     const propertiesToClone = ['metadata', 'attachments'];
+    // tslint:disable-next-line: no-any
+    const custom: Record<string, unknown> = {};
     propertiesToClone.forEach((propertyToClone) => {
         if (cell.data[propertyToClone]) {
-            cellMetadata.custom![propertyToClone] = cloneDeep(cell.data[propertyToClone]);
+            custom[propertyToClone] = cloneDeep(cell.data[propertyToClone]);
         }
     });
+    return custom;
 }
 
 export function getDefaultCodeLanguage(model: INotebookModel) {
@@ -218,9 +220,9 @@ function createVSCNotebookCellDataFromRawCell(model: INotebookModel, cell: ICell
         editable: model.isTrusted,
         executionOrder: undefined,
         hasExecutionOrder: false,
-        runnable: false
+        runnable: false,
+        custom: getCustomNotebookCellMetadata(cell)
     };
-    updateVSCNotebookCellMetadata(notebookCellMetadata, cell);
     return {
         cellKind: vscodeNotebookEnums.CellKind.Code,
         language: 'raw',
@@ -245,9 +247,9 @@ function createVSCNotebookCellDataFromMarkdownCell(model: INotebookModel, cell: 
         editable: model.isTrusted,
         executionOrder: undefined,
         hasExecutionOrder: false,
-        runnable: false
+        runnable: false,
+        custom: getCustomNotebookCellMetadata(cell)
     };
-    updateVSCNotebookCellMetadata(notebookCellMetadata, cell);
     return {
         cellKind: vscodeNotebookEnums.CellKind.Markdown,
         language: MARKDOWN_LANGUAGE,
@@ -301,10 +303,9 @@ function createVSCNotebookCellDataFromCodeCell(model: INotebookModel, cell: ICel
         runnable: model.isTrusted,
         statusMessage,
         runStartTime,
-        lastRunDuration
+        lastRunDuration,
+        custom: getCustomNotebookCellMetadata(cell)
     };
-
-    updateVSCNotebookCellMetadata(notebookCellMetadata, cell);
 
     // If not trusted, then clear the output in VSC Cell.
     // At this point we have the original output in the ICell.

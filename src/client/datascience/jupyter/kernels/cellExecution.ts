@@ -12,6 +12,7 @@ import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
 import { createDeferred } from '../../../common/utils/async';
+import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -91,6 +92,10 @@ export class CellExecution {
 
     private _completed?: boolean;
     private readonly initPromise: Promise<void>;
+    /**
+     * This is used to chain the updates to the cells.
+     */
+    private previousUpdatedToCellHasCompleted = Promise.resolve();
 
     private constructor(
         public readonly editor: VSCNotebookEditor,
@@ -336,12 +341,18 @@ export class CellExecution {
         }
     }
 
-    private handleIOPub(
+    @swallowExceptions()
+    private async handleIOPub(
         clearState: RefBool,
         loggers: INotebookExecutionLogger[],
         msg: KernelMessage.IIOPubMessage
         // tslint:disable-next-line: no-any
     ) {
+        // Wait for previous cell update to complete.
+        await this.previousUpdatedToCellHasCompleted.then(noop, noop);
+        const deferred = createDeferred<void>();
+        this.previousUpdatedToCellHasCompleted = this.previousUpdatedToCellHasCompleted.then(() => deferred.promise);
+
         // Let our loggers get a first crack at the message. They may change it
         loggers.forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
 
@@ -352,9 +363,9 @@ export class CellExecution {
         let shouldUpdate = true;
         try {
             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
+                await this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
-                this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
+                await this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
                 // Status is handled by the result promise. While it is running we are active. Otherwise we're stopped.
                 // So ignore status messages.
@@ -362,16 +373,16 @@ export class CellExecution {
                 shouldUpdate = false;
                 this.handleStatusMessage(statusMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState);
+                await this.handleStreamMessage(msg as KernelMessage.IStreamMsg, clearState);
             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
-                this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
+                await this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
                 // No new data to update UI, hence do not send updates.
                 shouldUpdate = false;
             } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
-                this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);
+                await this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
-                this.handleError(msg as KernelMessage.IErrorMsg, clearState);
+                await this.handleError(msg as KernelMessage.IErrorMsg, clearState);
             } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
                 // No new data to update UI, hence do not send updates.
                 shouldUpdate = false;
@@ -397,10 +408,12 @@ export class CellExecution {
         } catch (err) {
             // If not a restart error, then tell the subscriber
             this.completedWithErrors(err).then(noop, noop);
+        } finally {
+            deferred.resolve();
         }
     }
 
-    private addToCellData(
+    private async addToCellData(
         output:
             | nbformat.IUnrecognizedOutput
             | nbformat.IExecuteResult
@@ -411,14 +424,18 @@ export class CellExecution {
     ) {
         const converted = cellOutputToVSCCellOutput(output);
 
-        // Clear if necessary
-        if (clearState.value) {
-            this.cell.outputs = [];
-            clearState.update(false);
-        }
+        await this.editor.edit((edit) => {
+            let existingOutput = [...this.cell.outputs];
 
-        // Append to the data (we would push here but VS code requires a recreation of the array)
-        this.cell.outputs = [...this.cell.outputs, converted];
+            // Clear if necessary
+            if (clearState.value) {
+                existingOutput = [];
+                clearState.update(false);
+            }
+
+            // Append to the data (we would push here but VS code requires a recreation of the array)
+            edit.replaceCellOutput(this.cell.notebook.cells.indexOf(this.cell), existingOutput.concat(converted));
+        });
     }
 
     private handleInputRequest(session: IJupyterSession, msg: KernelMessage.IStdinMessage) {
@@ -439,13 +456,13 @@ export class CellExecution {
 
     // See this for docs on the messages:
     // https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter
-    private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: RefBool) {
+    private async handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: RefBool) {
         // Escape text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
             msg.content.data['text/plain'] = escape(msg.content.data['text/plain'] as string);
         }
 
-        this.addToCellData(
+        await this.addToCellData(
             {
                 output_type: 'execute_result',
                 data: msg.content.data,
@@ -458,30 +475,32 @@ export class CellExecution {
         );
     }
 
-    private handleExecuteReply(msg: KernelMessage.IExecuteReplyMsg, clearState: RefBool) {
+    private async handleExecuteReply(msg: KernelMessage.IExecuteReplyMsg, clearState: RefBool) {
         const reply = msg.content as KernelMessage.IExecuteReply;
         if (reply.payload) {
-            reply.payload.forEach((o) => {
-                if (o.data && o.data.hasOwnProperty('text/plain')) {
-                    this.addToCellData(
-                        {
-                            // Mark as stream output so the text is formatted because it likely has ansi codes in it.
-                            output_type: 'stream',
-                            // tslint:disable-next-line: no-any
-                            text: escape((o.data as any)['text/plain'].toString()),
-                            metadata: {},
-                            execution_count: reply.execution_count
-                        },
-                        clearState
-                    );
-                }
-            });
+            await Promise.all(
+                reply.payload.map(async (o) => {
+                    if (o.data && o.data.hasOwnProperty('text/plain')) {
+                        await this.addToCellData(
+                            {
+                                // Mark as stream output so the text is formatted because it likely has ansi codes in it.
+                                output_type: 'stream',
+                                // tslint:disable-next-line: no-any
+                                text: escape((o.data as any)['text/plain'].toString()),
+                                metadata: {},
+                                execution_count: reply.execution_count
+                            },
+                            clearState
+                        );
+                    }
+                })
+            );
         }
     }
 
-    private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
+    private async handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
         if (msg.content.execution_count) {
-            updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
+            await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
         }
     }
 
@@ -489,34 +508,41 @@ export class CellExecution {
         traceInfo(`Kernel switching to ${msg.content.execution_state}`);
     }
 
-    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
-        // Clear output if waiting for a clear
-        if (clearState.value) {
-            this.cell.outputs = [];
-            clearState.update(false);
-        }
+    private get cellIndex() {
+        return this.cell.notebook.cells.indexOf(this.cell);
+    }
+    private async handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
+        await this.editor.edit((edit) => {
+            let exitingCellOutput = this.cell.outputs;
+            // Clear output if waiting for a clear
+            if (clearState.value) {
+                exitingCellOutput = [];
+                clearState.update(false);
+            }
 
-        // Might already have a stream message. If so, just add on to it.
-        const lastOutput = this.cell.outputs.length > 0 ? this.cell.outputs[this.cell.outputs.length - 1] : undefined;
-        const existing: CellStreamOutput | undefined =
-            lastOutput && lastOutput.outputKind === CellOutputKind.Text ? lastOutput : undefined;
-        if (existing) {
-            // tslint:disable-next-line:restrict-plus-operands
-            existing.text = formatStreamText(concatMultilineString(existing.text + escape(msg.content.text)));
-            this.cell.outputs = [...this.cell.outputs]; // This is necessary to get VS code to update (for now)
-        } else {
-            const originalText = formatStreamText(concatMultilineString(escape(msg.content.text)));
-            // Create a new stream entry
-            const output: nbformat.IStream = {
-                output_type: 'stream',
-                name: msg.content.name,
-                text: originalText
-            };
-            this.cell.outputs = [...this.cell.outputs, cellOutputToVSCCellOutput(output)];
-        }
+            // Might already have a stream message. If so, just add on to it.
+            const lastOutput =
+                exitingCellOutput.length > 0 ? exitingCellOutput[exitingCellOutput.length - 1] : undefined;
+            const existing: CellStreamOutput | undefined =
+                lastOutput && lastOutput.outputKind === CellOutputKind.Text ? lastOutput : undefined;
+            if (existing) {
+                // tslint:disable-next-line:restrict-plus-operands
+                existing.text = formatStreamText(concatMultilineString(existing.text + escape(msg.content.text)));
+                edit.replaceCellOutput(this.cellIndex, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
+            } else {
+                const originalText = formatStreamText(concatMultilineString(escape(msg.content.text)));
+                // Create a new stream entry
+                const output: nbformat.IStream = {
+                    output_type: 'stream',
+                    name: msg.content.name,
+                    text: originalText
+                };
+                edit.replaceCellOutput(this.cellIndex, [...exitingCellOutput, cellOutputToVSCCellOutput(output)]);
+            }
+        });
     }
 
-    private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool) {
+    private async handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool) {
         // Escape text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
             msg.content.data['text/plain'] = escape(msg.content.data['text/plain'] as string);
@@ -529,40 +555,40 @@ export class CellExecution {
             // tslint:disable-next-line: no-any
             transient: msg.content.transient as any // NOSONAR
         };
-        this.addToCellData(output, clearState);
+        await this.addToCellData(output, clearState);
     }
 
-    private handleClearOutput(msg: KernelMessage.IClearOutputMsg, clearState: RefBool) {
+    private async handleClearOutput(msg: KernelMessage.IClearOutputMsg, clearState: RefBool) {
         // If the message says wait, add every message type to our clear state. This will
         // make us wait for this type of output before we clear it.
         if (msg && msg.content.wait) {
             clearState.update(true);
         } else {
             // Clear all outputs and start over again.
-            this.cell.outputs = [];
+            await this.editor.edit((edit) => edit.replaceCellOutput(this.cellIndex, []));
         }
     }
 
-    private handleError(msg: KernelMessage.IErrorMsg, clearState: RefBool) {
+    private async handleError(msg: KernelMessage.IErrorMsg, clearState: RefBool) {
         const output: nbformat.IError = {
             output_type: 'error',
             ename: msg.content.ename,
             evalue: msg.content.evalue,
             traceback: msg.content.traceback
         };
-        this.addToCellData(output, clearState);
+        await this.addToCellData(output, clearState);
     }
 
-    private handleReply(clearState: RefBool, msg: KernelMessage.IShellControlMessage) {
+    private async handleReply(clearState: RefBool, msg: KernelMessage.IShellControlMessage) {
         // tslint:disable-next-line:no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         if (jupyterLab.KernelMessage.isExecuteReplyMsg(msg)) {
-            this.handleExecuteReply(msg, clearState);
+            await this.handleExecuteReply(msg, clearState);
 
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
-                updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
+                await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
             }
 
             // Send this event.

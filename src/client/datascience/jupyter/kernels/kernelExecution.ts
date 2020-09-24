@@ -85,11 +85,17 @@ export class KernelExecution implements IDisposable {
         if (this.documentExecutions.has(document)) {
             return;
         }
+        const editor = this.vscNotebook.notebookEditors.find((item) => item.document === document);
+        if (!editor) {
+            return;
+        }
         const cancelTokenSource = new MultiCancellationTokenSource();
         this.documentExecutions.set(document, cancelTokenSource);
         const kernel = this.getKernel(document);
-        document.metadata.runState = vscodeNotebookEnums.NotebookRunState.Running;
 
+        await editor.edit((edit) =>
+            edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Running })
+        );
         const codeCellsToExecute = document.cells
             .filter((cell) => cell.cellKind === vscodeNotebookEnums.CellKind.Code)
             .filter((cell) => cell.document.getText().trim().length > 0)
@@ -121,7 +127,9 @@ export class KernelExecution implements IDisposable {
         } finally {
             await Promise.all(codeCellsToExecute.map((cell) => cell.cancel())); // Cancel pending cells.
             this.documentExecutions.delete(document);
-            document.metadata.runState = vscodeNotebookEnums.NotebookRunState.Idle;
+            await editor.edit((edit) =>
+                edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Idle })
+            );
         }
     }
 
