@@ -46,7 +46,9 @@ const envS1 = createNamedEnv('env S1', '3.9', PythonEnvKind.OtherVirtual, `${hom
 setSearchLocation(envS1, homeDir);
 const envS2 = createNamedEnv('env S2', '3.9', PythonEnvKind.OtherVirtual, `${homeDir}/some-dir2/bin/python`);
 setSearchLocation(envS2, homeDir);
-const rootedEnvs = [envS1, envS2];
+const envS3 = createNamedEnv('env S2', '3.9', PythonEnvKind.OtherVirtual, `${workspaceRoot.fsPath}/p/python`);
+envS3.searchLocation = workspaceRoot;
+const rootedEnvs = [envS1, envS2, envS3];
 
 const envSL1 = createLocatedEnv(`${homeDir}/.venvs/envSL1`, '3.9.0', PythonEnvKind.Venv);
 setSearchLocation(envSL1);
@@ -167,9 +169,9 @@ suite('Python envs locator utils - getQueryFilter', () => {
         });
 
         test('match multiple (one location)', () => {
-            const expected = [envS1, envS2];
+            const expected = [envS3, envSL2];
             const searchLocations = [
-                envS1.searchLocation!,
+                workspaceRoot,
             ];
             const query: PythonLocatorQuery = { searchLocations };
 
@@ -180,7 +182,7 @@ suite('Python envs locator utils - getQueryFilter', () => {
         });
 
         test('match multiple (multiple locations)', () => {
-            const expected = rootedLocatedEnvs;
+            const expected = [envS3, ...rootedLocatedEnvs];
             const searchLocations = rootedLocatedEnvs.map((env) => env.searchLocation!);
             searchLocations.push(doesNotExist);
             const query: PythonLocatorQuery = { searchLocations };
@@ -192,7 +194,7 @@ suite('Python envs locator utils - getQueryFilter', () => {
         });
 
         test('match multiple (include non-searched envs)', () => {
-            const expected = [...plainEnvs, ...locatedEnvs, ...rootedLocatedEnvs];
+            const expected = [...plainEnvs, ...locatedEnvs, envS3, ...rootedLocatedEnvs];
             const searchLocations = [null, ...rootedLocatedEnvs.map((env) => env.searchLocation!)];
             searchLocations.push(doesNotExist);
             const query: PythonLocatorQuery = { searchLocations };
@@ -217,6 +219,17 @@ suite('Python envs locator utils - getQueryFilter', () => {
         test('match all (including non-searched)', () => {
             const expected = envs;
             const searchLocations = [null, ...expected.map((env) => env.searchLocation!)];
+            const query: PythonLocatorQuery = { searchLocations };
+
+            const filter = getQueryFilter(query);
+            const filtered = envs.filter(filter);
+
+            assert.deepEqual(filtered, expected);
+        });
+
+        test('match all searched under one root', () => {
+            const expected = [envS1, envS2, envSL1, envSL3, envSL5];
+            const searchLocations = [Uri.file(homeDir)];
             const query: PythonLocatorQuery = { searchLocations };
 
             const filter = getQueryFilter(query);

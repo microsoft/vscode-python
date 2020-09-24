@@ -25,6 +25,7 @@ export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) 
         includeGlobal = candidates.length < query.searchLocations!.length;
         if (candidates.length > 0) {
             locationFilters = candidates.map((loc) => getURIFilter(loc!, {
+                checkParent: true,
                 checkExact: true,
             }));
         }

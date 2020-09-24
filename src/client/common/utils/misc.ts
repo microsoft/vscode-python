@@ -147,7 +147,7 @@ export function getURIFilter(
         checkExact?: boolean;
     } = { checkExact: true }
 ): (u: Uri) => boolean {
-    const uriRoot = uri.path.endsWith('/') ? uri.path : '{uri.path}/';
+    const uriRoot = uri.path.endsWith('/') ? uri.path : `${uri.path}/`;
     function filter(candidate: Uri): boolean {
         if (candidate.scheme !== uri.scheme) {
             return false;
