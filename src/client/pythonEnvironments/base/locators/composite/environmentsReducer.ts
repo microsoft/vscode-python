@@ -3,13 +3,13 @@
 
 import { cloneDeep, isEqual } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
-import { traceVerbose } from '../../common/logger';
-import { createDeferred } from '../../common/utils/async';
-import { areSameEnvironment, PythonEnvInfo, PythonEnvKind } from '../base/info';
+import { traceVerbose } from '../../../../common/logger';
+import { createDeferred } from '../../../../common/utils/async';
+import { areSameEnvironment, PythonEnvInfo, PythonEnvKind } from '../../info';
 import {
     ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery,
-} from '../base/locator';
-import { PythonEnvsChangedEvent } from '../base/watcher';
+} from '../../locator';
+import { PythonEnvsChangedEvent } from '../../watcher';
 
 /**
  * Combines duplicate environments received from the incoming locator into one and passes on unique environments

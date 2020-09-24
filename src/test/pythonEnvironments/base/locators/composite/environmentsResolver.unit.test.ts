@@ -6,17 +6,17 @@ import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import { ImportMock } from 'ts-mock-imports';
 import { EventEmitter } from 'vscode';
-import { ExecutionResult } from '../../../client/common/process/types';
-import { Architecture } from '../../../client/common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
-import { parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
-import { PythonEnvUpdatedEvent } from '../../../client/pythonEnvironments/base/locator';
-import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
-import { PythonEnvsResolver } from '../../../client/pythonEnvironments/collection/environmentsResolver';
-import * as ExternalDep from '../../../client/pythonEnvironments/common/externalDependencies';
-import { EnvironmentInfoService } from '../../../client/pythonEnvironments/info/environmentInfoService';
-import { sleep } from '../../core';
-import { createEnv, getEnvs, SimpleLocator } from '../base/common';
+import { ExecutionResult } from '../../../../../client/common/process/types';
+import { Architecture } from '../../../../../client/common/utils/platform';
+import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { PythonEnvUpdatedEvent } from '../../../../../client/pythonEnvironments/base/locator';
+import { PythonEnvsResolver } from '../../../../../client/pythonEnvironments/base/locators/composite/environmentsResolver';
+import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
+import * as ExternalDep from '../../../../../client/pythonEnvironments/common/externalDependencies';
+import { EnvironmentInfoService } from '../../../../../client/pythonEnvironments/info/environmentInfoService';
+import { sleep } from '../../../../core';
+import { createEnv, getEnvs, SimpleLocator } from '../../common';
 
 suite('Environments Resolver', () => {
     /**

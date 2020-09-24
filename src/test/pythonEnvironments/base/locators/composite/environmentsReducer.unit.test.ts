@@ -5,15 +5,15 @@ import { assert, expect } from 'chai';
 import { isEqual } from 'lodash';
 import * as path from 'path';
 import { EventEmitter } from 'vscode';
-import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
-import { PythonEnvUpdatedEvent } from '../../../client/pythonEnvironments/base/locator';
-import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
+import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { PythonEnvUpdatedEvent } from '../../../../../client/pythonEnvironments/base/locator';
 import {
     mergeEnvironments,
     PythonEnvsReducer,
-} from '../../../client/pythonEnvironments/collection/environmentsReducer';
-import { sleep } from '../../core';
-import { createEnv, getEnvs, SimpleLocator } from '../base/common';
+} from '../../../../../client/pythonEnvironments/base/locators/composite/environmentsReducer';
+import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
+import { sleep } from '../../../../core';
+import { createEnv, getEnvs, SimpleLocator } from '../../common';
 
 suite('Environments Reducer', () => {
     suite('iterEnvs()', () => {

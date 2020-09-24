@@ -3,14 +3,14 @@
 
 import { cloneDeep } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
-import { traceVerbose } from '../../common/logger';
-import { areSameEnvironment, PythonEnvInfo } from '../base/info';
-import { InterpreterInformation } from '../base/info/interpreter';
+import { traceVerbose } from '../../../../common/logger';
+import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
+import { areSameEnvironment, PythonEnvInfo } from '../../info';
+import { InterpreterInformation } from '../../info/interpreter';
 import {
     ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery,
-} from '../base/locator';
-import { PythonEnvsChangedEvent } from '../base/watcher';
-import { IEnvironmentInfoService } from '../info/environmentInfoService';
+} from '../../locator';
+import { PythonEnvsChangedEvent } from '../../watcher';
 
 /**
  * Calls environment info service which runs `interpreterInfo.py` script on environments received
