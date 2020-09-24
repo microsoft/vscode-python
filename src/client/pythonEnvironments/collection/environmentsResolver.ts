@@ -12,6 +12,10 @@ import {
 import { PythonEnvsChangedEvent } from '../base/watcher';
 import { IEnvironmentInfoService } from '../info/environmentInfoService';
 
+/**
+ * Calls environment info service which runs `interpreterInfo.py` script on environments received
+ * from the parent locator. Uses information received to populate environments further and pass it on.
+ */
 export class PythonEnvsResolver implements ILocator {
     public get onChanged(): Event<PythonEnvsChangedEvent> {
         return this.parentLocator.onChanged;
@@ -74,7 +78,6 @@ export class PythonEnvsResolver implements ILocator {
         let result = await iterator.next();
         while (!result.done) {
             const currEnv = result.value;
-            // Resolver only expects unique environments, so store & yield as-is.
             seen.push(currEnv);
             yield currEnv;
             state.pending += 1;
