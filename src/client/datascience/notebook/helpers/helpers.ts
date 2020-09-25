@@ -364,11 +364,12 @@ export async function clearCellForExecution(editor: NotebookEditor, cell: Notebo
 export async function updateCellExecutionTimes(
     editor: NotebookEditor,
     cell: NotebookCell,
-    times?: { startTime?: number; duration?: number; lastRunDuration?: number }
+    times?: { startTime?: number; lastRunDuration?: number }
 ) {
     const cellIndex = cell.notebook.cells.indexOf(cell);
 
-    if (!times || !times.duration || !times.startTime) {
+    if (!times || !times.lastRunDuration || !times.startTime) {
+        // Based on feedback from VSC, its best to clone these objects when updating them.
         const cellMetadata = cloneDeep(cell.metadata);
         let updated = false;
         if (cellMetadata.custom?.metadata?.vscode?.start_execution_time) {
@@ -380,16 +381,22 @@ export async function updateCellExecutionTimes(
             updated = true;
         }
         if (updated) {
-            await editor.edit((edit) => edit.replaceCellMetadata(cellIndex, { ...cellMetadata }));
+            await editor.edit((edit) =>
+                edit.replaceCellMetadata(cellIndex, {
+                    ...cellMetadata
+                })
+            );
         }
         return;
     }
 
     const startTimeISO = new Date(times.startTime).toISOString();
-    const endTimeISO = new Date(times.startTime + times.duration).toISOString();
+    const endTimeISO = new Date(times.startTime + times.lastRunDuration).toISOString();
+    // Based on feedback from VSC, its best to clone these objects when updating them.
     const customMetadata = cloneDeep(cell.metadata.custom || {});
     customMetadata.metadata = customMetadata.metadata || {};
     customMetadata.metadata.vscode = customMetadata.metadata.vscode || {};
+    // We store it in the metadata so we can display this when user opens a notebook again.
     customMetadata.metadata.vscode.end_execution_time = endTimeISO;
     customMetadata.metadata.vscode.start_execution_time = startTimeISO;
     const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;

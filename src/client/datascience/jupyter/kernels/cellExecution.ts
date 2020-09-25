@@ -189,8 +189,7 @@ export class CellExecution {
 
         await updateCellExecutionTimes(this.editor, this.cell, {
             startTime: this.cell.metadata.runStartTime,
-            lastRunDuration: this.stopWatch.elapsedTime,
-            duration: this.cell.metadata.lastRunDuration
+            lastRunDuration: this.stopWatch.elapsedTime
         });
 
         // If there are any errors in the cell, then change status to error.
