@@ -1490,35 +1490,6 @@ plt.show()`,
                 assert.ok(notebook, 'did not create notebook');
                 await verifySimple(notebook, `import os\nos.getcwd()`, escapedPath, true);
             });
-
-            runTest('Launch with space in path', async () => {
-                // Move where pyvsc-run-isolated.py is located
-                const spacedPathDir = path.join(EXTENSION_ROOT_DIR, 'tmp', 'spaced path');
-                const spacedPath = path.join(spacedPathDir, 'pyvsc-run-isolated.py');
-                await fs.mkdirp(spacedPathDir);
-                await fs.copyFile(path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py'), spacedPath);
-
-                // Stub out the location of the ISOLATED file.
-                // tslint:disable-next-line: no-require-imports
-                const pythonModule = require('../../client/common/process/internal/python');
-                const execModuleStub = sinon.stub(pythonModule, 'execModule');
-                try {
-                    execModuleStub.callsFake((name: string, moduleArgs: string[], isolated: boolean = true) => {
-                        const args = ['-m', name, ...moduleArgs];
-                        if (isolated) {
-                            args[0] = spacedPath.fileToCommandArgument();
-                        }
-                        // "code" isn't specific enough to know how to parse it,
-                        // so we only return the args.
-                        return args;
-                    });
-                    const notebook = await createNotebook();
-                    assert.ok(notebook, 'did not create notebook');
-                    await verifySimple(notebook, `a=1\na`, '1', true);
-                } finally {
-                    execModuleStub.reset();
-                }
-            });
         });
     });
 });
