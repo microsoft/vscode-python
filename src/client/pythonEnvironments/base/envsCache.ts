@@ -4,7 +4,7 @@
 import { cloneDeep } from 'lodash';
 import { IFileSystem } from '../../common/platform/types';
 import { IPersistentState } from '../../common/types';
-import { createGlobalPersistentStore } from '../common/externalDependencies';
+import { getGlobalPersistentStore } from '../common/externalDependencies';
 import { areSameEnvironment, PartialPythonEnvironment } from '../info';
 import { PythonEnvInfo } from './info';
 
@@ -68,7 +68,7 @@ export class PythonEnvInfoCache implements IEnvsCache {
         }
 
         this.initialized = true;
-        this.persistentStorage = createGlobalPersistentStore<PythonEnvInfo[]>('PYTHON_ENV_INFO_CACHE');
+        this.persistentStorage = getGlobalPersistentStore<PythonEnvInfo[]>('PYTHON_ENV_INFO_CACHE');
         this.envsList = this.persistentStorage?.value;
     }
 

@@ -43,7 +43,7 @@ function getPersistentStateFactory(): IPersistentStateFactory {
     return internalServiceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
 }
 
-export function createGlobalPersistentStore<T>(key: string): IPersistentState<T> {
+export function getGlobalPersistentStore<T>(key: string): IPersistentState<T> {
     const factory = getPersistentStateFactory();
     return factory.createGlobalPersistentState<T>(key, undefined);
 }

@@ -9,7 +9,7 @@ import * as externalDependencies from '../../../client/pythonEnvironments/common
 import * as envInfo from '../../../client/pythonEnvironments/info';
 
 suite('Environment Info cache', () => {
-    let createGlobalPersistentStoreStub: sinon.SinonStub;
+    let getGlobalPersistentStoreStub: sinon.SinonStub;
     let areSameEnvironmentStub: sinon.SinonStub;
     let updatedValues: PythonEnvInfo[] | undefined;
 
@@ -32,8 +32,8 @@ suite('Environment Info cache', () => {
             (env1: PythonEnvInfo, env2:PythonEnvInfo) => env1.name === env2.name,
         );
 
-        createGlobalPersistentStoreStub = sinon.stub(externalDependencies, 'createGlobalPersistentStore');
-        createGlobalPersistentStoreStub.returns({
+        getGlobalPersistentStoreStub = sinon.stub(externalDependencies, 'getGlobalPersistentStore');
+        getGlobalPersistentStoreStub.returns({
             value: envInfoArray,
             updateValue: async (envs: PythonEnvInfo[]) => {
                 updatedValues = envs;
@@ -43,7 +43,7 @@ suite('Environment Info cache', () => {
     });
 
     teardown(() => {
-        createGlobalPersistentStoreStub.restore();
+        getGlobalPersistentStoreStub.restore();
         areSameEnvironmentStub.restore();
         updatedValues = undefined;
     });
@@ -53,13 +53,13 @@ suite('Environment Info cache', () => {
 
         envsCache.initialize();
 
-        assert.ok(createGlobalPersistentStoreStub.calledOnce);
+        assert.ok(getGlobalPersistentStoreStub.calledOnce);
     });
 
     test('The in-memory env info array is undefined if there is no value in persistent storage when initializing the cache', () => {
         const envsCache = new PythonEnvInfoCache(allEnvsComplete);
 
-        createGlobalPersistentStoreStub.returns({ value: undefined });
+        getGlobalPersistentStoreStub.returns({ value: undefined });
         envsCache.initialize();
         const result = envsCache.getAllEnvs();
 
