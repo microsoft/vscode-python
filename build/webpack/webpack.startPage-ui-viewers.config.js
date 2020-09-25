@@ -3,5 +3,5 @@
 
 'use strict';
 
-const builder = require('./webpack.startpage-ui.config.builder');
+const builder = require('./webpack.startPage-ui.config.builder');
 module.exports = [builder.viewers];
