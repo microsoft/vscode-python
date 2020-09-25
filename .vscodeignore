@@ -37,7 +37,7 @@ typings.json
 vsc-extension-quickstart.md
 vscode-python-signing.*
 webpack.config.js
-webpack.startpage-*.config.js
+webpack.startPage-*.config.js
 
 .devcontainer/**
 .github/**
