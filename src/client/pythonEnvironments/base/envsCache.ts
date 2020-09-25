@@ -73,7 +73,7 @@ export class PythonEnvInfoCache implements IEnvsCache {
     }
 
     public getAllEnvs(): PythonEnvInfo[] | undefined {
-        return this.envsList;
+        return cloneDeep(this.envsList);
     }
 
     public setAllEnvs(envs: PythonEnvInfo[]): void {
@@ -83,11 +83,17 @@ export class PythonEnvInfoCache implements IEnvsCache {
     public getEnv(env: PythonEnvInfo | string): PythonEnvInfo | undefined {
         // This will have to be updated when areSameEnvironment's signature changes.
         // See https://github.com/microsoft/vscode-python/pull/14026/files#r493720817.
-        return this.envsList?.find((info) => areSameEnvironment(
+        const result = this.envsList?.find((info) => areSameEnvironment(
             info as unknown as PartialPythonEnvironment,
             env as unknown as PartialPythonEnvironment,
             {} as unknown as IFileSystem,
         ));
+
+        if (result) {
+            return cloneDeep(result);
+        }
+
+        return undefined;
     }
 
     public async flush(): Promise<void> {

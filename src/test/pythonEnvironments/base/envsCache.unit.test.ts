@@ -66,6 +66,17 @@ suite('Environment Info cache', () => {
         assert.strictEqual(result, undefined);
     });
 
+    test('`getAllEnvs` should return a deep copy of the environments currently in memory', () => {
+        const envsCache = new PythonEnvInfoCache(allEnvsComplete);
+
+        envsCache.initialize();
+        const envs = envsCache.getAllEnvs()!;
+
+        envs[0].name = 'some-other-name';
+
+        assert.ok(envs[0] !== envInfoArray[0]);
+    });
+
     test('`getAllEnvs` should return undefined if nothing has been set', () => {
         const envsCache = new PythonEnvInfoCache(allEnvsComplete);
 
@@ -85,8 +96,8 @@ suite('Environment Info cache', () => {
     });
 
     test('`getEnv` should return an environment that matches all non-undefined properties of its argument', () => {
-        const envsCache = new PythonEnvInfoCache(allEnvsComplete);
         const env:PythonEnvInfo = { name: 'my-venv-env' } as unknown as PythonEnvInfo;
+        const envsCache = new PythonEnvInfoCache(allEnvsComplete);
 
         envsCache.initialize();
 
@@ -97,9 +108,24 @@ suite('Environment Info cache', () => {
         });
     });
 
-    test('`getEnv` should return undefined if no environment matches the properties of its argument', () => {
+    test('`getEnv` should return a deep copy of an environment', () => {
+        const envToFind = {
+            kind: PythonEnvKind.System, name: 'my-system-env', defaultDisplayName: 'env-system',
+        } as unknown as PythonEnvInfo;
+        const env:PythonEnvInfo = { name: 'my-system-env' } as unknown as PythonEnvInfo;
         const envsCache = new PythonEnvInfoCache(allEnvsComplete);
+
+        envsCache.setAllEnvs([...envInfoArray, envToFind]);
+
+        const result = envsCache.getEnv(env)!;
+        result.name = 'some-other-name';
+
+        assert.ok(result !== envToFind);
+    });
+
+    test('`getEnv` should return undefined if no environment matches the properties of its argument', () => {
         const env:PythonEnvInfo = { name: 'my-nonexistent-env' } as unknown as PythonEnvInfo;
+        const envsCache = new PythonEnvInfoCache(allEnvsComplete);
 
         envsCache.initialize();
 
