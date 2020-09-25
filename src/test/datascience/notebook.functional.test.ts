@@ -11,7 +11,6 @@ import escape = require('lodash/escape');
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
-import * as sinon from 'sinon';
 import { Readable, Writable } from 'stream';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as uuid from 'uuid/v4';
