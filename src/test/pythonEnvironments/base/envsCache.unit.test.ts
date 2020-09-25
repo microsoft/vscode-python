@@ -16,13 +16,13 @@ suite('Environment Info cache', () => {
     const allEnvsComplete = () => true;
     const envInfoArray = [
         {
-            id: 'someid1', kind: PythonEnvKind.Conda, name: 'my-conda-env', defaultDisplayName: 'env-one',
+            kind: PythonEnvKind.Conda, name: 'my-conda-env', defaultDisplayName: 'env-one',
         },
         {
-            id: 'someid2', kind: PythonEnvKind.Venv, name: 'my-venv-env', defaultDisplayName: 'env-two',
+            kind: PythonEnvKind.Venv, name: 'my-venv-env', defaultDisplayName: 'env-two',
         },
         {
-            id: 'someid3', kind: PythonEnvKind.Pyenv, name: 'my-pyenv-env', defaultDisplayName: 'env-three',
+            kind: PythonEnvKind.Pyenv, name: 'my-pyenv-env', defaultDisplayName: 'env-three',
         },
     ] as PythonEnvInfo[];
 
@@ -93,7 +93,7 @@ suite('Environment Info cache', () => {
         const result = envsCache.getEnv(env);
 
         assert.deepStrictEqual(result, {
-            id: 'someid2', kind: PythonEnvKind.Venv, name: 'my-venv-env', defaultDisplayName: 'env-two',
+            kind: PythonEnvKind.Venv, name: 'my-venv-env', defaultDisplayName: 'env-two',
         });
     });
 
@@ -110,13 +110,12 @@ suite('Environment Info cache', () => {
 
     test('`flush` should write complete environment info objects to persistent storage', async () => {
         const otherEnv = {
-            id: 'someid5',
             kind: PythonEnvKind.OtherGlobal,
             name: 'my-other-env',
             defaultDisplayName: 'env-five',
         };
         const updatedEnvInfoArray = [
-            otherEnv, { id: 'someid4', kind: PythonEnvKind.System, name: 'my-system-env' },
+            otherEnv, { kind: PythonEnvKind.System, name: 'my-system-env' },
         ] as PythonEnvInfo[];
         const expected = [
             otherEnv,
