@@ -137,7 +137,7 @@ export class NotebookEditor implements INotebookEditor {
         if (editor) {
             editor
                 .edit((edit) =>
-                    edit.replaceCells(0, this.document.cells.length - 1, [
+                    edit.replaceCells(0, this.document.cells.length, [
                         {
                             cellKind: vscodeNotebookEnums.CellKind.Code,
                             language: defaultLanguage,

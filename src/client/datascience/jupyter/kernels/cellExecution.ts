@@ -11,6 +11,7 @@ import { concatMultilineString, formatStreamText } from '../../../../datascience
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
+import { IDisposable } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
@@ -78,6 +79,10 @@ export class CellExecution {
         return this._completed;
     }
 
+    private get cellIndex() {
+        return this.cell.notebook.cells.indexOf(this.cell);
+    }
+
     private static sentExecuteCellTelemetry?: boolean;
 
     private readonly oldCellRunState?: NotebookCellRunState;
@@ -96,6 +101,7 @@ export class CellExecution {
      * This is used to chain the updates to the cells.
      */
     private previousUpdatedToCellHasCompleted = Promise.resolve();
+    private disposables: IDisposable[] = [];
 
     private constructor(
         public readonly editor: VSCNotebookEditor,
@@ -138,10 +144,12 @@ export class CellExecution {
 
         // Begin the request that will modify our cell.
         kernelPromise
-            .then((_k) => this.execute(notebook.session, notebook.getLoggers()))
-            .catch((e) => this.completedWithErrors(e));
+            .then((kernel) => this.handleKernelRestart(kernel))
+            .then(() => this.execute(notebook.session, notebook.getLoggers()))
+            .catch((e) => this.completedWithErrors(e))
+            .finally(() => this.dispose())
+            .catch(noop);
     }
-
     /**
      * Cancel execution.
      * If execution has commenced, then interrupt (via cancellation token) else dequeue from execution.
@@ -158,6 +166,13 @@ export class CellExecution {
             await this.dequeue();
         }
         this._result.resolve(this.cell.metadata.runState);
+        this.dispose();
+    }
+    private dispose() {
+        this.disposables.forEach((d) => d.dispose());
+    }
+    private handleKernelRestart(kernel: IKernel) {
+        kernel.onRestarted(async () => this.cancel(), this, this.disposables);
     }
 
     private async completedWithErrors(error: Partial<Error>) {
@@ -505,10 +520,6 @@ export class CellExecution {
 
     private handleStatusMessage(msg: KernelMessage.IStatusMsg, _clearState: RefBool) {
         traceInfo(`Kernel switching to ${msg.content.execution_state}`);
-    }
-
-    private get cellIndex() {
-        return this.cell.notebook.cells.indexOf(this.cell);
     }
     private async handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
         await this.editor.edit((edit) => {

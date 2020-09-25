@@ -51,7 +51,7 @@ export async function insertMarkdownCell(source: string) {
         return;
     }
     await activeEditor.edit((edit) =>
-        edit.replaceCells(activeEditor.document.cells.length - 1, activeEditor.document.cells.length - 1, [
+        edit.replaceCells(activeEditor.document.cells.length, 0, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
@@ -63,24 +63,17 @@ export async function insertMarkdownCell(source: string) {
             }
         ])
     );
-
-    await waitForCondition(
-        async () =>
-            activeEditor?.document.cells[activeEditor.document.cells.length - 1].document.getText().trim() ===
-            source.trim(),
-        5_000,
-        'Cell not inserted'
-    );
 }
-export async function insertPythonCell(source: string) {
+export async function insertPythonCell(source: string, index?: number) {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
     if (!activeEditor) {
         assert.fail('No active editor');
         return;
     }
+    const startNumber = index ?? activeEditor.document.cells.length;
     await activeEditor.edit((edit) =>
-        edit.replaceCells(activeEditor.document.cells.length, 0, [
+        edit.replaceCells(startNumber, 0, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Code,
                 language: PYTHON_LANGUAGE,
@@ -92,16 +85,9 @@ export async function insertPythonCell(source: string) {
             }
         ])
     );
-    await waitForCondition(
-        async () =>
-            activeEditor?.document.cells[activeEditor.document.cells.length - 1].document.getText().trim() ===
-            source.trim(),
-        5_000,
-        'Cell not inserted'
-    );
 }
-export async function insertPythonCellAndWait(source: string) {
-    await insertPythonCell(source);
+export async function insertPythonCellAndWait(source: string, index?: number) {
+    await insertPythonCell(source, index);
 }
 export async function insertMarkdownCellAndWait(source: string) {
     await insertMarkdownCell(source);
@@ -116,7 +102,7 @@ export async function deleteCell(index: number = 0) {
         assert.fail('No active editor');
         return;
     }
-    await activeEditor.edit((edit) => edit.replaceCells(index, index, []));
+    await activeEditor.edit((edit) => edit.replaceCells(index, 1, []));
 }
 export async function deleteAllCellsAndWait() {
     const { vscodeNotebook } = await getServices();
@@ -124,9 +110,7 @@ export async function deleteAllCellsAndWait() {
     if (!activeEditor || activeEditor.document.cells.length === 0) {
         return;
     }
-    await activeEditor.edit((edit) => edit.replaceCells(0, activeEditor.document.cells.length - 1, []));
-    // Wait for cell to get deleted.
-    await waitForCondition(async () => activeEditor.document.cells.length === 0, 1_000, 'Cell not deleted');
+    await activeEditor.edit((edit) => edit.replaceCells(0, activeEditor.document.cells.length, []));
 }
 
 export async function createTemporaryFile(options: {
@@ -214,6 +198,7 @@ export async function startJupyter(closeInitialEditor: boolean) {
     const disposables: IDisposable[] = [];
     try {
         await editorProvider.createNew();
+        await deleteAllCellsAndWait();
         await insertPythonCell('print("Hello World")');
         const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
         await executeActiveDocument();
@@ -278,7 +263,7 @@ export function assertHasOutputInVSCell(cell: NotebookCell) {
 export function assertHasOutputInICell(cell: ICell, model: INotebookModel) {
     assert.ok((cell.data.outputs as nbformat.IOutput[]).length, `No output in ICell ${model.cells.indexOf(cell) + 1}`);
 }
-export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
+export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number = 0, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs, 'No output');
     assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');

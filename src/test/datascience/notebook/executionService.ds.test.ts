@@ -11,7 +11,6 @@ import { CellDisplayOutput, commands } from 'vscode';
 import { CellErrorOutput } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
-import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
@@ -111,22 +110,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         );
         assert.isUndefined(cells[0].metadata.runState);
     });
-    test('Execute cell should mark a notebook as being dirty', async () => {
-        await insertPythonCellAndWait('print("Hello World")');
-        const contentProvider = api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider);
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-        const changedEvent = createEventHandler(contentProvider, 'onDidChangeNotebook', disposables);
-
-        await executeCell(cell);
-
-        // Wait till execution count changes and status is success.
-        await waitForCondition(
-            async () => assertHasExecutionCompletedSuccessfully(cell),
-            15_000,
-            'Cell did not get executed'
-        );
-        assert.ok(changedEvent.fired, 'Notebook should be dirty after executing a cell');
-    });
     test('Verify Cell output, execution count and status', async () => {
         await insertPythonCellAndWait('print("Hello World")');
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
@@ -162,8 +145,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         );
 
         // Verify output.
-        assertHasTextOutputInVSCode(cells[0], 'Foo Bar', 0);
-        assertHasTextOutputInVSCode(cells[1], 'Hello World', 1);
+        assertHasTextOutputInVSCode(cells[0], 'Foo Bar');
+        assertHasTextOutputInVSCode(cells[1], 'Hello World');
 
         // Verify execution count.
         assert.ok(cells[0].metadata.executionOrder, 'Execution count should be > 0');
