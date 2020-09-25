@@ -133,9 +133,10 @@ export class NotebookProvider implements INotebookProvider {
             // This is required, else using `undefined` as a resource when we have worksapce folders is a different meaning.
             // This means interactive window doesn't properly support mult-root workspaces as we pick first workspace.
             // Ideally we need to pick the resource of the corresponding Python file.
-            resource = this.workspaceService.hasWorkspaceFolders
-                ? this.workspaceService.workspaceFolders![0]!.uri
-                : undefined;
+            resource =
+                (this.workspaceService.workspaceFolders || []).length > 0
+                    ? this.workspaceService.workspaceFolders![0]!.uri
+                    : undefined;
         }
         const promise = rawKernel
             ? this.rawNotebookProvider.createNotebook(

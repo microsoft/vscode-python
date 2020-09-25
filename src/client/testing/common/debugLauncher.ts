@@ -68,7 +68,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
     }
     private resolveWorkspaceFolder(cwd: string): WorkspaceFolder {
-        if (!this.workspaceService.hasWorkspaceFolders) {
+        if ((this.workspaceService.workspaceFolders || []).length === 0) {
             throw new Error('Please open a workspace');
         }
 

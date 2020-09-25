@@ -368,7 +368,7 @@ export class CondaService implements ICondaService {
     }
 
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
-        const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
+        const workspacesUris: (Uri | undefined)[] = ((this.workspaceService.workspaceFolders || []).length > 0)
             ? this.workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
             : [undefined];
         if (workspacesUris.findIndex((uri) => event.affectsConfiguration('python.condaPath', uri)) === -1) {

@@ -197,7 +197,7 @@ export class JupyterExporter implements INotebookExporter {
         if (!haveChangeAlready) {
             const notebookFilePath = path.dirname(notebookFile);
             // First see if we have a workspace open, this only works if we have a workspace root to be relative to
-            if (this.workspaceService.hasWorkspaceFolders) {
+            if ((this.workspaceService.workspaceFolders || []).length > 0) {
                 const workspacePath = await this.firstWorkspaceFolder(cells);
 
                 // Make sure that we have everything that we need here

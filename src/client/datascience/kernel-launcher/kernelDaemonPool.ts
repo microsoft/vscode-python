@@ -52,7 +52,7 @@ export class KernelDaemonPool implements IDisposable {
         this.envVars.onDidEnvironmentVariablesChange(this.onDidEnvironmentVariablesChange.bind(this));
         this.interrpeterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this));
         const promises: Promise<void>[] = [];
-        if (this.workspaceService.hasWorkspaceFolders) {
+        if ((this.workspaceService.workspaceFolders || []).length > 0) {
             promises.push(
                 ...(this.workspaceService.workspaceFolders || []).map((item) => this.preWarmKernelDaemon(item.uri))
             );

@@ -137,9 +137,10 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
     }
 
     private async getWorkspaceRoot(resource?: Uri): Promise<string | undefined> {
-        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders
-            ? this.workspaceService.workspaceFolders![0].uri
-            : undefined;
+        const defaultWorkspaceUri =
+            (this.workspaceService.workspaceFolders || []).length > 0
+                ? this.workspaceService.workspaceFolders![0].uri
+                : undefined;
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         const uri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
         return uri ? uri.fsPath : undefined;

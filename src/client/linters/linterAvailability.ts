@@ -100,7 +100,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      * @param resource Context information for workspace.
      */
     public async isLinterAvailable(linterInfo: ILinterInfo, resource: Resource): Promise<boolean | undefined> {
-        if (!this.workspaceService.hasWorkspaceFolders) {
+        if ((this.workspaceService.workspaceFolders || []).length === 0) {
             return false;
         }
         const workspaceFolder =

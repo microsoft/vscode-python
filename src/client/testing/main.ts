@@ -151,7 +151,10 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
     public async configurationChangeHandler(eventArgs: ConfigurationChangeEvent) {
         // If there's one workspace, then stop the tests and restart,
         // else let the user do this manually.
-        if (!this.workspaceService.hasWorkspaceFolders || this.workspaceService.workspaceFolders!.length > 1) {
+        if (
+            (this.workspaceService.workspaceFolders || []).length === 0 ||
+            this.workspaceService.workspaceFolders!.length > 1
+        ) {
             return;
         }
         if (!Array.isArray(this.workspaceService.workspaceFolders)) {
@@ -212,7 +215,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         );
     }
     public async autoDiscoverTests(resource: Resource) {
-        if (!this.workspaceService.hasWorkspaceFolders) {
+        if ((this.workspaceService.workspaceFolders || []).length === 0) {
             return;
         }
         // Default to discovering tests in first folder if none specified.

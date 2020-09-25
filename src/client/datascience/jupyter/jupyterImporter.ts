@@ -121,7 +121,7 @@ export class JupyterImporter implements INotebookImporter {
             if (!haveChangeAlready) {
                 const notebookFilePath = path.dirname(notebookFile.fsPath);
                 // First see if we have a workspace open, this only works if we have a workspace root to be relative to
-                if (this.workspaceService.hasWorkspaceFolders) {
+                if ((this.workspaceService.workspaceFolders || []).length > 0) {
                     const workspacePath = this.workspaceService.workspaceFolders![0].uri.fsPath;
 
                     // Make sure that we have everything that we need here

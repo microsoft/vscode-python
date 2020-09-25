@@ -92,7 +92,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         }
         const key = this.getWorkspaceKey(doc.uri);
         // If we have opened a doc that does not belong to workspace, then do nothing.
-        if (key === '' && this.workspaceService.hasWorkspaceFolders) {
+        if (key === '' && (this.workspaceService.workspaceFolders || []).length > 0) {
             return;
         }
         if (this.activatedWorkspaces.has(key)) {
@@ -161,7 +161,10 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         this.addRemoveDocOpenedHandlers();
     }
     protected hasMultipleWorkspaces() {
-        return this.workspaceService.hasWorkspaceFolders && this.workspaceService.workspaceFolders!.length > 1;
+        return (
+            (this.workspaceService.workspaceFolders || []).length > 0 &&
+            this.workspaceService.workspaceFolders!.length > 1
+        );
     }
     protected getWorkspaceKey(resource: Resource) {
         return this.workspaceService.getWorkspaceFolderIdentifier(resource, '');
