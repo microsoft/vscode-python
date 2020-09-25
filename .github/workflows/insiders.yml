@@ -139,6 +139,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with: 
+          path: 'source path'
 
       - name: Cache pip files
         uses: actions/cache@v2
