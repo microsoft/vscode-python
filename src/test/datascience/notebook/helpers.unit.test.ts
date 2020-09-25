@@ -82,10 +82,7 @@ suite('DataScience - NativeNotebook helpers', () => {
                     editable: true,
                     executionOrder: undefined,
                     hasExecutionOrder: false,
-                    runnable: false,
-                    statusMessage: undefined,
-                    runStartTime: undefined,
-                    lastRunDuration: undefined
+                    runnable: false
                 }
             }
         ]);
