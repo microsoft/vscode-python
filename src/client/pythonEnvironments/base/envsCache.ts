@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 import { cloneDeep } from 'lodash';
+import { IFileSystem } from '../../common/platform/types';
 import { IPersistentState } from '../../common/types';
 import { createGlobalPersistentStore } from '../common/externalDependencies';
+import { areSameEnvironment, PartialPythonEnvironment } from '../info';
 import { PythonEnvInfo } from './info';
 
 /**
@@ -32,12 +34,13 @@ export interface IEnvsCache {
     /**
      * Return a specific environmnent info object.
      *
-     * @param env The environment info data that will be used to look for an environment info object in the cache.
-     * This object may contain incomplete environment info.
+     * @param env The environment info data that will be used to look for
+     * an environment info object in the cache, or a unique environment key.
+     * If passing an environment info object, it may contain incomplete environment info.
      * @return The environment info object that matches all non-undefined keys from the `env` param,
      *  `undefined` otherwise.
      */
-    getEnv(env: Partial<PythonEnvInfo>): PythonEnvInfo | undefined;
+    getEnv(env: PythonEnvInfo | string): PythonEnvInfo | undefined;
 
     /**
      * Writes the content of the in-memory cache to persistent storage.
@@ -67,18 +70,14 @@ export class PythonEnvInfoCache implements IEnvsCache {
         this.envsList = cloneDeep(envs);
     }
 
-    public getEnv(env: Partial<PythonEnvInfo>): PythonEnvInfo | undefined {
-        // Retrieve all keys with non-undefined values.
-        type EnvParamKeys = keyof typeof env;
-        const keys = (Object.keys(env) as unknown as EnvParamKeys[]).filter((key) => env[key] !== undefined);
-
-        // Return the first object where the values match env's.
-        return this.envsList?.find((info) => {
-            // Check if there is any mismatch between the values of the in-memory info and env.
-            const mismatch = keys.some((key) => info[key] !== env[key]);
-
-            return !mismatch;
-        });
+    public getEnv(env: PythonEnvInfo | string): PythonEnvInfo | undefined {
+        // This will have to be updated when areSameEnvironment's signature changes.
+        // See https://github.com/microsoft/vscode-python/pull/14026/files#r493720817.
+        return this.envsList?.find((info) => areSameEnvironment(
+            info as unknown as PartialPythonEnvironment,
+            env as unknown as PartialPythonEnvironment,
+            {} as unknown as IFileSystem,
+        ));
     }
 
     public async flush(): Promise<void> {

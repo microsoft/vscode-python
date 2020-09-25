@@ -5,10 +5,12 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { CompleteEnvInfoFunction, PythonEnvInfoCache } from '../../../client/pythonEnvironments/base/envsCache';
 import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
-import * as externalDeps from '../../../client/pythonEnvironments/common/externalDependencies';
+import * as externalDependencies from '../../../client/pythonEnvironments/common/externalDependencies';
+import * as envInfo from '../../../client/pythonEnvironments/info';
 
 suite('Environment Info cache', () => {
     let createGlobalPersistentStoreStub: sinon.SinonStub;
+    let areSameEnvironmentStub: sinon.SinonStub;
     let updatedValues: PythonEnvInfo[] | undefined;
 
     const allEnvsComplete: CompleteEnvInfoFunction = () => true;
@@ -25,7 +27,12 @@ suite('Environment Info cache', () => {
     ] as PythonEnvInfo[];
 
     setup(() => {
-        createGlobalPersistentStoreStub = sinon.stub(externalDeps, 'createGlobalPersistentStore');
+        areSameEnvironmentStub = sinon.stub(envInfo, 'areSameEnvironment');
+        areSameEnvironmentStub.callsFake(
+            (env1: PythonEnvInfo, env2:PythonEnvInfo) => env1.name === env2.name,
+        );
+
+        createGlobalPersistentStoreStub = sinon.stub(externalDependencies, 'createGlobalPersistentStore');
         createGlobalPersistentStoreStub.returns({
             value: envInfoArray,
             updateValue: async (envs: PythonEnvInfo[]) => {
@@ -37,6 +44,7 @@ suite('Environment Info cache', () => {
 
     teardown(() => {
         createGlobalPersistentStoreStub.restore();
+        areSameEnvironmentStub.restore();
         updatedValues = undefined;
     });
 
@@ -78,9 +86,11 @@ suite('Environment Info cache', () => {
 
     test('`getEnv` should return an environment that matches all non-undefined properties of its argument', () => {
         const envsCache = new PythonEnvInfoCache(allEnvsComplete);
+        const env:PythonEnvInfo = { name: 'my-venv-env' } as unknown as PythonEnvInfo;
+
         envsCache.initialize();
 
-        const result = envsCache.getEnv({ name: 'my-venv-env' });
+        const result = envsCache.getEnv(env);
 
         assert.deepStrictEqual(result, {
             id: 'someid2', kind: PythonEnvKind.Venv, name: 'my-venv-env', defaultDisplayName: 'env-two',
@@ -89,9 +99,11 @@ suite('Environment Info cache', () => {
 
     test('`getEnv` should return undefined if no environment matches the properties of its argument', () => {
         const envsCache = new PythonEnvInfoCache(allEnvsComplete);
+        const env:PythonEnvInfo = { name: 'my-nonexistent-env' } as unknown as PythonEnvInfo;
+
         envsCache.initialize();
 
-        const result = envsCache.getEnv({ name: 'my-nonexistent-env' });
+        const result = envsCache.getEnv(env);
 
         assert.strictEqual(result, undefined);
     });
