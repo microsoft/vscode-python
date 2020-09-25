@@ -2,10 +2,8 @@
 // Licensed under the MIT License.
 
 import { cloneDeep } from 'lodash';
-import { IFileSystem } from '../../common/platform/types';
 import { getGlobalPersistentStore, IPersistentStore } from '../common/externalDependencies';
-import { areSameEnvironment, PartialPythonEnvironment } from '../info';
-import { PythonEnvInfo } from './info';
+import { areSameEnvironment, PythonEnvInfo } from './info';
 
 /**
  * Represents the environment info cache to be used by the cache locator.
@@ -82,11 +80,7 @@ export class PythonEnvInfoCache implements IEnvsCache {
     public getEnv(env: PythonEnvInfo | string): PythonEnvInfo | undefined {
         // This will have to be updated when areSameEnvironment's signature changes.
         // See https://github.com/microsoft/vscode-python/pull/14026/files#r493720817.
-        const result = this.envsList?.find((info) => areSameEnvironment(
-            info as unknown as PartialPythonEnvironment,
-            env as unknown as PartialPythonEnvironment,
-            {} as unknown as IFileSystem,
-        ));
+        const result = this.envsList?.find((info) => areSameEnvironment(info, env));
 
         if (result) {
             return cloneDeep(result);
