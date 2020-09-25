@@ -12,7 +12,7 @@ import {
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
-import { IVsCodeApi } from '../../startpage-ui/react-common/postOffice';
+import { IVsCodeApi } from '../../startPage-ui/react-common/postOffice';
 
 export type WaitForMessageOptions = {
     /**

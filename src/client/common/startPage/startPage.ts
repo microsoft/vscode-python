@@ -26,7 +26,7 @@ import { StartPageMessageListener } from './startPageMessageListener';
 import { ICodeCssGenerator, IStartPage, IStartPageMapping, IThemeFinder, StartPageMessages } from './types';
 import { WebviewPanelHost } from './webviewPanelHost';
 
-const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'startpage-ui', 'viewers');
+const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'startPage-ui', 'viewers');
 
 // Class that opens, disposes and handles messages and actions for the Python Extension Start Page.
 // It also runs when the extension activates.

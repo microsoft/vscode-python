@@ -99,7 +99,7 @@ gulp.task('hygiene-branch', (done) => run({ mode: 'diffMain' }, done));
 
 gulp.task('output:clean', () => del(['coverage']));
 
-gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/startpage-ui', 'out/server']));
+gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/startPage-ui', 'out/server']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
 gulp.task('clean:out', () => del(['out']));
 

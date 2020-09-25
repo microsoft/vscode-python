@@ -24,7 +24,7 @@ function getEntry(bundle) {
     switch (bundle) {
         case 'viewers':
             return {
-                startPage: ['babel-polyfill', `./src/startpage-ui/startPage/index.tsx`]
+                startPage: ['babel-polyfill', `./src/startPage-ui/startPage/index.tsx`]
             };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
@@ -36,7 +36,7 @@ function getPlugins(bundle) {
         new ForkTsCheckerWebpackPlugin({
             checkSyntacticErrors: true,
             tsconfig: configFileName,
-            reportFiles: ['src/startpage-ui/**/*.{ts,tsx}'],
+            reportFiles: ['src/startPage-ui/**/*.{ts,tsx}'],
             memoryLimit: 9096
         })
     ];
@@ -55,7 +55,7 @@ function getPlugins(bundle) {
                 ...(isProdBuild ? [definePlugin] : []),
                 ...[
                     new HtmlWebpackPlugin({
-                        template: 'src/startpage-ui/startPage/index.html',
+                        template: 'src/startPage-ui/startPage/index.html',
                         indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'startPage'],
                         filename: 'index.startPage.html'
@@ -72,7 +72,7 @@ function getPlugins(bundle) {
 }
 
 function buildConfiguration(bundle) {
-    // Folder inside `startpage-ui` that will be created and where the files will be dumped.
+    // Folder inside `startPage-ui` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
     const filesToCopy = [];
     if (bundle === 'notebook') {
@@ -81,7 +81,7 @@ function buildConfiguration(bundle) {
             ...[
                 {
                     from: path.join(constants.ExtensionRootDir, 'node_modules/font-awesome/**/*'),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'startpage-ui', bundleFolder, 'node_modules')
+                    to: path.join(constants.ExtensionRootDir, 'out', 'startPage-ui', bundleFolder, 'node_modules')
                 }
             ]
         );
@@ -90,7 +90,7 @@ function buildConfiguration(bundle) {
         context: constants.ExtensionRootDir,
         entry: getEntry(bundle),
         output: {
-            path: path.join(constants.ExtensionRootDir, 'out', 'startpage-ui', bundleFolder),
+            path: path.join(constants.ExtensionRootDir, 'out', 'startPage-ui', bundleFolder),
             filename: '[name].js',
             chunkFilename: `[name].bundle.js`
         },
@@ -179,7 +179,7 @@ function buildConfiguration(bundle) {
                     { from: './**/*theme*.json', to: '.' },
                     {
                         from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
-                        to: path.join(constants.ExtensionRootDir, 'out', 'startpage-ui', bundleFolder)
+                        to: path.join(constants.ExtensionRootDir, 'out', 'startPage-ui', bundleFolder)
                     },
                     ...filesToCopy
                 ],
@@ -218,7 +218,7 @@ function buildConfiguration(bundle) {
                                 configFile: configFileName,
                                 // Faster (turn on only on CI, for dev we don't need this).
                                 transpileOnly: true,
-                                reportFiles: ['src/startpage-ui/**/*.{ts,tsx}']
+                                reportFiles: ['src/startPage-ui/**/*.{ts,tsx}']
                             }
                         }
                     ]
