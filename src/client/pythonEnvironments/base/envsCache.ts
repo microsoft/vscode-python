@@ -3,8 +3,7 @@
 
 import { cloneDeep } from 'lodash';
 import { IFileSystem } from '../../common/platform/types';
-import { IPersistentState } from '../../common/types';
-import { getGlobalPersistentStore } from '../common/externalDependencies';
+import { getGlobalPersistentStore, IPersistentStore } from '../common/externalDependencies';
 import { areSameEnvironment, PartialPythonEnvironment } from '../info';
 import { PythonEnvInfo } from './info';
 
@@ -58,7 +57,7 @@ export class PythonEnvInfoCache implements IEnvsCache {
 
     private envsList: PythonEnvInfo[] | undefined;
 
-    private persistentStorage: IPersistentState<PythonEnvInfo[]> | undefined;
+    private persistentStorage: IPersistentStore<PythonEnvInfo[]> | undefined;
 
     constructor(private readonly isComplete: CompleteEnvInfoFunction) {}
 
@@ -69,7 +68,7 @@ export class PythonEnvInfoCache implements IEnvsCache {
 
         this.initialized = true;
         this.persistentStorage = getGlobalPersistentStore<PythonEnvInfo[]>('PYTHON_ENV_INFO_CACHE');
-        this.envsList = this.persistentStorage?.value;
+        this.envsList = this.persistentStorage?.get();
     }
 
     public getAllEnvs(): PythonEnvInfo[] | undefined {
@@ -100,7 +99,7 @@ export class PythonEnvInfoCache implements IEnvsCache {
         const completeEnvs = this.envsList?.filter(this.isComplete);
 
         if (completeEnvs?.length) {
-            await this.persistentStorage?.updateValue(completeEnvs);
+            await this.persistentStorage?.set(completeEnvs);
         }
     }
 }

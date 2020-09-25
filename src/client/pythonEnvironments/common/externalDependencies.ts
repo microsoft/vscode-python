@@ -4,7 +4,7 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
-import { IPersistentState, IPersistentStateFactory } from '../../common/types';
+import { IPersistentStateFactory } from '../../common/types';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 
@@ -43,7 +43,17 @@ function getPersistentStateFactory(): IPersistentStateFactory {
     return internalServiceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
 }
 
-export function getGlobalPersistentStore<T>(key: string): IPersistentState<T> {
+export interface IPersistentStore<T> {
+    get(): T | undefined;
+    set(value: T): Promise<void>;
+}
+
+export function getGlobalPersistentStore<T>(key: string): IPersistentStore<T> {
     const factory = getPersistentStateFactory();
-    return factory.createGlobalPersistentState<T>(key, undefined);
+    const state = factory.createGlobalPersistentState<T>(key, undefined);
+
+    return {
+        get() { return state.value; },
+        set(value: T) { return state.updateValue(value); },
+    };
 }
