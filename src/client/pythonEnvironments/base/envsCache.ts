@@ -48,7 +48,7 @@ export interface IEnvsCache {
     flush(): Promise<void>;
 }
 
-export type CompleteEnvInfoFunction = (envInfo: PythonEnvInfo) => boolean;
+type CompleteEnvInfoFunction = (envInfo: PythonEnvInfo) => boolean;
 
 export class PythonEnvInfoCache implements IEnvsCache {
     private initialized = false;

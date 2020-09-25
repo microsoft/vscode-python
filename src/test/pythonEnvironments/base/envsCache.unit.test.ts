@@ -3,7 +3,7 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { CompleteEnvInfoFunction, PythonEnvInfoCache } from '../../../client/pythonEnvironments/base/envsCache';
+import { PythonEnvInfoCache } from '../../../client/pythonEnvironments/base/envsCache';
 import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
 import * as externalDependencies from '../../../client/pythonEnvironments/common/externalDependencies';
 import * as envInfo from '../../../client/pythonEnvironments/info';
@@ -13,7 +13,7 @@ suite('Environment Info cache', () => {
     let areSameEnvironmentStub: sinon.SinonStub;
     let updatedValues: PythonEnvInfo[] | undefined;
 
-    const allEnvsComplete: CompleteEnvInfoFunction = () => true;
+    const allEnvsComplete = () => true;
     const envInfoArray = [
         {
             id: 'someid1', kind: PythonEnvKind.Conda, name: 'my-conda-env', defaultDisplayName: 'env-one',
