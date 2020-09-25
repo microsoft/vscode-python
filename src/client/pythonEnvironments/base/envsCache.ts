@@ -50,6 +50,9 @@ export interface IEnvsCache {
 
 type CompleteEnvInfoFunction = (envInfo: PythonEnvInfo) => boolean;
 
+/**
+ * Environment info cache using persistent storage to save and retrieve pre-cached env info.
+ */
 export class PythonEnvInfoCache implements IEnvsCache {
     private initialized = false;
 
