@@ -78,8 +78,6 @@ export class PythonEnvInfoCache implements IEnvsCache {
     }
 
     public getEnv(env: PythonEnvInfo | string): PythonEnvInfo | undefined {
-        // This will have to be updated when areSameEnvironment's signature changes.
-        // See https://github.com/microsoft/vscode-python/pull/14026/files#r493720817.
         const result = this.envsList?.find((info) => areSameEnvironment(info, env));
 
         if (result) {
