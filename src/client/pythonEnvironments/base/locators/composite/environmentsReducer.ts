@@ -3,9 +3,10 @@
 
 import { cloneDeep, isEqual } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
-import { traceVerbose } from '../../../../common/logger';
-import { createDeferred } from '../../../../common/utils/async';
-import { areSameEnvironment, PythonEnvInfo, PythonEnvKind } from '../../info';
+import { traceVerbose } from '../../common/logger';
+import { createDeferred } from '../../common/utils/async';
+import { PythonEnvInfo, PythonEnvKind } from '../base/info';
+import { areSameEnvironment } from '../base/info/env';
 import {
     ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery,
 } from '../../locator';

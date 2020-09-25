@@ -29,13 +29,19 @@ export enum PythonEnvKind {
 }
 
 /**
- * Information about a Python binary/executable.
+ * Information about a file.
  */
-export type PythonExecutableInfo = {
+export type FileInfo = {
     filename: string;
-    sysPrefix: string;
     ctime: number;
     mtime: number;
+};
+
+/**
+ * Information about a Python binary/executable.
+ */
+export type PythonExecutableInfo = FileInfo & {
+    sysPrefix: string;
 };
 
 /**

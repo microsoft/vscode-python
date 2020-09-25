@@ -4,10 +4,13 @@
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonExecutableInfo, PythonVersion,
+    FileInfo,
+    PythonDistroInfo,
+    PythonEnvInfo, PythonEnvKind, PythonVersion,
 } from '.';
+import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
-import { areEqualVersions } from './versionHelpers';
+import { areEqualVersions, areEquivalentVersions } from './pythonVersion';
 
 export function areSameEnvironment(
     left: string | PythonEnvInfo,
@@ -25,14 +28,9 @@ export function areSameEnvironment(
         const leftVersion = typeof left === 'string' ? undefined : left.version;
         const rightVersion = typeof right === 'string' ? undefined : right.version;
         if (leftVersion && rightVersion) {
-            if (areEqualVersions(leftVersion, rightVersion)) {
-                return true;
-            }
-
             if (
-                allowPartialMatch
-                && leftVersion.major === rightVersion.major
-                && leftVersion.minor === rightVersion.minor
+                areEqualVersions(leftVersion, rightVersion)
+                || (allowPartialMatch && areEquivalentVersions(leftVersion, rightVersion))
             ) {
                 return true;
             }
@@ -48,7 +46,7 @@ export function areSameEnvironment(
  * weighted by most important to least important fields.
  * Wn > Wn-1 + Wn-2 + ... W0
  */
-function getVersionInfoHeuristic(version:PythonVersion): number {
+function getPythonVersionInfoHeuristic(version:PythonVersion): number {
     let infoLevel = 0;
     if (version.major > 0) {
         infoLevel += 20; // W4
@@ -75,27 +73,51 @@ function getVersionInfoHeuristic(version:PythonVersion): number {
 
 /**
  * Returns a heuristic value on how much information is available in the given executable object.
- * @param {PythonExecutableInfo} executable executable object to generate heuristic from.
+ * @param {FileInfo} executable executable object to generate heuristic from.
  * @returns A heuristic value indicating the amount of info available in the object
  * weighted by most important to least important fields.
  * Wn > Wn-1 + Wn-2 + ... W0
  */
-function getExecutableInfoHeuristic(executable:PythonExecutableInfo): number {
+function getFileInfoHeuristic(file:FileInfo): number {
     let infoLevel = 0;
-    if (executable.filename.length > 0) {
-        infoLevel += 10; // W3
-    }
-
-    if (executable.sysPrefix.length > 0) {
+    if (file.filename.length > 0) {
         infoLevel += 5; // W2
     }
 
-    if (executable.mtime) {
+    if (file.mtime) {
         infoLevel += 2; // W1
     }
 
-    if (executable.ctime) {
+    if (file.ctime || file.mtime) {
         infoLevel += 1; // W0
+    }
+
+    return infoLevel;
+}
+
+/**
+ * Returns a heuristic value on how much information is available in the given distro object.
+ * @param {PythonDistroInfo} distro distro object to generate heuristic from.
+ * @returns A heuristic value indicating the amount of info available in the object
+ * weighted by most important to least important fields.
+ * Wn > Wn-1 + Wn-2 + ... W0
+ */
+function getDistroInfoHeuristic(distro:PythonDistroInfo):number {
+    let infoLevel = 0;
+    if (distro.org.length > 0) {
+        infoLevel += 20; // W3
+    }
+
+    if (distro.defaultDisplayName) {
+        infoLevel += 10; // W2
+    }
+
+    if (distro.binDir) {
+        infoLevel += 5; // W1
+    }
+
+    if (distro.version) {
+        infoLevel += 2;
     }
 
     return infoLevel;
@@ -144,35 +166,58 @@ export function getPrioritizedEnvironmentKind(): PythonEnvKind[] {
 }
 
 /**
- * Selects an environment kind based on the environment selection priority. This should
+ * Selects an environment based on the environment selection priority. This should
  * match the priority in the environment identifier.
- * @param left
- * @param right
  */
-function pickEnvironmentKind(left: PythonEnvInfo, right: PythonEnvInfo): PythonEnvKind {
+export function sortEnvInfoByPriority(...envs: PythonEnvInfo[]): PythonEnvInfo[] {
     // tslint:disable-next-line: no-suspicious-comment
     // TODO: When we consolidate the PythonEnvKind and EnvironmentType we should have
     // one location where we define priority and
     const envKindByPriority:PythonEnvKind[] = getPrioritizedEnvironmentKind();
-
-    return envKindByPriority.find((env) => left.kind === env || right.kind === env) ?? PythonEnvKind.Unknown;
+    return envs.sort(
+        (a:PythonEnvInfo, b:PythonEnvInfo) => envKindByPriority.indexOf(a.kind) - envKindByPriority.indexOf(b.kind),
+    );
 }
 
-export function mergeEnvironments(left: PythonEnvInfo, right: PythonEnvInfo): PythonEnvInfo {
-    const kind = pickEnvironmentKind(left, right);
-    const version = (getVersionInfoHeuristic(left.version) > getVersionInfoHeuristic(right.version)
-        ? left.version : right.version
-    );
-    const executable = (getExecutableInfoHeuristic(left.executable) > getExecutableInfoHeuristic(right.executable)
-        ? left.executable : right.executable
-    );
-    const preferredEnv:PythonEnvInfo = left.kind === kind ? left : right;
-    const merged = cloneDeep(preferredEnv);
-    merged.version = cloneDeep(version);
-    merged.executable = cloneDeep(executable);
+/**
+ * Merges properties of the `target` environment and `other` environment and returns the merged environment.
+ * if the value in the `target` environment is not defined or has less information. This does not mutate
+ * the `target` instead it returns a new object that contains the merged results.
+ * @param {PythonEnvInfo} target : Properties of this object are favored.
+ * @param {PythonEnvInfo} other : Properties of this object are used to fill the gaps in the merged result.
+ */
+export function mergeEnvironments(target: PythonEnvInfo, other: PythonEnvInfo): PythonEnvInfo {
+    const merged = cloneDeep(target);
 
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: compute id for the merged environment
-    merged.id = '';
+    const version = cloneDeep(
+        getPythonVersionInfoHeuristic(target.version) > getPythonVersionInfoHeuristic(other.version)
+            ? target.version : other.version,
+    );
+
+    const executable = cloneDeep(
+        getFileInfoHeuristic(target.executable) > getFileInfoHeuristic(other.executable)
+            ? target.executable : other.executable,
+    );
+    executable.sysPrefix = target.executable.sysPrefix ?? other.executable.sysPrefix;
+
+    const distro = cloneDeep(
+        getDistroInfoHeuristic(target.distro) > getDistroInfoHeuristic(other.distro)
+            ? target.distro : other.distro,
+    );
+
+    merged.arch = merged.arch === Architecture.Unknown ? other.arch : target.arch;
+    merged.defaultDisplayName = merged.defaultDisplayName ?? other.defaultDisplayName;
+    merged.distro = distro;
+    merged.executable = executable;
+
+    // No need to check this just use preferred kind. Since the first thing we do is figure out the
+    // preferred env based on kind.
+    merged.kind = target.kind;
+
+    merged.location = merged.location ?? other.location;
+    merged.name = merged.name ?? other.name;
+    merged.searchLocation = merged.searchLocation ?? other.searchLocation;
+    merged.version = version;
+
     return merged;
 }
