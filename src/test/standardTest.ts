@@ -16,7 +16,9 @@ const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
     ? process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
 
-const channel = process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL || 'stable';
+const channel = (process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
+    ? 'insiders'
+    : 'stable';
 
 function start() {
     console.log('*'.repeat(100));
