@@ -51,6 +51,8 @@ export interface IEnvsCache {
 export type CompleteEnvInfoFunction = (envInfo: PythonEnvInfo) => boolean;
 
 export class PythonEnvInfoCache implements IEnvsCache {
+    private initialized = false;
+
     private envsList: PythonEnvInfo[] | undefined;
 
     private persistentStorage: IPersistentState<PythonEnvInfo[]> | undefined;
@@ -58,6 +60,11 @@ export class PythonEnvInfoCache implements IEnvsCache {
     constructor(private readonly isComplete: CompleteEnvInfoFunction) {}
 
     public initialize(): void {
+        if (this.initialized) {
+            return;
+        }
+
+        this.initialized = true;
         this.persistentStorage = createGlobalPersistentStore<PythonEnvInfo[]>('PYTHON_ENV_INFO_CACHE');
         this.envsList = this.persistentStorage?.value;
     }
