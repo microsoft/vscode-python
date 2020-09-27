@@ -47,7 +47,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 
-const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py').replace(/\\/g, '/');
+const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
 
 /* Complex test to ensure we cover all combinations:
 We could have written separate tests for each installer, but we'd be replicate code.
