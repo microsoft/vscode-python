@@ -232,7 +232,7 @@ suite('Python envs locator utils - getQueryFilter', () => {
         test('match all (including non-searched)', () => {
             const expected = envs;
             const searchLocations = {
-                roots: expected.map((env) => env.searchLocation!),
+                roots: expected.map((e) => e.searchLocation!).filter((e) => !!e),
                 includeNonRooted: true,
             };
             const query: PythonLocatorQuery = { searchLocations };

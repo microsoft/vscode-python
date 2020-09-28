@@ -63,11 +63,10 @@ function getSearchLocationFilters(query: PythonLocatorQuery): ((u: Uri) => boole
     if (query.searchLocations === undefined) {
         return undefined;
     }
-    const candidates: Uri[] = query.searchLocations.roots.filter((u) => !!u);
-    if (candidates.length === 0) {
+    if (query.searchLocations.roots.length === 0) {
         return undefined;
     }
-    return candidates.map((loc) => getURIFilter(loc, {
+    return query.searchLocations.roots.map((loc) => getURIFilter(loc, {
         checkParent: true,
         checkExact: true,
     }));
