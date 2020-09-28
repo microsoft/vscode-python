@@ -4,9 +4,11 @@
 
 ### Fixes
 
+1. Fix IPyKernel install issue with windows paths.
+   ([#13493](https://github.com/microsoft/vscode-python/issues/13493))
 1. Fix escaping of output to encode HTML chars correctly.
    ([#5678](https://github.com/Microsoft/vscode-python/issues/5678))
-   
+
 ### Thanks
 
 Thanks to the following projects which we fully rely on to provide some of
