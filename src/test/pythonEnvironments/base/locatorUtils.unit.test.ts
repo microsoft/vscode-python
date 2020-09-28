@@ -73,8 +73,7 @@ suite('Python envs locator utils - getQueryFilter', () => {
         const queries: PythonLocatorQuery[] = [
             {},
             { kinds: [] },
-            { searchLocations: [] },
-            { kinds: [], searchLocations: [] },
+            // Any "defined" value for searchLocations causes filtering...
         ];
         queries.forEach((query) => {
             test(`all envs kept (query ${query})`, () => {
@@ -144,7 +143,11 @@ suite('Python envs locator utils - getQueryFilter', () => {
 
     suite('searchLocations', () => {
         test('match none', () => {
-            const query: PythonLocatorQuery = { searchLocations: [doesNotExist] };
+            const query: PythonLocatorQuery = {
+                searchLocations: {
+                    roots: [doesNotExist],
+                },
+            };
 
             const filter = getQueryFilter(query);
             const filtered = envs.filter(filter);
@@ -154,11 +157,13 @@ suite('Python envs locator utils - getQueryFilter', () => {
 
         test('match one (multiple locations)', () => {
             const expected = [envSL4];
-            const searchLocations = [
-                envSL4.searchLocation!,
-                doesNotExist,
-                envSL4.searchLocation!, // repeated
-            ];
+            const searchLocations = {
+                roots: [
+                    envSL4.searchLocation!,
+                    doesNotExist,
+                    envSL4.searchLocation!, // repeated
+                ],
+            };
             const query: PythonLocatorQuery = { searchLocations };
 
             const filter = getQueryFilter(query);
@@ -169,9 +174,11 @@ suite('Python envs locator utils - getQueryFilter', () => {
 
         test('match multiple (one location)', () => {
             const expected = [envS3, envSL2];
-            const searchLocations = [
-                workspaceRoot,
-            ];
+            const searchLocations = {
+                roots: [
+                    workspaceRoot,
+                ],
+            };
             const query: PythonLocatorQuery = { searchLocations };
 
             const filter = getQueryFilter(query);
@@ -182,8 +189,10 @@ suite('Python envs locator utils - getQueryFilter', () => {
 
         test('match multiple (multiple locations)', () => {
             const expected = [envS3, ...rootedLocatedEnvs];
-            const searchLocations = rootedLocatedEnvs.map((env) => env.searchLocation!);
-            searchLocations.push(doesNotExist);
+            const searchLocations = {
+                roots: rootedLocatedEnvs.map((env) => env.searchLocation!),
+            };
+            searchLocations.roots.push(doesNotExist);
             const query: PythonLocatorQuery = { searchLocations };
 
             const filter = getQueryFilter(query);
@@ -194,8 +203,11 @@ suite('Python envs locator utils - getQueryFilter', () => {
 
         test('match multiple (include non-searched envs)', () => {
             const expected = [...plainEnvs, ...locatedEnvs, envS3, ...rootedLocatedEnvs];
-            const searchLocations = [null, ...rootedLocatedEnvs.map((env) => env.searchLocation!)];
-            searchLocations.push(doesNotExist);
+            const searchLocations = {
+                roots: rootedLocatedEnvs.map((env) => env.searchLocation!),
+                includeNonRooted: true,
+            };
+            searchLocations.roots.push(doesNotExist);
             const query: PythonLocatorQuery = { searchLocations };
 
             const filter = getQueryFilter(query);
@@ -206,7 +218,9 @@ suite('Python envs locator utils - getQueryFilter', () => {
 
         test('match all searched', () => {
             const expected = [...rootedEnvs, ...rootedLocatedEnvs];
-            const searchLocations = expected.map((env) => env.searchLocation!);
+            const searchLocations = {
+                roots: expected.map((env) => env.searchLocation!),
+            };
             const query: PythonLocatorQuery = { searchLocations };
 
             const filter = getQueryFilter(query);
@@ -217,7 +231,10 @@ suite('Python envs locator utils - getQueryFilter', () => {
 
         test('match all (including non-searched)', () => {
             const expected = envs;
-            const searchLocations = [null, ...expected.map((env) => env.searchLocation!)];
+            const searchLocations = {
+                roots: expected.map((env) => env.searchLocation!),
+                includeNonRooted: true,
+            };
             const query: PythonLocatorQuery = { searchLocations };
 
             const filter = getQueryFilter(query);
@@ -228,7 +245,9 @@ suite('Python envs locator utils - getQueryFilter', () => {
 
         test('match all searched under one root', () => {
             const expected = [envS1, envS2, envSL1, envSL3, envSL5];
-            const searchLocations = [Uri.file(homeDir)];
+            const searchLocations = {
+                roots: [Uri.file(homeDir)],
+            };
             const query: PythonLocatorQuery = { searchLocations };
 
             const filter = getQueryFilter(query);
@@ -237,9 +256,12 @@ suite('Python envs locator utils - getQueryFilter', () => {
             assert.deepEqual(filtered, expected);
         });
 
-        test('match only non-searched envs (null location)', () => {
+        test('match only non-searched envs (empty roots)', () => {
             const expected = [...plainEnvs, ...locatedEnvs];
-            const searchLocations = [null];
+            const searchLocations = {
+                roots: [],
+                includeNonRooted: true,
+            };
             const query: PythonLocatorQuery = { searchLocations };
 
             const filter = getQueryFilter(query);
@@ -250,19 +272,11 @@ suite('Python envs locator utils - getQueryFilter', () => {
 
         test('match only non-searched envs (with unmatched location)', () => {
             const expected = [...plainEnvs, ...locatedEnvs];
-            const searchLocations: (Uri | null)[] = [null];
-            searchLocations.push(doesNotExist);
+            const searchLocations = {
+                roots: [doesNotExist],
+                includeNonRooted: true,
+            };
             const query: PythonLocatorQuery = { searchLocations };
-
-            const filter = getQueryFilter(query);
-            const filtered = envs.filter(filter);
-
-            assert.deepEqual(filtered, expected);
-        });
-
-        test('match only non-searched envs (explicit null)', () => {
-            const expected = [...plainEnvs, ...locatedEnvs];
-            const query: PythonLocatorQuery = { searchLocations: null };
 
             const filter = getQueryFilter(query);
             const filtered = envs.filter(filter);
@@ -275,7 +289,9 @@ suite('Python envs locator utils - getQueryFilter', () => {
         test('match none', () => {
             const query: PythonLocatorQuery = {
                 kinds: [PythonEnvKind.OtherGlobal],
-                searchLocations: [doesNotExist],
+                searchLocations: {
+                    roots: [doesNotExist],
+                },
             };
 
             const filter = getQueryFilter(query);
@@ -287,8 +303,10 @@ suite('Python envs locator utils - getQueryFilter', () => {
         test('match some', () => {
             const expected = [envSL1, envSL4, envSL5];
             const kinds = [PythonEnvKind.Venv, PythonEnvKind.Custom];
-            const searchLocations = rootedLocatedEnvs.map((env) => env.searchLocation!);
-            searchLocations.push(doesNotExist);
+            const searchLocations = {
+                roots: rootedLocatedEnvs.map((env) => env.searchLocation!),
+            };
+            searchLocations.roots.push(doesNotExist);
             const query: PythonLocatorQuery = { kinds, searchLocations };
 
             const filter = getQueryFilter(query);
@@ -300,7 +318,9 @@ suite('Python envs locator utils - getQueryFilter', () => {
         test('match all', () => {
             const expected = [...rootedEnvs, ...rootedLocatedEnvs];
             const kinds: PythonEnvKind[] = getEnumValues(PythonEnvKind);
-            const searchLocations = expected.map((env) => env.searchLocation!);
+            const searchLocations = {
+                roots: expected.map((env) => env.searchLocation!),
+            };
             const query: PythonLocatorQuery = { kinds, searchLocations };
 
             const filter = getQueryFilter(query);

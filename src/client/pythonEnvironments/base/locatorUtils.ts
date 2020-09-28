@@ -18,18 +18,16 @@ export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) 
     const kinds = (query.kinds !== undefined && query.kinds.length > 0)
         ? query.kinds
         : undefined;
-    let includeGlobal = !query.searchLocations || query.searchLocations.length === 0;
-    let locationFilters: ((u: Uri) => boolean)[] | undefined;
-    if (!includeGlobal) {
-        const candidates = query.searchLocations!.filter((u) => !!u);
-        includeGlobal = candidates.length < query.searchLocations!.length;
-        if (candidates.length > 0) {
-            locationFilters = candidates.map((loc) => getURIFilter(loc!, {
-                checkParent: true,
-                checkExact: true,
-            }));
+    let includeNonRooted = true;
+    if (query.searchLocations !== undefined) {
+        if (query.searchLocations.includeNonRooted !== undefined) {
+            includeNonRooted = query.searchLocations.includeNonRooted;
+        } else {
+            // We default to `false`.
+            includeNonRooted = false;
         }
     }
+    const locationFilters = getSearchLocationFilters(query);
     function checkKind(env: PythonEnvInfo): boolean {
         if (kinds === undefined) {
             return true;
@@ -39,20 +37,15 @@ export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) 
     function checkSearchLocation(env: PythonEnvInfo): boolean {
         if (env.searchLocation === undefined) {
             // It is not a "rooted" env.
-            return includeGlobal;
-        }
-
-        // It is a "rooted" env.
-        if (locationFilters === undefined) {
-            if (query.searchLocations === null) {
-                // The caller explicitly refused rooted envs.
-                return false;
+            return includeNonRooted;
+        } else {
+            // It is a "rooted" env.
+            if (locationFilters === undefined) {
+                return query.searchLocations === undefined;
             }
-            // `query.searchLocations` only had `null` in it.
-            return !query.searchLocations || query.searchLocations.length === 0;
+            // Check against the requested roots.
+            return locationFilters.some((filter) => filter(env.searchLocation!));
         }
-        // Check against the requested roots.
-        return locationFilters.some((filter) => filter(env.searchLocation!));
     }
     return (env) => {
         if (!checkKind(env)) {
@@ -63,6 +56,20 @@ export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) 
         }
         return true;
     };
+}
+
+function getSearchLocationFilters(query: PythonLocatorQuery): ((u: Uri) => boolean)[] | undefined {
+    if (query.searchLocations === undefined) {
+        return undefined;
+    }
+    const candidates: Uri[] = query.searchLocations.roots.filter((u) => !!u);
+    if (candidates.length === 0) {
+        return undefined;
+    }
+    return candidates.map((loc) => getURIFilter(loc, {
+        checkParent: true,
+        checkExact: true,
+    }));
 }
 
 /**

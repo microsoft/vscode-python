@@ -392,8 +392,9 @@ suite('WorkspaceLocators', () => {
             ]);
             const folders = new WorkspaceFolders([root1, root2]);
             locators.activate(folders);
+            const query = { searchLocations: { roots: [root1] } };
 
-            const iterators = locators.iterEnvs({ searchLocations: [root1] });
+            const iterators = locators.iterEnvs(query);
             const envs = await getEnvs(iterators);
 
             expect(envs).to.deep.equal(expected);
@@ -417,8 +418,9 @@ suite('WorkspaceLocators', () => {
             ]);
             const folders = new WorkspaceFolders([root1, root2]);
             locators.activate(folders);
+            const query = { searchLocations: { roots: [root1, root2] } };
 
-            const iterators = locators.iterEnvs({ searchLocations: [root1, root2] });
+            const iterators = locators.iterEnvs(query);
             const envs = await getEnvs(iterators);
 
             expect(envs).to.deep.equal(expected);
@@ -441,8 +443,9 @@ suite('WorkspaceLocators', () => {
             ]);
             const folders = new WorkspaceFolders([root1, root2]);
             locators.activate(folders);
+            const query = { searchLocations: { roots: [Uri.file('baz')] } };
 
-            const iterators = locators.iterEnvs({ searchLocations: [Uri.file('baz')] });
+            const iterators = locators.iterEnvs(query);
             const envs = await getEnvs(iterators);
 
             expect(envs).to.deep.equal([]);

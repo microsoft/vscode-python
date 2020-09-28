@@ -267,7 +267,7 @@ class ComponentAdapter implements IComponentAdapter {
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
             if (wsFolder !== undefined) {
-                query.searchLocations = [wsFolder.uri];
+                query.searchLocations = { roots: [wsFolder.uri] };
             }
         }
 

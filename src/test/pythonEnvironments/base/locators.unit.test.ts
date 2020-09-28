@@ -96,7 +96,7 @@ suite('Python envs locators - Locators', () => {
         test('with query', async () => {
             const expected: PythonLocatorQuery = {
                 kinds: [PythonEnvKind.Venv],
-                searchLocations: [Uri.file('???')]
+                searchLocations: { roots: [Uri.file('???')] },
             };
             let query: PythonLocatorQuery | undefined;
             async function onQuery(q: PythonLocatorQuery | undefined, e: PythonEnvInfo[]) {

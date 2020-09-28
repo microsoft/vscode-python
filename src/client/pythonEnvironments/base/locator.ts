@@ -83,18 +83,30 @@ export type BasicPythonLocatorQuery = {
 };
 
 /**
+ * The portion of a query related to env search locations.
+ */
+export type SearchLocations = {
+    /**
+     * The locations under which to look for environments.
+     */
+    roots: Uri[];
+    /**
+     * If true, also look for environments that do not have a search location.
+     */
+    includeNonRooted?: boolean;
+};
+
+/**
  * The full set of possible info to send to a locator when requesting environments.
  *
  * This is directly correlated with the `PythonEnvsChangedEvent`
  * emitted by watchers.
- *
- * @prop - searchLocations - if provided, results should be limited to
- *         within these locations; `null` means "include envs that have
- *         no search location"; if not provided, the search location
- *         of each enviroment is not considered when filtering
  */
 export type PythonLocatorQuery = BasicPythonLocatorQuery & {
-    searchLocations?: (Uri | null)[] | null;
+    /**
+     * If provided, results should be limited to within these locations.
+     */
+    searchLocations?: SearchLocations;
 };
 
 type QueryForEvent<E> = E extends PythonEnvsChangedEvent ? PythonLocatorQuery : BasicPythonLocatorQuery;

@@ -103,13 +103,12 @@ export class WorkspaceLocators extends Locator {
             return NOOP_ITERATOR;
         }
         const iterators = Object.keys(this.locators).map((key) => {
-            if (query?.searchLocations) {
+            if (query?.searchLocations !== undefined) {
                 const root = this.roots[key];
                 // Match any related search location.
                 const filter = getURIFilter(root, { checkParent: true, checkChild: true, checkExact: true });
                 // Ignore any requests for global envs.
-                const candidates: unknown = query.searchLocations.filter((u) => u !== null);
-                if (!(candidates as Uri[]).some(filter)) {
+                if (!query.searchLocations.roots.some(filter)) {
                     // This workspace folder did not match the query, so skip it!
                     return NOOP_ITERATOR;
                 }
