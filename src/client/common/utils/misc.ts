@@ -147,20 +147,28 @@ export function getURIFilter(
         checkExact?: boolean;
     } = { checkExact: true }
 ): (u: Uri) => boolean {
-    const uriRoot = uri.path.endsWith('/') ? uri.path : `${uri.path}/`;
+    let uriPath = uri.path;
+    while (uri.path.endsWith('/')) {
+        uriPath = uriPath.slice(0, -1);
+    }
+    const uriRoot = `${uriPath}/`;
     function filter(candidate: Uri): boolean {
         if (candidate.scheme !== uri.scheme) {
             return false;
         }
-        if (opts.checkExact && candidate.path === uri.path) {
+        let candidatePath = candidate.path;
+        while (candidate.path.endsWith('/')) {
+            candidatePath = candidatePath.slice(0, -1);
+        }
+        if (opts.checkExact && candidatePath === uriPath) {
             return true;
         }
-        if (opts.checkParent && candidate.path.startsWith(uriRoot)) {
+        if (opts.checkParent && candidatePath.startsWith(uriRoot)) {
             return true;
         }
         if (opts.checkChild) {
-            const candidateRoot = candidate.path.endsWith('/') ? candidate.path : '{candidate.path}/';
-            if (uri.path.startsWith(candidateRoot)) {
+            const candidateRoot = `{candidatePath}/`;
+            if (uriPath.startsWith(candidateRoot)) {
                 return true;
             }
         }
