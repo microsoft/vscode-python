@@ -325,7 +325,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
-          workingDirectory: ${{env.special-working-directory}}
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'venv'
 
       - name: Run single-workspace tests
@@ -334,7 +334,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
-          workingDirectory: ${{env.special-working-directory}}
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'single-workspace'
 
       - name: Run multi-workspace tests
@@ -343,7 +343,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testMultiWorkspace
-          workingDirectory: ${{env.special-working-directory}}
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'multi-workspace'
 
       - name: Run debugger tests
@@ -352,7 +352,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testDebugger
-          workingDirectory: ${{env.special-working-directory}}
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'debugger'
 
       - name: Run functional tests
