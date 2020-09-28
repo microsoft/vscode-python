@@ -74,7 +74,9 @@ export const NOOP_ITERATOR: IPythonEnvsIterator = iterEmpty<PythonEnvInfo>();
  * This is directly correlated with the `BasicPythonEnvsChangedEvent`
  * emitted by watchers.
  *
- * @prop kinds - if provided, results should be limited to these env kinds
+ * @prop kinds - if provided, results should be limited to these env
+ *               kinds; if not provided, the kind of each evnironment
+ *               is not considered when filtering
  */
 export type BasicPythonLocatorQuery = {
     kinds?: PythonEnvKind[];
@@ -88,7 +90,8 @@ export type BasicPythonLocatorQuery = {
  *
  * @prop - searchLocations - if provided, results should be limited to
  *         within these locations; `null` means "include envs that have
- *         no search location"
+ *         no search location"; if not provided, the search location
+ *         of each enviroment is not considered when filtering
  */
 export type PythonLocatorQuery = BasicPythonLocatorQuery & {
     searchLocations?: (Uri | null)[] | null;
