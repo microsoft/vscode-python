@@ -12,7 +12,7 @@ import { IProcessService, StdErrError } from '../../../client/common/process/typ
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { noop } from '../../core';
 
-const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py').replace(/\\/g, '/');
+const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
 
 use(chaiAsPromised);
 
