@@ -142,6 +142,10 @@ jobs:
       # At this point pinning is only needed for consistency. We no longer have TS debug adapter.
       NODE_VERSION: 12.15.0
     steps:
+      - name: Create Working Directory
+        run: mkdir 'path with chars Ⓛ'
+        working-directory: '.'
+        
       - name: Checkout
         uses: actions/checkout@v2
 
