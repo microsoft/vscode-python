@@ -76,7 +76,7 @@ steps:
 
   # See the help here on how to cache npm
   # https://docs.microsoft.com/en-us/azure/devops/pipelines/caching/?view=azure-devops#nodejsnpm
-  - task: CacheBeta@0
+  - task: Cache@2
     inputs:
       key: npm | $(Agent.OS) | package-lock.json
       path: $(npm_config_cache)
