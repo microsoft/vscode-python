@@ -475,6 +475,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             if (outputs.length > 0) {
                 const data = outputs[0].data;
                 if (data && data.hasOwnProperty('text/plain')) {
+                    // Plain text should be escaped by our execution engine. Unescape it so
+                    // we can parse it.
                     // tslint:disable-next-line:no-any
                     return unescape((data as any)['text/plain']);
                 }
