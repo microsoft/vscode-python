@@ -76,14 +76,13 @@ steps:
 
   # See the help here on how to cache npm
   # https://docs.microsoft.com/en-us/azure/devops/pipelines/caching/?view=azure-devops#nodejsnpm
-  # Disabled for now until DevOps fixes outage
-  # - task: Cache@2
-  #   inputs:
-  #     key: npm | $(Agent.OS) | package-lock.json
-  #     path: $(npm_config_cache)
-  #     restoreKeys: |
-  #       npm | $(Agent.OS)
-  #     displayName: Cache npm
+  - task: CacheBeta@0
+    inputs:
+      key: npm | $(Agent.OS) | package-lock.json
+      path: $(npm_config_cache)
+      restoreKeys: |
+        npm | $(Agent.OS)
+      displayName: Cache npm
 
   - task: Npm@1
     displayName: 'npm ci'
