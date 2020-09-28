@@ -140,7 +140,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with: 
-          path: 'source path'
+          path: 'path with chars Ⓛ'
 
       - name: Cache pip files
         uses: actions/cache@v2
