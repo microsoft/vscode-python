@@ -40,12 +40,12 @@ export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) 
             return includeNonRooted;
         } else {
             // It is a "rooted" env.
-            if (locationFilters === undefined) {
-                return query.searchLocations === undefined;
-            }
-            // Check against the requested roots.
             const loc = env.searchLocation;
-            return locationFilters.some((filter) => filter(loc));
+            if (locationFilters !== undefined) {
+                // Check against the requested roots.  (There may be none.)
+                return locationFilters.some((filter) => filter(loc));
+            }
+            return true;
         }
     }
     return (env) => {
@@ -64,7 +64,7 @@ function getSearchLocationFilters(query: PythonLocatorQuery): ((u: Uri) => boole
         return undefined;
     }
     if (query.searchLocations.roots.length === 0) {
-        return undefined;
+        return [];
     }
     return query.searchLocations.roots.map((loc) => getURIFilter(loc, {
         checkParent: true,
