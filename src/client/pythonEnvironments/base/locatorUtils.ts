@@ -44,7 +44,8 @@ export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) 
                 return query.searchLocations === undefined;
             }
             // Check against the requested roots.
-            return locationFilters.some((filter) => filter(env.searchLocation!));
+            const loc = env.searchLocation;
+            return locationFilters.some((filter) => filter(loc));
         }
     }
     return (env) => {
