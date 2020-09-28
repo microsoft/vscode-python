@@ -18,7 +18,7 @@ import { EnvironmentInfoService } from '../../../../../client/pythonEnvironments
 import { sleep } from '../../../../core';
 import { createEnv, getEnvs, SimpleLocator } from '../../common';
 
-suite('Environments Resolver', () => {
+suite('Python envs locator - Environments Resolver', () => {
     /**
      * Returns the expected environment to be returned by Environment info service
      */
@@ -94,8 +94,8 @@ suite('Environments Resolver', () => {
 
             // Assert
             const expectedUpdates = [
-                { old: env1, new: createExpectedEnvInfo(env1) },
-                { old: env2, new: createExpectedEnvInfo(env2) },
+                { index: 0, old: env1, update: createExpectedEnvInfo(env1) },
+                { index: 1, old: env2, update: createExpectedEnvInfo(env2) },
                 null,
             ];
             assert.deepEqual(expectedUpdates, onUpdatedEvents);
@@ -126,7 +126,7 @@ suite('Environments Resolver', () => {
             // Act
             await getEnvs(iterator);
             await sleep(1);
-            didUpdate.fire({ old: env, new: updatedEnv });
+            didUpdate.fire({ index: 0, old: env, update: updatedEnv });
             didUpdate.fire(null); // It is essential for the incoming iterator to fire "null" event signifying it's done
             await sleep(1);
 
@@ -134,7 +134,7 @@ suite('Environments Resolver', () => {
             // The updates can be anything, even the number of updates, but they should lead to the same final state
             const { length } = onUpdatedEvents;
             assert.deepEqual(
-                onUpdatedEvents[length - 2]?.new,
+                onUpdatedEvents[length - 2]?.update,
                 createExpectedEnvInfo(updatedEnv),
                 'The final update to environment is incorrect',
             );

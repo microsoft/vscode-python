@@ -88,7 +88,7 @@ export function copyEnvInfo(
  * to be same environment. This later case is needed for comparing windows store python,
  * where multiple versions of python executables are all put in the same directory.
  */
-export function areSameEnvironment(
+export function areSameEnv(
     left: string | PythonEnvInfo,
     right: string | PythonEnvInfo,
     allowPartialMatch?: boolean,
@@ -136,11 +136,11 @@ function getPythonVersionInfoHeuristic(version:PythonVersion): number {
         infoLevel += 5; // W2
     }
 
-    if (version.release.level) {
+    if (version.release?.level) {
         infoLevel += 3; // W1
     }
 
-    if (version.release.serial || version.sysVersion) {
+    if (version.release?.serial || version.sysVersion) {
         infoLevel += 1; // W0
     }
 

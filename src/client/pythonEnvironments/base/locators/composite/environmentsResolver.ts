@@ -6,7 +6,6 @@ import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
 import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
-import { areSameEnvironment } from '../../info/env';
 import { InterpreterInformation } from '../../info/interpreter';
 import {
     ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery,
@@ -63,14 +62,14 @@ export class PythonEnvsResolver implements ILocator {
                     state.done = true;
                     checkIfFinishedAndNotify(state, didUpdate);
                 } else {
-                    const oldIndex = seen.findIndex((s) => areSameEnvironment(s, event.old));
-                    if (oldIndex !== -1) {
-                        seen[oldIndex] = event.new;
+                    if (seen[event.index] !== undefined) {
+                        seen[event.index] = event.update;
                         state.pending += 1;
-                        this.resolveInBackground(oldIndex, state, didUpdate, seen).ignoreErrors();
+                        this.resolveInBackground(event.index, state, didUpdate, seen)
+                            .ignoreErrors();
                     } else {
                         // This implies a problem in a downstream locator
-                        traceVerbose(`Expected already iterated env in resolver, got ${event.old}`);
+                        traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
                     }
                 }
             });
@@ -103,8 +102,9 @@ export class PythonEnvsResolver implements ILocator {
         );
         if (interpreterInfo) {
             const resolvedEnv = getResolvedEnv(interpreterInfo, seen[envIndex]);
-            didUpdate.fire({ old: seen[envIndex], new: resolvedEnv });
+            const old = seen[envIndex];
             seen[envIndex] = resolvedEnv;
+            didUpdate.fire({ old, index: envIndex, update: resolvedEnv });
         }
         state.pending -= 1;
         checkIfFinishedAndNotify(state, didUpdate);

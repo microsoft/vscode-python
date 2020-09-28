@@ -15,7 +15,7 @@ import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments
 import { sleep } from '../../../../core';
 import { createEnv, getEnvs, SimpleLocator } from '../../common';
 
-suite('Environments Reducer', () => {
+suite('Python envs locator - Environments Reducer', () => {
     suite('iterEnvs()', () => {
         test('Iterator only yields unique environments', async () => {
             const env1 = createEnv('env1', '3.5', PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
@@ -64,8 +64,8 @@ suite('Environments Reducer', () => {
 
             // Assert
             const expectedUpdates = [
-                { old: env2, new: mergeEnvironments(env2, env4) },
-                { old: env1, new: mergeEnvironments(env1, env5) },
+                { index: 1, old: env2, update: mergeEnvironments(env2, env4) },
+                { index: 0, old: env1, update: mergeEnvironments(env1, env5) },
                 null,
             ];
             assert.deepEqual(expectedUpdates, onUpdatedEvents);
@@ -102,9 +102,16 @@ suite('Environments Reducer', () => {
             const env123 = mergeEnvironments(env12, env3);
             const expectedUpdates: (PythonEnvUpdatedEvent | null)[] = [];
             if (isEqual(env12, env123)) {
-                expectedUpdates.push({ old: env1, new: env12 }, null);
+                expectedUpdates.push(
+                    { index: 0, old: env1, update: env12 },
+                    null,
+                );
             } else {
-                expectedUpdates.push({ old: env1, new: env12 }, { old: env12, new: env123 }, null);
+                expectedUpdates.push(
+                    { index: 0, old: env1, update: env12 },
+                    { index: 0, old: env12, update: env123 },
+                    null,
+                );
             }
             assert.deepEqual(onUpdatedEvents, expectedUpdates);
         });
@@ -133,12 +140,15 @@ suite('Environments Reducer', () => {
 
             // Act
             await getEnvs(iterator);
-            didUpdate.fire({ old: env1, new: env2 });
+            didUpdate.fire({ index: 0, old: env1, update: env2 });
             didUpdate.fire(null); // It is essential for the incoming iterator to fire "null" event signifying it's done
             await sleep(1);
 
             // Assert
-            const expectedUpdates = [{ old: env1, new: mergeEnvironments(env1, env2) }, null];
+            const expectedUpdates = [
+                { index: 0, old: env1, update: mergeEnvironments(env1, env2) },
+                null,
+            ];
             assert.deepEqual(expectedUpdates, onUpdatedEvents);
             didUpdate.dispose();
         });
@@ -172,11 +182,11 @@ suite('Environments Reducer', () => {
 
             const env13 = mergeEnvironments(env1, env3);
             const env136 = mergeEnvironments(env13, env6);
-            const expectedResolvedEnv = createEnv('resolvedEnv', '3.8.1', PythonEnvKind.Conda, 'resolved/path/to/exec');
+            const expected = createEnv('resolvedEnv', '3.8.1', PythonEnvKind.Conda, 'resolved/path/to/exec');
             const parentLocator = new SimpleLocator(environmentsToBeIterated, {
                 resolve: async (e: PythonEnvInfo) => {
                     if (isEqual(e, env136)) {
-                        return expectedResolvedEnv;
+                        return expected;
                     }
                     return undefined;
                 },
@@ -184,9 +194,9 @@ suite('Environments Reducer', () => {
             const reducer = new PythonEnvsReducer(parentLocator);
 
             // Trying to resolve the environment corresponding to env1 env3 env6
-            const expected = await reducer.resolveEnv(path.join('path', 'to', 'exec'));
+            const resolved = await reducer.resolveEnv(path.join('path', 'to', 'exec'));
 
-            assert.deepEqual(expected, expectedResolvedEnv);
+            assert.deepEqual(resolved, expected);
         });
 
         test("If the reducer isn't able to resolve environment, return undefined", async () => {
