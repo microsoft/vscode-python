@@ -124,5 +124,5 @@
         "salt": "DeprecatePythonPath",
         "min": 80,
         "max": 100
-    },
+    }
 ]

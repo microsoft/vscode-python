@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.9.0 (14 September 2020)
+## 2020.9.0 (23 September 2020)
 
 ### Enhancements
 
@@ -19,6 +19,8 @@
    ([#13831](https://github.com/Microsoft/vscode-python/issues/13831))
 1. Enable custom editor support in stable VS code at 20%.
    ([#13890](https://github.com/Microsoft/vscode-python/issues/13890))
+1. Upgraded to isort `5.5.3`.
+   ([#14027](https://github.com/Microsoft/vscode-python/issues/14027))
 
 ### Fixes
 
@@ -57,6 +59,10 @@
    ([#13612](https://github.com/Microsoft/vscode-python/issues/13612))
 1. Fix the behavior of the 'python.showStartPage' setting.
    ([#13706](https://github.com/Microsoft/vscode-python/issues/13706))
+1. Correctly install ipykernel when launching from an interpreter.
+   ([#13956](https://github.com/Microsoft/vscode-python/issues/13956))
+1. Backup on custom editors is being ignored.
+   ([#13981](https://github.com/Microsoft/vscode-python/issues/13981))
 
 ### Code Health
 
@@ -82,6 +88,11 @@
    ([#13729](https://github.com/Microsoft/vscode-python/issues/13729))
 1. Fix nighly failure with beakerx.
    ([#13734](https://github.com/Microsoft/vscode-python/issues/13734))
+## 2020.8.6 (15 September 2020)
+
+### Fixes
+
+1. Workaround problem caused by https://github.com/microsoft/vscode/issues/106547
 
 ### Thanks
 

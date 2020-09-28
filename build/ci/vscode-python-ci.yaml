@@ -72,7 +72,7 @@ stages:
               NeedsIPythonReqs: true
           maxParallel: 2
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-20.04'
         steps:
           - template: templates/test_phases.yml
 
@@ -100,7 +100,7 @@ stages:
               NeedsPythonTestReqs: true
           maxParallel: 2
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-20.04'
         steps:
           - template: templates/test_phases.yml
 
