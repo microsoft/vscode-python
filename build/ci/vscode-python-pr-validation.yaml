@@ -111,6 +111,10 @@ stages:
         timeoutInMinutes: 90
         strategy:
           matrix:
+            'Unit':
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
             # This gives us our best functional coverage for the OS.
             'Functional':
               TestsToRun: 'testfunctional'

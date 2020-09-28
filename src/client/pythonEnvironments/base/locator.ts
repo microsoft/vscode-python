@@ -92,7 +92,7 @@ export type PythonLocatorQuery = BasicPythonLocatorQuery & {
     searchLocations?: Uri[];
 };
 
-export type QueryForEvent<E> = E extends PythonEnvsChangedEvent ? PythonLocatorQuery : BasicPythonLocatorQuery;
+type QueryForEvent<E> = E extends PythonEnvsChangedEvent ? PythonLocatorQuery : BasicPythonLocatorQuery;
 
 /**
  * A single Python environment locator.

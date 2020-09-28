@@ -547,7 +547,10 @@ export namespace vscMockExtHostedTypes {
     }
 
     export class WorkspaceEdit implements vscode.WorkspaceEdit {
-        replaceCells(
+        replaceNotebookMetadata(_uri: vscode.Uri, _value: vscode.NotebookDocumentMetadata): void {
+            //
+        }
+        replaceNotebookCells(
             _uri: vscode.Uri,
             _start: number,
             _end: number,
@@ -557,7 +560,7 @@ export namespace vscMockExtHostedTypes {
             // Noop.
         }
 
-        replaceCellOutput(
+        replaceNotebookCellOutput(
             _uri: vscode.Uri,
             _index: number,
             _outputs: vscode.CellOutput[],
@@ -566,7 +569,7 @@ export namespace vscMockExtHostedTypes {
             // Noop.
         }
 
-        replaceCellMetadata(
+        replaceNotebookCellMetadata(
             _uri: vscode.Uri,
             _index: number,
             _cellMetadata: vscode.NotebookCellMetadata,

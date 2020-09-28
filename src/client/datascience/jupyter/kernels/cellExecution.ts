@@ -6,11 +6,14 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
 import { CancellationToken, CellOutputKind, CellStreamOutput, NotebookCell, NotebookCellRunState } from 'vscode';
+import type { NotebookEditor as VSCNotebookEditor } from '../../../../../types/vscode-proposed';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
-import { IApplicationShell } from '../../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
+import { IDisposable } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
+import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -43,12 +46,14 @@ export class CellExecutionFactory {
         private readonly contentProvider: INotebookContentProvider,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
-        private readonly appShell: IApplicationShell
+        private readonly appShell: IApplicationShell,
+        private readonly vscNotebook: IVSCodeNotebook
     ) {}
 
     public create(cell: NotebookCell) {
         // tslint:disable-next-line: no-use-before-declare
         return CellExecution.fromCell(
+            this.vscNotebook.notebookEditors.find((e) => e.document === cell.notebook)!,
             cell,
             this.contentProvider,
             this.errorHandler,
@@ -74,6 +79,10 @@ export class CellExecution {
         return this._completed;
     }
 
+    private get cellIndex() {
+        return this.cell.notebook.cells.indexOf(this.cell);
+    }
+
     private static sentExecuteCellTelemetry?: boolean;
 
     private readonly oldCellRunState?: NotebookCellRunState;
@@ -87,8 +96,15 @@ export class CellExecution {
     private started?: boolean;
 
     private _completed?: boolean;
+    private readonly initPromise: Promise<void>;
+    /**
+     * This is used to chain the updates to the cells.
+     */
+    private previousUpdatedToCellHasCompleted = Promise.resolve();
+    private disposables: IDisposable[] = [];
 
     private constructor(
+        public readonly editor: VSCNotebookEditor,
         public readonly cell: NotebookCell,
         private readonly contentProvider: INotebookContentProvider,
         private readonly errorHandler: IDataScienceErrorHandler,
@@ -96,24 +112,31 @@ export class CellExecution {
         private readonly applicationService: IApplicationShell
     ) {
         this.oldCellRunState = cell.metadata.runState;
-        this.enqueue();
+        this.initPromise = this.enqueue();
     }
 
     public static fromCell(
+        editor: VSCNotebookEditor,
         cell: NotebookCell,
         contentProvider: INotebookContentProvider,
         errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
         appService: IApplicationShell
     ) {
-        return new CellExecution(cell, contentProvider, errorHandler, editorProvider, appService);
+        return new CellExecution(editor, cell, contentProvider, errorHandler, editorProvider, appService);
     }
 
-    public start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
+    public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
+        await this.initPromise;
         this.started = true;
         // Ensure we clear the cell state and trigger a change.
-        clearCellForExecution(this.cell);
-        this.cell.metadata.runStartTime = new Date().getTime();
+        await clearCellForExecution(this.editor, this.cell);
+        await this.editor.edit((edit) => {
+            edit.replaceCellMetadata(this.cell.notebook.cells.indexOf(this.cell), {
+                ...this.cell.metadata,
+                runStartTime: new Date().getTime()
+            });
+        });
         this.stopWatch.reset();
         // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
@@ -121,19 +144,18 @@ export class CellExecution {
 
         // Begin the request that will modify our cell.
         kernelPromise
-            .then((_k) => {
-                this.execute(notebook.session, notebook.getLoggers());
-            })
-            .catch((e) => {
-                this.completedWithErrors(e);
-            });
+            .then((kernel) => this.handleKernelRestart(kernel))
+            .then(() => this.execute(notebook.session, notebook.getLoggers()))
+            .catch((e) => this.completedWithErrors(e))
+            .finally(() => this.dispose())
+            .catch(noop);
     }
-
     /**
      * Cancel execution.
      * If execution has commenced, then interrupt (via cancellation token) else dequeue from execution.
      */
-    public cancel() {
+    public async cancel() {
+        await this.initPromise;
         // We need to notify cancellation only if execution is in progress,
         // coz if not, we can safely reset the states.
         if (this.started && !this._completed) {
@@ -141,15 +163,27 @@ export class CellExecution {
         }
 
         if (!this.started) {
-            this.dequeue();
+            await this.dequeue();
         }
         this._result.resolve(this.cell.metadata.runState);
+        this.dispose();
+    }
+    private dispose() {
+        this.disposables.forEach((d) => d.dispose());
+    }
+    private handleKernelRestart(kernel: IKernel) {
+        kernel.onRestarted(async () => this.cancel(), this, this.disposables);
     }
 
-    private completedWithErrors(error: Partial<Error>) {
+    private async completedWithErrors(error: Partial<Error>) {
         this.sendPerceivedCellExecute();
-        this.cell.metadata.lastRunDuration = this.stopWatch.elapsedTime;
-        updateCellWithErrorStatus(this.cell, error);
+        await this.editor.edit((edit) =>
+            edit.replaceCellMetadata(this.cell.notebook.cells.indexOf(this.cell), {
+                ...this.cell.metadata,
+                lastRunDuration: this.stopWatch.elapsedTime
+            })
+        );
+        await updateCellWithErrorStatus(this.editor, this.cell, error);
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
         this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
 
@@ -159,25 +193,34 @@ export class CellExecution {
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
     }
 
-    private completedSuccessfully() {
+    private async completedSuccessfully() {
         this.sendPerceivedCellExecute();
+        let statusMessage = '';
         // If we requested a cancellation, then assume it did not even run.
         // If it did, then we'd get an interrupt error in the output.
-        this.cell.metadata.runState = this.token.isCancellationRequested
+        let runState = this.token.isCancellationRequested
             ? vscodeNotebookEnums.NotebookCellRunState.Idle
             : vscodeNotebookEnums.NotebookCellRunState.Success;
 
-        this.cell.metadata.statusMessage = '';
-        this.cell.metadata.lastRunDuration = this.stopWatch.elapsedTime;
-        updateCellExecutionTimes(this.cell, {
+        await updateCellExecutionTimes(this.editor, this.cell, {
             startTime: this.cell.metadata.runStartTime,
-            duration: this.cell.metadata.lastRunDuration
+            lastRunDuration: this.stopWatch.elapsedTime
         });
+
         // If there are any errors in the cell, then change status to error.
         if (this.cell.outputs.some((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error)) {
-            this.cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Error;
-            this.cell.metadata.statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(this.cell.outputs);
+            runState = vscodeNotebookEnums.NotebookCellRunState.Error;
+            statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(this.cell.outputs);
         }
+
+        const cellIndex = this.editor.document.cells.indexOf(this.cell);
+        await this.editor.edit((edit) =>
+            edit.replaceCellMetadata(cellIndex, {
+                ...this.cell.metadata,
+                runState,
+                statusMessage
+            })
+        );
 
         this._completed = true;
         this._result.resolve(this.cell.metadata.runState);
@@ -203,13 +246,18 @@ export class CellExecution {
      * This cell will no longer be processed for execution (even though it was meant to be).
      * At this point we revert cell state & indicate that it has nto started & it is not busy.
      */
-    private dequeue() {
-        if (this.oldCellRunState === vscodeNotebookEnums.NotebookCellRunState.Running) {
-            this.cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
-        } else {
-            this.cell.metadata.runState = this.oldCellRunState;
-        }
-        this.cell.metadata.runStartTime = undefined;
+    private async dequeue() {
+        const runState =
+            this.oldCellRunState === vscodeNotebookEnums.NotebookCellRunState.Running
+                ? vscodeNotebookEnums.NotebookCellRunState.Idle
+                : this.oldCellRunState;
+        await this.editor.edit((edit) =>
+            edit.replaceCellMetadata(this.cell.notebook.cells.indexOf(this.cell), {
+                ...this.cell.metadata,
+                runStartTime: undefined,
+                runState
+            })
+        );
         this._completed = true;
         this._result.resolve(this.cell.metadata.runState);
         // Changes to metadata must be saved in ipynb, hence mark doc has dirty.
@@ -220,8 +268,13 @@ export class CellExecution {
      * Place in queue for execution with kernel.
      * (mark it as busy).
      */
-    private enqueue() {
-        this.cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Running;
+    private async enqueue() {
+        await this.editor.edit((edit) =>
+            edit.replaceCellMetadata(this.cell.notebook.cells.indexOf(this.cell), {
+                ...this.cell.metadata,
+                runState: vscodeNotebookEnums.NotebookCellRunState.Running
+            })
+        );
         this.contentProvider.notifyChangesToDocument(this.cell.notebook);
     }
 
@@ -281,13 +334,13 @@ export class CellExecution {
                 // When the request finishes we are done
                 request.done
                     .then(() => this.completedSuccessfully())
-                    .catch((e) => {
+                    .catch(async (e) => {
                         // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
                         // Such an error must be ignored.
                         if (e && e instanceof Error && e.message === 'Canceled') {
-                            this.completedSuccessfully();
+                            await this.completedSuccessfully();
                         } else {
-                            this.completedWithErrors(e);
+                            await this.completedWithErrors(e);
                         }
                     })
                     .finally(() => {
@@ -295,19 +348,25 @@ export class CellExecution {
                     })
                     .ignoreErrors();
             } else {
-                this.completedWithErrors(new Error('Session cannot generate requrests'));
+                this.completedWithErrors(new Error('Session cannot generate requrests')).then(noop, noop);
             }
         } else {
-            this.completedSuccessfully();
+            this.completedSuccessfully().then(noop, noop);
         }
     }
 
-    private handleIOPub(
+    @swallowExceptions()
+    private async handleIOPub(
         clearState: RefBool,
         loggers: INotebookExecutionLogger[],
         msg: KernelMessage.IIOPubMessage
         // tslint:disable-next-line: no-any
     ) {
+        // Wait for previous cell update to complete.
+        await this.previousUpdatedToCellHasCompleted.then(noop, noop);
+        const deferred = createDeferred<void>();
+        this.previousUpdatedToCellHasCompleted = this.previousUpdatedToCellHasCompleted.then(() => deferred.promise);
+
         // Let our loggers get a first crack at the message. They may change it
         loggers.forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
 
@@ -318,9 +377,9 @@ export class CellExecution {
         let shouldUpdate = true;
         try {
             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
+                await this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
-                this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
+                await this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
                 // Status is handled by the result promise. While it is running we are active. Otherwise we're stopped.
                 // So ignore status messages.
@@ -328,16 +387,16 @@ export class CellExecution {
                 shouldUpdate = false;
                 this.handleStatusMessage(statusMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState);
+                await this.handleStreamMessage(msg as KernelMessage.IStreamMsg, clearState);
             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
-                this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
+                await this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
                 // No new data to update UI, hence do not send updates.
                 shouldUpdate = false;
             } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
-                this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);
+                await this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
-                this.handleError(msg as KernelMessage.IErrorMsg, clearState);
+                await this.handleError(msg as KernelMessage.IErrorMsg, clearState);
             } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
                 // No new data to update UI, hence do not send updates.
                 shouldUpdate = false;
@@ -353,9 +412,7 @@ export class CellExecution {
 
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
-                if (updateCellExecutionCount(this.cell, msg.content.execution_count)) {
-                    shouldUpdate = true;
-                }
+                updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count).then(noop, noop);
             }
 
             // Show our update if any new output.
@@ -364,11 +421,13 @@ export class CellExecution {
             }
         } catch (err) {
             // If not a restart error, then tell the subscriber
-            this.completedWithErrors(err);
+            this.completedWithErrors(err).then(noop, noop);
+        } finally {
+            deferred.resolve();
         }
     }
 
-    private addToCellData(
+    private async addToCellData(
         output:
             | nbformat.IUnrecognizedOutput
             | nbformat.IExecuteResult
@@ -379,14 +438,18 @@ export class CellExecution {
     ) {
         const converted = cellOutputToVSCCellOutput(output);
 
-        // Clear if necessary
-        if (clearState.value) {
-            this.cell.outputs = [];
-            clearState.update(false);
-        }
+        await this.editor.edit((edit) => {
+            let existingOutput = [...this.cell.outputs];
 
-        // Append to the data (we would push here but VS code requires a recreation of the array)
-        this.cell.outputs = [...this.cell.outputs, converted];
+            // Clear if necessary
+            if (clearState.value) {
+                existingOutput = [];
+                clearState.update(false);
+            }
+
+            // Append to the data (we would push here but VS code requires a recreation of the array)
+            edit.replaceCellOutput(this.cell.notebook.cells.indexOf(this.cell), existingOutput.concat(converted));
+        });
     }
 
     private handleInputRequest(session: IJupyterSession, msg: KernelMessage.IStdinMessage) {
@@ -407,13 +470,13 @@ export class CellExecution {
 
     // See this for docs on the messages:
     // https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter
-    private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: RefBool) {
+    private async handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: RefBool) {
         // Escape text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
             msg.content.data['text/plain'] = escape(msg.content.data['text/plain'] as string);
         }
 
-        this.addToCellData(
+        await this.addToCellData(
             {
                 output_type: 'execute_result',
                 data: msg.content.data,
@@ -426,65 +489,70 @@ export class CellExecution {
         );
     }
 
-    private handleExecuteReply(msg: KernelMessage.IExecuteReplyMsg, clearState: RefBool) {
+    private async handleExecuteReply(msg: KernelMessage.IExecuteReplyMsg, clearState: RefBool) {
         const reply = msg.content as KernelMessage.IExecuteReply;
         if (reply.payload) {
-            reply.payload.forEach((o) => {
-                if (o.data && o.data.hasOwnProperty('text/plain')) {
-                    this.addToCellData(
-                        {
-                            // Mark as stream output so the text is formatted because it likely has ansi codes in it.
-                            output_type: 'stream',
-                            // tslint:disable-next-line: no-any
-                            text: escape((o.data as any)['text/plain'].toString()),
-                            metadata: {},
-                            execution_count: reply.execution_count
-                        },
-                        clearState
-                    );
-                }
-            });
+            await Promise.all(
+                reply.payload.map(async (o) => {
+                    if (o.data && o.data.hasOwnProperty('text/plain')) {
+                        await this.addToCellData(
+                            {
+                                // Mark as stream output so the text is formatted because it likely has ansi codes in it.
+                                output_type: 'stream',
+                                // tslint:disable-next-line: no-any
+                                text: escape((o.data as any)['text/plain'].toString()),
+                                metadata: {},
+                                execution_count: reply.execution_count
+                            },
+                            clearState
+                        );
+                    }
+                })
+            );
         }
     }
 
-    private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
+    private async handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
         if (msg.content.execution_count) {
-            updateCellExecutionCount(this.cell, msg.content.execution_count);
+            await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
         }
     }
 
     private handleStatusMessage(msg: KernelMessage.IStatusMsg, _clearState: RefBool) {
         traceInfo(`Kernel switching to ${msg.content.execution_state}`);
     }
+    private async handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
+        await this.editor.edit((edit) => {
+            let exitingCellOutput = this.cell.outputs;
+            // Clear output if waiting for a clear
+            if (clearState.value) {
+                exitingCellOutput = [];
+                clearState.update(false);
+            }
 
-    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
-        // Clear output if waiting for a clear
-        if (clearState.value) {
-            this.cell.outputs = [];
-            clearState.update(false);
-        }
-
-        // Might already have a stream message. If so, just add on to it.
-        const lastOutput = this.cell.outputs.length > 0 ? this.cell.outputs[this.cell.outputs.length - 1] : undefined;
-        const existing: CellStreamOutput | undefined =
-            lastOutput && lastOutput.outputKind === CellOutputKind.Text ? lastOutput : undefined;
-        if (existing) {
-            // tslint:disable-next-line:restrict-plus-operands
-            existing.text = formatStreamText(concatMultilineString(existing.text + escape(msg.content.text)));
-            this.cell.outputs = [...this.cell.outputs]; // This is necessary to get VS code to update (for now)
-        } else {
-            const originalText = formatStreamText(concatMultilineString(escape(msg.content.text)));
-            // Create a new stream entry
-            const output: nbformat.IStream = {
-                output_type: 'stream',
-                name: msg.content.name,
-                text: originalText
-            };
-            this.cell.outputs = [...this.cell.outputs, cellOutputToVSCCellOutput(output)];
-        }
+            // Might already have a stream message. If so, just add on to it.
+            const lastOutput =
+                exitingCellOutput.length > 0 ? exitingCellOutput[exitingCellOutput.length - 1] : undefined;
+            const existing: CellStreamOutput | undefined =
+                lastOutput && lastOutput.outputKind === CellOutputKind.Text ? lastOutput : undefined;
+            if (existing) {
+                // tslint:disable-next-line:restrict-plus-operands
+                existing.text = formatStreamText(concatMultilineString(existing.text + escape(msg.content.text)));
+                edit.replaceCellOutput(this.cellIndex, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
+            } else {
+                const originalText = formatStreamText(concatMultilineString(escape(msg.content.text)));
+                // Create a new stream entry
+                const output: nbformat.IStream = {
+                    output_type: 'stream',
+                    name: msg.content.name,
+                    text: originalText
+                };
+                edit.replaceCellOutput(this.cellIndex, [...exitingCellOutput, cellOutputToVSCCellOutput(output)]);
+            }
+        });
     }
 
-    private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool) {
+    private async handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool) {
         // Escape text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
             msg.content.data['text/plain'] = escape(msg.content.data['text/plain'] as string);
@@ -497,40 +565,40 @@ export class CellExecution {
             // tslint:disable-next-line: no-any
             transient: msg.content.transient as any // NOSONAR
         };
-        this.addToCellData(output, clearState);
+        await this.addToCellData(output, clearState);
     }
 
-    private handleClearOutput(msg: KernelMessage.IClearOutputMsg, clearState: RefBool) {
+    private async handleClearOutput(msg: KernelMessage.IClearOutputMsg, clearState: RefBool) {
         // If the message says wait, add every message type to our clear state. This will
         // make us wait for this type of output before we clear it.
         if (msg && msg.content.wait) {
             clearState.update(true);
         } else {
             // Clear all outputs and start over again.
-            this.cell.outputs = [];
+            await this.editor.edit((edit) => edit.replaceCellOutput(this.cellIndex, []));
         }
     }
 
-    private handleError(msg: KernelMessage.IErrorMsg, clearState: RefBool) {
+    private async handleError(msg: KernelMessage.IErrorMsg, clearState: RefBool) {
         const output: nbformat.IError = {
             output_type: 'error',
             ename: msg.content.ename,
             evalue: msg.content.evalue,
             traceback: msg.content.traceback
         };
-        this.addToCellData(output, clearState);
+        await this.addToCellData(output, clearState);
     }
 
-    private handleReply(clearState: RefBool, msg: KernelMessage.IShellControlMessage) {
+    private async handleReply(clearState: RefBool, msg: KernelMessage.IShellControlMessage) {
         // tslint:disable-next-line:no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         if (jupyterLab.KernelMessage.isExecuteReplyMsg(msg)) {
-            this.handleExecuteReply(msg, clearState);
+            await this.handleExecuteReply(msg, clearState);
 
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
-                updateCellExecutionCount(this.cell, msg.content.execution_count);
+                await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
             }
 
             // Send this event.

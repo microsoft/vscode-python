@@ -45,8 +45,8 @@ export class NotebookContentProvider implements INotebookContentProvider {
         @inject(NotebookEditorCompatibilitySupport)
         private readonly compatibilitySupport: NotebookEditorCompatibilitySupport
     ) {}
-    public notifyChangesToDocument(document: NotebookDocument) {
-        this.notebookChanged.fire({ document });
+    public notifyChangesToDocument(_document: NotebookDocument) {
+        // this.notebookChanged.fire({ document });
     }
     public async resolveNotebook(_document: NotebookDocument, _webview: NotebookCommunication): Promise<void> {
         // Later
