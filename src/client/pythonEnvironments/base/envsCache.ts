@@ -3,7 +3,8 @@
 
 import { cloneDeep } from 'lodash';
 import { getGlobalPersistentStore, IPersistentStore } from '../common/externalDependencies';
-import { areSameEnvironment, PythonEnvInfo } from './info';
+import { PythonEnvInfo } from './info';
+import { areSameEnvironment } from './info/env';
 
 /**
  * Represents the environment info cache to be used by the cache locator.
@@ -29,15 +30,17 @@ export interface IEnvsCache {
     setAllEnvs(envs: PythonEnvInfo[]): void;
 
     /**
-     * Return a specific environmnent info object.
+     * If the cache has been initialized, return environmnent info objects that match a query object.
+     * If none of the environments in the cache match the query data, return an empty array.
+     * If the in-memory cache has not been initialized prior to calling `filterEnvs`, return `undefined`.
      *
      * @param env The environment info data that will be used to look for
-     * an environment info object in the cache, or a unique environment key.
+     * environment info objects in the cache, or a unique environment key.
      * If passing an environment info object, it may contain incomplete environment info.
-     * @return The environment info object that matches all non-undefined keys from the `env` param,
-     *  `undefined` otherwise.
+     * @return The environment info objects matching the `env` param,
+     * or `undefined` if the in-memory cache is not initialized.
      */
-    getEnv(env: PythonEnvInfo | string): PythonEnvInfo | undefined;
+    filterEnvs(env: PythonEnvInfo | string): PythonEnvInfo[] | undefined;
 
     /**
      * Writes the content of the in-memory cache to persistent storage.
@@ -77,8 +80,8 @@ export class PythonEnvInfoCache implements IEnvsCache {
         this.envsList = cloneDeep(envs);
     }
 
-    public getEnv(env: PythonEnvInfo | string): PythonEnvInfo | undefined {
-        const result = this.envsList?.find((info) => areSameEnvironment(info, env));
+    public filterEnvs(env: PythonEnvInfo | string): PythonEnvInfo[] | undefined {
+        const result = this.envsList?.filter((info) => areSameEnvironment(info, env));
 
         if (result) {
             return cloneDeep(result);

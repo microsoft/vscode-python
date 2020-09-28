@@ -4,37 +4,38 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { PythonEnvInfoCache } from '../../../client/pythonEnvironments/base/envsCache';
-import * as envInfo from '../../../client/pythonEnvironments/base/info';
+import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
+import * as envInfo from '../../../client/pythonEnvironments/base/info/env';
 import * as externalDependencies from '../../../client/pythonEnvironments/common/externalDependencies';
 
 suite('Environment Info cache', () => {
     let getGlobalPersistentStoreStub: sinon.SinonStub;
     let areSameEnvironmentStub: sinon.SinonStub;
-    let updatedValues: envInfo.PythonEnvInfo[] | undefined;
+    let updatedValues: PythonEnvInfo[] | undefined;
 
     const allEnvsComplete = () => true;
     const envInfoArray = [
         {
-            kind: envInfo.PythonEnvKind.Conda, name: 'my-conda-env', defaultDisplayName: 'env-one',
+            kind: PythonEnvKind.Conda, name: 'my-conda-env', defaultDisplayName: 'env-one',
         },
         {
-            kind: envInfo.PythonEnvKind.Venv, name: 'my-venv-env', defaultDisplayName: 'env-two',
+            kind: PythonEnvKind.Venv, name: 'my-venv-env', defaultDisplayName: 'env-two',
         },
         {
-            kind: envInfo.PythonEnvKind.Pyenv, name: 'my-pyenv-env', defaultDisplayName: 'env-three',
+            kind: PythonEnvKind.Pyenv, name: 'my-pyenv-env', defaultDisplayName: 'env-three',
         },
-    ] as envInfo.PythonEnvInfo[];
+    ] as PythonEnvInfo[];
 
     setup(() => {
         areSameEnvironmentStub = sinon.stub(envInfo, 'areSameEnvironment');
         areSameEnvironmentStub.callsFake(
-            (env1: envInfo.PythonEnvInfo, env2:envInfo.PythonEnvInfo) => env1.name === env2.name,
+            (env1: PythonEnvInfo, env2:PythonEnvInfo) => env1.name === env2.name,
         );
 
         getGlobalPersistentStoreStub = sinon.stub(externalDependencies, 'getGlobalPersistentStore');
         getGlobalPersistentStoreStub.returns({
             get() { return envInfoArray; },
-            set(envs: envInfo.PythonEnvInfo[]) {
+            set(envs: PythonEnvInfo[]) {
                 updatedValues = envs;
                 return Promise.resolve();
             },
@@ -94,54 +95,63 @@ suite('Environment Info cache', () => {
         assert.strictEqual(envs === envInfoArray, false);
     });
 
-    test('`getEnv` should return an environment that matches all non-undefined properties of its argument', () => {
-        const env:envInfo.PythonEnvInfo = { name: 'my-venv-env' } as unknown as envInfo.PythonEnvInfo;
+    test('`filterEnvs` should return environments that match its argument using areSameEnvironmnet', () => {
+        const env:PythonEnvInfo = { name: 'my-venv-env' } as unknown as PythonEnvInfo;
         const envsCache = new PythonEnvInfoCache(allEnvsComplete);
 
         envsCache.initialize();
 
-        const result = envsCache.getEnv(env);
+        const result = envsCache.filterEnvs(env);
 
-        assert.deepStrictEqual(result, {
-            kind: envInfo.PythonEnvKind.Venv, name: 'my-venv-env', defaultDisplayName: 'env-two',
-        });
+        assert.deepStrictEqual(result, [{
+            kind: PythonEnvKind.Venv, name: 'my-venv-env', defaultDisplayName: 'env-two',
+        }]);
     });
 
-    test('`getEnv` should return a deep copy of an environment', () => {
+    test('`filterEnvs` should return a deep copy of the matched environments', () => {
         const envToFind = {
-            kind: envInfo.PythonEnvKind.System, name: 'my-system-env', defaultDisplayName: 'env-system',
-        } as unknown as envInfo.PythonEnvInfo;
-        const env:envInfo.PythonEnvInfo = { name: 'my-system-env' } as unknown as envInfo.PythonEnvInfo;
+            kind: PythonEnvKind.System, name: 'my-system-env', defaultDisplayName: 'env-system',
+        } as unknown as PythonEnvInfo;
+        const env:PythonEnvInfo = { name: 'my-system-env' } as unknown as PythonEnvInfo;
         const envsCache = new PythonEnvInfoCache(allEnvsComplete);
 
         envsCache.setAllEnvs([...envInfoArray, envToFind]);
 
-        const result = envsCache.getEnv(env)!;
-        result.name = 'some-other-name';
+        const result = envsCache.filterEnvs(env)!;
+        result[0].name = 'some-other-name';
 
-        assert.ok(result !== envToFind);
+        assert.notDeepStrictEqual(result[0], envToFind);
     });
 
-    test('`getEnv` should return undefined if no environment matches the properties of its argument', () => {
-        const env:envInfo.PythonEnvInfo = { name: 'my-nonexistent-env' } as unknown as envInfo.PythonEnvInfo;
+    test('`filterEnvs` should return an empty array if no environment matches the properties of its argument', () => {
+        const env:PythonEnvInfo = { name: 'my-nonexistent-env' } as unknown as PythonEnvInfo;
         const envsCache = new PythonEnvInfoCache(allEnvsComplete);
 
         envsCache.initialize();
 
-        const result = envsCache.getEnv(env);
+        const result = envsCache.filterEnvs(env);
+
+        assert.deepStrictEqual(result, []);
+    });
+
+    test('`filterEnvs` should return undefined if the cache hasn\'t been initialized', () => {
+        const env:PythonEnvInfo = { name: 'my-nonexistent-env' } as unknown as PythonEnvInfo;
+        const envsCache = new PythonEnvInfoCache(allEnvsComplete);
+
+        const result = envsCache.filterEnvs(env);
 
         assert.strictEqual(result, undefined);
     });
 
     test('`flush` should write complete environment info objects to persistent storage', async () => {
         const otherEnv = {
-            kind: envInfo.PythonEnvKind.OtherGlobal,
+            kind: PythonEnvKind.OtherGlobal,
             name: 'my-other-env',
             defaultDisplayName: 'env-five',
         };
         const updatedEnvInfoArray = [
-            otherEnv, { kind: envInfo.PythonEnvKind.System, name: 'my-system-env' },
-        ] as envInfo.PythonEnvInfo[];
+            otherEnv, { kind: PythonEnvKind.System, name: 'my-system-env' },
+        ] as PythonEnvInfo[];
         const expected = [
             otherEnv,
         ];
@@ -155,7 +165,7 @@ suite('Environment Info cache', () => {
     });
 
     test('`flush` should not write to persistent storage if there are no environment info objects in-memory', async () => {
-        const envsCache = new PythonEnvInfoCache((env) => env.kind === envInfo.PythonEnvKind.MacDefault);
+        const envsCache = new PythonEnvInfoCache((env) => env.kind === PythonEnvKind.MacDefault);
 
         await envsCache.flush();
 
@@ -163,7 +173,7 @@ suite('Environment Info cache', () => {
     });
 
     test('`flush` should not write to persistent storage if there are no complete environment info objects', async () => {
-        const envsCache = new PythonEnvInfoCache((env) => env.kind === envInfo.PythonEnvKind.MacDefault);
+        const envsCache = new PythonEnvInfoCache((env) => env.kind === PythonEnvKind.MacDefault);
 
         envsCache.initialize();
         await envsCache.flush();
