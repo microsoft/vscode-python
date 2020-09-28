@@ -12,10 +12,22 @@ import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
 import { areEqualVersions, areEquivalentVersions } from './pythonVersion';
 
+/**
+ * Checks if two environments are same.
+ * @param {string | PythonEnvInfo} left: environment to compare.
+ * @param {string | PythonEnvInfo} right: environment to compare.
+ * @param {boolean} allowPartialMatch: allow partial matches of properties when comparing.
+ *
+ * Remarks: The current comparison assumes that if the path to the executables are the same
+ * then it is the same environment. Additionally, if the paths are not same but executables
+ * are in the same directory and the version of python is the same than we can assume it
+ * to be same environment. This later case is needed for comparing windows store python,
+ * where multiple versions of python executables are all put in the same directory.
+ */
 export function areSameEnvironment(
     left: string | PythonEnvInfo,
     right: string | PythonEnvInfo,
-    allowPartialMatch?:boolean,
+    allowPartialMatch?: boolean,
 ): boolean {
     const leftFilename = typeof left === 'string' ? left : left.executable.filename;
     const rightFilename = typeof right === 'string' ? right : right.executable.filename;
@@ -88,7 +100,7 @@ function getFileInfoHeuristic(file:FileInfo): number {
         infoLevel += 2; // W1
     }
 
-    if (file.ctime || file.mtime) {
+    if (file.ctime) {
         infoLevel += 1; // W0
     }
 

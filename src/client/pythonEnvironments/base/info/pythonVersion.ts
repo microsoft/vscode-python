@@ -41,13 +41,7 @@ export function parseVersion(versionStr: string): PythonVersion {
  * @returns {boolean}
  */
 export function areEqualVersions(left: PythonVersion, right:PythonVersion): boolean {
-    return (
-        left.major === right.major
-        && left.minor === right.minor
-        && left.micro === right.micro
-        && left.release.level === right.release.level
-        && left.release.serial === right.release.serial
-    );
+    return left === right;
 }
 
 /**
