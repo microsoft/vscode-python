@@ -6,7 +6,7 @@ import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
 import { createDeferred } from '../../../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
-import { areSameEnvironment } from '../../info/env';
+import { areSameEnv } from '../../info/env';
 import {
     ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery,
 } from '../../locator';
@@ -29,13 +29,13 @@ export class PythonEnvsReducer implements ILocator {
         iterator.onUpdated!((event) => {
             if (event === null) {
                 waitForUpdatesDeferred.resolve();
-            } else if (environment && areSameEnvironment(environment, event.new)) {
-                environment = event.new;
+            } else if (environment && areSameEnv(environment, event.update)) {
+                environment = event.update;
             }
         });
         let result = await iterator.next();
         while (!result.done) {
-            if (areSameEnvironment(result.value, env)) {
+            if (areSameEnv(result.value, env)) {
                 environment = result.value;
             }
             // eslint-disable-next-line no-await-in-loop
@@ -73,13 +73,13 @@ async function* iterEnvsIterator(
                 state.done = true;
                 checkIfFinishedAndNotify(state, didUpdate);
             } else {
-                const oldIndex = seen.findIndex((s) => areSameEnvironment(s, event.old));
-                if (oldIndex !== -1) {
+                if (seen[event.index] !== undefined) {
                     state.pending += 1;
-                    resolveDifferencesInBackground(oldIndex, event.new, state, didUpdate, seen).ignoreErrors();
+                    resolveDifferencesInBackground(event.index, event.update, state, didUpdate, seen)
+                        .ignoreErrors();
                 } else {
                     // This implies a problem in a downstream locator
-                    traceVerbose(`Expected already iterated env, got ${event.old}`);
+                    traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
                 }
             }
         });
@@ -88,7 +88,7 @@ async function* iterEnvsIterator(
     let result = await iterator.next();
     while (!result.done) {
         const currEnv = result.value;
-        const oldIndex = seen.findIndex((s) => areSameEnvironment(s, currEnv));
+        const oldIndex = seen.findIndex((s) => areSameEnv(s, currEnv));
         if (oldIndex !== -1) {
             state.pending += 1;
             resolveDifferencesInBackground(oldIndex, currEnv, state, didUpdate, seen).ignoreErrors();
@@ -116,8 +116,8 @@ async function resolveDifferencesInBackground(
     const oldEnv = seen[oldIndex];
     const merged = mergeEnvironments(oldEnv, newEnv);
     if (!isEqual(oldEnv, merged)) {
-        didUpdate.fire({ old: oldEnv, new: merged });
         seen[oldIndex] = merged;
+        didUpdate.fire({ index: oldIndex, old: oldEnv, update: merged });
     }
     state.pending -= 1;
     checkIfFinishedAndNotify(state, didUpdate);

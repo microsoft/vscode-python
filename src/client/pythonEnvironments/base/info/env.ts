@@ -3,14 +3,123 @@
 
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import {
-    FileInfo,
-    PythonDistroInfo,
-    PythonEnvInfo, PythonEnvKind, PythonVersion,
-} from '.';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
 import { areEqualVersions, areEquivalentVersions } from './pythonVersion';
+
+import {
+    FileInfo,
+    PythonDistroInfo,
+    PythonEnvInfo,
+    PythonEnvKind,
+    PythonReleaseLevel,
+    PythonVersion,
+} from '.';
+
+/**
+ * Create a new info object with all values empty.
+ *
+ * @param init - if provided, these values are applied to the new object
+ */
+export function buildEnvInfo(init?: {
+    kind?: PythonEnvKind;
+    executable?: string;
+    location?: string;
+    version?: PythonVersion;
+}): PythonEnvInfo {
+    const env = {
+        kind: PythonEnvKind.Unknown,
+        executable: {
+            filename: '',
+            sysPrefix: '',
+            ctime: -1,
+            mtime: -1,
+        },
+        name: '',
+        location: '',
+        version: {
+            major: -1,
+            minor: -1,
+            micro: -1,
+            release: {
+                level: PythonReleaseLevel.Final,
+                serial: 0,
+            },
+        },
+        arch: Architecture.Unknown,
+        distro: {
+            org: '',
+        },
+    };
+    if (init !== undefined) {
+        updateEnv(env, init);
+    }
+    return env;
+}
+
+/**
+ * Return a deep copy of the given env info.
+ *
+ * @param updates - if provided, these values are applied to the copy
+ */
+export function copyEnvInfo(
+    env: PythonEnvInfo,
+    updates?: {
+        kind?: PythonEnvKind,
+    },
+): PythonEnvInfo {
+    // We don't care whether or not extra/hidden properties
+    // get preserved, so we do the easy thing here.
+    const copied = cloneDeep(env);
+    if (updates !== undefined) {
+        updateEnv(copied, updates);
+    }
+    return copied;
+}
+
+function updateEnv(env: PythonEnvInfo, updates: {
+    kind?: PythonEnvKind;
+    executable?: string;
+    location?: string;
+    version?: PythonVersion;
+}): void {
+    if (updates.kind !== undefined) {
+        env.kind = updates.kind;
+    }
+    if (updates.executable !== undefined) {
+        env.executable.filename = updates.executable;
+    }
+    if (updates.location !== undefined) {
+        env.location = updates.location;
+    }
+    if (updates.version !== undefined) {
+        env.version = updates.version;
+    }
+}
+
+/**
+ * For the given data, build a normalized partial info object.
+ *
+ * If insufficient data is provided to generate a minimal object, such
+ * that it is not identifiable, then `undefined` is returned.
+ */
+export function getMinimalPartialInfo(env: string | Partial<PythonEnvInfo>): Partial<PythonEnvInfo> | undefined {
+    if (typeof env === 'string') {
+        if (env === '') {
+            return undefined;
+        }
+        return {
+            executable: { filename: env, sysPrefix: '', ctime: -1, mtime: -1 },
+        };
+    }
+    if (env.executable === undefined) {
+        return undefined;
+    }
+    if (env.executable.filename === '') {
+        return undefined;
+    }
+    return env;
+}
 
 /**
  * Checks if two environments are same.
@@ -24,14 +133,20 @@ import { areEqualVersions, areEquivalentVersions } from './pythonVersion';
  * to be same environment. This later case is needed for comparing windows store python,
  * where multiple versions of python executables are all put in the same directory.
  */
-export function areSameEnvironment(
-    left: string | PythonEnvInfo,
-    right: string | PythonEnvInfo,
+export function areSameEnv(
+    left: string | Partial<PythonEnvInfo>,
+    right: string | Partial<PythonEnvInfo>,
     allowPartialMatch?: boolean,
-): boolean {
-    const leftFilename = typeof left === 'string' ? left : left.executable.filename;
-    const rightFilename = typeof right === 'string' ? right : right.executable.filename;
+): boolean | undefined {
+    const leftInfo = getMinimalPartialInfo(left);
+    const rightInfo = getMinimalPartialInfo(right);
+    if (leftInfo === undefined || rightInfo === undefined) {
+        return undefined;
+    }
+    const leftFilename = leftInfo.executable!.filename;
+    const rightFilename = rightInfo.executable!.filename;
 
+    // For now we assume that matching executable means they are the same.
     if (arePathsSame(leftFilename, rightFilename)) {
         return true;
     }
@@ -72,11 +187,11 @@ function getPythonVersionInfoHeuristic(version:PythonVersion): number {
         infoLevel += 5; // W2
     }
 
-    if (version.release.level) {
+    if (version.release?.level) {
         infoLevel += 3; // W1
     }
 
-    if (version.release.serial || version.sysVersion) {
+    if (version.release?.serial || version.sysVersion) {
         infoLevel += 1; // W0
     }
 

@@ -29,6 +29,11 @@ export enum PythonEnvKind {
 }
 
 /**
+ * A (system-global) unique ID for a single Python environment.
+ */
+export type PythonEnvID = string;
+
+/**
  * Information about a file.
  */
 export type FileInfo = {
@@ -45,11 +50,6 @@ export type PythonExecutableInfo = FileInfo & {
 };
 
 /**
- * A (system-global) unique ID for a single Python environment.
- */
-export type PythonEnvID = string;
-
-/**
  * The most fundamental information about a Python environment.
  *
  * You should expect these objects to be complete (no empty props).
@@ -63,7 +63,6 @@ export type PythonEnvID = string;
  * @prop location - the env's location (on disk), if relevant
  */
 export type PythonEnvBaseInfo = {
-    id: PythonEnvID;
     kind: PythonEnvKind;
     executable: PythonExecutableInfo;
     // One of (name, location) must be non-empty.
@@ -99,7 +98,7 @@ export type PythonVersionRelease = {
  * @prop sysVersion - the raw text from `sys.version`
  */
 export type PythonVersion = BasicVersionInfo & {
-    release: PythonVersionRelease;
+    release?: PythonVersionRelease;
     sysVersion?: string;
 };
 
