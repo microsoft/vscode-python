@@ -314,7 +314,12 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             input = JSON.stringify(output.data);
             renderWithScrollbars = true;
             isText = true;
-        } else if (output.output_type === 'execute_result' && input && input.hasOwnProperty('text/plain')) {
+        } else if (
+            output.output_type === 'execute_result' &&
+            input &&
+            input.hasOwnProperty('text/plain') &&
+            !input.hasOwnProperty('text/html')
+        ) {
             // Plain text should actually be shown as html so that escaped HTML shows up correctly
             mimeType = 'text/html';
             isText = true;
