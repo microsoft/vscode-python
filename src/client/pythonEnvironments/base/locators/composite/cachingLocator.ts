@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Event } from 'vscode';
 import '../../../../common/extensions';
 import { createDeferred } from '../../../../common/utils/async';
 import { logWarning } from '../../../../logging';
@@ -19,7 +20,11 @@ import { pickBestEnv } from './reducingLocator';
 /**
  * A locator that stores the known environments in the given cache.
  */
-export class CachingLocator extends PythonEnvsWatcher implements ILocator {
+export class CachingLocator implements ILocator {
+    public readonly onChanged: Event<PythonEnvsChangedEvent>;
+
+    private readonly watcher = new PythonEnvsWatcher();
+
     private readonly initializing = createDeferred<void>();
 
     private initialized = false;
@@ -28,7 +33,7 @@ export class CachingLocator extends PythonEnvsWatcher implements ILocator {
         private readonly cache: IEnvsCache,
         private readonly locator: ILocator,
     ) {
-        super();
+        this.onChanged = this.watcher.onChanged;
     }
 
     /**
@@ -144,6 +149,6 @@ export class CachingLocator extends PythonEnvsWatcher implements ILocator {
         // If necessary, we could skip if there are no changes.
         this.cache.setAllEnvs(envs);
         await this.cache.flush();
-        this.fire(opts.event || {}); // Emit an "onCHanged" event.
+        this.watcher.fire(opts.event || {}); // Emit an "onCHanged" event.
     }
 }
