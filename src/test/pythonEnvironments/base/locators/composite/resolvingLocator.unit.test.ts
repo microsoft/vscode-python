@@ -4,30 +4,56 @@
 import { assert, expect } from 'chai';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import { ImportMock } from 'ts-mock-imports';
 import { EventEmitter } from 'vscode';
-import { ExecutionResult } from '../../../../../client/common/process/types';
 import { Architecture } from '../../../../../client/common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { buildEnvInfo } from '../../../../../client/pythonEnvironments/base/info/env';
 import { parseVersion } from '../../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvUpdatedEvent } from '../../../../../client/pythonEnvironments/base/locator';
 import { ResolvingLocator } from '../../../../../client/pythonEnvironments/base/locators/composite/resolvingLocator';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
-import * as ExternalDep from '../../../../../client/pythonEnvironments/common/externalDependencies';
-import { EnvironmentInfoService } from '../../../../../client/pythonEnvironments/info/environmentInfoService';
 import { sleep } from '../../../../core';
 import { createNamedEnv, getEnvs, SimpleLocator } from '../../common';
 
-suite('Python envs locator - Environments Resolver', () => {
-    let envInfoService: EnvironmentInfoService;
-
-    setup(() => {
-        envInfoService = new EnvironmentInfoService();
+function buildToolEnvInfo(spec: {
+    executable: string;
+    sysPrefix: string;
+    version: string;
+    sysVersion: string;
+    is64Bit: boolean;
+}): PythonEnvInfo {
+    const env = buildEnvInfo({
+        executable: spec.executable,
+        version: parseVersion(spec.version),
     });
-    teardown(() => {
-        envInfoService.dispose();
-    });
+    env.version.sysVersion = spec.sysVersion;
+    env.executable.sysPrefix = spec.sysPrefix;
+    env.arch = spec.is64Bit ? Architecture.x64 : Architecture.x86;
+    return env;
+}
 
+function getEnvInfoFunc(
+    spec: {
+        sysPrefix: string;
+        version: string;
+        sysVersion: string;
+        is64Bit: boolean;
+    } | null,
+): (p: string) => Promise<PythonEnvInfo | undefined> {
+    if (spec === null) {
+        return (_e: string) => Promise.resolve(undefined);
+    }
+    return (executable: string) => {
+        const env = buildToolEnvInfo({ executable, ...spec });
+        return Promise.resolve(env);
+    };
+}
+
+function failIfUsed(_p: string): Promise<PythonEnvInfo | undefined> {
+    throw Error('this should not have been called!');
+}
+
+suite('Python envs locator - ResolvingLocator', () => {
     /**
      * Returns the expected environment to be returned by Environment info service
      */
@@ -42,25 +68,8 @@ suite('Python envs locator - Environments Resolver', () => {
         updatedEnv.arch = Architecture.x64;
         return updatedEnv;
     }
+
     suite('iterEnvs()', () => {
-        let stubShellExec: sinon.SinonStub;
-        setup(() => {
-            stubShellExec = ImportMock.mockFunction(
-                ExternalDep,
-                'shellExecute',
-                new Promise<ExecutionResult<string>>((resolve) => {
-                    resolve({
-                        stdout:
-                            '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
-                    });
-                }),
-            );
-        });
-
-        teardown(() => {
-            stubShellExec.restore();
-        });
-
         test('Iterator yields environments as-is', async () => {
             const env1 = createNamedEnv('env1', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
             const env2 = createNamedEnv('env2', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec2'));
@@ -68,7 +77,13 @@ suite('Python envs locator - Environments Resolver', () => {
             const env4 = createNamedEnv('env4', '3.9.0rc2', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
             const environmentsToBeIterated = [env1, env2, env3, env4];
             const parentLocator = new SimpleLocator(environmentsToBeIterated);
-            const resolver = new ResolvingLocator(parentLocator, envInfoService);
+            const getEnvInfo = getEnvInfoFunc({
+                sysPrefix: 'path',
+                version: '3.8.3',
+                sysVersion: '3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]',
+                is64Bit: true,
+            });;
+            const resolver = new ResolvingLocator(parentLocator, getEnvInfo);
 
             const iterator = resolver.iterEnvs();
             const envs = await getEnvs(iterator);
@@ -83,7 +98,13 @@ suite('Python envs locator - Environments Resolver', () => {
             const environmentsToBeIterated = [env1, env2];
             const parentLocator = new SimpleLocator(environmentsToBeIterated);
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
-            const resolver = new ResolvingLocator(parentLocator, envInfoService);
+            const getEnvInfo = getEnvInfoFunc({
+                sysPrefix: 'path',
+                version: '3.8.3',
+                sysVersion: '3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]',
+                is64Bit: true,
+            });;
+            const resolver = new ResolvingLocator(parentLocator, getEnvInfo);
 
             const iterator = resolver.iterEnvs(); // Act
 
@@ -118,7 +139,13 @@ suite('Python envs locator - Environments Resolver', () => {
             const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
             const parentLocator = new SimpleLocator(environmentsToBeIterated, { onUpdated: didUpdate.event });
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
-            const resolver = new ResolvingLocator(parentLocator, envInfoService);
+            const getEnvInfo = getEnvInfoFunc({
+                sysPrefix: 'path',
+                version: '3.8.3',
+                sysVersion: '3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]',
+                is64Bit: true,
+            });;
+            const resolver = new ResolvingLocator(parentLocator, getEnvInfo);
 
             const iterator = resolver.iterEnvs(); // Act
 
@@ -152,12 +179,12 @@ suite('Python envs locator - Environments Resolver', () => {
         });
     });
 
-    test('onChanged fires iff onChanged from resolver fires', () => {
+    test('onChanged fires iff onChanged from parent fires', () => {
         const parentLocator = new SimpleLocator([]);
         const event1: PythonEnvsChangedEvent = {};
         const event2: PythonEnvsChangedEvent = { kind: PythonEnvKind.Unknown };
         const expected = [event1, event2];
-        const resolver = new ResolvingLocator(parentLocator, envInfoService);
+        const resolver = new ResolvingLocator(parentLocator, failIfUsed);
 
         const events: PythonEnvsChangedEvent[] = [];
         resolver.onChanged((e) => events.push(e));
@@ -169,24 +196,6 @@ suite('Python envs locator - Environments Resolver', () => {
     });
 
     suite('resolveEnv()', () => {
-        let stubShellExec: sinon.SinonStub;
-        setup(() => {
-            stubShellExec = ImportMock.mockFunction(
-                ExternalDep,
-                'shellExecute',
-                new Promise<ExecutionResult<string>>((resolve) => {
-                    resolve({
-                        stdout:
-                            '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
-                    });
-                }),
-            );
-        });
-
-        teardown(() => {
-            stubShellExec.restore();
-        });
-
         test('Calls into parent locator to get resolved environment, then calls environnment service to resolve environment further and return it', async () => {
             const env = createNamedEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
             const resolvedEnvReturnedByReducer = createNamedEnv(
@@ -203,7 +212,13 @@ suite('Python envs locator - Environments Resolver', () => {
                     throw new Error('Incorrect environment sent to the resolver');
                 },
             });
-            const resolver = new ResolvingLocator(parentLocator, envInfoService);
+            const getEnvInfo = getEnvInfoFunc({
+                sysPrefix: 'path',
+                version: '3.8.3',
+                sysVersion: '3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]',
+                is64Bit: true,
+            });
+            const resolver = new ResolvingLocator(parentLocator, getEnvInfo);
 
             const expected = await resolver.resolveEnv(env);
 
@@ -211,11 +226,6 @@ suite('Python envs locator - Environments Resolver', () => {
         });
 
         test('If the parent locator resolves environment, but fetching interpreter info returns undefined, return undefined', async () => {
-            stubShellExec.returns(
-                new Promise<ExecutionResult<string>>((_resolve, reject) => {
-                    reject();
-                }),
-            );
             const env = createNamedEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
             const resolvedEnvReturnedByReducer = createNamedEnv(
                 'env1',
@@ -231,7 +241,8 @@ suite('Python envs locator - Environments Resolver', () => {
                     throw new Error('Incorrect environment sent to the resolver');
                 },
             });
-            const resolver = new ResolvingLocator(parentLocator, envInfoService);
+            const getEnvInfo = getEnvInfoFunc(null);
+            const resolver = new ResolvingLocator(parentLocator, getEnvInfo);
 
             const expected = await resolver.resolveEnv(env);
 
@@ -243,7 +254,8 @@ suite('Python envs locator - Environments Resolver', () => {
             const parentLocator = new SimpleLocator([], {
                 resolve: async () => undefined,
             });
-            const resolver = new ResolvingLocator(parentLocator, envInfoService);
+            const getEnvInfo = getEnvInfoFunc(null);
+            const resolver = new ResolvingLocator(parentLocator, getEnvInfo);
 
             const expected = await resolver.resolveEnv(env);
 

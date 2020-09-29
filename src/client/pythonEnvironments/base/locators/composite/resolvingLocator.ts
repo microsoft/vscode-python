@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { cloneDeep } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
-import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
 import { PythonEnvInfo } from '../../info';
-import { InterpreterInformation } from '../../../info/environmentInfoService';
+import { mergeEnvs } from '../../info/env';
 import {
     ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery,
 } from '../../locator';
@@ -23,19 +21,19 @@ export class ResolvingLocator implements ILocator {
 
     constructor(
         private readonly parentLocator: ILocator,
-        private readonly environmentInfoService: IEnvironmentInfoService,
+        private readonly getEnvInfo: (p: string) => Promise<PythonEnvInfo | undefined>,
     ) {}
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const environment = await this.parentLocator.resolveEnv(env);
-        if (!environment) {
+        const resolved = await this.parentLocator.resolveEnv(env);
+        if (!resolved) {
             return undefined;
         }
-        const interpreterInfo = await this.environmentInfoService.getEnvironmentInfo(environment.executable.filename);
-        if (!interpreterInfo) {
+        const info = await this.getEnvInfo(resolved.executable.filename);
+        if (!info) {
             return undefined;
         }
-        return getResolvedEnv(interpreterInfo, environment);
+        return mergeEnvs(info, resolved);
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
@@ -89,19 +87,17 @@ export class ResolvingLocator implements ILocator {
     }
 
     private async resolveInBackground(
-        envIndex: number,
+        index: number,
         state: { done: boolean; pending: number },
         didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
         seen: PythonEnvInfo[],
     ) {
-        const interpreterInfo = await this.environmentInfoService.getEnvironmentInfo(
-            seen[envIndex].executable.filename,
-        );
-        if (interpreterInfo) {
-            const resolvedEnv = getResolvedEnv(interpreterInfo, seen[envIndex]);
-            const old = seen[envIndex];
-            seen[envIndex] = resolvedEnv;
-            didUpdate.fire({ old, index: envIndex, update: resolvedEnv });
+        const info = await this.getEnvInfo(seen[index].executable.filename);
+        if (info !== undefined) {
+            const old = seen[index];
+            const update = mergeEnvs(info, old);
+            seen[index] = update;
+            didUpdate.fire({ index, old, update });
         }
         state.pending -= 1;
         checkIfFinishedAndNotify(state, didUpdate);
@@ -121,14 +117,4 @@ function checkIfFinishedAndNotify(
         didUpdate.fire(null);
         didUpdate.dispose();
     }
-}
-
-function getResolvedEnv(interpreterInfo: InterpreterInformation, environment: PythonEnvInfo) {
-    // Deep copy into a new object
-    const resolvedEnv = cloneDeep(environment);
-    resolvedEnv.version = interpreterInfo.version;
-    resolvedEnv.executable.filename = interpreterInfo.executable.filename;
-    resolvedEnv.executable.sysPrefix = interpreterInfo.executable.sysPrefix;
-    resolvedEnv.arch = interpreterInfo.arch;
-    return resolvedEnv;
 }
