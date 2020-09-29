@@ -16,16 +16,17 @@ import {
  */
 export type PythonEnvUpdatedEvent = {
     /**
-     * The env info that was previously provided.
-     *
-     * If the event comes from `IPythonEnvsIterator.onUpdated` then
-     * `old` was previously yielded during iteration.
+     * The iteration index of The env info that was previously provided.
      */
-    old: PythonEnvInfo;
+    index: number;
+    /**
+     * The env info that was previously provided.
+     */
+    old?: PythonEnvInfo;
     /**
      * The env info that replaces the old info.
      */
-    new: PythonEnvInfo;
+    update: PythonEnvInfo;
 };
 
 /**
@@ -73,10 +74,26 @@ export const NOOP_ITERATOR: IPythonEnvsIterator = iterEmpty<PythonEnvInfo>();
  * This is directly correlated with the `BasicPythonEnvsChangedEvent`
  * emitted by watchers.
  *
- * @prop kinds - if provided, results should be limited to these env kinds
+ * @prop kinds - if provided, results should be limited to these env
+ *               kinds; if not provided, the kind of each evnironment
+ *               is not considered when filtering
  */
 export type BasicPythonLocatorQuery = {
     kinds?: PythonEnvKind[];
+};
+
+/**
+ * The portion of a query related to env search locations.
+ */
+export type SearchLocations = {
+    /**
+     * The locations under which to look for environments.
+     */
+    roots: Uri[];
+    /**
+     * If true, also look for environments that do not have a search location.
+     */
+    includeNonRooted?: boolean;
 };
 
 /**
@@ -84,12 +101,12 @@ export type BasicPythonLocatorQuery = {
  *
  * This is directly correlated with the `PythonEnvsChangedEvent`
  * emitted by watchers.
- *
- * @prop - searchLocations - if provided, results should be limited to
- *         within these locations
  */
 export type PythonLocatorQuery = BasicPythonLocatorQuery & {
-    searchLocations?: Uri[];
+    /**
+     * If provided, results should be limited to within these locations.
+     */
+    searchLocations?: SearchLocations;
 };
 
 type QueryForEvent<E> = E extends PythonEnvsChangedEvent ? PythonLocatorQuery : BasicPythonLocatorQuery;

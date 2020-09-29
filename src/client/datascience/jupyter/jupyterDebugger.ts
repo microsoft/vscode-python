@@ -3,6 +3,8 @@
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
+// tslint:disable-next-line: no-require-imports
+import unescape = require('lodash/unescape');
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { DebugConfiguration, Disposable } from 'vscode';
@@ -473,8 +475,10 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             if (outputs.length > 0) {
                 const data = outputs[0].data;
                 if (data && data.hasOwnProperty('text/plain')) {
+                    // Plain text should be escaped by our execution engine. Unescape it so
+                    // we can parse it.
                     // tslint:disable-next-line:no-any
-                    return (data as any)['text/plain'];
+                    return unescape((data as any)['text/plain']);
                 }
                 if (outputs[0].output_type === 'stream') {
                     const stream = outputs[0] as nbformat.IStream;

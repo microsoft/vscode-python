@@ -221,9 +221,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         expect(displayCell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
         expect(markdownOutput.data['text/markdown']).to.be.equal('foo', 'Display cell did not update');
     });
-    test('Clearing output while executing will ensure output is cleared', async function () {
-        // https://github.com/microsoft/vscode-python/issues/12302
-        return this.skip();
+    test('Clearing output while executing will ensure output is cleared', async () => {
         // Assume you are executing a cell that prints numbers 1-100.
         // When printing number 50, you click clear.
         // Cell output should now start printing output from 51 onwards, & not 1.
@@ -235,24 +233,35 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                         time.sleep(0.1)
                         print(i)
 
-                    print("End")`
+                    print("End")`,
+            0
         );
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
         await executeActiveDocument();
 
-        // Wait till execution count changes and status is error.
+        // Wait till we get the desired output.
         await waitForCondition(
-            async () => assertHasTextOutputInVSCode(cell, 'Start', 0, false),
+            async () =>
+                assertHasTextOutputInVSCode(cell, 'Start', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '0', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '1', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '2', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '3', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '4', 0, false),
             15_000,
             'Cell did not get executed'
         );
 
         // Clear the cells
         await commands.executeCommand('notebook.clearAllCellsOutputs');
-        // Wait till execution count changes and status is error.
+
+        // Wait till previous output gets cleared & we have new output.
         await waitForCondition(
-            async () => assertNotHasTextOutputInVSCode(cell, 'Start', 0, false),
+            async () =>
+                assertNotHasTextOutputInVSCode(cell, 'Start', 0, false) &&
+                cell.outputs.length > 0 &&
+                cell.outputs[0].outputKind === vscodeNotebookEnums.CellOutputKind.Rich,
             5_000,
             'Cell did not get cleared'
         );
@@ -263,5 +272,123 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // Verify that it hasn't got added (even after interrupting).
         assertNotHasTextOutputInVSCode(cell, 'Start', 0, false);
+    });
+    test('Clearing output via code', async () => {
+        // Assume you are executing a cell that prints numbers 1-100.
+        // When printing number 50, you click clear.
+        // Cell output should now start printing output from 51 onwards, & not 1.
+        await insertPythonCellAndWait(
+            dedent`
+                from IPython.display import display, clear_output
+                import time
+                print('foo')
+                display('foo')
+                time.sleep(2)
+                clear_output(True)
+                print('bar')
+                display('bar')`,
+            0
+        );
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+
+        await executeActiveDocument();
+
+        // Wait for foo to be printed
+        await waitForCondition(
+            async () =>
+                assertHasTextOutputInVSCode(cell, 'foo', 0, false) &&
+                assertHasTextOutputInVSCode(cell, 'foo', 1, false),
+            15_000,
+            'Incorrect output'
+        );
+
+        // Wait for bar to be printed
+        await waitForCondition(
+            async () =>
+                assertHasTextOutputInVSCode(cell, 'bar', 0, false) &&
+                assertHasTextOutputInVSCode(cell, 'bar', 1, false),
+            15_000,
+            'Incorrect output'
+        );
+    });
+    test('Testing streamed output', async () => {
+        // Assume you are executing a cell that prints numbers 1-100.
+        // When printing number 50, you click clear.
+        // Cell output should now start printing output from 51 onwards, & not 1.
+        await insertPythonCellAndWait(
+            dedent`
+                    print("Start")
+                    import time
+                    for i in range(5):
+                        time.sleep(0.5)
+                        print(i)
+
+                    print("End")`,
+            0
+        );
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+
+        await executeActiveDocument();
+
+        await waitForCondition(
+            async () =>
+                assertHasTextOutputInVSCode(cell, 'Start', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '0', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '1', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '2', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '3', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '4', 0, false) &&
+                assertHasTextOutputInVSCode(cell, 'End', 0, false),
+            15_000,
+            'Incorrect output'
+        );
+    });
+    test('Verify escaping of output', async () => {
+        await insertPythonCellAndWait('1');
+        await insertPythonCellAndWait(dedent`
+                                            a="<a href=f>"
+                                            a`);
+        await insertPythonCellAndWait(dedent`
+                                            a="<a href=f>"
+                                            print(a)`);
+        await insertPythonCellAndWait('raise Exception("<whatever>")');
+        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+
+        await executeActiveDocument();
+
+        // Wait till execution count changes and status is error.
+        await waitForCondition(
+            async () => assertHasExecutionCompletedWithErrors(cells[3]),
+            15_000,
+            'Cell did not get executed'
+        );
+
+        for (const cell of cells) {
+            assert.lengthOf(cell.outputs, 1, 'Incorrect output');
+        }
+        assert.equal(
+            cells[0].outputs[0].outputKind,
+            vscodeNotebookEnums.CellOutputKind.Rich,
+            'Incorrect output for first cell'
+        );
+        assert.equal(
+            cells[1].outputs[0].outputKind,
+            vscodeNotebookEnums.CellOutputKind.Rich,
+            'Incorrect output for first cell'
+        );
+        assert.equal(
+            cells[2].outputs[0].outputKind,
+            vscodeNotebookEnums.CellOutputKind.Rich,
+            'Incorrect output for first cell'
+        );
+        assertHasTextOutputInVSCode(cells[0], '1');
+        assertHasTextOutputInVSCode(cells[1], '<a href=f>', 0, false);
+        assertHasTextOutputInVSCode(cells[2], '<a href=f>', 0, false);
+        const errorOutput = cells[3].outputs[0] as CellErrorOutput;
+        assert.equal(errorOutput.outputKind, vscodeNotebookEnums.CellOutputKind.Error, 'Incorrect output');
+        assert.equal(errorOutput.ename, 'Exception', 'Incorrect ename'); // As status contains ename, we don't want this displayed again.
+        assert.equal(errorOutput.evalue, '<whatever>', 'Incorrect evalue'); // As status contains ename, we don't want this displayed again.
+        assert.isNotEmpty(errorOutput.traceback, 'Incorrect traceback');
+        assert.include(errorOutput.traceback.join(''), '<whatever>');
     });
 });

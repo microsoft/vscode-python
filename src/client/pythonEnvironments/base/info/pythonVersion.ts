@@ -1,9 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { PythonReleaseLevel, PythonVersion } from '.';
 import { EMPTY_VERSION, parseBasicVersionInfo } from '../../../common/utils/version';
 
+import { PythonReleaseLevel, PythonVersion } from '.';
+
+/**
+ * Convert the given string into the corresponding Python version object.
+ */
 export function parseVersion(versionStr: string): PythonVersion {
     const parsed = parseBasicVersionInfo<PythonVersion>(versionStr);
     if (!parsed) {

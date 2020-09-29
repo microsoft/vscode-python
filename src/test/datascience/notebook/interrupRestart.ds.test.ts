@@ -81,7 +81,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
     });
 
-    test('Cancelling token will cancel cell executionxxx', async () => {
+    test('Cancelling token will cancel cell execution', async () => {
         await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
         const cell = vscEditor.document.cells[0];
         const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -115,7 +115,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             assertVSCCellHasErrors(cell);
         }
     });
-    test('Restarting kernel will cancel cell execution & we can re-run a cellxxx', async () => {
+    test('Restarting kernel will cancel cell execution & we can re-run a cell', async () => {
         await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
         const cell = vscEditor.document.cells[0];
 
