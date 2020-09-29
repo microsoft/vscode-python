@@ -7,8 +7,8 @@ import { isPyenvEnvironment } from '../discovery/locators/services/pyenvLocator'
 import { isVenvEnvironment } from '../discovery/locators/services/venvLocator';
 import { isVirtualenvEnvironment } from '../discovery/locators/services/virtualenvLocator';
 import { isVirtualenvwrapperEnvironment } from '../discovery/locators/services/virtualenvwrapperLocator';
+import { isWindowsStoreEnvironment } from '../discovery/locators/services/windowsStoreLocator';
 import { EnvironmentType } from '../info';
-import { isWindowsStoreEnvironment } from './windowsUtils';
 
 /**
  * Gets a prioritized list of environment types for identification.

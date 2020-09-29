@@ -156,7 +156,7 @@ suite('Windows Store', () => {
                     const data = pathToData.get(k);
                     if (data) {
                         return {
-                            id: '',
+
                             name: '',
                             location: '',
                             kind: PythonEnvKind.WindowsStore,
@@ -182,7 +182,7 @@ suite('Windows Store', () => {
         test('resolveEnv(string)', async () => {
             const python38path = path.join(testStoreAppRoot, 'python3.8.exe');
             const expected = {
-                id: '',
+
                 name: '',
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
@@ -200,7 +200,7 @@ suite('Windows Store', () => {
         test('resolveEnv(PythonEnvInfo)', async () => {
             const python38path = path.join(testStoreAppRoot, 'python3.8.exe');
             const expected = {
-                id: '',
+
                 name: '',
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
@@ -210,7 +210,6 @@ suite('Windows Store', () => {
 
             // Partially filled in env info object
             const input:PythonEnvInfo = {
-                id: '',
                 name: '',
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
@@ -235,6 +234,16 @@ suite('Windows Store', () => {
             const actual = await locator.resolveEnv(input);
 
             assertEnvEqual(actual, expected);
+        });
+        test('resolveEnv(string): Non store python', async () => {
+            // Use a non store root path
+            const python38path = path.join(testLocalAppData, 'python3.8.exe');
+
+            const envService = new EnvironmentInfoService();
+            const locator = new WindowsStoreLocator(envService);
+            const actual = await locator.resolveEnv(python38path);
+
+            assert.deepStrictEqual(actual, undefined);
         });
     });
 });
