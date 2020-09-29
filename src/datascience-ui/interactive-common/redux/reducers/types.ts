@@ -51,6 +51,7 @@ export enum CommonActionType {
     FOCUS_INPUT = 'action.focus_input',
     GATHER_CELL = 'action.gather_cell',
     GATHER_CELL_TO_SCRIPT = 'action.gather_cell_to_script',
+    COMPUTE_STALE_CELLS = 'action.compute_stale_cells',
     GET_VARIABLE_DATA = 'action.get_variable_data',
     GOTO_CELL = 'action.goto_cell',
     INSERT_ABOVE = 'action.insert_above',
@@ -130,6 +131,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.DELETE_CELL]: ICellAction;
     [CommonActionType.GATHER_CELL]: ICellAction;
     [CommonActionType.GATHER_CELL_TO_SCRIPT]: ICellAction;
+    [CommonActionType.COMPUTE_STALE_CELLS]: ICellAction;
     [CommonActionType.EDITOR_LOADED]: never | undefined;
     [CommonActionType.LOADED_ALL_CELLS]: never | undefined;
     [CommonActionType.UNMOUNT]: never | undefined;
@@ -152,7 +154,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.RUN_BY_LINE]: ICellAction;
 };
 
-export interface IShowDataViewerAction extends IShowDataViewer {}
+export interface IShowDataViewerAction extends IShowDataViewer { }
 
 export interface ILinkClickAction {
     href: string;
@@ -211,7 +213,7 @@ export interface IRefreshVariablesAction {
     newExecutionCount?: number;
 }
 
-export interface IShowDataViewerAction extends IShowDataViewer {}
+export interface IShowDataViewerAction extends IShowDataViewer { }
 
 export interface ISendCommandAction {
     command: NativeKeyboardCommandTelemetry | NativeMouseCommandTelemetry;
@@ -260,6 +262,11 @@ export type NotifyIPyWidgeWidgetVersionNotSupportedAction = {
 export interface IChangeGatherStatus {
     cellId: string;
     gathering: boolean;
+}
+
+export interface IChangeStaleStatus {
+    cellId: string;
+    stale: boolean;
 }
 
 export type CommonAction<T = never | undefined> = ActionWithPayload<T, CommonActionType | InteractiveWindowMessages>;

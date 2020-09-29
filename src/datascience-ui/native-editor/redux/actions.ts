@@ -115,6 +115,8 @@ export const actionCreators = {
         createIncomingActionWithPayload(CommonActionType.GATHER_CELL, { cellId }),
     gatherCellToScript: (cellId: string | undefined): CommonAction<ICellAction> =>
         createIncomingActionWithPayload(CommonActionType.GATHER_CELL_TO_SCRIPT, { cellId }),
+    computeStale: (cellId: string | undefined): CommonAction<ICellAction> =>
+        createIncomingActionWithPayload(CommonActionType.COMPUTE_STALE_CELLS, { cellId }),
     editorLoaded: (): CommonAction => createIncomingAction(CommonActionType.EDITOR_LOADED),
     codeCreated: (cellId: string | undefined, modelId: string): CommonAction<ICodeCreatedAction> =>
         createIncomingActionWithPayload(CommonActionType.CODE_CREATED, { cellId, modelId }),

@@ -57,6 +57,7 @@ export interface ICellViewModel {
     runningByLine: DebugState;
     currentStack?: DebugProtocol.StackFrame[];
     gathering: boolean;
+    stale: boolean;
 }
 
 export type IMainState = {
@@ -227,7 +228,8 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         hasBeenRun: false,
         scrollCount: 0,
         runningByLine: DebugState.Design,
-        gathering: false
+        gathering: false,
+        stale: false
     };
 }
 
@@ -282,7 +284,8 @@ export function createCellVM(
         scrollCount: 0,
         runDuringDebug,
         runningByLine: DebugState.Design,
-        gathering: false
+        gathering: false,
+        stale: false
     };
 
     // Update the input text
@@ -293,8 +296,8 @@ export function createCellVM(
         inputCell.data.cell_type === 'code'
             ? extractInputText(vm, settings)
             : inputCell.data.cell_type === 'markdown'
-            ? concatMultilineString(vm.cell.data.source)
-            : '';
+                ? concatMultilineString(vm.cell.data.source)
+                : '';
     if (inputText) {
         inputLinesCount = inputText.split('\n').length;
     }

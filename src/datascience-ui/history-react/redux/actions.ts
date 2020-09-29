@@ -59,6 +59,8 @@ export const actionCreators = {
         createIncomingActionWithPayload(CommonActionType.GATHER_CELL, { cellId }),
     gatherCellToScript: (cellId: string): CommonAction<ICellAction> =>
         createIncomingActionWithPayload(CommonActionType.GATHER_CELL_TO_SCRIPT, { cellId }),
+    computeStaleCells: (cellId: string): CommonAction<ICellAction> =>
+        createIncomingActionWithPayload(CommonActionType.COMPUTE_STALE_CELLS, { cellId }),
     clickCell: (cellId: string): CommonAction<ICellAction> =>
         createIncomingActionWithPayload(CommonActionType.CLICK_CELL, { cellId }),
     editCell: (cellId: string, e: IMonacoModelContentChangeEvent): CommonAction<IEditCellAction> =>

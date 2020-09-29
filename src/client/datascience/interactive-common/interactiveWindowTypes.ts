@@ -14,7 +14,8 @@ import {
     ILoadIPyWidgetClassFailureAction,
     IVariableExplorerHeight,
     LoadIPyWidgetClassLoadAction,
-    NotifyIPyWidgeWidgetVersionNotSupportedAction
+    NotifyIPyWidgeWidgetVersionNotSupportedAction,
+    IChangeStaleStatus
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { Resource } from '../../common/types';
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../constants';
@@ -97,7 +98,9 @@ export enum InteractiveWindowMessages {
     StopDebugging = 'stop_debugging',
     GatherCode = 'gather_code',
     GatherCodeToScript = 'gather_code_to_script',
+    ComputeStaleCells = 'compute_stale_cells',
     Gathering = 'gathering',
+    Stale = 'stale',
     LaunchNotebookTrustPrompt = 'launch_notebook_trust_prompt',
     TrustNotebookComplete = 'trust_notebook_complete',
     LoadAllCells = 'load_all_cells',
@@ -628,7 +631,9 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.StopDebugging]: never | undefined;
     public [InteractiveWindowMessages.GatherCode]: ICell;
     public [InteractiveWindowMessages.GatherCodeToScript]: ICell;
+    public [InteractiveWindowMessages.ComputeStaleCells]: ICell;
     public [InteractiveWindowMessages.Gathering]: IChangeGatherStatus;
+    public [InteractiveWindowMessages.Stale]: IChangeStaleStatus;
     public [InteractiveWindowMessages.LaunchNotebookTrustPrompt]: never | undefined;
     public [InteractiveWindowMessages.TrustNotebookComplete]: never | undefined;
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;

@@ -49,7 +49,8 @@ suite('DataScience MainState', () => {
             cursorPos: CursorPos.Current,
             hasBeenRun: false,
             runningByLine: DebugState.Design,
-            gathering: false
+            gathering: false,
+            stale: false
         };
         assert.equal(extractInputText(cloneVM(cvm, '# %%\na=1'), settings), 'a=1', 'Cell marker not removed');
         assert.equal(

@@ -167,7 +167,10 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 </div>
             ) : (
                 <div className="cell-result-container">
-                    <div className="cell-row-container">
+                    <div
+                        className="cell-row-container"
+                        style={{ backgroundColor: this.props.cellVM.stale ? 'yellow' : undefined }}
+                    >
                         {this.renderCollapseBar(true)}
                         {this.renderControls()}
                         {this.renderInput()}
@@ -484,6 +487,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private submitCell = (moveOp: 'add' | 'select' | 'none') => {
         this.props.executeCell(this.cellId, moveOp);
+        this.props.computeStale(this.cellId);
     };
 
     private addNewCell = () => {

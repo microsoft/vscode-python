@@ -51,6 +51,7 @@ export namespace Execution {
                 clonedCell.outputs = [];
                 newVMs[index] = Helpers.asCellViewModel({
                     ...orig,
+                    stale: false,
                     cell: { ...orig.cell, state: CellState.executing, data: clonedCell }
                 });
                 cellIdsToExecute.push(orig.cell.id);

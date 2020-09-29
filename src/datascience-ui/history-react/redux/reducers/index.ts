@@ -32,6 +32,7 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [CommonActionType.COPY_CELL_CODE]: Transfer.copyCellCode,
     [CommonActionType.GATHER_CELL]: Transfer.gather,
     [CommonActionType.GATHER_CELL_TO_SCRIPT]: Transfer.gatherToScript,
+    [CommonActionType.COMPUTE_STALE_CELLS]: Transfer.computeStaleCells,
     [CommonActionType.EDIT_CELL]: Transfer.editCell,
     [CommonActionType.SUBMIT_INPUT]: Execution.submitInput,
     [InteractiveWindowMessages.ExpandAll]: Effects.expandAll,
@@ -72,5 +73,6 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [SharedMessages.LocInit]: CommonEffects.handleLocInit,
     [InteractiveWindowMessages.UpdateDisplayData]: CommonEffects.handleUpdateDisplayData,
     [InteractiveWindowMessages.HasCell]: Transfer.hasCell,
-    [InteractiveWindowMessages.Gathering]: Transfer.gathering
+    [InteractiveWindowMessages.Gathering]: Transfer.gathering,
+    [InteractiveWindowMessages.Stale]: Transfer.stale
 };

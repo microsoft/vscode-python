@@ -17,6 +17,7 @@ import {
     CommonReducerArg,
     ICellAction,
     IChangeGatherStatus,
+    IChangeStaleStatus,
     IEditCellAction,
     ILinkClickAction,
     ISendCommandAction,
@@ -147,6 +148,14 @@ export namespace Transfer {
         const cellVM = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data.cellId);
         if (cellVM) {
             postActionToExtension(arg, InteractiveWindowMessages.GatherCodeToScript, cellVM.cell);
+        }
+        return arg.prevState;
+    }
+
+    export function computeStaleCells(arg: CommonReducerArg<CommonActionType, ICellAction>): IMainState {
+        const cellVM = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data.cellId);
+        if (cellVM) {
+            postActionToExtension(arg, InteractiveWindowMessages.ComputeStaleCells, cellVM.cell);
         }
         return arg.prevState;
     }
@@ -337,6 +346,26 @@ export namespace Transfer {
             const newCell: ICellViewModel = {
                 ...current,
                 gathering: arg.payload.data.gathering
+            };
+            cellVMs[index] = newCell;
+
+            return {
+                ...arg.prevState,
+                cellVMs
+            };
+        }
+
+        return arg.prevState;
+    }
+
+    export function stale(arg: CommonReducerArg<CommonActionType, IChangeStaleStatus>): IMainState {
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
+        if (index >= 0) {
+            const cellVMs = [...arg.prevState.cellVMs];
+            const current = arg.prevState.cellVMs[index];
+            const newCell: ICellViewModel = {
+                ...current,
+                stale: arg.payload.data.stale
             };
             cellVMs[index] = newCell;
 

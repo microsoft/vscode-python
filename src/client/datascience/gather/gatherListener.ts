@@ -55,7 +55,7 @@ export class GatherListener implements IInteractiveWindowListener {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem
-    ) {}
+    ) { }
 
     public dispose() {
         noop();
@@ -87,6 +87,10 @@ export class GatherListener implements IInteractiveWindowListener {
                     payload: { cellId: payload.id, gathering: true }
                 });
                 this.handleMessage(message, payload, this.doGatherToScript);
+                break;
+
+            case InteractiveWindowMessages.ComputeStaleCells:
+                this.handleMessage(message, payload, this.doGetStaleCells);
                 break;
 
             case InteractiveWindowMessages.RestartKernel:
@@ -216,6 +220,55 @@ export class GatherListener implements IInteractiveWindowListener {
                 linesGathered: slicedProgram.trim().splitLines().length,
                 cellsGathered: generateCellsFromString(slicedProgram).length
             });
+        }
+    };
+
+    private doGetStaleCells(payload: ICell): Promise<void> {
+        return this.getStaleInternal(payload)
+            .catch((err) => {
+                traceError(`Gather to Notebook error: ${err}`);
+                this.applicationShell.showErrorMessage(err);
+            })
+            .finally(() =>
+                this.postEmitter.fire({
+                    message: InteractiveWindowMessages.Gathering,
+                    payload: { cellId: payload.id, gathering: false }
+                })
+            );
+    }
+
+    private getStaleInternal = async (cell: ICell) => {
+        this.gatherTimer = new StopWatch();
+        let cellIds: string[] = [];
+
+        try {
+            cellIds = this.gatherProvider ? this.gatherProvider.getDependentCells(cell) : []; //localize.DataScience.gatherError();
+        } catch (e) {
+            traceError('Gather: Exception at getStaleCells', e);
+            sendTelemetryEvent(Telemetry.GatherException, undefined, { exceptionType: 'gather' });
+            // const newline = '\n';
+            // const defaultCellMarker =
+            //     this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
+            // cellIds = defaultCellMarker + newline + localize.DataScience.gatherError() + newline + (e as string);
+        }
+
+        if (!cellIds) {
+            sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'err' });
+        } else {
+            for (const cellId of cellIds) {
+                this.postEmitter.fire({
+                    message: InteractiveWindowMessages.Stale,
+                    payload: { cellId, stale: true }
+                });
+            }
+
+            // await this.showFile(slicedProgram, cell.file);
+            // sendTelemetryEvent(Telemetry.GatherStats, undefined, {
+            //     linesSubmitted: this.linesSubmitted,
+            //     cellsSubmitted: this.cellsSubmitted,
+            //     linesGathered: cellIds.trim().splitLines().length,
+            //     cellsGathered: generateCellsFromString(cellIds).length
+            // });
         }
     };
 

@@ -59,7 +59,8 @@ suite('DataScience Interactive Panel', () => {
                 scrollCount: 0,
                 selected: false,
                 runningByLine: DebugState.Design,
-                gathering: false
+                gathering: false,
+                stale: false
             },
             editorLoaded: noopAny,
             editorUnmounted: noopAny,
@@ -71,6 +72,7 @@ suite('DataScience Interactive Panel', () => {
             font: { family: '', size: 1 },
             gatherCell: noopAny,
             gatherCellToScript: noopAny,
+            computeStaleCells: noopAny,
             getVariableData: noopAny,
             gotoCell: noopAny,
             interruptKernel: noopAny,
