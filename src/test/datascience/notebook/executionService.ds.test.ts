@@ -222,7 +222,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         expect(markdownOutput.data['text/markdown']).to.be.equal('foo', 'Display cell did not update');
     });
     test('Clearing output while executing will ensure output is cleared', async function () {
-        // https://github.com/microsoft/vscode-python/issues/12302
+        // https://github.com/microsoft/vscode-python/issues/14155
         return this.skip();
         // Assume you are executing a cell that prints numbers 1-100.
         // When printing number 50, you click clear.
@@ -232,27 +232,38 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     print("Start")
                     import time
                     for i in range(100):
-                        time.sleep(0.1)
+                        time.sleep(0.5)
                         print(i)
 
-                    print("End")`
+                    print("End")`,
+            0
         );
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
         await executeActiveDocument();
 
-        // Wait till execution count changes and status is error.
+        // Wait till we get the desired output.
         await waitForCondition(
-            async () => assertHasTextOutputInVSCode(cell, 'Start', 0, false),
+            async () =>
+                assertHasTextOutputInVSCode(cell, 'Start', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '1', 1, false) &&
+                assertHasTextOutputInVSCode(cell, '2', 2, false) &&
+                assertHasTextOutputInVSCode(cell, '3', 3, false) &&
+                assertHasTextOutputInVSCode(cell, '4', 4, false) &&
+                assertHasTextOutputInVSCode(cell, '5', 5, false),
             15_000,
             'Cell did not get executed'
         );
 
         // Clear the cells
         await commands.executeCommand('notebook.clearAllCellsOutputs');
-        // Wait till execution count changes and status is error.
+
+        // Wait till previous output gets cleared & we have new output.
         await waitForCondition(
-            async () => assertNotHasTextOutputInVSCode(cell, 'Start', 0, false),
+            async () =>
+                assertNotHasTextOutputInVSCode(cell, 'Start', 0, false) &&
+                cell.outputs.length > 0 &&
+                cell.outputs[0].outputKind === vscodeNotebookEnums.CellOutputKind.Rich,
             5_000,
             'Cell did not get cleared'
         );
@@ -263,5 +274,39 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // Verify that it hasn't got added (even after interrupting).
         assertNotHasTextOutputInVSCode(cell, 'Start', 0, false);
+    });
+    test('Testing streamed output', async function () {
+        // https://github.com/microsoft/vscode-python/issues/14155
+        return this.skip();
+        // Assume you are executing a cell that prints numbers 1-100.
+        // When printing number 50, you click clear.
+        // Cell output should now start printing output from 51 onwards, & not 1.
+        await insertPythonCellAndWait(
+            dedent`
+                    print("Start")
+                    import time
+                    for i in range(5):
+                        time.sleep(0.5)
+                        print(i)
+
+                    print("End")`,
+            0
+        );
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+
+        await executeActiveDocument();
+
+        await waitForCondition(
+            async () =>
+                assertHasTextOutputInVSCode(cell, 'Start', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '1', 1, false) &&
+                assertHasTextOutputInVSCode(cell, '2', 2, false) &&
+                assertHasTextOutputInVSCode(cell, '3', 3, false) &&
+                assertHasTextOutputInVSCode(cell, '4', 4, false) &&
+                assertHasTextOutputInVSCode(cell, '5', 5, false) &&
+                assertHasTextOutputInVSCode(cell, 'End', 6, false),
+            15_000,
+            'Incorrect output'
+        );
     });
 });
