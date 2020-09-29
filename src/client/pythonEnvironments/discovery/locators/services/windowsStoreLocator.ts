@@ -3,83 +3,17 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { traceWarning } from '../../../../common/logger';
-import { getEnvironmentVariable } from '../../../../common/utils/platform';
-import { isWindowsPythonExe } from '../../../common/windowsUtils';
-
-/**
- * Gets path to the Windows Apps directory.
- * @returns {string} : Returns path to the Windows Apps directory under
- * `%LOCALAPPDATA%/Microsoft/WindowsApps`.
- */
-export function getWindowsStoreAppsRoot(): string {
-    const localAppData = getEnvironmentVariable('LOCALAPPDATA') || '';
-    return path.join(localAppData, 'Microsoft', 'WindowsApps');
-}
-
-/**
- * Checks if a given path is under the forbidden windows store directory.
- * @param {string} interpreterPath : Absolute path to the python interpreter.
- * @returns {boolean} : Returns true if `interpreterPath` is under
- * `%ProgramFiles%/WindowsApps`.
- */
-export function isForbiddenStorePath(interpreterPath:string):boolean {
-    const programFilesStorePath = path
-        .join(getEnvironmentVariable('ProgramFiles') || 'Program Files', 'WindowsApps')
-        .normalize()
-        .toUpperCase();
-    return path.normalize(interpreterPath).toUpperCase().includes(programFilesStorePath);
-}
-
-/**
- * Checks if the given interpreter belongs to Windows Store Python environment.
- * @param interpreterPath: Absolute path to any python interpreter.
- *
- * Remarks:
- * 1. Checking if the path includes `Microsoft\WindowsApps`, `Program Files\WindowsApps`, is
- * NOT enough. In WSL, `/mnt/c/users/user/AppData/Local/Microsoft/WindowsApps` is available as a search
- * path. It is possible to get a false positive for that path. So the comparison should check if the
- * absolute path to 'WindowsApps' directory is present in the given interpreter path. The WSL path to
- * 'WindowsApps' is not a valid path to access, Windows Store Python.
- *
- * 2. 'startsWith' comparison may not be right, user can provide '\\?\C:\users\' style long paths in windows.
- *
- * 3. A limitation of the checks here is that they don't handle 8.3 style windows paths.
- * For example,
- *     `C:\Users\USER\AppData\Local\MICROS~1\WINDOW~1\PYTHON~2.EXE`
- * is the shortened form of
- *     `C:\Users\USER\AppData\Local\Microsoft\WindowsApps\python3.7.exe`
- *
- * The correct way to compare these would be to always convert given paths to long path (or to short path).
- * For either approach to work correctly you need actual file to exist, and accessible from the user's
- * account.
- *
- * To convert to short path without using N-API in node would be to use this command. This is very expensive:
- * `> cmd /c for %A in ("C:\Users\USER\AppData\Local\Microsoft\WindowsApps\python3.7.exe") do @echo %~sA`
- * The above command will print out this:
- * `C:\Users\USER\AppData\Local\MICROS~1\WINDOW~1\PYTHON~2.EXE`
- *
- * If we go down the N-API route, use node-ffi and either call GetShortPathNameW or GetLongPathNameW from,
- * Kernel32 to convert between the two path variants.
- *
- */
-export async function isWindowsStoreEnvironment(interpreterPath: string): Promise<boolean> {
-    const pythonPathToCompare = path.normalize(interpreterPath).toUpperCase();
-    const localAppDataStorePath = path
-        .normalize(getWindowsStoreAppsRoot())
-        .toUpperCase();
-    if (pythonPathToCompare.includes(localAppDataStorePath)) {
-        return true;
-    }
-
-    // Program Files store path is a forbidden path. Only admins and system has access this path.
-    // We should never have to look at this path or even execute python from this path.
-    if (isForbiddenStorePath(pythonPathToCompare)) {
-        traceWarning('isWindowsStoreEnvironment called with Program Files store path.');
-        return true;
-    }
-    return false;
-}
+import { Event, EventEmitter } from 'vscode';
+import { Architecture } from '../../../../common/utils/platform';
+import {
+    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
+} from '../../../base/info';
+import { parseVersion } from '../../../base/info/pythonVersion';
+import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
+import { PythonEnvsChangedEvent } from '../../../base/watcher';
+import { getFileInfo } from '../../../common/externalDependencies';
+import { getWindowsStoreAppsRoot, isWindowsPythonExe, isWindowsStoreEnvironment } from '../../../common/windowsUtils';
+import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
 
 /**
  * Gets paths to the Python executable under Windows Store apps.
@@ -107,5 +41,77 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
         .filter(isWindowsPythonExe);
 }
 
-// tslint:disable-next-line: no-suspicious-comment
-// TODO: The above APIs will be consumed by the Windows Store locator class when we have it.
+export class WindowsStoreLocator implements ILocator {
+    private readonly kind:PythonEnvKind = PythonEnvKind.WindowsStore;
+
+    private readonly eventEmitter = new EventEmitter<PythonEnvsChangedEvent>();
+
+    public constructor(private readonly envService:IEnvironmentInfoService) { }
+
+    public iterEnvs(): IPythonEnvsIterator {
+        const buildEnvInfo = (exe:string) => this.buildEnvInfo(exe);
+        const iterator = async function* () {
+            const exes = await getWindowsStorePythonExes();
+            yield* exes.map(buildEnvInfo);
+        };
+        return iterator();
+    }
+
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        const executablePath = typeof env === 'string' ? env : env.executable.filename;
+        if (isWindowsStoreEnvironment(executablePath)) {
+            const interpreterInfo = await this.envService.getEnvironmentInfo(executablePath);
+            if (interpreterInfo) {
+                const data = await getFileInfo(executablePath);
+                interpreterInfo.executable = {
+                    ...interpreterInfo.executable,
+                    ...data,
+                };
+                return Promise.resolve({
+                    id: '',
+                    name: '',
+                    location: '',
+                    kind: this.kind,
+                    executable: interpreterInfo.executable,
+                    version: interpreterInfo.version,
+                    arch: interpreterInfo.arch,
+                    distro: { org: 'Microsoft' },
+                });
+            }
+        }
+        return undefined;
+    }
+
+    public get onChanged(): Event<PythonEnvsChangedEvent> {
+        return this.eventEmitter.event;
+    }
+
+    private async buildEnvInfo(exe:string): Promise<PythonEnvInfo> {
+        let version:PythonVersion;
+        try {
+            version = parseVersion(path.basename(exe));
+        } catch (e) {
+            version = {
+                major: 3,
+                minor: -1,
+                micro: -1,
+                release: { level: PythonReleaseLevel.Unknown, serial: -1 },
+                sysVersion: undefined,
+            };
+        }
+        return {
+            id: '',
+            name: '',
+            location: '',
+            kind: this.kind,
+            executable: {
+                filename: exe,
+                sysPrefix: '',
+                ...(await getFileInfo(exe)),
+            },
+            version,
+            arch: Architecture.x64,
+            distro: { org: 'Microsoft' },
+        };
+    }
+}

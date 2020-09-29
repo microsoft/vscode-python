@@ -57,3 +57,11 @@ export function getGlobalPersistentStore<T>(key: string): IPersistentStore<T> {
         set(value: T) { return state.updateValue(value); },
     };
 }
+
+export async function getFileInfo(filePath: string): Promise<{ctime:number, mtime:number}> {
+    const data = await fsapi.lstat(filePath);
+    return {
+        ctime: data.ctime.getUTCDate(),
+        mtime: data.mtime.getUTCDate(),
+    };
+}

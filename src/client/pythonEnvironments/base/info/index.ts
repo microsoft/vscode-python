@@ -81,7 +81,8 @@ export enum PythonReleaseLevel {
     Alpha = 'alpha',
     Beta = 'beta',
     Candidate = 'candidate',
-    Final = 'final'
+    Final = 'final',
+    Unknown = 'unknown'
 }
 
 /**
