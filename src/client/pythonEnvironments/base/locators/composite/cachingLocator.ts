@@ -22,6 +22,8 @@ import { pickBestEnv } from './reducingLocator';
 export class CachingLocator extends PythonEnvsWatcher implements ILocator {
     private readonly initializing = createDeferred<void>();
 
+    private initialized = false;
+
     constructor(
         private readonly cache: IEnvsCache,
         private readonly locator: ILocator,
@@ -43,6 +45,11 @@ export class CachingLocator extends PythonEnvsWatcher implements ILocator {
      * to be asynchronous.
      */
     public async initialize(): Promise<void> {
+        if (this.initialized) {
+            return;
+        }
+        this.initialized = true;
+
         await this.cache.initialize();
         const envs = this.cache.getAllEnvs();
         if (envs !== undefined) {
