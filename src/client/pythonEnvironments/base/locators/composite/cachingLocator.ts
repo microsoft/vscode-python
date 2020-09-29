@@ -29,7 +29,7 @@ export class CachingLocator implements ILocator {
 
     private initialized = false;
 
-    private done = createDeferred<void>();
+    private readonly done = createDeferred<void>();
 
     constructor(
         private readonly cache: IEnvsCache,
@@ -53,20 +53,8 @@ export class CachingLocator implements ILocator {
         this.initialized = true;
 
         await this.cache.initialize();
-
-        const envs = this.cache.getAllEnvs();
-        if (envs !== undefined) {
-            this.initializing.resolve();
-            await this.refresh();
-        } else {
-            // There is nothing in the cache, so we must wait for the
-            // initial refresh to finish before allowing iteration.
-            await this.refresh();
-            this.initializing.resolve();
-        }
-
+        await this.initialRefresh();
         this.locator.onChanged((event) => {
-            // We could be a little smarter about when we refresh.
             this.refresh({ event }).ignoreErrors();
         });
     }
@@ -126,16 +114,6 @@ export class CachingLocator implements ILocator {
         }
     }
 
-    // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-unused-vars
-    private async needsRefresh(_envs: PythonEnvInfo[]): Promise<boolean> {
-        // XXX
-        // For now we never refresh.  Options:
-        // * every X minutes (via `initialize()`
-        // * if at least X minutes have elapsed
-        // * if some "stale" check on any known env fails
-        return false;
-    }
-
     private async refresh(
         opts: {
             event?: PythonEnvsChangedEvent;
@@ -156,5 +134,28 @@ export class CachingLocator implements ILocator {
         this.cache.setAllEnvs(envs);
         await this.cache.flush();
         this.watcher.fire(opts.event || {}); // Emit an "onCHanged" event.
+    }
+
+    private async initialRefresh(): Promise<void> {
+        const envs = this.cache.getAllEnvs();
+        if (envs !== undefined) {
+            this.initializing.resolve();
+            await this.refresh();
+        } else {
+            // There is nothing in the cache, so we must wait for the
+            // initial refresh to finish before allowing iteration.
+            await this.refresh();
+            this.initializing.resolve();
+        }
+    }
+
+    // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-unused-vars
+    private async needsRefresh(_envs: PythonEnvInfo[]): Promise<boolean> {
+        // XXX
+        // For now we never refresh.  Options:
+        // * every X minutes (via `initialize()`
+        // * if at least X minutes have elapsed
+        // * if some "stale" check on any known env fails
+        return false;
     }
 }
