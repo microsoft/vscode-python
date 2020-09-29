@@ -5,6 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import { CancellationToken, Uri } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
@@ -76,12 +77,18 @@ export class JupyterInterpreterSubCommandExecutionService
         }
         return this.jupyterDependencyService.areDependenciesInstalled(interpreter, token);
     }
-    public async isExportSupported(token?: CancellationToken): Promise<boolean> {
+    //public async isExportSupported(token?: CancellationToken): Promise<boolean> {
+    public async isExportSupported(token?: CancellationToken): Promise<SemVer | undefined> {
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {
-            return false;
+            return;
         }
-        return this.jupyterDependencyService.isExportSupported(interpreter, token);
+
+        if (await this.jupyterDependencyService.isExportSupported(interpreter, token)) {
+            return this.jupyterDependencyService.getNbConvertVersion(interpreter, token);
+        }
+
+        // return this.jupyterDependencyService.isExportSupported(interpreter, token);
     }
     public async getReasonForJupyterNotebookNotBeingSupported(token?: CancellationToken): Promise<string> {
         let interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
@@ -167,9 +174,6 @@ export class JupyterInterpreterSubCommandExecutionService
                 throw new Error(DataScience.jupyterNbConvertNotSupported());
             }
         }
-
-        // Check what version of nbconvert we are working with here. We need different templates for 6.0.0+
-        const nbConvertVersion = this.jupyterDependencyService.getNbConvertVersion(interpreter, token);
 
         const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
             daemonModule: JupyterDaemonModule,

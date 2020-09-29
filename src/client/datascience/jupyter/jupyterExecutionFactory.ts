@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
+import { SemVer } from 'semver';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
@@ -117,7 +118,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         return execution.getNotebookError();
     }
 
-    public async isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
+    public async isImportSupported(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
         const execution = await this.executionFactory.get();
         return execution.isImportSupported(cancelToken);
     }

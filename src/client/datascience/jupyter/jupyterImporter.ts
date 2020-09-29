@@ -26,7 +26,7 @@ import {
 export class JupyterImporter implements INotebookImporter {
     public isDisposed: boolean = false;
     // Template that changes markdown cells to have # %% [markdown] in the comments
-    private readonly nbconvertTemplateFormat =
+    private readonly nbconvert5TemplateFormat =
         // tslint:disable-next-line:no-multiline-string
         `{%- extends 'null.tpl' -%}
 {% block codecell %}
@@ -38,8 +38,21 @@ export class JupyterImporter implements INotebookImporter {
 {% block markdowncell scoped %}{0} [markdown]
 {{ cell.source | comment_lines }}
 {% endblock markdowncell %}`;
+    private readonly nbconvert6TemplateFormat =
+        // tslint:disable-next-line:no-multiline-string
+        `{%- extends 'null.j2' -%}
+{% block codecell %}
+{0}
+{{ super() }}
+{% endblock codecell %}
+{% block in_prompt %}{% endblock in_prompt %}
+{% block input %}{{ cell.source | ipython2python }}{% endblock input %}
+{% block markdowncell scoped %}{0} [markdown]
+{{ cell.source | comment_lines }}
+{% endblock markdowncell %}`;
 
-    private templatePromise: Promise<string | undefined>;
+    private template5Promise: Promise<string | undefined>;
+    private template6Promise: Promise<string | undefined>;
 
     constructor(
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
@@ -51,11 +64,13 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IJupyterInterpreterDependencyManager)
         private readonly dependencyManager: IJupyterInterpreterDependencyManager
     ) {
-        this.templatePromise = this.createTemplateFile();
+        this.template5Promise = this.createTemplateFile(this.nbconvert5TemplateFormat);
+        this.template6Promise = this.createTemplateFile(this.nbconvert6TemplateFormat);
     }
 
     public async importFromFile(sourceFile: Uri): Promise<string> {
-        const template = await this.templatePromise;
+        const template5 = await this.template5Promise;
+        const template6 = await this.template6Promise;
 
         // If the user has requested it, add a cd command to the imported file so that relative paths still work
         const settings = this.configuration.getSettings();
@@ -69,9 +84,14 @@ export class JupyterImporter implements INotebookImporter {
             await this.dependencyManager.installMissingDependencies();
         }
 
+        const nbConvertVersion = await this.jupyterExecution.isImportSupported();
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
-        if (await this.jupyterExecution.isImportSupported()) {
-            let fileOutput: string = await this.jupyterExecution.importNotebook(sourceFile, template);
+        if (nbConvertVersion) {
+            // nbconvert 5 and 6 use a different base template file
+            let fileOutput: string = await this.jupyterExecution.importNotebook(
+                sourceFile,
+                nbConvertVersion.major >= 6 ? template6 : template5
+            );
             if (fileOutput.includes('get_ipython()')) {
                 fileOutput = this.addIPythonImport(fileOutput);
             }
@@ -153,7 +173,7 @@ export class JupyterImporter implements INotebookImporter {
         }
     }
 
-    private async createTemplateFile(): Promise<string | undefined> {
+    private async createTemplateFile(baseTemplate: string): Promise<string | undefined> {
         // Create a temp file on disk
         const file = await this.fs.createTemporaryLocalFile('.tpl');
 
@@ -162,10 +182,7 @@ export class JupyterImporter implements INotebookImporter {
             try {
                 // Save this file into our disposables so the temp file goes away
                 this.disposableRegistry.push(file);
-                await this.fs.appendLocalFile(
-                    file.filePath,
-                    this.nbconvertTemplateFormat.format(this.defaultCellMarker)
-                );
+                await this.fs.appendLocalFile(file.filePath, baseTemplate.format(this.defaultCellMarker));
 
                 // Now we should have a template that will convert
                 return file.filePath;

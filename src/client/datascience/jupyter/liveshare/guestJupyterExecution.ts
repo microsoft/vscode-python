@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { injectable } from 'inversify';
+import { SemVer } from 'semver';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 
@@ -72,10 +73,31 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
     }
 
     public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isNotebookSupported, cancelToken);
+        //return this.checkSupported(LiveShareCommands.isNotebookSupported, cancelToken);
+        const service = await this.waitForService();
+
+        // Make a remote call on the proxy
+        if (service) {
+            const result = await service.request(LiveShareCommands.isNotebookSupported, [], cancelToken);
+            return result as boolean;
+        }
+
+        return false;
     }
-    public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isImportSupported, cancelToken);
+    public async isImportSupported(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
+        //return this.checkSupported(LiveShareCommands.isImportSupported, cancelToken);
+        const service = await this.waitForService();
+
+        // Make a remote call on the proxy
+        if (service) {
+            const result = await service.request(LiveShareCommands.isImportSupported, [], cancelToken);
+
+            if (result) {
+                return result as SemVer;
+            }
+        }
+
+        return;
     }
     public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);
@@ -145,15 +167,15 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
         return this.serverCache.get(options);
     }
 
-    private async checkSupported(command: string, cancelToken?: CancellationToken): Promise<boolean> {
-        const service = await this.waitForService();
+    //private async checkSupported(command: string, cancelToken?: CancellationToken): Promise<boolean> {
+    //const service = await this.waitForService();
 
-        // Make a remote call on the proxy
-        if (service) {
-            const result = await service.request(command, [], cancelToken);
-            return result as boolean;
-        }
+    //// Make a remote call on the proxy
+    //if (service) {
+    //const result = await service.request(command, [], cancelToken);
+    //return result as boolean;
+    //}
 
-        return false;
-    }
+    //return false;
+    //}
 }
