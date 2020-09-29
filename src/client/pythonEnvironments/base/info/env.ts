@@ -67,7 +67,7 @@ export function buildEnvInfo(init?: {
 export function copyEnvInfo(
     env: PythonEnvInfo,
     updates?: {
-        kind?: PythonEnvKind;
+        kind?: PythonEnvKind,
     },
 ): PythonEnvInfo {
     // We don't care whether or not extra/hidden properties
@@ -79,15 +79,12 @@ export function copyEnvInfo(
     return copied;
 }
 
-function updateEnv(
-    env: PythonEnvInfo,
-    updates: {
-        kind?: PythonEnvKind;
-        executable?: string;
-        location?: string;
-        version?: PythonVersion;
-    },
-): void {
+function updateEnv(env: PythonEnvInfo, updates: {
+    kind?: PythonEnvKind;
+    executable?: string;
+    location?: string;
+    version?: PythonVersion;
+}): void {
     if (updates.kind !== undefined) {
         env.kind = updates.kind;
     }
