@@ -16,7 +16,7 @@ import { PythonEnvsChangedEvent } from '../../watcher';
  * Calls environment info service which runs `interpreterInfo.py` script on environments received
  * from the parent locator. Uses information received to populate environments further and pass it on.
  */
-export class PythonEnvsResolver implements ILocator {
+export class ResolvingLocator implements ILocator {
     public get onChanged(): Event<PythonEnvsChangedEvent> {
         return this.parentLocator.onChanged;
     }

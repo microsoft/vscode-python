@@ -7,7 +7,7 @@ import * as path from 'path';
 import { EventEmitter } from 'vscode';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import { PythonEnvUpdatedEvent } from '../../../../../client/pythonEnvironments/base/locator';
-import { PythonEnvsReducer } from '../../../../../client/pythonEnvironments/base/locators/composite/environmentsReducer';
+import { ReducingLocator } from '../../../../../client/pythonEnvironments/base/locators/composite/reducingLocator';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import { sleep } from '../../../../core';
 import { createNamedEnv, getEnvs, SimpleLocator } from '../../common';
@@ -22,7 +22,7 @@ suite('Python envs locator - Environments Reducer', () => {
             const env5 = createNamedEnv('env5', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1')); // Same as env1
             const environmentsToBeIterated = [env1, env2, env3, env4, env5]; // Contains 3 unique environments
             const parentLocator = new SimpleLocator(environmentsToBeIterated);
-            const reducer = new PythonEnvsReducer(parentLocator);
+            const reducer = new ReducingLocator(parentLocator);
 
             const iterator = reducer.iterEnvs();
             const envs = await getEnvs(iterator);
@@ -75,7 +75,7 @@ suite('Python envs locator - Environments Reducer', () => {
             const environmentsToBeIterated = [env1, env2, env3, env4, env5]; // Contains 3 unique environments
             const parentLocator = new SimpleLocator(environmentsToBeIterated);
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
-            const reducer = new PythonEnvsReducer(parentLocator);
+            const reducer = new ReducingLocator(parentLocator);
 
             const iterator = reducer.iterEnvs(); // Act
 
@@ -134,7 +134,7 @@ suite('Python envs locator - Environments Reducer', () => {
             const environmentsToBeIterated = [env1, env2, env3]; // All refer to the same environment
             const parentLocator = new SimpleLocator(environmentsToBeIterated);
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
-            const reducer = new PythonEnvsReducer(parentLocator);
+            const reducer = new ReducingLocator(parentLocator);
 
             const iterator = reducer.iterEnvs(); // Act
 
@@ -176,7 +176,7 @@ suite('Python envs locator - Environments Reducer', () => {
             const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
             const parentLocator = new SimpleLocator(environmentsToBeIterated, { onUpdated: didUpdate.event });
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
-            const reducer = new PythonEnvsReducer(parentLocator);
+            const reducer = new ReducingLocator(parentLocator);
 
             const iterator = reducer.iterEnvs(); // Act
 
@@ -209,7 +209,7 @@ suite('Python envs locator - Environments Reducer', () => {
         const event1: PythonEnvsChangedEvent = {};
         const event2: PythonEnvsChangedEvent = { kind: PythonEnvKind.Unknown };
         const expected = [event1, event2];
-        const reducer = new PythonEnvsReducer(parentLocator);
+        const reducer = new ReducingLocator(parentLocator);
 
         const events: PythonEnvsChangedEvent[] = [];
         reducer.onChanged((e) => events.push(e));
@@ -240,7 +240,7 @@ suite('Python envs locator - Environments Reducer', () => {
                     throw new Error('Incorrect environment sent to the resolve');
                 },
             });
-            const reducer = new PythonEnvsReducer(parentLocator);
+            const reducer = new ReducingLocator(parentLocator);
 
             // Trying to resolve the environment corresponding to env1 env3 env6
             const resolved = await reducer.resolveEnv(path.join('path', 'to', 'exec'));
@@ -266,7 +266,7 @@ suite('Python envs locator - Environments Reducer', () => {
                     throw new Error('Incorrect environment sent to the resolve');
                 },
             });
-            const reducer = new PythonEnvsReducer(parentLocator);
+            const reducer = new ReducingLocator(parentLocator);
 
             const expected = await reducer.resolveEnv(path.join('path', 'to', 'execNeverSeenBefore'));
 
