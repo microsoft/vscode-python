@@ -221,9 +221,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         expect(displayCell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
         expect(markdownOutput.data['text/markdown']).to.be.equal('foo', 'Display cell did not update');
     });
-    test('Clearing output while executing will ensure output is cleared', async function () {
-        // https://github.com/microsoft/vscode-python/issues/14155
-        return this.skip();
+    test('Clearing output while executing will ensure output is cleared', async () => {
         // Assume you are executing a cell that prints numbers 1-100.
         // When printing number 50, you click clear.
         // Cell output should now start printing output from 51 onwards, & not 1.
@@ -232,7 +230,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     print("Start")
                     import time
                     for i in range(100):
-                        time.sleep(0.5)
+                        time.sleep(0.1)
                         print(i)
 
                     print("End")`,
@@ -246,11 +244,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForCondition(
             async () =>
                 assertHasTextOutputInVSCode(cell, 'Start', 0, false) &&
-                assertHasTextOutputInVSCode(cell, '1', 1, false) &&
-                assertHasTextOutputInVSCode(cell, '2', 2, false) &&
-                assertHasTextOutputInVSCode(cell, '3', 3, false) &&
-                assertHasTextOutputInVSCode(cell, '4', 4, false) &&
-                assertHasTextOutputInVSCode(cell, '5', 5, false),
+                assertHasTextOutputInVSCode(cell, '0', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '1', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '2', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '3', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '4', 0, false),
             15_000,
             'Cell did not get executed'
         );
@@ -275,9 +273,45 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Verify that it hasn't got added (even after interrupting).
         assertNotHasTextOutputInVSCode(cell, 'Start', 0, false);
     });
-    test('Testing streamed output', async function () {
-        // https://github.com/microsoft/vscode-python/issues/14155
-        return this.skip();
+    test('Clearing output via code', async () => {
+        // Assume you are executing a cell that prints numbers 1-100.
+        // When printing number 50, you click clear.
+        // Cell output should now start printing output from 51 onwards, & not 1.
+        await insertPythonCellAndWait(
+            dedent`
+                from IPython.display import display, clear_output
+                import time
+                print('foo')
+                display('foo')
+                time.sleep(2)
+                clear_output(True)
+                print('bar')
+                display('bar')`,
+            0
+        );
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+
+        await executeActiveDocument();
+
+        // Wait for foo to be printed
+        await waitForCondition(
+            async () =>
+                assertHasTextOutputInVSCode(cell, 'foo', 0, false) &&
+                assertHasTextOutputInVSCode(cell, 'foo', 1, false),
+            15_000,
+            'Incorrect output'
+        );
+
+        // Wait for bar to be printed
+        await waitForCondition(
+            async () =>
+                assertHasTextOutputInVSCode(cell, 'bar', 0, false) &&
+                assertHasTextOutputInVSCode(cell, 'bar', 1, false),
+            15_000,
+            'Incorrect output'
+        );
+    });
+    test('Testing streamed output', async () => {
         // Assume you are executing a cell that prints numbers 1-100.
         // When printing number 50, you click clear.
         // Cell output should now start printing output from 51 onwards, & not 1.
@@ -299,12 +333,12 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForCondition(
             async () =>
                 assertHasTextOutputInVSCode(cell, 'Start', 0, false) &&
-                assertHasTextOutputInVSCode(cell, '1', 1, false) &&
-                assertHasTextOutputInVSCode(cell, '2', 2, false) &&
-                assertHasTextOutputInVSCode(cell, '3', 3, false) &&
-                assertHasTextOutputInVSCode(cell, '4', 4, false) &&
-                assertHasTextOutputInVSCode(cell, '5', 5, false) &&
-                assertHasTextOutputInVSCode(cell, 'End', 6, false),
+                assertHasTextOutputInVSCode(cell, '0', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '1', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '2', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '3', 0, false) &&
+                assertHasTextOutputInVSCode(cell, '4', 0, false) &&
+                assertHasTextOutputInVSCode(cell, 'End', 0, false),
             15_000,
             'Incorrect output'
         );
