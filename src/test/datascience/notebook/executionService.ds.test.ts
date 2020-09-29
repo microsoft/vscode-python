@@ -343,4 +343,52 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             'Incorrect output'
         );
     });
+    test('Verify escaping of output', async () => {
+        await insertPythonCellAndWait('1');
+        await insertPythonCellAndWait(dedent`
+                                            a="<a href=f>"
+                                            a`);
+        await insertPythonCellAndWait(dedent`
+                                            a="<a href=f>"
+                                            print(a)`);
+        await insertPythonCellAndWait('raise Exception("<whatever>")');
+        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+
+        await executeActiveDocument();
+
+        // Wait till execution count changes and status is error.
+        await waitForCondition(
+            async () => assertHasExecutionCompletedWithErrors(cells[3]),
+            15_000,
+            'Cell did not get executed'
+        );
+
+        for (const cell of cells) {
+            assert.lengthOf(cell.outputs, 1, 'Incorrect output');
+        }
+        assert.equal(
+            cells[0].outputs[0].outputKind,
+            vscodeNotebookEnums.CellOutputKind.Rich,
+            'Incorrect output for first cell'
+        );
+        assert.equal(
+            cells[1].outputs[0].outputKind,
+            vscodeNotebookEnums.CellOutputKind.Rich,
+            'Incorrect output for first cell'
+        );
+        assert.equal(
+            cells[2].outputs[0].outputKind,
+            vscodeNotebookEnums.CellOutputKind.Rich,
+            'Incorrect output for first cell'
+        );
+        assertHasTextOutputInVSCode(cells[0], '1');
+        assertHasTextOutputInVSCode(cells[1], '<a href=f>', 0, false);
+        assertHasTextOutputInVSCode(cells[2], '<a href=f>', 0, false);
+        const errorOutput = cells[3].outputs[0] as CellErrorOutput;
+        assert.equal(errorOutput.outputKind, vscodeNotebookEnums.CellOutputKind.Error, 'Incorrect output');
+        assert.equal(errorOutput.ename, 'Exception', 'Incorrect ename'); // As status contains ename, we don't want this displayed again.
+        assert.equal(errorOutput.evalue, '<whatever>', 'Incorrect evalue'); // As status contains ename, we don't want this displayed again.
+        assert.isNotEmpty(errorOutput.traceback, 'Incorrect traceback');
+        assert.include(errorOutput.traceback.join(''), '<whatever>');
+    });
 });

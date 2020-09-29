@@ -38,8 +38,6 @@ import {
 import { IKernel } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
-// tslint:disable-next-line: no-require-imports
-import escape = require('lodash/escape');
 
 export class CellExecutionFactory {
     constructor(
@@ -471,11 +469,6 @@ export class CellExecution {
     // See this for docs on the messages:
     // https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter
     private async handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: RefBool) {
-        // Escape text output
-        if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
-            msg.content.data['text/plain'] = escape(msg.content.data['text/plain'] as string);
-        }
-
         await this.addToCellData(
             {
                 output_type: 'execute_result',
@@ -500,7 +493,7 @@ export class CellExecution {
                                 // Mark as stream output so the text is formatted because it likely has ansi codes in it.
                                 output_type: 'stream',
                                 // tslint:disable-next-line: no-any
-                                text: escape((o.data as any)['text/plain'].toString()),
+                                text: (o.data as any)['text/plain'].toString(),
                                 metadata: {},
                                 execution_count: reply.execution_count
                             },
@@ -544,7 +537,7 @@ export class CellExecution {
                 );
                 edit.replaceCellOutput(this.cellIndex, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
             } else {
-                const originalText = formatStreamText(concatMultilineString(escape(msg.content.text)));
+                const originalText = formatStreamText(concatMultilineString(msg.content.text));
                 // Create a new stream entry
                 const output: nbformat.IStream = {
                     output_type: 'stream',
@@ -557,11 +550,6 @@ export class CellExecution {
     }
 
     private async handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool) {
-        // Escape text output
-        if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
-            msg.content.data['text/plain'] = escape(msg.content.data['text/plain'] as string);
-        }
-
         const output: nbformat.IDisplayData = {
             output_type: 'display_data',
             data: msg.content.data,
