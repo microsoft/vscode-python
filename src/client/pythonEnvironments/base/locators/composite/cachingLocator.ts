@@ -13,7 +13,7 @@ import {
     PythonLocatorQuery,
 } from '../../locator';
 import { getEnvs, getQueryFilter } from '../../locatorUtils';
-import { PythonEnvsWatcher } from '../../watcher';
+import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { pickBestEnv } from './reducingLocator';
 
 /**
@@ -60,9 +60,7 @@ export class CachingLocator extends PythonEnvsWatcher implements ILocator {
 
         this.locator.onChanged((event) => {
             // We could be a little smarter about when we refresh.
-            this.refresh()
-                .then(() => this.fire(event)) // XXX Drop this line?
-                .ignoreErrors();
+            this.refresh({ event }).ignoreErrors();
         });
     }
 
@@ -127,16 +125,25 @@ export class CachingLocator extends PythonEnvsWatcher implements ILocator {
         return false;
     }
 
-    private async refresh(): Promise<void> {
+    private async refresh(
+        opts: {
+            event?: PythonEnvsChangedEvent;
+        } = {},
+    ): Promise<void> {
         const iterator = this.locator.iterEnvs();
         const envs = await getEnvs(iterator);
-        await this.update(envs);
+        await this.update(envs, opts);
     }
 
-    private async update(envs: PythonEnvInfo[]): Promise<void> {
+    private async update(
+        envs: PythonEnvInfo[],
+        opts: {
+            event?: PythonEnvsChangedEvent;
+        } = {},
+    ): Promise<void> {
         // If necessary, we could skip if there are no changes.
         this.cache.setAllEnvs(envs);
         await this.cache.flush();
-        this.fire({}); // Emit an "onCHanged" event.
+        this.fire(opts.event || {}); // Emit an "onCHanged" event.
     }
 }
