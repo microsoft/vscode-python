@@ -100,7 +100,7 @@
         "onCommand:python.datascience.selectJupyterInterpreter",
         "onCommand:python.datascience.selectjupytercommandline",
         "onCommand:python.enableSourceMapSupport",
-        "onNotebookEditor:jupyter-notebook",
+        "onNotebook:jupyter-notebook",
         "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml",
         "onCustomEditor:ms-python.python.notebook.ipynb"
