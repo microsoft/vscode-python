@@ -98,6 +98,30 @@ function updateEnv(env: PythonEnvInfo, updates: {
 }
 
 /**
+ * For the given data, build a normalized partial info object.
+ *
+ * If insufficient data is provided to generate a minimal object, such
+ * that it is not identifiable, then `undefined` is returned.
+ */
+export function getMinimalPartialInfo(env: string | Partial<PythonEnvInfo>): Partial<PythonEnvInfo> | undefined {
+    if (typeof env === 'string') {
+        if (env === '') {
+            return undefined;
+        }
+        return {
+            executable: { filename: env, sysPrefix: '', ctime: -1, mtime: -1 },
+        };
+    }
+    if (env.executable === undefined) {
+        return undefined;
+    }
+    if (env.executable.filename === '') {
+        return undefined;
+    }
+    return env;
+}
+
+/**
  * Checks if two environments are same.
  * @param {string | PythonEnvInfo} left: environment to compare.
  * @param {string | PythonEnvInfo} right: environment to compare.
@@ -110,13 +134,19 @@ function updateEnv(env: PythonEnvInfo, updates: {
  * where multiple versions of python executables are all put in the same directory.
  */
 export function areSameEnv(
-    left: string | PythonEnvInfo,
-    right: string | PythonEnvInfo,
+    left: string | Partial<PythonEnvInfo>,
+    right: string | Partial<PythonEnvInfo>,
     allowPartialMatch?: boolean,
-): boolean {
-    const leftFilename = typeof left === 'string' ? left : left.executable.filename;
-    const rightFilename = typeof right === 'string' ? right : right.executable.filename;
+): boolean | undefined {
+    const leftInfo = getMinimalPartialInfo(left);
+    const rightInfo = getMinimalPartialInfo(right);
+    if (leftInfo === undefined || rightInfo === undefined) {
+        return undefined;
+    }
+    const leftFilename = leftInfo.executable!.filename;
+    const rightFilename = rightInfo.executable!.filename;
 
+    // For now we assume that matching executable means they are the same.
     if (arePathsSame(leftFilename, rightFilename)) {
         return true;
     }
