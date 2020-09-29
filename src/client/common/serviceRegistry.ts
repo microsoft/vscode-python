@@ -65,7 +65,6 @@ import { FileDownloader } from './net/fileDownloader';
 import { HttpClient } from './net/httpClient';
 import { NugetService } from './nuget/nugetService';
 import { INugetService } from './nuget/types';
-import { PersistentStateFactory } from './persistentState';
 import { IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
 import { CurrentProcess } from './process/currentProcess';
@@ -105,7 +104,6 @@ import {
     IFeatureDeprecationManager,
     IInstaller,
     IPathUtils,
-    IPersistentStateFactory,
     IRandom,
     IsWindows
 } from './types';
@@ -120,7 +118,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IRandom>(IRandom, Random);
-    serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
     serviceManager.addSingleton<ITerminalServiceFactory>(ITerminalServiceFactory, TerminalServiceFactory);
     serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
