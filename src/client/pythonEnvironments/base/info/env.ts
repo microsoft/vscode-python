@@ -395,13 +395,79 @@ function getDistroInfoHeuristic(distro: PythonDistroInfo): number {
 }
 
 /**
+ * Gets a prioritized list of environment types for identification.
+ * @returns {PythonEnvKind[]} : List of environments ordered by identification priority
+ *
+ * Remarks: This is the order of detection based on how the various distributions and tools
+ * configure the environment, and the fall back for identification.
+ * Top level we have the following environment types, since they leave a unique signature
+ * in the environment or * use a unique path for the environments they create.
+ *  1. Conda
+ *  2. Windows Store
+ *  3. PipEnv
+ *  4. Pyenv
+ *  5. Poetry
+ *
+ * Next level we have the following virtual environment tools. The are here because they
+ * are consumed by the tools above, and can also be used independently.
+ *  1. venv
+ *  2. virtualenvwrapper
+ *  3. virtualenv
+ *
+ * Last category is globally installed python, or system python.
+ */
+export function getPrioritizedEnvKinds(): PythonEnvKind[] {
+    return [
+        PythonEnvKind.CondaBase,
+        PythonEnvKind.Conda,
+        PythonEnvKind.WindowsStore,
+        PythonEnvKind.Pipenv,
+        PythonEnvKind.Pyenv,
+        PythonEnvKind.Poetry,
+        PythonEnvKind.Venv,
+        PythonEnvKind.VirtualEnvWrapper,
+        PythonEnvKind.VirtualEnv,
+        PythonEnvKind.OtherVirtual,
+        PythonEnvKind.OtherGlobal,
+        PythonEnvKind.MacDefault,
+        PythonEnvKind.System,
+        PythonEnvKind.Custom,
+        PythonEnvKind.Unknown,
+    ];
+}
+
+/**
+ * Selects an environment based on the environment selection priority. This should
+ * match the priority in the environment identifier.
+ */
+export function sortByPriority(...envs: PythonEnvInfo[]): PythonEnvInfo[] {
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: When we consolidate the PythonEnvKind and EnvironmentType we should have
+    // one location where we define priority and
+    const envKindByPriority: PythonEnvKind[] = getPrioritizedEnvKinds();
+    return envs.sort(
+        (a:PythonEnvInfo, b:PythonEnvInfo) => envKindByPriority.indexOf(a.kind) - envKindByPriority.indexOf(b.kind),
+    );
+}
+
+/**
+ * Determine which of the given envs should be used.
+ *
+ * The candidates must be equivalent in some way.
+ */
+export function pickBestEnv(candidates: PythonEnvInfo[]): PythonEnvInfo {
+    const sorted = sortByPriority(...candidates);
+    return sorted[0];
+}
+
+/**
  * Merges properties of the `target` environment and `other` environment and returns the merged environment.
  * if the value in the `target` environment is not defined or has less information. This does not mutate
  * the `target` instead it returns a new object that contains the merged results.
  * @param {PythonEnvInfo} target : Properties of this object are favored.
  * @param {PythonEnvInfo} other : Properties of this object are used to fill the gaps in the merged result.
  */
-export function mergeEnvironments(target: PythonEnvInfo, other: PythonEnvInfo): PythonEnvInfo {
+export function mergeEnvs(target: PythonEnvInfo, other: PythonEnvInfo): PythonEnvInfo {
     const merged = cloneDeep(target);
 
     const version = cloneDeep(

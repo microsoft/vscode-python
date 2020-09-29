@@ -4,8 +4,8 @@
 import { isEqual } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
-import { PythonEnvInfo, PythonEnvKind } from '../../info';
-import { areSameEnv, mergeEnvironments } from '../../info/env';
+import { PythonEnvInfo } from '../../info';
+import { areSameEnv, mergeEnvs, sortByPriority } from '../../info/env';
 import {
     ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery,
 } from '../../locator';
@@ -118,72 +118,6 @@ function checkIfFinishedAndNotify(
 }
 
 function resolveEnvCollision(oldEnv: PythonEnvInfo, newEnv: PythonEnvInfo): PythonEnvInfo {
-    const [env, other] = sortEnvInfoByPriority(oldEnv, newEnv);
-    return mergeEnvironments(env, other);
-}
-
-/**
- * Selects an environment based on the environment selection priority. This should
- * match the priority in the environment identifier.
- */
-function sortEnvInfoByPriority(...envs: PythonEnvInfo[]): PythonEnvInfo[] {
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: When we consolidate the PythonEnvKind and EnvironmentType we should have
-    // one location where we define priority.
-    const envKindByPriority: PythonEnvKind[] = getPrioritizedEnvironmentKind();
-    return envs.sort(
-        (a: PythonEnvInfo, b: PythonEnvInfo) => envKindByPriority.indexOf(a.kind) - envKindByPriority.indexOf(b.kind),
-    );
-}
-
-/**
- * Gets a prioritized list of environment types for identification.
- * @returns {PythonEnvKind[]} : List of environments ordered by identification priority
- *
- * Remarks: This is the order of detection based on how the various distributions and tools
- * configure the environment, and the fall back for identification.
- * Top level we have the following environment types, since they leave a unique signature
- * in the environment or * use a unique path for the environments they create.
- *  1. Conda
- *  2. Windows Store
- *  3. PipEnv
- *  4. Pyenv
- *  5. Poetry
- *
- * Next level we have the following virtual environment tools. The are here because they
- * are consumed by the tools above, and can also be used independently.
- *  1. venv
- *  2. virtualenvwrapper
- *  3. virtualenv
- *
- * Last category is globally installed python, or system python.
- */
-function getPrioritizedEnvironmentKind(): PythonEnvKind[] {
-    return [
-        PythonEnvKind.CondaBase,
-        PythonEnvKind.Conda,
-        PythonEnvKind.WindowsStore,
-        PythonEnvKind.Pipenv,
-        PythonEnvKind.Pyenv,
-        PythonEnvKind.Poetry,
-        PythonEnvKind.Venv,
-        PythonEnvKind.VirtualEnvWrapper,
-        PythonEnvKind.VirtualEnv,
-        PythonEnvKind.OtherVirtual,
-        PythonEnvKind.OtherGlobal,
-        PythonEnvKind.MacDefault,
-        PythonEnvKind.System,
-        PythonEnvKind.Custom,
-        PythonEnvKind.Unknown,
-    ];
-}
-
-/**
- * Determine which of the given envs should be used.
- *
- * The candidates must be equivalent in some way.
- */
-export function pickBestEnv(candidates: PythonEnvInfo[]): PythonEnvInfo {
-    const sorted = sortEnvInfoByPriority(...candidates);
-    return sorted[0];
+    const [env, other] = sortByPriority(oldEnv, newEnv);
+    return mergeEnvs(env, other);
 }

@@ -8,7 +8,7 @@ import { BackgroundRequestLooper } from '../../../../common/utils/backgroundLoop
 import { logWarning } from '../../../../logging';
 import { IEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
-import { getMinimalPartialInfo } from '../../info/env';
+import { getMinimalPartialInfo, pickBestEnv } from '../../info/env';
 import {
     ILocator,
     IPythonEnvsIterator,
@@ -16,7 +16,6 @@ import {
 } from '../../locator';
 import { getEnvs, getQueryFilter } from '../../locatorUtils';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
-import { pickBestEnv } from './reducingLocator';
 
 /**
  * A locator that stores the known environments in the given cache.
