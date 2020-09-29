@@ -4,7 +4,7 @@
 import { cloneDeep } from 'lodash';
 import { getGlobalPersistentStore, IPersistentStore } from '../common/externalDependencies';
 import { PythonEnvInfo } from './info';
-import { areSameEnvironment } from './info/env';
+import { areSameEnv } from './info/env';
 
 /**
  * Represents the environment info cache to be used by the cache locator.
@@ -81,7 +81,7 @@ export class PythonEnvInfoCache implements IEnvsCache {
     }
 
     public filterEnvs(env: PythonEnvInfo | string): PythonEnvInfo[] | undefined {
-        const result = this.envsList?.filter((info) => areSameEnvironment(info, env));
+        const result = this.envsList?.filter((info) => areSameEnv(info, env));
 
         if (result) {
             return cloneDeep(result);
