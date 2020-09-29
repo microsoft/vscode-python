@@ -29,6 +29,8 @@ export class CachingLocator implements ILocator {
 
     private initialized = false;
 
+    private done = createDeferred<void>();
+
     constructor(
         private readonly cache: IEnvsCache,
         private readonly locator: ILocator,
@@ -67,6 +69,10 @@ export class CachingLocator implements ILocator {
             // We could be a little smarter about when we refresh.
             this.refresh({ event }).ignoreErrors();
         });
+    }
+
+    public async dispose(): Promise<void> {
+        this.done.resolve();
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
