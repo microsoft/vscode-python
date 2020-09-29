@@ -29,11 +29,6 @@ export class CachingLocator extends PythonEnvsWatcher implements ILocator {
         private readonly locator: ILocator,
     ) {
         super();
-        locator.onChanged((event) => {
-            this.refresh()
-                .then(() => this.fire(event))
-                .ignoreErrors();
-        });
     }
 
     /**
@@ -51,6 +46,7 @@ export class CachingLocator extends PythonEnvsWatcher implements ILocator {
         this.initialized = true;
 
         await this.cache.initialize();
+
         const envs = this.cache.getAllEnvs();
         if (envs !== undefined) {
             this.initializing.resolve();
@@ -61,6 +57,13 @@ export class CachingLocator extends PythonEnvsWatcher implements ILocator {
             await this.refresh();
             this.initializing.resolve();
         }
+
+        this.locator.onChanged((event) => {
+            // We could be a little smarter about when we refresh.
+            this.refresh()
+                .then(() => this.fire(event)) // XXX Drop this line?
+                .ignoreErrors();
+        });
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
