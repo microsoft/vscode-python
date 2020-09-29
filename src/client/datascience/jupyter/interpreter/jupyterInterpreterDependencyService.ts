@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { parse, SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
@@ -239,6 +240,32 @@ export class JupyterInterpreterDependencyService {
             this.nbconvertInstalledInInterpreter.add(interpreter.path);
         }
         return installed;
+    }
+
+    // IANHU: Combine with kernelspec version code?
+    public async getNbConvertVersion(
+        interpreter: PythonEnvironment,
+        _token?: CancellationToken
+    ): Promise<SemVer | undefined> {
+        const command = this.commandFactory.createInterpreterCommand(
+            JupyterCommands.ConvertCommand,
+            'jupyter',
+            ['-m', 'jupyter', 'nbconvert'],
+            interpreter,
+            false
+        );
+
+        const result = await command.exec(['--version'], { throwOnStdErr: true });
+
+        // IANHU: Shared code with dataViewerDependencyService.ts for Pandas
+        // IANHU: Helper function and unit test?
+        const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(result.stdout);
+        if (versionMatch && versionMatch.length > 2) {
+            const major = parseInt(versionMatch[1], 10);
+            const minor = parseInt(versionMatch[2], 10);
+            const build = parseInt(versionMatch[3], 10);
+            return parse(`${major}.${minor}.${build}`, true) ?? undefined;
+        }
     }
 
     /**

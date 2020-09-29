@@ -168,6 +168,9 @@ export class JupyterInterpreterSubCommandExecutionService
             }
         }
 
+        // Check what version of nbconvert we are working with here. We need different templates for 6.0.0+
+        const nbConvertVersion = this.jupyterDependencyService.getNbConvertVersion(interpreter, token);
+
         const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
             daemonModule: JupyterDaemonModule,
             pythonPath: interpreter.path
