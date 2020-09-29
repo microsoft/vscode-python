@@ -167,7 +167,7 @@ jobs:
         id: out-cache
         uses: actions/cache@v2
         with:
-          path: ./out
+          path: ${{env.special-working-directory}}/out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Install dependencies (npm ci)
