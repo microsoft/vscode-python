@@ -27,6 +27,7 @@ export class RawSession implements ISessionWithSocket {
     private _kernel: RawKernel;
     private readonly _statusChanged: Signal<this, Kernel.Status>;
     private readonly _kernelChanged: Signal<this, Session.IKernelChangedArgs>;
+    private readonly _ioPubMessage: Signal<this, KernelMessage.IIOPubMessage>;
     private readonly exitHandler: IDisposable;
 
     // RawSession owns the lifetime of the kernel process and will dispose it
@@ -35,6 +36,7 @@ export class RawSession implements ISessionWithSocket {
         const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
         this._statusChanged = new signaling.Signal<this, Kernel.Status>(this);
         this._kernelChanged = new signaling.Signal<this, Session.IKernelChangedArgs>(this);
+        this._ioPubMessage = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         // Unique ID for this session instance
         this._id = uuid();
 
@@ -44,6 +46,7 @@ export class RawSession implements ISessionWithSocket {
         // Connect our kernel and hook up status changes
         this._kernel = createRawKernel(kernelProcess, this._clientID);
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
+        this._kernel.iopubMessage.connect(this.onIOPubMessage, this);
         this.exitHandler = kernelProcess.exited(this.handleUnhandledExitingOfKernelProcess, this);
     }
 
@@ -101,7 +104,7 @@ export class RawSession implements ISessionWithSocket {
         throw new Error('Not yet implemented');
     }
     get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
-        throw new Error('Not yet implemented');
+        return this._ioPubMessage;
     }
     get unhandledMessage(): ISignal<this, KernelMessage.IMessage> {
         throw new Error('Not yet implemented');
@@ -144,6 +147,9 @@ export class RawSession implements ISessionWithSocket {
     // Send out a message when our kernel changes state
     private onKernelStatus(_sender: Kernel.IKernelConnection, state: Kernel.Status) {
         this._statusChanged.emit(state);
+    }
+    private onIOPubMessage(_sender: Kernel.IKernelConnection, msg: KernelMessage.IIOPubMessage) {
+        this._ioPubMessage.emit(msg);
     }
     private handleUnhandledExitingOfKernelProcess(e: { exitCode?: number | undefined; reason?: string | undefined }) {
         if (this.isDisposing) {

@@ -6,6 +6,8 @@ import { assert } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { injectable } from 'inversify';
+// tslint:disable-next-line: no-require-imports
+import escape = require('lodash/escape');
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
@@ -158,9 +160,9 @@ suite('DataScience notebook tests', () => {
                 assert.equal(cells.length, 1, `Wrong number of cells returned`);
                 const data = extractDataOutput(cells[0]);
                 if (pathVerify) {
-                    // For a path comparison normalize output and add single quotes on expected value
-                    const normalizedOutput = path.normalize(data).toUpperCase();
-                    const normalizedTarget = `'${path.normalize(expectedValue).toUpperCase()}'`;
+                    // For a path comparison normalize output
+                    const normalizedOutput = path.normalize(data).toUpperCase().replace(/&#39;/g, '');
+                    const normalizedTarget = path.normalize(expectedValue).toUpperCase().replace(/'/g, '');
                     assert.equal(normalizedOutput, normalizedTarget, 'Cell path values does not match');
                 } else {
                     assert.equal(data, expectedValue, 'Cell value does not match');
@@ -1024,6 +1026,15 @@ a`,
                 },
                 {
                     markdownRegEx: undefined,
+                    code: `a="<a href=f>"
+a`,
+                    mimeType: 'text/plain',
+                    cellType: 'code',
+                    result: `<a href=f>`,
+                    verifyValue: (d) => assert.equal(d, escape(`<a href=f>`), 'XML not escaped')
+                },
+                {
+                    markdownRegEx: undefined,
                     code: `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`,
@@ -1032,7 +1043,7 @@ df.head()`,
                     cellType: 'error',
                     // tslint:disable-next-line:quotemark
                     verifyValue: (d) =>
-                        assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
+                        assert.ok((d as string).includes(escape("has no attribute 'read'")), 'Unexpected error result')
                 },
                 {
                     markdownRegEx: undefined,
@@ -1208,6 +1219,8 @@ plt.show()`,
             });
 
             class DyingProcess implements ChildProcess {
+                public readonly exitCode: number | null = null;
+                public readonly signalCode: number | null = null;
                 public stdin: Writable;
                 public stdout: Readable;
                 public stderr: Readable;
@@ -1474,7 +1487,7 @@ plt.show()`,
                 });
 
                 assert.ok(notebook, 'did not create notebook');
-                await verifySimple(notebook, `import os\nos.getcwd()`, escapedPath);
+                await verifySimple(notebook, `import os\nos.getcwd()`, escapedPath, true);
             });
         });
     });

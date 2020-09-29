@@ -12,7 +12,7 @@ import { PlatformService } from '../../../../client/common/platform/platformServ
 import { IConfigurationService, ICurrentProcess, IPythonSettings } from '../../../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../../../client/interpreter/autoSelection/types';
 import { IVirtualEnvironmentManager } from '../../../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../../../client/ioc/container';
@@ -52,15 +52,15 @@ suite('Virtual environments', () => {
         serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, process.object);
         serviceManager.addSingletonInstance<IVirtualEnvironmentManager>(
             IVirtualEnvironmentManager,
-            virtualEnvMgr.object
+            virtualEnvMgr.object,
         );
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
             IInterpreterAutoSeletionProxyService,
-            MockAutoSelectionService
+            MockAutoSelectionService,
         );
     });
 
@@ -72,9 +72,7 @@ suite('Virtual environments', () => {
         settings.setup((x) => x.venvFolders).returns(() => folders);
         virtualEnvMgr.setup((v) => v.getPyEnvRoot(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         let paths = await pathProvider.getSearchPaths();
-        let expected = ['envs', '.pyenv', '.direnv', '.virtualenvs', ...folders].map((item) =>
-            path.join(homedir, item)
-        );
+        let expected = ['envs', '.pyenv', '.direnv', '.virtualenvs', ...folders].map((item) => path.join(homedir, item));
 
         virtualEnvMgr.verifyAll();
         expect(paths).to.deep.equal(expected, 'Global search folder list is incorrect.');
@@ -97,7 +95,7 @@ suite('Virtual environments', () => {
 
         expect([...new Set(paths)]).to.deep.equal(
             paths,
-            'Duplicates are not removed from the list of global search paths'
+            'Duplicates are not removed from the list of global search paths',
         );
     });
 
@@ -108,9 +106,7 @@ suite('Virtual environments', () => {
         const workonFolder = path.join('~', '.workonFolder');
         process
             .setup((p) => p.env)
-            .returns(() => {
-                return { WORKON_HOME: workonFolder };
-            });
+            .returns(() => ({ WORKON_HOME: workonFolder }));
         settings.setup((x) => x.venvFolders).returns(() => []);
 
         const paths = await pathProvider.getSearchPaths();
@@ -127,9 +123,7 @@ suite('Virtual environments', () => {
         const workonFolder = path.join('path', 'to', '.workonFolder');
         process
             .setup((p) => p.env)
-            .returns(() => {
-                return { WORKON_HOME: workonFolder };
-            });
+            .returns(() => ({ WORKON_HOME: workonFolder }));
         settings.setup((x) => x.venvFolders).returns(() => []);
 
         const paths = await pathProvider.getSearchPaths();

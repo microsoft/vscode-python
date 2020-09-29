@@ -63,7 +63,11 @@ export class ExportBase implements IExport {
         }
 
         try {
-            await this.fs.copyLocal(tempTarget.filePath, target.fsPath);
+            if ((await this.fs.stat(Uri.file(tempTarget.filePath))).size > 1) {
+                await this.fs.copyLocal(tempTarget.filePath, target.fsPath);
+            } else {
+                throw new Error('File size is zero during conversion. Outputting error.');
+            }
         } catch {
             throw new Error(result.stderr);
         } finally {

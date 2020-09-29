@@ -19,6 +19,7 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     ICell,
+    IJupyterSession,
     INotebook,
     INotebookCompletion,
     INotebookExecutionInfo,
@@ -67,6 +68,9 @@ export class GuestJupyterNotebook
         return ServerStatus.Idle;
     }
 
+    public get session(): IJupyterSession {
+        throw new Error('Method not implemented');
+    }
     public onKernelChanged = new EventEmitter<KernelConnectionMetadata>().event;
     public onKernelRestarted = new EventEmitter<void>().event;
     public onKernelInterrupted = new EventEmitter<void>().event;

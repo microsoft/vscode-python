@@ -14,7 +14,7 @@ export class MockKernelFinder implements IKernelFinder {
     public async findKernelSpec(
         interpreterUri: InterpreterUri,
         kernelSpecMetadata?: nbformat.IKernelspecMetadata
-    ): Promise<IJupyterKernelSpec> {
+    ): Promise<IJupyterKernelSpec | undefined> {
         const spec = interpreterUri?.path
             ? this.dummySpecs.get(interpreterUri.path)
             : this.dummySpecs.get((interpreterUri || '').toString());

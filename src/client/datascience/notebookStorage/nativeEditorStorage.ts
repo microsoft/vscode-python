@@ -17,6 +17,7 @@ import {
     CellState,
     IDataScienceFileSystem,
     IJupyterExecution,
+    IModelLoadOptions,
     INotebookModel,
     INotebookStorage,
     ITrustService
@@ -26,12 +27,8 @@ import {
 import detectIndent = require('detect-indent');
 import { VSCodeNotebookModel } from './vscNotebookModel';
 
-const KeyPrefix = 'notebook-storage-';
+export const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
-
-export function isUntitled(model?: INotebookModel): boolean {
-    return isUntitledFile(model?.file);
-}
 
 export function getNextUntitledCounter(file: Uri | undefined, currentValue: number): number {
     if (file && isUntitledFile(file)) {
@@ -79,27 +76,8 @@ export class NativeEditorStorage implements INotebookStorage {
     public get(_file: Uri): INotebookModel | undefined {
         return undefined;
     }
-    public getOrCreateModel(
-        file: Uri,
-        possibleContents?: string,
-        backupId?: string,
-        forVSCodeNotebook?: boolean
-    ): Promise<INotebookModel>;
-    public getOrCreateModel(
-        file: Uri,
-        possibleContents?: string,
-        // tslint:disable-next-line: unified-signatures
-        skipDirtyContents?: boolean,
-        forVSCodeNotebook?: boolean
-    ): Promise<INotebookModel>;
-    public getOrCreateModel(
-        file: Uri,
-        possibleContents?: string,
-        // tslint:disable-next-line: no-any
-        options?: any,
-        forVSCodeNotebook?: boolean
-    ): Promise<INotebookModel> {
-        return this.loadFromFile(file, possibleContents, options, forVSCodeNotebook);
+    public getOrCreateModel(options: IModelLoadOptions): Promise<INotebookModel> {
+        return this.loadFromFile(options);
     }
     public async save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
         const contents = model.getContent();
@@ -158,8 +136,8 @@ export class NativeEditorStorage implements INotebookStorage {
     }
 
     public async revert(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
-        // Revert to what is in the hot exit file
-        await this.loadFromFile(model.file);
+        // Revert to what is in the real file. This is only used for the custom editor
+        await this.loadFromFile({ file: model.file, skipLoadingDirtyContents: true });
     }
 
     public async deleteBackup(model: INotebookModel, backupId: string): Promise<void> {
@@ -182,21 +160,29 @@ export class NativeEditorStorage implements INotebookStorage {
         // Keep track of the time when this data was saved.
         // This way when we retrieve the data we can compare it against last modified date of the file.
         const specialContents = contents ? JSON.stringify({ contents, lastModifiedTimeMs: Date.now() }) : undefined;
-        return this.writeToStorage(filePath, specialContents, cancelToken);
+        return this.writeToStorage(model.file, filePath, specialContents, cancelToken);
     }
 
     private async clearHotExit(file: Uri, backupId?: string): Promise<void> {
         const key = backupId || this.getStaticStorageKey(file);
         const filePath = this.getHashedFileName(key);
-        await this.writeToStorage(filePath);
+        await this.writeToStorage(undefined, filePath);
     }
 
-    private async writeToStorage(filePath: string, contents?: string, cancelToken?: CancellationToken): Promise<void> {
+    private async writeToStorage(
+        owningFile: Uri | undefined,
+        filePath: string,
+        contents?: string,
+        cancelToken?: CancellationToken
+    ): Promise<void> {
         try {
             if (!cancelToken?.isCancellationRequested) {
                 if (contents) {
                     await this.fs.createLocalDirectory(path.dirname(filePath));
                     if (!cancelToken?.isCancellationRequested) {
+                        if (owningFile) {
+                            this.trustService.trustNotebook(owningFile, contents).ignoreErrors();
+                        }
                         await this.fs.writeLocalFile(filePath, contents);
                     }
                 } else {
@@ -249,54 +235,44 @@ export class NativeEditorStorage implements INotebookStorage {
             noop();
         }
     }
-    private loadFromFile(
-        file: Uri,
-        possibleContents?: string,
-        backupId?: string,
-        forVSCodeNotebook?: boolean
-    ): Promise<INotebookModel>;
-    private loadFromFile(
-        file: Uri,
-        possibleContents?: string,
-        // tslint:disable-next-line: unified-signatures
-        skipDirtyContents?: boolean,
-        forVSCodeNotebook?: boolean
-    ): Promise<INotebookModel>;
-    private async loadFromFile(
-        file: Uri,
-        possibleContents?: string,
-        options?: boolean | string,
-        forVSCodeNotebook?: boolean
-    ): Promise<INotebookModel> {
+    private async loadFromFile(options: IModelLoadOptions): Promise<INotebookModel> {
         try {
             // Attempt to read the contents if a viable file
-            const contents = NativeEditorStorage.isUntitledFile(file) ? possibleContents : await this.fs.readFile(file);
+            const contents = NativeEditorStorage.isUntitledFile(options.file)
+                ? options.possibleContents
+                : await this.fs.readFile(options.file);
 
-            const skipDirtyContents = typeof options === 'boolean' ? options : !!options;
-            // Use backupId provided, else use static storage key.
-            const backupId =
-                typeof options === 'string' ? options : skipDirtyContents ? undefined : this.getStaticStorageKey(file);
+            // Get backup id from the options if available.
+            const backupId = options.backupId ? options.backupId : this.getStaticStorageKey(options.file);
 
             // If skipping dirty contents, delete the dirty hot exit file now
-            if (skipDirtyContents) {
-                await this.clearHotExit(file, backupId);
+            if (options.skipLoadingDirtyContents) {
+                await this.clearHotExit(options.file, backupId);
             }
 
             // See if this file was stored in storage prior to shutdown
-            const dirtyContents = skipDirtyContents ? undefined : await this.getStoredContents(file, backupId);
+            const dirtyContents = options.skipLoadingDirtyContents
+                ? undefined
+                : await this.getStoredContents(options.file, backupId);
             if (dirtyContents) {
                 // This means we're dirty. Indicate dirty and load from this content
-                return this.loadContents(file, dirtyContents, true, forVSCodeNotebook);
+                return this.loadContents(options.file, dirtyContents, true, options.isNative);
             } else {
                 // Load without setting dirty
-                return this.loadContents(file, contents, undefined, forVSCodeNotebook);
+                return this.loadContents(options.file, contents, undefined, options.isNative);
             }
         } catch (ex) {
             // May not exist at this time. Should always have a single cell though
-            traceError(`Failed to load notebook file ${file.toString()}`, ex);
+            traceError(`Failed to load notebook file ${options.file.toString()}`, ex);
             return this.factory.createModel(
-                { trusted: true, file, cells: [], crypto: this.crypto, globalMemento: this.globalStorage },
-                forVSCodeNotebook
+                {
+                    trusted: true,
+                    file: options.file,
+                    cells: [],
+                    crypto: this.crypto,
+                    globalMemento: this.globalStorage
+                },
+                options.isNative
             );
         }
     }
@@ -348,9 +324,11 @@ export class NativeEditorStorage implements INotebookStorage {
             };
         });
 
-        // Make sure at least one
-        if (remapped.length === 0) {
-            remapped.splice(0, 0, this.createEmptyCell(uuid()));
+        if (!forVSCodeNotebook) {
+            // Make sure at least one
+            if (remapped.length === 0) {
+                remapped.splice(0, 0, this.createEmptyCell(uuid()));
+            }
         }
         const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
 
@@ -376,6 +354,8 @@ export class NativeEditorStorage implements INotebookStorage {
             if (isNotebookTrusted) {
                 model.trust();
             }
+        } else {
+            model.trust();
         }
 
         return model;
@@ -409,9 +389,10 @@ export class NativeEditorStorage implements INotebookStorage {
     }
 
     private async getStoredContentsFromFile(file: Uri, key: string): Promise<string | undefined> {
+        const filePath = this.getHashedFileName(key);
         try {
             // Use this to read from the extension global location
-            const contents = await this.fs.readLocalFile(file.fsPath);
+            const contents = await this.fs.readLocalFile(filePath);
             const data = JSON.parse(contents);
             // Check whether the file has been modified since the last time the contents were saved.
             if (data && data.lastModifiedTimeMs && file.scheme === 'file') {

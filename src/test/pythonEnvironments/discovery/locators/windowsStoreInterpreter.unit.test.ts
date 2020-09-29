@@ -6,7 +6,9 @@
 // tslint:disable:no-any max-classes-per-file max-func-body-length
 
 import { expect } from 'chai';
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import {
+    anything, deepEqual, instance, mock, verify, when,
+} from 'ts-mockito';
 import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
@@ -17,24 +19,35 @@ import { ServiceContainer } from '../../../../client/ioc/container';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { WindowsStoreInterpreter } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 
+// We use this for mocking.
+class ComponentAdapter {
+    public async isWindowsStoreInterpreter(_pythonPath: string): Promise<boolean | undefined> {
+        return undefined;
+    }
+}
+
 suite('Interpreters - Windows Store Interpreter', () => {
     let windowsStoreInterpreter: WindowsStoreInterpreter;
+    let pyenvs: ComponentAdapter;
     let fs: IFileSystem;
     let persistanceStateFactory: IPersistentStateFactory;
     let executionFactory: IPythonExecutionFactory;
     let serviceContainer: IServiceContainer;
     setup(() => {
+        pyenvs = mock(ComponentAdapter);
         fs = mock(FileSystem);
         persistanceStateFactory = mock(PersistentStateFactory);
         executionFactory = mock(PythonExecutionFactory);
         serviceContainer = mock(ServiceContainer);
         when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(
-            instance(executionFactory)
+            instance(executionFactory),
         );
+        when(pyenvs.isWindowsStoreInterpreter(anything())).thenReturn(Promise.resolve(undefined));
         windowsStoreInterpreter = new WindowsStoreInterpreter(
             instance(serviceContainer),
             instance(persistanceStateFactory),
-            instance(fs)
+            instance(fs),
+            instance(pyenvs)
         );
     });
     const windowsStoreInterpreters = [
@@ -46,37 +59,37 @@ suite('Interpreters - Windows Store Interpreter', () => {
         'C:\\Microsoft\\WindowsApps\\Something\\Python.exe',
         'C:\\Microsoft\\WindowsApps\\Python.exe',
         'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-        'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe'
+        'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe',
     ];
     for (const interpreter of windowsStoreInterpreters) {
-        test(`${interpreter} must be identified as a windows store interpter`, () => {
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(true, 'Must be true');
+        test(`${interpreter} must be identified as a windows store interpter`, async () => {
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(true, 'Must be true');
         });
-        test(`${interpreter.toLowerCase()} must be identified as a windows store interpter (ignoring case)`, () => {
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toLowerCase())).to.equal(
+        test(`${interpreter.toLowerCase()} must be identified as a windows store interpter (ignoring case)`, async () => {
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toLowerCase())).to.equal(
                 true,
-                'Must be true'
+                'Must be true',
             );
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(
                 true,
-                'Must be true'
+                'Must be true',
             );
         });
         test(`D${interpreter.substring(
-            1
-        )} must be identified as a windows store interpter (ignoring driver letter)`, () => {
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(
+            1,
+        )} must be identified as a windows store interpter (ignoring driver letter)`, async () => {
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(
                 true,
-                'Must be true'
+                'Must be true',
             );
         });
         test(`${interpreter.replace(
             /\\/g,
-            '/'
-        )} must be identified as a windows store interpter (ignoring path separator)`, () => {
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
+            '/',
+        )} must be identified as a windows store interpter (ignoring path separator)`, async () => {
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
                 true,
-                'Must be true'
+                'Must be true',
             );
         });
     }
@@ -92,31 +105,31 @@ suite('Interpreters - Windows Store Interpreter', () => {
         'C:\\Program Files\\Python\\python.exe',
         'C:\\Program Files\\Microsoft\\Python\\python.exe',
         '..\\apps\\Python.exe',
-        'C:\\Apps\\Python.exe'
+        'C:\\Apps\\Python.exe',
     ];
     for (const interpreter of nonWindowsStoreInterpreters) {
-        test(`${interpreter} must not be identified as a windows store interpter`, () => {
+        test(`${interpreter} must not be identified as a windows store interpter`, async () => {
             expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter)).to.equal(false, 'Must be false');
             expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
                 false,
-                'Must be false'
+                'Must be false',
             );
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(false, 'Must be false');
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(false, 'Must be false');
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
                 false,
-                'Must be false'
+                'Must be false',
             );
             expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toLowerCase())).to.equal(
                 false,
-                'Must be false'
+                'Must be false',
             );
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(
                 false,
-                'Must be false'
+                'Must be false',
             );
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(
+            expect(await windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(
                 false,
-                'Must be false'
+                'Must be false',
             );
         });
     }
@@ -124,7 +137,7 @@ suite('Interpreters - Windows Store Interpreter', () => {
         'C:\\Program Files\\WindowsApps\\Something\\Python.exe',
         'C:\\Program Files\\WindowsApps\\Python.exe',
         'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-        'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe'
+        'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe',
     ];
     for (const interpreter of windowsStoreHiddenInterpreters) {
         test(`${interpreter} must be identified as a windows store (hidden) interpter`, () => {
@@ -133,23 +146,23 @@ suite('Interpreters - Windows Store Interpreter', () => {
         test(`${interpreter.toLowerCase()} must be identified as a windows store (hidden) interpter (ignoring case)`, () => {
             expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toLowerCase())).to.equal(
                 true,
-                'Must be true'
+                'Must be true',
             );
             expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toUpperCase())).to.equal(
                 true,
-                'Must be true'
+                'Must be true',
             );
         });
         test(`${interpreter} must be identified as a windows store (hidden) interpter (ignoring driver letter)`, () => {
             expect(windowsStoreInterpreter.isHiddenInterpreter(`D${interpreter.substring(1)}`)).to.equal(
                 true,
-                'Must be true'
+                'Must be true',
             );
         });
     }
     const nonWindowsStoreHiddenInterpreters = [
         'C:\\Microsofts\\WindowsApps\\Something\\Python.exe',
-        'C:\\Microsoft\\WindowsAppss\\Python.exe'
+        'C:\\Microsoft\\WindowsAppss\\Python.exe',
     ];
     for (const interpreter of nonWindowsStoreHiddenInterpreters) {
         test(`${interpreter} must not be identified as a windows store (hidden) interpter`, () => {
@@ -168,7 +181,7 @@ suite('Interpreters - Windows Store Interpreter', () => {
         const oneHour = 60 * 60 * 1000;
 
         when(
-            persistanceStateFactory.createGlobalPersistentState<string | undefined>(key, undefined, oneHour)
+            persistanceStateFactory.createGlobalPersistentState<string | undefined>(key, undefined, oneHour),
         ).thenReturn(instance(stateStore));
         when(stateStore.value).thenReturn();
         when(executionFactory.create(deepEqual({ pythonPath }))).thenResolve(pythonServiceInstance);
@@ -195,7 +208,7 @@ suite('Interpreters - Windows Store Interpreter', () => {
         const oneHour = 60 * 60 * 1000;
 
         when(
-            persistanceStateFactory.createGlobalPersistentState<string | undefined>(key, undefined, oneHour)
+            persistanceStateFactory.createGlobalPersistentState<string | undefined>(key, undefined, oneHour),
         ).thenReturn(instance(stateStore));
         when(stateStore.value).thenReturn('fileHash');
         const hash = await windowsStoreInterpreter.getInterpreterHash(pythonPath);

@@ -138,7 +138,7 @@ export class MockCustomEditorService implements ICustomEditorService {
     private async getModel(file: Uri): Promise<NativeEditorNotebookModel | undefined> {
         const nativeProvider = this.provider as NativeEditorProvider;
         if (nativeProvider) {
-            return (nativeProvider.loadModel(file) as unknown) as Promise<NativeEditorNotebookModel | undefined>;
+            return (nativeProvider.loadModel({ file }) as unknown) as Promise<NativeEditorNotebookModel | undefined>;
         }
         return undefined;
     }

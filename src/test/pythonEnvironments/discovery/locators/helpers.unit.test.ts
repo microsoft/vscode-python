@@ -8,7 +8,9 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
-import { anything, instance, mock, when } from 'ts-mockito';
+import {
+    anything, instance, mock, when,
+} from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
@@ -67,14 +69,14 @@ suite('Interpreters - Locators Helper', () => {
                 sysPrefix: name,
                 sysVersion: name,
                 envType: EnvironmentType.Unknown,
-                version: new SemVer('0.0.0-alpha')
+                version: new SemVer('0.0.0-alpha'),
             };
             interpreters.push(interpreter);
 
             // Treat 'mac' as as mac interpreter.
             interpreterServiceHelper
                 .setup((i) => i.isMacDefaultPythonPath(TypeMoq.It.isValue(interpreter.path)))
-                .returns(() => name === 'mac')
+                .returns(() => Promise.resolve(name === 'mac'))
                 .verifiable(TypeMoq.Times.never());
         });
 
@@ -91,7 +93,9 @@ suite('Interpreters - Locators Helper', () => {
     });
     getNamesAndValues<OS>(OS).forEach((os) => {
         test(`Ensure duplicates are removed (same version and same interpreter directory on ${os.name})`, async () => {
-            interpreterServiceHelper.setup((i) => i.isMacDefaultPythonPath(TypeMoq.It.isAny())).returns(() => false);
+            interpreterServiceHelper
+                .setup((i) => i.isMacDefaultPythonPath(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(false));
             platform.setup((p) => p.isWindows).returns(() => os.value === OS.Windows);
             platform.setup((p) => p.isLinux).returns(() => os.value === OS.Linux);
             platform.setup((p) => p.isMac).returns(() => os.value === OS.Mac);
@@ -110,7 +114,7 @@ suite('Interpreters - Locators Helper', () => {
                     sysPrefix: name,
                     sysVersion: name,
                     envType: EnvironmentType.Unknown,
-                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
+                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`),
                 };
                 interpreters.push(interpreter);
                 expectedInterpreters.push(interpreter);
@@ -124,7 +128,7 @@ suite('Interpreters - Locators Helper', () => {
                     sysPrefix: name,
                     sysVersion: name,
                     envType: EnvironmentType.Unknown,
-                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
+                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`),
                 };
 
                 const duplicateInterpreter = {
@@ -134,7 +138,7 @@ suite('Interpreters - Locators Helper', () => {
                     sysPrefix: name,
                     sysVersion: name,
                     envType: EnvironmentType.Unknown,
-                    version: new SemVer(interpreter.version.raw)
+                    version: new SemVer(interpreter.version.raw),
                 };
 
                 interpreters.push(interpreter);
@@ -156,7 +160,9 @@ suite('Interpreters - Locators Helper', () => {
     });
     getNamesAndValues<OS>(OS).forEach((os) => {
         test(`Ensure interpreter types are identified from other locators (${os.name})`, async () => {
-            interpreterServiceHelper.setup((i) => i.isMacDefaultPythonPath(TypeMoq.It.isAny())).returns(() => false);
+            interpreterServiceHelper
+                .setup((i) => i.isMacDefaultPythonPath(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(false));
             platform.setup((p) => p.isWindows).returns(() => os.value === OS.Windows);
             platform.setup((p) => p.isLinux).returns(() => os.value === OS.Linux);
             platform.setup((p) => p.isMac).returns(() => os.value === OS.Mac);
@@ -177,7 +183,7 @@ suite('Interpreters - Locators Helper', () => {
                     sysPrefix: name,
                     sysVersion: name,
                     envType: type,
-                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
+                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`),
                 };
                 interpreters.push(interpreter);
 

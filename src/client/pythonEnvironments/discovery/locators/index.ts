@@ -1,5 +1,10 @@
+// tslint:disable-next-line: no-single-line-block-comment
+/* eslint-disable max-classes-per-file */
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { flatten } from 'lodash';
+import {
+    Disposable, Event, EventEmitter, Uri,
+} from 'vscode';
 import { traceDecorators } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
 import { IDisposableRegistry } from '../../../common/types';
@@ -10,20 +15,177 @@ import {
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
     GLOBAL_VIRTUAL_ENV_SERVICE,
+    IComponentAdapter,
     IInterpreterLocatorHelper,
     IInterpreterLocatorService,
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import { PythonEnvInfo } from '../../base/info';
+import {
+    ILocator,
+    IPythonEnvsIterator,
+    Locator,
+    NOOP_ITERATOR,
+    PythonLocatorQuery,
+} from '../../base/locator';
+import {
+    combineIterators,
+    DisableableLocator,
+    Locators,
+} from '../../base/locators';
 import { PythonEnvironment } from '../../info';
 import { isHiddenInterpreter } from './services/interpreterFilter';
 import { GetInterpreterLocatorOptions } from './types';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
-const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
+/**
+ * A wrapper around all locators used by the extension.
+ */
+export class ExtensionLocators extends Locators {
+    constructor(
+        // These are expected to be low-level locators (e.g. system).
+        nonWorkspace: ILocator[],
+        // This is expected to be a locator wrapping any found in
+        // the workspace (i.e. WorkspaceLocators).
+        workspace: ILocator,
+    ) {
+        super([...nonWorkspace, workspace]);
+    }
+}
+
+type WorkspaceLocatorFactory = (root: Uri) => ILocator[];
+
+interface IWorkspaceFolders {
+    readonly roots: ReadonlyArray<Uri>;
+    readonly onAdded: Event<Uri>;
+    readonly onRemoved: Event<Uri>;
+}
+
+type RootURI = string;
+
+/**
+ * The collection of all workspace-specific locators used by the extension.
+ *
+ * The factories are used to produce the locators for each workspace folder.
+ */
+export class WorkspaceLocators extends Locator {
+    private readonly locators: Record<RootURI, DisableableLocator> = {};
+
+    private readonly roots: Record<RootURI, Uri> = {};
+
+    constructor(
+        // used to produce the per-root locators:
+        private readonly factories: WorkspaceLocatorFactory[],
+    ) {
+        super();
+    }
+
+    /**
+     * Activate the locator.
+     *
+     * @param folders - the info used to keep track of the workspace folders
+     */
+    public activate(folders: IWorkspaceFolders):void {
+        folders.roots.forEach((root) => {
+            this.addRoot(root);
+        });
+        folders.onAdded((root: Uri) => this.addRoot(root));
+        folders.onRemoved((root: Uri) => this.removeRoot(root));
+    }
+
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+        const iterators = Object.keys(this.locators).map((key) => {
+            if (query?.searchLocations) {
+                const root = this.roots[key];
+                if (!matchURI(root, ...query.searchLocations)) {
+                    return NOOP_ITERATOR;
+                }
+            }
+            // The query matches or was not location-specific.
+            const locator = this.locators[key];
+            return locator.iterEnvs(query);
+        });
+        return combineIterators(iterators);
+    }
+
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        if (typeof env !== 'string' && env.searchLocation) {
+            const rootLocator = this.locators[env.searchLocation.toString()];
+            if (rootLocator) {
+                return rootLocator.resolveEnv(env);
+            }
+        }
+        // Fall back to checking all the roots.
+        // The eslint disable below should be removed after we have a
+        // better solution for these. We need asyncFind for this.
+        // eslint-disable-next-line no-restricted-syntax
+        for (const key of Object.keys(this.locators)) {
+            // eslint-disable-next-line no-await-in-loop
+            const resolved = await this.locators[key].resolveEnv(env);
+            if (resolved !== undefined) {
+                return resolved;
+            }
+        }
+        return undefined;
+    }
+
+    private addRoot(root: Uri) {
+        // Drop the old one, if necessary.
+        this.removeRoot(root);
+        // Create the root's locator, wrapping each factory-generated locator.
+        const locators: ILocator[] = [];
+        this.factories.forEach((create) => {
+            locators.push(...create(root));
+        });
+        const locator = new DisableableLocator(new Locators(locators));
+        // Cache it.
+        const key = root.toString();
+        this.locators[key] = locator;
+        this.roots[key] = root;
+        this.emitter.fire({ searchLocation: root });
+        // Hook up the watchers.
+        locator.onChanged((e) => {
+            if (e.searchLocation === undefined) {
+                e.searchLocation = root;
+            }
+            this.emitter.fire(e);
+        });
+    }
+
+    private removeRoot(root: Uri) {
+        const key = root.toString();
+        const locator = this.locators[key];
+        if (locator === undefined) {
+            return;
+        }
+        delete this.locators[key];
+        delete this.roots[key];
+        locator.disable();
+        this.emitter.fire({ searchLocation: root });
+    }
+}
+
+/**
+ * Determine if the given URI matches one of the candidates.
+ *
+ * The scheme must match, as well as path.  The path must match exactly
+ * or the URI must be a parent of one of the candidates.
+ */
+function matchURI(uri: Uri, ...candidates: Uri[]): boolean {
+    const uriPath = uri.path.endsWith('/') ? uri.path : '{uri.path}/';
+    const matchedUri = candidates.find((candidate) => (candidate.scheme === uri.scheme)
+            && (candidate.path === uri.path || candidate.path.startsWith(uriPath)));
+    return matchedUri !== undefined;
+}
+
+// The parts of IComponentAdapter used here.
+interface IComponent {
+    hasInterpreters: Promise<boolean | undefined>;
+    getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[] | undefined>;
+}
 
 /**
  * Facilitates locating Python interpreters.
@@ -33,30 +195,46 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     public didTriggerInterpreterSuggestions: boolean;
 
     private readonly disposables: Disposable[] = [];
+
     private readonly platform: IPlatformService;
+
     private readonly interpreterLocatorHelper: IInterpreterLocatorHelper;
+
     private readonly _hasInterpreters: Deferred<boolean>;
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    private readonly onLocatingEmitter:EventEmitter<Promise<PythonEnvironment[]>> =
+        new EventEmitter<Promise<PythonEnvironment[]>>();
+
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
+    ) {
         this._hasInterpreters = createDeferred<boolean>();
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
         this.interpreterLocatorHelper = serviceContainer.get<IInterpreterLocatorHelper>(IInterpreterLocatorHelper);
         this.didTriggerInterpreterSuggestions = false;
     }
+
     /**
      * This class should never emit events when we're locating.
-     * The events will be fired by the indivitual locators retrieved in `getLocators`.
+     * The events will be fired by the individual locators retrieved in `getLocators`.
      *
      * @readonly
      * @type {Event<Promise<PythonEnvironment[]>>}
      * @memberof PythonInterpreterLocatorService
      */
     public get onLocating(): Event<Promise<PythonEnvironment[]>> {
-        return new EventEmitter<Promise<PythonEnvironment[]>>().event;
+        return this.onLocatingEmitter.event;
     }
+
     public get hasInterpreters(): Promise<boolean> {
-        return this._hasInterpreters.completed ? this._hasInterpreters.promise : Promise.resolve(false);
+        return this.pyenvs.hasInterpreters.then((res) => {
+            if (res !== undefined) {
+                return res;
+            }
+            return this._hasInterpreters.completed ? this._hasInterpreters.promise : Promise.resolve(false);
+        });
     }
 
     /**
@@ -64,7 +242,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      *
      * Called by VS Code to indicate it is done with the resource.
      */
-    public dispose() {
+    public dispose():void {
         this.disposables.forEach((disposable) => disposable.dispose());
     }
 
@@ -76,6 +254,10 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      */
     @traceDecorators.verbose('Get Interpreters')
     public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonEnvironment[]> {
+        const envs = await this.pyenvs.getInterpreters(resource, options);
+        if (envs !== undefined) {
+            return envs;
+        }
         const locators = this.getLocators(options);
         const promises = locators.map(async (provider) => provider.getInterpreters(resource));
         locators.forEach((locator) => {
@@ -115,7 +297,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             [GLOBAL_VIRTUAL_ENV_SERVICE, undefined],
             [WORKSPACE_VIRTUAL_ENV_SERVICE, undefined],
             [KNOWN_PATH_SERVICE, undefined],
-            [CURRENT_PATH_SERVICE, undefined]
+            [CURRENT_PATH_SERVICE, undefined],
         ];
 
         const locators = keys
@@ -125,7 +307,9 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         // Set it to true the first time the user selects an interpreter
         if (!this.didTriggerInterpreterSuggestions && options?.onSuggestion === true) {
             this.didTriggerInterpreterSuggestions = true;
-            locators.forEach((locator) => (locator.didTriggerInterpreterSuggestions = true));
+            locators.forEach((locator) => {
+                locator.didTriggerInterpreterSuggestions = true;
+            });
         }
 
         return locators;

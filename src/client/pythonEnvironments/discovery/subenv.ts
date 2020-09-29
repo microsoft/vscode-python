@@ -4,9 +4,12 @@
 import { EnvironmentType } from '../info';
 import { getPyenvTypeFinder } from './globalenv';
 
+// tslint:disable-next-line: no-single-line-block-comment
+/* eslint-disable no-await-in-loop, no-restricted-syntax */
+
 type ExecFunc = (cmd: string, args: string[]) => Promise<{ stdout: string }>;
 
-type NameFinderFunc = (python: string) => Promise<string>;
+type NameFinderFunc = (python: string) => Promise<string | undefined>;
 type TypeFinderFunc = (python: string) => Promise<EnvironmentType | undefined>;
 type ExecutableFinderFunc = (python: string) => Promise<string | undefined>;
 
@@ -42,7 +45,7 @@ export async function getType(python: string, finders: TypeFinderFunc[]): Promis
     return undefined;
 }
 
-//======= default sets ========
+// ======= default sets ========
 
 /**
  * Build the list of default "name finder" functions to pass to `getName()`.
@@ -58,7 +61,7 @@ export function getNameFinders(
     pathDirname: (filename: string) => string,
     pathBasename: (filename: string) => string,
     // </path>
-    isPipenvRoot: (dir: string, python: string) => Promise<boolean>
+    isPipenvRoot: (dir: string, python: string) => Promise<boolean>,
 ): NameFinderFunc[] {
     return [
         // Note that currently there is only one finder function in
@@ -68,10 +71,9 @@ export function getNameFinders(
             if (dirname && (await isPipenvRoot(dirname, python))) {
                 // In pipenv, return the folder name of the root dir.
                 return pathBasename(dirname);
-            } else {
-                return pathBasename(pathDirname(pathDirname(python)));
             }
-        }
+            return pathBasename(pathDirname(pathDirname(python)));
+        },
     ];
 }
 
@@ -101,19 +103,19 @@ export function getTypeFinders(
     isPipenvRoot: (dir: string, python: string) => Promise<boolean>,
     getEnvVar: (name: string) => string | undefined,
     fileExists: (n: string) => Promise<boolean>,
-    exec: ExecFunc
+    exec: ExecFunc,
 ): TypeFinderFunc[] {
     return [
         getVenvTypeFinder(pathDirname, pathJoin, fileExists),
         // For now we treat pyenv as a "virtual" environment (to keep compatibility)...
         getPyenvTypeFinder(homedir, pathSep, pathJoin, getEnvVar, exec),
         getPipenvTypeFinder(getCurDir, isPipenvRoot),
-        getVirtualenvTypeFinder(scripts, pathDirname, pathJoin, fileExists)
+        getVirtualenvTypeFinder(scripts, pathDirname, pathJoin, fileExists),
         // Lets not try to determine whether this is a conda environment or not.
     ];
 }
 
-//======= venv ========
+// ======= venv ========
 
 /**
  * Build a "type finder" function that identifies venv environments.
@@ -127,7 +129,7 @@ export function getVenvTypeFinder(
     pathDirname: (filename: string) => string,
     pathJoin: (...parts: string[]) => string,
     // </path>
-    fileExists: (n: string) => Promise<boolean>
+    fileExists: (n: string) => Promise<boolean>,
 ): TypeFinderFunc {
     return async (python: string) => {
         const dir = pathDirname(python);
@@ -156,7 +158,7 @@ export function getVenvExecutableFinder(
     pathDirname: (filename: string) => string,
     pathJoin: (...parts: string[]) => string,
     // </path>
-    fileExists: (n: string) => Promise<boolean>
+    fileExists: (n: string) => Promise<boolean>,
 ): ExecutableFinderFunc {
     const basenames = typeof basename === 'string' ? [basename] : basename;
     return async (python: string) => {
@@ -169,10 +171,11 @@ export function getVenvExecutableFinder(
             }
         }
         // No matches so return undefined.
+        return undefined;
     };
 }
 
-//======= virtualenv ========
+// ======= virtualenv ========
 
 /**
  * Build a "type finder" function that identifies virtualenv environments.
@@ -188,8 +191,8 @@ export function getVirtualenvTypeFinder(
     pathDirname: (filename: string) => string,
     pathJoin: (...parts: string[]) => string,
     // </path>
-    fileExists: (n: string) => Promise<boolean>
-) {
+    fileExists: (n: string) => Promise<boolean>,
+): TypeFinderFunc {
     const find = getVenvExecutableFinder(scripts, pathDirname, pathJoin, fileExists);
     return async (python: string) => {
         const found = await find(python);
@@ -197,7 +200,7 @@ export function getVirtualenvTypeFinder(
     };
 }
 
-//======= pipenv ========
+// ======= pipenv ========
 
 /**
  * Build a "type finder" function that identifies pipenv environments.
@@ -207,8 +210,8 @@ export function getVirtualenvTypeFinder(
  */
 export function getPipenvTypeFinder(
     getCurDir: () => Promise<string | undefined>,
-    isPipenvRoot: (dir: string, python: string) => Promise<boolean>
-) {
+    isPipenvRoot: (dir: string, python: string) => Promise<boolean>,
+): TypeFinderFunc {
     return async (python: string) => {
         const curDir = await getCurDir();
         if (curDir && (await isPipenvRoot(curDir, python))) {

@@ -21,6 +21,7 @@ import {
     IDataScienceFileSystem,
     INotebookEditor,
     INotebookEditorProvider,
+    INotebookExtensibility,
     INotebookProvider,
     IStatusProvider
 } from '../types';
@@ -68,7 +69,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
+        @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
+        @inject(INotebookExtensibility) private readonly notebookExtensibility: INotebookExtensibility
     ) {
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
@@ -143,7 +145,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             return;
         }
         const uri = doc.uri;
-        const model = await this.storage.getOrCreateModel(uri, undefined, undefined, true);
+        const model = await this.storage.getOrCreateModel({ file: uri, isNative: true });
         if (model instanceof VSCodeNotebookModel) {
             model.associateNotebookDocument(doc);
         }
@@ -162,7 +164,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 this.statusProvider,
                 this.appShell,
                 this.configurationService,
-                this.disposables
+                this.disposables,
+                this.notebookExtensibility
             );
             this.onEditorOpened(editor);
         }

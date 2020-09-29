@@ -92,9 +92,15 @@ export async function openNotebook(
     // Wait for UI to load, i.e. until we get the message `LoadAllCellsComplete`.
     const uiLoaded = notebookUI.waitUntilLoaded();
 
-    const port = await getFreePort({ host: 'localhost' });
-    process.env.VSC_PYTHON_DS_UI_PORT = port.toString();
-    traceInfo(`Notebook UI Tests: have port ${port}`);
+    // tslint:disable-next-line: insecure-random
+    let port = Math.floor(Math.random() * Math.floor(1000)) + 9000;
+    try {
+        port = await getFreePort({ host: 'localhost' });
+        process.env.VSC_PYTHON_DS_UI_PORT = port.toString();
+        traceInfo(`Notebook UI Tests: have port ${port}`);
+    } catch (exc) {
+        traceInfo(`Failed getting a port.`, exc);
+    }
 
     // Wait for the browser to launch and open the UI.
     // I.e. wait until we open the notebook react ui in browser.
@@ -127,6 +133,9 @@ export async function openNotebook(
 
     // Tell the notebook UI about the editor (it needs it for execution)
     notebookUI._setEditor(notebookEditor);
+
+    // Make sure we dispose of the notebook editor
+    disposables.push(notebookEditor);
 
     return { notebookEditor, webViewPanel, notebookUI };
 }

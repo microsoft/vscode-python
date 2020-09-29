@@ -5,17 +5,18 @@
 
 // tslint:disable:no-any max-func-body-length
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import { ChildProcess } from 'child_process';
 import { EOL } from 'os';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
+import * as sinon from 'sinon';
 import { Writable } from 'stream';
 import * as TypeMoq from 'typemoq';
 import { Range, TextDocument, TextEditor, TextLine, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../client/common/application/types';
-import { Commands, EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { Commands, EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { ProcessService } from '../../client/common/process/proc';
 import {
     IProcessServiceFactory,
@@ -27,10 +28,14 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IEditorUtils,
+    IOutputChannel,
+    IPersistentState,
+    IPersistentStateFactory,
     IPythonSettings,
     ISortImportSettings
 } from '../../client/common/types';
 import { createDeferred, createDeferredFromPromise } from '../../client/common/utils/async';
+import { Common, Diagnostics } from '../../client/common/utils/localize';
 import { noop } from '../../client/common/utils/misc';
 import { IServiceContainer } from '../../client/ioc/types';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
@@ -48,6 +53,8 @@ suite('Import Sort Provider', () => {
     let editorUtils: TypeMoq.IMock<IEditorUtils>;
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
+    let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
+    let output: TypeMoq.IMock<IOutputChannel>;
     let sortProvider: SortImportsEditingProvider;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -59,6 +66,10 @@ suite('Import Sort Provider', () => {
         processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         editorUtils = TypeMoq.Mock.ofType<IEditorUtils>();
+        persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        output = TypeMoq.Mock.ofType<IOutputChannel>();
+        serviceContainer.setup((c) => c.get(IOutputChannel, STANDARD_OUTPUT_CHANNEL)).returns(() => output.object);
+        serviceContainer.setup((c) => c.get(IPersistentStateFactory)).returns(() => persistentStateFactory.object);
         serviceContainer.setup((c) => c.get(ICommandManager)).returns(() => commandManager.object);
         serviceContainer.setup((c) => c.get(IDocumentManager)).returns(() => documentManager.object);
         serviceContainer.setup((c) => c.get(IApplicationShell)).returns(() => shell.object);
@@ -69,6 +80,10 @@ suite('Import Sort Provider', () => {
         serviceContainer.setup((c) => c.get(IDisposableRegistry)).returns(() => []);
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         sortProvider = new SortImportsEditingProvider(serviceContainer.object);
+    });
+
+    teardown(() => {
+        sinon.restore();
     });
 
     test('Ensure command is registered', () => {
@@ -341,7 +356,7 @@ suite('Import Sort Provider', () => {
                 p.execObservable(
                     TypeMoq.It.isValue('CUSTOM_ISORT'),
                     TypeMoq.It.isValue(expectedArgs),
-                    TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined, cwd: path.sep })
+                    TypeMoq.It.isValue({ token: undefined, cwd: path.sep })
                 )
             )
             .returns(() => executionResult)
@@ -428,7 +443,7 @@ suite('Import Sort Provider', () => {
             .setup((p) =>
                 p.execObservable(
                     TypeMoq.It.isValue(expectedArgs),
-                    TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined, cwd: path.sep })
+                    TypeMoq.It.isValue({ token: undefined, cwd: path.sep })
                 )
             )
             .returns(() => executionResult)
@@ -555,5 +570,127 @@ suite('Import Sort Provider', () => {
         edit = await firstExecutionDeferred.promise;
         expect(edit).to.be.equal(undefined, 'The results from the first execution should be discarded');
         stdinStream1.verifyAll();
+    });
+
+    test('If isort raises a warning message related to isort5 upgrade guide, show message', async () => {
+        const _showWarningAndOptionallyShowOutput = sinon.stub(
+            SortImportsEditingProvider.prototype,
+            '_showWarningAndOptionallyShowOutput'
+        );
+        _showWarningAndOptionallyShowOutput.resolves();
+        const uri = Uri.file('something.py');
+        const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
+        const processService = TypeMoq.Mock.ofType<ProcessService>();
+        processService.setup((d: any) => d.then).returns(() => undefined);
+        mockDoc.setup((d: any) => d.then).returns(() => undefined);
+        mockDoc.setup((d) => d.lineCount).returns(() => 10);
+        mockDoc.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => 'Hello');
+        mockDoc.setup((d) => d.isDirty).returns(() => true);
+        mockDoc.setup((d) => d.uri).returns(() => uri);
+        documentManager
+            .setup((d) => d.openTextDocument(TypeMoq.It.isValue(uri)))
+            .returns(() => Promise.resolve(mockDoc.object));
+        pythonSettings
+            .setup((s) => s.sortImports)
+            .returns(() => {
+                return ({ path: 'CUSTOM_ISORT', args: [] } as any) as ISortImportSettings;
+            });
+        processServiceFactory
+            .setup((p) => p.create(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(processService.object));
+        const result = new WorkspaceEdit();
+        editorUtils
+            .setup((e) =>
+                e.getWorkspaceEditsFromPatch(
+                    TypeMoq.It.isValue('Hello'),
+                    TypeMoq.It.isValue('DIFF'),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => result);
+
+        // ----------------------Run the command----------------------
+        let subscriber: Subscriber<Output<string>>;
+        const stdinStream = TypeMoq.Mock.ofType<Writable>();
+        stdinStream.setup((s) => s.write('Hello'));
+        stdinStream
+            .setup((s) => s.end())
+            .callback(() => {
+                subscriber.next({ source: 'stdout', out: 'DIFF' });
+                subscriber.next({ source: 'stderr', out: 'Some warning related to isort5 (W0503)' });
+                subscriber.complete();
+            })
+            .verifiable(TypeMoq.Times.once());
+        const childProcess = TypeMoq.Mock.ofType<ChildProcess>();
+        childProcess.setup((p) => p.stdin).returns(() => stdinStream.object);
+        const executionResult = {
+            proc: childProcess.object,
+            out: new Observable<Output<string>>((s) => (subscriber = s)),
+            dispose: noop
+        };
+        processService.reset();
+        processService.setup((d: any) => d.then).returns(() => undefined);
+        processService
+            .setup((p) => p.execObservable(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => executionResult);
+
+        const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
+
+        // ----------------------Verify results----------------------
+        expect(edit).to.be.equal(result, 'Execution result is incorrect');
+        assert.ok(_showWarningAndOptionallyShowOutput.calledOnce);
+        stdinStream.verifyAll();
+    });
+
+    test('If user clicks show output on the isort5 warning prompt, show the Python output', async () => {
+        const neverShowAgain = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+        persistentStateFactory
+            .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), false))
+            .returns(() => neverShowAgain.object);
+        neverShowAgain.setup((p) => p.value).returns(() => false);
+        shell
+            .setup((s) =>
+                s.showWarningMessage(
+                    Diagnostics.checkIsort5UpgradeGuide(),
+                    Common.openOutputPanel(),
+                    Common.doNotShowAgain()
+                )
+            )
+            .returns(() => Promise.resolve(Common.openOutputPanel()));
+        output.setup((o) => o.show(true)).verifiable(TypeMoq.Times.once());
+        await sortProvider._showWarningAndOptionallyShowOutput();
+        output.verifyAll();
+    });
+
+    test('If user clicks do not show again on the isort5 warning prompt, do not show the prompt again', async () => {
+        const neverShowAgain = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+        persistentStateFactory
+            .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), false))
+            .returns(() => neverShowAgain.object);
+        let doNotShowAgainValue = false;
+        neverShowAgain.setup((p) => p.value).returns(() => doNotShowAgainValue);
+        neverShowAgain
+            .setup((p) => p.updateValue(true))
+            .returns(() => {
+                doNotShowAgainValue = true;
+                return Promise.resolve();
+            });
+        shell
+            .setup((s) =>
+                s.showWarningMessage(
+                    Diagnostics.checkIsort5UpgradeGuide(),
+                    Common.openOutputPanel(),
+                    Common.doNotShowAgain()
+                )
+            )
+            .returns(() => Promise.resolve(Common.doNotShowAgain()))
+            .verifiable(TypeMoq.Times.once());
+
+        await sortProvider._showWarningAndOptionallyShowOutput();
+        shell.verifyAll();
+
+        await sortProvider._showWarningAndOptionallyShowOutput();
+        await sortProvider._showWarningAndOptionallyShowOutput();
+        shell.verifyAll();
     });
 });

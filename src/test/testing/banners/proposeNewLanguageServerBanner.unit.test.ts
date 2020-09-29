@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 'use strict';
-
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
+import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 import { Extension } from 'vscode';
 import { LanguageServerType } from '../../../client/activation/types';
@@ -24,6 +24,8 @@ import {
     ProposeLSStateKeys,
     ProposePylanceBanner
 } from '../../../client/languageServices/proposeLanguageServerBanner';
+import * as Telemetry from '../../../client/telemetry';
+import { EventName } from '../../../client/telemetry/constants';
 
 interface IExperimentLsCombination {
     inExperiment: boolean;
@@ -46,6 +48,8 @@ suite('Propose Pylance Banner', () => {
     let appShell: typemoq.IMock<IApplicationShell>;
     let appEnv: typemoq.IMock<IApplicationEnvironment>;
     let settings: typemoq.IMock<IPythonSettings>;
+    let sendTelemetryStub: sinon.SinonStub;
+    let telemetryEvent: { eventName: EventName; properties: { userAction: string } } | undefined;
 
     const message = Pylance.proposePylanceMessage();
     const yes = Pylance.tryItNow();
@@ -59,7 +63,23 @@ suite('Propose Pylance Banner', () => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         appEnv = typemoq.Mock.ofType<IApplicationEnvironment>();
         appEnv.setup((x) => x.uriScheme).returns(() => 'scheme');
+
+        sendTelemetryStub = sinon
+            .stub(Telemetry, 'sendTelemetryEvent')
+            .callsFake((eventName: EventName, _, properties: { userAction: string }) => {
+                telemetryEvent = {
+                    eventName,
+                    properties
+                };
+            });
     });
+
+    teardown(() => {
+        telemetryEvent = undefined;
+        sinon.restore();
+        Telemetry._resetSharedProperties();
+    });
+
     testData.forEach((t) => {
         test(`${t.inExperiment ? 'In' : 'Not in'} experiment and "python.languageServer": "${t.lsType}" should ${
             t.shouldShowBanner ? 'show' : 'not show'
@@ -109,8 +129,15 @@ suite('Propose Pylance Banner', () => {
 
         const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
         await testBanner.showBanner();
+
         expect(testBanner.enabled).to.be.equal(false, 'Banner should be permanently disabled when user clicked No');
         appShell.verifyAll();
+
+        sinon.assert.calledOnce(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, {
+            eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
+            properties: { userAction: 'no' }
+        });
     });
     test('Clicking Later should disable banner in session', async () => {
         appShell
@@ -128,11 +155,20 @@ suite('Propose Pylance Banner', () => {
 
         const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
         await testBanner.showBanner();
+
         expect(testBanner.enabled).to.be.equal(
             true,
             'Banner should not be permanently disabled when user clicked Later'
         );
         appShell.verifyAll();
+
+        sinon.assert.calledOnce(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, {
+            eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
+            properties: {
+                userAction: 'later'
+            }
+        });
     });
     test('Clicking Yes opens the extension marketplace entry', async () => {
         appShell
@@ -150,8 +186,17 @@ suite('Propose Pylance Banner', () => {
 
         const testBanner = preparePopup(true, appShell.object, appEnv.object, config.object, true, false);
         await testBanner.showBanner();
+
         expect(testBanner.enabled).to.be.equal(false, 'Banner should be permanently disabled after opening store URL');
         appShell.verifyAll();
+
+        sinon.assert.calledOnce(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, {
+            eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
+            properties: {
+                userAction: 'yes'
+            }
+        });
     });
 });
 

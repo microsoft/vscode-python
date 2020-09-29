@@ -22,21 +22,59 @@ suite('DataScience - NativeNotebook Renderer Extension', () => {
     const disposables: IDisposable[] = [];
     const jupyterNotebook: NotebookDocument = {
         cells: [],
+        version: 1,
         uri: Uri.file('one.ipynb'),
         fileName: '',
         isDirty: false,
         languages: [],
         metadata: {},
-        viewType: JupyterNotebookView
+        isUntitled: false,
+        viewType: JupyterNotebookView,
+        contentOptions: {
+            transientOutputs: false,
+            transientMetadata: {
+                breakpointMargin: true,
+                editable: true,
+                hasExecutionOrder: true,
+                inputCollapsed: true,
+                lastRunDuration: true,
+                outputCollapsed: true,
+                runStartTime: true,
+                runnable: true,
+                executionOrder: false,
+                custom: false,
+                runState: false,
+                statusMessage: false
+            }
+        }
     };
     const nonJupyterNotebook: NotebookDocument = {
         cells: [],
+        version: 1,
         uri: Uri.file('one.xyz'),
         fileName: '',
+        isUntitled: false,
         isDirty: false,
         languages: [],
         metadata: {},
-        viewType: 'somethingElse'
+        viewType: 'somethingElse',
+        contentOptions: {
+            transientOutputs: false,
+            transientMetadata: {
+                breakpointMargin: true,
+                editable: true,
+                hasExecutionOrder: true,
+                inputCollapsed: true,
+                lastRunDuration: true,
+                outputCollapsed: true,
+                runStartTime: true,
+                runnable: true,
+                executionOrder: false,
+                custom: false,
+                runState: false,
+                statusMessage: false
+            }
+        }
     };
     const extension: Extension<{}> = {
         activate: () => Promise.resolve({}),

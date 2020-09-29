@@ -35,7 +35,10 @@ class AddCLISubparserTests(unittest.TestCase):
         add_subparser("discover", "pytest", subparsers)
 
         self.assertEqual(
-            stub.calls, [("subparsers.add_parser", None, {"name": "pytest"}),]
+            stub.calls,
+            [
+                ("subparsers.add_parser", None, {"name": "pytest"}),
+            ],
         )
 
     def test_unsupported_command(self):

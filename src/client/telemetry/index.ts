@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import type { JSONObject } from '@phosphor/coreutils';
-import * as stackTrace from 'stack-trace';
 // tslint:disable-next-line: import-name
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 
@@ -118,7 +117,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
     let customProperties: Record<string, string> = {};
-    let eventNameSent = eventName as string;
+    const eventNameSent = eventName as string;
 
     if (ex) {
         // When sending telemetry events for exceptions no need to send custom properties.
@@ -126,9 +125,8 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         // Assume we have 10 events all with their own properties.
         // As we have errors for each event, those properties are treated as new data items.
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
-        eventNameSent = 'ERROR';
-        customProperties = { originalEventName: eventName as string, stackTrace: serializeStackTrace(ex) };
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
+        customProperties = { originalEventName: eventName as string };
+        reporter.sendTelemetryException(ex, customProperties, measures);
     } else {
         if (properties) {
             const data = properties as any;
@@ -290,40 +288,6 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
     }
 }
 
-function serializeStackTrace(ex: Error): string {
-    // We aren't showing the error message (ex.message) since it might contain PII.
-    let trace = '';
-    for (const frame of stackTrace.parse(ex)) {
-        const filename = frame.getFileName();
-        if (filename) {
-            const lineno = frame.getLineNumber();
-            const colno = frame.getColumnNumber();
-            trace += `\n\tat ${getCallsite(frame)} ${filename}:${lineno}:${colno}`;
-        } else {
-            trace += '\n\tat <anonymous>';
-        }
-    }
-    // Ensure we always use `/` as path separators.
-    // This way stack traces (with relative paths) coming from different OS will always look the same.
-    return trace.trim().replace(/\\/g, '/');
-}
-
-function getCallsite(frame: stackTrace.StackFrame) {
-    const parts: string[] = [];
-    if (typeof frame.getTypeName() === 'string' && frame.getTypeName().length > 0) {
-        parts.push(frame.getTypeName());
-    }
-    if (typeof frame.getMethodName() === 'string' && frame.getMethodName().length > 0) {
-        parts.push(frame.getMethodName());
-    }
-    if (typeof frame.getFunctionName() === 'string' && frame.getFunctionName().length > 0) {
-        if (parts.length !== 2 || parts.join('.') !== frame.getFunctionName()) {
-            parts.push(frame.getFunctionName());
-        }
-    }
-    return parts.join('.');
-}
-
 /**
  * Map all shared properties to their data types.
  */
@@ -332,6 +296,12 @@ export interface ISharedPropertyMapping {
      * For every DS telemetry we would like to know the type of Notebook Editor used when doing something.
      */
     ['ds_notebookeditor']: undefined | 'old' | 'custom' | 'native';
+
+    /**
+     * For every telemetry event from the extension we want to make sure we can associate it with install
+     * source. We took this approach to work around very limiting query performance issues.
+     */
+    ['installSource']: undefined | 'marketPlace' | 'pythonCodingPack';
 }
 
 // Map all events to their properties
@@ -1363,6 +1333,16 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.LANGUAGE_SERVER_REQUEST]: any;
     /**
+     * Telemetry sent on user response to 'Try Pylance' prompt.
+     */
+    [EventName.LANGUAGE_SERVER_TRY_PYLANCE]: {
+        /**
+         * User response to the prompt.
+         * @type {string}
+         */
+        userAction: string;
+    };
+    /**
      * Telemetry captured for enabling reload.
      */
     [EventName.PYTHON_WEB_APP_RELOAD]: {
@@ -1387,6 +1367,23 @@ export interface IEventNamePropertyMapping {
          * Carries the selection of user when they are asked to take the extension survey
          */
         selection: 'Yes' | 'Maybe later' | 'Do not show again' | undefined;
+    };
+    /**
+     * Telemetry event sent when the Python interpreter tip is shown on activation for new users.
+     */
+    [EventName.ACTIVATION_TIP_PROMPT]: never | undefined;
+    /**
+     * Telemetry event sent when the feedback survey prompt is shown on activation for new users, and they click on the survey link.
+     */
+    [EventName.ACTIVATION_SURVEY_PROMPT]: never | undefined;
+    /**
+     * Telemetry sent back when join mailing list prompt is shown.
+     */
+    [EventName.JOIN_MAILING_LIST_PROMPT]: {
+        /**
+         * Carries the selection of user when they are asked to join the mailing list.
+         */
+        selection: 'Yes' | 'No' | undefined;
     };
     /**
      * Telemetry event sent when 'Extract Method' command is invoked

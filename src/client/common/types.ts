@@ -325,7 +325,6 @@ export enum AnalysisSettingsLogLevel {
 export type LanguageServerDownloadChannels = 'stable' | 'beta' | 'daily';
 export interface IAnalysisSettings {
     readonly downloadChannel?: LanguageServerDownloadChannels;
-    readonly openFilesOnly: boolean;
     readonly typeshedPaths: string[];
     readonly cacheFolderPath: string | null;
     readonly errors: string[];
@@ -399,7 +398,6 @@ export interface IDataScienceSettings {
     jupyterCommandLineArguments: string[];
     widgetScriptSources: WidgetCDNs[];
     alwaysScrollOnNewCell?: boolean;
-    showKernelSelectionOnInteractiveWindow?: boolean;
     interactiveWindowMode: InteractiveWindowMode;
 }
 
@@ -637,6 +635,7 @@ export interface IExperimentsManager {
 export const IExperimentService = Symbol('IExperimentService');
 export interface IExperimentService {
     inExperiment(experimentName: string): Promise<boolean>;
+    getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
 }
 
 export type InterpreterConfigurationScope = { uri: Resource; configTarget: ConfigurationTarget };

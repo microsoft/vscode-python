@@ -19,7 +19,8 @@ def _check_binaries(dir_path):
 
 
 @pytest.mark.skipif(
-    sys.version_info[:2] != (3, 7), reason="DEBUGPY wheels shipped for Python 3.7 only",
+    sys.version_info[:2] != (3, 7),
+    reason="DEBUGPY wheels shipped for Python 3.7 only",
 )
 def test_install_debugpy(tmpdir):
     import install_debugpy

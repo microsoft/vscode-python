@@ -8,7 +8,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
@@ -18,7 +18,6 @@ import { traceError } from '../../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager,
     InteractiveWindowMode,
     IPersistentStateFactory,
@@ -104,7 +103,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         applicationShell: IApplicationShell,
         documentManager: IDocumentManager,
         statusProvider: IStatusProvider,
-        provider: IWebPanelProvider,
+        provider: IWebviewPanelProvider,
         disposables: IDisposableRegistry,
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
@@ -125,7 +124,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         experimentsManager: IExperimentsManager,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
-        expService: IExperimentService,
         private exportUtil: ExportUtil,
         owner: Resource,
         mode: InteractiveWindowMode,
@@ -167,7 +165,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             experimentsManager,
             notebookProvider,
             useCustomEditorApi,
-            expService,
             selector
         );
 
@@ -200,7 +197,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    public async show(preserveFocus?: boolean): Promise<void> {
+    public async show(preserveFocus: boolean = true): Promise<void> {
         await this.loadPromise;
         return super.show(preserveFocus);
     }
@@ -259,7 +256,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 break;
 
             case InteractiveWindowMessages.ExportNotebookAs:
-                this.handleMessage(message, payload, this.exportAs);
+                this.handleMessage(message, payload, this.exportAs.bind);
                 break;
 
             case InteractiveWindowMessages.HasCellResponse:

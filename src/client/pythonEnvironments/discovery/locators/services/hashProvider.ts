@@ -10,6 +10,7 @@ import { IInterpreterHashProvider } from '../../../../interpreter/locators/types
 @injectable()
 export class InterpreterHashProvider implements IInterpreterHashProvider {
     constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
+
     public async getInterpreterHash(pythonPath: string): Promise<string> {
         return this.fs.getFileHash(pythonPath);
     }

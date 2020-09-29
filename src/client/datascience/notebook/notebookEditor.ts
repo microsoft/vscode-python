@@ -3,8 +3,8 @@
 
 'use strict';
 
-import { CellKind, ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
-import type { NotebookDocument } from 'vscode-proposed';
+import { ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import type { NotebookCell, NotebookDocument } from 'vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -17,12 +17,15 @@ import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
     INotebook,
     INotebookEditor,
+    INotebookExtensibility,
     INotebookModel,
     INotebookProvider,
     InterruptResult,
     IStatusProvider
 } from '../types';
 import { getDefaultCodeLanguage } from './helpers/helpers';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 export class NotebookEditor implements INotebookEditor {
     public readonly type = 'native';
@@ -60,6 +63,9 @@ export class NotebookEditor implements INotebookEditor {
     public get onExecutedCode(): Event<string> {
         return this.executedCode.event;
     }
+    public get notebookExtensibility(): INotebookExtensibility {
+        return this.nbExtensibility;
+    }
     public notebook?: INotebook | undefined;
 
     private changedViewState = new EventEmitter<void>();
@@ -79,7 +85,8 @@ export class NotebookEditor implements INotebookEditor {
         private readonly statusProvider: IStatusProvider,
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
-        disposables: IDisposableRegistry
+        disposables: IDisposableRegistry,
+        private readonly nbExtensibility: INotebookExtensibility
     ) {
         disposables.push(model.onDidEdit(() => this._modified.fire(this)));
         disposables.push(
@@ -126,17 +133,67 @@ export class NotebookEditor implements INotebookEditor {
             return;
         }
         const defaultLanguage = getDefaultCodeLanguage(this.model);
-        this.vscodeNotebook.activeNotebookEditor.edit((editor) => {
-            const totalLength = this.document.cells.length;
-            editor.insert(this.document.cells.length, '', defaultLanguage, CellKind.Code, [], undefined);
-            for (let i = totalLength - 1; i >= 0; i = i - 1) {
-                editor.delete(i);
-            }
-        });
+        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
+        if (editor) {
+            editor
+                .edit((edit) =>
+                    edit.replaceCells(0, this.document.cells.length, [
+                        {
+                            cellKind: vscodeNotebookEnums.CellKind.Code,
+                            language: defaultLanguage,
+                            metadata: {},
+                            outputs: [],
+                            source: ''
+                        }
+                    ])
+                )
+                .then(noop, noop);
+        }
     }
-    public notifyExecution(code: string) {
+    public expandAllCells(): void {
+        if (!this.vscodeNotebook.activeNotebookEditor) {
+            return;
+        }
+        const notebook = this.vscodeNotebook.activeNotebookEditor.document;
+        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
+        if (editor) {
+            editor
+                .edit((edit) => {
+                    notebook.cells.forEach((cell, index) => {
+                        edit.replaceCellMetadata(index, {
+                            ...cell.metadata,
+                            inputCollapsed: false,
+                            outputCollapsed: false
+                        });
+                    });
+                })
+                .then(noop, noop);
+        }
+    }
+    public collapseAllCells(): void {
+        if (!this.vscodeNotebook.activeNotebookEditor) {
+            return;
+        }
+        const notebook = this.vscodeNotebook.activeNotebookEditor.document;
+        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
+        if (editor) {
+            editor
+                .edit((edit) => {
+                    notebook.cells.forEach((cell, index) => {
+                        edit.replaceCellMetadata(index, {
+                            ...cell.metadata,
+                            inputCollapsed: true,
+                            outputCollapsed: true
+                        });
+                    });
+                })
+                .then(noop, noop);
+        }
+    }
+    public notifyExecution(cell: NotebookCell) {
         this._executed.fire(this);
-        this.executedCode.fire(code);
+        this.executedCode.fire(cell.document.getText());
+        this.nbExtensibility.fireKernelPostExecute(cell);
     }
     public async interruptKernel(): Promise<void> {
         if (this.restartingKernel) {
@@ -206,12 +263,9 @@ export class NotebookEditor implements INotebookEditor {
         // Set our status
         const status = this.statusProvider.set(DataScience.restartingKernelStatus(), true, undefined, undefined);
 
-        // Disable running cells.
-        const [cellRunnable, runnable] = [this.document.metadata.cellRunnable, this.document.metadata.runnable];
         try {
-            this.document.metadata.cellRunnable = false;
-            this.document.metadata.runnable = false;
             await kernel.restart();
+            this.nbExtensibility.fireKernelRestart();
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
@@ -234,8 +288,6 @@ export class NotebookEditor implements INotebookEditor {
         } finally {
             status.dispose();
             this.restartingKernel = false;
-            // Restore previous state.
-            [this.document.metadata.cellRunnable, this.document.metadata.runnable] = [cellRunnable, runnable];
         }
     }
     private async shouldAskForRestart(): Promise<boolean> {

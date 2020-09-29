@@ -4,7 +4,6 @@ import re
 import os
 import json
 import sys
-import imp
 
 
 def check_for_ipython():

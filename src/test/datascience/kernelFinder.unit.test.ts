@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import * as assert from 'assert';
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
@@ -12,7 +11,7 @@ import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IPlatformService } from '../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
-import { IExtensionContext, IInstaller, IPathUtils, Resource } from '../../client/common/types';
+import { IExtensionContext, IPathUtils, Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { defaultKernelSpecName } from '../../client/datascience/jupyter/kernels/helpers';
@@ -31,7 +30,6 @@ suite('Kernel Finder', () => {
     let pathUtils: typemoq.IMock<IPathUtils>;
     let context: typemoq.IMock<IExtensionContext>;
     let envVarsProvider: typemoq.IMock<IEnvironmentVariablesProvider>;
-    let installer: IInstaller;
     let workspaceService: IWorkspaceService;
     let kernelFinder: IKernelFinder;
     let activeInterpreter: PythonEnvironment;
@@ -83,9 +81,6 @@ suite('Kernel Finder', () => {
         context = typemoq.Mock.ofType<IExtensionContext>();
         context.setup((c) => c.globalStoragePath).returns(() => './');
         fileSystem = typemoq.Mock.ofType<IDataScienceFileSystem>();
-
-        installer = mock<IInstaller>();
-        when(installer.isInstalled(anything(), anything())).thenResolve(true);
 
         platformService = typemoq.Mock.ofType<IPlatformService>();
         platformService.setup((ps) => ps.isWindows).returns(() => true);
@@ -326,7 +321,6 @@ suite('Kernel Finder', () => {
                 platformService.object,
                 fileSystem.object,
                 pathUtils.object,
-                instance(installer),
                 context.object,
                 instance(workspaceService),
                 instance(executionFactory),
@@ -409,7 +403,6 @@ suite('Kernel Finder', () => {
                 platformService.object,
                 fileSystem.object,
                 pathUtils.object,
-                instance(installer),
                 context.object,
                 instance(workspaceService),
                 instance(executionFactory),
@@ -447,7 +440,7 @@ suite('Kernel Finder', () => {
             fileSystem.reset();
         });
 
-        test('No kernel name given. Default spec returned should match the interpreter selected.', async () => {
+        test('No kernel name given, then return undefined.', async () => {
             setupFileSystem();
 
             // Create a second active interpreter to return on the second call
@@ -473,11 +466,8 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
-            let spec = await kernelFinder.findKernelSpec(resource);
-            expect(spec.display_name).to.equal(activeInterpreter.displayName);
-
-            spec = await kernelFinder.findKernelSpec(resource);
-            expect(spec.display_name).to.equal(activeInterpreter2.displayName);
+            const spec = await kernelFinder.findKernelSpec(resource);
+            assert.isUndefined(spec);
             fileSystem.reset();
         });
 
@@ -520,7 +510,7 @@ suite('Kernel Finder', () => {
             fileSystem.reset();
         });
 
-        test('KernelSpec not found, returning default', async () => {
+        test('KernelSpec not found, returning undefined', async () => {
             setupFileSystem();
             fileSystem
                 .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
@@ -532,11 +522,11 @@ suite('Kernel Finder', () => {
                 });
             // get default kernel
             const spec = await kernelFinder.findKernelSpec(resource);
-            assert.equal(spec.name.includes('python_defaultSpec'), true);
+            assert.isUndefined(spec);
             fileSystem.reset();
         });
 
-        test('Kernel metadata already has a default spec, return the same default spec', async () => {
+        test('Kernel metadata already has a default spec, and kernel spec not found, then return undefined', async () => {
             setupFileSystem();
             fileSystem
                 .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
@@ -551,43 +541,7 @@ suite('Kernel Finder', () => {
                 name: defaultKernelSpecName,
                 display_name: 'TargetDisplayName'
             });
-            assert.equal(spec.name.includes(defaultKernelSpecName), true);
-            expect(spec.display_name).to.equals('TargetDisplayName');
-            fileSystem.reset();
-        });
-
-        test('KernelSpec not found, returning default, then search for it again and find it in the cache', async () => {
-            setupFileSystem();
-            fileSystem
-                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
-                .returns((pathParam: string) => {
-                    if (pathParam.includes(cacheFile)) {
-                        return Promise.resolve('[]');
-                    }
-                    return Promise.resolve('{}');
-                });
-
-            // get default kernel
-            const spec = await kernelFinder.findKernelSpec(resource);
-            assert.equal(spec.name.includes('python_defaultSpec'), true);
-            fileSystem.reset();
-
-            setupFileSystem();
-            fileSystem
-                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
-                .returns((pathParam: string) => {
-                    if (pathParam.includes(cacheFile)) {
-                        return Promise.resolve(`["${spec.path}"]`);
-                    }
-                    return Promise.resolve(JSON.stringify(spec));
-                })
-                .verifiable(typemoq.Times.once());
-
-            // get the same kernel, but from cache
-            const spec2 = await kernelFinder.findKernelSpec(resource, { name: spec.name, display_name: '' });
-            assert.notStrictEqual(spec, spec2);
-
-            fileSystem.verifyAll();
+            assert.isUndefined(spec);
             fileSystem.reset();
         });
 
@@ -609,7 +563,7 @@ suite('Kernel Finder', () => {
                 });
 
             const spec = await kernelFinder.findKernelSpec(resource, { name: 'kernelA', display_name: '' });
-            assert.equal(spec.name.includes('kernelA'), true);
+            assert.equal(spec!.name.includes('kernelA'), true);
             fileSystem.reset();
 
             setupFileSystem();
@@ -637,7 +591,7 @@ suite('Kernel Finder', () => {
                     return Promise.resolve('{}');
                 });
             const spec2 = await kernelFinder.findKernelSpec(resource, { name: 'kernelB', display_name: '' });
-            assert.equal(spec2.name.includes('kernelB'), true);
+            assert.equal(spec2!.name.includes('kernelB'), true);
         });
     });
 });

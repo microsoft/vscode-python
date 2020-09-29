@@ -135,8 +135,8 @@ export interface IFont {
 
 export interface IServerState {
     jupyterServerStatus: ServerStatus;
-    localizedUri: string;
-    displayName: string;
+    serverName: string;
+    kernelName: string;
     language: string;
 }
 
@@ -193,8 +193,8 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         loaded: false,
         testMode: true,
         kernel: {
-            localizedUri: 'No Kernel',
-            displayName: 'Python',
+            serverName: '',
+            kernelName: 'Python',
             jupyterServerStatus: ServerStatus.NotStarted,
             language: PYTHON_LANGUAGE
         },

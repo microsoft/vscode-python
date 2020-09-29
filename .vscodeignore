@@ -103,7 +103,6 @@ pythonFiles/lib/**/*.dist-info/**
 pythonFiles/lib/**/*.egg-info/**
 pythonFiles/lib/python/bin/**
 pythonFiles/tests/**
-requirements.txt
 scripts/**
 src/**
 test/**

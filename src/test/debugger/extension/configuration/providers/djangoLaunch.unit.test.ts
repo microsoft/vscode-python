@@ -139,7 +139,7 @@ suite('Debugging - Configuration Provider Django', () => {
             type: DebuggerTypeName,
             request: 'launch',
             program: 'xyz.py',
-            args: ['runserver', '--noreload'],
+            args: ['runserver'],
             django: true
         };
 
@@ -159,7 +159,7 @@ suite('Debugging - Configuration Provider Django', () => {
             type: DebuggerTypeName,
             request: 'launch',
             program: 'hello',
-            args: ['runserver', '--noreload'],
+            args: ['runserver'],
             django: true
         };
 
@@ -182,7 +182,7 @@ suite('Debugging - Configuration Provider Django', () => {
             type: DebuggerTypeName,
             request: 'launch',
             program: defaultProgram,
-            args: ['runserver', '--noreload'],
+            args: ['runserver'],
             django: true
         };
 

@@ -20,7 +20,7 @@ export class CondaEnvService extends CacheableLocatorService {
         @inject(ICondaService) private condaService: ICondaService,
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IFileSystem) private fileSystem: IFileSystem
+        @inject(IFileSystem) private fileSystem: IFileSystem,
     ) {
         super('CondaEnvService', serviceContainer);
     }
@@ -55,14 +55,14 @@ export class CondaEnvService extends CacheableLocatorService {
                 info,
                 (env) => this.condaService.getInterpreterPath(env),
                 (f) => this.fileSystem.fileExists(f),
-                (p) => this.helper.getInterpreterInformation(p)
+                (p) => this.helper.getInterpreterInformation(p),
             );
             this._hasInterpreters.resolve(interpreters.length > 0);
             const environments = await this.condaService.getCondaEnvironments(true);
             if (Array.isArray(environments) && environments.length > 0) {
                 interpreters.forEach((interpreter) => {
-                    const environment = environments.find((item) =>
-                        this.fileSystem.arePathsSame(item.path, interpreter!.envPath!)
+                    const environment = environments.find(
+                        (item) => this.fileSystem.arePathsSame(item.path, interpreter!.envPath!),
                     );
                     if (environment) {
                         interpreter.envName = environment!.name;

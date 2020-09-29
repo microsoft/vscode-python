@@ -6,7 +6,7 @@ import unittest
 
 from ...util import StubProxy
 from testing_tools.adapter.util import fix_path, fix_relpath
-from testing_tools.adapter.info import TestInfo, TestPath, ParentInfo
+from testing_tools.adapter.info import SingleTestInfo, SingleTestPath, ParentInfo
 from testing_tools.adapter.report import report_discovered
 
 
@@ -26,17 +26,25 @@ class ReportDiscoveredTests(unittest.TestCase):
         relfile = "test_spam.py"
         relpath = fix_relpath(relfile)
         tests = [
-            TestInfo(
+            SingleTestInfo(
                 id="test#1",
                 name="test_spam",
-                path=TestPath(root=testroot, relfile=relfile, func="test_spam",),
+                path=SingleTestPath(
+                    root=testroot,
+                    relfile=relfile,
+                    func="test_spam",
+                ),
                 source="{}:{}".format(relfile, 10),
                 markers=[],
                 parentid="file#1",
             ),
         ]
         parents = [
-            ParentInfo(id="<root>", kind="folder", name=testroot,),
+            ParentInfo(
+                id="<root>",
+                kind="folder",
+                name=testroot,
+            ),
             ParentInfo(
                 id="file#1",
                 kind="file",
@@ -74,7 +82,12 @@ class ReportDiscoveredTests(unittest.TestCase):
         report_discovered(tests, parents, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [("send", (expected,), None),])
+        self.assertEqual(
+            stub.calls,
+            [
+                ("send", (expected,), None),
+            ],
+        )
 
     def test_multiroot(self):
         stub = StubSender()
@@ -84,17 +97,25 @@ class ReportDiscoveredTests(unittest.TestCase):
         relpath1 = fix_path(relfileid1)
         relfile1 = relpath1[2:]
         tests = [
-            TestInfo(
+            SingleTestInfo(
                 id=relfileid1 + "::test_spam",
                 name="test_spam",
-                path=TestPath(root=testroot1, relfile=relfile1, func="test_spam",),
+                path=SingleTestPath(
+                    root=testroot1,
+                    relfile=relfile1,
+                    func="test_spam",
+                ),
                 source="{}:{}".format(relfile1, 10),
                 markers=[],
                 parentid=relfileid1,
             ),
         ]
         parents = [
-            ParentInfo(id=".", kind="folder", name=testroot1,),
+            ParentInfo(
+                id=".",
+                kind="folder",
+                name=testroot1,
+            ),
             ParentInfo(
                 id=relfileid1,
                 kind="file",
@@ -135,11 +156,13 @@ class ReportDiscoveredTests(unittest.TestCase):
         relfile2 = relpath2[2:]
         tests.extend(
             [
-                TestInfo(
+                SingleTestInfo(
                     id=relfileid2 + "::BasicTests::test_first",
                     name="test_first",
-                    path=TestPath(
-                        root=testroot2, relfile=relfile2, func="BasicTests.test_first",
+                    path=SingleTestPath(
+                        root=testroot2,
+                        relfile=relfile2,
+                        func="BasicTests.test_first",
                     ),
                     source="{}:{}".format(relfile2, 61),
                     markers=[],
@@ -149,7 +172,11 @@ class ReportDiscoveredTests(unittest.TestCase):
         )
         parents.extend(
             [
-                ParentInfo(id=".", kind="folder", name=testroot2,),
+                ParentInfo(
+                    id=".",
+                    kind="folder",
+                    name=testroot2,
+                ),
                 ParentInfo(
                     id="./w",
                     kind="folder",
@@ -218,7 +245,12 @@ class ReportDiscoveredTests(unittest.TestCase):
         report_discovered(tests, parents, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [("send", (expected,), None),])
+        self.assertEqual(
+            stub.calls,
+            [
+                ("send", (expected,), None),
+            ],
+        )
 
     def test_complex(self):
         """
@@ -265,30 +297,34 @@ class ReportDiscoveredTests(unittest.TestCase):
         relfileid5 = "./x/y/a/test_spam.py"
         relfileid6 = "./x/y/b/test_spam.py"
         tests = [
-            TestInfo(
+            SingleTestInfo(
                 id=relfileid1 + "::MySuite::test_x1",
                 name="test_x1",
-                path=TestPath(
-                    root=testroot, relfile=fix_path(relfileid1), func="MySuite.test_x1",
+                path=SingleTestPath(
+                    root=testroot,
+                    relfile=fix_path(relfileid1),
+                    func="MySuite.test_x1",
                 ),
                 source="{}:{}".format(fix_path(relfileid1), 10),
                 markers=None,
                 parentid=relfileid1 + "::MySuite",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id=relfileid1 + "::MySuite::test_x2",
                 name="test_x2",
-                path=TestPath(
-                    root=testroot, relfile=fix_path(relfileid1), func="MySuite.test_x2",
+                path=SingleTestPath(
+                    root=testroot,
+                    relfile=fix_path(relfileid1),
+                    func="MySuite.test_x2",
                 ),
                 source="{}:{}".format(fix_path(relfileid1), 21),
                 markers=None,
                 parentid=relfileid1 + "::MySuite",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id=relfileid2 + "::SpamTests::test_okay",
                 name="test_okay",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=fix_path(relfileid2),
                     func="SpamTests.test_okay",
@@ -297,20 +333,22 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=None,
                 parentid=relfileid2 + "::SpamTests",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id=relfileid3 + "::test_ham1",
                 name="test_ham1",
-                path=TestPath(
-                    root=testroot, relfile=fix_path(relfileid3), func="test_ham1",
+                path=SingleTestPath(
+                    root=testroot,
+                    relfile=fix_path(relfileid3),
+                    func="test_ham1",
                 ),
                 source="{}:{}".format(fix_path(relfileid3), 8),
                 markers=None,
                 parentid=relfileid3,
             ),
-            TestInfo(
+            SingleTestInfo(
                 id=relfileid3 + "::HamTests::test_uh_oh",
                 name="test_uh_oh",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=fix_path(relfileid3),
                     func="HamTests.test_uh_oh",
@@ -319,10 +357,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=["expected-failure"],
                 parentid=relfileid3 + "::HamTests",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id=relfileid3 + "::HamTests::test_whoa",
                 name="test_whoa",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=fix_path(relfileid3),
                     func="HamTests.test_whoa",
@@ -331,10 +369,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=None,
                 parentid=relfileid3 + "::HamTests",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id=relfileid3 + "::MoreHam::test_yay[1-2]",
                 name="test_yay[1-2]",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=fix_path(relfileid3),
                     func="MoreHam.test_yay",
@@ -344,10 +382,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=None,
                 parentid=relfileid3 + "::MoreHam::test_yay",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id=relfileid3 + "::MoreHam::test_yay[1-2][3-4]",
                 name="test_yay[1-2][3-4]",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=fix_path(relfileid3),
                     func="MoreHam.test_yay",
@@ -357,10 +395,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=None,
                 parentid=relfileid3 + "::MoreHam::test_yay[1-2]",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id=relfileid4 + "::SpamTests::test_okay",
                 name="test_okay",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=fix_path(relfileid4),
                     func="SpamTests.test_okay",
@@ -369,10 +407,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=None,
                 parentid=relfileid4 + "::SpamTests",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id=relfileid5 + "::SpamTests::test_okay",
                 name="test_okay",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=fix_path(relfileid5),
                     func="SpamTests.test_okay",
@@ -381,10 +419,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=None,
                 parentid=relfileid5 + "::SpamTests",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id=relfileid6 + "::SpamTests::test_okay",
                 name="test_okay",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=fix_path(relfileid6),
                     func="SpamTests.test_okay",
@@ -395,7 +433,11 @@ class ReportDiscoveredTests(unittest.TestCase):
             ),
         ]
         parents = [
-            ParentInfo(id=".", kind="folder", name=testroot,),
+            ParentInfo(
+                id=".",
+                kind="folder",
+                name=testroot,
+            ),
             ParentInfo(
                 id=relfileid1,
                 kind="file",
@@ -770,17 +812,22 @@ class ReportDiscoveredTests(unittest.TestCase):
         report_discovered(tests, parents, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [("send", (expected,), None),])
+        self.assertEqual(
+            stub.calls,
+            [
+                ("send", (expected,), None),
+            ],
+        )
 
     def test_simple_basic(self):
         stub = StubSender()
         testroot = fix_path("/a/b/c")
         relfile = fix_path("x/y/z/test_spam.py")
         tests = [
-            TestInfo(
+            SingleTestInfo(
                 id="test#1",
                 name="test_spam_1",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot,
                     relfile=relfile,
                     func="MySuite.test_spam_1",
@@ -808,7 +855,12 @@ class ReportDiscoveredTests(unittest.TestCase):
         report_discovered(tests, parents, simple=True, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [("send", (expected,), None),])
+        self.assertEqual(
+            stub.calls,
+            [
+                ("send", (expected,), None),
+            ],
+        )
 
     def test_simple_complex(self):
         """
@@ -857,31 +909,37 @@ class ReportDiscoveredTests(unittest.TestCase):
         relfile6 = fix_path("x/y/b/test_spam.py")
         tests = [
             # under first root folder
-            TestInfo(
+            SingleTestInfo(
                 id="test#1",
                 name="test_x1",
-                path=TestPath(
-                    root=testroot1, relfile=relfile1, func="MySuite.test_x1", sub=None,
+                path=SingleTestPath(
+                    root=testroot1,
+                    relfile=relfile1,
+                    func="MySuite.test_x1",
+                    sub=None,
                 ),
                 source="{}:{}".format(relfile1, 10),
                 markers=None,
                 parentid="suite#1",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id="test#2",
                 name="test_x2",
-                path=TestPath(
-                    root=testroot1, relfile=relfile1, func="MySuite.test_x2", sub=None,
+                path=SingleTestPath(
+                    root=testroot1,
+                    relfile=relfile1,
+                    func="MySuite.test_x2",
+                    sub=None,
                 ),
                 source="{}:{}".format(relfile1, 21),
                 markers=None,
                 parentid="suite#1",
             ),
             # under second root folder
-            TestInfo(
+            SingleTestInfo(
                 id="test#3",
                 name="test_okay",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot2,
                     relfile=relfile2,
                     func="SpamTests.test_okay",
@@ -891,20 +949,23 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=None,
                 parentid="suite#2",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id="test#4",
                 name="test_ham1",
-                path=TestPath(
-                    root=testroot2, relfile=relfile3, func="test_ham1", sub=None,
+                path=SingleTestPath(
+                    root=testroot2,
+                    relfile=relfile3,
+                    func="test_ham1",
+                    sub=None,
                 ),
                 source="{}:{}".format(relfile3, 8),
                 markers=None,
                 parentid="file#3",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id="test#5",
                 name="test_uh_oh",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot2,
                     relfile=relfile3,
                     func="HamTests.test_uh_oh",
@@ -914,10 +975,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=["expected-failure"],
                 parentid="suite#3",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id="test#6",
                 name="test_whoa",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot2,
                     relfile=relfile3,
                     func="HamTests.test_whoa",
@@ -927,10 +988,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=None,
                 parentid="suite#3",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id="test#7",
                 name="test_yay (sub1)",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot2,
                     relfile=relfile3,
                     func="MoreHam.test_yay",
@@ -940,10 +1001,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=None,
                 parentid="suite#4",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id="test#8",
                 name="test_yay (sub2) (sub3)",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot2,
                     relfile=relfile3,
                     func="MoreHam.test_yay",
@@ -953,10 +1014,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=None,
                 parentid="suite#3",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id="test#9",
                 name="test_okay",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot2,
                     relfile=relfile4,
                     func="SpamTests.test_okay",
@@ -966,10 +1027,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=None,
                 parentid="suite#5",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id="test#10",
                 name="test_okay",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot2,
                     relfile=relfile5,
                     func="SpamTests.test_okay",
@@ -979,10 +1040,10 @@ class ReportDiscoveredTests(unittest.TestCase):
                 markers=None,
                 parentid="suite#6",
             ),
-            TestInfo(
+            SingleTestInfo(
                 id="test#11",
                 name="test_okay",
-                path=TestPath(
+                path=SingleTestPath(
                     root=testroot2,
                     relfile=relfile6,
                     func="SpamTests.test_okay",
@@ -1110,4 +1171,9 @@ class ReportDiscoveredTests(unittest.TestCase):
         report_discovered(tests, parents, simple=True, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [("send", (expected,), None),])
+        self.assertEqual(
+            stub.calls,
+            [
+                ("send", (expected,), None),
+            ],
+        )

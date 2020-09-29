@@ -20,7 +20,7 @@ const TestUriHandle = 'TestUriHandle';
 
 class TestUriProvider implements IJupyterUriProvider {
     public id: string = TestUriProviderId;
-    public currentBearer = 1;
+    public currentBearer = 0;
     public getQuickPickEntryItems(): QuickPickItem[] {
         throw new Error('Method not implemented.');
     }
@@ -29,7 +29,7 @@ class TestUriProvider implements IJupyterUriProvider {
     }
     public async getServerUri(handle: string): Promise<IJupyterServerUri> {
         if (handle === TestUriHandle) {
-            setTimeout(() => (this.currentBearer += 1), 300);
+            this.currentBearer += 1;
             return {
                 // tslint:disable-next-line: no-http-string
                 baseUrl: 'http://foobar:3000',
@@ -99,7 +99,13 @@ suite(`DataScience JupyterServerUriProvider tests`, () => {
         await ioc.dispose();
     });
 
-    test('Expiration', async () => {
+    test('Expiration', async function () {
+        // Only run with mock so we don't try to really start a remote server
+        if (!ioc.mockJupyter) {
+            // tslint:disable-next-line: no-invalid-this
+            return this.skip();
+        }
+
         // Set the URI to id value.
         const uri = `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${TestUriProviderId}&${Identifiers.REMOTE_URI_HANDLE_PARAM}=${TestUriHandle}`;
         ioc.forceDataScienceSettingsChanged({
@@ -121,7 +127,7 @@ suite(`DataScience JupyterServerUriProvider tests`, () => {
         assert.deepEqual(authHeader, { Bearer: '1' }, 'Bearer token invalid');
 
         // Wait a bit
-        await sleep(500);
+        await sleep(1000);
 
         authHeader = server?.getConnectionInfo()?.getAuthHeader?.call(undefined);
 

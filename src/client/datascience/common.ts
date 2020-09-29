@@ -44,21 +44,23 @@ const AllowedKeys = {
     ['execute_result']: new Set(Object.keys(dummyExecuteResultObj))
 };
 
-export function getSavedUriList(globalState: Memento): { uri: string; time: number }[] {
-    const uriList = globalState.get<{ uri: string; time: number }[]>(Settings.JupyterServerUriList);
+export function getSavedUriList(globalState: Memento): { uri: string; time: number; displayName?: string }[] {
+    const uriList = globalState.get<{ uri: string; time: number; displayName?: string }[]>(
+        Settings.JupyterServerUriList
+    );
     return uriList
         ? uriList.sort((a, b) => {
               return b.time - a.time;
           })
         : [];
 }
-export function addToUriList(globalState: Memento, uri: string, time: number) {
+export function addToUriList(globalState: Memento, uri: string, time: number, displayName: string) {
     const uriList = getSavedUriList(globalState);
 
     const editList = uriList.filter((f, i) => {
         return f.uri !== uri && i < Settings.JupyterServerUriListMax - 1;
     });
-    editList.splice(0, 0, { uri, time });
+    editList.splice(0, 0, { uri, time, displayName });
 
     globalState.update(Settings.JupyterServerUriList, editList).then(noop, noop);
 }
@@ -94,8 +96,11 @@ export function pruneCell(cell: nbformat.ICell): nbformat.ICell {
 
     // Remove outputs and execution_count from non code cells
     if (result.cell_type !== 'code') {
-        delete result.outputs;
-        delete result.execution_count;
+        // Map to any so nyc will build.
+        // tslint:disable-next-line: no-any
+        delete (<any>result).outputs;
+        // tslint:disable-next-line: no-any
+        delete (<any>result).execution_count;
     } else {
         // Clean outputs from code cells
         result.outputs = result.outputs ? (result.outputs as nbformat.IOutput[]).map(fixupOutput) : [];

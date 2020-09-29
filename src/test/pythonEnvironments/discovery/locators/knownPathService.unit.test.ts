@@ -47,9 +47,7 @@ suite('Interpreters Known Paths', () => {
         platformService.setup((p) => p.pathVariableName).returns(() => 'PATH');
         currentProcess
             .setup((p) => p.env)
-            .returns(() => {
-                return { PATH: pathsInPATHVar.join(pathDelimiter) };
-            });
+            .returns(() => ({ PATH: pathsInPATHVar.join(pathDelimiter) }));
 
         const expectedPaths = [...pathsInPATHVar].filter((item) => item.length > 0);
 
@@ -67,9 +65,7 @@ suite('Interpreters Known Paths', () => {
         platformService.setup((p) => p.pathVariableName).returns(() => 'PATH');
         currentProcess
             .setup((p) => p.env)
-            .returns(() => {
-                return { PATH: '' };
-            });
+            .returns(() => ({ PATH: '' }));
 
         const expectedPaths: string[] = [];
         ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'].forEach((p) => {
@@ -95,9 +91,7 @@ suite('Interpreters Known Paths', () => {
         platformService.setup((p) => p.pathVariableName).returns(() => 'PATH');
         currentProcess
             .setup((p) => p.env)
-            .returns(() => {
-                return { PATH: pathsInPATHVar.join(pathDelimiter) };
-            });
+            .returns(() => ({ PATH: pathsInPATHVar.join(pathDelimiter) }));
 
         const expectedPaths = [...pathsInPATHVar].filter((item) => item.length > 0);
         ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'].forEach((p) => {

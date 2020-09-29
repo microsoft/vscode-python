@@ -157,7 +157,7 @@ export class HostRawNotebookProvider
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
 
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
-            const kernelConnectionMetadata = await this.kernelSelector.getKernelForLocalConnection(
+            const kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForLocalConnection(
                 resource,
                 'raw',
                 undefined,
@@ -166,8 +166,11 @@ export class HostRawNotebookProvider
                 cancelToken
             );
 
-            // Interpreter is optional, but we must have a kernel spec for a raw launch
-            if (!kernelConnectionMetadata?.kernelSpec) {
+            // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
+            if (
+                !kernelConnectionMetadata ||
+                (!kernelConnectionMetadata?.kernelSpec && kernelConnectionMetadata?.kind === 'startUsingKernelSpec')
+            ) {
                 notebookPromise.reject('Failed to find a kernelspec to use for ipykernel launch');
             } else {
                 await rawSession.connect(kernelConnectionMetadata, launchTimeout, cancelToken);

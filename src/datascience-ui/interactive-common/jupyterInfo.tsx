@@ -30,14 +30,14 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
     constructor(prop: IJupyterInfoProps) {
         super(prop);
         this.selectKernel = this.selectKernel.bind(this);
+        this.selectServer = this.selectServer.bind(this);
     }
 
     public render() {
+        const jupyterServerDisplayName: string = this.props.kernel.serverName;
         const serverTextSize =
-            getLocString('DataScience.jupyterServer', 'Jupyter Server').length +
-            this.props.kernel.localizedUri.length +
-            4; // plus 4 for the icon
-        const displayNameTextSize = this.props.kernel.displayName.length + this.props.kernel.jupyterServerStatus.length;
+            getLocString('DataScience.jupyterServer', 'Jupyter Server').length + jupyterServerDisplayName.length + 4; // plus 4 for the icon
+        const displayNameTextSize = this.props.kernel.kernelName.length + this.props.kernel.jupyterServerStatus.length;
         const dynamicFont: React.CSSProperties = {
             fontSize: 'var(--vscode-font-size)', // Use the same font and size as the menu
             fontFamily: 'var(--vscode-font-family)',
@@ -50,17 +50,25 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
             maxWidth: getMaxWidth(displayNameTextSize)
         };
 
+        const ariaDisabled = this.props.isNotebookTrusted === undefined ? false : this.props.isNotebookTrusted;
         return (
             <div className="kernel-status" style={dynamicFont}>
                 {this.renderTrustMessage()}
-                <div className="kernel-status-section kernel-status-server" style={serverTextWidth} role="button">
-                    <div className="kernel-status-text" title={this.props.kernel.localizedUri}>
-                        {getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.localizedUri}
+                <div className="kernel-status-section kernel-status-server" style={serverTextWidth}>
+                    <div
+                        className="kernel-status-text kernel-status-section-hoverable"
+                        style={serverTextWidth}
+                        onClick={this.selectServer}
+                        role="button"
+                        aria-disabled={ariaDisabled}
+                    >
+                        {getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {jupyterServerDisplayName}
                     </div>
                     <Image
                         baseTheme={this.props.baseTheme}
                         class="image-button-image kernel-status-icon"
                         image={this.getIcon()}
+                        title={this.getStatus()}
                     />
                 </div>
                 <div className="kernel-status-divider" />
@@ -80,11 +88,11 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
                     role="button"
                     aria-disabled={ariaDisabled}
                 >
-                    {this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}
+                    {this.props.kernel.kernelName}: {this.props.kernel.jupyterServerStatus}
                 </div>
             );
         } else {
-            const displayName = this.props.kernel.displayName ?? getLocString('DataScience.noKernel', 'No Kernel');
+            const displayName = this.props.kernel.kernelName ?? getLocString('DataScience.noKernel', 'No Kernel');
             return (
                 <div className="kernel-status-section kernel-status-status" style={displayNameTextWidth} role="button">
                     {displayName}: {this.props.kernel.jupyterServerStatus}
@@ -112,5 +120,15 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
         return this.props.kernel.jupyterServerStatus === ServerStatus.NotStarted
             ? ImageName.JupyterServerDisconnected
             : ImageName.JupyterServerConnected;
+    }
+
+    private getStatus() {
+        return this.props.kernel.jupyterServerStatus === ServerStatus.NotStarted
+            ? getLocString('DataScience.disconnected', 'Disconnected')
+            : getLocString('DataScience.connected', 'Connected');
+    }
+
+    private selectServer(): void {
+        this.props.selectServer();
     }
 }

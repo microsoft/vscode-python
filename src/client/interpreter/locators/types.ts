@@ -22,6 +22,7 @@ export interface IPipEnvServiceHelper {
  * @export
  * @interface IInterpreterHashProviderFactory
  */
+export const IInterpreterHashProviderFactory = Symbol('IInterpreterHashProviderFactory');
 export interface IInterpreterHashProviderFactory {
     create(options: { pythonPath: string } | { resource: Uri }): Promise<IInterpreterHashProvider>;
 }
@@ -52,7 +53,7 @@ export interface IWindowsStoreInterpreter {
      * @returns {boolean}
      * @memberof WindowsStoreInterpreter
      */
-    isWindowsStoreInterpreter(pythonPath: string): boolean;
+    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean>;
     /**
      * Whether this is a python executable in a windows app store folder that is internal and can be hidden from users.
      *

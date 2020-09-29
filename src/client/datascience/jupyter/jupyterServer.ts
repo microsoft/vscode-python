@@ -113,7 +113,7 @@ export class JupyterServerBase implements INotebookServer {
         notebookMetadata?: INotebookMetadataLive,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
-        if (!this.sessionManager) {
+        if (!this.sessionManager || this.isDisposed) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
         // If we have a saved session send this into the notebook so we don't create a new one
@@ -261,6 +261,10 @@ export class JupyterServerBase implements INotebookServer {
         _cancelToken?: CancellationToken
     ): Promise<INotebook> {
         throw new Error('You forgot to override createNotebookInstance');
+    }
+
+    protected get isDisposed(): boolean {
+        throw new Error('You forgot to override isDisposed');
     }
 
     private async destroyKernelSpec() {

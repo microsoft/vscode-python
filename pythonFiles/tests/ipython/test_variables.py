@@ -2,9 +2,7 @@
 # Licensed under the MIT License.
 
 import pytest
-import sys
 import os
-import json
 from .scripts import (
     get_variable_value,
     get_variables,
@@ -12,7 +10,6 @@ from .scripts import (
     get_data_frame_rows,
     check_for_ipython,
 )
-import imp
 
 haveIPython = check_for_ipython()
 

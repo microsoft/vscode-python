@@ -21,7 +21,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
@@ -31,7 +31,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager,
     Resource
 } from '../../common/types';
@@ -65,6 +64,7 @@ import {
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
+    INotebookExtensibility,
     INotebookImporter,
     INotebookMetadataLive,
     INotebookModel,
@@ -92,6 +92,9 @@ const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', '
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
+    }
+    public get notebookExtensibility(): INotebookExtensibility {
+        return this.nbExtensibility;
     }
 
     public get visible(): boolean {
@@ -153,7 +156,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         liveShare: ILiveShareApi,
         applicationShell: IApplicationShell,
         documentManager: IDocumentManager,
-        provider: IWebPanelProvider,
+        provider: IWebviewPanelProvider,
         disposables: IDisposableRegistry,
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
@@ -178,10 +181,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private trustService: ITrustService,
-        expService: IExperimentService,
         private _model: INotebookModel,
         webviewPanel: WebviewPanel | undefined,
-        selector: KernelSelector
+        selector: KernelSelector,
+        private nbExtensibility: INotebookExtensibility
     ) {
         super(
             listeners,
@@ -218,7 +221,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             experimentsManager,
             notebookProvider,
             useCustomEditorApi,
-            expService,
             selector
         );
         asyncRegistry.push(this);
@@ -238,7 +240,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.previouslyNotTrusted = !this._model.isTrusted;
     }
 
-    public async show(preserveFocus?: boolean) {
+    public async show(preserveFocus: boolean = true) {
         await this.loadPromise;
         return super.show(preserveFocus);
     }
@@ -354,6 +356,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get owningResource(): Resource {
         // Resource to use for loading and our identity are the same.
         return this.notebookIdentity.resource;
+    }
+
+    public expandAllCells(): void {
+        throw Error('Not implemented Exception');
+    }
+    public collapseAllCells(): void {
+        throw Error('Not implemented Exception');
     }
 
     protected addSysInfo(reason: SysInfoReason): Promise<void> {
@@ -742,8 +751,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             if (!this.notebook && metadata?.kernelspec) {
                 this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                     jupyterServerStatus: ServerStatus.NotStarted,
-                    localizedUri: '',
-                    displayName: metadata.kernelspec.display_name ?? metadata.kernelspec.name,
+                    serverName: await this.getServerDisplayName(undefined),
+                    kernelName: metadata.kernelspec.display_name ?? metadata.kernelspec.name,
                     language: translateKernelLanguageToMonaco(
                         (metadata.kernelspec.language as string) ?? PYTHON_LANGUAGE
                     )

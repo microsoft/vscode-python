@@ -4,12 +4,12 @@
 'use strict';
 
 import { assert } from 'chai';
+import { cloneDeep } from 'lodash';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Memento, Uri } from 'vscode';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import type { NotebookContentProvider as VSCodeNotebookContentProvider } from 'vscode-proposed';
-import { NotebookCellData } from '../../../../typings/vscode-proposed';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { ICryptoUtils } from '../../../client/common/types';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
@@ -55,23 +55,25 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         ]
                     }
                 );
-                when(storageProvider.getOrCreateModel(anything(), anything(), anything(), anything())).thenResolve(
-                    model
-                );
+                when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
 
                 const notebook = await contentProvider.openNotebook(fileUri, {});
 
                 assert.isOk(notebook);
-                assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
+                assert.deepEqual(notebook.languages, ['*']);
                 // ignore metadata we add.
-                notebook.cells.forEach((cell) => delete cell.metadata.custom);
+                const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
+                    const cellToCompareWith = cloneDeep(cell);
+                    delete cellToCompareWith.metadata?.custom;
+                    return cellToCompareWith;
+                });
 
                 assert.equal(notebook.metadata.cellEditable, isNotebookTrusted);
                 assert.equal(notebook.metadata.cellRunnable, isNotebookTrusted);
                 assert.equal(notebook.metadata.editable, isNotebookTrusted);
                 assert.equal(notebook.metadata.runnable, isNotebookTrusted);
 
-                assert.deepEqual(notebook.cells, [
+                assert.deepEqual(cellsWithoutCustomMetadata, [
                     {
                         cellKind: (vscodeNotebookEnums as any).CellKind.Code,
                         language: PYTHON_LANGUAGE,
@@ -81,8 +83,11 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
+                            lastRunDuration: undefined,
+                            runStartTime: undefined,
                             runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
-                            runnable: isNotebookTrusted
+                            runnable: isNotebookTrusted,
+                            statusMessage: undefined
                         }
                     },
                     {
@@ -131,14 +136,12 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         ]
                     }
                 );
-                when(storageProvider.getOrCreateModel(anything(), anything(), anything(), anything())).thenResolve(
-                    model
-                );
+                when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
 
                 const notebook = await contentProvider.openNotebook(fileUri, {});
 
                 assert.isOk(notebook);
-                assert.deepEqual(notebook.languages, ['csharp']);
+                assert.deepEqual(notebook.languages, ['*']);
 
                 assert.equal(notebook.metadata.cellEditable, isNotebookTrusted);
                 assert.equal(notebook.metadata.cellRunnable, isNotebookTrusted);
@@ -146,9 +149,13 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                 assert.equal(notebook.metadata.runnable, isNotebookTrusted);
 
                 // ignore metadata we add.
-                notebook.cells.forEach((cell: NotebookCellData) => delete cell.metadata.custom);
+                const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
+                    const cellToCompareWith = cloneDeep(cell);
+                    delete cellToCompareWith.metadata?.custom;
+                    return cellToCompareWith;
+                });
 
-                assert.deepEqual(notebook.cells, [
+                assert.deepEqual(cellsWithoutCustomMetadata, [
                     {
                         cellKind: (vscodeNotebookEnums as any).CellKind.Code,
                         language: 'csharp',
@@ -159,7 +166,10 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
-                            runnable: isNotebookTrusted
+                            runnable: isNotebookTrusted,
+                            statusMessage: undefined,
+                            runStartTime: undefined,
+                            lastRunDuration: undefined
                         }
                     },
                     {

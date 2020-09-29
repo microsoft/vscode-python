@@ -195,11 +195,13 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.SetJupyterKernel]: [KernelConnectionMetadata, Uri, undefined | Uri];
     [DSCommands.SwitchJupyterKernel]: [ISwitchKernelOptions | undefined];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
-    [DSCommands.SaveNotebookNonCustomEditor]: [Uri];
-    [DSCommands.SaveAsNotebookNonCustomEditor]: [Uri, Uri];
+    [DSCommands.SaveNotebookNonCustomEditor]: [INotebookModel];
+    [DSCommands.SaveAsNotebookNonCustomEditor]: [INotebookModel, Uri];
     [DSCommands.OpenNotebookNonCustomEditor]: [Uri];
     [DSCommands.GatherQuality]: [string];
     [DSCommands.LatestExtension]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [undefined | never];
     [DSCommands.TrustNotebook]: [undefined | never | Uri];
+    [DSCommands.NotebookEditorExpandAllCells]: [];
+    [DSCommands.NotebookEditorCollapseAllCells]: [];
 }

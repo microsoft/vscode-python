@@ -11,7 +11,7 @@ import { createDeferred } from '../../../../common/utils/async';
 import {
     IInterpreterWatcher,
     IInterpreterWatcherBuilder,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../../interpreter/contracts';
 import { IServiceContainer } from '../../../../ioc/types';
 import { WorkspaceVirtualEnvWatcherService } from './workspaceVirtualEnvWatcherService';
@@ -19,6 +19,7 @@ import { WorkspaceVirtualEnvWatcherService } from './workspaceVirtualEnvWatcherS
 @injectable()
 export class InterpreterWatcherBuilder implements IInterpreterWatcherBuilder {
     private readonly watchersByResource = new Map<string, Promise<IInterpreterWatcher>>();
+
     /**
      * Creates an instance of InterpreterWatcherBuilder.
      * Inject the DI container, as we need to get a new instance of IInterpreterWatcher to build it.
@@ -28,7 +29,7 @@ export class InterpreterWatcherBuilder implements IInterpreterWatcherBuilder {
      */
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
     ) {}
 
     @traceDecorators.verbose('Build the workspace interpreter watcher')
@@ -39,13 +40,14 @@ export class InterpreterWatcherBuilder implements IInterpreterWatcherBuilder {
             this.watchersByResource.set(key, deferred.promise);
             const watcher = this.serviceContainer.get<WorkspaceVirtualEnvWatcherService>(
                 IInterpreterWatcher,
-                WORKSPACE_VIRTUAL_ENV_SERVICE
+                WORKSPACE_VIRTUAL_ENV_SERVICE,
             );
             await watcher.register(resource);
             deferred.resolve(watcher);
         }
         return this.watchersByResource.get(key)!;
     }
+
     protected getResourceKey(resource: Uri | undefined): string {
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         return workspaceFolder ? workspaceFolder.uri.fsPath : '';

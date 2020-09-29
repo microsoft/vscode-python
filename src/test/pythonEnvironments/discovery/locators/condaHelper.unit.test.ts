@@ -2,11 +2,11 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import {
     AnacondaDisplayName,
-    CondaInfo
+    CondaInfo,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/conda';
 import {
     getDisplayName,
-    parseCondaEnvFileContents
+    parseCondaEnvFileContents,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/condaHelper';
 
 // tslint:disable-next-line:max-func-body-length
@@ -17,7 +17,7 @@ suite('Interpreters display name from Conda Environments', () => {
     });
     test('Must return at least Python Version', () => {
         const info: CondaInfo = {
-            python_version: '3.6.1.final.10'
+            python_version: '3.6.1.final.10',
         };
         const displayName = getDisplayName(info);
         assert.equal(displayName, AnacondaDisplayName, 'Incorrect display name');
@@ -25,7 +25,7 @@ suite('Interpreters display name from Conda Environments', () => {
     test('Must return info without first part if not a python version', () => {
         const info: CondaInfo = {
             'sys.version':
-                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
+                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
         };
         const displayName = getDisplayName(info);
         assert.equal(displayName, 'Anaconda 4.4.0 (64-bit)', 'Incorrect display name');
@@ -34,7 +34,7 @@ suite('Interpreters display name from Conda Environments', () => {
         const info: CondaInfo = {
             python_version: '3.6.1.final.10',
             'sys.version':
-                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
+                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
         };
         const displayName = getDisplayName(info);
         assert.equal(displayName, 'Anaconda 4.4.0 (64-bit)', 'Incorrect display name');
@@ -42,7 +42,7 @@ suite('Interpreters display name from Conda Environments', () => {
     test('Must include Ananconda name if Company name not found', () => {
         const info: CondaInfo = {
             python_version: '3.6.1.final.10',
-            'sys.version': '3.6.1 |4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
+            'sys.version': '3.6.1 |4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
         };
         const displayName = getDisplayName(info);
         assert.equal(displayName, `4.4.0 (64-bit) : ${AnacondaDisplayName}`, 'Incorrect display name');
@@ -79,25 +79,25 @@ with*one*two*three*four*five*six*seven*  *  /Users/donjayamanne/anaconda3/envs/w
             {
                 name: 'aaaa_bbbb_cccc_dddd_eeee_ffff_gggg',
                 path: '/Users/donjayamanne/anaconda3/envs/aaaa_bbbb_cccc_dddd_eeee_ffff_gggg',
-                isActive: false
+                isActive: false,
             },
             {
                 name: 'aaaa_bbbb_cccc_dddd_eeee_ffff_gggg',
                 path: '/Users/donjayamanne/anaconda3/envs/aaaa_bbbb_cccc_dddd_eeee_ffff_gggg',
-                isActive: true
+                isActive: true,
             },
             { name: 'with*star', path: '/Users/donjayamanne/anaconda3/envs/with*star', isActive: false },
             {
                 name: 'with*one*two*three*four*five*six*seven*',
                 path: '/Users/donjayamanne/anaconda3/envs/with*one*two*three*four*five*six*seven*',
-                isActive: false
+                isActive: false,
             },
             {
                 name: 'with*one*two*three*four*five*six*seven*',
                 path: '/Users/donjayamanne/anaconda3/envs/with*one*two*three*four*five*six*seven*',
-                isActive: true
+                isActive: true,
             },
-            { name: '', path: '/Users/donjayamanne/anaconda3/envs/seven ', isActive: false }
+            { name: '', path: '/Users/donjayamanne/anaconda3/envs/seven ', isActive: false },
         ];
 
         const list = parseCondaEnvFileContents(environments);

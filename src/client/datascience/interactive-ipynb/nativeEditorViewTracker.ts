@@ -3,7 +3,6 @@ import { Memento, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { UseCustomEditorApi } from '../../common/constants';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
-import { isUntitled } from '../notebookStorage/nativeEditorStorage';
 import { INotebookEditor, INotebookEditorProvider } from '../types';
 
 const MEMENTO_KEY = 'nativeEditorViewTracking';
@@ -48,9 +47,9 @@ export class NativeEditorViewTracker implements IExtensionSingleActivationServic
         const fileKey = editor.file.toString();
 
         // Skip untitled files. They have to be changed first.
-        if (!list.includes(fileKey) && (!isUntitled(editor.model) || editor.isDirty)) {
+        if (!list.includes(fileKey) && (!editor.model.isUntitled || editor.isDirty)) {
             this.workspaceMemento.update(MEMENTO_KEY, [...list, fileKey]);
-        } else if (isUntitled(editor.model) && editor.model) {
+        } else if (editor.model.isUntitled && editor.model) {
             editor.model.changed(this.onUntitledChanged.bind(this, editor.file));
         }
     }

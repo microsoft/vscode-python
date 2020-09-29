@@ -60,6 +60,10 @@ export namespace Diagnostics {
         'Your settings needs to be updated to change the setting "python.unitTest." to "python.testing.", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?'
     );
     export const updateSettings = localize('diagnostics.updateSettings', 'Yes, update settings');
+    export const checkIsort5UpgradeGuide = localize(
+        'diagnostics.checkIsort5UpgradeGuide',
+        'We found outdated configuration for sorting imports in this workspace. Check the [isort upgrade guide](https://aka.ms/AA9j5x4) to update your settings.'
+    );
 }
 
 export namespace Common {
@@ -886,9 +890,13 @@ export namespace DataScience {
     );
     export const openExportFileYes = localize('DataScience.openExportFileYes', 'Yes');
     export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
+    export const exportFailedGeneralMessage = localize(
+        'DataScience.exportFailedGeneralMessage',
+        `Export failed. Please check the 'Python' [output](command:python.viewOutput) panel for further details.`
+    );
     export const exportToPDFDependencyMessage = localize(
         'DataScience.exportToPDFDependencyMessage',
-        'If you have not installed xelatex (TeX) you will need to do so before you can export to PDF, for further instructions please look [here](https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex). \r\nTo avoid installing xelatex (TeX) you might want to try exporting to HTML and using your browsers "Print to PDF" feature.'
+        'If you have not installed xelatex (TeX) you will need to do so before you can export to PDF, for further instructions please look https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex. \r\nTo avoid installing xelatex (TeX) you might want to try exporting to HTML and using your browsers "Print to PDF" feature.'
     );
     export const failedExportMessage = localize('DataScience.failedExportMessage', 'Export failed.');
     export const runCell = localize('DataScience.runCell', 'Run cell');
@@ -1105,6 +1113,12 @@ export namespace DataScience {
     export const previewNotebookOnlySupportedInVSCInsiders = localize(
         'DataScience.previewNotebookOnlySupportedInVSCInsiders',
         'The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code.'
+    );
+    export const connected = localize('DataScience.connected', 'Connected');
+    export const disconnected = localize('DataScience.disconnected', 'Disconnected');
+    export const ipykernelNotInstalled = localize(
+        'DataScience.ipykernelNotInstalled',
+        'IPyKernel not installed into interpreter {0}'
     );
 }
 

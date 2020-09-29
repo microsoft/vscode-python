@@ -40,15 +40,14 @@ export class ExportManager implements IExportManager {
             }
             await this.performExport(format, model, target);
         } catch (e) {
-            let msg = e;
             traceError('Export failed', e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
 
             if (format === ExportFormat.pdf) {
-                msg = localize.DataScience.exportToPDFDependencyMessage();
+                traceError(localize.DataScience.exportToPDFDependencyMessage());
             }
 
-            this.showExportFailed(msg);
+            this.showExportFailed(localize.DataScience.exportFailedGeneralMessage());
         }
     }
 

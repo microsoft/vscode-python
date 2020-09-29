@@ -10,12 +10,12 @@ import { isMacDefaultPythonPath } from '../pythonEnvironments/discovery';
 import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import {
     EnvironmentType,
-    getInterpreterTypeName,
+    getEnvironmentTypeName,
     InterpreterInformation,
     PythonEnvironment,
     sortInterpreters
 } from '../pythonEnvironments/info';
-import { IInterpreterHelper } from './contracts';
+import { IComponentAdapter, IInterpreterHelper } from './contracts';
 import { IInterpreterHashProviderFactory } from './locators/types';
 
 const EXPITY_DURATION = 24 * 60 * 60 * 1000;
@@ -44,12 +44,19 @@ export function isInterpreterLocatedInWorkspace(interpreter: PythonEnvironment, 
     return interpreterPath.startsWith(resourcePath);
 }
 
+// The parts of IComponentAdapter used here.
+interface IComponent {
+    getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>>;
+    isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined>;
+}
+
 @injectable()
 export class InterpreterHelper implements IInterpreterHelper {
     private readonly persistentFactory: IPersistentStateFactory;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory
+        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponent
     ) {
         this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
@@ -78,6 +85,11 @@ export class InterpreterHelper implements IInterpreterHelper {
         }
     }
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
+        const found = await this.pyenvs.getInterpreterInformation(pythonPath);
+        if (found !== undefined) {
+            return found;
+        }
+
         const fileHash = await this.hashProviderFactory
             .create({ pythonPath })
             .then((provider) => provider.getInterpreterHash(pythonPath))
@@ -115,11 +127,15 @@ export class InterpreterHelper implements IInterpreterHelper {
             return;
         }
     }
-    public isMacDefaultPythonPath(pythonPath: string) {
+    public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean> {
+        const result = await this.pyenvs.isMacDefaultPythonPath(pythonPath);
+        if (result !== undefined) {
+            return result;
+        }
         return isMacDefaultPythonPath(pythonPath);
     }
     public getInterpreterTypeDisplayName(interpreterType: EnvironmentType) {
-        return getInterpreterTypeName(interpreterType);
+        return getEnvironmentTypeName(interpreterType);
     }
     public getBestInterpreter(interpreters?: PythonEnvironment[]): PythonEnvironment | undefined {
         if (!Array.isArray(interpreters) || interpreters.length === 0) {

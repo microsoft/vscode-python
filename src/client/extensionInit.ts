@@ -12,7 +12,7 @@ import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensionContext, IMemento, WORKS
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
-import { registerForIOC } from './pythonEnvironments/legacyIOC';
+import { activate as activatePythonEnvironments } from './pythonEnvironments';
 
 // The code in this module should do nothing more complex than register
 // objects to DI and simple init (e.g. no side effects).  That implies
@@ -37,9 +37,9 @@ export function initializeGlobals(context: IExtensionContext): [IServiceManager,
 
 export function initializeComponents(
     _context: IExtensionContext,
-    _serviceManager: IServiceManager,
-    _serviceContainer: IServiceContainer
+    serviceManager: IServiceManager,
+    serviceContainer: IServiceContainer
 ) {
-    registerForIOC(_serviceManager);
+    activatePythonEnvironments(serviceManager, serviceContainer);
     // We will be pulling code over from activateLegacy().
 }

@@ -15,7 +15,7 @@ import { normalizeMarkedString } from '../../../textUtils';
 const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'autocomp');
 const fileOne = path.join(autoCompPath, 'one.py');
 
-suite('Code, Hover Definition and Intellisense (Jedi)', () => {
+suite('Language Server: Code, Hover Definition and Intellisense (Jedi)', () => {
     suiteSetup(initialize);
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);

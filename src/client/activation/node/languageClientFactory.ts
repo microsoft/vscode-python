@@ -9,8 +9,8 @@ import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { ILanguageClientFactory, ILanguageServerFolderService } from '../types';
-import { FileBasedCancellationStrategy } from './cancellationUtils';
 
 // tslint:disable:no-require-imports no-require-imports no-var-requires max-classes-per-file
 const languageClientName = 'Python Tools';

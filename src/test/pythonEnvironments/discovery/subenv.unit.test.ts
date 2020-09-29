@@ -36,7 +36,7 @@ suite('getType()', () => {
             (p: string) => finders.object.venv(p),
             (p: string) => finders.object.pyenv(p),
             (p: string) => finders.object.pipenv(p),
-            (p: string) => finders.object.virtualenv(p)
+            (p: string) => finders.object.virtualenv(p),
         ]);
 
         expect(result).to.equal(EnvironmentType.Venv, 'broken');
@@ -58,7 +58,7 @@ suite('getType()', () => {
             (p: string) => finders.object.venv(p),
             (p: string) => finders.object.pyenv(p),
             (p: string) => finders.object.pipenv(p),
-            (p: string) => finders.object.virtualenv(p)
+            (p: string) => finders.object.virtualenv(p),
         ]);
 
         expect(result).to.equal(EnvironmentType.Pyenv, 'broken');
@@ -88,7 +88,7 @@ suite('getType()', () => {
             (p: string) => finders.object.venv(p),
             (p: string) => finders.object.pyenv(p),
             (p: string) => finders.object.pipenv(p),
-            (p: string) => finders.object.virtualenv(p)
+            (p: string) => finders.object.virtualenv(p),
         ]);
 
         expect(result).to.equal(undefined, 'broken');

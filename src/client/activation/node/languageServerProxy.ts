@@ -21,9 +21,9 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
+import { FileBasedCancellationStrategy } from '../common/cancellationUtils';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerFolderService, ILanguageServerProxy } from '../types';
-import { FileBasedCancellationStrategy } from './cancellationUtils';
 
 @injectable()
 export class NodeLanguageServerProxy implements ILanguageServerProxy {
@@ -126,7 +126,12 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
                         // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
                         method: telemetryEvent.Properties.method?.replace(/\//g, '.')
                     };
-                    sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
+                    sendTelemetryEvent(
+                        eventName,
+                        telemetryEvent.Measurements,
+                        formattedProperties,
+                        telemetryEvent.Exception
+                    );
                 });
             }
             await this.registerTestServices();

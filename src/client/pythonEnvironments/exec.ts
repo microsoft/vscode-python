@@ -35,16 +35,15 @@ export function buildPythonExecInfo(python: string | string[], pythonArgs?: stri
             python: [...python],
             // It isn't necessarily the last item but our supported
             // cases it currently is.
-            pythonExecutable: python[python.length - 1]
-        };
-    } else {
-        return {
-            command: python,
-            args: pythonArgs || [],
-            python: [python],
-            pythonExecutable: python
+            pythonExecutable: python[python.length - 1],
         };
     }
+    return {
+        command: python,
+        args: pythonArgs || [],
+        python: [python],
+        pythonExecutable: python,
+    };
 }
 
 /**
@@ -58,7 +57,7 @@ export function copyPythonExecInfo(orig: PythonExecInfo, extraPythonArgs?: strin
         command: orig.command,
         args: [...orig.args],
         python: [...orig.python],
-        pythonExecutable: orig.pythonExecutable
+        pythonExecutable: orig.pythonExecutable,
     };
     if (extraPythonArgs) {
         info.args.push(...extraPythonArgs);

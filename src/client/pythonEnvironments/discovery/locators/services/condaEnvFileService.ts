@@ -28,7 +28,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
         @inject(IInterpreterHelper) private helperService: IInterpreterHelper,
         @inject(ICondaService) private condaService: ICondaService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
     ) {
         super('CondaEnvFileService', serviceContainer);
     }
@@ -59,9 +59,9 @@ export class CondaEnvFileService extends CacheableLocatorService {
         }
         return this.fileSystem
             .fileExists(this.condaService.condaEnvironmentsFile!)
-            .then((exists) =>
+            .then((exists) => (
                 exists ? this.getEnvironmentsFromFile(this.condaService.condaEnvironmentsFile!) : Promise.resolve([])
-            );
+            ));
     }
 
     /**
@@ -77,7 +77,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
 
             const interpreters = (
                 await Promise.all(
-                    environmentPaths.map((environmentPath) => this.getInterpreterDetails(environmentPath))
+                    environmentPaths.map((environmentPath) => this.getInterpreterDetails(environmentPath)),
                 )
             )
                 .filter((item) => !!item)
@@ -86,8 +86,8 @@ export class CondaEnvFileService extends CacheableLocatorService {
             const environments = await this.condaService.getCondaEnvironments(true);
             if (Array.isArray(environments) && environments.length > 0) {
                 interpreters.forEach((interpreter) => {
-                    const environment = environments.find((item) =>
-                        this.fileSystem.arePathsSame(item.path, interpreter!.envPath!)
+                    const environment = environments.find(
+                        (item) => this.fileSystem.arePathsSame(item.path, interpreter!.envPath!),
                     );
                     if (environment) {
                         interpreter.envName = environment!.name;
@@ -123,7 +123,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
             companyDisplayName: AnacondaCompanyName,
             envType: EnvironmentType.Conda,
             envPath: environmentPath,
-            envName
+            envName,
         };
     }
 }

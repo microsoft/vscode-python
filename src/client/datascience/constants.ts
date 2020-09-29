@@ -109,6 +109,8 @@ export namespace Commands {
     export const TrustNotebook = 'python.datascience.notebookeditor.trust';
     export const EnableLoadingWidgetsFrom3rdPartySource =
         'python.datascience.enableLoadingWidgetScriptsFromThirdPartySource';
+    export const NotebookEditorExpandAllCells = 'python.datascience.notebookeditor.expandallcells';
+    export const NotebookEditorCollapseAllCells = 'python.datascience.notebookeditor.collapseallcells';
 }
 
 export namespace CodeLensCommands {
@@ -541,6 +543,7 @@ export namespace CodeSnippets {
     export const ConfigPng = `%config InlineBackend.figure_formats = {'png'}`;
     export const UpdateCWDAndPath =
         'import os\nimport sys\n%cd "{0}"\nif os.getcwd() not in sys.path:\n    sys.path.insert(0, os.getcwd())';
+    export const disableJedi = '%config Completer.use_jedi = False';
 }
 
 export enum JupyterCommands {

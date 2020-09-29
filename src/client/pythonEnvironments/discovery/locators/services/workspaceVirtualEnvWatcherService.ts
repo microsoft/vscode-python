@@ -5,7 +5,9 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri } from 'vscode';
+import {
+    Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri,
+} from 'vscode';
 import { IWorkspaceService } from '../../../../common/application/types';
 import '../../../../common/extensions';
 import { traceDecorators, traceVerbose } from '../../../../common/logger';
@@ -20,24 +22,31 @@ const timeToPollForEnvCreation = 2_000;
 @injectable()
 export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, Disposable {
     private readonly didCreate: EventEmitter<Resource>;
+
     private timers = new Map<string, { timer: NodeJS.Timer | number; counter: number }>();
+
     private fsWatchers: FileSystemWatcher[] = [];
+
     private resource: Resource;
+
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
     ) {
         this.didCreate = new EventEmitter<Resource>();
         disposableRegistry.push(this);
     }
+
     public get onDidCreate(): Event<Resource> {
         return this.didCreate.event;
     }
+
     public dispose() {
         this.clearTimers();
     }
+
     @traceDecorators.verbose('Register Interpreter Watcher')
     public async register(resource: Resource): Promise<void> {
         if (this.fsWatchers.length > 0) {
@@ -59,6 +68,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
             this.fsWatchers.push(fsWatcher);
         }
     }
+
     @traceDecorators.verbose('Interpreter Watcher change handler')
     public async createHandler(e: Uri) {
         this.didCreate.fire(this.resource);
@@ -66,6 +76,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
         // the python executable is accessible (i.e. when we can launch the process).
         this.notifyCreationWhenReady(e.fsPath).ignoreErrors();
     }
+
     protected async notifyCreationWhenReady(pythonPath: string) {
         const counter = this.timers.has(pythonPath) ? this.timers.get(pythonPath)!.counter + 1 : 0;
         const isValid = await this.isValidExecutable(pythonPath);
@@ -84,15 +95,17 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
 
         const timer = setTimeout(
             () => this.notifyCreationWhenReady(pythonPath).ignoreErrors(),
-            timeToPollForEnvCreation
+            timeToPollForEnvCreation,
         );
         this.timers.set(pythonPath, { timer, counter });
     }
+
     private clearTimers() {
         // tslint:disable-next-line: no-any
         this.timers.forEach((item) => clearTimeout(item.timer as any));
         this.timers.clear();
     }
+
     private async isValidExecutable(pythonPath: string): Promise<boolean> {
         const execService = await this.pythonExecFactory.create({ pythonPath });
         const info = await execService.getInterpreterInformation().catch(() => undefined);

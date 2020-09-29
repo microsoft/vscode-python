@@ -299,8 +299,8 @@ suite('Interpreters Display', () => {
             statusBar.verify((s) => s.hide(), TypeMoq.Times.never());
         });
         test('Status bar must not be displayed if a filter is registered that needs it to be hidden', async () => {
-            const filter1: IInterpreterStatusbarVisibilityFilter = { visible: false };
-            const filter2: IInterpreterStatusbarVisibilityFilter = { visible: true };
+            const filter1: IInterpreterStatusbarVisibilityFilter = { hidden: true };
+            const filter2: IInterpreterStatusbarVisibilityFilter = { hidden: false };
             createInterpreterDisplay([filter1, filter2]);
 
             await interpreterDisplay.refresh(resource);
@@ -309,8 +309,8 @@ suite('Interpreters Display', () => {
             statusBar.verify((s) => s.hide(), TypeMoq.Times.once());
         });
         test('Status bar must not be displayed if both filters need it to be hidden', async () => {
-            const filter1: IInterpreterStatusbarVisibilityFilter = { visible: false };
-            const filter2: IInterpreterStatusbarVisibilityFilter = { visible: false };
+            const filter1: IInterpreterStatusbarVisibilityFilter = { hidden: true };
+            const filter2: IInterpreterStatusbarVisibilityFilter = { hidden: true };
             createInterpreterDisplay([filter1, filter2]);
 
             await interpreterDisplay.refresh(resource);
@@ -319,8 +319,8 @@ suite('Interpreters Display', () => {
             statusBar.verify((s) => s.hide(), TypeMoq.Times.once());
         });
         test('Status bar must be displayed if both filter needs it to be displayed', async () => {
-            const filter1: IInterpreterStatusbarVisibilityFilter = { visible: true };
-            const filter2: IInterpreterStatusbarVisibilityFilter = { visible: true };
+            const filter1: IInterpreterStatusbarVisibilityFilter = { hidden: false };
+            const filter2: IInterpreterStatusbarVisibilityFilter = { hidden: false };
             createInterpreterDisplay([filter1, filter2]);
 
             await interpreterDisplay.refresh(resource);
@@ -330,9 +330,9 @@ suite('Interpreters Display', () => {
         });
         test('Status bar must hidden if a filter triggers need for status bar to be hidden', async () => {
             const event1 = new EventEmitter<void>();
-            const filter1: ReadWrite<IInterpreterStatusbarVisibilityFilter> = { visible: true, changed: event1.event };
+            const filter1: ReadWrite<IInterpreterStatusbarVisibilityFilter> = { hidden: false, changed: event1.event };
             const event2 = new EventEmitter<void>();
-            const filter2: ReadWrite<IInterpreterStatusbarVisibilityFilter> = { visible: true, changed: event2.event };
+            const filter2: ReadWrite<IInterpreterStatusbarVisibilityFilter> = { hidden: false, changed: event2.event };
             createInterpreterDisplay([filter1, filter2]);
 
             await interpreterDisplay.refresh(resource);
@@ -342,7 +342,7 @@ suite('Interpreters Display', () => {
 
             // Filter one will now want the status bar to get hidden.
             statusBar.reset();
-            filter1.visible = false;
+            filter1.hidden = true;
             event1.fire();
 
             statusBar.verify((s) => s.show(), TypeMoq.Times.never());
@@ -357,7 +357,7 @@ suite('Interpreters Display', () => {
             statusBar.verify((s) => s.hide(), TypeMoq.Times.once());
 
             // Filter two now needs it to be displayed & filter 1 will allow it to be displayed.
-            filter1.visible = true;
+            filter1.hidden = false;
             statusBar.reset();
             event2.fire();
 

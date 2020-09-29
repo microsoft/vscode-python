@@ -9,6 +9,7 @@ import { traceDecorators } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../../common/process/types';
 import { IPersistentStateFactory } from '../../../../common/types';
+import { IComponentAdapter } from '../../../../interpreter/contracts';
 import { IInterpreterHashProvider, IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
 
@@ -26,9 +27,14 @@ import { IServiceContainer } from '../../../../ioc/types';
 export function isRestrictedWindowsStoreInterpreterPath(pythonPath: string): boolean {
     const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
     return (
-        pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
-        pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
+        pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase())
+        || pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
     );
+}
+
+// The parts of IComponentAdapter used here.
+interface IComponent {
+    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined>;
 }
 
 /**
@@ -59,8 +65,10 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private readonly persistentFactory: IPersistentStateFactory,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponent
     ) {}
+
     /**
      * Whether this is a Windows Store/App Interpreter.
      *
@@ -68,14 +76,19 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
      * @returns {boolean}
      * @memberof WindowsStoreInterpreter
      */
-    public isWindowsStoreInterpreter(pythonPath: string): boolean {
+    public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
+        const result = await this.pyenvs.isWindowsStoreInterpreter(pythonPath);
+        if (result !== undefined) {
+            return result;
+        }
         const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
         return (
-            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\'.toUpperCase()) ||
-            pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
-            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
+            pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\'.toUpperCase())
+            || pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase())
+            || pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
         );
     }
+
     /**
      * Whether this is a python executable in a windows app store folder that is internal and can be hidden from users.
      * Interpreters that fall into this category will not be displayed to the users.
@@ -87,6 +100,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
     public isHiddenInterpreter(pythonPath: string): boolean {
         return isRestrictedWindowsStoreInterpreterPath(pythonPath);
     }
+
     /**
      * Gets the hash of the Python interpreter (installed from the windows store).
      * We need to use a special way to get the hash for these, by first resolving the
@@ -110,7 +124,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
         const stateStore = this.persistentFactory.createGlobalPersistentState<string | undefined>(
             key,
             undefined,
-            60 * 60 * 1000
+            60 * 60 * 1000,
         );
 
         if (stateStore.value) {

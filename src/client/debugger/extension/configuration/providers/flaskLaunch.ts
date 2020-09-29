@@ -34,7 +34,7 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
                 FLASK_ENV: 'development',
                 FLASK_DEBUG: '0'
             },
-            args: ['run', '--no-debugger', '--no-reload'],
+            args: ['run', '--no-debugger'],
             jinja: true
         };
 

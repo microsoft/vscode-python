@@ -40,9 +40,9 @@ export namespace Kernel {
             return {
                 ...arg.prevState,
                 kernel: {
-                    localizedUri: arg.payload.data.localizedUri,
+                    serverName: arg.payload.data.serverName,
                     jupyterServerStatus: arg.payload.data.jupyterServerStatus,
-                    displayName: arg.payload.data.displayName,
+                    kernelName: arg.payload.data.kernelName,
                     language: arg.payload.data.language
                 }
             };

@@ -155,7 +155,7 @@ enable=bad-names
 
 ```python3
 # example.py
-foo = 42  # Marked as a blacklisted name.
+foo = 42  # Marked as a disallowed name.
 ```
 
 -   [ ] Installation via the prompt installs Pylint as appropriate
@@ -234,7 +234,7 @@ def foo():pass
 
 ### [Debugging](https://code.visualstudio.com/docs/python/debugging)
 
--   [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work (see [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) and the `"configurationSnippets"` section for all of the possible configurations)
+-   [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work (see [`package.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) and the `"configurationSnippets"` section for all of the possible configurations)
 -   [ ] Running code from start to finish w/ no special debugging options (e.g. no breakpoints)
 -   [ ] Breakpoint-like things
     -   [ ] Breakpoint
@@ -492,6 +492,13 @@ def test_failure():
     1. Verify the variables explorer window shows output not available while debugging
     1. When you get to the end of the cell, the debugger should stop
     1. Output from the cell should show up in the Interactive Window (sometimes you have to finish debugging the cell first)
+-   [ ] Verify installing ipykernel in a new environment
+    1. Create a brand new folder on your machine
+    1. Create a new venv in that folder via command line / terminal `python3 -m venv .newEnv`
+    1. Open that folder in VS Code and copy the manual test file there
+    1. Select the newly created venv by running Ctrl+Shift+P, typing 'Python: Select Interpreter' into the VS Code command palette, and selecting the new venv from the dropdown. If the new venv doesn't appear in the quickpick you may need to reload VS Code and reattempt this step.
+    1. Execute the manual test file, you should be prompted to install ipykernel in `.newEnv`
+    1. After ipykernel is installed execution of the file should continue successfully
 
 #### P1 Test Scenarios
 
@@ -576,12 +583,14 @@ def test_failure():
     1. Run a cell on the host
     1. Verify the editor opens on the guest and the cell is run there too
 -   [ ] Jupyter Hub support
+
     1. Windows install instructions
+
         1. Install Docker Desktop onto a machine
         1. Create a folder with a file 'Dockerfile' in it.
         1. Mark the file to look like so:
 
-        ``` 
+        ```
         ARG BASE_CONTAINER=jupyterhub/jupyterhub
         FROM $BASE_CONTAINER
 
@@ -590,28 +599,26 @@ def test_failure():
         USER $NB_UID
         ```
 
-        1. From a command prompt (in the same folder as the Dockerfile), run ```docker build -t jupyterhubcontainer:1.0 .```
-        1. Run ```docker container create --name jupyterhub jupyterhubcontainer:1.0 jupyterhub```
-        1. From the docker desktop app, start the jupyterhub container. 
-        1. From the docker desktop app, run the CLI 
+        1. From a command prompt (in the same folder as the Dockerfile), run `docker build -t jupyterhubcontainer:1.0 .`
+        1. Run `docker container create --name jupyterhub jupyterhubcontainer:1.0 jupyterhub`
+        1. From the docker desktop app, start the jupyterhub container.
+        1. From the docker desktop app, run the CLI
+
     1. OR Mac / Linux install instructions
         1. Install docker
-        1. From the terminal ```docker run -p 8000:8000 -d --name jupyterhub jupyterhub/jupyterhub jupyterhub```
-        1. Open a terminal in the docker container with ```docker exec -it jupyterhub bash```
-        1. From that terminal run ```python3 -m pip install notebook```
-    1. From the new command prompt, run ```adduser testuser```
+        1. From the terminal `docker run -p 8000:8000 -d --name jupyterhub jupyterhub/jupyterhub jupyterhub`
+        1. Open a terminal in the docker container with `docker exec -it jupyterhub bash`
+        1. From that terminal run `python3 -m pip install notebook`
+    1. From the new command prompt, run `adduser testuser`
     1. Follow the series of prompts to add a password for this user
     1. Open VS code
     1. Open a folder with a python file in it.
-    1. Run the ```Python: Specify local or remote Jupyter server for connections``` command.
+    1. Run the `Python: Specify local or remote Jupyter server for connections` command.
     1. Pick 'Existing'
-    1. Enter ```http://localhost:8000``` (assuming the jupyter hub container was successful in launching)
+    1. Enter `http://localhost:8000` (assuming the jupyter hub container was successful in launching)
     1. Reload VS code and reopen this folder.
     1. Run a cell in a python file.
-        [ ] Verify results
-            1. Verify you are asked first for a user name and then a password.
-            1. Verify a cell runs once you enter the user name and password
-            1. Verify that the python that is running in the interactive window is from the docker container (if on windows it should show a linux path)
+       [ ] Verify results 1. Verify you are asked first for a user name and then a password. 1. Verify a cell runs once you enter the user name and password 1. Verify that the python that is running in the interactive window is from the docker container (if on windows it should show a linux path)
 
 #### P2 Test Scenarios
 

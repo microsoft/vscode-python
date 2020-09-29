@@ -2,9 +2,9 @@
 
 ---
 
-| `release` branch                                                                                                                                                                            | `master` branch                                                                                                                                                                           | Nightly CI                                                                                                                                                                                             | coverage (`master` branch)                                                                                                               |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=master) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=master) | [![codecov](https://codecov.io/gh/microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/microsoft/vscode-python) |
+| `release` branch                                                                                                                                                                            | `main` branch                                                                                                                                                                         | Nightly CI                                                                                                                                                                                         | coverage (`main` branch)                                                                                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=main)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=main) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=main)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=main) | [![codecov](https://codecov.io/gh/microsoft/vscode-python/branch/main/graph/badge.svg)](https://codecov.io/gh/microsoft/vscode-python) |
 
 [[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)]
 
@@ -138,8 +138,8 @@ you can do this by setting environment variables. The same variables work when
 running from the command line or launching from within VSCode, though the
 mechanism used to specify them changes a little.
 
-* Setting `CI_PYTHON_PATH` lets you change the version of python the tests are executed with
-* Setting `VSC_PYTHON_CI_TEST_GREP` lets you filter the tests by name
+-   Setting `CI_PYTHON_PATH` lets you change the version of python the tests are executed with
+-   Setting `VSC_PYTHON_CI_TEST_GREP` lets you filter the tests by name
 
 _`CI_PYTHON_PATH`_
 
@@ -149,7 +149,7 @@ this will almost always mean Python 2 is used, which probably isn't what you
 want.
 
 By setting the `CI_PYTHON_PATH` environment variable you can
-control the exact Python executable that gets used.  If the executable
+control the exact Python executable that gets used. If the executable
 you specify isn't on `$PATH` then be sure to use an absolute path.
 
 This is also the mechanism for testing against other versions of Python.
@@ -169,8 +169,8 @@ use the value `ProcessService.*stderr`.
 Be sure to escape any grep-sensitive characters in your suite name.
 
 In some rare cases in the "system" tests the `VSC_PYTHON_CI_TEST_GREP`
-environment variable is ignored.  If that happens then you will need to
-temporarily modify the `const grep = ` line in
+environment variable is ignored. If that happens then you will need to
+temporarily modify the `const grep =` line in
 [`src/test/index.ts`](https://github.com/Microsoft/vscode-python/blob/84f9c7a174111/src/test/index.ts#L64).
 
 _Launching from VSCode_
@@ -223,10 +223,10 @@ From there use the `Extension + Debugger` launch option.
 
 ### Coding Standards
 
-Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-python/blob/master/CODING_STANDARDS.md).
+Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-python/blob/main/CODING_STANDARDS.md).
 We have CI tests to ensure the code committed will adhere to the above coding standards. \*You can run this locally by executing the command `npx gulp precommit` or use the `precommit` Task.
 
-Messages displayed to the user must be localized using/created constants from/in the [localize.ts](https://github.com/Microsoft/vscode-python/blob/master/src/client/common/utils/localize.ts) file.
+Messages displayed to the user must be localized using/created constants from/in the [localize.ts](https://github.com/Microsoft/vscode-python/blob/main/src/client/common/utils/localize.ts) file.
 
 ## Development process
 
@@ -266,7 +266,7 @@ is created for each release to help track anything that requires a
 person to do (long-term this project aims to automate as much of the
 development process as possible).
 
-All development is actively done in the `master` branch of the
+All development is actively done in the `main` branch of the
 repository. This allows us to have a
 [development build](#development-build) which is expected to be stable at
 all times. Once we reach a release candidate, it becomes
@@ -300,7 +300,7 @@ have a merged fix and verify that the fix did in fact work. The other is to try 
 ### Pull requests
 
 Key details that all pull requests are expected to handle should be
-in the [pull request template](https://github.com/Microsoft/vscode-python/blob/master/.github/PULL_REQUEST_TEMPLATE.md). We do expect CI to be passing for a pull request before we will consider merging it.
+in the [pull request template](https://github.com/Microsoft/vscode-python/blob/main/.github/PULL_REQUEST_TEMPLATE.md). We do expect CI to be passing for a pull request before we will consider merging it.
 
 ### Versioning
 
@@ -317,11 +317,11 @@ For example the first release made in 2020 is `2020.1.<build number>`.
 
 Overall steps for releasing are covered in the
 [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan)
-([template](https://github.com/Microsoft/vscode-python/blob/master/.github/release_plan.md)).
+([template](https://github.com/Microsoft/vscode-python/blob/main/.github/release_plan.md)).
 
 ### Building a release
 
-To create a release _build_, follow the steps outlined in the [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan) (which has a [template](https://github.com/Microsoft/vscode-python/blob/master/.github/release_plan.md)).
+To create a release _build_, follow the steps outlined in the [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan) (which has a [template](https://github.com/Microsoft/vscode-python/blob/main/.github/release_plan.md)).
 
 ## Local Build
 
@@ -347,7 +347,7 @@ Resulting in a `ms-python-insiders.vsix` file in your `vscode-python` folder.
 
 ## Development Build
 
-If you would like to use the latest version of the extension as committed to `master` that has passed our test suite, then you may set the `"python.insidersChannel"` setting to `"daily"` or `"weekly"` based on how often you would like the extension to check for updates.
+If you would like to use the latest version of the extension as committed to `main` that has passed our test suite, then you may set the `"python.insidersChannel"` setting to `"daily"` or `"weekly"` based on how often you would like the extension to check for updates.
 
 You may also download and install the extension manually from the following
 [location](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix).

@@ -11,7 +11,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -20,7 +20,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -41,6 +40,7 @@ import {
     IJupyterVariables,
     INotebookEditorProvider,
     INotebookExporter,
+    INotebookExtensibility,
     INotebookImporter,
     INotebookModel,
     INotebookProvider,
@@ -73,7 +73,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         liveShare: ILiveShareApi,
         applicationShell: IApplicationShell,
         documentManager: IDocumentManager,
-        provider: IWebPanelProvider,
+        provider: IWebviewPanelProvider,
         disposables: IDisposableRegistry,
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
@@ -100,10 +100,10 @@ export class NativeEditorOldWebView extends NativeEditor {
         useCustomEditorApi: boolean,
         private readonly storage: INotebookStorageProvider,
         trustService: ITrustService,
-        expService: IExperimentService,
         model: INotebookModel,
         webviewPanel: WebviewPanel | undefined,
-        selector: KernelSelector
+        selector: KernelSelector,
+        notebookExtensibility: INotebookExtensibility
     ) {
         super(
             listeners,
@@ -135,10 +135,10 @@ export class NativeEditorOldWebView extends NativeEditor {
             notebookProvider,
             useCustomEditorApi,
             trustService,
-            expService,
             model,
             webviewPanel,
-            selector
+            selector,
+            notebookExtensibility
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.
@@ -269,7 +269,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         }
         try {
             if (!this.isUntitled) {
-                await this.commandManager.executeCommand(Commands.SaveNotebookNonCustomEditor, this.model?.file);
+                await this.commandManager.executeCommand(Commands.SaveNotebookNonCustomEditor, this.model);
                 this.savedEvent.fire(this);
                 return;
             }
@@ -295,7 +295,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             if (fileToSaveTo) {
                 await this.commandManager.executeCommand(
                     Commands.SaveAsNotebookNonCustomEditor,
-                    this.model.file,
+                    this.model,
                     fileToSaveTo
                 );
                 this.savedEvent.fire(this);
