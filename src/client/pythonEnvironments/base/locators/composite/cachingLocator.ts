@@ -97,10 +97,7 @@ export class CachingLocator implements ILocator {
         await this.cache.initialize();
         this.looper.start();
         await this.initialRefresh();
-        this.locator.onChanged((event) => {
-            // XXX only do it if no earlier events are pending...
-            this.refresh(event).ignoreErrors();
-        });
+        this.locator.onChanged((event) => this.handleChange(event));
     }
 
     public dispose(): void {
@@ -158,21 +155,15 @@ export class CachingLocator implements ILocator {
         }
     }
 
-    private refresh(
-        event?: PythonEnvsChangedEvent,
-    ): Promise<void> {
-        if (!event) {
-            // Re-use the last req in the queue if possible.
-            const last = this.looper.getLastRequest();
-            if (last !== undefined) {
-                const [, promise] = last;
-                return promise;
-            }
-            // The queue is empty so add a new request.
+    private refresh(): Promise<void> {
+        // Re-use the last req in the queue if possible.
+        const last = this.looper.getLastRequest();
+        if (last !== undefined) {
+            const [, promise] = last;
+            return promise;
         }
-        const [, waitUntilDone] = this.looper.addRequest(
-            () => this.doRefresh(event),
-        );
+        // The queue is empty so add a new request.
+        const [, waitUntilDone] = this.looper.addRequest();
         return waitUntilDone;
     }
 
@@ -192,6 +183,15 @@ export class CachingLocator implements ILocator {
         this.cache.setAllEnvs(envs);
         await this.cache.flush();
         this.watcher.fire(event || {}); // Emit an "onCHanged" event.
+    }
+
+    private handleChange(event: PythonEnvsChangedEvent): void {
+        const req = this.looper.getNextRequest();
+        if (req === undefined) {
+            // There isn't already a pending request.
+            this.looper.addRequest(() => this.doRefresh(event));
+        }
+        // Otherwise let the pending request take care of it.
     }
 
     private async initialRefresh(): Promise<void> {
@@ -284,8 +284,11 @@ class BackgroundLooper {
 
     private readonly loopRunning = createDeferred<void>();
 
-    private waitUntilReady= createDeferred<void>();
+    private waitUntilReady = createDeferred<void>();
 
+    private running: RequestID | undefined;
+
+    // For now we don't worry about a max queue size.
     private readonly queue: RequestID[] = [];
 
     private readonly requests: Record<RequestID, [RunFunc, Promise<void>, NotifyFunc]> = {};
@@ -346,32 +349,48 @@ class BackgroundLooper {
     }
 
     public getLastRequest(): [RequestID, Promise<void>] | undefined {
-        if (this.lastID === undefined) {
+        let reqID: RequestID;
+        if (this.queue.length > 0) {
+            reqID = this.queue[this.queue.length - 1];
+        } else if (this.running !== undefined) {
+            reqID = this.running;
+        } else {
             return undefined;
         }
-        const req = this.requests[this.lastID];
-        if (req === undefined) {
+        // The req cannot be undefined since every queued ID has a request.
+        // eslint-disable-next-line comma-dangle,comma-spacing
+        const [, promise,] = this.requests[reqID];
+        if (reqID === undefined) {
             // The queue must be empty.
             return undefined;
         }
+        return [reqID, promise];
+    }
+
+    public getNextRequest(): [RequestID, Promise<void>] | undefined {
+        if (this.queue.length === 0) {
+            return undefined;
+        }
+        const reqID = this.queue[0];
+        // The req cannot be undefined since every queued ID has a request.
         // eslint-disable-next-line comma-dangle,comma-spacing
-        const [, promise,] = req;
-        return [this.lastID, promise];
+        const [, promise,] = this.requests[reqID]!;
+        return [reqID, promise];
     }
 
     public addRequest(run?: RunFunc): [RequestID, Promise<void>] {
-        const reqid = this.getNextID();
+        const reqID = this.getNextID();
         // This is the only method that adds requests to the queue
         // and `getNextID()` keeps us from having collisions here.
         // So we are guaranteed that there are no matching requests
         // in the queue.
         const running = createDeferred<void>();
-        this.requests[reqid] = [
+        this.requests[reqID] = [
             run !== undefined ? run : this.opts.runDefault,
             running.promise,
             () => running.resolve(),
         ];
-        this.queue.push(reqid);
+        this.queue.push(reqID);
         if (this.queue.length === 1) {
             // `waitUntilReady` will get replaced with a new deferred
             // in the loop once the existing one gets used.
@@ -379,7 +398,7 @@ class BackgroundLooper {
             // again.
             this.waitUntilReady.resolve();
         }
-        return [reqid, running.promise];
+        return [reqID, running.promise];
     }
 
     private async runLoop(): Promise<void> {
@@ -420,21 +439,27 @@ class BackgroundLooper {
     }
 
     private async flush(): Promise<void> {
+        if (this.running !== undefined) {
+            // We must be flushing the queue already.
+            return;
+        }
         // Run every request in the queue.
         while (this.queue.length > 0) {
-            const reqid = this.queue[0];
+            const reqID = this.queue[0];
+            this.running = reqID;
             // We pop the request off the queue early because ....?
             this.queue.shift();
-            const [run, , notify] = this.requests[reqid];
+            const [run, , notify] = this.requests[reqID];
 
             // eslint-disable-next-line no-await-in-loop
             await this.runRequest(run);
 
             // We leave the request until right before `notify()`
             // for the sake of any calls to `getLastRequest()`.
-            delete this.requests[reqid];
+            delete this.requests[reqID];
             notify();
         }
+        this.running = undefined;
     }
 
     private async runRequest(run: RunFunc): Promise<void> {
