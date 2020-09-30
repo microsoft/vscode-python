@@ -915,19 +915,18 @@ df.head()`;
    "metadata": {},
    "outputs": [
     {
-     "data": {
-      "text/plain": [
-       "2"
-      ]
-     },
-     "execution_count": 2,
-     "metadata": {},
-     "output_type": "execute_result"
+     "output_type": "stream",
+     "text": [
+         "Hello World 9!\\n"
+     ],
+     "name": "stdout"
     }
    ],
    "source": [
-    "b=2\\n",
-    "b"
+    "from IPython.display import clear_output\\n",
+    "for i in range(10):\\n",
+    "    clear_output()\\n",
+    "    print(\\"Hello World {0}!\\".format(i))\\n"
    ]
   },
   {
@@ -981,7 +980,13 @@ df.head()`;
  "nbformat_minor": 2
 }`;
                     addMockData(ioc, `a='<1>'\na`, `'<1>'`);
-                    addMockData(ioc, 'b=2\nb', 2);
+                    addContinuousMockData(
+                        ioc,
+                        'from IPython.display import clear_output\nfor i in range(10):\n    clear_output()\n    print("Hello World {0}!".format(i))\n',
+                        async () => {
+                            return { result: 'Hello World 9!\n', haveMore: false };
+                        }
+                    );
                     addMockData(ioc, 'c=3\nc', 3);
                     const dsfs = ioc.get<IDataScienceFileSystem>(IDataScienceFileSystem);
                     const tf = await dsfs.createTemporaryLocalFile('.ipynb');

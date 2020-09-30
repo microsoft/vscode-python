@@ -1259,7 +1259,7 @@ export class JupyterNotebookBase implements INotebook {
             reply.payload.forEach((o) => {
                 if (o.data && o.data.hasOwnProperty('text/plain')) {
                     // tslint:disable-next-line: no-any
-                    const str = concatMultilineString((o.data as any)['text/plain']);
+                    const str = concatMultilineString((o.data as any)['text/plain']); // NOSONAR
                     const data = trimFunc(str);
                     this.addToCellData(
                         cell,
@@ -1308,8 +1308,10 @@ export class JupyterNotebookBase implements INotebook {
                 ? data.outputs[data.outputs.length - 1]
                 : undefined;
         if (existing) {
-            // tslint:disable-next-line:restrict-plus-operands
-            const originalText = formatStreamText(concatMultilineString(existing.text + msg.content.text));
+            const originalText = formatStreamText(
+                // tslint:disable-next-line: no-any
+                `${concatMultilineString(existing.text as any)}${concatMultilineString(msg.content.text)}`
+            );
             originalTextLength = originalText.length;
             const newText = trimFunc(originalText);
             trimmedTextLength = newText.length;
@@ -1324,7 +1326,7 @@ export class JupyterNotebookBase implements INotebook {
                 text: [trimFunc(originalText)]
             };
             data.outputs = [...data.outputs, output];
-            trimmedTextLength = output.text.length;
+            trimmedTextLength = output.text[0].length;
             cell.data = data;
         }
 
@@ -1333,13 +1335,11 @@ export class JupyterNotebookBase implements INotebook {
         // the output is trimmed and what setting changes that.
         // * If data.metadata.tags is undefined, define it so the following
         //   code is can rely on it being defined.
-        if (data.metadata.tags === undefined) {
-            data.metadata.tags = [];
-        }
-
-        data.metadata.tags = data.metadata.tags.filter((t) => t !== 'outputPrepend');
-
         if (trimmedTextLength < originalTextLength) {
+            if (data.metadata.tags === undefined) {
+                data.metadata.tags = [];
+            }
+            data.metadata.tags = data.metadata.tags.filter((t) => t !== 'outputPrepend');
             data.metadata.tags.push('outputPrepend');
         }
     }
