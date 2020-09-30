@@ -36,14 +36,21 @@ export function initializeGlobals(context: IExtensionContext): [IServiceManager,
     return [serviceManager, serviceContainer];
 }
 
+export function initializeCommon(
+    _context: IExtensionContext,
+    serviceManager: IServiceManager,
+    _serviceContainer: IServiceContainer
+): void {
+    // Core registrations (non-feature specific).
+    commonRegisterTypes(serviceManager);
+
+    // We will be pulling other code over from activateLegacy().
+}
+
 export function initializeComponents(
     _context: IExtensionContext,
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer
 ) {
-    // Core registrations (non-feature specific).
-    commonRegisterTypes(serviceManager);
-
     activatePythonEnvironments(serviceManager, serviceContainer);
-    // We will be pulling code over from activateLegacy().
 }
