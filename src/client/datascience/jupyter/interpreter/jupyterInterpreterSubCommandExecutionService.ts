@@ -77,18 +77,16 @@ export class JupyterInterpreterSubCommandExecutionService
         }
         return this.jupyterDependencyService.areDependenciesInstalled(interpreter, token);
     }
-    //public async isExportSupported(token?: CancellationToken): Promise<boolean> {
     public async isExportSupported(token?: CancellationToken): Promise<SemVer | undefined> {
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {
             return;
         }
 
+        // If nbconvert is there check and return the version
         if (await this.jupyterDependencyService.isExportSupported(interpreter, token)) {
             return this.jupyterDependencyService.getNbConvertVersion(interpreter, token);
         }
-
-        // return this.jupyterDependencyService.isExportSupported(interpreter, token);
     }
     public async getReasonForJupyterNotebookNotBeingSupported(token?: CancellationToken): Promise<string> {
         let interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);

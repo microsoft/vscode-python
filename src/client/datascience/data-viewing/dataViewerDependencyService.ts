@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { parse, SemVer } from 'semver';
+import { SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';

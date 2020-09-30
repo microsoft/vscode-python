@@ -85,7 +85,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
         return false;
     }
     public async isImportSupported(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
-        //return this.checkSupported(LiveShareCommands.isImportSupported, cancelToken);
         const service = await this.waitForService();
 
         // Make a remote call on the proxy
@@ -96,8 +95,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
                 return result as SemVer;
             }
         }
-
-        return;
     }
     public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);
@@ -166,16 +163,4 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
     public async getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
         return this.serverCache.get(options);
     }
-
-    //private async checkSupported(command: string, cancelToken?: CancellationToken): Promise<boolean> {
-    //const service = await this.waitForService();
-
-    //// Make a remote call on the proxy
-    //if (service) {
-    //const result = await service.request(command, [], cancelToken);
-    //return result as boolean;
-    //}
-
-    //return false;
-    //}
 }
