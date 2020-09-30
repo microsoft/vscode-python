@@ -129,7 +129,7 @@ function resolveEnvCollision(oldEnv: PythonEnvInfo, newEnv: PythonEnvInfo): Pyth
 function sortEnvInfoByPriority(...envs: PythonEnvInfo[]): PythonEnvInfo[] {
     // tslint:disable-next-line: no-suspicious-comment
     // TODO: When we consolidate the PythonEnvKind and EnvironmentType we should have
-    // one location where we define priority and
+    // one location where we define priority.
     const envKindByPriority: PythonEnvKind[] = getPrioritizedEnvironmentKind();
     return envs.sort(
         (a: PythonEnvInfo, b: PythonEnvInfo) => envKindByPriority.indexOf(a.kind) - envKindByPriority.indexOf(b.kind),
