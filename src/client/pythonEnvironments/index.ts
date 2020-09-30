@@ -3,6 +3,7 @@
 
 import * as vscode from 'vscode';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
+import { PythonEnvInfoCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from './base/locator';
 import { PythonEnvsChangedEvent } from './base/watcher';
@@ -50,11 +51,15 @@ export class PythonEnvironments implements ILocator {
 export function createAPI(): [PythonEnvironments, () => void] {
     const [locators, activateLocators] = initLocators();
 
+    // Update this to pass in an actual function that checks for env info completeness.
+    const envsCache = new PythonEnvInfoCache(() => true);
+
     return [
         new PythonEnvironments(locators),
         () => {
             activateLocators();
             // Any other activation needed for the API will go here later.
+            envsCache.initialize();
         },
     ];
 }
