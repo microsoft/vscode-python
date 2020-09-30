@@ -9,6 +9,7 @@ import os.path
 import subprocess
 import sys
 import unittest
+import pytest
 
 from ...__main__ import TESTING_TOOLS_ROOT
 from testing_tools.adapter.util import fix_path, PATH_SEP
