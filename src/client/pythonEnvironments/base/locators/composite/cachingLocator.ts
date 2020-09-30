@@ -6,7 +6,7 @@
 
 import { Event } from 'vscode';
 import '../../../../common/extensions';
-import { createDeferred } from '../../../../common/utils/async';
+import { createDeferred, sleep } from '../../../../common/utils/async';
 import { logWarning } from '../../../../logging';
 import { IEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
@@ -168,7 +168,37 @@ type RequestID = number;
 type RunFunc = () => Promise<void>;
 type NotifyFunc = () => void;
 
+type RetryOptions = {
+    maxRetries: number;
+    intervalms: number;
+};
+
+// Set defaults and otherwise adjust values.
+function normalizeRetryOptions(
+    opts: Partial<RetryOptions> | undefined,
+    defaults: RetryOptions = { maxRetries: 3, intervalms: 100 },
+): RetryOptions | undefined {
+    if (opts === undefined) {
+        return undefined;
+    }
+    const normalized = { ...opts };
+    if (normalized.maxRetries === undefined) {
+        normalized.maxRetries = defaults.maxRetries;
+    } else if (normalized.maxRetries < 0) {
+        // This is effectively infinity.
+        normalized.maxRetries = Number.MAX_SAFE_INTEGER;
+    }
+    if (normalized.intervalms === undefined) {
+        normalized.intervalms = defaults.intervalms;
+    }
+    return normalized as RetryOptions;
+}
+
 class BackgroundLooper {
+    private readonly opts: {
+        retry?: RetryOptions;
+    };
+
     private started = false;
 
     private stopped = false;
@@ -184,6 +214,16 @@ class BackgroundLooper {
     private readonly requests: Record<RequestID, [RunFunc, Promise<void>, NotifyFunc]> = {};
 
     private lastID: number | undefined;
+
+    constructor(
+        opts: {
+            retry?: Partial<RetryOptions>;
+        } = {},
+    ) {
+        this.opts = {
+            retry: normalizeRetryOptions(opts.retry),
+        };
+    }
 
     public start(): void {
         if (this.stopped) {
@@ -221,6 +261,7 @@ class BackgroundLooper {
         const changed = opts.changed === undefined ? true : opts.changed;
         const lastID = this.lastID === undefined ? -1 : this.lastID;
         let id = lastID + 1;
+        // XXX `this.queue.length` may not be stable enough...
         if (!changed && this.lastID !== undefined && this.queue.length > 0) {
             id = lastID;
         }
@@ -260,12 +301,8 @@ class BackgroundLooper {
             while (this.queue.length > 0) {
                 const id = this.queue[0];
                 this.queue.shift();
-                const [run, , notify] = this.requests[id];
                 // eslint-disable-next-line no-await-in-loop
-                await run();
-                // XXX retries?
-                delete this.requests[id];
-                notify();
+                await this.runRequest(id);
             }
             // eslint-disable-next-line no-await-in-loop
             await Promise.race([
@@ -274,5 +311,34 @@ class BackgroundLooper {
             ]);
         }
         this.loopRunning.resolve();
+    }
+
+    private async runRequest(id: RequestID): Promise<void> {
+        const [run, , notify] = this.requests[id];
+
+        let retriesLeft = this.opts.retry !== undefined
+            ? this.opts.retry.maxRetries
+            : 0;
+        let retrying = false;
+        do {
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                await run();
+            } catch (err) {
+                if (retriesLeft < 1) {
+                    throw err; // re-trhow
+                }
+                retriesLeft -= 1;
+                logWarning(`failed while handling request (${err})`);
+                logWarning(`retrying (${retriesLeft} attempts left)`);
+                // We cannot get here if "opts.retry" is not defined.
+                // eslint-disable-next-line no-await-in-loop
+                await sleep(this.opts.retry!.intervalms);
+                retrying = true;
+            }
+        } while (!retrying);
+
+        delete this.requests[id];
+        notify();
     }
 }
