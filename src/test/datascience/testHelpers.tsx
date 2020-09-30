@@ -7,7 +7,6 @@ import { min } from 'lodash';
 import * as path from 'path';
 import * as React from 'react';
 import { Provider } from 'react-redux';
-import { isString } from 'util';
 import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
@@ -273,7 +272,7 @@ export function verifyHtmlOnCell(
         output = targetCell!.find('div.markdown-cell-output');
     }
     const outputHtml = output.length > 0 ? output.html() : undefined;
-    if (html && isString(html)) {
+    if (html && typeof html === 'string') {
         // Extract only the first 100 chars from the input string
         const sliced = html.substr(0, min([html.length, 100]));
         assert.ok(output.length > 0, 'No output cell found');

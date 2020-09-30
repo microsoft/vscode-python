@@ -6,8 +6,6 @@ import { assert } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { injectable } from 'inversify';
-// tslint:disable-next-line: no-require-imports
-import escape = require('lodash/escape');
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
@@ -1031,7 +1029,7 @@ a`,
                     mimeType: 'text/plain',
                     cellType: 'code',
                     result: `<a href=f>`,
-                    verifyValue: (d) => assert.ok(d.includes(escape(`<a href=f>`)), 'XML not escaped')
+                    verifyValue: (d) => assert.ok(d.includes(`<a href=f>`), 'Should not escape at the notebook level')
                 },
                 {
                     markdownRegEx: undefined,
@@ -1043,7 +1041,7 @@ df.head()`,
                     cellType: 'error',
                     // tslint:disable-next-line:quotemark
                     verifyValue: (d) =>
-                        assert.ok((d as string).includes(escape("has no attribute 'read'")), 'Unexpected error result')
+                        assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
                 },
                 {
                     markdownRegEx: undefined,
