@@ -8,6 +8,7 @@
 import { Container } from 'inversify';
 import { Disposable, Memento } from 'vscode';
 
+import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from './common/types';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
@@ -40,6 +41,9 @@ export function initializeComponents(
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer
 ) {
+    // Core registrations (non-feature specific).
+    commonRegisterTypes(serviceManager);
+
     activatePythonEnvironments(serviceManager, serviceContainer);
     // We will be pulling code over from activateLegacy().
 }
