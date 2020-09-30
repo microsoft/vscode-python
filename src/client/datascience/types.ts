@@ -994,11 +994,10 @@ export interface IJupyterSubCommandExecutionService {
      */
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     /**
-     * Checks whether exporting of ipynb is supported.
      * If exporting is supported return the version of nbconvert available
      * otherwise undefined.
      */
-    isExportSupported(cancelToken?: CancellationToken): Promise<SemVer | undefined>;
+    getExportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined>;
     /**
      * Error message indicating why jupyter notebook isn't supported.
      *

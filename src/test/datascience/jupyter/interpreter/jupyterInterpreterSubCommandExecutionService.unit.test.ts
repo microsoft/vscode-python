@@ -101,7 +101,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             assert.isFalse(isSupported);
         });
         test('Export is not supported', async () => {
-            const isSupported = await jupyterInterpreterExecutionService.isExportSupported(undefined);
+            const isSupported = await jupyterInterpreterExecutionService.getExportPackageVersion(undefined);
             assert.isUndefined(isSupported);
         });
         test('Jupyter cannot be started because no interpreter has been selected', async () => {

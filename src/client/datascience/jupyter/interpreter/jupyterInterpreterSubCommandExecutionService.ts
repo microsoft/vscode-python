@@ -77,7 +77,7 @@ export class JupyterInterpreterSubCommandExecutionService
         }
         return this.jupyterDependencyService.areDependenciesInstalled(interpreter, token);
     }
-    public async isExportSupported(token?: CancellationToken): Promise<SemVer | undefined> {
+    public async getExportPackageVersion(token?: CancellationToken): Promise<SemVer | undefined> {
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {
             return;
