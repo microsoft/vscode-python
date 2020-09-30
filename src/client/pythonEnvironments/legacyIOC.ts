@@ -3,8 +3,6 @@
 
 import { injectable } from 'inversify';
 import * as vscode from 'vscode';
-import { PersistentStateFactory } from '../common/persistentState';
-import { IPersistentStateFactory } from '../common/types';
 import { getVersionString, parseVersion } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -369,8 +367,5 @@ export function registerForIOC(
     serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
 
     serviceManager.addSingletonInstance<IEnvironmentInfoService>(IEnvironmentInfoService, new EnvironmentInfoService());
-
-    serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
-
     initializeExternalDependencies(serviceContainer);
 }
