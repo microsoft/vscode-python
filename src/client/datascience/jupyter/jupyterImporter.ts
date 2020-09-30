@@ -40,8 +40,8 @@ export class JupyterImporter implements INotebookImporter {
 {% endblock markdowncell %}`;
     private readonly nbconvert5Null = 'null.tpl';
     private readonly nbconvert6Null = 'base/null.j2';
-    private template5Promise: Promise<string | undefined>;
-    private template6Promise: Promise<string | undefined>;
+    private template5Promise?: Promise<string | undefined>;
+    private template6Promise?: Promise<string | undefined>;
 
     constructor(
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
@@ -52,19 +52,9 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IJupyterInterpreterDependencyManager)
         private readonly dependencyManager: IJupyterInterpreterDependencyManager
-    ) {
-        //this.template5Promise = this.createTemplateFile(this.nbconvert5TemplateFormat);
-        //this.template6Promise = this.createTemplateFile(this.nbconvert6TemplateFormat);
-
-        // Create a template file for both nbconvert 5 and 6 in case user updates or changes python interpreter
-        this.template5Promise = this.createTemplateFile(false);
-        this.template6Promise = this.createTemplateFile(true);
-    }
+    ) {}
 
     public async importFromFile(sourceFile: Uri): Promise<string> {
-        const template5 = await this.template5Promise;
-        const template6 = await this.template6Promise;
-
         // If the user has requested it, add a cd command to the imported file so that relative paths still work
         const settings = this.configuration.getSettings();
         let directoryChange: string | undefined;
@@ -81,10 +71,23 @@ export class JupyterImporter implements INotebookImporter {
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (nbConvertVersion) {
             // nbconvert 5 and 6 use a different base template file
-            let fileOutput: string = await this.jupyterExecution.importNotebook(
-                sourceFile,
-                nbConvertVersion.major >= 6 ? template6 : template5
-            );
+            // Create and select the correct one
+            let template: string | undefined;
+            if (nbConvertVersion.major >= 6) {
+                if (!this.template6Promise) {
+                    this.template6Promise = this.createTemplateFile(true);
+                }
+
+                template = await this.template6Promise;
+            } else {
+                if (!this.template5Promise) {
+                    this.template5Promise = this.createTemplateFile(false);
+                }
+
+                template = await this.template5Promise;
+            }
+
+            let fileOutput: string = await this.jupyterExecution.importNotebook(sourceFile, template);
             if (fileOutput.includes('get_ipython()')) {
                 fileOutput = this.addIPythonImport(fileOutput);
             }

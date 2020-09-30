@@ -626,7 +626,7 @@ suite('DataScience notebook tests', () => {
                 }
             });
 
-            runTest('IANHU Export/Import', async () => {
+            runTest('Export/Import', async () => {
                 // Get a bunch of test cells (use our test cells from the react controls)
                 const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
                 const testState = generateTestState(testFolderPath);
