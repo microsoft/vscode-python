@@ -32,13 +32,21 @@ export class CachingLocator implements ILocator {
 
     private initialized = false;
 
-    private readonly done = createDeferred<void>();
+    private looper: BackgroundLooper;
+
+    private requests: Record<RequestID, PythonEnvsChangedEvent | undefined> = {};
 
     constructor(
         private readonly cache: IEnvsCache,
         private readonly locator: ILocator,
     ) {
         this.onChanged = this.watcher.onChanged;
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        this.looper = new BackgroundLooper(async (id) => {
+            const event = this.requests[id];
+            await this.doRefresh(event);
+            delete this.requests[id];
+        });
     }
 
     /**
@@ -53,17 +61,18 @@ export class CachingLocator implements ILocator {
         if (this.initialized) {
             return;
         }
-        this.initialized = true;
 
         await this.cache.initialize();
+        this.looper.start();
         await this.initialRefresh();
         this.locator.onChanged((event) => {
-            this.refresh({ event }).ignoreErrors();
+            this.refresh(event).ignoreErrors();
         });
     }
 
     public async dispose(): Promise<void> {
-        this.done.resolve();
+        this.looper.stop();
+        await this.looper.wait();
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
@@ -118,25 +127,31 @@ export class CachingLocator implements ILocator {
     }
 
     private async refresh(
-        opts: {
-            event?: PythonEnvsChangedEvent;
-        } = {},
+        event?: PythonEnvsChangedEvent,
+    ): Promise<void> {
+        const id = this.looper.getID({ changed: !!event });
+        if (this.requests[id] === undefined) {
+            this.requests[id] = event;
+        }
+        return this.looper.addRequest(id);
+    }
+
+    private async doRefresh(
+        event: PythonEnvsChangedEvent | undefined,
     ): Promise<void> {
         const iterator = this.locator.iterEnvs();
         const envs = await getEnvs(iterator);
-        await this.update(envs, opts);
+        await this.update(envs, event);
     }
 
     private async update(
         envs: PythonEnvInfo[],
-        opts: {
-            event?: PythonEnvsChangedEvent;
-        } = {},
+        event?: PythonEnvsChangedEvent,
     ): Promise<void> {
         // If necessary, we could skip if there are no changes.
         this.cache.setAllEnvs(envs);
         await this.cache.flush();
-        this.watcher.fire(opts.event || {}); // Emit an "onCHanged" event.
+        this.watcher.fire(event || {}); // Emit an "onCHanged" event.
     }
 
     private async initialRefresh(): Promise<void> {
@@ -166,7 +181,7 @@ export class CachingLocator implements ILocator {
 type RequestID = number;
 type NotifyFunc = () => void;
 
-export class BackgroundLooper {
+class BackgroundLooper {
     private started = false;
 
     private stopped = false;
