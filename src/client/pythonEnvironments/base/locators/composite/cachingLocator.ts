@@ -6,7 +6,7 @@
 
 import { Event } from 'vscode';
 import '../../../../common/extensions';
-import { createDeferred, sleep } from '../../../../common/utils/async';
+import { createDeferred } from '../../../../common/utils/async';
 import { logWarning } from '../../../../logging';
 import { IEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
@@ -20,36 +20,11 @@ import { getEnvs, getQueryFilter } from '../../locatorUtils';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { pickBestEnv } from './reducingLocator';
 
-type CachingLocatorOptions = {
-    refreshMinutes: number,
-    refreshRetryMinutes: number,
-};
-
-// Set defaults and otherwise adjust values.
-function normalizeCachingLocatorOptions(
-    opts: Partial<CachingLocatorOptions>,
-    defaults: CachingLocatorOptions = {
-        refreshMinutes: 24 * 60, // 1 day
-        refreshRetryMinutes: 10,
-    },
-): CachingLocatorOptions {
-    const normalized = { ...opts };
-    if (normalized.refreshMinutes === undefined) {
-        normalized.refreshMinutes = defaults.refreshMinutes;
-    }
-    if (normalized.refreshRetryMinutes === undefined) {
-        normalized.refreshRetryMinutes = defaults.refreshRetryMinutes;
-    }
-    return normalized as CachingLocatorOptions;
-}
-
 /**
  * A locator that stores the known environments in the given cache.
  */
 export class CachingLocator implements ILocator {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
-
-    private readonly opts: CachingLocatorOptions;
 
     private readonly watcher = new PythonEnvsWatcher();
 
@@ -62,22 +37,11 @@ export class CachingLocator implements ILocator {
     constructor(
         private readonly cache: IEnvsCache,
         private readonly locator: ILocator,
-        opts: {
-            refreshMinutes?: number,
-            refreshRetryMinutes?: number,
-        } = {},
     ) {
         this.onChanged = this.watcher.onChanged;
-        this.opts = normalizeCachingLocatorOptions(opts);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.looper = new BackgroundLooper({
             runDefault: () => this.refresh(),
-            retry: {
-                intervalms: this.opts.refreshRetryMinutes * 60 * 1000,
-            },
-            periodic: {
-                intervalms: this.opts.refreshMinutes * 60 * 1000,
-            },
         });
     }
 
@@ -265,63 +229,6 @@ type RequestID = number;
 type RunFunc = () => Promise<void>;
 type NotifyFunc = () => void;
 
-type RetryOptions = {
-    maxRetries: number;
-    intervalms: number;
-};
-
-// Set defaults and otherwise adjust values.
-function normalizeRetryOptions(
-    opts: Partial<RetryOptions> | undefined,
-    defaults: RetryOptions = {
-        maxRetries: 3,
-        intervalms: 100,
-    },
-): RetryOptions | undefined {
-    if (opts === undefined) {
-        return undefined;
-    }
-    const normalized = { ...opts };
-    if (normalized.maxRetries === undefined) {
-        normalized.maxRetries = defaults.maxRetries;
-    } else if (normalized.maxRetries < 0) {
-        // This is effectively infinity.
-        normalized.maxRetries = Number.MAX_SAFE_INTEGER;
-    }
-    if (normalized.intervalms === undefined) {
-        normalized.intervalms = defaults.intervalms;
-    }
-    return normalized as RetryOptions;
-}
-
-type PeriodicOptions = {
-    intervalms: number;
-    initialTimestamp: number;
-};
-
-function normalizePeriodicOptions(
-    opts: Partial<PeriodicOptions> | undefined,
-    defaults: PeriodicOptions = {
-        intervalms: -1,
-        initialTimestamp: -1,
-    },
-): PeriodicOptions | undefined {
-    if (opts === undefined) {
-        return undefined;
-    }
-    const normalized = { ...opts };
-    if (normalized.intervalms === undefined) {
-        // "never run"
-        normalized.intervalms = defaults.intervalms;
-    }
-    if (normalized.initialTimestamp === undefined && normalized.intervalms > -1) {
-        normalized.initialTimestamp = Date.now() + normalized.intervalms;
-    } else {
-        normalized.initialTimestamp = defaults.initialTimestamp;
-    }
-    return normalized as PeriodicOptions;
-}
-
 /**
  * This helps avoid running duplicate expensive operations.
  *
@@ -331,8 +238,6 @@ function normalizePeriodicOptions(
 class BackgroundLooper {
     private readonly opts: {
         runDefault: RunFunc;
-        retry?: RetryOptions;
-        periodic?: PeriodicOptions;
     };
 
     private started = false;
@@ -354,25 +259,16 @@ class BackgroundLooper {
 
     private lastID: number | undefined;
 
-    private nextPeriod = -1;
-
     constructor(
         opts: {
             runDefault?: RunFunc;
-            retry?: Partial<RetryOptions>;
-            periodic?: Partial<PeriodicOptions>;
         } = {},
     ) {
         this.opts = {
             runDefault: opts.runDefault !== undefined
                 ? opts.runDefault
                 : async () => { throw Error('no default operation provided'); },
-            retry: normalizeRetryOptions(opts.retry),
-            periodic: normalizePeriodicOptions(opts.periodic),
         };
-        if (this.opts.periodic !== undefined) {
-            this.nextPeriod = this.opts.periodic.initialTimestamp;
-        }
     }
 
     /**
@@ -506,12 +402,6 @@ class BackgroundLooper {
                 this.done.promise.then(() => 0),
                 this.waitUntilReady.promise.then(() => 1),
             ];
-            if (this.opts.periodic !== undefined && this.nextPeriod > -1) {
-                const msLeft = Math.max(0, this.nextPeriod - Date.now());
-                promises.push(
-                    sleep(msLeft).then(() => 2),
-                );
-            }
             return Promise.race(promises);
         };
 
@@ -521,12 +411,6 @@ class BackgroundLooper {
                 this.waitUntilReady = createDeferred<void>();
                 // eslint-disable-next-line no-await-in-loop
                 await this.flush();
-            } else if (winner === 2) {
-                // We reset the period before queueing to avoid any races.
-                this.nextPeriod = Date.now() + this.opts.periodic!.intervalms;
-                // Rather than running the request directly, we add
-                // it to the queue.  This avoids races.
-                this.addRequest(this.opts.runDefault);
             } else {
                 // This should not be reachable.
                 throw Error(`unsupported winner ${winner}`);
@@ -558,7 +442,7 @@ class BackgroundLooper {
             const [run, , notify] = this.requests[reqID];
 
             // eslint-disable-next-line no-await-in-loop
-            await this.runRequest(run);
+            await run();
 
             // We leave the request until right before `notify()`
             // for the sake of any calls to `getLastRequest()`.
@@ -566,36 +450,6 @@ class BackgroundLooper {
             notify();
         }
         this.running = undefined;
-    }
-
-    /**
-     * Run a single request.
-     */
-    private async runRequest(run: RunFunc): Promise<void> {
-        if (this.opts.retry === undefined) {
-            // eslint-disable-next-line no-await-in-loop
-            await run();
-            return;
-        }
-        let retriesLeft = this.opts.retry.maxRetries;
-        const retryIntervalms = this.opts.retry.intervalms;
-        let retrying = false;
-        do {
-            try {
-                // eslint-disable-next-line no-await-in-loop
-                await run();
-            } catch (err) {
-                if (retriesLeft < 1) {
-                    throw err; // re-trhow
-                }
-                retriesLeft -= 1;
-                logWarning(`failed while handling request (${err})`);
-                logWarning(`retrying (${retriesLeft} attempts left)`);
-                // eslint-disable-next-line no-await-in-loop
-                await sleep(retryIntervalms);
-                retrying = true;
-            }
-        } while (!retrying);
     }
 
     /**
