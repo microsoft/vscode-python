@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Uri } from 'vscode';
 
@@ -123,9 +124,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     @reportAction(ReportableAction.CheckingIfImportIsSupported)
-    public async isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
+    public async getImportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
         // See if we can find the command nbconvert
-        return this.jupyterInterpreterService.isExportSupported(cancelToken);
+        return this.jupyterInterpreterService.getExportPackageVersion(cancelToken);
     }
 
     public isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {

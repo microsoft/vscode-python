@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
@@ -14,6 +15,7 @@ import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
+import { parseSemVer } from '../../common';
 import { HelpLinks, JupyterCommands, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
@@ -239,6 +241,23 @@ export class JupyterInterpreterDependencyService {
             this.nbconvertInstalledInInterpreter.add(interpreter.path);
         }
         return installed;
+    }
+
+    public async getNbConvertVersion(
+        interpreter: PythonEnvironment,
+        _token?: CancellationToken
+    ): Promise<SemVer | undefined> {
+        const command = this.commandFactory.createInterpreterCommand(
+            JupyterCommands.ConvertCommand,
+            'jupyter',
+            ['-m', 'jupyter', 'nbconvert'],
+            interpreter,
+            false
+        );
+
+        const result = await command.exec(['--version'], { throwOnStdErr: true });
+
+        return parseSemVer(result.stdout);
     }
 
     /**

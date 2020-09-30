@@ -122,7 +122,7 @@ export class HostJupyterExecution
                 // Register handlers for all of the supported remote calls
                 if (service) {
                     service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
-                    service.onRequest(LiveShareCommands.isImportSupported, this.onRemoteIsImportSupported);
+                    service.onRequest(LiveShareCommands.getImportPackageVersion, this.onRemoteGetImportPackageVersion);
                     service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
                     service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
                 }
@@ -153,9 +153,9 @@ export class HostJupyterExecution
         return this.isNotebookSupported(cancellation);
     };
 
-    private onRemoteIsImportSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
+    private onRemoteGetImportPackageVersion = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
-        return this.isImportSupported(cancellation);
+        return this.getImportPackageVersion(cancellation);
     };
 
     private onRemoteConnectToNotebookServer = async (
