@@ -32,21 +32,14 @@ export class CachingLocator implements ILocator {
 
     private initialized = false;
 
-    private looper: BackgroundLooper;
-
-    private requests: Record<RequestID, PythonEnvsChangedEvent | undefined> = {};
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    private looper = new BackgroundLooper();
 
     constructor(
         private readonly cache: IEnvsCache,
         private readonly locator: ILocator,
     ) {
         this.onChanged = this.watcher.onChanged;
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        this.looper = new BackgroundLooper(async (id) => {
-            const event = this.requests[id];
-            await this.doRefresh(event);
-            delete this.requests[id];
-        });
     }
 
     /**
@@ -70,9 +63,9 @@ export class CachingLocator implements ILocator {
         });
     }
 
-    public async dispose(): Promise<void> {
-        this.looper.stop();
-        await this.looper.wait();
+    public dispose(): void {
+        const waitUntilStopped = this.looper.stop();
+        waitUntilStopped.ignoreErrors();
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
@@ -130,18 +123,11 @@ export class CachingLocator implements ILocator {
         event?: PythonEnvsChangedEvent,
     ): Promise<void> {
         const id = this.looper.getID({ changed: !!event });
-        if (this.requests[id] === undefined) {
-            this.requests[id] = event;
-        }
-        return this.looper.addRequest(id);
-    }
-
-    private async doRefresh(
-        event: PythonEnvsChangedEvent | undefined,
-    ): Promise<void> {
-        const iterator = this.locator.iterEnvs();
-        const envs = await getEnvs(iterator);
-        await this.update(envs, event);
+        return this.looper.addRequest(id, async () => {
+            const iterator = this.locator.iterEnvs();
+            const envs = await getEnvs(iterator);
+            await this.update(envs, event);
+        });
     }
 
     private async update(
@@ -179,6 +165,7 @@ export class CachingLocator implements ILocator {
 }
 
 type RequestID = number;
+type RunFunc = () => Promise<void>;
 type NotifyFunc = () => void;
 
 class BackgroundLooper {
@@ -194,13 +181,9 @@ class BackgroundLooper {
 
     private readonly queue: RequestID[] = [];
 
-    private readonly requests: Record<RequestID, [Promise<void>, NotifyFunc]> = {};
+    private readonly requests: Record<RequestID, [RunFunc, Promise<void>, NotifyFunc]> = {};
 
     private lastID: number | undefined;
-
-    constructor(
-        private readonly run: (id: RequestID) => Promise<void>,
-    ) {}
 
     public start(): void {
         if (this.stopped) {
@@ -214,9 +197,9 @@ class BackgroundLooper {
         this.runLoop().ignoreErrors();
     }
 
-    public stop(): void {
+    public stop(): Promise<void> {
         if (this.stopped) {
-            return;
+            return this.loopRunning.promise;
         }
         if (!this.started) {
             throw Error('not started yet');
@@ -224,11 +207,14 @@ class BackgroundLooper {
         this.stopped = true;
 
         this.done.resolve();
-    }
 
-    public async wait(): Promise<void> {
-        // XXX Fail if not started yet?
-        await this.loopRunning;
+        // It is conceivable that a separate "waitUntilStopped"
+        // operation would be useful.  If it turned out to be desireable
+        // then at the point we could add such a method separately.
+        // It would do nothing more than `await this.loopRunning`.
+        // Currently there is no need for a separate method since
+        // returning the promise here is sufficient.
+        return this.loopRunning.promise;
     }
 
     public getID(opts: { changed?: boolean } = {}): RequestID {
@@ -242,34 +228,41 @@ class BackgroundLooper {
         return id;
     }
 
-    public addRequest(id: RequestID): Promise<void> {
+    public addRequest(
+        id: RequestID,
+        run: RunFunc,
+    ): Promise<void> {
         const req = this.requests[id];
         if (req !== undefined) {
             // eslint-disable-next-line comma-dangle,comma-spacing
-            const [promise,] = req;
+            const [, promise,] = req;
             return promise;
         }
 
         const running = createDeferred<void>();
-        this.requests[id] = [running.promise, () => running.resolve()];
+        this.requests[id] = [run, running.promise, () => running.resolve()];
         this.queue.push(id);
+        // `waitUntilReady` will get replaced with a new deferred in
+        // the loop once the existing one gets used.
         this.waitUntilReady.resolve();
         return running.promise;
     }
 
     private async runLoop(): Promise<void> {
-        await Promise.race([
-            this.waitUntilReady.promise,
-            this.done,
+        const winner = await Promise.race([
+            this.done.promise.then(() => 0),
+            this.waitUntilReady.promise.then(() => 1),
         ]);
-        this.waitUntilReady = createDeferred<void>();
+        if (winner === 1) {
+            this.waitUntilReady = createDeferred<void>();
+        }
         while (!this.done.completed) {
             while (this.queue.length > 0) {
                 const id = this.queue[0];
                 this.queue.shift();
-                const [, notify] = this.requests[id];
+                const [run, , notify] = this.requests[id];
                 // eslint-disable-next-line no-await-in-loop
-                await this.run(id);
+                await run();
                 // XXX retries?
                 delete this.requests[id];
                 notify();
