@@ -20,11 +20,36 @@ import { getEnvs, getQueryFilter } from '../../locatorUtils';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { pickBestEnv } from './reducingLocator';
 
+type CachingLocatorOptions = {
+    refreshMinutes: number,
+    refreshRetryMinutes: number,
+};
+
+// Set defaults and otherwise adjust values.
+function normalizeCachingLocatorOptions(
+    opts: Partial<CachingLocatorOptions>,
+    defaults: CachingLocatorOptions = {
+        refreshMinutes: 24 * 60, // 1 day
+        refreshRetryMinutes: 10,
+    },
+): CachingLocatorOptions {
+    const normalized = { ...opts };
+    if (normalized.refreshMinutes === undefined) {
+        normalized.refreshMinutes = defaults.refreshMinutes;
+    }
+    if (normalized.refreshRetryMinutes === undefined) {
+        normalized.refreshRetryMinutes = defaults.refreshRetryMinutes;
+    }
+    return normalized as CachingLocatorOptions;
+}
+
 /**
  * A locator that stores the known environments in the given cache.
  */
 export class CachingLocator implements ILocator {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
+
+    private readonly opts: CachingLocatorOptions;
 
     private readonly watcher = new PythonEnvsWatcher();
 
@@ -32,14 +57,29 @@ export class CachingLocator implements ILocator {
 
     private initialized = false;
 
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    private looper = new BackgroundLooper();
+    private looper: BackgroundLooper;
 
     constructor(
         private readonly cache: IEnvsCache,
         private readonly locator: ILocator,
+        opts: {
+            refreshMinutes?: number,
+            refreshRetryMinutes?: number,
+            checkStale?: boolean,
+        } = {},
     ) {
         this.onChanged = this.watcher.onChanged;
+        this.opts = normalizeCachingLocatorOptions(opts);
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        this.looper = new BackgroundLooper({
+            runDefault: () => this.doRefresh(),
+            retry: {
+                intervalms: this.opts.refreshRetryMinutes * 60 * 1000,
+            },
+            periodic: {
+                intervalms: this.opts.refreshMinutes * 60 * 1000,
+            },
+        });
     }
 
     /**
@@ -59,6 +99,7 @@ export class CachingLocator implements ILocator {
         this.looper.start();
         await this.initialRefresh();
         this.locator.onChanged((event) => {
+            // XXX only do it if no earlier events are pending...
             this.refresh(event).ignoreErrors();
         });
     }
@@ -132,13 +173,17 @@ export class CachingLocator implements ILocator {
             // The queue is empty so add a new request.
         }
         const [, waitUntilDone] = this.looper.addRequest(
-            async () => {
-                const iterator = this.locator.iterEnvs();
-                const envs = await getEnvs(iterator);
-                await this.update(envs, event);
-            },
+            () => this.doRefresh(event),
         );
         return waitUntilDone;
+    }
+
+    private async doRefresh(
+        event?: PythonEnvsChangedEvent,
+    ): Promise<void> {
+        const iterator = this.locator.iterEnvs();
+        const envs = await getEnvs(iterator);
+        await this.update(envs, event);
     }
 
     private async update(
@@ -187,7 +232,10 @@ type RetryOptions = {
 // Set defaults and otherwise adjust values.
 function normalizeRetryOptions(
     opts: Partial<RetryOptions> | undefined,
-    defaults: RetryOptions = { maxRetries: 3, intervalms: 100 },
+    defaults: RetryOptions = {
+        maxRetries: 3,
+        intervalms: 100,
+    },
 ): RetryOptions | undefined {
     if (opts === undefined) {
         return undefined;
@@ -205,9 +253,39 @@ function normalizeRetryOptions(
     return normalized as RetryOptions;
 }
 
+type PeriodicOptions = {
+    intervalms: number;
+    initialTimestamp: number;
+};
+
+function normalizePeriodicOptions(
+    opts: Partial<PeriodicOptions> | undefined,
+    defaults: PeriodicOptions = {
+        intervalms: -1,
+        initialTimestamp: -1,
+    },
+): PeriodicOptions | undefined {
+    if (opts === undefined) {
+        return undefined;
+    }
+    const normalized = { ...opts };
+    if (normalized.intervalms === undefined) {
+        // "never run"
+        normalized.intervalms = defaults.intervalms;
+    }
+    if (normalized.initialTimestamp === undefined && normalized.intervalms > -1) {
+        normalized.initialTimestamp = Date.now() + normalized.intervalms;
+    } else {
+        normalized.initialTimestamp = defaults.initialTimestamp;
+    }
+    return normalized as PeriodicOptions;
+}
+
 class BackgroundLooper {
     private readonly opts: {
+        runDefault: RunFunc;
         retry?: RetryOptions;
+        periodic?: PeriodicOptions;
     };
 
     private started = false;
@@ -226,14 +304,25 @@ class BackgroundLooper {
 
     private lastID: number | undefined;
 
+    private nextPeriod = -1;
+
     constructor(
         opts: {
+            runDefault?: RunFunc;
             retry?: Partial<RetryOptions>;
+            periodic?: Partial<PeriodicOptions>;
         } = {},
     ) {
         this.opts = {
+            runDefault: opts.runDefault !== undefined
+                ? opts.runDefault
+                : async () => { throw Error('no default operation provided'); },
             retry: normalizeRetryOptions(opts.retry),
+            periodic: normalizePeriodicOptions(opts.periodic),
         };
+        if (this.opts.periodic !== undefined) {
+            this.nextPeriod = this.opts.periodic.initialTimestamp;
+        }
     }
 
     public start(): void {
@@ -282,37 +371,59 @@ class BackgroundLooper {
         return [this.lastID, promise];
     }
 
-    public addRequest(run: RunFunc): [RequestID, Promise<void>] {
+    public addRequest(run?: RunFunc): [RequestID, Promise<void>] {
         const reqid = this.getNextID();
         // This is the only method that adds requests to the queue
         // and `getNextID()` keeps us from having collisions here.
         // So we are guaranteed that there are no matching requests
         // in the queue.
         const running = createDeferred<void>();
-        this.requests[reqid] = [run, running.promise, () => running.resolve()];
+        this.requests[reqid] = [
+            run !== undefined ? run : this.opts.runDefault,
+            running.promise,
+            () => running.resolve(),
+        ];
         this.queue.push(reqid);
-        // `waitUntilReady` will get replaced with a new deferred in
-        // the loop once the existing one gets used.
-        this.waitUntilReady.resolve();
+        if (this.queue.length === 1) {
+            // `waitUntilReady` will get replaced with a new deferred
+            // in the loop once the existing one gets used.
+            // We let the queue clear out before triggering the loop
+            // again.
+            this.waitUntilReady.resolve();
+        }
         return [reqid, running.promise];
     }
 
     private async runLoop(): Promise<void> {
-        const getWinner = () => Promise.race([
-            this.done.promise.then(() => 0),
-            this.waitUntilReady.promise.then(() => 1),
-        ]);
+        const getWinner = () => {
+            const promises = [
+                this.done.promise.then(() => 0),
+                this.waitUntilReady.promise.then(() => 1),
+            ];
+            if (this.opts.periodic !== undefined && this.nextPeriod > -1) {
+                const msLeft = Math.max(0, this.nextPeriod - Date.now());
+                promises.push(
+                    sleep(msLeft).then(() => 2),
+                );
+            }
+            return Promise.race(promises);
+        };
+
         let winner = await getWinner();
         while (!this.done.completed) {
             if (winner === 1) {
                 this.waitUntilReady = createDeferred<void>();
-            }
-
-            while (this.queue.length > 0) {
-                const id = this.queue[0];
-                this.queue.shift();
                 // eslint-disable-next-line no-await-in-loop
-                await this.runRequest(id);
+                await this.flush();
+            } else if (winner === 2) {
+                // We reset the period before queueing to avoid any races.
+                this.nextPeriod = Date.now() + this.opts.periodic!.intervalms;
+                // Rather than running the request directly, we add
+                // it to the queue.  This avoids races.
+                this.addRequest(this.opts.runDefault);
+            } else {
+                // This should not be reachable.
+                throw Error(`unsupported winner ${winner}`);
             }
             // eslint-disable-next-line no-await-in-loop
             winner = await getWinner();
@@ -320,12 +431,32 @@ class BackgroundLooper {
         this.loopRunning.resolve();
     }
 
-    private async runRequest(id: RequestID): Promise<void> {
-        const [run, , notify] = this.requests[id];
+    private async flush(): Promise<void> {
+        // Run every request in the queue.
+        while (this.queue.length > 0) {
+            const reqid = this.queue[0];
+            // We pop the request off the queue early because ....?
+            this.queue.shift();
+            const [run, , notify] = this.requests[reqid];
 
-        let retriesLeft = this.opts.retry !== undefined
-            ? this.opts.retry.maxRetries
-            : 0;
+            // eslint-disable-next-line no-await-in-loop
+            await this.runRequest(run);
+
+            // We leave the request until right before `notify()`
+            // for the sake of any calls to `getLastRequest()`.
+            delete this.requests[reqid];
+            notify();
+        }
+    }
+
+    private async runRequest(run: RunFunc): Promise<void> {
+        if (this.opts.retry === undefined) {
+            // eslint-disable-next-line no-await-in-loop
+            await run();
+            return;
+        }
+        let retriesLeft = this.opts.retry.maxRetries;
+        const retryIntervalms = this.opts.retry.intervalms;
         let retrying = false;
         do {
             try {
@@ -338,15 +469,11 @@ class BackgroundLooper {
                 retriesLeft -= 1;
                 logWarning(`failed while handling request (${err})`);
                 logWarning(`retrying (${retriesLeft} attempts left)`);
-                // We cannot get here if "opts.retry" is not defined.
                 // eslint-disable-next-line no-await-in-loop
-                await sleep(this.opts.retry!.intervalms);
+                await sleep(retryIntervalms);
                 retrying = true;
             }
         } while (!retrying);
-
-        delete this.requests[id];
-        notify();
     }
 
     private getNextID(): RequestID {
