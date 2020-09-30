@@ -283,7 +283,6 @@ export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     serverStarted: Event<INotebookServerOptions | undefined>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    //isImportSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken): Promise<SemVer | undefined>;
     isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
@@ -998,12 +997,7 @@ export interface IJupyterSubCommandExecutionService {
      * Checks whether exporting of ipynb is supported.
      * If exporting is supported return the version of nbconvert available
      * otherwise undefined.
-     *
-     * @param {CancellationToken} [cancelToken]
-     * @returns {Promise<boolean>}
-     * @memberof IJupyterSubCommandExecutionService
      */
-    //isExportSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isExportSupported(cancelToken?: CancellationToken): Promise<SemVer | undefined>;
     /**
      * Error message indicating why jupyter notebook isn't supported.

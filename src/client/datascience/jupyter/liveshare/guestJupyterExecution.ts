@@ -73,7 +73,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
     }
 
     public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        //return this.checkSupported(LiveShareCommands.isNotebookSupported, cancelToken);
         const service = await this.waitForService();
 
         // Make a remote call on the proxy
