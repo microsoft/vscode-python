@@ -40,7 +40,7 @@ export class JupyterImporter implements INotebookImporter {
 {% endblock markdowncell %}`;
     private readonly nbconvert6TemplateFormat =
         // tslint:disable-next-line:no-multiline-string
-        `{%- extends 'null.j2' -%}
+        `{%- extends 'base/null.j2' -%}
 {% block codecell %}
 {0}
 {{ super() }}

@@ -15,6 +15,7 @@ import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
+import { parseSemVer } from '../../common';
 import { HelpLinks, JupyterCommands, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
@@ -257,15 +258,16 @@ export class JupyterInterpreterDependencyService {
 
         const result = await command.exec(['--version'], { throwOnStdErr: true });
 
+        return parseSemVer(result.stdout);
         // IANHU: Shared code with dataViewerDependencyService.ts for Pandas
         // IANHU: Helper function and unit test?
-        const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(result.stdout);
-        if (versionMatch && versionMatch.length > 2) {
-            const major = parseInt(versionMatch[1], 10);
-            const minor = parseInt(versionMatch[2], 10);
-            const build = parseInt(versionMatch[3], 10);
-            return parse(`${major}.${minor}.${build}`, true) ?? undefined;
-        }
+        //const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(result.stdout);
+        //if (versionMatch && versionMatch.length > 2) {
+        //const major = parseInt(versionMatch[1], 10);
+        //const minor = parseInt(versionMatch[2], 10);
+        //const build = parseInt(versionMatch[3], 10);
+        //return parse(`${major}.${minor}.${build}`, true) ?? undefined;
+        //}
     }
 
     /**

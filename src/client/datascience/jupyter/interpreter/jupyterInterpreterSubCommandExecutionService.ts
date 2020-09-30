@@ -183,6 +183,7 @@ export class JupyterInterpreterSubCommandExecutionService
         const args = template
             ? [file.fsPath, '--to', 'python', '--stdout', '--template', template]
             : [file.fsPath, '--to', 'python', '--stdout'];
+
         // Ignore stderr, as nbconvert writes conversion result to stderr.
         // stdout contains the generated python code.
         return daemon
