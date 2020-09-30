@@ -186,7 +186,16 @@ export class JupyterInterpreterSubCommandExecutionService
         // stdout contains the generated python code.
         return daemon
             .execModule('jupyter', ['nbconvert'].concat(args), { throwOnStdErr: false, encoding: 'utf8', token })
-            .then((output) => output.stdout);
+            .then((output) => {
+                // We can't check stderr (as nbconvert puts diag output there) but we need to verify here that we actually
+                // converted something. If it's zero size then just raise an error
+                if (output.stdout === '') {
+                    traceError('nbconvert zero size output');
+                    throw new Error(output.stderr);
+                } else {
+                    return output.stdout;
+                }
+            });
     }
     public async openNotebook(notebookFile: string): Promise<void> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable();
