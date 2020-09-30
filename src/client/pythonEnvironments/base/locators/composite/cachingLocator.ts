@@ -119,15 +119,26 @@ export class CachingLocator implements ILocator {
         }
     }
 
-    private async refresh(
+    private refresh(
         event?: PythonEnvsChangedEvent,
     ): Promise<void> {
-        const id = this.looper.getID({ changed: !!event });
-        return this.looper.addRequest(id, async () => {
-            const iterator = this.locator.iterEnvs();
-            const envs = await getEnvs(iterator);
-            await this.update(envs, event);
-        });
+        if (!event) {
+            // Re-use the last req in the queue if possible.
+            const last = this.looper.getLastRequest();
+            if (last !== undefined) {
+                const [, promise] = last;
+                return promise;
+            }
+            // The queue is empty so add a new request.
+        }
+        const [, waitUntilDone] = this.looper.addRequest(
+            async () => {
+                const iterator = this.locator.iterEnvs();
+                const envs = await getEnvs(iterator);
+                await this.update(envs, event);
+            },
+        );
+        return waitUntilDone;
     }
 
     private async update(
@@ -257,36 +268,33 @@ class BackgroundLooper {
         return this.loopRunning.promise;
     }
 
-    public getID(opts: { changed?: boolean } = {}): RequestID {
-        const changed = opts.changed === undefined ? true : opts.changed;
-        const lastID = this.lastID === undefined ? -1 : this.lastID;
-        let id = lastID + 1;
-        // XXX `this.queue.length` may not be stable enough...
-        if (!changed && this.lastID !== undefined && this.queue.length > 0) {
-            id = lastID;
+    public getLastRequest(): [RequestID, Promise<void>] | undefined {
+        if (this.lastID === undefined) {
+            return undefined;
         }
-        this.lastID = id;
-        return id;
+        const req = this.requests[this.lastID];
+        if (req === undefined) {
+            // The queue must be empty.
+            return undefined;
+        }
+        // eslint-disable-next-line comma-dangle,comma-spacing
+        const [, promise,] = req;
+        return [this.lastID, promise];
     }
 
-    public addRequest(
-        id: RequestID,
-        run: RunFunc,
-    ): Promise<void> {
-        const req = this.requests[id];
-        if (req !== undefined) {
-            // eslint-disable-next-line comma-dangle,comma-spacing
-            const [, promise,] = req;
-            return promise;
-        }
-
+    public addRequest(run: RunFunc): [RequestID, Promise<void>] {
+        const reqid = this.getNextID();
+        // This is the only method that adds requests to the queue
+        // and `getNextID()` keeps us from having collisions here.
+        // So we are guaranteed that there are no matching requests
+        // in the queue.
         const running = createDeferred<void>();
-        this.requests[id] = [run, running.promise, () => running.resolve()];
-        this.queue.push(id);
+        this.requests[reqid] = [run, running.promise, () => running.resolve()];
+        this.queue.push(reqid);
         // `waitUntilReady` will get replaced with a new deferred in
         // the loop once the existing one gets used.
         this.waitUntilReady.resolve();
-        return running.promise;
+        return [reqid, running.promise];
     }
 
     private async runLoop(): Promise<void> {
@@ -340,5 +348,17 @@ class BackgroundLooper {
 
         delete this.requests[id];
         notify();
+    }
+
+    private getNextID(): RequestID {
+        // For nowe there is no way to queue up a request with
+        // an ID that did not originate here.  So we don't need
+        // to worry about collisions.
+        if (this.lastID === undefined) {
+            this.lastID = 1;
+        } else {
+            this.lastID += 1;
+        }
+        return this.lastID;
     }
 }
