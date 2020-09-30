@@ -38,8 +38,6 @@ import {
 import { IKernel } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
-// tslint:disable-next-line: no-require-imports
-import escape = require('lodash/escape');
 
 export class CellExecutionFactory {
     constructor(
@@ -48,7 +46,7 @@ export class CellExecutionFactory {
         private readonly editorProvider: INotebookEditorProvider,
         private readonly appShell: IApplicationShell,
         private readonly vscNotebook: IVSCodeNotebook
-    ) { }
+    ) {}
 
     public create(cell: NotebookCell) {
         // tslint:disable-next-line: no-use-before-declare
