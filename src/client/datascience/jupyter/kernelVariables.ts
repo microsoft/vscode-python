@@ -6,8 +6,6 @@ import { inject, injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
 
-// tslint:disable-next-line: no-require-imports
-import unescape = require('lodash/unescape');
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
@@ -248,7 +246,7 @@ export class KernelVariables implements IJupyterVariables {
 
     // Pull our text result out of the Jupyter cell
     private deserializeJupyterResult<T>(cells: ICell[]): T {
-        const text = unescape(this.extractJupyterResultText(cells));
+        const text = this.extractJupyterResultText(cells);
         return JSON.parse(text) as T;
     }
 
@@ -373,7 +371,7 @@ export class KernelVariables implements IJupyterVariables {
         // Now execute the query
         if (notebook && query) {
             const cells = await notebook.execute(query.query, Identifiers.EmptyFileName, 0, uuid(), token, true);
-            const text = unescape(this.extractJupyterResultText(cells));
+            const text = this.extractJupyterResultText(cells);
 
             // Apply the expression to it
             const matches = this.getAllMatches(query.parser, text);

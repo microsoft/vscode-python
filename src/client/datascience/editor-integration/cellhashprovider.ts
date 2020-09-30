@@ -29,7 +29,9 @@ import {
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
-const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)/g;
+// tslint:disable-next-line: no-require-imports no-var-requires
+const _escape = require('lodash/escape') as typeof import('lodash/escape'); // NOSONAR
+const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)(.*)/g;
 
 interface IRangedCellHash extends ICellHash {
     code: string;
@@ -133,7 +135,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
                 ...msg,
                 content: {
                     ...msg.content,
-                    traceback: this.modifyTraceback(msg as KernelMessage.IErrorMsg) // NOSONAR
+                    transient: this.modifyTraceback(msg as KernelMessage.IErrorMsg) // NOSONAR
                 }
             };
         }
@@ -423,14 +425,16 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
             // Now attempt to find a cell that matches these source lines
             const offset = this.findCellOffset(this.hashes.get(match[0]), sourceLines);
             if (offset !== undefined) {
-                return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num) => {
+                return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                     const n = parseInt(num, 10);
                     const newLine = offset + n - 1;
-                    return `${prefix}<a href='file://${match[0]}?line=${newLine}'>${newLine + 1}</a>`;
+                    return `${_escape(prefix)}<a href='file://${match[0]}?line=${newLine}'>${newLine + 1}</a>${_escape(
+                        suffix
+                    )}`;
                 });
             }
         }
-        return traceFrame;
+        return _escape(traceFrame);
     }
 }
 

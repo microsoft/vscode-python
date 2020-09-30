@@ -40,10 +40,6 @@ import { KernelConnectionMetadata } from './kernels/types';
 
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-// tslint:disable-next-line: no-require-imports
-import escape = require('lodash/escape');
-// tslint:disable-next-line: no-require-imports
-import unescape = require('lodash/unescape');
 import { concatMultilineString, formatStreamText } from '../../../datascience-ui/common';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -787,12 +783,12 @@ export class JupyterNotebookBase implements INotebook {
                 outputs.forEach((o) => {
                     if (o.output_type === 'stream') {
                         const stream = o as nbformat.IStream;
-                        result = result.concat(formatStreamText(unescape(concatMultilineString(stream.text, true))));
+                        result = result.concat(formatStreamText(concatMultilineString(stream.text, true)));
                     } else {
                         const data = o.data;
                         if (data && data.hasOwnProperty('text/plain')) {
                             // tslint:disable-next-line:no-any
-                            result = result.concat(unescape((data as any)['text/plain']));
+                            result = result.concat((data as any)['text/plain']);
                         }
                     }
                 });
@@ -1237,7 +1233,7 @@ export class JupyterNotebookBase implements INotebook {
     ) {
         // Check our length on text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
-            msg.content.data['text/plain'] = escape(trimFunc(msg.content.data['text/plain'] as string));
+            msg.content.data['text/plain'] = trimFunc(msg.content.data['text/plain'] as string);
         }
 
         this.addToCellData(
@@ -1266,7 +1262,7 @@ export class JupyterNotebookBase implements INotebook {
                 if (o.data && o.data.hasOwnProperty('text/plain')) {
                     // tslint:disable-next-line: no-any
                     const str = (o.data as any)['text/plain'].toString();
-                    const data = escape(trimFunc(str)) as string;
+                    const data = trimFunc(str) as string;
                     this.addToCellData(
                         cell,
                         {
@@ -1314,13 +1310,13 @@ export class JupyterNotebookBase implements INotebook {
                 : undefined;
         if (existing) {
             // tslint:disable-next-line:restrict-plus-operands
-            existing.text = existing.text + escape(msg.content.text);
+            existing.text = existing.text + msg.content.text;
             const originalText = formatStreamText(concatMultilineString(existing.text));
             originalTextLength = originalText.length;
             existing.text = trimFunc(originalText);
             trimmedTextLength = existing.text.length;
         } else {
-            const originalText = formatStreamText(concatMultilineString(escape(msg.content.text)));
+            const originalText = formatStreamText(concatMultilineString(msg.content.text));
             originalTextLength = originalText.length;
             // Create a new stream entry
             const output: nbformat.IStream = {
@@ -1350,11 +1346,6 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool, cell: ICell) {
-        // Escape text output
-        if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
-            msg.content.data['text/plain'] = escape(msg.content.data['text/plain'] as string);
-        }
-
         const output: nbformat.IDisplayData = {
             output_type: 'display_data',
             data: msg.content.data,
@@ -1402,10 +1393,14 @@ export class JupyterNotebookBase implements INotebook {
     private handleError(msg: KernelMessage.IErrorMsg, clearState: RefBool, cell: ICell) {
         const output: nbformat.IError = {
             output_type: 'error',
-            ename: escape(msg.content.ename),
-            evalue: escape(msg.content.evalue),
-            traceback: msg.content.traceback.map(escape)
+            ename: msg.content.ename,
+            evalue: msg.content.evalue,
+            traceback: msg.content.traceback
         };
+        if (msg.content.hasOwnProperty('transient')) {
+            // tslint:disable-next-line: no-any
+            output.transient = (msg.content as any).transient;
+        }
         this.addToCellData(cell, output, clearState);
         cell.state = CellState.error;
 
