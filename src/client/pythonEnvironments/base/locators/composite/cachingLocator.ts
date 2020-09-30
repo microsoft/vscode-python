@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable-next-line: no-single-line-block-comment
+/* eslint-disable max-classes-per-file */
+
 import { Event } from 'vscode';
 import '../../../../common/extensions';
 import { createDeferred } from '../../../../common/utils/async';
@@ -157,5 +160,111 @@ export class CachingLocator implements ILocator {
         // * if at least X minutes have elapsed
         // * if some "stale" check on any known env fails
         return false;
+    }
+}
+
+type RequestID = number;
+type NotifyFunc = () => void;
+
+export class BackgroundLooper {
+    private started = false;
+
+    private stopped = false;
+
+    private readonly done = createDeferred<void>();
+
+    private readonly loopRunning = createDeferred<void>();
+
+    private waitUntilReady= createDeferred<void>();
+
+    private readonly queue: RequestID[] = [];
+
+    private readonly requests: Record<RequestID, [Promise<void>, NotifyFunc]> = {};
+
+    private lastID: number | undefined;
+
+    constructor(
+        private readonly run: (id: RequestID) => Promise<void>,
+    ) {}
+
+    public start(): void {
+        if (this.stopped) {
+            throw Error('already stopped');
+        }
+        if (this.started) {
+            return;
+        }
+        this.started = true;
+
+        this.runLoop().ignoreErrors();
+    }
+
+    public stop(): void {
+        if (this.stopped) {
+            return;
+        }
+        if (!this.started) {
+            throw Error('not started yet');
+        }
+        this.stopped = true;
+
+        this.done.resolve();
+    }
+
+    public async wait(): Promise<void> {
+        // XXX Fail if not started yet?
+        await this.loopRunning;
+    }
+
+    public getID(opts: { changed?: boolean } = {}): RequestID {
+        const changed = opts.changed === undefined ? true : opts.changed;
+        const lastID = this.lastID === undefined ? -1 : this.lastID;
+        let id = lastID + 1;
+        if (!changed && this.lastID !== undefined && this.queue.length > 0) {
+            id = lastID;
+        }
+        this.lastID = id;
+        return id;
+    }
+
+    public addRequest(id: RequestID): Promise<void> {
+        const req = this.requests[id];
+        if (req !== undefined) {
+            // eslint-disable-next-line comma-dangle,comma-spacing
+            const [promise,] = req;
+            return promise;
+        }
+
+        const running = createDeferred<void>();
+        this.requests[id] = [running.promise, () => running.resolve()];
+        this.queue.push(id);
+        this.waitUntilReady.resolve();
+        return running.promise;
+    }
+
+    private async runLoop(): Promise<void> {
+        await Promise.race([
+            this.waitUntilReady.promise,
+            this.done,
+        ]);
+        this.waitUntilReady = createDeferred<void>();
+        while (!this.done.completed) {
+            while (this.queue.length > 0) {
+                const id = this.queue[0];
+                this.queue.shift();
+                const [, notify] = this.requests[id];
+                // eslint-disable-next-line no-await-in-loop
+                await this.run(id);
+                // XXX retries?
+                delete this.requests[id];
+                notify();
+            }
+            // eslint-disable-next-line no-await-in-loop
+            await Promise.race([
+                this.waitUntilReady,
+                this.done,
+            ]);
+        }
+        this.loopRunning.resolve();
     }
 }
