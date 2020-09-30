@@ -492,6 +492,13 @@ def test_failure():
     1. Verify the variables explorer window shows output not available while debugging
     1. When you get to the end of the cell, the debugger should stop
     1. Output from the cell should show up in the Interactive Window (sometimes you have to finish debugging the cell first)
+-   [ ] Verify installing ipykernel in a new environment
+    1. Create a brand new folder on your machine
+    1. Create a new venv in that folder via command line / terminal `python3 -m venv .newEnv`
+    1. Open that folder in VS Code and copy the manual test file there
+    1. Select the newly created venv by running Ctrl+Shift+P, typing 'Python: Select Interpreter' into the VS Code command palette, and selecting the new venv from the dropdown. If the new venv doesn't appear in the quickpick you may need to reload VS Code and reattempt this step.
+    1. Execute the manual test file, you should be prompted to install ipykernel in `.newEnv`
+    1. After ipykernel is installed execution of the file should continue successfully
 
 #### P1 Test Scenarios
 

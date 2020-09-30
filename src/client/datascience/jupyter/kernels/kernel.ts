@@ -17,7 +17,7 @@ import {
     Uri
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell, ICommandManager } from '../../../common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -86,7 +86,8 @@ export class Kernel implements IKernel {
         editorProvider: INotebookEditorProvider,
         private readonly kernelProvider: IKernelProvider,
         private readonly kernelSelectionUsage: IKernelSelectionUsage,
-        appShell: IApplicationShell
+        appShell: IApplicationShell,
+        vscNotebook: IVSCodeNotebook
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -96,7 +97,8 @@ export class Kernel implements IKernel {
             contentProvider,
             editorProvider,
             kernelSelectionUsage,
-            appShell
+            appShell,
+            vscNotebook
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
@@ -107,11 +109,11 @@ export class Kernel implements IKernel {
         await this.start({ disableUI: false, token: this.startCancellation.token });
         await this.kernelExecution.executeAllCells(document);
     }
-    public cancelCell(cell: NotebookCell) {
+    public async cancelCell(cell: NotebookCell) {
         this.startCancellation.cancel();
-        this.kernelExecution.cancelCell(cell);
+        await this.kernelExecution.cancelCell(cell);
     }
-    public cancelAllCells(document: NotebookDocument) {
+    public async cancelAllCells(document: NotebookDocument) {
         this.startCancellation.cancel();
         this.kernelExecution.cancelAllCells(document);
     }

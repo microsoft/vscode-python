@@ -220,7 +220,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .verifiable(typemoq.Times.once());
             helper
                 .setup((i) => i.isMacDefaultPythonPath(typemoq.It.isAny()))
-                .returns(() => false)
+                .returns(() => Promise.resolve(false))
                 .verifiable(typemoq.Times.once());
 
             const diagnostics = await diagnosticService.diagnose(undefined);
@@ -251,7 +251,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .verifiable(typemoq.Times.once());
             helper
                 .setup((i) => i.isMacDefaultPythonPath(typemoq.It.isValue(pythonPath)))
-                .returns(() => true)
+                .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.atLeastOnce());
 
             const diagnostics = await diagnosticService.diagnose(undefined);
@@ -291,11 +291,11 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .verifiable(typemoq.Times.once());
             helper
                 .setup((i) => i.isMacDefaultPythonPath(typemoq.It.isValue(pythonPath)))
-                .returns(() => true)
+                .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.atLeastOnce());
             helper
                 .setup((i) => i.isMacDefaultPythonPath(typemoq.It.isValue(nonMacStandardInterpreter)))
-                .returns(() => false)
+                .returns(() => Promise.resolve(false))
                 .verifiable(typemoq.Times.atLeastOnce());
             interpreterService
                 .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))

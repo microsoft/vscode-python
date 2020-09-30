@@ -10,7 +10,7 @@ import { Uri } from 'vscode';
 import { LanguageServerType } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
-import { IConfigurationService } from '../../client/common/types';
+import { IConfigurationService, IInstaller } from '../../client/common/types';
 import { Identifiers } from '../../client/datascience/constants';
 import { IntellisenseDocument } from '../../client/datascience/interactive-common/intellisense/intellisenseDocument';
 import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
@@ -21,10 +21,15 @@ import {
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
 import { ICell, IDataScienceFileSystem, INotebookProvider } from '../../client/datascience/types';
+import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
+import { IInterpreterSelector } from '../../client/interpreter/configuration/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
+import { IWindowsStoreInterpreter } from '../../client/interpreter/locators/types';
 import { createEmptyCell, generateTestCells } from '../../datascience-ui/interactive-common/mainState';
 import { generateReverseChange, IMonacoTextModel } from '../../datascience-ui/react-common/monacoHelpers';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
+import { MockExtensions } from './mockExtensions';
+import { MockJupyterExtensionIntegration } from './mockJupyterExtensionIntegration';
 import { MockLanguageServerCache } from './mockLanguageServerCache';
 
 // tslint:disable:no-any unified-signatures
@@ -76,13 +81,27 @@ suite('DataScience Intellisense Unit Tests', () => {
             .returns((f1: Uri, f2: Uri) => {
                 return f1?.fsPath?.toLowerCase() === f2.fsPath?.toLowerCase();
             });
+        const selector = TypeMoq.Mock.ofType<IInterpreterSelector>();
+        const storeInterpreter = TypeMoq.Mock.ofType<IWindowsStoreInterpreter>();
+        const installer = TypeMoq.Mock.ofType<IInstaller>();
+        const envService = TypeMoq.Mock.ofType<IEnvironmentActivationService>();
+
+        const extensionRegister = new MockJupyterExtensionIntegration(
+            new MockExtensions(),
+            interpreterService.object,
+            selector.object,
+            storeInterpreter.object,
+            installer.object,
+            envService.object,
+            languageServerCache
+        );
 
         intellisenseProvider = new IntellisenseProvider(
             workspaceService.object,
             fileSystem.object,
             notebookProvider.object,
             interpreterService.object,
-            languageServerCache,
+            extensionRegister,
             instance(variableProvider)
         );
         intellisenseDocument = await intellisenseProvider.getDocument();
