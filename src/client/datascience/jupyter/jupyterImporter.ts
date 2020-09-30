@@ -26,11 +26,11 @@ import {
 export class JupyterImporter implements INotebookImporter {
     public isDisposed: boolean = false;
     // Template that changes markdown cells to have # %% [markdown] in the comments
-    private readonly nbconvert5TemplateFormat =
+    private readonly nbconvertBaseTemplateFormat =
         // tslint:disable-next-line:no-multiline-string
-        `{%- extends 'null.tpl' -%}
+        `{%- extends '{0}' -%}
 {% block codecell %}
-{0}
+{1}
 {{ super() }}
 {% endblock codecell %}
 {% block in_prompt %}{% endblock in_prompt %}
@@ -38,19 +38,8 @@ export class JupyterImporter implements INotebookImporter {
 {% block markdowncell scoped %}{0} [markdown]
 {{ cell.source | comment_lines }}
 {% endblock markdowncell %}`;
-    private readonly nbconvert6TemplateFormat =
-        // tslint:disable-next-line:no-multiline-string
-        `{%- extends 'base/null.j2' -%}
-{% block codecell %}
-{0}
-{{ super() }}
-{% endblock codecell %}
-{% block in_prompt %}{% endblock in_prompt %}
-{% block input %}{{ cell.source | ipython2python }}{% endblock input %}
-{% block markdowncell scoped %}{0} [markdown]
-{{ cell.source | comment_lines }}
-{% endblock markdowncell %}`;
-
+    private readonly nbconvert5Null = 'null.tpl';
+    private readonly nbconvert6Null = 'base/null.j2';
     private template5Promise: Promise<string | undefined>;
     private template6Promise: Promise<string | undefined>;
 
@@ -64,8 +53,12 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IJupyterInterpreterDependencyManager)
         private readonly dependencyManager: IJupyterInterpreterDependencyManager
     ) {
-        this.template5Promise = this.createTemplateFile(this.nbconvert5TemplateFormat);
-        this.template6Promise = this.createTemplateFile(this.nbconvert6TemplateFormat);
+        //this.template5Promise = this.createTemplateFile(this.nbconvert5TemplateFormat);
+        //this.template6Promise = this.createTemplateFile(this.nbconvert6TemplateFormat);
+
+        // Create a template file for both nbconvert 5 and 6 in case user updates or changes python interpreter
+        this.template5Promise = this.createTemplateFile(false);
+        this.template6Promise = this.createTemplateFile(true);
     }
 
     public async importFromFile(sourceFile: Uri): Promise<string> {
@@ -173,7 +166,7 @@ export class JupyterImporter implements INotebookImporter {
         }
     }
 
-    private async createTemplateFile(baseTemplate: string): Promise<string | undefined> {
+    private async createTemplateFile(nbconvert6: boolean): Promise<string | undefined> {
         // Create a temp file on disk
         const file = await this.fs.createTemporaryLocalFile('.tpl');
 
@@ -182,7 +175,13 @@ export class JupyterImporter implements INotebookImporter {
             try {
                 // Save this file into our disposables so the temp file goes away
                 this.disposableRegistry.push(file);
-                await this.fs.appendLocalFile(file.filePath, baseTemplate.format(this.defaultCellMarker));
+                await this.fs.appendLocalFile(
+                    file.filePath,
+                    this.nbconvertBaseTemplateFormat.format(
+                        nbconvert6 ? this.nbconvert6Null : this.nbconvert5Null,
+                        this.defaultCellMarker
+                    )
+                );
 
                 // Now we should have a template that will convert
                 return file.filePath;
