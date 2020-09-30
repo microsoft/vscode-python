@@ -106,6 +106,11 @@ export class CachingLocator implements ILocator {
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+        // We assume that `getAllEnvs()` is cheap enough that calling
+        // it again in `iterFromCache()` is not a problem.
+        if (this.cache.getAllEnvs() === undefined) {
+            return this.iterFromDownstream(query);
+        }
         return this.iterFromCache(query);
     }
 
@@ -135,10 +140,21 @@ export class CachingLocator implements ILocator {
         return resolved;
     }
 
-    private async* iterFromCache(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        // XXX For now we wait for the initial refresh to finish...
+    private async* iterFromDownstream(query?: PythonLocatorQuery): IPythonEnvsIterator {
+        // For now we wait for the initial refresh to finish.  If that
+        // turns out to be a problem then we can do something more
+        // clever here.
         await this.initializing.promise;
+        const iterator = this.iterFromCache(query);
+        let res = await iterator.next();
+        while (!res.done) {
+            yield res.value;
+            // eslint-disable-next-line no-await-in-loop
+            res = await iterator.next();
+        }
+    }
 
+    private async* iterFromCache(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const envs = this.cache.getAllEnvs();
         if (envs === undefined) {
             logWarning('envs cache unexpectedly not initialized');
