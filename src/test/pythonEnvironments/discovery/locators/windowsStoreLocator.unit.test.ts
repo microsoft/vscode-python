@@ -14,7 +14,6 @@ import { InterpreterInformation } from '../../../../client/pythonEnvironments/ba
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 import * as externalDep from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { getWindowsStorePythonExes, WindowsStoreLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
-import { EnvironmentInfoService } from '../../../../client/pythonEnvironments/info/environmentInfoService';
 import { getEnvs } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 
@@ -95,7 +94,7 @@ suite('Windows Store', () => {
                     major: 3,
                     minor: -1,
                     micro: -1,
-                    release: { level: PythonReleaseLevel.Unknown, serial: -1 },
+                    release: { level: PythonReleaseLevel.Final, serial: -1 },
                     sysVersion,
                 };
             }
@@ -167,8 +166,7 @@ suite('Windows Store', () => {
                     return undefined;
                 });
 
-            const envService = new EnvironmentInfoService();
-            const locator = new WindowsStoreLocator(envService);
+            const locator = new WindowsStoreLocator();
             const iterator = locator.iterEnvs();
             const actualEnvs = (await getEnvs(iterator))
                 .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -187,11 +185,10 @@ suite('Windows Store', () => {
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
                 distro: { org: 'Microsoft' },
-                ...createExpectedInterpreterInfo(python38path, python383data.sysVersion, python383data.sysPrefix, '3.8.3'),
+                ...createExpectedInterpreterInfo(python38path),
             };
 
-            const envService = new EnvironmentInfoService();
-            const locator = new WindowsStoreLocator(envService);
+            const locator = new WindowsStoreLocator();
             const actual = await locator.resolveEnv(python38path);
 
             assertEnvEqual(actual, expected);
@@ -205,7 +202,7 @@ suite('Windows Store', () => {
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
                 distro: { org: 'Microsoft' },
-                ...createExpectedInterpreterInfo(python38path, python383data.sysVersion, python383data.sysPrefix, '3.8.3'),
+                ...createExpectedInterpreterInfo(python38path),
             };
 
             // Partially filled in env info object
@@ -225,12 +222,11 @@ suite('Windows Store', () => {
                     major: 3,
                     minor: -1,
                     micro: -1,
-                    release: { level: PythonReleaseLevel.Unknown, serial: -1 },
+                    release: { level: PythonReleaseLevel.Final, serial: -1 },
                 },
             };
 
-            const envService = new EnvironmentInfoService();
-            const locator = new WindowsStoreLocator(envService);
+            const locator = new WindowsStoreLocator();
             const actual = await locator.resolveEnv(input);
 
             assertEnvEqual(actual, expected);
@@ -239,8 +235,16 @@ suite('Windows Store', () => {
             // Use a non store root path
             const python38path = path.join(testLocalAppData, 'python3.8.exe');
 
-            const envService = new EnvironmentInfoService();
-            const locator = new WindowsStoreLocator(envService);
+            const locator = new WindowsStoreLocator();
+            const actual = await locator.resolveEnv(python38path);
+
+            assert.deepStrictEqual(actual, undefined);
+        });
+        test('resolveEnv(string): forbidden path', async () => {
+            // Use a non store root path
+            const python38path = path.join(testLocalAppData, 'Program Files', 'WindowsApps', 'python3.8.exe');
+
+            const locator = new WindowsStoreLocator();
             const actual = await locator.resolveEnv(python38path);
 
             assert.deepStrictEqual(actual, undefined);

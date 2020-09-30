@@ -3,7 +3,6 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { Event, EventEmitter } from 'vscode';
 import { traceWarning } from '../../../../common/logger';
 import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
 import {
@@ -11,10 +10,9 @@ import {
 } from '../../../base/info';
 import { parseVersion } from '../../../base/info/pythonVersion';
 import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
-import { PythonEnvsChangedEvent } from '../../../base/watcher';
+import { PythonEnvsWatcher } from '../../../base/watcher';
 import { getFileInfo } from '../../../common/externalDependencies';
 import { isWindowsPythonExe } from '../../../common/windowsUtils';
-import { IEnvironmentInfoService } from '../../../info/environmentInfoService';
 
 /**
  * Gets path to the Windows Apps directory.
@@ -116,12 +114,8 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
         .filter(isWindowsPythonExe);
 }
 
-export class WindowsStoreLocator implements ILocator {
+export class WindowsStoreLocator extends PythonEnvsWatcher implements ILocator {
     private readonly kind:PythonEnvKind = PythonEnvKind.WindowsStore;
-
-    private readonly eventEmitter = new EventEmitter<PythonEnvsChangedEvent>();
-
-    public constructor(private readonly envService:IEnvironmentInfoService) { }
 
     public iterEnvs(): IPythonEnvsIterator {
         const buildEnvInfo = (exe:string) => this.buildEnvInfo(exe);
@@ -135,29 +129,9 @@ export class WindowsStoreLocator implements ILocator {
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
         if (await isWindowsStoreEnvironment(executablePath)) {
-            const interpreterInfo = await this.envService.getEnvironmentInfo(executablePath);
-            if (interpreterInfo) {
-                const data = await getFileInfo(executablePath);
-                interpreterInfo.executable = {
-                    ...interpreterInfo.executable,
-                    ...data,
-                };
-                return Promise.resolve({
-                    name: '',
-                    location: '',
-                    kind: this.kind,
-                    executable: interpreterInfo.executable,
-                    version: interpreterInfo.version,
-                    arch: interpreterInfo.arch,
-                    distro: { org: 'Microsoft' },
-                });
-            }
+            return this.buildEnvInfo(executablePath);
         }
         return undefined;
-    }
-
-    public get onChanged(): Event<PythonEnvsChangedEvent> {
-        return this.eventEmitter.event;
     }
 
     private async buildEnvInfo(exe:string): Promise<PythonEnvInfo> {
@@ -169,7 +143,7 @@ export class WindowsStoreLocator implements ILocator {
                 major: 3,
                 minor: -1,
                 micro: -1,
-                release: { level: PythonReleaseLevel.Unknown, serial: -1 },
+                release: { level: PythonReleaseLevel.Final, serial: -1 },
                 sysVersion: undefined,
             };
         }
