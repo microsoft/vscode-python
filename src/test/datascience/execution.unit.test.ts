@@ -1055,7 +1055,7 @@ suite('Jupyter Execution', async () => {
         const jupyterExecutionFactory = createExecution(workingPython);
 
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
-        const nbConvertVer = await jupyterExecutionFactory.isImportSupported();
+        const nbConvertVer = await jupyterExecutionFactory.getImportPackageVersion();
         assert.isTrue(nbConvertVer?.compare('1.1.1') === 0);
         const usableInterpreter = await jupyterExecutionFactory.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
@@ -1071,7 +1071,7 @@ suite('Jupyter Execution', async () => {
         );
 
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
-        const nbConvertVer = await jupyterExecutionFactory.isImportSupported();
+        const nbConvertVer = await jupyterExecutionFactory.getImportPackageVersion();
         assert.isTrue(nbConvertVer?.compare('1.1.1') === 0);
         const usableInterpreter = await jupyterExecutionFactory.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');

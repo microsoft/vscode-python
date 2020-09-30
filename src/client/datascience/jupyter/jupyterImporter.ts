@@ -63,11 +63,11 @@ export class JupyterImporter implements INotebookImporter {
         }
 
         // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
-        if (!(await this.jupyterExecution.isImportSupported())) {
+        if (!(await this.jupyterExecution.getImportPackageVersion())) {
             await this.dependencyManager.installMissingDependencies();
         }
 
-        const nbConvertVersion = await this.jupyterExecution.isImportSupported();
+        const nbConvertVersion = await this.jupyterExecution.getImportPackageVersion();
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (nbConvertVersion) {
             // nbconvert 5 and 6 use a different base template file

@@ -83,12 +83,12 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
 
         return false;
     }
-    public async isImportSupported(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
+    public async getImportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
         const service = await this.waitForService();
 
         // Make a remote call on the proxy
         if (service) {
-            const result = await service.request(LiveShareCommands.isImportSupported, [], cancelToken);
+            const result = await service.request(LiveShareCommands.getImportPackageVersion, [], cancelToken);
 
             if (result) {
                 return result as SemVer;

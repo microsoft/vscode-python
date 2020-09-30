@@ -124,7 +124,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     @reportAction(ReportableAction.CheckingIfImportIsSupported)
-    public async isImportSupported(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
+    public async getImportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
         // See if we can find the command nbconvert
         return this.jupyterInterpreterService.isExportSupported(cancelToken);
     }
