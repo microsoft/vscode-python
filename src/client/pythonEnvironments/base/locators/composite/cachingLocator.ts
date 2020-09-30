@@ -65,7 +65,6 @@ export class CachingLocator implements ILocator {
         opts: {
             refreshMinutes?: number,
             refreshRetryMinutes?: number,
-            checkStale?: boolean,
         } = {},
     ) {
         this.onChanged = this.watcher.onChanged;
@@ -148,10 +147,9 @@ export class CachingLocator implements ILocator {
             logWarning('envs cache unexpectedly not initialized');
             return;
         }
-        if (await this.needsRefresh(envs)) {
-            // Refresh in the background.
-            this.refresh().ignoreErrors();
-        }
+        // We trust `this.locator.onChanged` to be reliable.
+        // So there is no need to check if anything is stale
+        // at this point.
         if (query !== undefined) {
             const filter = getQueryFilter(query);
             yield* envs.filter(filter);
@@ -207,16 +205,6 @@ export class CachingLocator implements ILocator {
             await this.refresh();
             this.initializing.resolve();
         }
-    }
-
-    // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-unused-vars
-    private async needsRefresh(_envs: PythonEnvInfo[]): Promise<boolean> {
-        // XXX
-        // For now we never refresh.  Options:
-        // * every X minutes (via `initialize()`
-        // * if at least X minutes have elapsed
-        // * if some "stale" check on any known env fails
-        return false;
     }
 }
 
