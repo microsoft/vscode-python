@@ -298,14 +298,16 @@ class BackgroundLooper {
     }
 
     private async runLoop(): Promise<void> {
-        const winner = await Promise.race([
+        const getWinner = () => Promise.race([
             this.done.promise.then(() => 0),
             this.waitUntilReady.promise.then(() => 1),
         ]);
-        if (winner === 1) {
-            this.waitUntilReady = createDeferred<void>();
-        }
+        let winner = await getWinner();
         while (!this.done.completed) {
+            if (winner === 1) {
+                this.waitUntilReady = createDeferred<void>();
+            }
+
             while (this.queue.length > 0) {
                 const id = this.queue[0];
                 this.queue.shift();
@@ -313,10 +315,7 @@ class BackgroundLooper {
                 await this.runRequest(id);
             }
             // eslint-disable-next-line no-await-in-loop
-            await Promise.race([
-                this.waitUntilReady,
-                this.done,
-            ]);
+            winner = await getWinner();
         }
         this.loopRunning.resolve();
     }
