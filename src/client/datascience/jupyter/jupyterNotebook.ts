@@ -40,7 +40,7 @@ import { KernelConnectionMetadata } from './kernels/types';
 
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { concatMultilineString, formatStreamText } from '../../../datascience-ui/common';
+import { concatMultilineString, formatStreamText, splitMultilineString } from '../../../datascience-ui/common';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterFromKernelConnectionMetadata, isPythonKernelConnection } from './kernels/helpers';
@@ -1202,12 +1202,7 @@ export class JupyterNotebookBase implements INotebook {
 
     private addToCellData = (
         cell: ICell,
-        output:
-            | nbformat.IUnrecognizedOutput
-            | nbformat.IExecuteResult
-            | nbformat.IDisplayData
-            | nbformat.IStream
-            | nbformat.IError,
+        output: nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError,
         clearState: RefBool
     ) => {
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
@@ -1233,7 +1228,10 @@ export class JupyterNotebookBase implements INotebook {
     ) {
         // Check our length on text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
-            msg.content.data['text/plain'] = trimFunc(msg.content.data['text/plain'] as string);
+            msg.content.data['text/plain'] = splitMultilineString(
+                // tslint:disable-next-line: no-any
+                trimFunc(concatMultilineString(msg.content.data['text/plain'] as any))
+            );
         }
 
         this.addToCellData(
@@ -1261,14 +1259,15 @@ export class JupyterNotebookBase implements INotebook {
             reply.payload.forEach((o) => {
                 if (o.data && o.data.hasOwnProperty('text/plain')) {
                     // tslint:disable-next-line: no-any
-                    const str = (o.data as any)['text/plain'].toString();
-                    const data = trimFunc(str) as string;
+                    const str = concatMultilineString((o.data as any)['text/plain']);
+                    const data = trimFunc(str);
                     this.addToCellData(
                         cell,
                         {
                             // Mark as stream output so the text is formatted because it likely has ansi codes in it.
                             output_type: 'stream',
-                            text: data,
+                            text: splitMultilineString(data),
+                            name: 'stdout',
                             metadata: {},
                             execution_count: reply.execution_count
                         },
@@ -1310,11 +1309,11 @@ export class JupyterNotebookBase implements INotebook {
                 : undefined;
         if (existing) {
             // tslint:disable-next-line:restrict-plus-operands
-            existing.text = existing.text + msg.content.text;
-            const originalText = formatStreamText(concatMultilineString(existing.text));
+            const originalText = formatStreamText(concatMultilineString(existing.text + msg.content.text));
             originalTextLength = originalText.length;
-            existing.text = trimFunc(originalText);
-            trimmedTextLength = existing.text.length;
+            const newText = trimFunc(originalText);
+            trimmedTextLength = newText.length;
+            existing.text = splitMultilineString(newText);
         } else {
             const originalText = formatStreamText(concatMultilineString(msg.content.text));
             originalTextLength = originalText.length;
@@ -1322,7 +1321,7 @@ export class JupyterNotebookBase implements INotebook {
             const output: nbformat.IStream = {
                 output_type: 'stream',
                 name: msg.content.name,
-                text: trimFunc(originalText)
+                text: [trimFunc(originalText)]
             };
             data.outputs = [...data.outputs, output];
             trimmedTextLength = output.text.length;

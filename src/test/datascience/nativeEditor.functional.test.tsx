@@ -896,7 +896,7 @@ df.head()`;
     {
      "data": {
       "text/plain": [
-       "1"
+       "'<1>'"
       ]
      },
      "execution_count": 1,
@@ -981,6 +981,8 @@ df.head()`;
  "nbformat_minor": 2
 }`;
                     addMockData(ioc, `a='<1>'\na`, `'<1>'`);
+                    addMockData(ioc, 'b=2\nb', 2);
+                    addMockData(ioc, 'c=3\nc', 3);
                     const dsfs = ioc.get<IDataScienceFileSystem>(IDataScienceFileSystem);
                     const tf = await dsfs.createTemporaryLocalFile('.ipynb');
                     try {
@@ -1002,7 +1004,18 @@ df.head()`;
 
                         // Read in the file contents. Should match the original
                         const savedContents = await dsfs.readLocalFile(tf.filePath);
-                        assert.equal(savedContents, baseFile, 'File contents were changed by execution');
+                        const savedJSON = JSON.parse(savedContents);
+                        const baseJSON = JSON.parse(baseFile);
+
+                        // Don't compare kernelspec names
+                        delete savedJSON.metadata.kernelspec.display_name;
+                        delete baseJSON.metadata.kernelspec.display_name;
+
+                        // Don't compare python versions
+                        delete savedJSON.metadata.language_info.version;
+                        delete baseJSON.metadata.language_info.version;
+
+                        assert.deepEqual(savedJSON, baseJSON, 'File contents were changed by execution');
                     } finally {
                         tf.dispose();
                     }
