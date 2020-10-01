@@ -50,7 +50,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          path: ${{REPO_DIRECTORY}}
+          path: ${{ env.REPO_DIRECTORY }}
 
       - name: Cache pip files
         uses: actions/cache@v2
@@ -69,7 +69,7 @@ jobs:
         id: out-cache
         uses: actions/cache@v2
         with:
-          path: ${{REPO_DIRECTORY}}/out
+          path: ${{ env.REPO_DIRECTORY }}/out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Install dependencies (npm ci)
