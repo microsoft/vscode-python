@@ -17,8 +17,13 @@ env:
   VSIX_NAME: ms-python-insiders.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
+  REPO_DIRECTORY: 'test with spaces'
 
 jobs:
+  defaults:
+  run:
+    # Cannot use context or expressions in defaults
+    working-directory: 'test with spaces'
   ### Non-smoke tests
   tests:
     name: Tests
@@ -43,6 +48,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          path: ${{REPO_DIRECTORY}}
 
       - name: Cache pip files
         uses: actions/cache@v2
@@ -61,7 +68,7 @@ jobs:
         id: out-cache
         uses: actions/cache@v2
         with:
-          path: ./out
+          path: ${{REPO_DIRECTORY}}/out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Install dependencies (npm ci)
