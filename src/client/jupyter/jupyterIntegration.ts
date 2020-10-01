@@ -144,7 +144,7 @@ export class JupyterExtensionIntegration {
     }
 
     public async integrateWithJupyterExtension(): Promise<void> {
-        const jupyterExtension = this.extensions.getExtension<JupyterExtensionApi>('ms-ai-tools.jupyter');
+        const jupyterExtension = this.extensions.getExtension<JupyterExtensionApi>('ms-toolsai.jupyter');
         if (!jupyterExtension) {
             return;
         }
