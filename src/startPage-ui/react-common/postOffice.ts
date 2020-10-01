@@ -89,7 +89,7 @@ export class PostOffice implements IDisposable {
                 // See ./src/startPage-ui/startPage/index.html
                 // tslint:disable-next-line: no-any
                 const api = (this.vscodeApi as any) as { handleMessage?: Function };
-                if (api.handleMessage) {
+                if (api && api.handleMessage) {
                     api.handleMessage(this.handleMessages.bind(this));
                 }
             } catch {

@@ -84,7 +84,7 @@
         "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.startPage.open",
         "onCommand:python.enableSourceMapSupport",
-        "onNotebookEditor:jupyter-notebook",
+        "onNotebook:jupyter-notebook",
         "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml",
         "onCustomEditor:ms-python.python.notebook.ipynb"
@@ -2007,7 +2007,7 @@
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
         "named-js-regexp": "^1.3.3",
-        "node-fetch": "^2.6.0",
+        "node-fetch": "^2.6.1",
         "node-stream-zip": "^1.6.0",
         "onigasm": "^2.2.2",
         "pdfkit": "^0.11.0",

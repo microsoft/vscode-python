@@ -17,30 +17,38 @@ export enum PythonEnvKind {
     WindowsStore = 'global-windows-store',
     Pyenv = 'global-pyenv',
     CondaBase = 'global-conda-base',
+    Poetry = 'global-poetry',
     Custom = 'global-custom',
     OtherGlobal = 'global-other',
     // "virtual"
     Venv = 'virt-venv',
     VirtualEnv = 'virt-virtualenv',
+    VirtualEnvWrapper = 'virt-virtualenvwrapper',
     Pipenv = 'virt-pipenv',
     Conda = 'virt-conda',
     OtherVirtual = 'virt-other'
 }
 
 /**
- * Information about a Python binary/executable.
+ * A (system-global) unique ID for a single Python environment.
  */
-export type PythonExecutableInfo = {
+export type PythonEnvID = string;
+
+/**
+ * Information about a file.
+ */
+export type FileInfo = {
     filename: string;
-    sysPrefix: string;
     ctime: number;
     mtime: number;
 };
 
 /**
- * A (system-global) unique ID for a single Python environment.
+ * Information about a Python binary/executable.
  */
-export type PythonEnvID = string;
+export type PythonExecutableInfo = FileInfo & {
+    sysPrefix: string;
+};
 
 /**
  * The most fundamental information about a Python environment.
@@ -56,7 +64,6 @@ export type PythonEnvID = string;
  * @prop location - the env's location (on disk), if relevant
  */
 export type PythonEnvBaseInfo = {
-    id: PythonEnvID;
     kind: PythonEnvKind;
     executable: PythonExecutableInfo;
     // One of (name, location) must be non-empty.
@@ -92,7 +99,7 @@ export type PythonVersionRelease = {
  * @prop sysVersion - the raw text from `sys.version`
  */
 export type PythonVersion = BasicVersionInfo & {
-    release: PythonVersionRelease;
+    release?: PythonVersionRelease;
     sysVersion?: string;
 };
 

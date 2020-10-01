@@ -152,6 +152,7 @@
             "skipFiles": ["<node_internals>/**"]
         },
         {
+
             "name": "Tests (Multiroot, VS Code, *.test.ts)",
             "type": "extensionHost",
             "request": "launch",

@@ -16,9 +16,9 @@ import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments
 import * as ExternalDep from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import { EnvironmentInfoService } from '../../../../../client/pythonEnvironments/info/environmentInfoService';
 import { sleep } from '../../../../core';
-import { createEnv, getEnvs, SimpleLocator } from '../../common';
+import { createNamedEnv, getEnvs, SimpleLocator } from '../../common';
 
-suite('Environments Resolver', () => {
+suite('Python envs locator - Environments Resolver', () => {
     /**
      * Returns the expected environment to be returned by Environment info service
      */
@@ -53,10 +53,10 @@ suite('Environments Resolver', () => {
         });
 
         test('Iterator yields environments as-is', async () => {
-            const env1 = createEnv('env1', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
-            const env2 = createEnv('env2', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec2'));
-            const env3 = createEnv('env3', '2.7', PythonEnvKind.System, path.join('path', 'to', 'exec3'));
-            const env4 = createEnv('env4', '3.9.0rc2', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
+            const env1 = createNamedEnv('env1', '3.5.12b1', PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
+            const env2 = createNamedEnv('env2', '3.8.1', PythonEnvKind.Conda, path.join('path', 'to', 'exec2'));
+            const env3 = createNamedEnv('env3', '2.7', PythonEnvKind.System, path.join('path', 'to', 'exec3'));
+            const env4 = createNamedEnv('env4', '3.9.0rc2', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
             const environmentsToBeIterated = [env1, env2, env3, env4];
             const parentLocator = new SimpleLocator(environmentsToBeIterated);
             const resolver = new PythonEnvsResolver(parentLocator, new EnvironmentInfoService());
@@ -69,8 +69,8 @@ suite('Environments Resolver', () => {
 
         test('Updates for environments are sent correctly followed by the null event', async () => {
             // Arrange
-            const env1 = createEnv('env1', '3.5.12b1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec1'));
-            const env2 = createEnv('env2', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
+            const env1 = createNamedEnv('env1', '3.5.12b1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec1'));
+            const env2 = createNamedEnv('env2', '3.8.1', PythonEnvKind.Unknown, path.join('path', 'to', 'exec2'));
             const environmentsToBeIterated = [env1, env2];
             const parentLocator = new SimpleLocator(environmentsToBeIterated);
             const onUpdatedEvents: (PythonEnvUpdatedEvent | null)[] = [];
@@ -94,8 +94,8 @@ suite('Environments Resolver', () => {
 
             // Assert
             const expectedUpdates = [
-                { old: env1, new: createExpectedEnvInfo(env1) },
-                { old: env2, new: createExpectedEnvInfo(env2) },
+                { index: 0, old: env1, update: createExpectedEnvInfo(env1) },
+                { index: 1, old: env2, update: createExpectedEnvInfo(env2) },
                 null,
             ];
             assert.deepEqual(expectedUpdates, onUpdatedEvents);
@@ -103,8 +103,8 @@ suite('Environments Resolver', () => {
 
         test('Updates to environments from the incoming iterator are sent correctly followed by the null event', async () => {
             // Arrange
-            const env = createEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
-            const updatedEnv = createEnv('env1', '3.8.1', PythonEnvKind.System, path.join('path', 'to', 'exec'));
+            const env = createNamedEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
+            const updatedEnv = createNamedEnv('env1', '3.8.1', PythonEnvKind.System, path.join('path', 'to', 'exec'));
             const environmentsToBeIterated = [env];
             const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
             const parentLocator = new SimpleLocator(environmentsToBeIterated, { onUpdated: didUpdate.event });
@@ -126,7 +126,7 @@ suite('Environments Resolver', () => {
             // Act
             await getEnvs(iterator);
             await sleep(1);
-            didUpdate.fire({ old: env, new: updatedEnv });
+            didUpdate.fire({ index: 0, old: env, update: updatedEnv });
             didUpdate.fire(null); // It is essential for the incoming iterator to fire "null" event signifying it's done
             await sleep(1);
 
@@ -134,7 +134,7 @@ suite('Environments Resolver', () => {
             // The updates can be anything, even the number of updates, but they should lead to the same final state
             const { length } = onUpdatedEvents;
             assert.deepEqual(
-                onUpdatedEvents[length - 2]?.new,
+                onUpdatedEvents[length - 2]?.update,
                 createExpectedEnvInfo(updatedEnv),
                 'The final update to environment is incorrect',
             );
@@ -179,8 +179,8 @@ suite('Environments Resolver', () => {
         });
 
         test('Calls into parent locator to get resolved environment, then calls environnment service to resolve environment further and return it', async () => {
-            const env = createEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
-            const resolvedEnvReturnedByReducer = createEnv(
+            const env = createNamedEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
+            const resolvedEnvReturnedByReducer = createNamedEnv(
                 'env1',
                 '3.8.1',
                 PythonEnvKind.Conda,
@@ -207,8 +207,8 @@ suite('Environments Resolver', () => {
                     reject();
                 }),
             );
-            const env = createEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
-            const resolvedEnvReturnedByReducer = createEnv(
+            const env = createNamedEnv('env1', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
+            const resolvedEnvReturnedByReducer = createNamedEnv(
                 'env1',
                 '3.8.1',
                 PythonEnvKind.Conda,
@@ -230,7 +230,7 @@ suite('Environments Resolver', () => {
         });
 
         test("If the parent locator isn't able to resolve environment, return undefined", async () => {
-            const env = createEnv('env', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
+            const env = createNamedEnv('env', '3.8', PythonEnvKind.Unknown, path.join('path', 'to', 'exec'));
             const parentLocator = new SimpleLocator([], {
                 resolve: async () => undefined,
             });

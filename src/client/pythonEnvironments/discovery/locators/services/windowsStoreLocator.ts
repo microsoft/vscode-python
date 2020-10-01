@@ -4,7 +4,14 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { traceWarning } from '../../../../common/logger';
-import { getEnvironmentVariable } from '../../../../common/utils/platform';
+import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
+import {
+    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
+} from '../../../base/info';
+import { parseVersion } from '../../../base/info/pythonVersion';
+import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
+import { PythonEnvsWatcher } from '../../../base/watcher';
+import { getFileInfo } from '../../../common/externalDependencies';
 import { isWindowsPythonExe } from '../../../common/windowsUtils';
 
 /**
@@ -107,5 +114,51 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
         .filter(isWindowsPythonExe);
 }
 
-// tslint:disable-next-line: no-suspicious-comment
-// TODO: The above APIs will be consumed by the Windows Store locator class when we have it.
+export class WindowsStoreLocator extends PythonEnvsWatcher implements ILocator {
+    private readonly kind:PythonEnvKind = PythonEnvKind.WindowsStore;
+
+    public iterEnvs(): IPythonEnvsIterator {
+        const buildEnvInfo = (exe:string) => this.buildEnvInfo(exe);
+        const iterator = async function* () {
+            const exes = await getWindowsStorePythonExes();
+            yield* exes.map(buildEnvInfo);
+        };
+        return iterator();
+    }
+
+    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        const executablePath = typeof env === 'string' ? env : env.executable.filename;
+        if (await isWindowsStoreEnvironment(executablePath)) {
+            return this.buildEnvInfo(executablePath);
+        }
+        return undefined;
+    }
+
+    private async buildEnvInfo(exe:string): Promise<PythonEnvInfo> {
+        let version:PythonVersion;
+        try {
+            version = parseVersion(path.basename(exe));
+        } catch (e) {
+            version = {
+                major: 3,
+                minor: -1,
+                micro: -1,
+                release: { level: PythonReleaseLevel.Final, serial: -1 },
+                sysVersion: undefined,
+            };
+        }
+        return {
+            name: '',
+            location: '',
+            kind: this.kind,
+            executable: {
+                filename: exe,
+                sysPrefix: '',
+                ...(await getFileInfo(exe)),
+            },
+            version,
+            arch: Architecture.x64,
+            distro: { org: 'Microsoft' },
+        };
+    }
+}

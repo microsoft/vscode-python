@@ -55,7 +55,7 @@ export function createAPI(): [PythonEnvironments, () => void] {
         () => {
             activateLocators();
             // Any other activation needed for the API will go here later.
-        }
+        },
     ];
 }
 

@@ -130,6 +130,53 @@ export function isUri(resource?: Uri | any): resource is Uri {
     return typeof uri.path === 'string' && typeof uri.scheme === 'string';
 }
 
+/**
+ * Create a filter func that determine if the given URI and candidate match.
+ *
+ * The scheme must match, as well as path.
+ *
+ * @param checkParent - if `true`, match if the candidate is rooted under `uri`
+ * @param checkChild - if `true`, match if `uri` is rooted under the candidate
+ * @param checkExact - if `true`, match if the candidate matches `uri` exactly
+ */
+export function getURIFilter(
+    uri: Uri,
+    opts: {
+        checkParent?: boolean;
+        checkChild?: boolean;
+        checkExact?: boolean;
+    } = { checkExact: true }
+): (u: Uri) => boolean {
+    let uriPath = uri.path;
+    while (uri.path.endsWith('/')) {
+        uriPath = uriPath.slice(0, -1);
+    }
+    const uriRoot = `${uriPath}/`;
+    function filter(candidate: Uri): boolean {
+        if (candidate.scheme !== uri.scheme) {
+            return false;
+        }
+        let candidatePath = candidate.path;
+        while (candidate.path.endsWith('/')) {
+            candidatePath = candidatePath.slice(0, -1);
+        }
+        if (opts.checkExact && candidatePath === uriPath) {
+            return true;
+        }
+        if (opts.checkParent && candidatePath.startsWith(uriRoot)) {
+            return true;
+        }
+        if (opts.checkChild) {
+            const candidateRoot = `{candidatePath}/`;
+            if (uriPath.startsWith(candidateRoot)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    return filter;
+}
+
 export function isNotebookCell(documentOrUri: TextDocument | Uri): boolean {
     const uri = isUri(documentOrUri) ? documentOrUri : documentOrUri.uri;
     return uri.scheme.includes(NotebookCellScheme);
