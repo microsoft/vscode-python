@@ -54,54 +54,59 @@ stages:
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'DataScience':
-              TestsToRun: 'testDataScience'
-              NeedsPythonTestReqs: true
-              NeedsPythonFunctionalReqs: true
-            'Smoke':
-              TestsToRun: 'testSmoke'
+            'Venv':
+              TestsToRun: 'venvTests'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
+              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+            # 'DataScience':
+            #   TestsToRun: 'testDataScience'
+            #   NeedsPythonTestReqs: true
+            #   NeedsPythonFunctionalReqs: true
+            # 'Smoke':
+            #   TestsToRun: 'testSmoke'
+            #   NeedsPythonTestReqs: true
+            #   NeedsIPythonReqs: true
         pool:
           vmImage: 'ubuntu-20.04'
         steps:
           - template: templates/test_phases.yml
 
-      - job: 'Py27'
-        dependsOn: []
-        strategy:
-          matrix:
-            'Unit':
-              PythonVersion: '2.7'
-              # Note: "pythonInternalTools" tests are 3.7+.
-              TestsToRun: 'pythonUnitTests'
-              NeedsPythonTestReqs: true
-            'Functional':
-              PythonVersion: '2.7'
-              TestsToRun: 'testfunctional'
-              NeedsPythonTestReqs: true
-              NeedsPythonFunctionalReqs: true
-        pool:
-          vmImage: 'ubuntu-20.04'
-        steps:
-          - template: templates/test_phases.yml
+      # - job: 'Py27'
+      #   dependsOn: []
+      #   strategy:
+      #     matrix:
+      #       'Unit':
+      #         PythonVersion: '2.7'
+      #         # Note: "pythonInternalTools" tests are 3.7+.
+      #         TestsToRun: 'pythonUnitTests'
+      #         NeedsPythonTestReqs: true
+      #       'Functional':
+      #         PythonVersion: '2.7'
+      #         TestsToRun: 'testfunctional'
+      #         NeedsPythonTestReqs: true
+      #         NeedsPythonFunctionalReqs: true
+      #   pool:
+      #     vmImage: 'ubuntu-20.04'
+      #   steps:
+      #     - template: templates/test_phases.yml
 
-  - stage: Mac
-    dependsOn: []
-    jobs:
-      - job: 'Py3x'
-        dependsOn: []
-        strategy:
-          matrix:
-            # This gives us our best functional coverage for the OS.
-            'Functional+Single':
-              TestsToRun: 'testfunctional, testSingleWorkspace'
-              NeedsPythonTestReqs: true
-              NeedsPythonFunctionalReqs: true
-        pool:
-          vmImage: '$(vmImageMacOS)'
-        steps:
-          - template: templates/test_phases.yml
+  # - stage: Mac
+  #   dependsOn: []
+  #   jobs:
+  #     - job: 'Py3x'
+  #       dependsOn: []
+  #       strategy:
+  #         matrix:
+  #           # This gives us our best functional coverage for the OS.
+  #           'Functional+Single':
+  #             TestsToRun: 'testfunctional, testSingleWorkspace'
+  #             NeedsPythonTestReqs: true
+  #             NeedsPythonFunctionalReqs: true
+  #       pool:
+  #         vmImage: '$(vmImageMacOS)'
+  #       steps:
+  #         - template: templates/test_phases.yml
 
   - stage: Windows
     dependsOn: []
@@ -123,6 +128,11 @@ stages:
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
+            'Venv':
+              TestsToRun: 'venvTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
         pool:
           vmImage: 'vs2017-win2016'
         steps:
