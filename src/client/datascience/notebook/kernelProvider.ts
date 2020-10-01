@@ -34,6 +34,7 @@ class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     constructor(
         public readonly label: string,
         public readonly description: string,
+        public readonly detail: string,
         public readonly selection: Readonly<KernelConnectionMetadata>,
         public readonly isPreferred: boolean,
         private readonly kernelProvider: IKernelProvider
@@ -109,7 +110,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         const mapped = withInterpreter.map((kernel) => {
             return new VSCodeNotebookKernelMetadata(
                 kernel.label,
-                kernel.description || kernel.detail || '',
+                kernel.description || '',
+                kernel.detail || '',
                 kernel.selection,
                 areKernelConnectionsEqual(kernel.selection, preferredKernel),
                 this.kernelProvider
@@ -135,7 +137,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
                     1,
                     new VSCodeNotebookKernelMetadata(
                         kernel.label,
-                        kernel.description || kernel.detail || '',
+                        kernel.description || '',
+                        kernel.detail || '',
                         kernel.selection,
                         true,
                         this.kernelProvider
@@ -163,7 +166,8 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             return;
         } else if (preferredKernel.kind === 'startUsingPythonInterpreter') {
             return new VSCodeNotebookKernelMetadata(
-                preferredKernel.interpreter?.displayName || preferredKernel.interpreter.path,
+                preferredKernel.interpreter.displayName || preferredKernel.interpreter.path,
+                '',
                 preferredKernel.interpreter.path,
                 preferredKernel,
                 true,
@@ -171,8 +175,9 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
             );
         } else if (preferredKernel.kind === 'connectToLiveKernel') {
             return new VSCodeNotebookKernelMetadata(
-                preferredKernel.kernelModel?.display_name || preferredKernel.kernelModel?.name,
-                preferredKernel.kernelModel?.name,
+                preferredKernel.kernelModel.display_name || preferredKernel.kernelModel.name,
+                '',
+                preferredKernel.kernelModel.name,
                 preferredKernel,
                 true,
                 this.kernelProvider
@@ -180,6 +185,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         } else {
             return new VSCodeNotebookKernelMetadata(
                 preferredKernel.kernelSpec.display_name,
+                '',
                 preferredKernel.kernelSpec.name,
                 preferredKernel,
                 true,
