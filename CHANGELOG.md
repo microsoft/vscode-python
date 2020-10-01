@@ -1,7 +1,5 @@
 # Changelog
 
-<<<<<<< HEAD
-=======
 ## 2020.9.1 (29 September 2020)
 
 ### Fixes
@@ -65,7 +63,6 @@ And finally thanks to the [Python](https://www.python.org/) development team and
 community for creating a fantastic programming language and community to be a
 part of!
 
->>>>>>> origin/main
 ## 2020.9.0 (23 September 2020)
 
 ### Enhancements
