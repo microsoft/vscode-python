@@ -60,24 +60,13 @@ export class Locators extends PythonEnvsWatchers implements ILocator {
         const iterators = this.locators.map((loc) => loc.iterEnvs(query));
         return combineIterators(iterators);
     }
-
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        for (const locator of this.locators) {
-            const resolved = await locator.resolveEnv(env);
-            if (resolved !== undefined) {
-                return resolved;
-            }
-        }
-        return undefined;
-    }
 }
 
 /**
  * A locator wrapper that can be disabled.
  *
  * If disabled, events emitted by the wrapped locator are discarded,
- * `iterEnvs()` yields nothing, and `resolveEnv()` already returns
- * `undefined`.
+ * `iterEnvs()` yields nothing.
  */
 export class DisableableLocator extends DisableableEnvsWatcher implements ILocator {
     constructor(
@@ -92,12 +81,5 @@ export class DisableableLocator extends DisableableEnvsWatcher implements ILocat
             return NOOP_ITERATOR;
         }
         return this.locator.iterEnvs(query);
-    }
-
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        if (!this.enabled) {
-            return undefined;
-        }
-        return this.locator.resolveEnv(env);
     }
 }

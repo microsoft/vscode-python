@@ -13,6 +13,7 @@ import {
 } from '../../../client/pythonEnvironments/base/info';
 import { buildEnvInfo } from '../../../client/pythonEnvironments/base/info/env';
 import { parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
+import { IPythonEnvsFinder } from '../../../client/pythonEnvironments/base/finder';
 import {
     IPythonEnvsIterator, Locator, PythonEnvUpdatedEvent, PythonLocatorQuery,
 } from '../../../client/pythonEnvironments/base/locator';
@@ -46,8 +47,9 @@ export function createNamedEnv(
     return env;
 }
 
-export class SimpleLocator extends Locator {
+export class SimpleLocator extends Locator implements IPythonEnvsFinder {
     private deferred = createDeferred<void>();
+
     constructor(
         private envs: PythonEnvInfo[],
         private callbacks?: {
@@ -62,12 +64,15 @@ export class SimpleLocator extends Locator {
     ) {
         super();
     }
+
     public get done(): Promise<void> {
         return this.deferred.promise;
     }
+
     public fire(event: PythonEnvsChangedEvent) {
         this.emitter.fire(event);
     }
+
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const deferred = this.deferred;
         const callbacks = this.callbacks;
@@ -107,7 +112,16 @@ export class SimpleLocator extends Locator {
         iterator.onUpdated = this.callbacks?.onUpdated;
         return iterator;
     }
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+
+    public async findEnv(env: string | Partial<PythonEnvInfo>): Promise<PythonEnvInfo[]> {
+        if (typeof env === 'string') {
+            env = buildEnvInfo({ executable: env });
+        }
+        // XXX TBD
+        return [];
+    }
+
+    public async resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const envInfo: PythonEnvInfo = typeof env === 'string' ? createLocatedEnv('', '', undefined, env) : env;
         if (this.callbacks?.resolve === undefined) {
             return envInfo;

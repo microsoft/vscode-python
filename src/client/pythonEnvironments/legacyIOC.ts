@@ -30,6 +30,7 @@ import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
 import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { getEnvs } from './base/locatorUtils';
+import { IPythonEnvsFinder } from './base/finder';
 import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
@@ -130,7 +131,7 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     return env;
 }
 
-interface IPythonEnvironments extends ILocator {}
+interface IPythonEnvironments extends ILocator, IPythonEnvsFinder {}
 
 @injectable()
 class ComponentAdapter implements IComponentAdapter {
@@ -148,7 +149,11 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
-        const env = await this.api.resolveEnv(pythonPath);
+        const envs = await this.api.findEnv(pythonPath);
+        if (envs.length === 0) {
+            return undefined;
+        }
+        const env = await this.api.resolveEnv(envs[0]);
         if (env === undefined) {
             return undefined;
         }
@@ -160,10 +165,11 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
-        const env = await this.api.resolveEnv(pythonPath);
-        if (env === undefined) {
+        const envs = await this.api.findEnv(pythonPath);
+        if (envs.length === 0) {
             return undefined;
         }
+        const env = envs[0];
         return env.kind === PythonEnvKind.MacDefault;
     }
 
@@ -200,10 +206,11 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
-        const env = await this.api.resolveEnv(interpreterPath);
-        if (env === undefined) {
+        const envs = await this.api.findEnv(interpreterPath);
+        if (envs.length === 0) {
             return undefined;
         }
+        const env = envs[0];
         return env.kind === PythonEnvKind.Conda;
     }
 
@@ -212,11 +219,16 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
-        const env = await this.api.resolveEnv(interpreterPath);
-        if (env === undefined) {
+        const envs = await this.api.findEnv(interpreterPath);
+        if (envs.length === 0) {
             return undefined;
         }
-        if (env.kind !== PythonEnvKind.Conda) {
+        const minimal = envs[0];
+        if (minimal.kind !== PythonEnvKind.Conda) {
+            return undefined;
+        }
+        const env = await this.api.resolveEnv(minimal);
+        if (env === undefined) {
             return undefined;
         }
         if (env.name !== '') {
@@ -233,10 +245,11 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
-        const env = await this.api.resolveEnv(pythonPath);
-        if (env === undefined) {
+        const envs = await this.api.findEnv(pythonPath);
+        if (envs.length === 0) {
             return undefined;
         }
+        const env = envs[0];
         return env.kind === PythonEnvKind.WindowsStore;
     }
 

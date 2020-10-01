@@ -133,7 +133,7 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
      * Locators are not required to have provide all info about
      * an environment.  However, each yielded item will at least
      * include all the `PythonEnvBaseInfo` data.  To ensure all
-     * possible information is filled in, call `ILocator.resolveEnv()`.
+     * possible information is filled in, call `IResolver.resolveEnv()`.
      *
      * Updates to yielded objects may be provided via the optional
      * `onUpdated` property of the iterator.  However, callers can
@@ -144,22 +144,6 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
      * @returns - the fast async iterator of Python envs, which may have incomplete info
      */
     iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
-
-    /**
-     * Find the given Python environment and fill in as much missing info as possible.
-     *
-     * If the locator can find the environment then the result is as
-     * much info about that env as the locator has.  At the least this
-     * will include all the `PythonEnvBaseInfo` data.  If a `PythonEnvInfo`
-     * was provided then the result will be a copy with any updates or
-     * extra info applied.
-     *
-     * If the locator could not find the environment then `undefined`
-     * is returned.
-     *
-     * @param env - the Python executable path or partial env info to find and update
-     */
-    resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
 }
 
 interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
@@ -168,9 +152,6 @@ interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
 
 /**
  * The generic base for Python envs locators.
- *
- * By default `resolveEnv()` returns undefined.  Subclasses may override
- * the method to provide an implementation.
  *
  * Subclasses will call `this.emitter.fire()` to emit events.
  *
@@ -187,17 +168,10 @@ export abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = Python
     }
 
     public abstract iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
-
-    public async resolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        return undefined;
-    }
 }
 
 /**
  * The base for most Python envs locators.
- *
- * By default `resolveEnv()` returns undefined.  Subclasses may override
- * the method to provide an implementation.
  *
  * Subclasses will call `this.emitter.fire()` * to emit events.
  *

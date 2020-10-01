@@ -3,6 +3,7 @@
 
 import * as vscode from 'vscode';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
+import { IPythonEnvsFinder } from './base/finder';
 import { PythonEnvInfo } from './base/info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from './base/locator';
 import { PythonEnvsChangedEvent } from './base/watcher';
@@ -23,10 +24,11 @@ export function activate(serviceManager: IServiceManager, serviceContainer: ISer
  *
  * Note that this is composed of sub-components.
  */
-export class PythonEnvironments implements ILocator {
+export class PythonEnvironments implements ILocator, IPythonEnvsFinder {
     constructor(
         // These are the sub-components the full component is composed of:
-        private readonly locators: ILocator
+        private readonly locators: ILocator,
+        private readonly finders: IPythonEnvsFinder,
     ) {}
 
     public get onChanged(): vscode.Event<PythonEnvsChangedEvent> {
@@ -37,8 +39,12 @@ export class PythonEnvironments implements ILocator {
         return this.locators.iterEnvs(query);
     }
 
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        return this.locators.resolveEnv(env);
+    public async findEnv(env: string | Partial<PythonEnvInfo>): Promise<PythonEnvInfo[]> {
+        return this.finders.findEnv(env);
+    }
+
+    public async resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        return this.finders.resolveEnv(env);
     }
 }
 
@@ -51,7 +57,7 @@ export function createAPI(): [PythonEnvironments, () => void] {
     const [locators, activateLocators] = initLocators();
 
     return [
-        new PythonEnvironments(locators),
+        new PythonEnvironments(locators, locators),
         () => {
             activateLocators();
             // Any other activation needed for the API will go here later.

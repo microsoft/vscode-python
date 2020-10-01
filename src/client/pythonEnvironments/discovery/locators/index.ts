@@ -25,6 +25,8 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import { IPythonEnvsFinder } from '../../base/finder';
+import { DisableableFinder, Finders } from '../../base/finders';
 import { PythonEnvInfo } from '../../base/info';
 import {
     ILocator,
@@ -42,16 +44,35 @@ import { PythonEnvironment } from '../../info';
 import { isHiddenInterpreter } from './services/interpreterFilter';
 import { GetInterpreterLocatorOptions } from './types';
 
+class MultiCombined extends Locators implements IPythonEnvsFinder {
+    private readonly finders: Finders;
+
+    constructor(
+        wrapped: (ILocator & IPythonEnvsFinder)[],
+    ) {
+        super(wrapped);
+        this.finders = new Finders(wrapped);
+    }
+
+    public findEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo[]> {
+        return this.finders.findEnv(env);
+    }
+
+    public resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        return this.finders.resolveEnv(env);
+    }
+}
+
 /**
  * A wrapper around all locators used by the extension.
  */
-export class ExtensionLocators extends Locators {
+export class ExtensionLocators extends MultiCombined {
     constructor(
         // These are expected to be low-level locators (e.g. system).
-        nonWorkspace: ILocator[],
+        nonWorkspace: (ILocator & IPythonEnvsFinder)[],
         // This is expected to be a locator wrapping any found in
         // the workspace (i.e. WorkspaceLocators).
-        workspace: ILocator,
+        workspace: ILocator & IPythonEnvsFinder,
     ) {
         super([...nonWorkspace, workspace]);
     }
@@ -72,8 +93,8 @@ type RootURI = string;
  *
  * The factories are used to produce the locators for each workspace folder.
  */
-export class WorkspaceLocators extends Locator {
-    private readonly locators: Record<RootURI, DisableableLocator> = {};
+export class WorkspaceLocators extends Locator implements IPythonEnvsFinder {
+    private readonly locators: Record<RootURI, DisableableCombined> = {};
 
     private readonly roots: Record<RootURI, Uri> = {};
 
@@ -120,7 +141,21 @@ export class WorkspaceLocators extends Locator {
         return combineIterators(iterators);
     }
 
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+    public async findEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo[]> {
+        if (typeof env !== 'string' && env.searchLocation) {
+            const rootLocator = this.locators[env.searchLocation.toString()];
+            if (rootLocator) {
+                return rootLocator.findEnv(env);
+            }
+        }
+        const promises: Promise<PythonEnvInfo[]> = Object.keys(this.locators)
+            .map((k) => this.locators[k])
+            .map((r) => r.findEnv(env));
+        return (await Promise.all(promises))
+            .reduce((p, c) => [...p, ...c]);
+    }
+
+    public async resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         if (typeof env !== 'string' && env.searchLocation) {
             const rootLocator = this.locators[env.searchLocation.toString()];
             if (rootLocator) {
@@ -149,7 +184,7 @@ export class WorkspaceLocators extends Locator {
         this.factories.forEach((create) => {
             locators.push(...create(root));
         });
-        const locator = new DisableableLocator(new Locators(locators));
+        const locator = new DisableableCombined(new MultiCombined(locators));
         // Cache it.
         const key = root.toString();
         this.locators[key] = locator;
@@ -174,6 +209,35 @@ export class WorkspaceLocators extends Locator {
         delete this.roots[key];
         locator.disable();
         this.emitter.fire({ searchLocation: root });
+    }
+}
+
+class DisableableCombined extends DisableableLocator implements IPythonEnvsFinder {
+    private readonly finder: DisableableFinder;
+
+    constructor(
+        wrapped: ILocator & IPythonEnvsFinder,
+    ) {
+        super(wrapped);
+        this.finder = new DisableableFinder(wrapped);
+    }
+
+    public enable(): void {
+        super.enable();
+        this.finder.enable();
+    }
+
+    public disable(): void {
+        super.disable();
+        this.finder.disable();
+    }
+
+    public findEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo[]> {
+        return this.finder.findEnv(env);
+    }
+
+    public resolveEnv(env: PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        return this.finder.resolveEnv(env);
     }
 }
 
