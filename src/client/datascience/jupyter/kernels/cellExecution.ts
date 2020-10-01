@@ -426,12 +426,7 @@ export class CellExecution {
     }
 
     private async addToCellData(
-        output:
-            | nbformat.IUnrecognizedOutput
-            | nbformat.IExecuteResult
-            | nbformat.IDisplayData
-            | nbformat.IStream
-            | nbformat.IError,
+        output: nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError,
         clearState: RefBool
     ) {
         const converted = cellOutputToVSCCellOutput(output);
@@ -494,6 +489,7 @@ export class CellExecution {
                                 output_type: 'stream',
                                 // tslint:disable-next-line: no-any
                                 text: (o.data as any)['text/plain'].toString(),
+                                name: 'stdout',
                                 metadata: {},
                                 execution_count: reply.execution_count
                             },
@@ -533,7 +529,7 @@ export class CellExecution {
             if (existing && 'text/plain' in existing.data) {
                 // tslint:disable-next-line:restrict-plus-operands
                 existing.data['text/plain'] = formatStreamText(
-                    concatMultilineString(`${existing.data['text/plain']}${escape(msg.content.text)}`)
+                    concatMultilineString(`${existing.data['text/plain']}${msg.content.text}`)
                 );
                 edit.replaceCellOutput(this.cellIndex, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
             } else {
