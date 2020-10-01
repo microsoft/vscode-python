@@ -402,7 +402,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         }
 
         // Make sure text output is escaped (nteract texttransform won't)
-        if (mimeType === 'text/plain') {
+        if (mimeType === 'text/plain' && data) {
             data = lodashEscape(data.toString());
             mimeType = 'text/html';
         }
