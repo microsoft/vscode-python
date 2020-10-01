@@ -231,18 +231,25 @@ suite('Windows Store', () => {
 
             assertEnvEqual(actual, expected);
         });
-        test('resolveEnv(string): Non store python', async () => {
-            // Use a non store root path
-            const python38path = path.join(testLocalAppData, 'python3.8.exe');
+        test('resolveEnv(string): forbidden path', async () => {
+            const python38path = path.join(testLocalAppData, 'Program Files', 'WindowsApps', 'python3.8.exe');
+            const expected = {
+
+                name: '',
+                location: '',
+                kind: PythonEnvKind.WindowsStore,
+                distro: { org: 'Microsoft' },
+                ...createExpectedInterpreterInfo(python38path),
+            };
 
             const locator = new WindowsStoreLocator();
             const actual = await locator.resolveEnv(python38path);
 
-            assert.deepStrictEqual(actual, undefined);
+            assertEnvEqual(actual, expected);
         });
-        test('resolveEnv(string): forbidden path', async () => {
+        test('resolveEnv(string): Non store python', async () => {
             // Use a non store root path
-            const python38path = path.join(testLocalAppData, 'Program Files', 'WindowsApps', 'python3.8.exe');
+            const python38path = path.join(testLocalAppData, 'python3.8.exe');
 
             const locator = new WindowsStoreLocator();
             const actual = await locator.resolveEnv(python38path);
