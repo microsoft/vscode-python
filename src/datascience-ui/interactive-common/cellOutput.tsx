@@ -330,7 +330,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             // tslint:disable-next-line: no-any
             const text = (input as any)['text/plain'];
             input = {
-                'text/html': lodashEscape(text)
+                'text/html': lodashEscape(concatMultilineString(text))
             };
         } else if (output.output_type === 'stream') {
             mimeType = 'text/html';
