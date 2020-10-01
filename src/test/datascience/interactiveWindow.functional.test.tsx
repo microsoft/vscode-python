@@ -63,6 +63,8 @@ import {
     verifyLastCellInputState
 } from './testHelpers';
 import { ITestInteractiveWindowProvider } from './testInteractiveWindowProvider';
+// tslint:disable-next-line: no-require-imports no-var-requires
+const _escape = require('lodash/escape') as typeof import('lodash/escape'); // NOSONAR
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Interactive Window output tests', () => {
@@ -385,6 +387,9 @@ for _ in range(50):
     time.sleep(0.1)
     sys.stdout.write('\\r')`;
 
+            const exception = 'raise Exception("<html check>")';
+            addMockData(ioc, exception, `"<html check>"`, 'text/html', 'error');
+
             addMockData(ioc, badPanda, `pandas has no attribute 'read'`, 'text/html', 'error');
             addMockData(ioc, goodPanda, `<td>A table</td>`, 'text/html');
             addMockData(ioc, matPlotLib, matPlotLibResults, 'text/html');
@@ -400,6 +405,9 @@ for _ in range(50):
                 }
                 return Promise.resolve({ result: result, haveMore: loops > 0 });
             });
+
+            await addCode(ioc, exception, true);
+            verifyHtmlOnInteractiveCell(_escape(`<html check>`), CellPosition.Last);
 
             await addCode(ioc, badPanda, true);
             verifyHtmlOnInteractiveCell(`has no attribute 'read'`, CellPosition.Last);

@@ -20,6 +20,8 @@ import { getRichestMimetype, getTransform, isIPyWidgetOutput, isMimeTypeSupporte
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiToHtml = require('ansi-to-html');
+// tslint:disable-next-line: no-var-requires no-require-imports
+const lodashEscape = require('lodash/escape');
 
 // tslint:disable-next-line: no-require-imports no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
@@ -328,7 +330,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             // tslint:disable-next-line: no-any
             const text = (input as any)['text/plain'];
             input = {
-                'text/html': text // XML tags should have already been escaped.
+                'text/html': lodashEscape(concatMultilineString(text))
             };
         } else if (output.output_type === 'stream') {
             mimeType = 'text/html';
@@ -337,7 +339,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             renderWithScrollbars = true;
             // Sonar is wrong, TS won't compile without this AS
             const stream = output as nbformat.IStream; // NOSONAR
-            const concatted = concatMultilineString(stream.text);
+            const concatted = lodashEscape(concatMultilineString(stream.text));
             input = {
                 'text/html': concatted // XML tags should have already been escaped.
             };
@@ -363,14 +365,18 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             const error = output as nbformat.IError; // NOSONAR
             try {
                 const converter = new CellOutput.ansiToHtmlClass(CellOutput.getAnsiToHtmlOptions());
-                const trace = error.traceback.length ? converter.toHtml(error.traceback.join('\n')) : error.evalue;
+                // Modified traceback may exist. If so use that instead. It's only at run time though
+                const traceback: string[] = error.transient
+                    ? (error.transient as string[])
+                    : error.traceback.map(lodashEscape);
+                const trace = traceback ? converter.toHtml(traceback.join('\n')) : error.evalue;
                 input = {
                     'text/html': trace
                 };
             } catch {
                 // This can fail during unit tests, just use the raw data
                 input = {
-                    'text/html': error.evalue
+                    'text/html': lodashEscape(error.evalue)
                 };
             }
         } else if (input) {
@@ -393,6 +399,12 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         // Fixup latex to make sure it has the requisite $$ around it
         if (mimeType === 'text/latex') {
             data = fixMarkdown(concatMultilineString(data as nbformat.MultilineString, true), true);
+        }
+
+        // Make sure text output is escaped (nteract texttransform won't)
+        if (mimeType === 'text/plain' && data) {
+            data = lodashEscape(data.toString());
+            mimeType = 'text/html';
         }
 
         return {

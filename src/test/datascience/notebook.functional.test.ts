@@ -6,8 +6,6 @@ import { assert } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { injectable } from 'inversify';
-// tslint:disable-next-line: no-require-imports
-import escape = require('lodash/escape');
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
@@ -130,7 +128,7 @@ suite('DataScience notebook tests', () => {
                 return path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
             }
 
-            function extractDataOutput(cell: ICell): any {
+            function extractDataOutput(cell: ICell): string | undefined {
                 assert.equal(cell.data.cell_type, 'code', `Wrong type of cell returned`);
                 const codeCell = cell.data as nbformat.ICodeCell;
                 if (codeCell.outputs.length > 0) {
@@ -145,7 +143,7 @@ suite('DataScience notebook tests', () => {
                         // For linter
                         assert.ok(data.hasOwnProperty('text/plain'), `Cell mime type not correct`);
                         assert.ok((data as any)['text/plain'], `Cell mime type not correct`);
-                        return (data as any)['text/plain'];
+                        return concatMultilineString((data as any)['text/plain']);
                     }
                 }
             }
@@ -159,9 +157,9 @@ suite('DataScience notebook tests', () => {
                 const cells = await notebook!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
                 assert.equal(cells.length, 1, `Wrong number of cells returned`);
                 const data = extractDataOutput(cells[0]);
-                if (pathVerify) {
+                if (pathVerify && data) {
                     // For a path comparison normalize output
-                    const normalizedOutput = path.normalize(data).toUpperCase().replace(/&#39;/g, '');
+                    const normalizedOutput = path.normalize(data).toUpperCase().replace(/'/g, '');
                     const normalizedTarget = path.normalize(expectedValue).toUpperCase().replace(/'/g, '');
                     assert.equal(normalizedOutput, normalizedTarget, 'Cell path values does not match');
                 } else {
@@ -1031,7 +1029,7 @@ a`,
                     mimeType: 'text/plain',
                     cellType: 'code',
                     result: `<a href=f>`,
-                    verifyValue: (d) => assert.ok(d.includes(escape(`<a href=f>`)), 'XML not escaped')
+                    verifyValue: (d) => assert.ok(d.includes(`<a href=f>`), 'Should not escape at the notebook level')
                 },
                 {
                     markdownRegEx: undefined,
@@ -1043,7 +1041,7 @@ df.head()`,
                     cellType: 'error',
                     // tslint:disable-next-line:quotemark
                     verifyValue: (d) =>
-                        assert.ok((d as string).includes(escape("has no attribute 'read'")), 'Unexpected error result')
+                        assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
                 },
                 {
                     markdownRegEx: undefined,
@@ -1340,7 +1338,10 @@ plt.show()`,
                     }
                     public async postExecute(cell: ICell, silent: boolean): Promise<void> {
                         if (!silent) {
-                            outputs.push(extractDataOutput(cell));
+                            const data = extractDataOutput(cell);
+                            if (data) {
+                                outputs.push(data);
+                            }
                         }
                     }
                 }

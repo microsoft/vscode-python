@@ -40,11 +40,7 @@ import { KernelConnectionMetadata } from './kernels/types';
 
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-// tslint:disable-next-line: no-require-imports
-import escape = require('lodash/escape');
-// tslint:disable-next-line: no-require-imports
-import unescape = require('lodash/unescape');
-import { concatMultilineString, formatStreamText } from '../../../datascience-ui/common';
+import { concatMultilineString, formatStreamText, splitMultilineString } from '../../../datascience-ui/common';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterFromKernelConnectionMetadata, isPythonKernelConnection } from './kernels/helpers';
@@ -787,12 +783,12 @@ export class JupyterNotebookBase implements INotebook {
                 outputs.forEach((o) => {
                     if (o.output_type === 'stream') {
                         const stream = o as nbformat.IStream;
-                        result = result.concat(formatStreamText(unescape(concatMultilineString(stream.text, true))));
+                        result = result.concat(formatStreamText(concatMultilineString(stream.text, true)));
                     } else {
                         const data = o.data;
                         if (data && data.hasOwnProperty('text/plain')) {
                             // tslint:disable-next-line:no-any
-                            result = result.concat(unescape((data as any)['text/plain']));
+                            result = result.concat((data as any)['text/plain']);
                         }
                     }
                 });
@@ -1206,12 +1202,7 @@ export class JupyterNotebookBase implements INotebook {
 
     private addToCellData = (
         cell: ICell,
-        output:
-            | nbformat.IUnrecognizedOutput
-            | nbformat.IExecuteResult
-            | nbformat.IDisplayData
-            | nbformat.IStream
-            | nbformat.IError,
+        output: nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError,
         clearState: RefBool
     ) => {
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
@@ -1237,7 +1228,10 @@ export class JupyterNotebookBase implements INotebook {
     ) {
         // Check our length on text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
-            msg.content.data['text/plain'] = escape(trimFunc(msg.content.data['text/plain'] as string));
+            msg.content.data['text/plain'] = splitMultilineString(
+                // tslint:disable-next-line: no-any
+                trimFunc(concatMultilineString(msg.content.data['text/plain'] as any))
+            );
         }
 
         this.addToCellData(
@@ -1265,14 +1259,15 @@ export class JupyterNotebookBase implements INotebook {
             reply.payload.forEach((o) => {
                 if (o.data && o.data.hasOwnProperty('text/plain')) {
                     // tslint:disable-next-line: no-any
-                    const str = (o.data as any)['text/plain'].toString();
-                    const data = escape(trimFunc(str)) as string;
+                    const str = concatMultilineString((o.data as any)['text/plain']); // NOSONAR
+                    const data = trimFunc(str);
                     this.addToCellData(
                         cell,
                         {
                             // Mark as stream output so the text is formatted because it likely has ansi codes in it.
                             output_type: 'stream',
-                            text: data,
+                            text: splitMultilineString(data),
+                            name: 'stdout',
                             metadata: {},
                             execution_count: reply.execution_count
                         },
@@ -1313,23 +1308,25 @@ export class JupyterNotebookBase implements INotebook {
                 ? data.outputs[data.outputs.length - 1]
                 : undefined;
         if (existing) {
-            // tslint:disable-next-line:restrict-plus-operands
-            existing.text = existing.text + escape(msg.content.text);
-            const originalText = formatStreamText(concatMultilineString(existing.text));
+            const originalText = formatStreamText(
+                // tslint:disable-next-line: no-any
+                `${concatMultilineString(existing.text as any)}${concatMultilineString(msg.content.text)}`
+            );
             originalTextLength = originalText.length;
-            existing.text = trimFunc(originalText);
-            trimmedTextLength = existing.text.length;
+            const newText = trimFunc(originalText);
+            trimmedTextLength = newText.length;
+            existing.text = splitMultilineString(newText);
         } else {
-            const originalText = formatStreamText(concatMultilineString(escape(msg.content.text)));
+            const originalText = formatStreamText(concatMultilineString(msg.content.text));
             originalTextLength = originalText.length;
             // Create a new stream entry
             const output: nbformat.IStream = {
                 output_type: 'stream',
                 name: msg.content.name,
-                text: trimFunc(originalText)
+                text: [trimFunc(originalText)]
             };
             data.outputs = [...data.outputs, output];
-            trimmedTextLength = output.text.length;
+            trimmedTextLength = output.text[0].length;
             cell.data = data;
         }
 
@@ -1338,23 +1335,16 @@ export class JupyterNotebookBase implements INotebook {
         // the output is trimmed and what setting changes that.
         // * If data.metadata.tags is undefined, define it so the following
         //   code is can rely on it being defined.
-        if (data.metadata.tags === undefined) {
-            data.metadata.tags = [];
-        }
-
-        data.metadata.tags = data.metadata.tags.filter((t) => t !== 'outputPrepend');
-
         if (trimmedTextLength < originalTextLength) {
+            if (data.metadata.tags === undefined) {
+                data.metadata.tags = [];
+            }
+            data.metadata.tags = data.metadata.tags.filter((t) => t !== 'outputPrepend');
             data.metadata.tags.push('outputPrepend');
         }
     }
 
     private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool, cell: ICell) {
-        // Escape text output
-        if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
-            msg.content.data['text/plain'] = escape(msg.content.data['text/plain'] as string);
-        }
-
         const output: nbformat.IDisplayData = {
             output_type: 'display_data',
             data: msg.content.data,
@@ -1402,10 +1392,14 @@ export class JupyterNotebookBase implements INotebook {
     private handleError(msg: KernelMessage.IErrorMsg, clearState: RefBool, cell: ICell) {
         const output: nbformat.IError = {
             output_type: 'error',
-            ename: escape(msg.content.ename),
-            evalue: escape(msg.content.evalue),
-            traceback: msg.content.traceback.map(escape)
+            ename: msg.content.ename,
+            evalue: msg.content.evalue,
+            traceback: msg.content.traceback
         };
+        if (msg.content.hasOwnProperty('transient')) {
+            // tslint:disable-next-line: no-any
+            output.transient = (msg.content as any).transient;
+        }
         this.addToCellData(cell, output, clearState);
         cell.state = CellState.error;
 
