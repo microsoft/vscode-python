@@ -227,6 +227,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
+          working-directory: ${{ env.REPO_DIRECTORY }}
         if: matrix.test-suite == 'venv'
 
       - name: Run single-workspace tests
