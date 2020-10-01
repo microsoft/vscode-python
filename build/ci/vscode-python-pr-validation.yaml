@@ -91,22 +91,27 @@ stages:
       #   steps:
       #     - template: templates/test_phases.yml
 
-  # - stage: Mac
-  #   dependsOn: []
-  #   jobs:
-  #     - job: 'Py3x'
-  #       dependsOn: []
-  #       strategy:
-  #         matrix:
-  #           # This gives us our best functional coverage for the OS.
-  #           'Functional+Single':
-  #             TestsToRun: 'testfunctional, testSingleWorkspace'
-  #             NeedsPythonTestReqs: true
-  #             NeedsPythonFunctionalReqs: true
-  #       pool:
-  #         vmImage: '$(vmImageMacOS)'
-  #       steps:
-  #         - template: templates/test_phases.yml
+  - stage: Mac
+    dependsOn: []
+    jobs:
+      - job: 'Py3x'
+        dependsOn: []
+        strategy:
+          matrix:
+            # This gives us our best functional coverage for the OS.
+            'Functional+Single':
+              TestsToRun: 'testfunctional, testSingleWorkspace'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Venv':
+              TestsToRun: 'venvTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+        pool:
+          vmImage: '$(vmImageMacOS)'
+        steps:
+          - template: templates/test_phases.yml
 
   - stage: Windows
     dependsOn: []
