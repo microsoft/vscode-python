@@ -19,11 +19,12 @@ env:
   TEST_RESULTS_DIRECTORY: .
   REPO_DIRECTORY: 'test with spaces'
 
-jobs:
-  defaults:
+defaults:
   run:
     # Cannot use context or expressions in defaults
     working-directory: 'test with spaces'
+
+jobs:
   ### Non-smoke tests
   tests:
     name: Tests
