@@ -892,7 +892,7 @@ export namespace DataScience {
     export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
     export const exportFailedGeneralMessage = localize(
         'DataScience.exportFailedGeneralMessage',
-        `Export failed. Please check the 'Python' [output](command:python.viewOutput) panel for further details.`
+        `Please check the 'Python' [output](command:python.viewOutput) panel for further details.`
     );
     export const exportToPDFDependencyMessage = localize(
         'DataScience.exportToPDFDependencyMessage',

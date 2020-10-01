@@ -873,7 +873,7 @@ suite('DataScience notebook tests', () => {
                 );
                 assert.ok(
                     await testCancelableMethod(
-                        (t: CancellationToken) => jupyterExecution.isImportSupported(t),
+                        (t: CancellationToken) => jupyterExecution.getImportPackageVersion(t),
                         'Cancel did not cancel isImport after {0}ms',
                         true
                     )

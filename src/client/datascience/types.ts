@@ -7,6 +7,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import type { JSONObject } from '@phosphor/coreutils';
 import { WriteStream } from 'fs-extra';
 import { Observable } from 'rxjs/Observable';
+import { SemVer } from 'semver';
 import {
     CancellationToken,
     CodeLens,
@@ -282,7 +283,7 @@ export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     serverStarted: Event<INotebookServerOptions | undefined>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    isImportSupported(cancelToken?: CancellationToken): Promise<boolean>;
+    getImportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined>;
     isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
         options?: INotebookServerOptions,
@@ -993,13 +994,10 @@ export interface IJupyterSubCommandExecutionService {
      */
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     /**
-     * Checks whether exporting of ipynb is supported.
-     *
-     * @param {CancellationToken} [cancelToken]
-     * @returns {Promise<boolean>}
-     * @memberof IJupyterSubCommandExecutionService
+     * If exporting is supported return the version of nbconvert available
+     * otherwise undefined.
      */
-    isExportSupported(cancelToken?: CancellationToken): Promise<boolean>;
+    getExportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined>;
     /**
      * Error message indicating why jupyter notebook isn't supported.
      *
