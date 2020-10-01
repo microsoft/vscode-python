@@ -472,7 +472,7 @@ jobs:
     needs: [tests, smoke-tests, build-vsix]
     env:
       BLOB_CONTAINER_NAME: extension-builds
-      BLOB_NAME: ms-python-gha-insiders.vsix # So named to avoid clobbering Azure Pipelines upload.
+      BLOB_NAME: ms-python-insiders.vsix
 
     steps:
       - name: Download VSIX
