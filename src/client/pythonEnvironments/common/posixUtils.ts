@@ -25,7 +25,7 @@ export function isPosixPythonBin(interpreterPath:string): boolean {
 
 export async function commonPosixBinPaths(): Promise<string[]> {
     const searchPaths = (getPathEnvironmentVariable() || '')
-        .split(path.posix.delimiter)
+        .split(path.delimiter)
         .filter((p) => p.length > 0);
 
     const paths: Set<string> = new Set(

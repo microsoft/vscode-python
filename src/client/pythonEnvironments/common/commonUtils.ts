@@ -6,8 +6,8 @@ import * as fsapi from 'fs-extra';
 export async function getFileInfo(filePath: string): Promise<{ctime:number, mtime:number}> {
     const data = await fsapi.lstat(filePath);
     return {
-        ctime: data.ctime.getUTCDate(),
-        mtime: data.mtime.getUTCDate(),
+        ctime: data.ctime.valueOf(),
+        mtime: data.mtime.valueOf(),
     };
 }
 

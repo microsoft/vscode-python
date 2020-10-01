@@ -11,7 +11,7 @@ import {
 import { parseVersion } from '../../../base/info/pythonVersion';
 import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
 import { PythonEnvsWatcher } from '../../../base/watcher';
-import { getFileInfo } from '../../../common/externalDependencies';
+import { getFileInfo } from '../../../common/commonUtils';
 import { isWindowsPythonExe } from '../../../common/windowsUtils';
 
 /**

@@ -21,8 +21,8 @@ async function getPythonBinFromKnownPaths(): Promise<string[]> {
     // eslint-disable-next-line no-restricted-syntax
     for (const knownPath of knownPaths) {
         // eslint-disable-next-line no-await-in-loop
-        const files = await fsapi.readdir(knownPath);
-        files.map((filename:string) => path.join(knownPath, filename))
+        const files = (await fsapi.readdir(knownPath))
+            .map((filename:string) => path.join(knownPath, filename))
             .filter(isPosixPythonBin);
 
         // eslint-disable-next-line no-restricted-syntax
