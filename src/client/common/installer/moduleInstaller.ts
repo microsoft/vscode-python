@@ -14,7 +14,6 @@ import { wrapCancellationTokens } from '../cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from '../process/internal/python';
-import { ISOLATE_SCRIPT_FILENAME } from '../process/internal/scripts';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
 import { Products } from '../utils/localize';
@@ -48,12 +47,6 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                     : resource;
                 const pythonPath = isResource(resource) ? settings.pythonPath : resource.path;
                 const args = internalPython.execModule(executionInfo.moduleName, executionInfoArgs);
-                if (args[0].endsWith(ISOLATE_SCRIPT_FILENAME)) {
-                    // We need to quote it here since we are sending this directly as text to
-                    // the terminal. This should be handled generically so we don't have to do
-                    // this everywhere.
-                    args[0] = args[0].toCommandArgument();
-                }
                 if (!interpreter || interpreter.envType !== EnvironmentType.Unknown) {
                     await terminalService.sendCommand(pythonPath, args, token);
                 } else if (settings.globalModuleInstallation) {
