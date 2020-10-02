@@ -13,7 +13,6 @@ import { captureTelemetry } from '../../../telemetry';
 import { Commands, Telemetry, VSCodeNativeTelemetry } from '../../constants';
 import { handleUpdateDisplayDataMessage } from '../../notebook/helpers/executionHelpers';
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
-import { INotebookContentProvider } from '../../notebook/types';
 import { IDataScienceErrorHandler, INotebook, INotebookEditorProvider } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage } from './types';
@@ -40,19 +39,12 @@ export class KernelExecution implements IDisposable {
         private readonly commandManager: ICommandManager,
         private readonly interpreterService: IInterpreterService,
         errorHandler: IDataScienceErrorHandler,
-        private readonly contentProvider: INotebookContentProvider,
         editorProvider: INotebookEditorProvider,
         readonly kernelSelectionUsage: IKernelSelectionUsage,
         readonly appShell: IApplicationShell,
         readonly vscNotebook: IVSCodeNotebook
     ) {
-        this.executionFactory = new CellExecutionFactory(
-            this.contentProvider,
-            errorHandler,
-            editorProvider,
-            appShell,
-            vscNotebook
-        );
+        this.executionFactory = new CellExecutionFactory(errorHandler, editorProvider, appShell, vscNotebook);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
@@ -174,9 +166,7 @@ export class KernelExecution implements IDisposable {
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         const editor = this.vscNotebook.notebookEditors.find((e) => e.document === document);
         if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg) && editor) {
-            if (await handleUpdateDisplayDataMessage(msg, editor)) {
-                this.contentProvider.notifyChangesToDocument(document);
-            }
+            await handleUpdateDisplayDataMessage(msg, editor);
         }
     }
 

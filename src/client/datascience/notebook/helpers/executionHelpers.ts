@@ -21,14 +21,14 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 export async function handleUpdateDisplayDataMessage(
     msg: KernelMessage.IUpdateDisplayDataMsg,
     editor: NotebookEditor
-): Promise<boolean> {
+): Promise<void> {
     const document = editor.document;
-    let updated = false;
     // Find any cells that have this same display_id
     for (const cell of document.cells) {
         if (cell.cellKind !== vscodeNotebookEnums.CellKind.Code) {
-            return false;
+            continue;
         }
+        let updated = false;
 
         const outputs = createIOutputFromCellOutputs(cell.outputs);
         const changedOutputs = outputs.map((output) => {
@@ -51,15 +51,10 @@ export async function handleUpdateDisplayDataMessage(
             }
         });
 
-        if (!updated) {
-            continue;
+        if (updated) {
+            await updateCellOutput(editor, cell, changedOutputs);
         }
-
-        await updateCellOutput(editor, cell, changedOutputs);
-        updated = true;
     }
-
-    return updated;
 }
 
 /**
@@ -87,7 +82,7 @@ export async function updateCellExecutionCount(
     editor: NotebookEditor,
     cell: NotebookCell,
     executionCount: number
-): Promise<boolean> {
+): Promise<void> {
     if (cell.metadata.executionOrder !== executionCount && executionCount) {
         const cellIndex = editor.document.cells.indexOf(cell);
         await editor.edit((edit) =>
@@ -96,9 +91,7 @@ export async function updateCellExecutionCount(
                 executionOrder: executionCount
             })
         );
-        return true;
     }
-    return false;
 }
 
 /**

@@ -24,7 +24,6 @@ import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { CodeSnippets } from '../../constants';
-import { INotebookContentProvider } from '../../notebook/types';
 import { getDefaultNotebookContent, updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import {
     IDataScienceErrorHandler,
@@ -82,7 +81,6 @@ export class Kernel implements IKernel {
         commandManager: ICommandManager,
         interpreterService: IInterpreterService,
         private readonly errorHandler: IDataScienceErrorHandler,
-        contentProvider: INotebookContentProvider,
         editorProvider: INotebookEditorProvider,
         private readonly kernelProvider: IKernelProvider,
         private readonly kernelSelectionUsage: IKernelSelectionUsage,
@@ -94,7 +92,6 @@ export class Kernel implements IKernel {
             commandManager,
             interpreterService,
             errorHandler,
-            contentProvider,
             editorProvider,
             kernelSelectionUsage,
             appShell,
