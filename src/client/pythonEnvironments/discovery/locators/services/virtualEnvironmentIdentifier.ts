@@ -8,8 +8,7 @@ import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
-import { comparePythonVersionSpecificity } from '../../../base/info/env';
-import { parseVersion, parseVersionInfo } from '../../../base/info/pythonVersion';
+import { compareVersions, parseVersion, parseVersionInfo } from '../../../base/info/pythonVersion';
 import { pathExists, readFile } from '../../../common/externalDependencies';
 
 function getPyvenvConfigPathsFrom(interpreterPath:string): string[] {
@@ -162,7 +161,7 @@ export async function getPythonVersionFromVenv(interpreterPath:string): Promise<
 
                 if (pythonVersions.length > 0) {
                     for (const v of pythonVersions) {
-                        if (v && comparePythonVersionSpecificity(v, version) > 0) {
+                        if (v && compareVersions(v, version) > 0) {
                             version = v;
                         }
                     }

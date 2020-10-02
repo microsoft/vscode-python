@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import { isEqual as areDeepEqual } from 'lodash';
 import { traceError } from '../../../common/logger';
 import {
+    compareVersions as compareBasicVersions,
     EMPTY_VERSION,
     isVersionInfoEmpty,
     parseBasicVersionInfo,
@@ -122,47 +123,126 @@ export function isVersionEmpty(version: PythonVersion): boolean {
 
 /**
  * Checks if all the fields in the version object match.
- * @param {PythonVersion} left
- * @param {PythonVersion} right
- * @returns {boolean}
+ *
+ * Note that "sysVersion" is ignored.
  */
 export function areIdenticalVersion(left: PythonVersion, right: PythonVersion): boolean {
-    return areDeepEqual(left, right);
+    // We do not do a simple deep-equal check here due to "sysVersion".
+    const [result,] = compareVersionsRaw(left, right);
+    return result === 0;
 }
 
 /**
  * Checks if major and minor version fields match. True here means that the python ABI is the
  * same, but the micro version could be different. But for the purpose this is being used
  * it does not matter.
- * @param {PythonVersion} left
- * @param {PythonVersion} right
- * @returns {boolean}
  */
 export function areSimilarVersions(left: PythonVersion, right: PythonVersion): boolean {
+    let [result, prop] = compareVersionsRaw(left, right);
+    if (result === 0) {
+        return true;
+    }
     if (left.major === 2 && right.major === 2) {
-        if (left.minor === -1 || right.minor === -1) {
-            // We are going to assume that if the major version is 2 then the version is 2.7
-            return true;
+        // We are going to assume that if the major version is 2 then the version is 2.7
+        if (left.minor === -1) {
+            [result, prop] = compareBasicVersions({ ...left, minor: 7 }, right);
+        }
+        if (right.minor === -1) {
+            [result, prop] = compareBasicVersions(left, { ...right, minor: 7 });
         }
     }
+    if (result < 0) {
+        return ((right as unknown) as any)[prop] === -1;
+    }
+    return ((left as unknown) as any)[prop] === -1;
+    //if (left.major === 2 && right.major === 2) {
+    //    if (left.minor === -1 || right.minor === -1) {
+    //        // We are going to assume that if the major version is 2 then the version is 2.7
+    //        return true;
+    //    }
+    //}
 
-    if (left.major !== right.major) {
-        return false;
+    //if (left.major !== right.major) {
+    //    return false;
+    //}
+    //if (left.minor === -1 || right.minor === -1) {
+    //    return true;
+    //}
+    //if (left.minor !== right.minor) {
+    //    return false;
+    //}
+    //if (left.micro === -1 || right.micro === -1) {
+    //    return true;
+    //}
+    //if (left.micro !== right.micro) {
+    //    return false;
+    //}
+    //if (left.release === undefined || right.release === undefined) {
+    //    return true;
+    //}
+    //return areDeepEqual(left.release, right.release);
+}
+
+/**
+ * Determine if the first version is less-than (-1), equal (0), or greater-than (1).
+ */
+export function compareVersions(left: PythonVersion, right: PythonVersion): number {
+    const [compared] = compareVersionsRaw(left, right);
+    return compared;
+}
+
+function compareVersionsRaw(left: PythonVersion, right: PythonVersion): [number, string] {
+    const [result, prop] = compareBasicVersions(left, right);
+    if (result !== 0) {
+        return [result, prop];
     }
-    if (left.minor === -1 || right.minor === -1) {
-        return true;
+    const [release,] = compareVersionRelease(left, right);
+    return release === 0 ? [0, ''] : [release, 'release'];
+}
+
+function compareVersionRelease(left: PythonVersion, right: PythonVersion): [number, string] {
+    if (left.release === undefined) {
+        if (right.release === undefined) {
+            return [0, ''];
+        }
+        return [1, 'level'];
+    } else if (right.release === undefined) {
+        return [-1, 'level'];
     }
-    if (left.minor !== right.minor) {
-        return false;
+
+    if (left.release.level < right.release.level) {
+        return [1, 'level'];
+    } else if (left.release.level > right.release.level) {
+        return [-1, 'level'];
+    } else if (left.release.level === PythonReleaseLevel.Final) {
+        // We ignore "serial".
+        return [0, ''];
     }
-    if (left.micro === -1 || right.micro === -1) {
-        return true;
+
+    if (left.release.serial < right.release.serial) {
+        return [1, 'serial'];
+    } else if (left.release.serial > right.release.serial) {
+        return [-1, 'serial'];
     }
-    if (left.micro !== right.micro) {
-        return false;
+
+    return [0, ''];
+}
+
+/**
+ * Build a new version based on the given objects.
+ *
+ * "version" is used if the two are equivalent and "other" does not
+ * have more info.  Otherwise "other" is used.
+ */
+export function mergeVersions(version: PythonVersion, other: PythonVersion): PythonVersion {
+    let winner = version;
+    const [result,] = compareVersionsRaw(version, other);
+    if (result === 0) {
+        if (version.major === 2 && version.minor === -1) {
+            winner = other;
+        }
+    } else if (result > 0) {
+        winner = other;
     }
-    if (left.release === undefined || right.release === undefined) {
-        return true;
-    }
-    return areDeepEqual(left.release, right.release);
+    return cloneDeep(winner);
 }

@@ -5,8 +5,7 @@ import * as path from 'path';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
-import { comparePythonVersionSpecificity } from '../base/info/env';
-import { parseVersion } from '../base/info/pythonVersion';
+import { compareVersions, parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from '../discovery/locators/services/condaLocator';
 import { getPythonVersionFromVenv } from '../discovery/locators/services/virtualEnvironmentIdentifier';
 import { isDirectory, listDir } from './externalDependencies';
@@ -63,7 +62,7 @@ export async function getPythonVersionFromNearByFiles(interpreterPath:string): P
     for await (const interpreter of findInterpretersInDir(root)) {
         try {
             const curVersion = parseVersion(path.basename(interpreter));
-            if (comparePythonVersionSpecificity(curVersion, version) > 0) {
+            if (compareVersions(curVersion, version) > 0) {
                 version = curVersion;
             }
         } catch (ex) {
@@ -95,7 +94,7 @@ export async function getPythonVersionFromPath(
 
     let version = UNKNOWN_PYTHON_VERSION;
     for (const v of [versionA, versionB, versionC, versionD]) {
-        version = comparePythonVersionSpecificity(version, v) > 0 ? version : v;
+        version = compareVersions(version, v) > 0 ? version : v;
     }
     return version;
 }

@@ -7,6 +7,9 @@ import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
 import { parseVersionFromExecutable } from './executable';
+import { mergeBuilds } from './pythonBuild';
+import { mergeDistros } from './pythonDistro';
+import { mergeExecutables } from './pythonExecutable';
 import {
     areIdenticalVersion,
     areSimilarVersions,
@@ -14,8 +17,7 @@ import {
 } from './pythonVersion';
 
 import {
-    FileInfo,
-    PythonDistroInfo,
+    PythonEnvBaseInfo,
     PythonEnvInfo,
     PythonEnvKind,
     PythonReleaseLevel,
@@ -302,99 +304,6 @@ export function areSameEnv(
 }
 
 /**
- * Returns a heuristic value on how much information is available in the given version object.
- * @param {PythonVersion} version version object to generate heuristic from.
- * @returns A heuristic value indicating the amount of info available in the object
- * weighted by most important to least important fields.
- * Wn > Wn-1 + Wn-2 + ... W0
- */
-function getPythonVersionSpecificity(version: PythonVersion): number {
-    let infoLevel = 0;
-    if (version.major > 0) {
-        infoLevel += 20; // W4
-    }
-
-    if (version.minor >= 0) {
-        infoLevel += 10; // W3
-    }
-
-    if (version.micro >= 0) {
-        infoLevel += 5; // W2
-    }
-
-    if (version.release?.level) {
-        infoLevel += 3; // W1
-    }
-
-    if (version.release?.serial || version.sysVersion) {
-        infoLevel += 1; // W0
-    }
-
-    return infoLevel;
-}
-
-/**
- * Compares two python versions, based on the amount of data each object has. If versionA has
- * less information then the returned value is negative. If it is same then 0. If versionA has
- * more information then positive.
- */
-export function comparePythonVersionSpecificity(versionA: PythonVersion, versionB: PythonVersion): number {
-    return Math.sign(getPythonVersionSpecificity(versionA) - getPythonVersionSpecificity(versionB));
-}
-
-/**
- * Returns a heuristic value on how much information is available in the given executable object.
- * @param {FileInfo} executable executable object to generate heuristic from.
- * @returns A heuristic value indicating the amount of info available in the object
- * weighted by most important to least important fields.
- * Wn > Wn-1 + Wn-2 + ... W0
- */
-function getFileInfoHeuristic(file: FileInfo): number {
-    let infoLevel = 0;
-    if (file.filename.length > 0) {
-        infoLevel += 5; // W2
-    }
-
-    if (file.mtime) {
-        infoLevel += 2; // W1
-    }
-
-    if (file.ctime) {
-        infoLevel += 1; // W0
-    }
-
-    return infoLevel;
-}
-
-/**
- * Returns a heuristic value on how much information is available in the given distro object.
- * @param {PythonDistroInfo} distro distro object to generate heuristic from.
- * @returns A heuristic value indicating the amount of info available in the object
- * weighted by most important to least important fields.
- * Wn > Wn-1 + Wn-2 + ... W0
- */
-function getDistroInfoHeuristic(distro: PythonDistroInfo): number {
-    let infoLevel = 0;
-    if (distro.org.length > 0) {
-        infoLevel += 20; // W3
-    }
-
-    if (distro.defaultDisplayName) {
-        infoLevel += 10; // W2
-    }
-
-    if (distro.binDir) {
-        infoLevel += 5; // W1
-    }
-
-    if (distro.version) {
-        infoLevel += 2;
-    }
-
-    return infoLevel;
-}
-
-/**
  * Gets a prioritized list of environment types for identification.
  * @returns {PythonEnvKind[]} : List of environments ordered by identification priority
  *
@@ -464,42 +373,55 @@ export function pickBestEnv(candidates: PythonEnvInfo[]): PythonEnvInfo {
  * Merges properties of the `target` environment and `other` environment and returns the merged environment.
  * if the value in the `target` environment is not defined or has less information. This does not mutate
  * the `target` instead it returns a new object that contains the merged results.
- * @param {PythonEnvInfo} target : Properties of this object are favored.
- * @param {PythonEnvInfo} other : Properties of this object are used to fill the gaps in the merged result.
+ * @param env - properties of this object are favored
+ * @param other - properties of this object are used to fill the gaps in the merged result
  */
-export function mergeEnvs(target: PythonEnvInfo, other: PythonEnvInfo): PythonEnvInfo {
-    const merged = cloneDeep(target);
+export function mergeEnvs(env: PythonEnvInfo, other: PythonEnvInfo): PythonEnvInfo {
+    const merged = {
+        ...cloneDeep(env),
+        ...mergeBaseInfo(env, other),
+        ...mergeBuilds(env, other),
+    };
+    merged.distro = mergeDistros(env.distro, other.distro);
 
-    const version = cloneDeep(
-        getPythonVersionSpecificity(target.version) > getPythonVersionSpecificity(other.version)
-            ? target.version
-            : other.version,
-    );
+    if (env.defaultDisplayName === undefined || env.defaultDisplayName === '') {
+        if (other.defaultDisplayName !== undefined) {
+            merged.defaultDisplayName = other.defaultDisplayName;
+        } else {
+            delete merged.defaultDisplayName;
+        }
+    }
 
-    const executable = cloneDeep(
-        getFileInfoHeuristic(target.executable) > getFileInfoHeuristic(other.executable)
-            ? target.executable
-            : other.executable,
-    );
-    executable.sysPrefix = target.executable.sysPrefix ?? other.executable.sysPrefix;
+    if (env.searchLocation === undefined) {
+        if (other.searchLocation !== undefined) {
+            merged.searchLocation = cloneDeep(other.searchLocation);
+        } else {
+            delete merged.searchLocation;
+        }
+    }
 
-    const distro = cloneDeep(
-        getDistroInfoHeuristic(target.distro) > getDistroInfoHeuristic(other.distro) ? target.distro : other.distro,
-    );
+    return merged;
+}
 
-    merged.arch = merged.arch === Architecture.Unknown ? other.arch : target.arch;
-    merged.defaultDisplayName = merged.defaultDisplayName ?? other.defaultDisplayName;
-    merged.distro = distro;
-    merged.executable = executable;
+function mergeBaseInfo(base: PythonEnvBaseInfo, other: PythonEnvBaseInfo): PythonEnvBaseInfo {
+    const merged: PythonEnvBaseInfo = {
+        kind: base.kind,
+        executable: mergeExecutables(base.executable, other.executable),
+        name: base.name,
+        location: base.location,
+    };
 
-    // No need to check this just use preferred kind. Since the first thing we do is figure out the
-    // preferred env based on kind.
-    merged.kind = target.kind;
+    // Always use the original kind unless it is missing.
+    if (base.kind === PythonEnvKind.Unknown) {
+        merged.kind = other.kind;
+    }
 
-    merged.location = merged.location.length ? merged.location : other.location;
-    merged.name = merged.name.length ? merged.name : other.name;
-    merged.searchLocation = merged.searchLocation ?? other.searchLocation;
-    merged.version = version;
+    if (base.name === '') {
+        merged.name = other.name;
+    }
+    if (base.location === '') {
+        merged.location = other.location;
+    }
 
     return merged;
 }
