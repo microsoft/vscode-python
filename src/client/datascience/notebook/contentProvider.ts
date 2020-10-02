@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import type {
     NotebookCommunication,
+    NotebookContentProvider as VSCNotebookContentProvider,
     NotebookData,
     NotebookDocument,
     NotebookDocumentBackup,
@@ -22,10 +23,8 @@ import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProv
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { notebookModelToVSCNotebookData } from './helpers/helpers';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
-import { INotebookContentProvider } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
-
 /**
  * This class is responsible for reading a notebook file (ipynb or other files) and returning VS Code with the NotebookData.
  * Its up to extension authors to read the files and return it in a format that VSCode understands.
@@ -35,7 +34,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  * When saving, VSC will provide their model and we need to take that and merge it with an existing ipynb json (if any, to preserve metadata).
  */
 @injectable()
-export class NotebookContentProvider implements INotebookContentProvider {
+export class NotebookContentProvider implements VSCNotebookContentProvider {
     private notebookChanged = new EventEmitter<NotebookDocumentContentChangeEvent>();
     public get onDidChangeNotebook() {
         return this.notebookChanged.event;

@@ -11,8 +11,12 @@ import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { instance, mock } from 'ts-mockito';
 import { commands, Memento, TextDocument, Uri } from 'vscode';
-import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
-import { CellDisplayOutput } from '../../../../typings/vscode-proposed';
+import {
+    CellDisplayOutput,
+    NotebookCell,
+    NotebookContentProvider as VSCNotebookContentProvider,
+    NotebookDocument
+} from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IConfigurationService, ICryptoUtils, IDisposable } from '../../../client/common/types';
@@ -37,7 +41,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 async function getServices() {
     const api = await initialize();
     return {
-        contentProvider: api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider),
+        contentProvider: api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider),
         vscodeNotebook: api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
         editorProvider: api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider)
     };
@@ -152,7 +156,7 @@ export async function canRunTests() {
 export async function swallowSavingOfNotebooks() {
     const api = await initialize();
     // We will be editing notebooks, to close notebooks them we need to ensure changes are saved.
-    const contentProvider = api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider);
+    const contentProvider = api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider);
     sinon.stub(contentProvider, 'saveNotebook').callsFake(noop as any);
     sinon.stub(contentProvider, 'saveNotebookAs').callsFake(noop as any);
 }

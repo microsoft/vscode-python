@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { NotebookContentProvider as VSCNotebookContentProvider } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IInterpreterStatusbarVisibilityFilter } from '../../interpreter/contracts';
 import { IServiceManager } from '../../ioc/types';
@@ -17,7 +18,7 @@ import { NotebookSurveyBanner, NotebookSurveyDataLogger } from './survey';
 import { INotebookContentProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<INotebookContentProvider>(INotebookContentProvider, NotebookContentProvider);
+    serviceManager.addSingleton<VSCNotebookContentProvider>(INotebookContentProvider, NotebookContentProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookIntegration

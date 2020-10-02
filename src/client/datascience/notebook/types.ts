@@ -3,7 +3,4 @@
 
 'use strict';
 
-import type { NotebookContentProvider as VSCodeNotebookContentProvider } from 'vscode-proposed';
-
 export const INotebookContentProvider = Symbol('INotebookContentProvider');
-export interface INotebookContentProvider extends VSCodeNotebookContentProvider {}
