@@ -18,7 +18,11 @@ import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { updateCellExecutionCount, updateCellWithErrorStatus } from '../../notebook/helpers/executionHelpers';
+import {
+    handleUpdateDisplayDataMessage,
+    updateCellExecutionCount,
+    updateCellWithErrorStatus
+} from '../../notebook/helpers/executionHelpers';
 import {
     cellOutputToVSCCellOutput,
     clearCellForExecution,
@@ -370,12 +374,12 @@ export class CellExecution {
                 await this.handleStreamMessage(msg as KernelMessage.IStreamMsg, clearState);
             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
                 await this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
+            } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
+                await handleUpdateDisplayDataMessage(msg, this.editor);
             } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
                 await this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
                 await this.handleError(msg as KernelMessage.IErrorMsg, clearState);
-            } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
-                // Noop.
             } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
                 // Noop.
             } else if (jupyterLab.KernelMessage.isCommMsgMsg(msg)) {
