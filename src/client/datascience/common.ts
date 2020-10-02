@@ -38,7 +38,7 @@ const dummyExecuteResultObj: nbformat.IExecuteResult = {
     data: {},
     metadata: {}
 };
-const AllowedKeys = {
+export const AllowedCellOutputKeys = {
     ['stream']: new Set(Object.keys(dummyStreamObj)),
     ['error']: new Set(Object.keys(dummyErrorObj)),
     ['display_data']: new Set(Object.keys(dummyDisplayObj)),
@@ -73,7 +73,7 @@ function fixupOutput(output: nbformat.IOutput): nbformat.IOutput {
         case 'error':
         case 'execute_result':
         case 'display_data':
-            allowedKeys = AllowedKeys[output.output_type];
+            allowedKeys = AllowedCellOutputKeys[output.output_type];
             break;
         default:
             return output;

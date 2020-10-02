@@ -17,6 +17,7 @@ import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
+import { pruneCell } from '../common';
 import { CodeSnippets, Identifiers } from '../constants';
 import {
     CellState,
@@ -235,9 +236,11 @@ export class JupyterExporter implements INotebookExporter {
     };
 
     private pruneCell = (cell: ICell, cellMatcher: CellMatcher): nbformat.IBaseCell => {
+        // Prune with the common pruning function first.
+        const copy = pruneCell({ ...cell.data });
+
         // Remove the #%% of the top of the source if there is any. We don't need
         // this to end up in the exported ipynb file.
-        const copy = { ...cell.data };
         copy.source = this.pruneSource(cell.data.source, cellMatcher);
         return copy;
     };

@@ -89,11 +89,12 @@ export function addMockData(
     code: string,
     result: string | number | undefined | string[],
     mimeType?: string | string[],
-    cellType?: string
+    cellType?: string,
+    traceback?: string[]
 ) {
     if (ioc.mockJupyter) {
         if (cellType && cellType === 'error') {
-            ioc.mockJupyter.addError(code, result ? result.toString() : '');
+            ioc.mockJupyter.addError(code, result ? result.toString() : '', traceback);
         } else {
             if (result) {
                 ioc.mockJupyter.addCell(code, result, mimeType);

@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Memento, Selection, TextDocument, TextEditor, Uri } from 'vscode';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { ReactWrapper } from 'enzyme';
 import { anything, when } from 'ts-mockito';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
@@ -17,11 +18,12 @@ import { createDeferred, sleep, waitForPromise } from '../../client/common/utils
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
+import { AllowedCellOutputKeys } from '../../client/datascience/common';
 import { EditorContexts } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { AskedForPerFileSettingKey } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { IInteractiveWindowProvider } from '../../client/datascience/types';
+import { IDataScienceFileSystem, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
@@ -635,53 +637,81 @@ for i in range(0, 100):
                     return;
                 }
             };
-            let exportCalled = false;
-            const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-            appShell
-                .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
-                .returns((e) => {
-                    throw e;
+            const dsfs = ioc.get<IDataScienceFileSystem>(IDataScienceFileSystem);
+            const tf = await dsfs.createTemporaryLocalFile('.ipynb');
+            try {
+                let exportCalled = false;
+                const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+                appShell
+                    .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                    .returns((e) => {
+                        throw e;
+                    });
+                appShell
+                    .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(''));
+                appShell
+                    .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
+                    .returns(() => {
+                        exportCalled = true;
+                        return Promise.resolve(Uri.file(tf.filePath));
+                    });
+                appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+                ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+                const exportCode = `
+for i in range(100):
+    time.sleep(0.1)
+    raise Exception('test')
+`;
+
+                // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
+                addMockData(ioc, exportCode, 'NameError', 'type/error', 'error', [
+                    '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
+                    '\u001b[1;31mNameError\u001b[0m                                 Traceback (most recent call last)',
+                    "\u001b[1;32md:\\Source\\Testing_3\\manualTestFile.py\u001b[0m in \u001b[0;36m<module>\u001b[1;34m\u001b[0m\n\u001b[0;32m      1\u001b[0m \u001b[1;32mfor\u001b[0m \u001b[0mi\u001b[0m \u001b[1;32min\u001b[0m \u001b[0mrange\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;36m100\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m:\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[1;32m----> 2\u001b[1;33m     \u001b[0mtime\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0msleep\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;36m0.1\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m\u001b[0;32m      3\u001b[0m     \u001b[1;32mraise\u001b[0m \u001b[0mException\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;34m'test'\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n",
+                    "\u001b[1;31mNameError\u001b[0m: name 'time' is not defined"
+                ]);
+                await addCode(ioc, exportCode);
+                const { window, mount } = await getOrCreateInteractiveWindow(ioc);
+
+                // Export should cause exportCalled to change to true
+                const exportPromise = mount.waitForMessage(InteractiveWindowMessages.ReturnAllCells);
+                window.exportCells();
+                await exportPromise;
+                await sleep(100); // Give time for appshell to come up
+                assert.equal(exportCalled, true, 'Export is not being called during export');
+
+                // Read file contents into a jupyter structure. Make sure we have only the expected values
+                const contents = await dsfs.readLocalFile(tf.filePath);
+                const struct = JSON.parse(contents) as nbformat.INotebookContent;
+                assert.strictEqual(struct.cells.length, 1, 'Wrong number of cells');
+                const outputs = struct.cells[0].outputs as nbformat.IOutput[];
+                assert.strictEqual(outputs.length, 1, 'Not correct number of outputs');
+                assert.strictEqual(outputs[0].output_type, 'error', 'Error not found');
+                const allowedKeys = [...AllowedCellOutputKeys.error];
+                const actualKeys = Object.keys(outputs[0]);
+                assert.deepStrictEqual(allowedKeys, actualKeys, 'Invalid keys in output');
+
+                // Remove the cell
+                const exportButton = findButton(mount.wrapper, InteractivePanel, 6);
+                const undo = findButton(mount.wrapper, InteractivePanel, 2);
+
+                // Now verify if we undo, we have no cells
+                const afterUndo = await getInteractiveCellResults(ioc, () => {
+                    undo!.simulate('click');
+                    return Promise.resolve();
                 });
-            appShell
-                .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(''));
-            appShell
-                .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
-                .returns(() => {
-                    exportCalled = true;
-                    return Promise.resolve(undefined);
-                });
-            appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
-            ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
-            // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
-            await addCode(ioc, 'a=1\na');
-            const { window, mount } = await getOrCreateInteractiveWindow(ioc);
+                assert.equal(afterUndo.length, 1, 'Undo should remove cells');
 
-            // Export should cause exportCalled to change to true
-            const exportPromise = mount.waitForMessage(InteractiveWindowMessages.ReturnAllCells);
-            window.exportCells();
-            await exportPromise;
-            await sleep(100); // Give time for appshell to come up
-            assert.equal(exportCalled, true, 'Export is not being called during export');
-
-            // Remove the cell
-            const exportButton = findButton(mount.wrapper, InteractivePanel, 6);
-            const undo = findButton(mount.wrapper, InteractivePanel, 2);
-
-            // Now verify if we undo, we have no cells
-            const afterUndo = await getInteractiveCellResults(ioc, () => {
-                undo!.simulate('click');
-                return Promise.resolve();
-            });
-
-            assert.equal(afterUndo.length, 1, 'Undo should remove cells');
-
-            // Then verify we cannot click the button (it should be disabled)
-            exportCalled = false;
-            exportButton!.simulate('click');
-            await sleep(100);
-            assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
+                // Then verify we cannot click the button (it should be disabled)
+                exportCalled = false;
+                exportButton!.simulate('click');
+                await sleep(100);
+                assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
+            } finally {
+                tf.dispose();
+            }
         },
         () => {
             return ioc;
