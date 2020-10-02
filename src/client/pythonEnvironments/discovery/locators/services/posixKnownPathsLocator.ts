@@ -3,7 +3,7 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { traceVerbose } from '../../../../common/logger';
+import { traceError, traceInfo } from '../../../../common/logger';
 
 import { Architecture } from '../../../../common/utils/platform';
 import {
@@ -12,7 +12,7 @@ import {
 import { parseVersion } from '../../../base/info/pythonVersion';
 import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
 import { PythonEnvsWatcher } from '../../../base/watcher';
-import { getFileInfo, resolveSymbolicLink } from '../../../common/commonUtils';
+import { getFileInfo, resolveSymbolicLink } from '../../../common/externalDependencies';
 import { commonPosixBinPaths, isPosixPythonBin } from '../../../common/posixUtils';
 
 async function getPythonBinFromKnownPaths(): Promise<string[]> {
@@ -29,10 +29,14 @@ async function getPythonBinFromKnownPaths(): Promise<string[]> {
         for (const file of files) {
             // Ensure that we have a collection of unique global binaries by
             // resolving all symlinks to the target binaries.
-            // eslint-disable-next-line no-await-in-loop
-            const resolvedBin = await resolveSymbolicLink(file);
-            pythonBins.add(resolvedBin);
-            traceVerbose(`Found: ${file} --> ${resolvedBin}`);
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                const resolvedBin = await resolveSymbolicLink(file);
+                pythonBins.add(resolvedBin);
+                traceInfo(`Found: ${file} --> ${resolvedBin}`);
+            } catch (ex) {
+                traceError('Failed to resolve symbolic link: ', ex);
+            }
         }
     }
 
@@ -60,7 +64,8 @@ export class PosixKnownPathsLocator extends PythonEnvsWatcher implements ILocato
         let version:PythonVersion;
         try {
             version = parseVersion(path.basename(bin));
-        } catch (e) {
+        } catch (ex) {
+            traceError(`Failed to parse version from path: ${bin}`, ex);
             version = {
                 major: -1,
                 minor: -1,

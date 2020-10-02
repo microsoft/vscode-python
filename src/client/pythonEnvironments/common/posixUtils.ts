@@ -18,7 +18,7 @@ export function isPosixPythonBin(interpreterPath:string): boolean {
      * python38
      * python3.8
      */
-    const posixPythonBinPattern = /^python(\d+(.\d+)?)?$/;
+    const posixPythonBinPattern = /^python(\d+(\.\d+)?)?$/;
 
     return posixPythonBinPattern.test(path.basename(interpreterPath));
 }
@@ -28,7 +28,7 @@ export async function commonPosixBinPaths(): Promise<string[]> {
         .split(path.delimiter)
         .filter((p) => p.length > 0);
 
-    const paths: Set<string> = new Set(
+    const paths: string[] = Array.from(new Set(
         [
             '/bin',
             '/etc',
@@ -54,16 +54,8 @@ export async function commonPosixBinPaths(): Promise<string[]> {
             '/usr/share',
             '~/.local/bin',
         ].concat(searchPaths),
-    );
+    ));
 
-    const commonPaths:string[] = [];
-    // eslint-disable-next-line no-restricted-syntax
-    for (const p of paths) {
-        // eslint-disable-next-line no-await-in-loop
-        if (await fsapi.pathExists(p)) {
-            commonPaths.push(p);
-        }
-    }
-
-    return commonPaths;
+    const exists = await Promise.all(paths.map((p) => fsapi.pathExists(p)));
+    return paths.filter((_, index) => exists[index]);
 }
