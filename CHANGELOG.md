@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.9.2 (2 October 2020)
+## 2020.9.2 (5 October 2020)
 
 ### Fixes
 
@@ -8,6 +8,8 @@
    ([#14169](https://github.com/Microsoft/vscode-python/issues/14169))
 1. Do not escape output in the actual ipynb file.
    ([#14182](https://github.com/Microsoft/vscode-python/issues/14182))
+1. Fix exporting from the interactive window.
+   ([#14210](https://github.com/Microsoft/vscode-python/issues/14210))
 
 ### Thanks
 
