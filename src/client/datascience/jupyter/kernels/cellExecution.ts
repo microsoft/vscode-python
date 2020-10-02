@@ -77,10 +77,6 @@ export class CellExecution {
         return this._completed;
     }
 
-    private get cellIndex() {
-        return this.cell.notebook.cells.indexOf(this.cell);
-    }
-
     private static sentExecuteCellTelemetry?: boolean;
 
     private readonly oldCellRunState?: NotebookCellRunState;
@@ -130,7 +126,7 @@ export class CellExecution {
         // Ensure we clear the cell state and trigger a change.
         await clearCellForExecution(this.editor, this.cell);
         await this.editor.edit((edit) => {
-            edit.replaceCellMetadata(this.cell.notebook.cells.indexOf(this.cell), {
+            edit.replaceCellMetadata(this.cell.index, {
                 ...this.cell.metadata,
                 runStartTime: new Date().getTime()
             });
@@ -176,7 +172,7 @@ export class CellExecution {
     private async completedWithErrors(error: Partial<Error>) {
         this.sendPerceivedCellExecute();
         await this.editor.edit((edit) =>
-            edit.replaceCellMetadata(this.cell.notebook.cells.indexOf(this.cell), {
+            edit.replaceCellMetadata(this.cell.index, {
                 ...this.cell.metadata,
                 lastRunDuration: this.stopWatch.elapsedTime
             })
@@ -211,9 +207,8 @@ export class CellExecution {
             statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(this.cell.outputs);
         }
 
-        const cellIndex = this.editor.document.cells.indexOf(this.cell);
         await this.editor.edit((edit) =>
-            edit.replaceCellMetadata(cellIndex, {
+            edit.replaceCellMetadata(this.cell.index, {
                 ...this.cell.metadata,
                 runState,
                 statusMessage
@@ -250,7 +245,7 @@ export class CellExecution {
                 ? vscodeNotebookEnums.NotebookCellRunState.Idle
                 : this.oldCellRunState;
         await this.editor.edit((edit) =>
-            edit.replaceCellMetadata(this.cell.notebook.cells.indexOf(this.cell), {
+            edit.replaceCellMetadata(this.cell.index, {
                 ...this.cell.metadata,
                 runStartTime: undefined,
                 runState
@@ -268,7 +263,7 @@ export class CellExecution {
      */
     private async enqueue() {
         await this.editor.edit((edit) =>
-            edit.replaceCellMetadata(this.cell.notebook.cells.indexOf(this.cell), {
+            edit.replaceCellMetadata(this.cell.index, {
                 ...this.cell.metadata,
                 runState: vscodeNotebookEnums.NotebookCellRunState.Running
             })
@@ -441,7 +436,7 @@ export class CellExecution {
             }
 
             // Append to the data (we would push here but VS code requires a recreation of the array)
-            edit.replaceCellOutput(this.cell.notebook.cells.indexOf(this.cell), existingOutput.concat(converted));
+            edit.replaceCellOutput(this.cell.index, existingOutput.concat(converted));
         });
     }
 
@@ -531,7 +526,7 @@ export class CellExecution {
                 existing.data['text/plain'] = formatStreamText(
                     concatMultilineString(`${existing.data['text/plain']}${msg.content.text}`)
                 );
-                edit.replaceCellOutput(this.cellIndex, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
+                edit.replaceCellOutput(this.cell.index, [...exitingCellOutput]); // This is necessary to get VS code to update (for now)
             } else {
                 const originalText = formatStreamText(concatMultilineString(msg.content.text));
                 // Create a new stream entry
@@ -540,7 +535,7 @@ export class CellExecution {
                     name: msg.content.name,
                     text: originalText
                 };
-                edit.replaceCellOutput(this.cellIndex, [...exitingCellOutput, cellOutputToVSCCellOutput(output)]);
+                edit.replaceCellOutput(this.cell.index, [...exitingCellOutput, cellOutputToVSCCellOutput(output)]);
             }
         });
     }
@@ -563,7 +558,7 @@ export class CellExecution {
             clearState.update(true);
         } else {
             // Clear all outputs and start over again.
-            await this.editor.edit((edit) => edit.replaceCellOutput(this.cellIndex, []));
+            await this.editor.edit((edit) => edit.replaceCellOutput(this.cell.index, []));
         }
     }
 

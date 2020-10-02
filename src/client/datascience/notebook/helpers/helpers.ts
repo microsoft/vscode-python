@@ -343,16 +343,15 @@ export function createIOutputFromCellOutputs(cellOutputs: CellOutput[]): nbforma
 }
 
 export async function clearCellForExecution(editor: NotebookEditor, cell: NotebookCell) {
-    const cellIndex = cell.notebook.cells.indexOf(cell);
     await editor.edit((edit) => {
-        edit.replaceCellMetadata(cellIndex, {
+        edit.replaceCellMetadata(cell.index, {
             ...cell.metadata,
             statusMessage: undefined,
             executionOrder: undefined,
             lastRunDuration: undefined,
             runStartTime: undefined
         });
-        edit.replaceCellOutput(cellIndex, []);
+        edit.replaceCellOutput(cell.index, []);
     });
     await updateCellExecutionTimes(editor, cell);
 }
@@ -366,8 +365,6 @@ export async function updateCellExecutionTimes(
     cell: NotebookCell,
     times?: { startTime?: number; lastRunDuration?: number }
 ) {
-    const cellIndex = cell.notebook.cells.indexOf(cell);
-
     if (!times || !times.lastRunDuration || !times.startTime) {
         // Based on feedback from VSC, its best to clone these objects when updating them.
         const cellMetadata = cloneDeep(cell.metadata);
@@ -382,7 +379,7 @@ export async function updateCellExecutionTimes(
         }
         if (updated) {
             await editor.edit((edit) =>
-                edit.replaceCellMetadata(cellIndex, {
+                edit.replaceCellMetadata(cell.index, {
                     ...cellMetadata
                 })
             );
@@ -401,7 +398,7 @@ export async function updateCellExecutionTimes(
     customMetadata.metadata.vscode.start_execution_time = startTimeISO;
     const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;
     await editor.edit((edit) =>
-        edit.replaceCellMetadata(cellIndex, {
+        edit.replaceCellMetadata(cell.index, {
             ...cell.metadata,
             custom: customMetadata,
             lastRunDuration

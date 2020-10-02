@@ -225,7 +225,7 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell) 
     await waitForCondition(
         async () => assertHasExecutionCompletedSuccessfully(cell),
         1_000,
-        `Cell ${cell.notebook.cells.indexOf(cell) + 1} did not complete successfully`
+        `Cell ${cell.index + 1} did not complete successfully`
     );
 }
 export function assertExecutionOrderInVSCCell(cell: NotebookCell, executionOrder?: number) {
@@ -236,7 +236,7 @@ export async function waitForExecutionOrderInVSCCell(cell: NotebookCell, executi
     await waitForCondition(
         async () => assertExecutionOrderInVSCCell(cell, executionOrder),
         1_000,
-        `Execution count not '${executionOrder}' for Cell ${cell.notebook.cells.indexOf(cell) + 1}`
+        `Execution count not '${executionOrder}' for Cell ${cell.index + 1}`
     );
 }
 export async function waitForExecutionOrderInCell(cell: NotebookCell, executionOrder: number | undefined) {
@@ -248,7 +248,7 @@ export async function waitForExecutionOrderInCell(cell: NotebookCell, executionO
             return cell.metadata.executionOrder === executionOrder;
         },
         15_000,
-        `Execution count not '${executionOrder}' for Cell ${cell.notebook.cells.indexOf(cell)}`
+        `Execution count not '${executionOrder}' for Cell ${cell.index}`
     );
 }
 export function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
@@ -258,7 +258,7 @@ export function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
     );
 }
 export function assertHasOutputInVSCell(cell: NotebookCell) {
-    assert.ok(cell.outputs.length, `No output in Cell ${cell.notebook.cells.indexOf(cell) + 1}`);
+    assert.ok(cell.outputs.length, `No output in Cell ${cell.index + 1}`);
 }
 export function assertHasOutputInICell(cell: ICell, model: INotebookModel) {
     assert.ok((cell.data.outputs as nbformat.IOutput[]).length, `No output in ICell ${model.cells.indexOf(cell) + 1}`);
@@ -285,7 +285,7 @@ export async function waitForTextOutputInVSCode(
     await waitForCondition(
         async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),
         timeout,
-        `Output does not contain provided text '${text}' for Cell ${cell.notebook.cells.indexOf(cell) + 1}`
+        `Output does not contain provided text '${text}' for Cell ${cell.index + 1}`
     );
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
@@ -313,7 +313,7 @@ export async function waitForVSCCellHasEmptyOutput(cell: NotebookCell) {
     await waitForCondition(
         async () => cell.outputs.length === 0,
         1_000,
-        `Cell ${cell.notebook.cells.indexOf(cell) + 1} output did not get cleared`
+        `Cell ${cell.index + 1} output did not get cleared`
     );
 }
 export async function waitForCellHasEmptyOutput(cell: ICell, model: INotebookModel) {
@@ -327,7 +327,7 @@ export async function waitForVSCCellIsRunning(cell: NotebookCell) {
     await waitForCondition(
         async () => assertVSCCellIsRunning(cell),
         1_000,
-        `Cell ${cell.notebook.cells.indexOf(cell) + 1} did not start`
+        `Cell ${cell.index + 1} did not start`
     );
 }
 export function assertVSCCellIsNotRunning(cell: NotebookCell) {
