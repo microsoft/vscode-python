@@ -540,7 +540,7 @@ suite('Module Installer', () => {
 
             mockTerminalFactory.verifyAll();
             expect(argsSent.join(' ')).equal(
-                `${isolated} pip install -U ${moduleName} --user`,
+                `${isolated} pip install -U ${moduleName} --user1`,
                 'Invalid command sent to terminal for installation.'
             );
         });
