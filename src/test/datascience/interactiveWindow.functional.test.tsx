@@ -63,6 +63,8 @@ import {
     verifyLastCellInputState
 } from './testHelpers';
 import { ITestInteractiveWindowProvider } from './testInteractiveWindowProvider';
+// tslint:disable-next-line: no-require-imports no-var-requires
+const _escape = require('lodash/escape') as typeof import('lodash/escape'); // NOSONAR
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Interactive Window output tests', () => {
@@ -128,7 +130,7 @@ suite('DataScience Interactive Window output tests', () => {
         async () => {
             await addCode(ioc, 'a=1\na');
 
-            verifyHtmlOnInteractiveCell('<span>1</span>', CellPosition.Last);
+            verifyHtmlOnInteractiveCell('1', CellPosition.Last);
         },
         () => {
             return ioc;
@@ -171,7 +173,7 @@ for i in range(10):
             addMockData(ioc, 'a=1', undefined, 'text/plain');
             await addCode(ioc, 'a=1');
 
-            verifyHtmlOnInteractiveCell('<span>1</span>', CellPosition.First);
+            verifyHtmlOnInteractiveCell('1', CellPosition.First);
             verifyHtmlOnInteractiveCell(undefined, CellPosition.Last);
         },
         () => {
@@ -236,7 +238,7 @@ for i in range(10):
                 }
             }
 
-            verifyHtmlOnInteractiveCell('<span>1</span>', CellPosition.Last);
+            verifyHtmlOnInteractiveCell('1', CellPosition.Last);
         },
         () => {
             return ioc;
@@ -300,7 +302,7 @@ for i in range(10):
                 }
             }
 
-            verifyHtmlOnInteractiveCell('<span>1</span>', CellPosition.Last);
+            verifyHtmlOnInteractiveCell('1', CellPosition.Last);
         },
         () => {
             return ioc;
@@ -385,6 +387,9 @@ for _ in range(50):
     time.sleep(0.1)
     sys.stdout.write('\\r')`;
 
+            const exception = 'raise Exception("<html check>")';
+            addMockData(ioc, exception, `"<html check>"`, 'text/html', 'error');
+
             addMockData(ioc, badPanda, `pandas has no attribute 'read'`, 'text/html', 'error');
             addMockData(ioc, goodPanda, `<td>A table</td>`, 'text/html');
             addMockData(ioc, matPlotLib, matPlotLibResults, 'text/html');
@@ -400,6 +405,9 @@ for _ in range(50):
                 }
                 return Promise.resolve({ result: result, haveMore: loops > 0 });
             });
+
+            await addCode(ioc, exception, true);
+            verifyHtmlOnInteractiveCell(_escape(`<html check>`), CellPosition.Last);
 
             await addCode(ioc, badPanda, true);
             verifyHtmlOnInteractiveCell(`has no attribute 'read'`, CellPosition.Last);
@@ -698,7 +706,7 @@ for i in range(0, 100):
                 const window = (await interactiveWindowProvider.getOrCreate(undefined)) as InteractiveWindow;
                 await addCode(ioc, 'a=1\na');
                 const activeInterpreter = await interpreterService.getActiveInterpreter(window.owningResource);
-                verifyHtmlOnInteractiveCell('<span>1</span>', CellPosition.Last);
+                verifyHtmlOnInteractiveCell('1', CellPosition.Last);
                 assert.equal(
                     window.notebook!.getMatchingInterpreter()?.path,
                     activeInterpreter?.path,
@@ -724,7 +732,7 @@ for i in range(0, 100):
                     activeInterpreter?.path,
                     'Active intrepreter used to launch second notebook when it should not have'
                 );
-                verifyHtmlOnCell(ioc.getWrapper('interactive'), 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+                verifyHtmlOnCell(ioc.getWrapper('interactive'), 'InteractiveCell', '1', CellPosition.Last);
             } else {
                 context.skip();
             }
@@ -867,7 +875,7 @@ for i in range(0, 100):
 
             // Then enter some code.
             await enterInput(mount, 'a=1\na', 'InteractiveCell');
-            verifyHtmlOnInteractiveCell('<span>1</span>', CellPosition.Last);
+            verifyHtmlOnInteractiveCell('1', CellPosition.Last);
         },
         () => {
             return ioc;
@@ -888,7 +896,7 @@ for i in range(0, 100):
 
             // Then enter some code.
             await enterInput(mount, 'a=1\na', 'InteractiveCell');
-            verifyHtmlOnInteractiveCell('<span>1</span>', CellPosition.Last);
+            verifyHtmlOnInteractiveCell('1', CellPosition.Last);
             const ImageButtons = getLastOutputCell(mount.wrapper, 'InteractiveCell').find(ImageButton);
             assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
             const copyToSource = ImageButtons.at(2);
@@ -911,7 +919,7 @@ for i in range(0, 100):
 
             // Then enter some code.
             await enterInput(mount, 'a=1\na', 'InteractiveCell');
-            verifyHtmlOnInteractiveCell('<span>1</span>', CellPosition.Last);
+            verifyHtmlOnInteractiveCell('1', CellPosition.Last);
 
             // Then delete the node
             const lastCell = getLastOutputCell(mount.wrapper, 'InteractiveCell');
@@ -928,7 +936,7 @@ for i in range(0, 100):
 
             // Should be able to enter again
             await enterInput(mount, 'a=1\na', 'InteractiveCell');
-            verifyHtmlOnInteractiveCell('<span>1</span>', CellPosition.Last);
+            verifyHtmlOnInteractiveCell('1', CellPosition.Last);
 
             // Try a 3rd time with some new input
             addMockData(ioc, 'print("hello")', 'hello');
@@ -952,7 +960,7 @@ for i in range(0, 100):
         async () => {
             // Prime the pump
             await addCode(ioc, 'a=1\na');
-            verifyHtmlOnInteractiveCell('<span>1</span>', CellPosition.Last);
+            verifyHtmlOnInteractiveCell('1', CellPosition.Last);
 
             // Then something that could possibly timeout
             addContinuousMockData(ioc, 'import time\r\ntime.sleep(1000)', (_c) => {
@@ -979,7 +987,7 @@ for i in range(0, 100):
 
             // Now see if our wrapper still works. Interactive window should have forced a restart
             await window.addCode('a=1\na', Uri.file('foo'), 0);
-            verifyHtmlOnInteractiveCell('<span>1</span>', CellPosition.Last);
+            verifyHtmlOnInteractiveCell('1', CellPosition.Last);
         },
         () => {
             return ioc;
@@ -1071,7 +1079,7 @@ for i in range(0, 100):
 
             // Then enter some code.
             await enterInput(mount, 'a=1\na', 'InteractiveCell');
-            verifyHtmlOnInteractiveCell('<span>1</span>', CellPosition.Last);
+            verifyHtmlOnInteractiveCell('1', CellPosition.Last);
             const ImageButtons = getLastOutputCell(mount.wrapper, 'InteractiveCell').find(ImageButton);
             assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
             const gatherCode = ImageButtons.at(0);
@@ -1198,21 +1206,21 @@ for i in range(0, 100):
         await addCell(ne.mount, 'a=1\na', true);
 
         // Make sure both are correct
-        verifyHtmlOnCell(iw.mount.wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
-        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(iw.mount.wrapper, 'InteractiveCell', '1', CellPosition.Last);
+        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', '1', CellPosition.Last);
 
         // Close the interactive editor.
         await closeInteractiveWindow(ioc, iw.window);
 
         // Run another cell and make sure it works in the notebook
         await addCell(ne.mount, 'b=2\nb', true);
-        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', '<span>2</span>', CellPosition.Last);
+        verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', '2', CellPosition.Last);
 
         // Rerun the interactive window
         iw = await getOrCreateInteractiveWindow(ioc);
         await addCode(ioc, 'a=1\na');
 
-        verifyHtmlOnCell(iw.mount.wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(iw.mount.wrapper, 'InteractiveCell', '1', CellPosition.Last);
     });
     test('Multiple interactive windows', async () => {
         ioc.forceDataScienceSettingsChanged({ interactiveWindowMode: 'multiple' });

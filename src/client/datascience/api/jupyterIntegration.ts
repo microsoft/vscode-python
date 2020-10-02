@@ -7,9 +7,12 @@
 
 import { inject, injectable } from 'inversify';
 import { dirname } from 'path';
-import { CancellationToken, Event, Uri } from 'vscode';
+import { CancellationToken, Disposable, Event, Uri } from 'vscode';
+import * as lsp from 'vscode-languageserver-protocol';
+import { ILanguageServerCache, ILanguageServerConnection } from '../../activation/types';
 import { InterpreterUri } from '../../common/installer/types';
 import { IExtensions, IInstaller, InstallerResponse, Product, Resource } from '../../common/types';
+import { isResource } from '../../common/utils/misc';
 import { getDebugpyPackagePath } from '../../debugger/extension/adapter/remoteLaunchers';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../interpreter/configuration/types';
@@ -17,6 +20,11 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { WindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+
+export interface ILanguageServer extends Disposable {
+    readonly connection: ILanguageServerConnection;
+    readonly capabilities: lsp.ServerCapabilities;
+}
 
 type PythonApiForJupyterExtension = {
     /**
@@ -57,9 +65,14 @@ type PythonApiForJupyterExtension = {
      * Returns path to where `debugpy` is. In python extension this is `/pythonFiles/lib/python`.
      */
     getDebuggerPath(): Promise<string>;
+    /**
+     * Returns a ILanguageServer that can be used for communicating with a language server process.
+     * @param resource file that determines which connection to return
+     */
+    getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined>;
 };
 
-type JupyterExtensionApi = {
+export type JupyterExtensionApi = {
     registerPythonApi(interpreterService: PythonApiForJupyterExtension): void;
 };
 
@@ -71,19 +84,11 @@ export class JupyterExtensionIntegration {
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
         @inject(IInstaller) private readonly installer: IInstaller,
-        @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService
+        @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
+        @inject(ILanguageServerCache) private readonly languageServerCache: ILanguageServerCache
     ) {}
 
-    public async integrateWithJupyterExtension(): Promise<void> {
-        const jupyterExtension = this.extensions.getExtension<JupyterExtensionApi>('ms-ai-tools.jupyter');
-        if (!jupyterExtension) {
-            return;
-        }
-        await jupyterExtension.activate();
-        if (!jupyterExtension.isActive) {
-            return;
-        }
-        const jupyterExtensionApi = jupyterExtension.exports;
+    public registerApi(jupyterExtensionApi: JupyterExtensionApi) {
         jupyterExtensionApi.registerPythonApi({
             onDidChangeInterpreter: this.interpreterService.onDidChangeInterpreter,
             getActiveInterpreter: async (resource?: Uri) => this.interpreterService.getActiveInterpreter(resource),
@@ -104,7 +109,34 @@ export class JupyterExtensionIntegration {
                 resource?: InterpreterUri,
                 cancel?: CancellationToken
             ): Promise<InstallerResponse> => this.installer.install(product, resource, cancel),
-            getDebuggerPath: async () => dirname(getDebugpyPackagePath())
+            getDebuggerPath: async () => dirname(getDebugpyPackagePath()),
+            getLanguageServer: async (r) => {
+                const resource = isResource(r) ? r : undefined;
+                const interpreter = !isResource(r) ? r : undefined;
+                const client = await this.languageServerCache.get(resource, interpreter);
+
+                // Some langauge servers don't support the connection yet. (like Jedi until we switch to LSP)
+                if (client && client.connection && client.capabilities) {
+                    return {
+                        connection: client.connection,
+                        capabilities: client.capabilities,
+                        dispose: client.dispose
+                    };
+                }
+                return undefined;
+            }
         });
+    }
+
+    public async integrateWithJupyterExtension(): Promise<void> {
+        const jupyterExtension = this.extensions.getExtension<JupyterExtensionApi>('ms-ai-tools.jupyter');
+        if (!jupyterExtension) {
+            return;
+        }
+        await jupyterExtension.activate();
+        if (!jupyterExtension.isActive) {
+            return;
+        }
+        this.registerApi(jupyterExtension.exports);
     }
 }

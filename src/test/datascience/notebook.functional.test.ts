@@ -128,7 +128,7 @@ suite('DataScience notebook tests', () => {
                 return path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
             }
 
-            function extractDataOutput(cell: ICell): any {
+            function extractDataOutput(cell: ICell): string | undefined {
                 assert.equal(cell.data.cell_type, 'code', `Wrong type of cell returned`);
                 const codeCell = cell.data as nbformat.ICodeCell;
                 if (codeCell.outputs.length > 0) {
@@ -143,7 +143,7 @@ suite('DataScience notebook tests', () => {
                         // For linter
                         assert.ok(data.hasOwnProperty('text/plain'), `Cell mime type not correct`);
                         assert.ok((data as any)['text/plain'], `Cell mime type not correct`);
-                        return (data as any)['text/plain'];
+                        return concatMultilineString((data as any)['text/plain']);
                     }
                 }
             }
@@ -157,7 +157,7 @@ suite('DataScience notebook tests', () => {
                 const cells = await notebook!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
                 assert.equal(cells.length, 1, `Wrong number of cells returned`);
                 const data = extractDataOutput(cells[0]);
-                if (pathVerify) {
+                if (pathVerify && data) {
                     // For a path comparison normalize output
                     const normalizedOutput = path.normalize(data).toUpperCase().replace(/'/g, '');
                     const normalizedTarget = path.normalize(expectedValue).toUpperCase().replace(/'/g, '');
@@ -180,7 +180,7 @@ suite('DataScience notebook tests', () => {
                 const error = cell.outputs[0].evalue;
                 if (error) {
                     assert.ok(error, 'Error not found when expected');
-                    assert.equal(error, errorString, 'Unexpected error found');
+                    assert.ok(error.toString().includes(errorString), 'Unexpected error found');
                 }
             }
 
@@ -755,7 +755,7 @@ suite('DataScience notebook tests', () => {
                     await server!.waitForIdle(10000);
 
                     console.log('Verifying restart');
-                    await verifyError(server, 'a', `name 'a' is not defined`);
+                    await verifyError(server, 'a', `is not defined`);
                 } catch (exc) {
                     assert.ok(
                         exc instanceof JupyterKernelPromiseFailedError,
@@ -873,7 +873,7 @@ suite('DataScience notebook tests', () => {
                 );
                 assert.ok(
                     await testCancelableMethod(
-                        (t: CancellationToken) => jupyterExecution.isImportSupported(t),
+                        (t: CancellationToken) => jupyterExecution.getImportPackageVersion(t),
                         'Cancel did not cancel isImport after {0}ms',
                         true
                     )
@@ -1021,6 +1021,15 @@ a`,
                     cellType: 'code',
                     result: 1,
                     verifyValue: (d) => assert.equal(d, 1, 'Plain text invalid')
+                },
+                {
+                    markdownRegEx: undefined,
+                    code: `a="<a href=f>"
+a`,
+                    mimeType: 'text/plain',
+                    cellType: 'code',
+                    result: `<a href=f>`,
+                    verifyValue: (d) => assert.ok(d.includes(`<a href=f>`), 'Should not escape at the notebook level')
                 },
                 {
                     markdownRegEx: undefined,
@@ -1329,7 +1338,10 @@ plt.show()`,
                     }
                     public async postExecute(cell: ICell, silent: boolean): Promise<void> {
                         if (!silent) {
-                            outputs.push(extractDataOutput(cell));
+                            const data = extractDataOutput(cell);
+                            if (data) {
+                                outputs.push(data);
+                            }
                         }
                     }
                 }

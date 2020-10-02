@@ -25,8 +25,6 @@ import {
 
 // Helper functions for dealing with kernels and kernelspecs
 
-export const defaultKernelSpecName = 'python_defaultSpec_';
-
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 const connectionFilePlaceholder = '{connection_file}';
 
@@ -136,13 +134,13 @@ export function getKernelConnectionLanguage(kernelConnection?: KernelConnectionM
     return model?.language || kernelSpec?.language;
 }
 // Create a default kernelspec with the given display name
-export function createDefaultKernelSpec(displayName?: string): IJupyterKernelSpec {
+export function createDefaultKernelSpec(interpreter?: PythonEnvironment): IJupyterKernelSpec {
     // This creates a default kernel spec. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
     const defaultSpec: Kernel.ISpecModel = {
-        name: defaultKernelSpecName + Date.now().toString(),
+        name: interpreter?.displayName || 'Python 3',
         language: 'python',
-        display_name: displayName || 'Python 3',
+        display_name: interpreter?.displayName || 'Python 3',
         metadata: {},
         argv: ['python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
         env: {},

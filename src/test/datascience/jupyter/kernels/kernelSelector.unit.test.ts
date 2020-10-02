@@ -19,7 +19,6 @@ import { Architecture } from '../../../../client/common/utils/platform';
 import { StopWatch } from '../../../../client/common/utils/stopWatch';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
-import { defaultKernelSpecName } from '../../../../client/datascience/jupyter/kernels/helpers';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
@@ -453,9 +452,6 @@ suite('DataScience - KernelSelector', () => {
 
             assert.deepEqual(kernel?.interpreter, interpreter);
             expect((kernel as any)?.kernelSpec, 'Should have kernelspec').to.not.be.undefined;
-            expect((kernel as any)?.kernelSpec!.name, 'Spec should have default name').to.include(
-                defaultKernelSpecName
-            );
         });
         test('For a raw connection, if a kernel spec is selected return it with the interpreter', async () => {
             when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);

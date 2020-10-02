@@ -14,7 +14,6 @@ import { PythonExecutionFactory } from '../../client/common/process/pythonExecut
 import { IExtensionContext, IPathUtils, Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
-import { defaultKernelSpecName } from '../../client/datascience/jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../../client/datascience/jupyter/kernels/jupyterKernelSpec';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
@@ -522,25 +521,6 @@ suite('Kernel Finder', () => {
                 });
             // get default kernel
             const spec = await kernelFinder.findKernelSpec(resource);
-            assert.isUndefined(spec);
-            fileSystem.reset();
-        });
-
-        test('Kernel metadata already has a default spec, and kernel spec not found, then return undefined', async () => {
-            setupFileSystem();
-            fileSystem
-                .setup((fs) => fs.readLocalFile(typemoq.It.isAnyString()))
-                .returns((pathParam: string) => {
-                    if (pathParam.includes(cacheFile)) {
-                        return Promise.resolve('[]');
-                    }
-                    return Promise.resolve('{}');
-                });
-            // get default kernel
-            const spec = await kernelFinder.findKernelSpec(resource, {
-                name: defaultKernelSpecName,
-                display_name: 'TargetDisplayName'
-            });
             assert.isUndefined(spec);
             fileSystem.reset();
         });

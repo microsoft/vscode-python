@@ -9,6 +9,7 @@ import { traceDecorators } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
+import { getURIFilter } from '../../../common/utils/misc';
 import { OSType } from '../../../common/utils/platform';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -97,10 +98,18 @@ export class WorkspaceLocators extends Locator {
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+        if (query?.searchLocations === null) {
+            // Workspace envs all have searchLocation, so there's nothing to do.
+            return NOOP_ITERATOR;
+        }
         const iterators = Object.keys(this.locators).map((key) => {
-            if (query?.searchLocations) {
+            if (query?.searchLocations !== undefined) {
                 const root = this.roots[key];
-                if (!matchURI(root, ...query.searchLocations)) {
+                // Match any related search location.
+                const filter = getURIFilter(root, { checkParent: true, checkChild: true, checkExact: true });
+                // Ignore any requests for global envs.
+                if (!query.searchLocations.roots.some(filter)) {
+                    // This workspace folder did not match the query, so skip it!
                     return NOOP_ITERATOR;
                 }
             }
@@ -166,19 +175,6 @@ export class WorkspaceLocators extends Locator {
         locator.disable();
         this.emitter.fire({ searchLocation: root });
     }
-}
-
-/**
- * Determine if the given URI matches one of the candidates.
- *
- * The scheme must match, as well as path.  The path must match exactly
- * or the URI must be a parent of one of the candidates.
- */
-function matchURI(uri: Uri, ...candidates: Uri[]): boolean {
-    const uriPath = uri.path.endsWith('/') ? uri.path : '{uri.path}/';
-    const matchedUri = candidates.find((candidate) => (candidate.scheme === uri.scheme)
-            && (candidate.path === uri.path || candidate.path.startsWith(uriPath)));
-    return matchedUri !== undefined;
 }
 
 // The parts of IComponentAdapter used here.

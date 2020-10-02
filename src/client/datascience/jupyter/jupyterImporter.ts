@@ -26,11 +26,11 @@ import {
 export class JupyterImporter implements INotebookImporter {
     public isDisposed: boolean = false;
     // Template that changes markdown cells to have # %% [markdown] in the comments
-    private readonly nbconvertTemplateFormat =
+    private readonly nbconvertBaseTemplateFormat =
         // tslint:disable-next-line:no-multiline-string
-        `{%- extends 'null.tpl' -%}
+        `{%- extends '{0}' -%}
 {% block codecell %}
-{0}
+{1}
 {{ super() }}
 {% endblock codecell %}
 {% block in_prompt %}{% endblock in_prompt %}
@@ -38,8 +38,10 @@ export class JupyterImporter implements INotebookImporter {
 {% block markdowncell scoped %}{0} [markdown]
 {{ cell.source | comment_lines }}
 {% endblock markdowncell %}`;
-
-    private templatePromise: Promise<string | undefined>;
+    private readonly nbconvert5Null = 'null.tpl';
+    private readonly nbconvert6Null = 'base/null.j2';
+    private template5Promise?: Promise<string | undefined>;
+    private template6Promise?: Promise<string | undefined>;
 
     constructor(
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
@@ -50,13 +52,9 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IJupyterInterpreterDependencyManager)
         private readonly dependencyManager: IJupyterInterpreterDependencyManager
-    ) {
-        this.templatePromise = this.createTemplateFile();
-    }
+    ) {}
 
     public async importFromFile(sourceFile: Uri): Promise<string> {
-        const template = await this.templatePromise;
-
         // If the user has requested it, add a cd command to the imported file so that relative paths still work
         const settings = this.configuration.getSettings();
         let directoryChange: string | undefined;
@@ -65,12 +63,30 @@ export class JupyterImporter implements INotebookImporter {
         }
 
         // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
-        if (!(await this.jupyterExecution.isImportSupported())) {
+        if (!(await this.jupyterExecution.getImportPackageVersion())) {
             await this.dependencyManager.installMissingDependencies();
         }
 
+        const nbConvertVersion = await this.jupyterExecution.getImportPackageVersion();
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
-        if (await this.jupyterExecution.isImportSupported()) {
+        if (nbConvertVersion) {
+            // nbconvert 5 and 6 use a different base template file
+            // Create and select the correct one
+            let template: string | undefined;
+            if (nbConvertVersion.major >= 6) {
+                if (!this.template6Promise) {
+                    this.template6Promise = this.createTemplateFile(true);
+                }
+
+                template = await this.template6Promise;
+            } else {
+                if (!this.template5Promise) {
+                    this.template5Promise = this.createTemplateFile(false);
+                }
+
+                template = await this.template5Promise;
+            }
+
             let fileOutput: string = await this.jupyterExecution.importNotebook(sourceFile, template);
             if (fileOutput.includes('get_ipython()')) {
                 fileOutput = this.addIPythonImport(fileOutput);
@@ -153,7 +169,7 @@ export class JupyterImporter implements INotebookImporter {
         }
     }
 
-    private async createTemplateFile(): Promise<string | undefined> {
+    private async createTemplateFile(nbconvert6: boolean): Promise<string | undefined> {
         // Create a temp file on disk
         const file = await this.fs.createTemporaryLocalFile('.tpl');
 
@@ -164,7 +180,10 @@ export class JupyterImporter implements INotebookImporter {
                 this.disposableRegistry.push(file);
                 await this.fs.appendLocalFile(
                     file.filePath,
-                    this.nbconvertTemplateFormat.format(this.defaultCellMarker)
+                    this.nbconvertBaseTemplateFormat.format(
+                        nbconvert6 ? this.nbconvert6Null : this.nbconvert5Null,
+                        this.defaultCellMarker
+                    )
                 );
 
                 // Now we should have a template that will convert
