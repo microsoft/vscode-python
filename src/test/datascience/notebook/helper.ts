@@ -324,11 +324,7 @@ export async function waitForCellHasEmptyOutput(cell: ICell, model: INotebookMod
     );
 }
 export async function waitForVSCCellIsRunning(cell: NotebookCell) {
-    await waitForCondition(
-        async () => assertVSCCellIsRunning(cell),
-        1_000,
-        `Cell ${cell.index + 1} did not start`
-    );
+    await waitForCondition(async () => assertVSCCellIsRunning(cell), 1_000, `Cell ${cell.index + 1} did not start`);
 }
 export function assertVSCCellIsNotRunning(cell: NotebookCell) {
     assert.notEqual(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
