@@ -474,7 +474,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 const data = outputs[0].data;
                 if (data && data.hasOwnProperty('text/plain')) {
                     // tslint:disable-next-line:no-any
-                    return (data as any)['text/plain'];
+                    return concatMultilineString((data as any)['text/plain']);
                 }
                 if (outputs[0].output_type === 'stream') {
                     const stream = outputs[0] as nbformat.IStream;

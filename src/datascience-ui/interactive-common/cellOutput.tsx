@@ -316,22 +316,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             input = JSON.stringify(output.data);
             renderWithScrollbars = true;
             isText = true;
-        } else if (
-            output.output_type === 'execute_result' &&
-            input &&
-            input.hasOwnProperty('text/plain') &&
-            !input.hasOwnProperty('text/html')
-        ) {
-            // Plain text should actually be shown as html so that escaped HTML shows up correctly
-            mimeType = 'text/html';
-            isText = true;
-            isError = false;
-            renderWithScrollbars = true;
-            // tslint:disable-next-line: no-any
-            const text = (input as any)['text/plain'];
-            input = {
-                'text/html': lodashEscape(concatMultilineString(text))
-            };
         } else if (output.output_type === 'stream') {
             mimeType = 'text/html';
             isText = true;
@@ -341,7 +325,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             const stream = output as nbformat.IStream; // NOSONAR
             const concatted = lodashEscape(concatMultilineString(stream.text));
             input = {
-                'text/html': concatted // XML tags should have already been escaped.
+                'text/html': concatted
             };
 
             // Output may have ascii colorization chars in it.
@@ -399,12 +383,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         // Fixup latex to make sure it has the requisite $$ around it
         if (mimeType === 'text/latex') {
             data = fixMarkdown(concatMultilineString(data as nbformat.MultilineString, true), true);
-        }
-
-        // Make sure text output is escaped (nteract texttransform won't)
-        if (mimeType === 'text/plain' && data) {
-            data = lodashEscape(data.toString());
-            mimeType = 'text/html';
         }
 
         return {
