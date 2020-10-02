@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - space*
 
 env:
   PYTHON_VERSION: 3.8
@@ -131,14 +132,16 @@ jobs:
         python: [2.7, 3.8]
         test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
     env:
-      # Something in Node 12.16.0 breaks the TS debug adapter, and ubuntu-latest bundles Node 12.16.1.
-      # We can remove this when we switch over to the python-based DA in https://github.com/microsoft/vscode-python/issues/7136.
-      # See https://github.com/microsoft/ptvsd/issues/2068
-      # At this point pinning is only needed for consistency. We no longer have TS debug adapter.
-      NODE_VERSION: 12.15.0
+      special-working-directory: './path with spaces'
+      special-working-directory-relative: 'path with spaces'
+    defaults:
+      run:
+        working-directory: ${{env.special-working-directory}}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          path: ${{env.special-working-directory-relative}}
 
       - name: Cache pip files
         uses: actions/cache@v2
@@ -157,7 +160,7 @@ jobs:
         id: out-cache
         uses: actions/cache@v2
         with:
-          path: ./out
+          path: ${{env.special-working-directory}}//out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Install dependencies (npm ci)
@@ -315,6 +318,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'venv'
 
       - name: Run single-workspace tests
@@ -323,6 +327,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'single-workspace'
 
       - name: Run multi-workspace tests
@@ -331,6 +336,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testMultiWorkspace
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'multi-workspace'
 
       - name: Run debugger tests
@@ -339,6 +345,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testDebugger
+          working-directory: ${{env.special-working-directory}}
         if: matrix.test-suite == 'debugger'
 
       - name: Run functional tests
