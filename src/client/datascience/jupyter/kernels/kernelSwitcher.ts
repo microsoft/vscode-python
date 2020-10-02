@@ -90,7 +90,10 @@ export class KernelSwitcher {
         const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection) ? kernelConnection : undefined;
         const kernelName = kernelSpec?.kernelSpec?.name || kernelModel?.kernelModel?.name;
         // One of them is bound to be non-empty.
-        const displayName = kernelModel?.kernelModel?.display_name || kernelName || '';
+        const displayName =
+            kernelConnection.kind === 'startUsingPythonInterpreter'
+                ? kernelConnection.interpreter.displayName || kernelConnection.interpreter.path
+                : kernelModel?.kernelModel?.display_name || kernelName || '';
         const options: ProgressOptions = {
             location: ProgressLocation.Notification,
             cancellable: false,
