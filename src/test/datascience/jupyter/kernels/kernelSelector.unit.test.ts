@@ -19,7 +19,6 @@ import { Architecture } from '../../../../client/common/utils/platform';
 import { StopWatch } from '../../../../client/common/utils/stopWatch';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
-import { defaultKernelSpecName } from '../../../../client/datascience/jupyter/kernels/helpers';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
