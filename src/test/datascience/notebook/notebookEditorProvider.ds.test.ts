@@ -19,7 +19,7 @@ import {
     canRunTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    insertMarkdownCellAndWait,
+    insertMarkdownCell,
     trustAllNotebooks
 } from './helper';
 
@@ -147,7 +147,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         const notebookClosed = createEventHandler(editorProvider, 'onDidCloseNotebookEditor', disposables);
 
         const notebookEditor = await editorProvider.open(testIPynb);
-        await insertMarkdownCellAndWait('1'); // Make the file dirty (so it gets pinned).
+        await insertMarkdownCell('1'); // Make the file dirty (so it gets pinned).
         await notebookOpened.assertFired();
         await activeNotebookChanged.assertFired();
         assert.equal(activeNotebookChanged.first, notebookEditor);
@@ -194,7 +194,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         const notebookClosed = createEventHandler(editorProvider, 'onDidCloseNotebookEditor', disposables);
 
         const editor1 = await editorProvider.open(testIPynb);
-        await insertMarkdownCellAndWait('1'); // Make the file dirty (so it gets pinned).
+        await insertMarkdownCell('1'); // Make the file dirty (so it gets pinned).
         await notebookOpened.assertFired();
         await activeNotebookChanged.assertFired();
         assert.equal(activeNotebookChanged.first, editor1);
@@ -203,7 +203,7 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         // Open another notebook.
         const testIPynb2 = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
         const editor2 = await editorProvider.open(testIPynb2);
-        await insertMarkdownCellAndWait('1'); // Make the file dirty (so it gets pinned).
+        await insertMarkdownCell('1'); // Make the file dirty (so it gets pinned).
 
         await notebookOpened.assertFiredExactly(2);
         await activeNotebookChanged.assertFiredAtLeast(2);

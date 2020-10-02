@@ -31,7 +31,7 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
     executeActiveDocument,
-    insertPythonCellAndWait,
+    insertPythonCell,
     saveActiveNotebook,
     startJupyter,
     trustAllNotebooks
@@ -135,10 +135,10 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         const testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
         await editorProvider.open(testIPynb);
 
-        await insertPythonCellAndWait('print(1)');
-        await insertPythonCellAndWait('print(a)');
-        await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)');
-        await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)');
+        await insertPythonCell('print(1)');
+        await insertPythonCell('print(a)');
+        await insertPythonCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)');
+        await insertPythonCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)');
         let cell1: NotebookCell;
         let cell2: NotebookCell;
         let cell3: NotebookCell;

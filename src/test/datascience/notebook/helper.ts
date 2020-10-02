@@ -90,12 +90,6 @@ export async function insertPythonCell(source: string, index?: number) {
         ])
     );
 }
-export async function insertPythonCellAndWait(source: string, index?: number) {
-    await insertPythonCell(source, index);
-}
-export async function insertMarkdownCellAndWait(source: string) {
-    await insertMarkdownCell(source);
-}
 export async function deleteCell(index: number = 0) {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
