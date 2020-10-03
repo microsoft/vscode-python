@@ -1261,6 +1261,21 @@ export namespace DebugConfigStrings {
             invalid: localize('debug.flaskEnterAppPathOrNamePathInvalidNameError')
         };
     }
+    export namespace fastapi {
+        export const snippet = {
+            name: localize('python.snippet.launch.fastapi.label')
+        };
+        // tslint:disable-next-line:no-shadowed-variable
+        export const selectConfiguration = {
+            label: localize('debug.debugFastAPIConfigurationLabel'),
+            description: localize('debug.debugFastAPIConfigurationDescription')
+        };
+        export const enterDevelopmentIniPath = {
+            title: localize('debug.fastapiEnterDevelopmentIniPathTitle'),
+            prompt: localize('debug.fastapiEnterDevelopmentIniPathPrompt'),
+            invalid: localize('debug.fastapiEnterDevelopmentIniPathInvalidFilePathError')
+        };
+    }
     export namespace pyramid {
         export const snippet = {
             name: localize('python.snippet.launch.pyramid.label')
