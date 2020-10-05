@@ -13,7 +13,6 @@
     "python.formatting.provider": "yapf",
     "python.pythonPath": "python",
     "python.experiments.optInto": [
-        "LocalZMQKernel - experiment",
         "NativeNotebook - experiment"
     ],
     // Do not set this to "Microsoft", else it will result in LS being downloaded on CI
@@ -22,8 +21,11 @@
     "python.languageServer": "Jedi",
     // Ensure auto save is off.
     "files.autoSave": "off",
+    //If enabled, ensure we save immediately.
+    "files.autoSaveDelay": 1,
     // We don't want jupyter to start when testing (DS functionality or anything else).
     "python.dataScience.disableJupyterAutoStart": true,
     "python.logging.level": "debug",
-    "python.dataScience.alwaysTrustNotebooks": true // In UI tests we don't want prompts for `Do you want to trust thie nb...`
+    "python.dataScience.alwaysTrustNotebooks": true, // In UI tests we don't want prompts for `Do you want to trust thie nb...`
+    "python.dataScience.useNotebookEditor": true
 }
