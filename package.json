@@ -3464,7 +3464,7 @@
         "test:functional:perf": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.perf.json",
         "test:functional:memleak": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.json",
         "test:functional:cover": "npm run test:functional",
-        "test:functional:split": "node ./build/ci/scripts/runFunctionalTests.js",
+        "test:functional:parallel": "node ./build/ci/scripts/runFunctionalTests.js",
         "test:cover:report": "nyc --nycrc-path build/.nycrc  report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
         "testDebugger": "node ./out/test/testBootstrap.js ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",

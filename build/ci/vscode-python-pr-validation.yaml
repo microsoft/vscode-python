@@ -46,11 +46,30 @@ stages:
               TestsToRun: 'pythonUnitTests, pythonInternalTools, pythonIPythonTests'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
-            'Functional':
-              TestsToRun: 'testfunctional'
+            'Functional Group 1 (real jupyter)':
+              TestsToRun: 'testFunctionalParallel'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
-              SplitFunctionalTests: false
+              VSCODE_PYTHON_ROLLING: true
+              FunctionalTestGroup: 1
+            'Functional Group 2 (real jupyter)':
+              TestsToRun: 'testFunctionalParallel'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+              VSCODE_PYTHON_ROLLING: true
+              FunctionalTestGroup: 2
+            'Functional Group 3 (real jupyter)':
+              TestsToRun: 'testFunctionalParallel'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+              VSCODE_PYTHON_ROLLING: true
+              FunctionalTestGroup: 3
+            'Functional Group 4 (real jupyter)':
+              TestsToRun: 'testFunctionalParallel'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+              VSCODE_PYTHON_ROLLING: true
+              FunctionalTestGroup: 4
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
