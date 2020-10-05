@@ -106,29 +106,12 @@ export function updateNotebookMetadata(
             metadata.kernelspec.display_name = displayName;
             kernelId = kernelSpecOrModel.id;
         }
-<<<<<<< HEAD
         try {
             // This is set only for when we select an interpreter.
             // tslint:disable-next-line: no-any
             delete (metadata.kernelspec as any).metadata;
         } catch {
             // Noop.
-=======
-    } else if (kernelConnection?.kind === 'startUsingPythonInterpreter') {
-        // Store interpreter name, we expect the kernel finder will find the corresponding interpreter based on this name.
-        const name = kernelConnection.interpreter.displayName || '';
-        if (metadata.kernelspec?.name !== name || metadata.kernelspec?.display_name !== name) {
-            changed = true;
-            metadata.kernelspec = {
-                name,
-                display_name: name,
-                metadata: {
-                    interpreter: {
-                        hash: sha256().update(kernelConnection.interpreter.path).digest('hex')
-                    }
-                }
-            };
->>>>>>> da389971d... Find interpreter based on hash in kernelspec of nb metadata (#13856)
         }
     }
     return { changed, kernelId };
