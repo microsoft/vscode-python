@@ -9,6 +9,7 @@ import { PythonEnvInfo } from './base/info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsChangedEvent } from './base/watcher';
+import { getGlobalPersistentStore } from './common/externalDependencies';
 import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
 import { registerForIOC } from './legacyIOC';
 
@@ -54,7 +55,16 @@ export function createAPI(): [PythonEnvironments, () => void] {
     const [locators, activateLocators] = initLocators();
 
     // Update this to pass in an actual function that checks for env info completeness.
-    const envsCache = new PythonEnvInfoCache(() => true);
+    const envsCache = new PythonEnvInfoCache(
+        () => true, // "isComplete"
+        () => {
+            const storage = getGlobalPersistentStore<PythonEnvInfo[]>('PYTHON_ENV_INFO_CACHE');
+            return {
+                load: async () => storage.get(),
+                store: async (e) => storage.set(e),
+            };
+        },
+    );
     // XXX For now we use a noop cache.
     const cache = new EmptyCache();
     const cachingLocator = new CachingLocator(cache, locators);
@@ -65,7 +75,7 @@ export function createAPI(): [PythonEnvironments, () => void] {
             activateLocators();
             cachingLocator.initialize().ignoreErrors();
             // Any other activation needed for the API will go here later.
-            envsCache.initialize();
+            envsCache.initialize().ignoreErrors();
         },
     ];
 }
