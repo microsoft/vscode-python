@@ -418,7 +418,7 @@ steps:
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
     displayName: 'Publish functional tests results'
-    condition: contains(variables['TestsToRun'], 'testFunctional')
+    condition: or(contains(variables['TestsToRun'], 'testFunctional'), contains(variables['TestsToRun'], 'testFunctionalParallel')) 
     inputs:
       testResultsFiles: '$(Build.ArtifactStagingDirectory)/test-junit*.xml'
       testRunTitle: 'functional-$(Agent.Os)-Py$(pythonVersion)'
