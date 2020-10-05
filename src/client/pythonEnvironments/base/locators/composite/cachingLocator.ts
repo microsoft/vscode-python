@@ -322,6 +322,12 @@ function normalizePeriodicOptions(
     return normalized as PeriodicOptions;
 }
 
+/**
+ * This helps avoid running duplicate expensive operations.
+ *
+ * The key aspect is that alraedy running or queue requests can be
+ * re-used instead of creating a duplicate request.
+ */
 class BackgroundLooper {
     private readonly opts: {
         runDefault: RunFunc;
@@ -369,6 +375,11 @@ class BackgroundLooper {
         }
     }
 
+    /**
+     * Start the request execution loop.
+     *
+     * Currently it does not support being re-started.
+     */
     public start(): void {
         if (this.stopped) {
             throw Error('already stopped');
@@ -381,6 +392,11 @@ class BackgroundLooper {
         this.runLoop().ignoreErrors();
     }
 
+    /**
+     * Stop the loop (assuming it was already started.)
+     *
+     * @returns - a promise that resolves once the loop has stopped.
+     */
     public stop(): Promise<void> {
         if (this.stopped) {
             return this.loopRunning.promise;
@@ -401,6 +417,15 @@ class BackgroundLooper {
         return this.loopRunning.promise;
     }
 
+    /**
+     * Return the most recent active request, if any.
+     *
+     * If there are no pending requests then this is the currently
+     * running one (if one is running).
+     *
+     * @returns - the ID of the request and its completion promise;
+     *            if there are no active requests then you get `undefined`
+     */
     public getLastRequest(): [RequestID, Promise<void>] | undefined {
         let reqID: RequestID;
         if (this.queue.length > 0) {
@@ -420,6 +445,15 @@ class BackgroundLooper {
         return [reqID, promise];
     }
 
+    /**
+     * Return the request that is waiting to run next, if any.
+     *
+     * The request is the next one that will be run.  This implies that
+     * there is one already running.
+     *
+     * @returns - the ID of the request and its completion promise;
+     *            if there are no pending requests then you get `undefined`
+     */
     public getNextRequest(): [RequestID, Promise<void>] | undefined {
         if (this.queue.length === 0) {
             return undefined;
@@ -431,6 +465,15 @@ class BackgroundLooper {
         return [reqID, promise];
     }
 
+    /**
+     * Request that a function be run.
+     *
+     * If one is already running then the new request is added to the
+     * end of the queue.  Otherwise it is run immediately.
+     *
+     * @returns - the ID of the new request and its completion promise;
+     *            the promise resolves once the request has completed
+     */
     public addRequest(run?: RunFunc): [RequestID, Promise<void>] {
         const reqID = this.getNextID();
         // This is the only method that adds requests to the queue
@@ -454,6 +497,9 @@ class BackgroundLooper {
         return [reqID, running.promise];
     }
 
+    /**
+     * This is the actual loop where the queue is managed and waiting happens.
+     */
     private async runLoop(): Promise<void> {
         const getWinner = () => {
             const promises = [
@@ -491,6 +537,12 @@ class BackgroundLooper {
         this.loopRunning.resolve();
     }
 
+    /**
+     * Run all pending requests, in queue order.
+     *
+     * Each request's completion promise resolves once that request
+     * finishes.
+     */
     private async flush(): Promise<void> {
         if (this.running !== undefined) {
             // We must be flushing the queue already.
@@ -515,6 +567,9 @@ class BackgroundLooper {
         this.running = undefined;
     }
 
+    /**
+     * Run a single request.
+     */
     private async runRequest(run: RunFunc): Promise<void> {
         if (this.opts.retry === undefined) {
             // eslint-disable-next-line no-await-in-loop
@@ -542,6 +597,9 @@ class BackgroundLooper {
         } while (!retrying);
     }
 
+    /**
+     * Provide the request ID to use next.
+     */
     private getNextID(): RequestID {
         // For now there is no way to queue up a request with
         // an ID that did not originate here.  So we don't need
