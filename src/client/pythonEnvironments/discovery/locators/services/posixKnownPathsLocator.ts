@@ -18,19 +18,15 @@ import { commonPosixBinPaths, isPosixPythonBin } from '../../../common/posixUtil
 async function getPythonBinFromKnownPaths(): Promise<string[]> {
     const knownPaths = await commonPosixBinPaths();
     const pythonBins:Set<string> = new Set();
-    // eslint-disable-next-line no-restricted-syntax
     for (const knownPath of knownPaths) {
-        // eslint-disable-next-line no-await-in-loop
         const files = (await fsapi.readdir(knownPath))
             .map((filename:string) => path.join(knownPath, filename))
             .filter(isPosixPythonBin);
 
-        // eslint-disable-next-line no-restricted-syntax
         for (const file of files) {
             // Ensure that we have a collection of unique global binaries by
             // resolving all symlinks to the target binaries.
             try {
-                // eslint-disable-next-line no-await-in-loop
                 const resolvedBin = await resolveSymbolicLink(file);
                 pythonBins.add(resolvedBin);
                 traceInfo(`Found: ${file} --> ${resolvedBin}`);
