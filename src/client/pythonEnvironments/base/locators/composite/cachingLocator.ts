@@ -71,7 +71,7 @@ export class CachingLocator implements ILocator {
         this.opts = normalizeCachingLocatorOptions(opts);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.looper = new BackgroundLooper({
-            runDefault: () => this.doRefresh(),
+            runDefault: () => this.refresh(),
             retry: {
                 intervalms: this.opts.refreshRetryMinutes * 60 * 1000,
             },
@@ -96,8 +96,20 @@ export class CachingLocator implements ILocator {
 
         await this.cache.initialize();
         this.looper.start();
-        await this.initialRefresh();
-        this.locator.onChanged((event) => this.handleChange(event));
+
+        this.locator.onChanged((event) => this.ensureCurrentRefresh(event));
+
+        // Do the initial refresh.
+        const envs = this.cache.getAllEnvs();
+        if (envs !== undefined) {
+            this.initializing.resolve();
+            await this.ensureRecentRefresh();
+        } else {
+            // There is nothing in the cache, so we must wait for the
+            // initial refresh to finish before allowing iteration.
+            await this.ensureRecentRefresh();
+            this.initializing.resolve();
+        }
     }
 
     public dispose(): void {
@@ -134,7 +146,7 @@ export class CachingLocator implements ILocator {
             const envs = this.cache.getAllEnvs();
             if (envs !== undefined) {
                 envs.push(resolved);
-                await this.update(envs);
+                await this.updateCache(envs);
             }
         }
         return resolved;
@@ -183,12 +195,13 @@ export class CachingLocator implements ILocator {
     }
 
     /**
-     * Trigger a refresh of the cache from the downstream locator.
+     * Maybe trigger a refresh of the cache from the downstream locator.
      *
-     * Note that if a refresh has already been requested or is currently
-     * running, this is a noop.
+     * If a refresh isn't already running then we request a refresh and
+     * wait for it to finish.  Otherwise we do not make a new request,
+     * but instead only wait for the last requested refresh to complete.
      */
-    private refresh(): Promise<void> {
+    private ensureRecentRefresh(): Promise<void> {
         // Re-use the last req in the queue if possible.
         const last = this.looper.getLastRequest();
         if (last !== undefined) {
@@ -196,27 +209,48 @@ export class CachingLocator implements ILocator {
             return promise;
         }
         // The queue is empty so add a new request.
-        const [, waitUntilDone] = this.looper.addRequest();
+        const [, waitUntilDone] = this.looper.addRequest(() => this.refresh());
         return waitUntilDone;
+    }
+
+    /**
+     * Maybe trigger a refresh of the cache from the downstream locator.
+     *
+     * Make sure that a completely new refresh will be started soon and
+     * wait for it to finish.  If a refresh isn't already running then
+     * we start one and wait for it to finish.  If one is already
+     * running then we make sure a new one is requested to start after
+     * that and wait for it to finish.  That means if one is already
+     * waiting in the queue then we wait for that one instead of making
+     * a new request.
+     */
+    private ensureCurrentRefresh(event?: PythonEnvsChangedEvent): void {
+        const req = this.looper.getNextRequest();
+        if (req === undefined) {
+            // There isn't already a pending request (due to an
+            // onChanged event), so we add one.
+            this.looper.addRequest(() => this.refresh(event));
+        }
+        // Otherwise let the pending request take care of it.
     }
 
     /**
      * Immediately perform a refresh of the cache from the downstream locator.
      *
-     * It does not matter if another refresh is already
+     * It does not matter if another refresh is already running.
      */
-    private async doRefresh(
+    private async refresh(
         event?: PythonEnvsChangedEvent,
     ): Promise<void> {
         const iterator = this.locator.iterEnvs();
         const envs = await getEnvs(iterator);
-        await this.update(envs, event);
+        await this.updateCache(envs, event);
     }
 
     /**
      * Set the cache to the given envs, flush, and emit an onChanged event.
      */
-    private async update(
+    private async updateCache(
         envs: PythonEnvInfo[],
         event?: PythonEnvsChangedEvent,
     ): Promise<void> {
@@ -224,29 +258,6 @@ export class CachingLocator implements ILocator {
         this.cache.setAllEnvs(envs);
         await this.cache.flush();
         this.watcher.fire(event || {}); // Emit an "onCHanged" event.
-    }
-
-    private handleChange(event: PythonEnvsChangedEvent): void {
-        const req = this.looper.getNextRequest();
-        if (req === undefined) {
-            // There isn't already a pending request (due to an
-            // onChanged event), so we add one.
-            this.looper.addRequest(() => this.doRefresh(event));
-        }
-        // Otherwise let the pending request take care of it.
-    }
-
-    private async initialRefresh(): Promise<void> {
-        const envs = this.cache.getAllEnvs();
-        if (envs !== undefined) {
-            this.initializing.resolve();
-            await this.refresh();
-        } else {
-            // There is nothing in the cache, so we must wait for the
-            // initial refresh to finish before allowing iteration.
-            await this.refresh();
-            this.initializing.resolve();
-        }
     }
 }
 
