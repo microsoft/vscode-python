@@ -140,6 +140,11 @@ export class CachingLocator implements ILocator {
         return resolved;
     }
 
+    /**
+     * A generator that yields the envs provided by the downstream locator.
+     *
+     * Contrast this with `iterFromCache()` that yields only from the cache.
+     */
     private async* iterFromDownstream(query?: PythonLocatorQuery): IPythonEnvsIterator {
         // For now we wait for the initial refresh to finish.  If that
         // turns out to be a problem then we can do something more
@@ -154,6 +159,12 @@ export class CachingLocator implements ILocator {
         }
     }
 
+    /**
+     * A generator that yields the envs found in the cache.
+     *
+     * Contrast this with `iterFromDownstream()` which relies on
+     * the downstream locator.
+     */
     private async* iterFromCache(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const envs = this.cache.getAllEnvs();
         if (envs === undefined) {
@@ -171,6 +182,12 @@ export class CachingLocator implements ILocator {
         }
     }
 
+    /**
+     * Trigger a refresh of the cache from the downstream locator.
+     *
+     * Note that if a refresh has already been requested or is currently
+     * running, this is a noop.
+     */
     private refresh(): Promise<void> {
         // Re-use the last req in the queue if possible.
         const last = this.looper.getLastRequest();
@@ -183,6 +200,11 @@ export class CachingLocator implements ILocator {
         return waitUntilDone;
     }
 
+    /**
+     * Immediately perform a refresh of the cache from the downstream locator.
+     *
+     * It does not matter if another refresh is already
+     */
     private async doRefresh(
         event?: PythonEnvsChangedEvent,
     ): Promise<void> {
@@ -191,6 +213,9 @@ export class CachingLocator implements ILocator {
         await this.update(envs, event);
     }
 
+    /**
+     * Set the cache to the given envs, flush, and emit an onChanged event.
+     */
     private async update(
         envs: PythonEnvInfo[],
         event?: PythonEnvsChangedEvent,
@@ -204,7 +229,8 @@ export class CachingLocator implements ILocator {
     private handleChange(event: PythonEnvsChangedEvent): void {
         const req = this.looper.getNextRequest();
         if (req === undefined) {
-            // There isn't already a pending request.
+            // There isn't already a pending request (due to an
+            // onChanged event), so we add one.
             this.looper.addRequest(() => this.doRefresh(event));
         }
         // Otherwise let the pending request take care of it.
