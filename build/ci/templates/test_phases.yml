@@ -396,8 +396,8 @@ steps:
   # Example command line (windows pwsh):
   # > node build/ci/scripts/runFunctionalTests.js
   - script: |
-      npm run test:functional:parallel --group $(FunctionalTestGroup)
-    displayName: 'Run functional split'
+      npm run test:functional:parallel -- --group $(FunctionalTestGroup)
+    displayName: 'Run functional parallel group'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testFunctionalParallel'))
     env:
       DISPLAY: :10
