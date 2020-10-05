@@ -506,7 +506,7 @@ class BackgroundLooper {
     }
 
     private getNextID(): RequestID {
-        // For nowe there is no way to queue up a request with
+        // For now there is no way to queue up a request with
         // an ID that did not originate here.  So we don't need
         // to worry about collisions.
         if (this.lastID === undefined) {
