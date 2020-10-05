@@ -928,6 +928,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.showDataViewer",
+                "title": "View Tensor in Data Viewer",
+                "category": "Python"
+            },
+            {
                 "command": "python.analysis.restartLanguageServer",
                 "title": "%python.command.python.analysis.restartLanguageServer.title%",
                 "category": "Python"
@@ -1654,6 +1659,14 @@
                     "command": "python.runTestNode",
                     "when": "view == python_tests && viewItem == suite && !busyTests",
                     "group": "inline@0"
+                }
+            ],
+            "debug/variables/context": [
+                {
+                    "command": "python.datascience.showDataViewer",
+                    "group": "1_view",
+                    "title": "View Tensor in Data Viewer",
+                    "when": "debugProtocolVariableMenuContext == 'Tensor'"
                 }
             ]
         },

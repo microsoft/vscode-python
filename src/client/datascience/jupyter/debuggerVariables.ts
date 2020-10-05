@@ -274,24 +274,31 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
             ? this.configService.getSettings().datascience.variableExplorerExclude?.split(';')
             : [];
 
-        const allowedVariables = variablesResponse.body.variables.filter((v) => {
-            if (!v.name || !v.type || !v.value) {
-                return false;
-            }
-            if (exclusionList && exclusionList.includes(v.type)) {
-                return false;
-            }
-            if (v.name.startsWith('_')) {
-                return false;
-            }
-            if (KnownExcludedVariables.has(v.name)) {
-                return false;
-            }
-            if (v.type === 'NoneType') {
-                return false;
-            }
-            return true;
-        });
+        const allowedVariables = variablesResponse.body.variables
+            .filter((v) => {
+                if (!v.name || !v.type || !v.value) {
+                    return false;
+                }
+                if (exclusionList && exclusionList.includes(v.type)) {
+                    return false;
+                }
+                if (v.name.startsWith('_')) {
+                    return false;
+                }
+                if (KnownExcludedVariables.has(v.name)) {
+                    return false;
+                }
+                if (v.type === 'NoneType') {
+                    return false;
+                }
+                return true;
+            })
+            .map((v) => {
+                return v.type === 'Tensor'
+                    ? // tslint:disable-next-line: no-object-literal-type-assertion
+                      ({ ...v, __vscodeVariableMenuContext: 'Tensor' } as DebugProtocol.Variable)
+                    : v;
+            });
 
         this.lastKnownVariables = allowedVariables.map((v) => {
             return {
