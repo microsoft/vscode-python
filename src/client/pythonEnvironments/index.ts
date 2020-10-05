@@ -3,7 +3,6 @@
 
 import * as vscode from 'vscode';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
-import { EmptyCache } from './base/cache';
 import { PythonEnvInfoCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from './base/locator';
@@ -66,16 +65,15 @@ export function createAPI(): [PythonEnvironments, () => void] {
         },
     );
     // XXX For now we use a noop cache.
-    const cache = new EmptyCache();
-    const cachingLocator = new CachingLocator(cache, locators);
+    const cachingLocator = new CachingLocator(envsCache, locators);
 
     return [
         new PythonEnvironments(cachingLocator),
         () => {
             activateLocators();
+            envsCache.initialize().ignoreErrors();
             cachingLocator.initialize().ignoreErrors();
             // Any other activation needed for the API will go here later.
-            envsCache.initialize().ignoreErrors();
         },
     ];
 }

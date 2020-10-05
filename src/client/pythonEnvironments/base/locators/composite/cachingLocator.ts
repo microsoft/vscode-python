@@ -4,6 +4,7 @@
 import '../../../../common/extensions';
 import { createDeferred } from '../../../../common/utils/async';
 import { logWarning } from '../../../../logging';
+import { IEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
 import { getMinimalPartialInfo } from '../../info/env';
 import {
@@ -15,19 +16,6 @@ import { getEnvs, getQueryFilter } from '../../locatorUtils';
 import { PythonEnvsWatcher } from '../../watcher';
 import { pickBestEnv } from './reducingLocator';
 
-// Note that we only export IEnvsCache for the sake of code navigation.
-
-/**
- * The cache-related functionality used by CachingLocator.
- */
-export interface IPythonEnvsCache {
-    initialize(): Promise<void>;
-    matchEnv(env: Partial<PythonEnvInfo>): PythonEnvInfo[];
-    getAllEnvs(): PythonEnvInfo[] | undefined;
-    setAllEnvs(envs: PythonEnvInfo[]): void;
-    flush(): Promise<void>;
-}
-
 /**
  * A locator that stores the known environments in the given cache.
  */
@@ -35,7 +23,7 @@ export class CachingLocator extends PythonEnvsWatcher implements ILocator {
     private readonly initializing = createDeferred<void>();
 
     constructor(
-        private readonly cache: IPythonEnvsCache,
+        private readonly cache: IEnvsCache,
         private readonly locator: ILocator,
     ) {
         super();
@@ -79,7 +67,10 @@ export class CachingLocator extends PythonEnvsWatcher implements ILocator {
         if (query === undefined) {
             return undefined;
         }
-        const candidates = this.cache.matchEnv(query);
+        const candidates = this.cache.filterEnvs(query);
+        if (candidates === undefined) {
+            return undefined;
+        }
         if (candidates.length > 0) {
             return pickBestEnv(candidates);
         }

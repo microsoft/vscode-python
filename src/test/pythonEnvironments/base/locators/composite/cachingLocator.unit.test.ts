@@ -5,8 +5,8 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { createDeferred } from '../../../../../client/common/utils/async';
+import { PythonEnvInfoCache } from '../../../../../client/pythonEnvironments/base/envsCache';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
-import { areSameEnv } from '../../../../../client/pythonEnvironments/base/info/env';
 import { CachingLocator } from '../../../../../client/pythonEnvironments/base/locators/composite/cachingLocator';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
@@ -26,49 +26,13 @@ const env5 = createLocatedEnv('/x/y/z/env4', '3.8.1', PythonEnvKind.Venv);
 env5.searchLocation = Uri.file(path.normalize('/x/y/z'));
 const envs = [env1, env2, env3, env4, env5];
 
-class FakeCache {
-    public initialized = false;
-
-    private envs: PythonEnvInfo[] | undefined;
-
+class FakeCache extends PythonEnvInfoCache {
     constructor(
-        private readonly load: () => Promise<PythonEnvInfo[] | undefined>,
-        private readonly store: (e: PythonEnvInfo[]) => Promise<void>,
-    ) {}
-
-    public async initialize(): Promise<void> {
-        if (this.initialized) {
-            return;
-        }
-        this.envs = await this.load();
-        this.initialized = true;
-    }
-
-    public matchEnv(env: Partial<PythonEnvInfo>): PythonEnvInfo[] {
-        const cached = this.envs;
-        if (cached === undefined) {
-            return [];
-        }
-        return cached.filter((e) => areSameEnv(e, env));
-    }
-
-    public getAllEnvs(): PythonEnvInfo[] | undefined {
-        const cached = this.envs;
-        if (cached === undefined) {
-            return undefined;
-        }
-        return [...cached];
-    }
-
-    public setAllEnvs(setOfEnvs: PythonEnvInfo[]): void {
-        this.envs = [...setOfEnvs];
-    }
-
-    public async flush(): Promise<void> {
-        const cached = this.envs;
-        if (cached !== undefined) {
-            await this.store(cached);
-        }
+        load: () => Promise<PythonEnvInfo[] | undefined>,
+        store: (e: PythonEnvInfo[]) => Promise<void>,
+        isComplete: (e: PythonEnvInfo) => boolean = () => true,
+    ) {
+        super(isComplete, () => ({ load, store }));
     }
 }
 
