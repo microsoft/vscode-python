@@ -402,7 +402,7 @@ class BackgroundLooper {
         // in the queue.
         const running = createDeferred<void>();
         this.requests[reqID] = [
-            run !== undefined ? run : this.opts.runDefault,
+            run ?? this.opts.runDefault,
             running.promise,
             () => running.resolve(),
         ];
