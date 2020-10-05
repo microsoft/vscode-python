@@ -552,7 +552,8 @@ class BackgroundLooper {
         while (this.queue.length > 0) {
             const reqID = this.queue[0];
             this.running = reqID;
-            // We pop the request off the queue early because ....?
+            // We pop the request off the queue here so it doesn't show
+            // up as both running and pending.
             this.queue.shift();
             const [run, , notify] = this.requests[reqID];
 
