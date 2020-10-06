@@ -197,7 +197,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    public async show(preserveFocus?: boolean): Promise<void> {
+    public async show(preserveFocus: boolean = true): Promise<void> {
         await this.loadPromise;
         return super.show(preserveFocus);
     }

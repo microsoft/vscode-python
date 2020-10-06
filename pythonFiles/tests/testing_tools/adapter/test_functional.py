@@ -10,8 +10,6 @@ import subprocess
 import sys
 import unittest
 
-import pytest
-
 from ...__main__ import TESTING_TOOLS_ROOT
 from testing_tools.adapter.util import fix_path, PATH_SEP
 
@@ -81,6 +79,15 @@ def fix_source(tests, testid, srcfile, lineno):
     if not srcfile:
         srcfile = test["source"].rpartition(":")[0]
     test["source"] = fix_path("{}:{}".format(srcfile, lineno))
+
+
+def sorted_object(obj):
+    if isinstance(obj, dict):
+        return sorted((key, sorted_object(obj[key])) for key in obj.keys())
+    if isinstance(obj, list):
+        return sorted((sorted_object(x) for x in obj))
+    else:
+        return obj
 
 
 # Note that these tests are skipped if util.PATH_SEP is not os.path.sep.
@@ -160,7 +167,7 @@ class PytestTests(unittest.TestCase):
         result[0]["tests"] = fix_test_order(result[0]["tests"])
 
         self.maxDiff = None
-        self.assertEqual(result, expected)
+        self.assertEqual(sorted_object(result), sorted_object(expected))
 
     @pytest.mark.skip(reason="https://github.com/microsoft/vscode-python/issues/14023")
     def test_discover_complex_doctest(self):
@@ -245,7 +252,7 @@ class PytestTests(unittest.TestCase):
         result[0]["tests"] = fix_test_order(result[0]["tests"])
 
         self.maxDiff = None
-        self.assertEqual(result, expected)
+        self.assertEqual(sorted_object(result), sorted_object(expected))
 
     def test_discover_not_found(self):
         projroot, testroot = resolve_testroot("notests")

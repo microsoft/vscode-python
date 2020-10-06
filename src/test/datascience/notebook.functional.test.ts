@@ -214,10 +214,10 @@ suite('DataScience notebook tests', () => {
                         );
                         const actualMimeType = data.hasOwnProperty(mimeType) ? mimeType : 'text/plain';
                         assert.ok((data as any)[actualMimeType], `${index}: Cell mime type not correct`);
-                        verifyValue((data as any)[actualMimeType]);
+                        verifyValue(concatMultilineString((data as any)[actualMimeType]));
                     }
                     if (text) {
-                        verifyValue(text);
+                        verifyValue(concatMultilineString(text as any));
                     }
                 } else if (cellType === 'markdown') {
                     assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);

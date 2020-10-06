@@ -17,7 +17,6 @@ import {
     SignatureHelpContext,
     SymbolInformation,
     TextDocument,
-    TextDocumentContentChangeEvent,
     WorkspaceEdit
 } from 'vscode';
 
@@ -65,12 +64,12 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
         this.impl.clearAnalysisCache ? this.impl.clearAnalysisCache() : noop();
     }
 
-    public handleChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]) {
-        this.impl.handleChanges ? this.impl.handleChanges(document, changes) : noop();
+    public get connection() {
+        return this.impl.connection;
     }
 
-    public handleOpen(document: TextDocument) {
-        this.impl.handleOpen ? this.impl.handleOpen(document) : noop();
+    public get capabilities() {
+        return this.impl.capabilities;
     }
 
     public provideRenameEdits(

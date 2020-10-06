@@ -14,7 +14,7 @@ import { IProcessService, IProcessServiceFactory } from '../../../../client/comm
 import { ITerminalActivationCommandProvider } from '../../../../client/common/terminal/types';
 import { IConfigurationService, IPersistentStateFactory, IPythonSettings } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
-import { IInterpreterLocatorService, IInterpreterService } from '../../../../client/interpreter/contracts';
+import { IComponentAdapter, IInterpreterLocatorService, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { CondaService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
@@ -39,6 +39,7 @@ suite('Interpreters Conda Service', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let condaService: CondaService;
+    let pyenvs: TypeMoq.IMock<IComponentAdapter>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let config: TypeMoq.IMock<IConfigurationService>;
     let settings: TypeMoq.IMock<IPythonSettings>;
@@ -59,6 +60,7 @@ suite('Interpreters Conda Service', () => {
         persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         registryInterpreterLocatorService = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
+        pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         config = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -123,6 +125,7 @@ suite('Interpreters Conda Service', () => {
             config.object,
             disposableRegistry,
             workspaceService.object,
+            pyenvs.object,
             registryInterpreterLocatorService.object,
         );
     });
@@ -606,6 +609,7 @@ suite('Interpreters Conda Service', () => {
             config.object,
             disposableRegistry,
             workspaceService.object,
+            pyenvs.object,
         );
 
         const result = await condaSrv.getCondaFile();

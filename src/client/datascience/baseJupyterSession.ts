@@ -68,9 +68,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     public get isConnected(): boolean {
         return this.connected;
     }
-    public get onIoPubMessage() {
-        return this.ioPubEventEmitter.event;
-    }
     protected onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     protected statusHandler: Slot<ISessionWithSocket, Kernel.Status>;
     protected connected: boolean = false;

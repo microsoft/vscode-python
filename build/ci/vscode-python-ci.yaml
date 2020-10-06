@@ -66,13 +66,17 @@ stages:
             'Debugger':
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
+            'DataScience in VSCode':
+              TestsToRun: 'testDataScienceInVSCode'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
           maxParallel: 2
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-20.04'
         steps:
           - template: templates/test_phases.yml
 
@@ -100,7 +104,7 @@ stages:
               NeedsPythonTestReqs: true
           maxParallel: 2
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-20.04'
         steps:
           - template: templates/test_phases.yml
 

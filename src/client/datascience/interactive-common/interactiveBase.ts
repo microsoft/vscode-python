@@ -216,14 +216,11 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
         // When the variable service requests a refresh, refresh our variable list
         this.disposables.push(this.jupyterVariables.refreshRequired(this.refreshVariables.bind(this)));
-    }
 
-    public async show(preserveFocus: boolean = true): Promise<void> {
-        // Verify a server that matches us hasn't started already
-        this.createNotebookIfProviderConnectionExists().ignoreErrors();
-
-        // Show our web panel.
-        return super.show(preserveFocus);
+        // If we have already auto started our server then we can go ahead and try to create a notebook on construction
+        setTimeout(() => {
+            this.createNotebookIfProviderConnectionExists().ignoreErrors();
+        }, 0);
     }
 
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
@@ -610,7 +607,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             await this.ensureDarkSet();
 
             // Then show our webpanel
-            await this.show();
+            await this.show(true);
 
             // Add our sys info if necessary
             if (file !== Identifiers.EmptyFileName) {

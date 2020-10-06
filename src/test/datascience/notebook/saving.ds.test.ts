@@ -10,7 +10,10 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { commands, Uri } from 'vscode';
-import { NotebookCell } from '../../../../typings/vscode-proposed';
+import {
+    NotebookCell,
+    NotebookContentProvider as VSCNotebookContentProvider
+} from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
@@ -28,7 +31,7 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
     executeActiveDocument,
-    insertPythonCellAndWait,
+    insertPythonCell,
     saveActiveNotebook,
     startJupyter,
     trustAllNotebooks
@@ -73,7 +76,7 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         const testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
         await editorProvider.open(testIPynb);
-        const contentProvider = api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider);
+        const contentProvider = api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider);
         const changedEvent = createEventHandler(contentProvider, 'onDidChangeNotebook', disposables);
 
         // Clear the output & then save the notebook.
@@ -99,7 +102,7 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         await editorProvider.open(testIPynb);
         const notebookDocument = vscodeNotebook.activeNotebookEditor?.document!;
         const vscCells = notebookDocument.cells!;
-        const contentProvider = api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider);
+        const contentProvider = api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider);
         const changedEvent = createEventHandler(contentProvider, 'onDidChangeNotebook', disposables);
 
         // Clear the output & then save the notebook.
@@ -132,10 +135,10 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         const testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
         await editorProvider.open(testIPynb);
 
-        await insertPythonCellAndWait('print(1)', 0);
-        await insertPythonCellAndWait('print(a)', 1);
-        await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 2);
-        await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 3);
+        await insertPythonCell('print(1)');
+        await insertPythonCell('print(a)');
+        await insertPythonCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)');
+        await insertPythonCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)');
         let cell1: NotebookCell;
         let cell2: NotebookCell;
         let cell3: NotebookCell;

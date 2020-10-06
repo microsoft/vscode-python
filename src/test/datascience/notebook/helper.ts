@@ -11,8 +11,12 @@ import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { instance, mock } from 'ts-mockito';
 import { commands, Memento, TextDocument, Uri } from 'vscode';
-import { NotebookCell, NotebookDocument } from '../../../../types/vscode-proposed';
-import { CellDisplayOutput } from '../../../../typings/vscode-proposed';
+import {
+    CellDisplayOutput,
+    NotebookCell,
+    NotebookContentProvider as VSCNotebookContentProvider,
+    NotebookDocument
+} from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IConfigurationService, ICryptoUtils, IDisposable } from '../../../client/common/types';
@@ -37,79 +41,74 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 async function getServices() {
     const api = await initialize();
     return {
-        contentProvider: api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider),
+        contentProvider: api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider),
         vscodeNotebook: api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
         editorProvider: api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider)
     };
 }
 
-export async function insertMarkdownCell(source: string, index: number = 0) {
+export async function insertMarkdownCell(source: string) {
     const { vscodeNotebook } = await getServices();
-    const vscEditor = vscodeNotebook.activeNotebookEditor;
-    await new Promise((resolve) =>
-        vscEditor?.edit((builder) => {
-            builder.insert(index, source, MARKDOWN_LANGUAGE, vscodeNotebookEnums.CellKind.Markdown, [], undefined);
-            resolve();
-        })
-    );
-
-    await waitForCondition(
-        async () => vscEditor?.document.cells[index].document.getText().trim() === source.trim(),
-        5_000,
-        'Cell not inserted'
+    const activeEditor = vscodeNotebook.activeNotebookEditor;
+    if (!activeEditor) {
+        assert.fail('No active editor');
+        return;
+    }
+    await activeEditor.edit((edit) =>
+        edit.replaceCells(activeEditor.document.cells.length, 0, [
+            {
+                cellKind: vscodeNotebookEnums.CellKind.Markdown,
+                language: MARKDOWN_LANGUAGE,
+                source,
+                metadata: {
+                    hasExecutionOrder: false
+                },
+                outputs: []
+            }
+        ])
     );
 }
-export async function insertPythonCell(source: string, index: number = 0) {
+export async function insertPythonCell(source: string, index?: number) {
     const { vscodeNotebook } = await getServices();
-    const vscEditor = vscodeNotebook.activeNotebookEditor;
-    await new Promise((resolve) =>
-        vscEditor?.edit((builder) => {
-            builder.insert(index, source, PYTHON_LANGUAGE, vscodeNotebookEnums.CellKind.Code, [], undefined);
-            resolve();
-        })
+    const activeEditor = vscodeNotebook.activeNotebookEditor;
+    if (!activeEditor) {
+        assert.fail('No active editor');
+        return;
+    }
+    const startNumber = index ?? activeEditor.document.cells.length;
+    await activeEditor.edit((edit) =>
+        edit.replaceCells(startNumber, 0, [
+            {
+                cellKind: vscodeNotebookEnums.CellKind.Code,
+                language: PYTHON_LANGUAGE,
+                source,
+                metadata: {
+                    hasExecutionOrder: false
+                },
+                outputs: []
+            }
+        ])
     );
-
-    await waitForCondition(
-        async () => vscEditor?.document.cells[index].document.getText().trim() === source.trim(),
-        5_000,
-        'Cell not inserted'
-    );
-}
-export async function insertPythonCellAndWait(source: string, index: number = 0) {
-    await insertPythonCell(source, index);
-}
-export async function insertMarkdownCellAndWait(source: string, index: number = 0) {
-    await insertMarkdownCell(source, index);
 }
 export async function deleteCell(index: number = 0) {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
-    await new Promise((resolve) =>
-        activeEditor?.edit((builder) => {
-            builder.delete(index);
-            resolve();
-        })
-    );
-}
-export async function deleteAllCellsAndWait(index: number = 0) {
-    const { vscodeNotebook } = await getServices();
-    const activeEditor = vscodeNotebook.activeNotebookEditor;
-    if (!activeEditor) {
+    if (!activeEditor || activeEditor.document.cells.length === 0) {
         return;
     }
-    const vscCells = activeEditor.document.cells!;
-    let previousCellOut = vscCells.length;
-    while (previousCellOut) {
-        await new Promise((resolve) =>
-            activeEditor?.edit((builder) => {
-                builder.delete(index);
-                resolve();
-            })
-        );
-        // Wait for cell to get deleted.
-        await waitForCondition(async () => vscCells.length === previousCellOut - 1, 1_000, 'Cell not deleted');
-        previousCellOut = vscCells.length;
+    if (!activeEditor) {
+        assert.fail('No active editor');
+        return;
     }
+    await activeEditor.edit((edit) => edit.replaceCells(index, 1, []));
+}
+export async function deleteAllCellsAndWait() {
+    const { vscodeNotebook } = await getServices();
+    const activeEditor = vscodeNotebook.activeNotebookEditor;
+    if (!activeEditor || activeEditor.document.cells.length === 0) {
+        return;
+    }
+    await activeEditor.edit((edit) => edit.replaceCells(0, activeEditor.document.cells.length, []));
 }
 
 export async function createTemporaryFile(options: {
@@ -151,7 +150,7 @@ export async function canRunTests() {
 export async function swallowSavingOfNotebooks() {
     const api = await initialize();
     // We will be editing notebooks, to close notebooks them we need to ensure changes are saved.
-    const contentProvider = api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider);
+    const contentProvider = api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider);
     sinon.stub(contentProvider, 'saveNotebook').callsFake(noop as any);
     sinon.stub(contentProvider, 'saveNotebookAs').callsFake(noop as any);
 }
@@ -197,7 +196,8 @@ export async function startJupyter(closeInitialEditor: boolean) {
     const disposables: IDisposable[] = [];
     try {
         await editorProvider.createNew();
-        await insertPythonCell('print("Hello World")', 0);
+        await deleteAllCellsAndWait();
+        await insertPythonCell('print("Hello World")');
         const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
         await executeActiveDocument();
         // Wait for Jupyter to start.
@@ -223,7 +223,7 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell) 
     await waitForCondition(
         async () => assertHasExecutionCompletedSuccessfully(cell),
         1_000,
-        `Cell ${cell.notebook.cells.indexOf(cell) + 1} did not complete successfully`
+        `Cell ${cell.index + 1} did not complete successfully`
     );
 }
 export function assertExecutionOrderInVSCCell(cell: NotebookCell, executionOrder?: number) {
@@ -234,7 +234,7 @@ export async function waitForExecutionOrderInVSCCell(cell: NotebookCell, executi
     await waitForCondition(
         async () => assertExecutionOrderInVSCCell(cell, executionOrder),
         1_000,
-        `Execution count not '${executionOrder}' for Cell ${cell.notebook.cells.indexOf(cell) + 1}`
+        `Execution count not '${executionOrder}' for Cell ${cell.index + 1}`
     );
 }
 export async function waitForExecutionOrderInCell(cell: NotebookCell, executionOrder: number | undefined) {
@@ -246,7 +246,7 @@ export async function waitForExecutionOrderInCell(cell: NotebookCell, executionO
             return cell.metadata.executionOrder === executionOrder;
         },
         15_000,
-        `Execution count not '${executionOrder}' for Cell ${cell.notebook.cells.indexOf(cell)}`
+        `Execution count not '${executionOrder}' for Cell ${cell.index}`
     );
 }
 export function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
@@ -256,12 +256,12 @@ export function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
     );
 }
 export function assertHasOutputInVSCell(cell: NotebookCell) {
-    assert.ok(cell.outputs.length, `No output in Cell ${cell.notebook.cells.indexOf(cell) + 1}`);
+    assert.ok(cell.outputs.length, `No output in Cell ${cell.index + 1}`);
 }
 export function assertHasOutputInICell(cell: ICell, model: INotebookModel) {
     assert.ok((cell.data.outputs as nbformat.IOutput[]).length, `No output in ICell ${model.cells.indexOf(cell) + 1}`);
 }
-export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
+export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number = 0, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs, 'No output');
     assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
@@ -283,7 +283,7 @@ export async function waitForTextOutputInVSCode(
     await waitForCondition(
         async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),
         timeout,
-        `Output does not contain provided text '${text}' for Cell ${cell.notebook.cells.indexOf(cell) + 1}`
+        `Output does not contain provided text '${text}' for Cell ${cell.index + 1}`
     );
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
@@ -311,7 +311,7 @@ export async function waitForVSCCellHasEmptyOutput(cell: NotebookCell) {
     await waitForCondition(
         async () => cell.outputs.length === 0,
         1_000,
-        `Cell ${cell.notebook.cells.indexOf(cell) + 1} output did not get cleared`
+        `Cell ${cell.index + 1} output did not get cleared`
     );
 }
 export async function waitForCellHasEmptyOutput(cell: ICell, model: INotebookModel) {
@@ -322,11 +322,7 @@ export async function waitForCellHasEmptyOutput(cell: ICell, model: INotebookMod
     );
 }
 export async function waitForVSCCellIsRunning(cell: NotebookCell) {
-    await waitForCondition(
-        async () => assertVSCCellIsRunning(cell),
-        1_000,
-        `Cell ${cell.notebook.cells.indexOf(cell) + 1} did not start`
-    );
+    await waitForCondition(async () => assertVSCCellIsRunning(cell), 1_000, `Cell ${cell.index + 1} did not start`);
 }
 export function assertVSCCellIsNotRunning(cell: NotebookCell) {
     assert.notEqual(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
@@ -431,6 +427,23 @@ export function createNotebookDocument(
         uri: model.file,
         isUntitled: false,
         viewType,
+        contentOptions: {
+            transientOutputs: false,
+            transientMetadata: {
+                breakpointMargin: true,
+                editable: true,
+                hasExecutionOrder: true,
+                inputCollapsed: true,
+                lastRunDuration: true,
+                outputCollapsed: true,
+                runStartTime: true,
+                runnable: true,
+                executionOrder: false,
+                custom: false,
+                runState: false,
+                statusMessage: false
+            }
+        },
         metadata: {
             cellEditable: model.isTrusted,
             cellHasExecutionOrder: true,
@@ -447,6 +460,7 @@ export function createNotebookDocument(
             metadata: vscCell.metadata || {},
             uri: model.file.with({ fragment: `cell${index}` }),
             notebook: doc,
+            index,
             document: instance(mock<TextDocument>()),
             outputs: vscCell.outputs
         };

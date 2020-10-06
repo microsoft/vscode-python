@@ -83,8 +83,11 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
+                            lastRunDuration: undefined,
+                            runStartTime: undefined,
                             runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
-                            runnable: isNotebookTrusted
+                            runnable: isNotebookTrusted,
+                            statusMessage: undefined
                         }
                     },
                     {
@@ -163,7 +166,10 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
-                            runnable: isNotebookTrusted
+                            runnable: isNotebookTrusted,
+                            statusMessage: undefined,
+                            runStartTime: undefined,
+                            lastRunDuration: undefined
                         }
                     },
                     {
