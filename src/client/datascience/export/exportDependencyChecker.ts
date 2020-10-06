@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as localize from '../../common/utils/localize';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ProgressReporter } from '../progress/progressReporter';
 import { IJupyterExecution, IJupyterInterpreterDependencyManager } from '../types';
 import { ExportFormat } from './types';
@@ -13,7 +14,7 @@ export class ExportDependencyChecker {
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter
     ) {}
 
-    public async checkDependencies(format: ExportFormat) {
+    public async checkDependencies(format: ExportFormat, interpreter?: PythonEnvironment) {
         // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
         try {
@@ -27,4 +28,8 @@ export class ExportDependencyChecker {
             reporter.dispose();
         }
     }
+
+    // For this specific interpreter associated with a notebook check to see if it supports import
+    // and export with nbconvert
+    private async checkNotebookInterpreter(interpreter: PythonEnvironment) {}
 }
