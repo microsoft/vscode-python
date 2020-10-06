@@ -242,23 +242,6 @@ export class JupyterInterpreterDependencyService {
         return installed;
     }
 
-    public async getNbConvertVersion(
-        interpreter: PythonEnvironment,
-        _token?: CancellationToken
-    ): Promise<SemVer | undefined> {
-        const command = this.commandFactory.createInterpreterCommand(
-            JupyterCommands.ConvertCommand,
-            'jupyter',
-            ['-m', 'jupyter', 'nbconvert'],
-            interpreter,
-            false
-        );
-
-        const result = await command.exec(['--version'], { throwOnStdErr: true });
-
-        return parseSemVer(result.stdout);
-    }
-
     /**
      * Gets a list of the dependencies not installed, dependencies that are required to launch the jupyter notebook server.
      *
