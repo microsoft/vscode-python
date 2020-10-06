@@ -22,7 +22,7 @@ env:
   COVERAGE_REPORTS: tests-coverage-reports
   CI_PYTHON_PATH: python
   TEST_RESULTS_DIRECTORY: .
-  TEST_RESULTS_GLOB: '**/test-results.xml'
+  TEST_RESULTS_GLOB: '**/test-results*.xml'
 
 jobs:
   tests:
