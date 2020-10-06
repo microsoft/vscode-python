@@ -340,10 +340,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return this.jupyterInterpreterService.openNotebook(file);
     }
 
-    public async importNotebook(file: Uri, template: string | undefined): Promise<string> {
-        return this.jupyterInterpreterService.exportNotebookToPython(file, template);
-    }
-
     public getServer(_options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
         // This is cached at the host or guest level
         return Promise.resolve(undefined);
