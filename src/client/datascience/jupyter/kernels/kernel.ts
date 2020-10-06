@@ -238,12 +238,7 @@ export class Kernel implements IKernel {
         }
         await this.notebook
             .requestKernelInfo()
-            .then((item) => {
-                this._info = item.content;
-            })
-            .catch((ex) => {
-                console.error('ooops', ex);
-            })
+            .then((item) => (this._info = item.content))
             .catch(noop);
         await this.notebook.waitForIdle(this.launchTimeout);
     }
