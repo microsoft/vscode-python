@@ -118,10 +118,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         return execution.getNotebookError();
     }
 
-    public async getImportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
-        const execution = await this.executionFactory.get();
-        return execution.getImportPackageVersion(cancelToken);
-    }
     public async isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
         const execution = await this.executionFactory.get();
         return execution.isSpawnSupported(cancelToken);

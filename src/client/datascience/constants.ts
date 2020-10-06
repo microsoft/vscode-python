@@ -569,7 +569,6 @@ export namespace LiveShare {
 
 export namespace LiveShareCommands {
     export const isNotebookSupported = 'isNotebookSupported';
-    export const getImportPackageVersion = 'getImportPackageVersion';
     export const connectToNotebookServer = 'connectToNotebookServer';
     export const getUsableJupyterPython = 'getUsableJupyterPython';
     export const executeObservable = 'executeObservable';

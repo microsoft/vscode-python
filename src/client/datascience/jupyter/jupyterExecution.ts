@@ -123,12 +123,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return this.usablePythonInterpreter;
     }
 
-    @reportAction(ReportableAction.CheckingIfImportIsSupported)
-    public async getImportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
-        // See if we can find the command nbconvert
-        return this.jupyterInterpreterService.getExportPackageVersion(cancelToken);
-    }
-
     public isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // Supported if we can run a notebook
         return this.isNotebookSupported(cancelToken);
