@@ -40,8 +40,8 @@ import { Decorator } from './editor-integration/decorator';
 import { HoverProvider } from './editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
 import { ExportBase } from './export/exportBase';
-import { ExportDependencyChecker } from './export/exportDependencyChecker';
 import { ExportFileOpener } from './export/exportFileOpener';
+import { ExportInterpreterFinder } from './export/exportInterpreterFinder';
 import { ExportManager } from './export/exportManager';
 import { ExportManagerFilePicker } from './export/exportManagerFilePicker';
 import { ExportToHTML } from './export/exportToHTML';
@@ -310,7 +310,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
     serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory, JupyterVariableDataProviderFactory);
     serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
-    serviceManager.addSingleton<ExportDependencyChecker>(ExportDependencyChecker, ExportDependencyChecker);
+    serviceManager.addSingleton<ExportInterpreterFinder>(ExportInterpreterFinder, ExportInterpreterFinder);
     serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
     serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
     serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);

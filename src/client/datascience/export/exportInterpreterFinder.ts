@@ -8,7 +8,7 @@ import { ExportFormat } from './types';
 
 // IANHU: Rename? ExportInterpreterFinder?
 @injectable()
-export class ExportDependencyChecker {
+export class ExportInterpreterFinder {
     constructor(
         @inject(IJupyterInterpreterDependencyManager)
         private readonly dependencyManager: IJupyterInterpreterDependencyManager,

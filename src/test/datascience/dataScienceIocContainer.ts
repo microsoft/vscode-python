@@ -209,8 +209,8 @@ import { CodeWatcher } from '../../client/datascience/editor-integration/codewat
 import { HoverProvider } from '../../client/datascience/editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { ExportBase } from '../../client/datascience/export/exportBase';
-import { ExportDependencyChecker } from '../../client/datascience/export/exportDependencyChecker';
 import { ExportFileOpener } from '../../client/datascience/export/exportFileOpener';
+import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
 import { ExportManager } from '../../client/datascience/export/exportManager';
 import { ExportManagerFilePicker } from '../../client/datascience/export/exportManagerFilePicker';
 import { ExportToHTML } from '../../client/datascience/export/exportToHTML';
@@ -597,7 +597,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         this.serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
         this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
-        this.serviceManager.addSingleton<ExportDependencyChecker>(ExportDependencyChecker, ExportDependencyChecker);
+        this.serviceManager.addSingleton<ExportInterpreterFinder>(ExportInterpreterFinder, ExportInterpreterFinder);
         this.serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
         this.serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
         this.serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);

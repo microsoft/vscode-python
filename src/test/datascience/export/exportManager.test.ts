@@ -7,8 +7,8 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
-import { ExportDependencyChecker } from '../../../client/datascience/export/exportDependencyChecker';
 import { ExportFileOpener } from '../../../client/datascience/export/exportFileOpener';
+import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
 import { ExportManager } from '../../../client/datascience/export/exportManager';
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
 import { ExportFormat, IExport, IExportManagerFilePicker } from '../../../client/datascience/export/types';
@@ -25,7 +25,7 @@ suite('DataScience - Export Manager', () => {
     let filePicker: IExportManagerFilePicker;
     let appShell: IApplicationShell;
     let exportFileOpener: ExportFileOpener;
-    let exportDependencyChecker: ExportDependencyChecker;
+    let exportDependencyChecker: ExportInterpreterFinder;
     const model = mock<INotebookModel>();
     setup(async () => {
         exportUtil = mock<ExportUtil>();
@@ -37,7 +37,7 @@ suite('DataScience - Export Manager', () => {
         exportPdf = mock<IExport>();
         appShell = mock<IApplicationShell>();
         exportFileOpener = mock<ExportFileOpener>();
-        exportDependencyChecker = mock<ExportDependencyChecker>();
+        exportDependencyChecker = mock<ExportInterpreterFinder>();
         // tslint:disable-next-line: no-any
         when(filePicker.getExportFileLocation(anything(), anything(), anything())).thenReturn(
             Promise.resolve(Uri.file('test.pdf'))

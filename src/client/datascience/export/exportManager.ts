@@ -11,8 +11,8 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { ProgressReporter } from '../progress/progressReporter';
 import { IDataScienceFileSystem, INotebookModel } from '../types';
-import { ExportDependencyChecker } from './exportDependencyChecker';
 import { ExportFileOpener } from './exportFileOpener';
+import { ExportInterpreterFinder } from './exportInterpreterFinder';
 import { ExportUtil } from './exportUtil';
 import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './types';
 
@@ -28,7 +28,7 @@ export class ExportManager implements IExportManager {
         @inject(ExportUtil) private readonly exportUtil: ExportUtil,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(ExportFileOpener) private readonly exportFileOpener: ExportFileOpener,
-        @inject(ExportDependencyChecker) private exportDependencyChecker: ExportDependencyChecker
+        @inject(ExportInterpreterFinder) private exportInterpreterFinder: ExportInterpreterFinder
     ) {}
 
     public async export(
@@ -40,7 +40,7 @@ export class ExportManager implements IExportManager {
         let target;
         try {
             // Get the interpreter to use for the export, checking the candidate interpreter first
-            const exportInterpreter = await this.exportDependencyChecker.getExportInterpreter(
+            const exportInterpreter = await this.exportInterpreterFinder.getExportInterpreter(
                 format,
                 candidateInterpreter
             );
