@@ -93,11 +93,13 @@ export class ExportCommands implements IDisposable {
         }
 
         if (exportMethod) {
-            await this.exportManager.export(exportMethod, model, defaultFileName);
+            await this.exportManager.export(exportMethod, model, defaultFileName, interpreter);
         } else {
             // if we don't have an export method we need to ask for one and display the
             // quickpick menu
-            const pickedItem = await this.showExportQuickPickMenu(model, defaultFileName).then((item) => item);
+            const pickedItem = await this.showExportQuickPickMenu(model, defaultFileName, interpreter).then(
+                (item) => item
+            );
             if (pickedItem !== undefined) {
                 pickedItem.handler();
             } else {
@@ -147,9 +149,10 @@ export class ExportCommands implements IDisposable {
 
     private async showExportQuickPickMenu(
         model: INotebookModel,
-        defaultFileName?: string
+        defaultFileName?: string,
+        interpreter?: PythonEnvironment
     ): Promise<IExportQuickPickItem | undefined> {
-        const items = this.getExportQuickPickItems(model, defaultFileName);
+        const items = this.getExportQuickPickItems(model, defaultFileName, interpreter);
 
         const options: QuickPickOptions = {
             ignoreFocusOut: false,

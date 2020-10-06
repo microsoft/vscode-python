@@ -14,7 +14,7 @@ export class ExportToPython extends ExportBase {
         if (token.isCancellationRequested) {
             return;
         }
-        const contents = await this.importer.importFromFile(source);
+        const contents = await this.importer.importFromFile(source, interpreter);
         await this.fs.writeFile(target, contents);
     }
 }

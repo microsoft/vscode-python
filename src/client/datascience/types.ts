@@ -433,7 +433,7 @@ export interface IJupyterKernelSpec {
 
 export const INotebookImporter = Symbol('INotebookImporter');
 export interface INotebookImporter extends Disposable {
-    importFromFile(contentsFile: Uri): Promise<string>;
+    importFromFile(contentsFile: Uri, interpreter: PythonEnvironment): Promise<string>;
 }
 
 export const INotebookExporter = Symbol('INotebookExporter');

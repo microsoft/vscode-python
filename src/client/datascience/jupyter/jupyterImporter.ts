@@ -14,11 +14,13 @@ import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { CodeSnippets, Identifiers } from '../constants';
 import {
     IDataScienceFileSystem,
     IJupyterExecution,
     IJupyterInterpreterDependencyManager,
+    INbConvertInterpreterDependencyChecker,
     INotebookImporter
 } from '../types';
 
@@ -51,10 +53,12 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IJupyterInterpreterDependencyManager)
-        private readonly dependencyManager: IJupyterInterpreterDependencyManager
+        private readonly dependencyManager: IJupyterInterpreterDependencyManager,
+        @inject(INbConvertInterpreterDependencyChecker)
+        private readonly nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker
     ) {}
 
-    public async importFromFile(sourceFile: Uri): Promise<string> {
+    public async importFromFile(sourceFile: Uri, interpreter: PythonEnvironment): Promise<string> {
         // If the user has requested it, add a cd command to the imported file so that relative paths still work
         const settings = this.configuration.getSettings();
         let directoryChange: string | undefined;
@@ -63,11 +67,12 @@ export class JupyterImporter implements INotebookImporter {
         }
 
         // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
-        if (!(await this.jupyterExecution.getImportPackageVersion())) {
-            await this.dependencyManager.installMissingDependencies();
-        }
+        //if (!(await this.jupyterExecution.getImportPackageVersion())) {
+        //await this.dependencyManager.installMissingDependencies();
+        //}
 
-        const nbConvertVersion = await this.jupyterExecution.getImportPackageVersion();
+        //const nbConvertVersion = await this.jupyterExecution.getImportPackageVersion();
+        const nbConvertVersion = await this.nbConvertDependencyChecker.getNbConvertVersion(interpreter);
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (nbConvertVersion) {
             // nbconvert 5 and 6 use a different base template file
