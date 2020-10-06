@@ -147,7 +147,7 @@ export class CellExecution {
      * If execution has commenced, then interrupt (via cancellation token) else dequeue from execution.
      */
     public async cancel() {
-        if (this.cancelHandled){
+        if (this.cancelHandled) {
             return;
         }
         await this.initPromise;
@@ -580,10 +580,6 @@ export class CellExecution {
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
                 await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
-            }
-        }
-    }
-nt);
             }
         }
     }
