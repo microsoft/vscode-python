@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import * as localize from '../../common/utils/localize';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     IJupyterExecution,
@@ -9,6 +10,7 @@ import {
 } from '../types';
 import { ExportFormat } from './types';
 
+// IANHU: Rename? ExportInterpreterFinder?
 @injectable()
 export class ExportDependencyChecker {
     constructor(
@@ -17,27 +19,66 @@ export class ExportDependencyChecker {
         private readonly dependencyManager: IJupyterInterpreterDependencyManager,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(INbConvertInterpreterDependencyChecker)
-        private readonly nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker
+        private readonly nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker,
+        @inject(JupyterInterpreterService) private readonly jupyterInterpreterService: JupyterInterpreterService
     ) {}
 
-    public async checkDependencies(format: ExportFormat, interpreter?: PythonEnvironment) {
+    // IANHU: To Remove
+    //public async checkDependencies(format: ExportFormat, interpreter?: PythonEnvironment) {
+    //// Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
+    //const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
+    //try {
+    //// If an interpreter was passed in, first see if that interpreter supports NB Convert
+    //// if it does, we are good to go, but don't install nbconvert into it
+    //if (interpreter && this.checkNotebookInterpreter(interpreter)) {
+    //return;
+    //}
+
+    //// If an interpreter was not passed in, work with the main jupyter interperter
+    //// IANHU: Clean up what this is using
+    //if (!(await this.jupyterExecution.getImportPackageVersion())) {
+    //await this.dependencyManager.installMissingDependencies();
+    //if (!(await this.jupyterExecution.getImportPackageVersion())) {
+    //throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
+    //}
+    //}
+    //} finally {
+    //reporter.dispose();
+    //}
+    //}
+
+    // Get a valid interpreter to perform an export with
+    // The candidateInterpreter is the interpreter to check first if nbconvert is supported
+    // If it is not supported, fall back on the selected jupyter interpreter
+    public async getExportInterpreter(
+        format: ExportFormat,
+        candidateInterpreter?: PythonEnvironment
+    ): Promise<PythonEnvironment> {
         // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
         try {
             // If an interpreter was passed in, first see if that interpreter supports NB Convert
             // if it does, we are good to go, but don't install nbconvert into it
-            if (interpreter && this.checkNotebookInterpreter(interpreter)) {
-                return;
+            if (candidateInterpreter && (await this.checkNotebookInterpreter(candidateInterpreter))) {
+                return candidateInterpreter;
             }
 
             // If an interpreter was not passed in, work with the main jupyter interperter
-            // IANHU: Clean up what this is using
-            if (!(await this.jupyterExecution.getImportPackageVersion())) {
-                await this.dependencyManager.installMissingDependencies();
-                if (!(await this.jupyterExecution.getImportPackageVersion())) {
-                    throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
+            const selectedJupyterInterpreter = await this.jupyterInterpreterService.getSelectedInterpreter();
+
+            if (selectedJupyterInterpreter) {
+                if (await this.checkNotebookInterpreter(selectedJupyterInterpreter)) {
+                    return selectedJupyterInterpreter;
+                } else {
+                    // Give the user a chance to install nbconvert into the selected jupyter interpreter
+                    await this.dependencyManager.installMissingDependencies();
+                    if (await this.checkNotebookInterpreter(selectedJupyterInterpreter)) {
+                        return selectedJupyterInterpreter;
+                    }
                 }
             }
+
+            throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
         } finally {
             reporter.dispose();
         }
