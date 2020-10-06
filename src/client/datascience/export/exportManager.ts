@@ -6,6 +6,7 @@ import { IApplicationShell } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { TemporaryDirectory } from '../../common/platform/types';
 import * as localize from '../../common/utils/localize';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { ProgressReporter } from '../progress/progressReporter';
@@ -27,13 +28,18 @@ export class ExportManager implements IExportManager {
         @inject(ExportUtil) private readonly exportUtil: ExportUtil,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(ExportFileOpener) private readonly exportFileOpener: ExportFileOpener,
-        @inject(ExportDependencyChecker) private exportDepedencyChecker: ExportDependencyChecker
+        @inject(ExportDependencyChecker) private exportDependencyChecker: ExportDependencyChecker
     ) {}
 
-    public async export(format: ExportFormat, model: INotebookModel, defaultFileName?: string): Promise<undefined> {
+    public async export(
+        format: ExportFormat,
+        model: INotebookModel,
+        defaultFileName?: string,
+        interpreter?: PythonEnvironment
+    ): Promise<undefined> {
         let target;
         try {
-            await this.exportDepedencyChecker.checkDependencies(format);
+            await this.exportDependencyChecker.checkDependencies(format);
             target = await this.getTargetFile(format, model, defaultFileName);
             if (!target) {
                 return;
