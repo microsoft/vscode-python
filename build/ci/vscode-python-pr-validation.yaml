@@ -47,25 +47,25 @@ stages:
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
             'Functional Group 1':
-              TestsToRun: 'testFunctionalParallel'
+              TestsToRun: 'testParallelFunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
               VSCODE_PYTHON_ROLLING: true
               FunctionalTestGroup: 1
             'Functional Group 2':
-              TestsToRun: 'testFunctionalParallel'
+              TestsToRun: 'testParallelFunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
               VSCODE_PYTHON_ROLLING: true
               FunctionalTestGroup: 2
             'Functional Group 3':
-              TestsToRun: 'testFunctionalParallel'
+              TestsToRun: 'testParallelFunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
               VSCODE_PYTHON_ROLLING: true
               FunctionalTestGroup: 3
             'Functional Group 4':
-              TestsToRun: 'testFunctionalParallel'
+              TestsToRun: 'testParallelFunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
               VSCODE_PYTHON_ROLLING: true
