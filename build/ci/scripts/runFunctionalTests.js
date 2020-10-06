@@ -8,12 +8,14 @@
 var path = require('path');
 var glob = require('glob');
 var child_process = require('child_process');
+var fs = require('fs-extra');
 
 // Create a base for the output file
 var originalMochaFile = process.env['MOCHA_FILE'];
 var mochaFile = originalMochaFile || './test-results.xml';
 var mochaBaseFile = path.join(path.dirname(mochaFile), path.basename(mochaFile, '.xml'));
 var mochaFileExt = '.xml';
+var groupCount = 4;
 
 function gatherArgs(extraArgs, file) {
     return [
@@ -29,6 +31,39 @@ function gatherArgs(extraArgs, file) {
         '--timeout=180000',
         ...extraArgs
     ];
+}
+
+async function generateGroups(files) {
+    // Go through each file putting it into a bucket. Each bucket will attempt to
+    // have equal size
+
+    // Start with largest files first (sort by size)
+    var stats = await Promise.all(files.map((f) => fs.stat(f)));
+    var filesWithSize = files.map((f, i) => {
+        return {
+            file: f,
+            size: stats[i].size
+        };
+    });
+    var sorted = filesWithSize.sort((a, b) => b.size - a.size);
+
+    // Generate buckets that try to hold the largest file first
+    var buckets = new Array(groupCount).fill().map((_, i) => {
+        return {
+            index: i,
+            totalSize: 0,
+            files: []
+        };
+    });
+    var lowestBucket = buckets[0];
+    sorted.forEach((fs) => {
+        buckets[lowestBucket.index].totalSize += fs.size;
+        buckets[lowestBucket.index].files.push(fs.file);
+        lowestBucket = buckets.find((b) => b.totalSize < lowestBucket.totalSize) || lowestBucket;
+    });
+
+    // Return these groups of files
+    return buckets.map((b) => b.files);
 }
 
 async function runIndividualTest(extraArgs, file, index) {
@@ -58,7 +93,7 @@ async function main() {
 
     // Glob all of the files that we usually send to mocha as a group (see mocha.functional.opts.xml)
     var files = await new Promise((resolve, reject) => {
-        glob('./out/test/**/*.functional.test.js', (ex, res) => {
+        glob('./out/test/datascience/**/*.functional.test.js', (ex, res) => {
             if (ex) {
                 reject(ex);
             } else {
@@ -68,20 +103,18 @@ async function main() {
     });
 
     // Figure out what group is running (should be something like --group1, --group2 etc.)
-    var groupArgIndex = process.argv.findIndex((a) => a === '--group');
-    var groupArg = groupArgIndex >= 0 ? parseInt(process.argv[groupArgIndex].slice(7), 10) - 1 : -1;
+    var groupArgIndex = process.argv.findIndex((a) => a.includes('--group'));
+    var groupIndex = groupArgIndex >= 0 ? parseInt(process.argv[groupArgIndex].slice(7), 10) - 1 : -1;
 
-    // Split the files into groups if asked (4 equal parts as we support 4 groups)
-    var groupSize = Math.floor(files.length / 4);
-    var startIndex = groupArg >= 0 ? groupSize * groupArg : 0;
-    var endIndex = groupArg >= 0 && groupArg < 3 ? startIndex + groupSize : files.length;
-    console.log(`Running for group ${groupArg} from ${startIndex} to ${endIndex}`);
-    files = files.slice(startIndex, endIndex);
+    // Generate 4 groups based on sorting by size
+    var groups = await generateGroups(files);
+    files = groupIndex >= 0 ? groups[groupIndex] : files;
+    console.log(`Running for group ${groupIndex}`);
 
     // Extract any extra args for the individual mocha processes
     var extraArgs =
-        groupArg >= 0 && process.argv.length > 4
-            ? process.argv.slice(4)
+        groupIndex >= 0 && process.argv.length > 3
+            ? process.argv.slice(3)
             : process.argv.length > 2
             ? process.argv.slice(2)
             : [];
