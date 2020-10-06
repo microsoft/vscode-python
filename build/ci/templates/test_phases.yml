@@ -373,6 +373,23 @@ steps:
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'SystemTests'
 
+
+  # Slow DataScience tests with VS Code
+  # Create a venv & register it as a kernel.
+  # These tests are slow hence will only run on linux.
+  # This env will be used to install ipykernel & test for prompts if ipykernel is missing & similar tests.
+  # Ensure this is registered as a kernel.
+  - bash: |
+      python -m venv .venvnokernel
+      source .venvnokernel/bin/activate
+
+      python -m pip install ipykernel
+      python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
+      python -m pip uninstall ipykernel --yes
+    displayName: 'Prepare Virtual Env for Kernel Tests'
+    workingDirectory: $(Build.SourcesDirectory)/src/test/datascience
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScienceInVSCode'))
+
   # Set the CI_PYTHON_PATH variable that forces VS Code system tests to use
   # the specified Python interpreter.
   #
@@ -438,17 +455,28 @@ steps:
     env:
       DISPLAY: :10
 
-  # Run the single workspace tests in VS Code Insiders.
+  # Run the single workspace tests for DS in VS Code Insiders.
   - script: |
       npm run testDataScience
     continueOnError: true
     displayName: 'Run DataScience Tests in VSCode Insiders'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScience'))
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScience'), not(contains(variables['TestsToRun'], 'testDataScienceInVSCode')))
     env:
       DISPLAY: :10
       VSC_PYTHON_CI_TEST_VSC_CHANNEL: 'insiders'
       VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE: 'true'
       TEST_FILES_SUFFIX: 'ds.test'
+
+  # Run the single workspace tests for DS in VS Code Stable.
+  - script: |
+      npm run testDataScienceInVSCode
+    displayName: 'Run DataScience Tests in VSCode Stable'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScienceInVSCode'))
+    env:
+      DISPLAY: :10
+      VSC_PYTHON_CI_TEST_VSC_CHANNEL: 'stable'
+      VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE: 'true'
+      TEST_FILES_SUFFIX: 'vscode.test'
 
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2

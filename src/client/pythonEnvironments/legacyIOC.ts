@@ -3,8 +3,6 @@
 
 import { injectable } from 'inversify';
 import * as vscode from 'vscode';
-import { createDeferred } from '../common/utils/async';
-import { Architecture } from '../common/utils/platform';
 import { getVersionString, parseVersion } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -29,7 +27,9 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
+import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
+import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
@@ -106,13 +106,19 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
 
     if (version !== undefined) {
         const { release, sysVersion } = version;
-        const { level, serial } = release;
-        const releaseStr = level === PythonReleaseLevel.Final
-            ? 'final'
-            : `${level}${serial}`;
-        const versionStr = `${getVersionString(version)}-${releaseStr}`;
-        env.version = parseVersion(versionStr);
-        env.sysVersion = sysVersion;
+        if (release === undefined) {
+            const versionStr = `${getVersionString(version)}-final`;
+            env.version = parseVersion(versionStr);
+            env.sysVersion = '';
+        } else {
+            const { level, serial } = release;
+            const releaseStr = level === PythonReleaseLevel.Final
+                ? 'final'
+                : `${level}${serial}`;
+            const versionStr = `${getVersionString(version)}-${releaseStr}`;
+            env.version = parseVersion(versionStr);
+            env.sysVersion = sysVersion;
+        }
     }
 
     if (distro !== undefined && distro.org !== '') {
@@ -122,34 +128,6 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     // or info.defaultDisplayName.
 
     return env;
-}
-
-function buildEmptyEnvInfo(): PythonEnvInfo {
-    return {
-        id: '',
-        kind: PythonEnvKind.Unknown,
-        executable: {
-            filename: '',
-            sysPrefix: '',
-            ctime: -1,
-            mtime: -1,
-        },
-        name: '',
-        location: '',
-        version: {
-            major: -1,
-            minor: -1,
-            micro: -1,
-            release: {
-                level: PythonReleaseLevel.Final,
-                serial: 0,
-            },
-        },
-        arch: Architecture.Unknown,
-        distro: {
-            org: '',
-        },
-    };
 }
 
 interface IPythonEnvironments extends ILocator {}
@@ -201,8 +179,7 @@ class ComponentAdapter implements IComponentAdapter {
         if (!this.enabled) {
             return undefined;
         }
-        const info = buildEmptyEnvInfo();
-        info.executable.filename = pythonPath;
+        const info = buildEnvInfo({ executable: pythonPath });
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
             if (wsFolder !== undefined) {
@@ -290,43 +267,13 @@ class ComponentAdapter implements IComponentAdapter {
         if (resource !== undefined) {
             const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
             if (wsFolder !== undefined) {
-                query.searchLocations = [wsFolder.uri];
+                query.searchLocations = { roots: [wsFolder.uri] };
             }
         }
 
-        const deferred = createDeferred<PythonEnvironment[]>();
-        const envs: PythonEnvironment[] = [];
-        const executableToLegacy: Record<string, PythonEnvironment> = {};
         const iterator = this.api.iterEnvs(query);
-
-        if (iterator.onUpdated !== undefined) {
-            iterator.onUpdated((event) => {
-                if (event === null) {
-                    deferred.resolve(envs);
-                } else {
-                    // Replace the old one.
-                    const old = executableToLegacy[event.old.executable.filename];
-                    if (old !== undefined) {
-                        const index = envs.indexOf(old);
-                        if (index !== -1) {
-                            envs[index] = convertEnvInfo(event.new);
-                        }
-                    }
-                }
-            });
-        } else {
-            deferred.resolve(envs);
-        }
-
-        let res = await iterator.next();
-        while (!res.done) {
-            const env = convertEnvInfo(res.value);
-            envs.push(env);
-            executableToLegacy[env.path] = env;
-            res = await iterator.next(); // eslint-disable-line no-await-in-loop
-        }
-
-        return deferred.promise;
+        const envs = await getEnvs(iterator);
+        return envs.map(convertEnvInfo);
     }
 }
 

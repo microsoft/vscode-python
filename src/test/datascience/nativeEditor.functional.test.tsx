@@ -34,6 +34,7 @@ import { KeyPrefix } from '../../client/datascience/notebookStorage/nativeEditor
 import {
     ICell,
     IDataScienceErrorHandler,
+    IDataScienceFileSystem,
     IJupyterExecution,
     INotebookEditor,
     INotebookEditorProvider,
@@ -878,6 +879,151 @@ df.head()`;
                     verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `1`, 0);
                     verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `2`, 1);
                     verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `3`, 2);
+                });
+
+                runMountedTest('Roundtrip with jupyter', async () => {
+                    // Write out a temporary file
+                    const baseFile = `
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'<1>'"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "a='<1>'\\n",
+    "a"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [
+    {
+     "output_type": "stream",
+     "text": [
+         "Hello World 9!\\n"
+     ],
+     "name": "stdout"
+    }
+   ],
+   "source": [
+    "from IPython.display import clear_output\\n",
+    "for i in range(10):\\n",
+    "    clear_output()\\n",
+    "    print(\\"Hello World {0}!\\".format(i))\\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "3"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "c=3\\n",
+    "c"
+   ]
+  }
+ ],
+ "metadata": {
+  "file_extension": ".py",
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.4"
+  },
+  "mimetype": "text/x-python",
+  "name": "python",
+  "npconvert_exporter": "python",
+  "pygments_lexer": "ipython3",
+  "version": 3
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}`;
+                    addMockData(ioc, `a='<1>'\na`, `'<1>'`);
+                    addContinuousMockData(
+                        ioc,
+                        'from IPython.display import clear_output\nfor i in range(10):\n    clear_output()\n    print("Hello World {0}!".format(i))\n',
+                        async () => {
+                            return { result: 'Hello World 9!\n', haveMore: false };
+                        }
+                    );
+                    addMockData(ioc, 'c=3\nc', 3);
+                    const dsfs = ioc.get<IDataScienceFileSystem>(IDataScienceFileSystem);
+                    const tf = await dsfs.createTemporaryLocalFile('.ipynb');
+                    try {
+                        await dsfs.writeLocalFile(tf.filePath, baseFile);
+
+                        // File should exist. Open and run all cells
+                        const n = await openEditor(ioc, '', tf.filePath);
+                        const threeCellsUpdated = n.mount.waitForMessage(InteractiveWindowMessages.ExecutionRendered, {
+                            numberOfTimes: 3
+                        });
+                        n.editor.runAllCells();
+                        await threeCellsUpdated;
+
+                        // Save the file
+                        const saveButton = findButton(n.mount.wrapper, NativeEditor, 8);
+                        const saved = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
+                        saveButton!.simulate('click');
+                        await saved;
+
+                        // Read in the file contents. Should match the original
+                        const savedContents = await dsfs.readLocalFile(tf.filePath);
+                        const savedJSON = JSON.parse(savedContents);
+                        const baseJSON = JSON.parse(baseFile);
+
+                        // Don't compare kernelspec names
+                        delete savedJSON.metadata.kernelspec.display_name;
+                        delete baseJSON.metadata.kernelspec.display_name;
+
+                        // Don't compare python versions
+                        delete savedJSON.metadata.language_info.version;
+                        delete baseJSON.metadata.language_info.version;
+
+                        assert.deepEqual(savedJSON, baseJSON, 'File contents were changed by execution');
+                    } finally {
+                        tf.dispose();
+                    }
                 });
 
                 runMountedTest('Startup and shutdown', async () => {

@@ -149,7 +149,20 @@ export async function run(): Promise<void> {
     }
 
     // Ignore `ds.test.js` test files when running other tests.
-    const ignoreGlob = options.testFilesSuffix.toLowerCase() === 'ds.test' ? [] : ['**/**.ds.test.js'];
+    const ignoreGlob: string[] = [];
+    switch (options.testFilesSuffix.toLowerCase()) {
+        case 'ds.test': {
+            ignoreGlob.push('**/**.vscode.test.js');
+            break;
+        }
+        case 'vscode.test': {
+            ignoreGlob.push('**/**.ds.test.js');
+            break;
+        }
+        default: {
+            ignoreGlob.push('**/**.vscode.test.js', '**/**.ds.test.js');
+        }
+    }
     const testFiles = await new Promise<string[]>((resolve, reject) => {
         glob(
             `**/**.${options.testFilesSuffix}.js`,

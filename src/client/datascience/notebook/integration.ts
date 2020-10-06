@@ -3,6 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
+import { NotebookContentProvider as VSCNotebookContentProvider } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
     IApplicationEnvironment,
@@ -33,7 +34,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
+        @inject(INotebookContentProvider) private readonly notebookContentProvider: VSCNotebookContentProvider,
         @inject(VSCodeKernelPickerProvider) private readonly kernelProvider: VSCodeKernelPickerProvider,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly shell: IApplicationShell,

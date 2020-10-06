@@ -20,6 +20,8 @@ import { getRichestMimetype, getTransform, isIPyWidgetOutput, isMimeTypeSupporte
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiToHtml = require('ansi-to-html');
+// tslint:disable-next-line: no-var-requires no-require-imports
+const lodashEscape = require('lodash/escape');
 
 // tslint:disable-next-line: no-require-imports no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
@@ -314,17 +316,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             input = JSON.stringify(output.data);
             renderWithScrollbars = true;
             isText = true;
-        } else if (output.output_type === 'execute_result' && input && input.hasOwnProperty('text/plain')) {
-            // Plain text should actually be shown as html so that escaped HTML shows up correctly
-            mimeType = 'text/html';
-            isText = true;
-            isError = false;
-            renderWithScrollbars = true;
-            // tslint:disable-next-line: no-any
-            const text = (input as any)['text/plain'];
-            input = {
-                'text/html': text // XML tags should have already been escaped.
-            };
         } else if (output.output_type === 'stream') {
             mimeType = 'text/html';
             isText = true;
@@ -332,9 +323,9 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             renderWithScrollbars = true;
             // Sonar is wrong, TS won't compile without this AS
             const stream = output as nbformat.IStream; // NOSONAR
-            const concatted = concatMultilineString(stream.text);
+            const concatted = lodashEscape(concatMultilineString(stream.text));
             input = {
-                'text/html': concatted // XML tags should have already been escaped.
+                'text/html': concatted
             };
 
             // Output may have ascii colorization chars in it.
@@ -358,14 +349,18 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             const error = output as nbformat.IError; // NOSONAR
             try {
                 const converter = new CellOutput.ansiToHtmlClass(CellOutput.getAnsiToHtmlOptions());
-                const trace = error.traceback.length ? converter.toHtml(error.traceback.join('\n')) : error.evalue;
+                // Modified traceback may exist. If so use that instead. It's only at run time though
+                const traceback: string[] = error.transient
+                    ? (error.transient as string[])
+                    : error.traceback.map(lodashEscape);
+                const trace = traceback ? converter.toHtml(traceback.join('\n')) : error.evalue;
                 input = {
                     'text/html': trace
                 };
             } catch {
                 // This can fail during unit tests, just use the raw data
                 input = {
-                    'text/html': error.evalue
+                    'text/html': lodashEscape(error.evalue)
                 };
             }
         } else if (input) {

@@ -3,17 +3,14 @@
 
 'use strict';
 
-import { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../../common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { IDisposable } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { captureTelemetry } from '../../../telemetry';
 import { Commands, Telemetry, VSCodeNativeTelemetry } from '../../constants';
-import { handleUpdateDisplayDataMessage } from '../../notebook/helpers/executionHelpers';
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
-import { INotebookContentProvider } from '../../notebook/types';
 import { IDataScienceErrorHandler, INotebook, INotebookEditorProvider } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage } from './types';
@@ -40,12 +37,12 @@ export class KernelExecution implements IDisposable {
         private readonly commandManager: ICommandManager,
         private readonly interpreterService: IInterpreterService,
         errorHandler: IDataScienceErrorHandler,
-        private readonly contentProvider: INotebookContentProvider,
         editorProvider: INotebookEditorProvider,
         readonly kernelSelectionUsage: IKernelSelectionUsage,
-        readonly appShell: IApplicationShell
+        readonly appShell: IApplicationShell,
+        readonly vscNotebook: IVSCodeNotebook
     ) {
-        this.executionFactory = new CellExecutionFactory(this.contentProvider, errorHandler, editorProvider, appShell);
+        this.executionFactory = new CellExecutionFactory(errorHandler, editorProvider, appShell, vscNotebook);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
@@ -78,11 +75,17 @@ export class KernelExecution implements IDisposable {
         if (this.documentExecutions.has(document)) {
             return;
         }
+        const editor = this.vscNotebook.notebookEditors.find((item) => item.document === document);
+        if (!editor) {
+            return;
+        }
         const cancelTokenSource = new MultiCancellationTokenSource();
         this.documentExecutions.set(document, cancelTokenSource);
         const kernel = this.getKernel(document);
-        document.metadata.runState = vscodeNotebookEnums.NotebookRunState.Running;
 
+        await editor.edit((edit) =>
+            edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Running })
+        );
         const codeCellsToExecute = document.cells
             .filter((cell) => cell.cellKind === vscodeNotebookEnums.CellKind.Code)
             .filter((cell) => cell.document.getText().trim().length > 0)
@@ -98,35 +101,31 @@ export class KernelExecution implements IDisposable {
         );
 
         try {
-            let executingAPreviousCellHasFailed = false;
-            await codeCellsToExecute.reduce(
-                (previousPromise, cellToExecute) =>
-                    previousPromise.then((previousCellState) => {
-                        // If a previous cell has failed or execution cancelled, the get out.
-                        if (
-                            executingAPreviousCellHasFailed ||
-                            cancelTokenSource.token.isCancellationRequested ||
-                            previousCellState === vscodeNotebookEnums.NotebookCellRunState.Error
-                        ) {
-                            executingAPreviousCellHasFailed = true;
-                            codeCellsToExecute.forEach((cell) => cell.cancel()); // Cancel pending cells.
-                            return;
-                        }
-                        const result = this.executeIndividualCell(kernel, cellToExecute);
-                        result.finally(() => this.cellExecutions.delete(cellToExecute.cell)).catch(noop);
-                        return result;
-                    }),
-                Promise.resolve<NotebookCellRunState | undefined>(undefined)
-            );
+            for (const cellToExecute of codeCellsToExecute) {
+                const result = this.executeIndividualCell(kernel, cellToExecute);
+                result.finally(() => this.cellExecutions.delete(cellToExecute.cell)).catch(noop);
+                const executionResult = await result;
+                // If a cell has failed or execution cancelled, the get out.
+                if (
+                    cancelTokenSource.token.isCancellationRequested ||
+                    executionResult === vscodeNotebookEnums.NotebookCellRunState.Error
+                ) {
+                    await Promise.all(codeCellsToExecute.map((cell) => cell.cancel())); // Cancel pending cells.
+                    break;
+                }
+            }
         } finally {
+            await Promise.all(codeCellsToExecute.map((cell) => cell.cancel())); // Cancel pending cells.
             this.documentExecutions.delete(document);
-            document.metadata.runState = vscodeNotebookEnums.NotebookRunState.Idle;
+            await editor.edit((edit) =>
+                edit.replaceMetadata({ ...document.metadata, runState: vscodeNotebookEnums.NotebookRunState.Idle })
+            );
         }
     }
 
-    public cancelCell(cell: NotebookCell): void {
+    public async cancelCell(cell: NotebookCell) {
         if (this.cellExecutions.get(cell)) {
-            this.cellExecutions.get(cell)!.cancel();
+            await this.cellExecutions.get(cell)!.cancel();
         }
     }
 
@@ -160,14 +159,6 @@ export class KernelExecution implements IDisposable {
         return kernel;
     }
 
-    private onIoPubMessage(document: NotebookDocument, msg: KernelMessage.IIOPubMessage) {
-        // tslint:disable-next-line:no-require-imports
-        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-        if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg) && handleUpdateDisplayDataMessage(msg, document)) {
-            this.contentProvider.notifyChangesToDocument(document);
-        }
-    }
-
     private async executeIndividualCell(
         kernelPromise: Promise<IKernel>,
         cellExecution: CellExecution
@@ -176,33 +167,18 @@ export class KernelExecution implements IDisposable {
             throw new Error('No notebook object');
         }
 
-        // Register for IO pub messages
-        const ioRegistration = this.notebook.session.onIoPubMessage(
-            this.onIoPubMessage.bind(this, cellExecution.cell.notebook)
-        );
         cellExecution.token.onCancellationRequested(
-            () => {
-                ioRegistration.dispose();
-                if (cellExecution.completed) {
-                    return;
-                }
-
-                // Interrupt kernel only if we need to cancel a cell execution.
-                this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
-            },
+            // Interrupt kernel only if we need to cancel a cell execution.
+            () => this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop),
             this,
             this.disposables
         );
 
         // Start execution
-        cellExecution.start(kernelPromise, this.notebook);
+        await cellExecution.start(kernelPromise, this.notebook);
 
         // The result promise will resolve when complete.
-        try {
-            return await cellExecution.result;
-        } finally {
-            ioRegistration.dispose();
-        }
+        return cellExecution.result;
     }
 
     private async validateKernel(document: NotebookDocument): Promise<void> {

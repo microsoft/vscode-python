@@ -17,9 +17,9 @@ export class ExportDependencyChecker {
         // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
         try {
-            if (!(await this.jupyterExecution.isImportSupported())) {
+            if (!(await this.jupyterExecution.getImportPackageVersion())) {
                 await this.dependencyManager.installMissingDependencies();
-                if (!(await this.jupyterExecution.isImportSupported())) {
+                if (!(await this.jupyterExecution.getImportPackageVersion())) {
                     throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
                 }
             }

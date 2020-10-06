@@ -306,7 +306,7 @@ export function shell_exec(command: string, lockfile: string, shellArgs: string[
     // We don't bother with a "parse" function since the output
     // could be anything.
     return [
-        ISOLATED.fileToCommandArgument(),
+        ISOLATED,
         script,
         command.fileToCommandArgument(),
         // The shell args must come after the command

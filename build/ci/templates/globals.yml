@@ -11,4 +11,3 @@ variables:
   npm_config_cache: $(Pipeline.Workspace)/.npm
   vmImageMacOS: 'macOS-10.15'
   TS_NODE_FILES: true # Temporarily enabled to allow using types from vscode.proposed.d.ts from ts-node (for tests).
-  VSC_PYTHON_CI_TEST_VSC_CHANNEL: '1.48.0' # Enforce this until https://github.com/microsoft/vscode-test/issues/73 is fixed

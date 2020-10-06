@@ -36,7 +36,10 @@ import {
 } from '../../../../client/pythonEnvironments/discovery/locators';
 import { EnvironmentType, PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 import {
-    createEnv, createLocatedEnv, getEnvs, SimpleLocator,
+    createLocatedEnv,
+    createNamedEnv,
+    getEnvs,
+    SimpleLocator,
 } from '../../base/common';
 
 class WorkspaceFolders {
@@ -97,7 +100,7 @@ suite('WorkspaceLocators', () => {
     suite('onChanged', () => {
         test('no roots', () => {
             const expected: PythonEnvsChangedEvent[] = [];
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const loc1 = new SimpleLocator([env1]);
             const locators = new WorkspaceLocators([
                 () => [loc1],
@@ -115,7 +118,7 @@ suite('WorkspaceLocators', () => {
 
         test('no factories', () => {
             const expected: PythonEnvsChangedEvent[] = [];
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const loc1 = new SimpleLocator([env1]);
             const locators = new WorkspaceLocators([]);
             const folders = new WorkspaceFolders(['foo', 'bar']);
@@ -146,7 +149,7 @@ suite('WorkspaceLocators', () => {
             const event4: PythonEnvsChangedEvent = { kind: PythonEnvKind.Venv };
             const event5: PythonEnvsChangedEvent = { kind: PythonEnvKind.Pipenv };
             const event6: PythonEnvsChangedEvent = { kind: PythonEnvKind.Conda };
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const loc1 = new SimpleLocator([env1]);
             const loc2 = new SimpleLocator([]);
             const loc3 = new SimpleLocator([]);
@@ -263,7 +266,7 @@ suite('WorkspaceLocators', () => {
     suite('iterEnvs()', () => {
         test('no roots', async () => {
             const expected: PythonEnvInfo[] = [];
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const loc1 = new SimpleLocator([env1]);
             const locators = new WorkspaceLocators([
                 () => [loc1],
@@ -307,7 +310,7 @@ suite('WorkspaceLocators', () => {
 
         test('one not empty', async () => {
             const root1 = Uri.file('foo');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected: PythonEnvInfo[] = [env1];
             const loc1 = new SimpleLocator([env1]);
             const locators = new WorkspaceLocators([
@@ -324,8 +327,8 @@ suite('WorkspaceLocators', () => {
 
         test('empty locator ignored', async () => {
             const root1 = Uri.file('foo');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
-            const env2 = createEnv('python2', '2.7', PythonEnvKind.Pipenv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env2 = createNamedEnv('python2', '2.7', PythonEnvKind.Pipenv);
             const expected: PythonEnvInfo[] = [env1, env2];
             const loc1 = new SimpleLocator([env1]);
             const loc2 = new SimpleLocator([], { before: loc1.done });
@@ -345,14 +348,14 @@ suite('WorkspaceLocators', () => {
         test('consolidates envs across roots', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const env2 = createLocatedEnv('foo/some-dir', '3.8.1', PythonEnvKind.Conda);
-            const env3 = createEnv('python2', '2.7', PythonEnvKind.Pipenv);
-            const env4 = createEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
-            const env5 = createEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
-            const env6 = createEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
-            const env7 = createEnv('eggs', '3.9.1a0', PythonEnvKind.Venv);
-            const env8 = createEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
+            const env3 = createNamedEnv('python2', '2.7', PythonEnvKind.Pipenv);
+            const env4 = createNamedEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
+            const env5 = createNamedEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
+            const env6 = createNamedEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
+            const env7 = createNamedEnv('eggs', '3.9.1a0', PythonEnvKind.Venv);
+            const env8 = createNamedEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
             const expected: PythonEnvInfo[] = [env1, env2, env3, env4, env5, env6, env7, env8];
             const loc1 = new SimpleLocator([env1, env2]);
             const loc2 = new SimpleLocator([env3, env4], { before: loc1.done });
@@ -374,10 +377,10 @@ suite('WorkspaceLocators', () => {
         test('query matches a root', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
-            const env2 = createEnv('python2', '2.7', PythonEnvKind.Pipenv);
-            const env3 = createEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
-            const env4 = createEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env2 = createNamedEnv('python2', '2.7', PythonEnvKind.Pipenv);
+            const env3 = createNamedEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
+            const env4 = createNamedEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
             const expected: PythonEnvInfo[] = [env1, env2];
             const loc1 = new SimpleLocator([env1]);
             const loc2 = new SimpleLocator([env2], { before: loc1.done });
@@ -389,8 +392,9 @@ suite('WorkspaceLocators', () => {
             ]);
             const folders = new WorkspaceFolders([root1, root2]);
             locators.activate(folders);
+            const query = { searchLocations: { roots: [root1] } };
 
-            const iterators = locators.iterEnvs({ searchLocations: [root1] });
+            const iterators = locators.iterEnvs(query);
             const envs = await getEnvs(iterators);
 
             expect(envs).to.deep.equal(expected);
@@ -399,10 +403,10 @@ suite('WorkspaceLocators', () => {
         test('query matches all roots', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
-            const env2 = createEnv('python2', '2.7', PythonEnvKind.Pipenv);
-            const env3 = createEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
-            const env4 = createEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env2 = createNamedEnv('python2', '2.7', PythonEnvKind.Pipenv);
+            const env3 = createNamedEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
+            const env4 = createNamedEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
             const expected: PythonEnvInfo[] = [env1, env2, env3, env4];
             const loc1 = new SimpleLocator([env1]);
             const loc2 = new SimpleLocator([env2], { before: loc1.done });
@@ -414,8 +418,9 @@ suite('WorkspaceLocators', () => {
             ]);
             const folders = new WorkspaceFolders([root1, root2]);
             locators.activate(folders);
+            const query = { searchLocations: { roots: [root1, root2] } };
 
-            const iterators = locators.iterEnvs({ searchLocations: [root1, root2] });
+            const iterators = locators.iterEnvs(query);
             const envs = await getEnvs(iterators);
 
             expect(envs).to.deep.equal(expected);
@@ -424,10 +429,10 @@ suite('WorkspaceLocators', () => {
         test('query does not match a root', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
-            const env2 = createEnv('python2', '2.7', PythonEnvKind.Pipenv);
-            const env3 = createEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
-            const env4 = createEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env2 = createNamedEnv('python2', '2.7', PythonEnvKind.Pipenv);
+            const env3 = createNamedEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
+            const env4 = createNamedEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
             const loc1 = new SimpleLocator([env1]);
             const loc2 = new SimpleLocator([env2], { before: loc1.done });
             const loc3 = new SimpleLocator([env3], { before: loc2.done });
@@ -438,8 +443,9 @@ suite('WorkspaceLocators', () => {
             ]);
             const folders = new WorkspaceFolders([root1, root2]);
             locators.activate(folders);
+            const query = { searchLocations: { roots: [Uri.file('baz')] } };
 
-            const iterators = locators.iterEnvs({ searchLocations: [Uri.file('baz')] });
+            const iterators = locators.iterEnvs(query);
             const envs = await getEnvs(iterators);
 
             expect(envs).to.deep.equal([]);
@@ -448,10 +454,10 @@ suite('WorkspaceLocators', () => {
         test('query has no searchLocation', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
-            const env2 = createEnv('python2', '2.7', PythonEnvKind.Pipenv);
-            const env3 = createEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
-            const env4 = createEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env2 = createNamedEnv('python2', '2.7', PythonEnvKind.Pipenv);
+            const env3 = createNamedEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
+            const env4 = createNamedEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
             const expected: PythonEnvInfo[] = [env1, env2, env3, env4];
             const loc1 = new SimpleLocator([env1]);
             const loc2 = new SimpleLocator([env2], { before: loc1.done });
@@ -473,14 +479,14 @@ suite('WorkspaceLocators', () => {
         test('iterate out of order', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const env2 = createLocatedEnv('foo/some-dir', '3.8.1', PythonEnvKind.Conda);
-            const env3 = createEnv('python2', '2.7', PythonEnvKind.Pipenv);
-            const env4 = createEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
-            const env5 = createEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
-            const env6 = createEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
-            const env7 = createEnv('eggs', '3.9.1a0', PythonEnvKind.Venv);
-            const env8 = createEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
+            const env3 = createNamedEnv('python2', '2.7', PythonEnvKind.Pipenv);
+            const env4 = createNamedEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
+            const env5 = createNamedEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
+            const env6 = createNamedEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
+            const env7 = createNamedEnv('eggs', '3.9.1a0', PythonEnvKind.Venv);
+            const env8 = createNamedEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
             const expected: PythonEnvInfo[] = [env5, env6, env1, env2, env3, env4, env7, env8];
             const loc3 = new SimpleLocator([env5, env6]);
             const loc1 = new SimpleLocator([env1, env2], { before: loc3.done });
@@ -502,14 +508,14 @@ suite('WorkspaceLocators', () => {
         test('iterate intermingled', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
-            const env1 = createEnv('foo-x', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo-x', '3.8.1', PythonEnvKind.Venv);
             const env2 = createLocatedEnv('foo/some-dir', '3.8.1', PythonEnvKind.Conda);
-            const env3 = createEnv('python2', '2.7', PythonEnvKind.Pipenv);
-            const env4 = createEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
-            const env5 = createEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
-            const env6 = createEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
-            const env7 = createEnv('eggs', '3.9.1a0', PythonEnvKind.Venv);
-            const env8 = createEnv('foo-y', '3.5.12b1', PythonEnvKind.Venv);
+            const env3 = createNamedEnv('python2', '2.7', PythonEnvKind.Pipenv);
+            const env4 = createNamedEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
+            const env5 = createNamedEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
+            const env6 = createNamedEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
+            const env7 = createNamedEnv('eggs', '3.9.1a0', PythonEnvKind.Venv);
+            const env8 = createNamedEnv('foo-y', '3.5.12b1', PythonEnvKind.Venv);
             const expected = [env3, env6, env1, env2, env8, env4, env5, env7];
             const ordered = [env1, env2, env3, env4, env5, env6, env7, env8];
             const deferreds = [
@@ -554,14 +560,14 @@ suite('WorkspaceLocators', () => {
         test('respects roots set during activation', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const env2 = createLocatedEnv('foo/some-dir', '3.8.1', PythonEnvKind.Conda);
-            const env3 = createEnv('python2', '2.7', PythonEnvKind.Pipenv);
-            const env4 = createEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
-            const env5 = createEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
-            const env6 = createEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
-            const env7 = createEnv('eggs', '3.9.1a0', PythonEnvKind.Venv);
-            const env8 = createEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
+            const env3 = createNamedEnv('python2', '2.7', PythonEnvKind.Pipenv);
+            const env4 = createNamedEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
+            const env5 = createNamedEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
+            const env6 = createNamedEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
+            const env7 = createNamedEnv('eggs', '3.9.1a0', PythonEnvKind.Venv);
+            const env8 = createNamedEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
             const expected: PythonEnvInfo[] = [env1, env2, env3, env4, env5, env6, env7, env8];
             const loc1 = new SimpleLocator([env1, env2]);
             const loc2 = new SimpleLocator([env3, env4], { before: loc1.done });
@@ -586,14 +592,14 @@ suite('WorkspaceLocators', () => {
         test('respects added roots', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const env2 = createLocatedEnv('foo/some-dir', '3.8.1', PythonEnvKind.Conda);
-            const env3 = createEnv('python2', '2.7', PythonEnvKind.Pipenv);
-            const env4 = createEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
-            const env5 = createEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
-            const env6 = createEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
-            const env7 = createEnv('eggs', '3.9.1a0', PythonEnvKind.Venv);
-            const env8 = createEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
+            const env3 = createNamedEnv('python2', '2.7', PythonEnvKind.Pipenv);
+            const env4 = createNamedEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
+            const env5 = createNamedEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
+            const env6 = createNamedEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
+            const env7 = createNamedEnv('eggs', '3.9.1a0', PythonEnvKind.Venv);
+            const env8 = createNamedEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
             const expected: PythonEnvInfo[] = [env1, env2, env3, env4, env5, env6, env7, env8];
             const loc1 = new SimpleLocator([env1, env2]);
             const loc2 = new SimpleLocator([env3, env4], { before: loc1.done });
@@ -620,14 +626,14 @@ suite('WorkspaceLocators', () => {
         test('ignores removed roots', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const env2 = createLocatedEnv('foo/some-dir', '3.8.1', PythonEnvKind.Conda);
-            const env3 = createEnv('python2', '2.7', PythonEnvKind.Pipenv);
-            const env4 = createEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
-            const env5 = createEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
-            const env6 = createEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
-            const env7 = createEnv('eggs', '3.9.1a0', PythonEnvKind.Venv);
-            const env8 = createEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
+            const env3 = createNamedEnv('python2', '2.7', PythonEnvKind.Pipenv);
+            const env4 = createNamedEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
+            const env5 = createNamedEnv('hello world', '3.8', PythonEnvKind.VirtualEnv);
+            const env6 = createNamedEnv('spam', '3.10.0a0', PythonEnvKind.OtherVirtual);
+            const env7 = createNamedEnv('eggs', '3.9.1a0', PythonEnvKind.Venv);
+            const env8 = createNamedEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
             const expectedBefore = [env1, env2, env3, env4, env5, env6, env7, env8];
             const expectedAfter = [env1, env2, env3, env4];
             const loc1 = new SimpleLocator([env1, env2]);
@@ -661,7 +667,7 @@ suite('WorkspaceLocators', () => {
         }
 
         test('no roots', async () => {
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const loc1 = new SimpleLocator([env1]);
             const locators = new WorkspaceLocators([
                 () => [loc1],
@@ -675,7 +681,7 @@ suite('WorkspaceLocators', () => {
         });
 
         test('no factories', async () => {
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const locators = new WorkspaceLocators([]);
             const folders = new WorkspaceFolders(['foo', 'bar']);
             locators.activate(folders);
@@ -687,7 +693,7 @@ suite('WorkspaceLocators', () => {
 
         test('one locator, not resolved', async () => {
             const root1 = Uri.file('foo');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const loc1 = new SimpleLocator([env1], { resolve: null });
             const locators = new WorkspaceLocators([
                 () => [loc1],
@@ -702,7 +708,7 @@ suite('WorkspaceLocators', () => {
 
         test('one locator, resolved', async () => {
             const root1 = Uri.file('foo');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected = env1;
             const loc1 = new SimpleLocator([env1]);
             const locators = new WorkspaceLocators([
@@ -718,7 +724,7 @@ suite('WorkspaceLocators', () => {
 
         test('one root, first locator resolves', async () => {
             const root1 = Uri.file('foo');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected = env1;
             const seen: number[] = [];
             const loc1 = new SimpleLocator([env1], { resolve: getResolver(seen, 1) });
@@ -737,7 +743,7 @@ suite('WorkspaceLocators', () => {
 
         test('one root, second locator resolves', async () => {
             const root1 = Uri.file('foo');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected = env1;
             const seen: number[] = [];
             const loc1 = new SimpleLocator([env1], { resolve: getResolver(seen, 1, false) });
@@ -756,7 +762,7 @@ suite('WorkspaceLocators', () => {
 
         test('one root, not resolved', async () => {
             const root1 = Uri.file('foo');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const seen: number[] = [];
             const loc1 = new SimpleLocator([env1], { resolve: getResolver(seen, 1, false) });
             const loc2 = new SimpleLocator([], { resolve: getResolver(seen, 2, false) });
@@ -775,7 +781,7 @@ suite('WorkspaceLocators', () => {
         test('many roots, no searchLocation, second root matches', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected = env1;
             const seen: number[] = [];
             const loc1 = new SimpleLocator([env1], { resolve: getResolver(seen, 1, false) });
@@ -795,7 +801,7 @@ suite('WorkspaceLocators', () => {
         test('many roots, searchLocation matches', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             env1.searchLocation = root2;
             const expected = env1;
             const seen: number[] = [];
@@ -816,7 +822,7 @@ suite('WorkspaceLocators', () => {
         test('many roots, searchLocation does not match', async () => {
             const root1 = Uri.file('foo');
             const root2 = Uri.file('bar');
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             env1.searchLocation = Uri.file('baz');
             const expected = env1;
             const seen: number[] = [];

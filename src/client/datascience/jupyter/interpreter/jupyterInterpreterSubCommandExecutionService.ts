@@ -5,6 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import { CancellationToken, Uri } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
@@ -76,12 +77,16 @@ export class JupyterInterpreterSubCommandExecutionService
         }
         return this.jupyterDependencyService.areDependenciesInstalled(interpreter, token);
     }
-    public async isExportSupported(token?: CancellationToken): Promise<boolean> {
+    public async getExportPackageVersion(token?: CancellationToken): Promise<SemVer | undefined> {
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {
-            return false;
+            return;
         }
-        return this.jupyterDependencyService.isExportSupported(interpreter, token);
+
+        // If nbconvert is there check and return the version
+        if (await this.jupyterDependencyService.isExportSupported(interpreter, token)) {
+            return this.jupyterDependencyService.getNbConvertVersion(interpreter, token);
+        }
     }
     public async getReasonForJupyterNotebookNotBeingSupported(token?: CancellationToken): Promise<string> {
         let interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
@@ -176,11 +181,21 @@ export class JupyterInterpreterSubCommandExecutionService
         const args = template
             ? [file.fsPath, '--to', 'python', '--stdout', '--template', template]
             : [file.fsPath, '--to', 'python', '--stdout'];
+
         // Ignore stderr, as nbconvert writes conversion result to stderr.
         // stdout contains the generated python code.
         return daemon
             .execModule('jupyter', ['nbconvert'].concat(args), { throwOnStdErr: false, encoding: 'utf8', token })
-            .then((output) => output.stdout);
+            .then((output) => {
+                // We can't check stderr (as nbconvert puts diag output there) but we need to verify here that we actually
+                // converted something. If it's zero size then just raise an error
+                if (output.stdout === '') {
+                    traceError('nbconvert zero size output');
+                    throw new Error(output.stderr);
+                } else {
+                    return output.stdout;
+                }
+            });
     }
     public async openNotebook(notebookFile: string): Promise<void> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable();

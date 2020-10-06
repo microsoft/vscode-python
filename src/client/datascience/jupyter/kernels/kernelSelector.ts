@@ -575,7 +575,7 @@ export class KernelSelector implements IKernelSelectionUsage {
 
     // When switching to an interpreter in raw kernel mode then just create a default kernelspec for that interpreter to use
     private async useInterpreterAndDefaultKernel(interpreter: PythonEnvironment): Promise<KernelConnectionMetadata> {
-        const kernelSpec = createDefaultKernelSpec(interpreter.displayName);
+        const kernelSpec = createDefaultKernelSpec(interpreter);
         return { kernelSpec, interpreter, kind: 'startUsingPythonInterpreter' };
     }
 

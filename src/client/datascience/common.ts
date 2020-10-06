@@ -3,6 +3,7 @@
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as os from 'os';
+import { parse, SemVer } from 'semver';
 import { Memento, Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { traceError, traceInfo } from '../common/logger';
@@ -37,7 +38,7 @@ const dummyExecuteResultObj: nbformat.IExecuteResult = {
     data: {},
     metadata: {}
 };
-const AllowedKeys = {
+export const AllowedCellOutputKeys = {
     ['stream']: new Set(Object.keys(dummyStreamObj)),
     ['error']: new Set(Object.keys(dummyErrorObj)),
     ['display_data']: new Set(Object.keys(dummyDisplayObj)),
@@ -72,7 +73,7 @@ function fixupOutput(output: nbformat.IOutput): nbformat.IOutput {
         case 'error':
         case 'execute_result':
         case 'display_data':
-            allowedKeys = AllowedKeys[output.output_type];
+            allowedKeys = AllowedCellOutputKeys[output.output_type];
             break;
         default:
             return output;
@@ -186,5 +187,16 @@ export async function getRealPath(
         if (await fs.localFileExists(trimmed)) {
             return trimmed;
         }
+    }
+}
+
+// For the given string parse it out to a SemVer or return undefined
+export function parseSemVer(versionString: string): SemVer | undefined {
+    const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(versionString);
+    if (versionMatch && versionMatch.length > 2) {
+        const major = parseInt(versionMatch[1], 10);
+        const minor = parseInt(versionMatch[2], 10);
+        const build = parseInt(versionMatch[3], 10);
+        return parse(`${major}.${minor}.${build}`, true) ?? undefined;
     }
 }
