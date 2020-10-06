@@ -929,7 +929,7 @@
             },
             {
                 "command": "python.datascience.showDataViewer",
-                "title": "View Tensor in Data Viewer",
+                "title": "%python.command.python.datascience.showDataViewer.title%",
                 "category": "Python"
             },
             {
@@ -1665,8 +1665,7 @@
                 {
                     "command": "python.datascience.showDataViewer",
                     "group": "1_view",
-                    "title": "View Tensor in Data Viewer",
-                    "when": "debugProtocolVariableMenuContext == 'Tensor'"
+                    "when": "debugProtocolVariableMenuContext == 'viewableInDataViewer'"
                 }
             ]
         },

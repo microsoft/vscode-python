@@ -19,7 +19,7 @@ import {
     INotebook
 } from '../types';
 
-const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'ndarray', 'Series']);
+const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'ndarray', 'Series', 'Tensor']);
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 
 @injectable()
@@ -33,7 +33,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
     constructor(
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
         @inject(IConfigurationService) private configService: IConfigurationService
-    ) {}
+    ) { }
 
     public get refreshRequired(): Event<void> {
         return this.refreshEventEmitter.event;
@@ -294,10 +294,10 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
                 return true;
             })
             .map((v) => {
-                return v.type === 'Tensor'
-                    ? // tslint:disable-next-line: no-object-literal-type-assertion
-                      ({ ...v, __vscodeVariableMenuContext: 'Tensor' } as DebugProtocol.Variable)
-                    : v;
+                if (v.type && DataViewableTypes.has(v.type)) {
+                    v.__vscodeVariableMenuContext = 'viewableInDataViewer';
+                }
+                return v;
             });
 
         this.lastKnownVariables = allowedVariables.map((v) => {
