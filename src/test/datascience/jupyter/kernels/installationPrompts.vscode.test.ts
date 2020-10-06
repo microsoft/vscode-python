@@ -9,7 +9,7 @@ import { IApplicationShell } from '../../../../client/common/application/types';
 import { ProductNames } from '../../../../client/common/installer/productNames';
 import { BufferDecoder } from '../../../../client/common/process/decoder';
 import { ProcessService } from '../../../../client/common/process/proc';
-import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
+import { IDisposable, IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { createDeferred } from '../../../../client/common/utils/async';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { INotebookEditorProvider } from '../../../../client/datascience/types';
@@ -22,6 +22,7 @@ import { closeNotebooksAndCleanUpAfterTests } from '../../notebook/helper';
 
 // tslint:disable: no-invalid-this max-func-body-length no-function-expression no-any
 suite('DataScience Install IPyKernel (slow) (install)', () => {
+    const disposables: IDisposable[] = [];
     const nbFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/jupyter/kernels/nbWithKernel.ipynb');
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     const venvPythonPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable);
@@ -55,7 +56,7 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
     });
 
     setup(closeActiveWindows);
-    teardown(closeNotebooksAndCleanUpAfterTests);
+    teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     test('Test Install IPyKernel prompt message', async () => {
         // Confirm the message has not changed.
@@ -72,7 +73,7 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         const installed = createDeferred();
 
         // Confirm it is installed.
-        sinon.stub(installer, 'install').callsFake(async function (product: Product) {
+        const showInformationMessage = sinon.stub(installer, 'install').callsFake(async function (product: Product) {
             // Call original method
             const result: InstallerResponse = await ((installer.install as any).wrappedMethod.apply(
                 installer,
@@ -83,6 +84,7 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
             }
             return result;
         });
+        disposables.push({ dispose: () => showInformationMessage.restore() });
 
         // Confirm message is displayed & we click 'Install` button.
         sinon.stub(appShell, 'showErrorMessage').callsFake(function (message: string) {
