@@ -1082,6 +1082,16 @@ export interface INbConvertInterpreterDependencyChecker {
     getNbConvertVersion(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<SemVer | undefined>;
 }
 
+export const INbConvertExportToPythonService = Symbol('INbConvertExportToPythonService');
+export interface INbConvertExportToPythonService {
+    exportNotebookToPython(
+        file: Uri,
+        interpreter: PythonEnvironment,
+        template?: string,
+        token?: CancellationToken
+    ): Promise<string>;
+}
+
 export interface INotebookModel {
     readonly indentAmount: string;
     readonly onDidDispose: Event<void>;

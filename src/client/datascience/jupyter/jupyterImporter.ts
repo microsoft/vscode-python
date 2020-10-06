@@ -20,6 +20,7 @@ import {
     IDataScienceFileSystem,
     IJupyterExecution,
     IJupyterInterpreterDependencyManager,
+    INbConvertExportToPythonService,
     INbConvertInterpreterDependencyChecker,
     INotebookImporter
 } from '../types';
@@ -55,7 +56,8 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IJupyterInterpreterDependencyManager)
         private readonly dependencyManager: IJupyterInterpreterDependencyManager,
         @inject(INbConvertInterpreterDependencyChecker)
-        private readonly nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker
+        private readonly nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker,
+        @inject(INbConvertExportToPythonService) private readonly exportToPythonService: INbConvertExportToPythonService
     ) {}
 
     public async importFromFile(sourceFile: Uri, interpreter: PythonEnvironment): Promise<string> {
@@ -92,7 +94,11 @@ export class JupyterImporter implements INotebookImporter {
                 template = await this.template5Promise;
             }
 
-            let fileOutput: string = await this.jupyterExecution.importNotebook(sourceFile, template);
+            let fileOutput: string = await this.exportToPythonService.exportNotebookToPython(
+                sourceFile,
+                interpreter,
+                template
+            );
             if (fileOutput.includes('get_ipython()')) {
                 fileOutput = this.addIPythonImport(fileOutput);
             }
