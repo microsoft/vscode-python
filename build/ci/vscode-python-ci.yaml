@@ -66,6 +66,10 @@ stages:
             'Debugger':
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
+            'DataScience in VSCode':
+              TestsToRun: 'testDataScienceInVSCode'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
