@@ -141,8 +141,8 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                         typeof data[prop] === 'string'
                             ? data[prop]
                             : typeof data[prop] === 'object'
-                            ? 'object'
-                            : data[prop].toString();
+                                ? 'object'
+                                : data[prop].toString();
                 } catch (ex) {
                     traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
                 }
@@ -1829,6 +1829,7 @@ export interface IEventNamePropertyMapping {
     [NativeKeyboardCommandTelemetry.Run]: never | undefined;
     [NativeKeyboardCommandTelemetry.RunAndAdd]: never | undefined;
     [NativeKeyboardCommandTelemetry.RunAndMove]: never | undefined;
+    [NativeKeyboardCommandTelemetry.RunDeps]: never | undefined;
     [NativeKeyboardCommandTelemetry.Save]: never | undefined;
     [NativeKeyboardCommandTelemetry.ToggleLineNumbers]: never | undefined;
     [NativeKeyboardCommandTelemetry.ToggleOutput]: never | undefined;
@@ -1845,6 +1846,7 @@ export interface IEventNamePropertyMapping {
     [NativeMouseCommandTelemetry.RunAbove]: never | undefined;
     [NativeMouseCommandTelemetry.RunAll]: never | undefined;
     [NativeMouseCommandTelemetry.RunBelow]: never | undefined;
+    [NativeMouseCommandTelemetry.RunDeps]: never | undefined;
     [NativeMouseCommandTelemetry.Save]: never | undefined;
     [NativeMouseCommandTelemetry.SelectKernel]: never | undefined;
     [NativeMouseCommandTelemetry.SelectServer]: never | undefined;

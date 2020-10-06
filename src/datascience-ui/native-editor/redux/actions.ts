@@ -56,6 +56,8 @@ export const actionCreators = {
         }),
     executeCell: (cellId: string, moveOp: 'add' | 'select' | 'none') =>
         createIncomingActionWithPayload(CommonActionType.EXECUTE_CELL_AND_ADVANCE, { cellId, moveOp }),
+    executeCellDeps: (cellId: string, moveOp: 'add' | 'select' | 'none') =>
+        createIncomingActionWithPayload(CommonActionType.EXECUTE_CELL_DEPS, { cellId, moveOp }),
     focusCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> =>
         createIncomingActionWithPayload(CommonActionType.FOCUS_CELL, { cellId, cursorPos }),
     unfocusCell: (cellId: string, code: string) =>

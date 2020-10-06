@@ -167,10 +167,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 </div>
             ) : (
                 <div className="cell-result-container">
-                    <div
-                        className="cell-row-container"
-                        style={{ backgroundColor: this.props.cellVM.stale ? 'yellow' : undefined }}
-                    >
+                    <div className="cell-row-container">
                         {this.renderCollapseBar(true)}
                         {this.renderControls()}
                         {this.renderInput()}
@@ -481,7 +478,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
         }
 
         // Submit this cell
-        this.submitCell('none');
+        // this.submitCell('none');
+        this.runDeps();
         this.props.sendCommand(NativeKeyboardCommandTelemetry.Run);
     };
 
@@ -489,6 +487,10 @@ export class NativeCell extends React.Component<INativeCellProps> {
         this.props.executeCell(this.cellId, moveOp);
         this.props.computeStale(this.cellId);
     };
+
+    private runDeps() {
+        this.props.executeCellDeps(this.cellId, this.props.lastCell ? 'add' : 'select');
+    }
 
     private addNewCell = () => {
         setTimeout(() => this.props.insertBelow(this.cellId), 1);
@@ -580,6 +582,10 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.runAndMove();
             this.props.sendCommand(NativeMouseCommandTelemetry.Run);
         };
+        const runCellDeps = () => {
+            this.runDeps();
+            this.props.sendCommand(NativeMouseCommandTelemetry.RunDeps);
+        };
         const gatherCell = () => {
             this.props.gatherCell(cellId);
         };
@@ -642,6 +648,19 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
+                            onClick={runCellDeps}
+                            tooltip={getLocString('DataScience.runCellDeps', 'Run cell and dependencies')}
+                            hidden={this.isMarkdownCell()}
+                            disabled={true}
+                        >
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.RunDeps}
+                            />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
                             onClick={step}
                             tooltip={getLocString('DataScience.step', 'Run next line (F10)')}
                             hidden={this.isMarkdownCell()}
@@ -671,6 +690,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 </div>
             );
         }
+        const runDisabled = this.props.busy || !this.props.isNotebookTrusted;
         return (
             <div className={toolbarClassName}>
                 <div className="native-editor-celltoolbar-middle">
@@ -679,16 +699,25 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         onClick={runCell}
                         tooltip={getLocString('DataScience.runCell', 'Run cell')}
                         hidden={this.isMarkdownCell()}
-                        disabled={this.props.busy || !this.props.isNotebookTrusted}
+                        disabled={runDisabled}
                     >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Run} />
+                    </ImageButton>
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onClick={runCellDeps}
+                        tooltip={getLocString('DataScience.runCellDeps', 'Run cell and dependencies')}
+                        hidden={this.isMarkdownCell()}
+                        disabled={runDisabled}
+                    >
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunDeps} />
                     </ImageButton>
                     <ImageButton
                         baseTheme={this.props.baseTheme}
                         onClick={runbyline}
                         tooltip={getLocString('DataScience.runByLine', 'Run by line')}
                         hidden={this.isMarkdownCell() || !this.props.supportsRunByLine}
-                        disabled={this.props.busy || !this.props.isNotebookTrusted}
+                        disabled={runDisabled}
                     >
                         <Image
                             baseTheme={this.props.baseTheme}
@@ -745,10 +774,21 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.cellVM.cell.data.execution_count
                 ? this.props.cellVM.cell.data.execution_count.toString()
                 : '-';
+        const stale = this.props.cellVM.stale;
+        const renderStale = () => {
+            if (stale) {
+                return (
+                    <div style={{ width: 24, height: 24 }}>
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Stale} />
+                    </div>
+                );
+            }
+        };
 
         return (
-            <div className="controls-div">
+            <div className={`controls-div ${stale ? 'stale' : ''}`}>
                 <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()} />
+                {renderStale()}
             </div>
         );
     };

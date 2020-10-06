@@ -8,6 +8,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 
 import type { nbformat } from '@jupyterlab/coreutils';
+import { CommonActionType } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -90,7 +91,11 @@ export class GatherListener implements IInteractiveWindowListener {
                 break;
 
             case InteractiveWindowMessages.ComputeStaleCells:
-                this.handleMessage(message, payload, this.doGetStaleCells);
+                this.handleMessage(message, payload, this.reportStaleCells);
+                break;
+
+            case InteractiveWindowMessages.RunDependents:
+                this.handleMessage(message, payload, this.runStaleCells);
                 break;
 
             case InteractiveWindowMessages.RestartKernel:
@@ -223,52 +228,37 @@ export class GatherListener implements IInteractiveWindowListener {
         }
     };
 
-    private doGetStaleCells(payload: ICell): Promise<void> {
-        return this.getStaleInternal(payload)
-            .catch((err) => {
-                traceError(`Gather to Notebook error: ${err}`);
-                this.applicationShell.showErrorMessage(err);
-            })
-            .finally(() =>
-                this.postEmitter.fire({
-                    message: InteractiveWindowMessages.Gathering,
-                    payload: { cellId: payload.id, gathering: false }
-                })
-            );
-    }
-
-    private getStaleInternal = async (cell: ICell) => {
-        this.gatherTimer = new StopWatch();
-        let cellIds: string[] = [];
-
+    private reportStaleCells = async (cell: ICell) => {
         try {
-            cellIds = this.gatherProvider ? this.gatherProvider.getDependentCells(cell) : []; //localize.DataScience.gatherError();
-        } catch (e) {
-            traceError('Gather: Exception at getStaleCells', e);
-            sendTelemetryEvent(Telemetry.GatherException, undefined, { exceptionType: 'gather' });
-            // const newline = '\n';
-            // const defaultCellMarker =
-            //     this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
-            // cellIds = defaultCellMarker + newline + localize.DataScience.gatherError() + newline + (e as string);
-        }
-
-        if (!cellIds) {
-            sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'err' });
-        } else {
+            const cellIds = this.gatherProvider ? this.gatherProvider.getStaleCells(cell) : [];
             for (const cellId of cellIds) {
                 this.postEmitter.fire({
                     message: InteractiveWindowMessages.Stale,
                     payload: { cellId, stale: true }
                 });
             }
+        } catch (e) {
+            traceError('Gather: Exception at getStaleCells', e);
+            sendTelemetryEvent(Telemetry.GatherException, undefined, { exceptionType: 'gather' });
+        }
+    };
 
-            // await this.showFile(slicedProgram, cell.file);
-            // sendTelemetryEvent(Telemetry.GatherStats, undefined, {
-            //     linesSubmitted: this.linesSubmitted,
-            //     cellsSubmitted: this.cellsSubmitted,
-            //     linesGathered: cellIds.trim().splitLines().length,
-            //     cellsGathered: generateCellsFromString(cellIds).length
-            // });
+    private runStaleCells = async (cell: ICell) => {
+        try {
+            this.postEmitter.fire({
+                message: CommonActionType.EXECUTE_CELL,
+                payload: { cellId: cell.id, moveOp: 'none' }
+            });
+            const cellIds = this.gatherProvider ? this.gatherProvider.getStaleCells(cell) : [];
+            for (const cellId of cellIds) {
+                this.postEmitter.fire({
+                    message: CommonActionType.EXECUTE_CELL,
+                    payload: { cellId, moveOp: 'none' }
+                });
+            }
+        } catch (e) {
+            traceError('Gather: Exception at getStaleCells', e);
+            sendTelemetryEvent(Telemetry.GatherException, undefined, { exceptionType: 'gather' });
         }
     };
 

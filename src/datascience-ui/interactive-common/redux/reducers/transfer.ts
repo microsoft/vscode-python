@@ -160,6 +160,14 @@ export namespace Transfer {
         return arg.prevState;
     }
 
+    export function executeCellDeps(arg: CommonReducerArg<CommonActionType, ICellAction>): IMainState {
+        const cellVM = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data.cellId);
+        if (cellVM) {
+            postActionToExtension(arg, InteractiveWindowMessages.RunDependents, cellVM.cell);
+        }
+        return arg.prevState;
+    }
+
     function postModelUpdate<T>(arg: CommonReducerArg<CommonActionType, T>, update: NotebookModelChange) {
         postActionToExtension(arg, InteractiveWindowMessages.UpdateModel, update);
     }

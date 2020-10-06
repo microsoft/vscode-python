@@ -45,6 +45,7 @@ export enum CommonActionType {
     EXECUTE_CELL = 'action.execute_cell',
     EXECUTE_CELL_AND_ADVANCE = 'action.execute_cell_and_advance',
     EXECUTE_CELL_AND_BELOW = 'action.execute_cell_and_below',
+    EXECUTE_CELL_DEPS = 'action.execute_cell_deps',
     EXPORT = 'action.export',
     EXPORT_NOTEBOOK_AS = 'action.export_As',
     FOCUS_CELL = 'action.focus_cell',
@@ -102,6 +103,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.ADD_NEW_CELL]: IAddCellAction;
     [CommonActionType.EDIT_CELL]: IEditCellAction;
     [CommonActionType.EXECUTE_CELL_AND_ADVANCE]: IExecuteAction;
+    [CommonActionType.EXECUTE_CELL_DEPS]: IExecuteAction;
     [CommonActionType.EXECUTE_CELL]: IExecuteAction;
     [CommonActionType.EXECUTE_ALL_CELLS]: never | undefined;
     [CommonActionType.EXECUTE_ABOVE]: ICellAction;

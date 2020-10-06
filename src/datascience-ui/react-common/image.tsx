@@ -34,6 +34,7 @@ export enum ImageName {
     Run,
     RunAbove,
     RunBelow,
+    RunDeps,
     InsertAbove,
     InsertBelow,
     SwitchToCode,
@@ -52,6 +53,7 @@ export enum ImageName {
     PythonColor,
     OpenFolder,
     RunByLine,
+    Stale,
     Sync
 }
 
@@ -156,6 +158,10 @@ const images: { [key: string]: { light: string; dark: string } } = {
         light: require('./images/RunBelow/runbelow.svg'),
         dark: require('./images/RunBelow/runbelow-inverse.svg')
     },
+    RunDeps: {
+        light: require('./images/RunDeps/run-deps-light.svg'),
+        dark: require('./images/RunDeps/run-deps-dark.svg')
+    },
     InsertAbove: {
         light: require('./images/InsertAbove/above.svg'),
         dark: require('./images/InsertAbove/above-inverse.svg')
@@ -227,6 +233,10 @@ const images: { [key: string]: { light: string; dark: string } } = {
     RunByLine: {
         light: require('./images/RunByLine/runbyline_light.svg'),
         dark: require('./images/RunByLine/runbyline_dark.svg')
+    },
+    Stale: {
+        light: require('./images/Stale/stale.svg'),
+        dark: require('./images/Stale/stale.svg'),
     },
     Sync: {
         light: require('./images/Sync/sync.svg'),

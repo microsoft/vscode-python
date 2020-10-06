@@ -61,6 +61,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [InteractiveWindowMessages.Gathering]: Transfer.gathering,
     [InteractiveWindowMessages.Stale]: Transfer.stale,
     [CommonActionType.EDITOR_LOADED]: Transfer.started,
+    [CommonActionType.EXECUTE_CELL_DEPS]: Transfer.executeCellDeps,
     [CommonActionType.LOADED_ALL_CELLS]: Transfer.loadedAllCells,
     [CommonActionType.LAUNCH_NOTEBOOK_TRUST_PROMPT]: Transfer.launchNotebookTrustPrompt,
     [CommonActionType.UNMOUNT]: Creation.unmount,
