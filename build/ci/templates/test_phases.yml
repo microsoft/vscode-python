@@ -464,7 +464,6 @@ steps:
     env:
       DISPLAY: :10
       VSC_PYTHON_CI_TEST_VSC_CHANNEL: 'insiders'
-      VSC_PYTHON_CI_TEST_ONLY_NATIVE_NOTEBOOKS: 'true'
       VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE: 'true'
       TEST_FILES_SUFFIX: 'native.vscode.test'
 
