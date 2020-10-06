@@ -460,7 +460,7 @@ steps:
       npm run testDataScience
     continueOnError: true
     displayName: 'Run DataScience Tests in VSCode Insiders'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScience'))
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScience'), not(contains(variables['TestsToRun'], 'testDataScienceInVSCode')))
     env:
       DISPLAY: :10
       VSC_PYTHON_CI_TEST_VSC_CHANNEL: 'insiders'
@@ -470,7 +470,6 @@ steps:
   # Run the single workspace tests for DS in VS Code Stable.
   - script: |
       npm run testDataScienceInVSCode
-    continueOnError: true
     displayName: 'Run DataScience Tests in VSCode Stable'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScienceInVSCode'))
     env:
