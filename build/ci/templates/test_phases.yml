@@ -397,7 +397,7 @@ steps:
   # > node build/ci/scripts/runFunctionalTests.js
   - script: |
       npm run test:functional:parallel -- --group $(FunctionalTestGroup)
-    displayName: 'Run functional parallel group'
+    displayName: 'Run functional parallel'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testFunctionalParallel'))
     env:
       DISPLAY: :10
