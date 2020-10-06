@@ -33,7 +33,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
     constructor(
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
         @inject(IConfigurationService) private configService: IConfigurationService
-    ) { }
+    ) {}
 
     public get refreshRequired(): Event<void> {
         return this.refreshEventEmitter.event;
@@ -295,7 +295,8 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
             })
             .map((v) => {
                 if (v.type && DataViewableTypes.has(v.type)) {
-                    v.__vscodeVariableMenuContext = 'viewableInDataViewer';
+                    // tslint:disable-next-line: no-any
+                    (v as any).__vscodeVariableMenuContext = 'viewableInDataViewer';
                 }
                 return v;
             });
