@@ -230,7 +230,6 @@ export class JupyterInterpreterDependencyService {
      * @param {PythonEnvironment} interpreter
      * @param {CancellationToken} [_token]
      * @returns {Promise<boolean>}
-     * @memberof JupyterInterpreterConfigurationService
      */
     public async isExportSupported(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
         if (this.nbconvertInstalledInInterpreter.has(interpreter.path)) {
@@ -266,7 +265,6 @@ export class JupyterInterpreterDependencyService {
      * @param {PythonEnvironment} interpreter
      * @param {CancellationToken} [token]
      * @returns {Promise<Product[]>}
-     * @memberof JupyterInterpreterConfigurationService
      */
     public async getDependenciesNotInstalled(
         interpreter: PythonEnvironment,
@@ -313,7 +311,6 @@ export class JupyterInterpreterDependencyService {
      * @param {PythonEnvironment} interpreter
      * @param {CancellationToken} [_token]
      * @returns {Promise<boolean>}
-     * @memberof JupyterInterpreterConfigurationService
      */
     private async isKernelSpecAvailable(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
         const command = this.commandFactory.createInterpreterCommand(
@@ -343,7 +340,6 @@ export class JupyterInterpreterDependencyService {
      * @param {PythonEnvironment} interpreter
      * @param {CancellationToken} [token]
      * @returns {Promise<JupyterInterpreterDependencyResponse>}
-     * @memberof JupyterInterpreterConfigurationService
      */
     private async checkKernelSpecAvailability(
         interpreter: PythonEnvironment,

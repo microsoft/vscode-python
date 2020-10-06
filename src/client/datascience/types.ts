@@ -1076,6 +1076,12 @@ export interface IJupyterInterpreterDependencyManager {
     installMissingDependencies(err?: JupyterInstallError): Promise<void>;
 }
 
+export const INbConvertInterpreterDependencyChecker = Symbol('INbConvertInterpreterDependencyChecker');
+export interface INbConvertInterpreterDependencyChecker {
+    isNbConvertInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
+    getNbConvertVersion(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<SemVer | undefined>;
+}
+
 export interface INotebookModel {
     readonly indentAmount: string;
     readonly onDidDispose: Event<void>;
