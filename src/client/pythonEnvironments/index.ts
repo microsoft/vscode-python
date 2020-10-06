@@ -20,6 +20,7 @@ import {
     ILocator, IPythonEnvsIterator, PythonLocatorQuery,
 } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
+import { WindowsKnownPathsLocator } from './base/locators/lowLevel/windowsKnownPathsLocator';
 import { PythonEnvsChangedEvent } from './base/watcher';
 import { initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
 import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
@@ -135,6 +136,7 @@ function initNonWorkspaceLocators(
             new PyenvLocator(),
             new WindowsRegistryLocator(),
             new WindowsStoreLocator(),
+            new WindowsKnownPathsLocator(),
         ];
     } else {
         // Linux/Mac locators go here
