@@ -6,7 +6,7 @@ import builtins as _VSCODE_builtins
 import vscodeDataFrameHelpers as _VSCODE_dataFrameHelpers
 
 
-def maybeParseTensorShape(var, result):
+def _VSCODE_maybeParseTensorShape(var, result):
     try:
         vartype = type(var)
         if (hasattr(vartype, "__name__")) and vartype.__name__ == "Tensor":
@@ -41,7 +41,7 @@ def _VSCODE_getVariableInfo(var):
                 ):
                     result["shape"] = _VSCODE_shapeStr
                 del _VSCODE_shapeStr
-            maybeParseTensorShape(var, result)
+            _VSCODE_maybeParseTensorShape(var, result)
         except TypeError:
             pass
 
