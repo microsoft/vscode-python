@@ -46,30 +46,10 @@ stages:
               TestsToRun: 'pythonUnitTests, pythonInternalTools, pythonIPythonTests'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
-            'Functional Group 1':
-              TestsToRun: 'testParallelFunctional'
+            'Functional Non DataScience':
+              TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
-              VSCODE_PYTHON_ROLLING: true
-              FunctionalTestGroup: 1
-            'Functional Group 2':
-              TestsToRun: 'testParallelFunctional'
-              NeedsPythonTestReqs: true
-              NeedsPythonFunctionalReqs: true
-              VSCODE_PYTHON_ROLLING: true
-              FunctionalTestGroup: 2
-            'Functional Group 3':
-              TestsToRun: 'testParallelFunctional'
-              NeedsPythonTestReqs: true
-              NeedsPythonFunctionalReqs: true
-              VSCODE_PYTHON_ROLLING: true
-              FunctionalTestGroup: 3
-            'Functional Group 4':
-              TestsToRun: 'testParallelFunctional'
-              NeedsPythonTestReqs: true
-              NeedsPythonFunctionalReqs: true
-              VSCODE_PYTHON_ROLLING: true
-              FunctionalTestGroup: 4
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
@@ -95,7 +75,7 @@ stages:
               # Note: "pythonInternalTools" tests are 3.7+.
               TestsToRun: 'pythonUnitTests'
               NeedsPythonTestReqs: true
-            'Functional':
+            'Functional Non DS':
               PythonVersion: '2.7'
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
@@ -135,7 +115,7 @@ stages:
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
             # This gives us our best functional coverage for the OS.
-            'Functional':
+            'Functional Non DS':
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
