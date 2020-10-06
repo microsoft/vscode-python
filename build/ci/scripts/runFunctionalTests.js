@@ -67,12 +67,9 @@ async function main() {
         });
     });
 
-    // Figure out what group is running
+    // Figure out what group is running (should be something like --group1, --group2 etc.)
     var groupArgIndex = process.argv.findIndex((a) => a === '--group');
-    var groupArg =
-        groupArgIndex >= 0 && groupArgIndex < process.argv.length - 1
-            ? parseInt(process.argv[groupArgIndex + 1], 10) - 1
-            : -1;
+    var groupArg = groupArgIndex >= 0 ? parseInt(process.argv[groupArgIndex].slice(7), 10) - 1 : -1;
 
     // Split the files into groups if asked (4 equal parts as we support 4 groups)
     var groupSize = Math.floor(files.length / 4);
