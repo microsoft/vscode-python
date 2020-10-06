@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
+import { KernelMessage } from '@jupyterlab/services';
+import * as fastDeepEqual from 'fast-deep-equal';
 import { sha256 } from 'hash.js';
+import { cloneDeep } from 'lodash';
 import { Event, EventEmitter, Memento, Uri } from 'vscode';
 import { ICryptoUtils } from '../../common/types';
 import { isUntitledFile } from '../../common/utils/misc';
@@ -10,6 +13,7 @@ import { pruneCell } from '../common';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
     getInterpreterFromKernelConnectionMetadata,
+    isPythonKernelConnection,
     kernelConnectionMetadataHasKernelModel
 } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -39,7 +43,8 @@ export function getInterpreterInfoStoredInMetadata(
 // tslint:disable-next-line: cyclomatic-complexity
 export function updateNotebookMetadata(
     metadata?: nbformat.INotebookMetadata,
-    kernelConnection?: KernelConnectionMetadata
+    kernelConnection?: KernelConnectionMetadata,
+    kernelInfo?: KernelMessage.IInfoReplyMsg['content']
 ) {
     let changed = false;
     let kernelId: string | undefined;
@@ -47,22 +52,33 @@ export function updateNotebookMetadata(
         return { changed, kernelId };
     }
 
-    // Get our kernel_info and language_info from the current notebook
-    const interpreter = getInterpreterFromKernelConnectionMetadata(kernelConnection);
-    if (
-        interpreter &&
-        interpreter.version &&
-        metadata &&
-        metadata.language_info &&
-        metadata.language_info.version !== interpreter.version.raw
-    ) {
-        metadata.language_info.version = interpreter.version.raw;
-        changed = true;
-    } else if (!interpreter && metadata?.language_info) {
-        // It's possible, such as with raw kernel and a default kernelspec to not have interpreter info
-        // for this case clear out old invalid language_info entries as they are related to the previous execution
-        metadata.language_info = undefined;
-        changed = true;
+    if (kernelInfo && kernelInfo.status === 'ok') {
+        if (!fastDeepEqual(metadata.language_info, kernelInfo.language_info)) {
+            metadata.language_info = cloneDeep(kernelInfo.language_info);
+            changed = true;
+        }
+    } else {
+        // Get our kernel_info and language_info from the current notebook
+        const isPythonConnection = isPythonKernelConnection(kernelConnection);
+        const interpreter = isPythonConnection
+            ? getInterpreterFromKernelConnectionMetadata(kernelConnection)
+            : undefined;
+        if (
+            interpreter &&
+            interpreter.version &&
+            metadata &&
+            metadata.language_info &&
+            metadata.language_info.version !== interpreter.version.raw
+        ) {
+            metadata.language_info.version = interpreter.version.raw;
+            changed = true;
+        } else if (!interpreter && metadata?.language_info && isPythonConnection) {
+            // It's possible, such as with raw kernel and a default kernelspec to not have interpreter info
+            // for this case clear out old invalid language_info entries as they are related to the previous execution
+            // However we should clear previous language info only if language is python, else just leave it as is.
+            metadata.language_info = undefined;
+            changed = true;
+        }
     }
 
     const kernelSpecOrModel =

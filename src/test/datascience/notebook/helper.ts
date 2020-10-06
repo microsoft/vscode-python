@@ -196,8 +196,7 @@ export async function startJupyter(closeInitialEditor: boolean) {
     const disposables: IDisposable[] = [];
     try {
         await editorProvider.createNew();
-        await deleteAllCellsAndWait();
-        await insertPythonCell('print("Hello World")');
+        await insertPythonCell('print("Hello World")', 0);
         const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
         await executeActiveDocument();
         // Wait for Jupyter to start.

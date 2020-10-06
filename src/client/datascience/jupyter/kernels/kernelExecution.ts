@@ -7,13 +7,12 @@ import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { IDisposable } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
-import { IInterpreterService } from '../../../interpreter/contracts';
 import { captureTelemetry } from '../../../telemetry';
 import { Commands, Telemetry, VSCodeNativeTelemetry } from '../../constants';
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
 import { IDataScienceErrorHandler, INotebook, INotebookEditorProvider } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
-import type { IKernel, IKernelProvider, IKernelSelectionUsage } from './types';
+import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -35,12 +34,12 @@ export class KernelExecution implements IDisposable {
     constructor(
         private readonly kernelProvider: IKernelProvider,
         private readonly commandManager: ICommandManager,
-        private readonly interpreterService: IInterpreterService,
         errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
         readonly kernelSelectionUsage: IKernelSelectionUsage,
         readonly appShell: IApplicationShell,
-        readonly vscNotebook: IVSCodeNotebook
+        readonly vscNotebook: IVSCodeNotebook,
+        readonly metadata: Readonly<KernelConnectionMetadata>
     ) {
         this.executionFactory = new CellExecutionFactory(errorHandler, editorProvider, appShell, vscNotebook);
     }
@@ -142,15 +141,7 @@ export class KernelExecution implements IDisposable {
         await this.validateKernel(document);
         let kernel = this.kernelProvider.get(document.uri);
         if (!kernel) {
-            const activeInterpreter = await this.interpreterService.getActiveInterpreter(document.uri);
-            kernel = this.kernelProvider.getOrCreate(document.uri, {
-                metadata: {
-                    interpreter: activeInterpreter!,
-                    kernelModel: undefined,
-                    kernelSpec: undefined,
-                    kind: 'startUsingPythonInterpreter'
-                }
-            });
+            kernel = this.kernelProvider.getOrCreate(document.uri, { metadata: this.metadata });
         }
         if (!kernel) {
             throw new Error('Unable to create a Kernel to run cell');

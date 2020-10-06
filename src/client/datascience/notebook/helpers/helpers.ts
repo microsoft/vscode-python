@@ -27,6 +27,7 @@ import { JupyterNotebookView } from '../constants';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
+import { KernelMessage } from '@jupyterlab/services';
 import cloneDeep = require('lodash/cloneDeep');
 import { isUntitledFile } from '../../../common/utils/misc';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
@@ -54,7 +55,10 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     }
 }
 
-const kernelInformationForNotebooks = new WeakMap<NotebookDocument, KernelConnectionMetadata | undefined>();
+const kernelInformationForNotebooks = new WeakMap<
+    NotebookDocument,
+    { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: KernelMessage.IInfoReplyMsg['content'] }
+>();
 
 export function getNotebookMetadata(document: NotebookDocument): nbformat.INotebookMetadata | undefined {
     // tslint:disable-next-line: no-any
@@ -70,8 +74,9 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
         notebookContent = { ...content, metadata: { ...metadata, language_info } } as any;
     }
     notebookContent = cloneDeep(notebookContent);
-    if (kernelInformationForNotebooks.has(document)) {
-        updateNotebookMetadata(notebookContent.metadata, kernelInformationForNotebooks.get(document));
+    const data = kernelInformationForNotebooks.get(document);
+    if (data && data.metadata) {
+        updateNotebookMetadata(notebookContent.metadata, data.metadata, data.kernelInfo);
     }
 
     return notebookContent.metadata;
@@ -88,7 +93,20 @@ export function updateKernelInNotebookMetadata(
     document: NotebookDocument,
     kernelConnection: KernelConnectionMetadata | undefined
 ) {
-    kernelInformationForNotebooks.set(document, kernelConnection);
+    const data = { ...(kernelInformationForNotebooks.get(document) || {}) };
+    data.metadata = kernelConnection;
+    kernelInformationForNotebooks.set(document, data);
+}
+export function updateKernelInfoInNotebookMetadata(
+    document: NotebookDocument,
+    kernelInfo: KernelMessage.IInfoReplyMsg['content']
+) {
+    if (kernelInformationForNotebooks.get(document)?.kernelInfo === kernelInfo) {
+        return;
+    }
+    const data = { ...(kernelInformationForNotebooks.get(document) || {}) };
+    data.kernelInfo = kernelInfo;
+    kernelInformationForNotebooks.set(document, data);
 }
 /**
  * Converts a NotebookModel into VSCode friendly format.
