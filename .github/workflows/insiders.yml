@@ -3,7 +3,7 @@ name: Insiders Build
 on:
   push:
     branches:
-      - main
+      - unicode-**
 
 env:
   PYTHON_VERSION: 3.8
@@ -120,7 +120,7 @@ jobs:
     name: Tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     strategy:
       fail-fast: false
       matrix:
@@ -136,9 +136,16 @@ jobs:
       # See https://github.com/microsoft/ptvsd/issues/2068
       # At this point pinning is only needed for consistency. We no longer have TS debug adapter.
       NODE_VERSION: 12.15.0
+      SPACES_DIR: './test with 🌌s'
+      SPACES_DIR_NAME: 'test with 🌌s'
+    defaults:
+      run:
+        working-directory: ${{env.SPACES_DIR}}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          path: ${{env.SPACES_DIR_NAME}}
 
       - name: Cache pip files
         uses: actions/cache@v2
@@ -157,7 +164,7 @@ jobs:
         id: out-cache
         uses: actions/cache@v2
         with:
-          path: ./out
+          path: ${{env.SPACES_DIR}}/out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Install dependencies (npm ci)
@@ -288,12 +295,12 @@ jobs:
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
       # Upload unit test coverage reports for later use in the "reports" job.
-      - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v1
-        with:
-          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
-          path: .nyc_output
-        if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
+      # - name: Upload unit test coverage reports
+      #   uses: actions/upload-artifact@v1
+      #   with:
+      #     name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+      #     path: .nyc_output
+      #   if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
       # Run the Python and IPython tests in our codebase.
       - name: Run Python and IPython unit tests
@@ -315,6 +322,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
+          working-directory: ${{env.SPACES_DIR}}
         if: matrix.test-suite == 'venv'
 
       - name: Run single-workspace tests
@@ -323,6 +331,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSingleWorkspace
+          working-directory: ${{env.SPACES_DIR}}
         if: matrix.test-suite == 'single-workspace'
 
       - name: Run multi-workspace tests
@@ -331,6 +340,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testMultiWorkspace
+          working-directory: ${{env.SPACES_DIR}}
         if: matrix.test-suite == 'multi-workspace'
 
       - name: Run debugger tests
@@ -339,6 +349,7 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testDebugger
+          working-directory: ${{env.SPACES_DIR}}
         if: matrix.test-suite == 'debugger'
 
       - name: Run functional tests
