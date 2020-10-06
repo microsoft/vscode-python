@@ -152,7 +152,7 @@
             "skipFiles": ["<node_internals>/**"]
         },
         {
-            "name": "Tests (DataScience, *.ds.test.ts)",
+            "name": "Tests (DataScience, *.native.vscode.test.ts)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -169,7 +169,7 @@
                 "CI_PYTHON_PATH": "<PythonPath>", // Initialize this to invert the grep (exclude tests with value defined in grep).
 
                 "VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "true",
-                "TEST_FILES_SUFFIX": "ds.test"
+                "TEST_FILES_SUFFIX": "native.vscode.test"
             },
             "stopOnEntry": false,
             "sourceMaps": true,

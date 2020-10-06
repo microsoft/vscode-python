@@ -71,7 +71,10 @@ function updateTestsForOldNotebooks() {
 
 if (!IS_CI_SERVER) {
     // Noop.
-} else if (process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL === 'insiders') {
+} else if (
+    process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL === 'insiders' &&
+    process.env.TEST_FILES_SUFFIX === 'native.vscode.test'
+) {
     updateTestsForNativeNotebooks();
 } else {
     updateTestsForOldNotebooks();

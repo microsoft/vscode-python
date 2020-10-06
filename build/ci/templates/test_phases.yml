@@ -465,7 +465,7 @@ steps:
       DISPLAY: :10
       VSC_PYTHON_CI_TEST_VSC_CHANNEL: 'insiders'
       VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE: 'true'
-      TEST_FILES_SUFFIX: 'ds.test'
+      TEST_FILES_SUFFIX: 'native.vscode.test'
 
   # Run the single workspace tests for DS in VS Code Stable.
   - script: |
