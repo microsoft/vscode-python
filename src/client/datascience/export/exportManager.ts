@@ -39,7 +39,7 @@ export class ExportManager implements IExportManager {
     ): Promise<undefined> {
         let target;
         try {
-            await this.exportDependencyChecker.checkDependencies(format);
+            await this.exportDependencyChecker.checkDependencies(format, interpreter);
             target = await this.getTargetFile(format, model, defaultFileName);
             if (!target) {
                 return;
