@@ -19,12 +19,12 @@ export class ExportBase implements IExport {
         @inject(INotebookImporter) protected readonly importer: INotebookImporter
     ) {}
 
-    // tslint:disable-next-line: no-empty
     public async export(
         _source: Uri,
         _target: Uri,
         _interpreter: PythonEnvironment,
         _token: CancellationToken
+        // tslint:disable-next-line: no-empty
     ): Promise<void> {}
 
     @reportAction(ReportableAction.PerformingExport)
@@ -39,7 +39,7 @@ export class ExportBase implements IExport {
             return;
         }
 
-        const service = await this.getExecutionService(source);
+        const service = await this.getExecutionService(source, interpreter);
         if (!service) {
             return;
         }
@@ -82,11 +82,10 @@ export class ExportBase implements IExport {
         }
     }
 
-    protected async getExecutionService(source: Uri): Promise<IPythonExecutionService | undefined> {
-        const interpreter = await this.jupyterService.getSelectedInterpreter();
-        if (!interpreter) {
-            return;
-        }
+    protected async getExecutionService(
+        source: Uri,
+        interpreter: PythonEnvironment
+    ): Promise<IPythonExecutionService | undefined> {
         return this.pythonExecutionFactory.createActivatedEnvironment({
             resource: source,
             interpreter,

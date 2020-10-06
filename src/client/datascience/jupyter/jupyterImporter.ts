@@ -18,8 +18,6 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { CodeSnippets, Identifiers } from '../constants';
 import {
     IDataScienceFileSystem,
-    IJupyterExecution,
-    IJupyterInterpreterDependencyManager,
     INbConvertExportToPythonService,
     INbConvertInterpreterDependencyChecker,
     INotebookImporter
@@ -50,11 +48,8 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IJupyterInterpreterDependencyManager)
-        private readonly dependencyManager: IJupyterInterpreterDependencyManager,
         @inject(INbConvertInterpreterDependencyChecker)
         private readonly nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker,
         @inject(INbConvertExportToPythonService) private readonly exportToPythonService: INbConvertExportToPythonService
@@ -68,12 +63,6 @@ export class JupyterImporter implements INotebookImporter {
             directoryChange = await this.calculateDirectoryChange(sourceFile);
         }
 
-        // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
-        //if (!(await this.jupyterExecution.getImportPackageVersion())) {
-        //await this.dependencyManager.installMissingDependencies();
-        //}
-
-        //const nbConvertVersion = await this.jupyterExecution.getImportPackageVersion();
         const nbConvertVersion = await this.nbConvertDependencyChecker.getNbConvertVersion(interpreter);
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (nbConvertVersion) {

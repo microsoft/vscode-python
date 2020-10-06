@@ -3,18 +3,13 @@ import * as localize from '../../common/utils/localize';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService';
 import { ProgressReporter } from '../progress/progressReporter';
-import {
-    IJupyterExecution,
-    IJupyterInterpreterDependencyManager,
-    INbConvertInterpreterDependencyChecker
-} from '../types';
+import { IJupyterInterpreterDependencyManager, INbConvertInterpreterDependencyChecker } from '../types';
 import { ExportFormat } from './types';
 
 // IANHU: Rename? ExportInterpreterFinder?
 @injectable()
 export class ExportDependencyChecker {
     constructor(
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IJupyterInterpreterDependencyManager)
         private readonly dependencyManager: IJupyterInterpreterDependencyManager,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
@@ -23,33 +18,6 @@ export class ExportDependencyChecker {
         @inject(JupyterInterpreterService) private readonly jupyterInterpreterService: JupyterInterpreterService
     ) {}
 
-    // IANHU: To Remove
-    //public async checkDependencies(format: ExportFormat, interpreter?: PythonEnvironment) {
-    //// Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
-    //const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
-    //try {
-    //// If an interpreter was passed in, first see if that interpreter supports NB Convert
-    //// if it does, we are good to go, but don't install nbconvert into it
-    //if (interpreter && this.checkNotebookInterpreter(interpreter)) {
-    //return;
-    //}
-
-    //// If an interpreter was not passed in, work with the main jupyter interperter
-    //// IANHU: Clean up what this is using
-    //if (!(await this.jupyterExecution.getImportPackageVersion())) {
-    //await this.dependencyManager.installMissingDependencies();
-    //if (!(await this.jupyterExecution.getImportPackageVersion())) {
-    //throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
-    //}
-    //}
-    //} finally {
-    //reporter.dispose();
-    //}
-    //}
-
-    // Get a valid interpreter to perform an export with
-    // The candidateInterpreter is the interpreter to check first if nbconvert is supported
-    // If it is not supported, fall back on the selected jupyter interpreter
     public async getExportInterpreter(
         format: ExportFormat,
         candidateInterpreter?: PythonEnvironment
