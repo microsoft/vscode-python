@@ -224,25 +224,6 @@ export class JupyterInterpreterDependencyService {
     }
 
     /**
-     * Whether its possible to export ipynb to other formats.
-     * Basically checks whether nbconvert is installed.
-     *
-     * @param {PythonEnvironment} interpreter
-     * @param {CancellationToken} [_token]
-     * @returns {Promise<boolean>}
-     */
-    public async isExportSupported(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
-        if (this.nbconvertInstalledInInterpreter.has(interpreter.path)) {
-            return true;
-        }
-        const installed = this.installer.isInstalled(Product.nbconvert, interpreter).then((result) => result === true);
-        if (installed) {
-            this.nbconvertInstalledInInterpreter.add(interpreter.path);
-        }
-        return installed;
-    }
-
-    /**
      * Gets a list of the dependencies not installed, dependencies that are required to launch the jupyter notebook server.
      *
      * @param {PythonEnvironment} interpreter
