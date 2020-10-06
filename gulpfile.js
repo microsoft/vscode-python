@@ -137,7 +137,13 @@ gulp.task('compile-viewers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
 });
 
-gulp.task('compile-webviews', gulp.series('compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
+if (process.env.VSC_PYTHON_CI_TEST_ONLY_NATIVE_NOTEBOOKS) {
+    // Noop.
+    // When tetsing native notebooks, there's no need to build webviews.
+    gulp.task('compile-webviews', () => {});
+} else {
+    gulp.task('compile-webviews', gulp.series('compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
+}
 
 gulp.task(
     'check-datascience-dependencies',
