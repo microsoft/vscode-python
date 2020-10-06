@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
@@ -15,7 +14,6 @@ import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { parseSemVer } from '../../common';
 import { HelpLinks, JupyterCommands, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
@@ -109,13 +107,6 @@ export class JupyterInterpreterDependencyService {
      * @memberof JupyterInterpreterDependencyService
      */
     private readonly dependenciesInstalledInInterpreter = new Set<string>();
-    /**
-     * Same as `dependenciesInstalledInInterpreter`.
-     *
-     * @private
-     * @memberof JupyterInterpreterDependencyService
-     */
-    private readonly nbconvertInstalledInInterpreter = new Set<string>();
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,

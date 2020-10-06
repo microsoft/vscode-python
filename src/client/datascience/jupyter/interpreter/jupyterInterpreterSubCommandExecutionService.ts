@@ -5,8 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { SemVer } from 'semver';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 
@@ -24,8 +23,6 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, JupyterDaemonModule, Telemetry } from '../../constants';
-import { reportAction } from '../../progress/decorator';
-import { ReportableAction } from '../../progress/types';
 import {
     IDataScienceFileSystem,
     IJupyterInterpreterDependencyManager,

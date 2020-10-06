@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import { injectable } from 'inversify';
-import { SemVer } from 'semver';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 

@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import * as path from 'path';
-import { SemVer } from 'semver';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
@@ -20,8 +19,6 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { reportAction } from '../progress/decorator';
-import { ReportableAction } from '../progress/types';
 import {
     IJupyterConnection,
     IJupyterExecution,
