@@ -35,16 +35,20 @@ export class ExportManager implements IExportManager {
         format: ExportFormat,
         model: INotebookModel,
         defaultFileName?: string,
-        interpreter?: PythonEnvironment
+        candidateInterpreter?: PythonEnvironment
     ): Promise<undefined> {
         let target;
         try {
-            const exportInterpreter = await this.exportDependencyChecker.getExportInterpreter(format, interpreter);
+            // Get the interpreter to use for the export, checking the candidate interpreter first
+            const exportInterpreter = await this.exportDependencyChecker.getExportInterpreter(
+                format,
+                candidateInterpreter
+            );
             target = await this.getTargetFile(format, model, defaultFileName);
             if (!target) {
                 return;
             }
-            await this.performExport(format, model, target);
+            await this.performExport(format, model, target, exportInterpreter);
         } catch (e) {
             traceError('Export failed', e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
@@ -57,7 +61,12 @@ export class ExportManager implements IExportManager {
         }
     }
 
-    private async performExport(format: ExportFormat, model: INotebookModel, target: Uri) {
+    private async performExport(
+        format: ExportFormat,
+        model: INotebookModel,
+        target: Uri,
+        interpreter: PythonEnvironment
+    ) {
         /* Need to make a temp directory here, instead of just a temp file. This is because
            we need to store the contents of the notebook in a file that is named the same
            as what we want the title of the exported file to be. To ensure this file path will be unique
@@ -68,7 +77,7 @@ export class ExportManager implements IExportManager {
 
         const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`, true);
         try {
-            await this.exportToFormat(source, target, format, reporter.token);
+            await this.exportToFormat(source, target, format, interpreter, reporter.token);
         } finally {
             tempDir.dispose();
             reporter.dispose();
@@ -109,7 +118,13 @@ export class ExportManager implements IExportManager {
         this.applicationShell.showErrorMessage(`${localize.DataScience.failedExportMessage()} ${msg}`).then();
     }
 
-    private async exportToFormat(source: Uri, target: Uri, format: ExportFormat, cancelToken: CancellationToken) {
+    private async exportToFormat(
+        source: Uri,
+        target: Uri,
+        format: ExportFormat,
+        interpreter: PythonEnvironment,
+        cancelToken: CancellationToken
+    ) {
         if (format === ExportFormat.pdf) {
             // When exporting to PDF we need to remove any SVG output. This is due to an error
             // with nbconvert and a dependency of its called InkScape.
@@ -118,15 +133,15 @@ export class ExportManager implements IExportManager {
 
         switch (format) {
             case ExportFormat.python:
-                await this.exportToPython.export(source, target, cancelToken);
+                await this.exportToPython.export(source, target, interpreter, cancelToken);
                 break;
 
             case ExportFormat.pdf:
-                await this.exportToPDF.export(source, target, cancelToken);
+                await this.exportToPDF.export(source, target, interpreter, cancelToken);
                 break;
 
             case ExportFormat.html:
-                await this.exportToHTML.export(source, target, cancelToken);
+                await this.exportToHTML.export(source, target, interpreter, cancelToken);
                 break;
 
             default:

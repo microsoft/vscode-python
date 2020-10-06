@@ -3,6 +3,7 @@ import * as path from 'path';
 import { CancellationToken, Uri } from 'vscode';
 
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IDataScienceFileSystem, IJupyterSubCommandExecutionService, INotebookImporter } from '../types';
@@ -19,13 +20,19 @@ export class ExportBase implements IExport {
     ) {}
 
     // tslint:disable-next-line: no-empty
-    public async export(_source: Uri, _target: Uri, _token: CancellationToken): Promise<void> {}
+    public async export(
+        _source: Uri,
+        _target: Uri,
+        _interpreter: PythonEnvironment,
+        _token: CancellationToken
+    ): Promise<void> {}
 
     @reportAction(ReportableAction.PerformingExport)
     public async executeCommand(
         source: Uri,
         target: Uri,
         format: ExportFormat,
+        interpreter: PythonEnvironment,
         token: CancellationToken
     ): Promise<void> {
         if (token.isCancellationRequested) {
