@@ -6,7 +6,6 @@ import { ProgressReporter } from '../progress/progressReporter';
 import { IJupyterInterpreterDependencyManager, INbConvertInterpreterDependencyChecker } from '../types';
 import { ExportFormat } from './types';
 
-// IANHU: Rename? ExportInterpreterFinder?
 @injectable()
 export class ExportInterpreterFinder {
     constructor(
@@ -18,6 +17,7 @@ export class ExportInterpreterFinder {
         @inject(JupyterInterpreterService) private readonly jupyterInterpreterService: JupyterInterpreterService
     ) {}
 
+    // For the given ExportFormat and a possible candidateInterpreter return an interpreter capable of running nbconvert or throw
     public async getExportInterpreter(
         format: ExportFormat,
         candidateInterpreter?: PythonEnvironment
