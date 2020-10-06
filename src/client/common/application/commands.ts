@@ -3,7 +3,14 @@
 
 'use strict';
 
-import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
+import {
+    CancellationToken,
+    DebugProtocolVariable,
+    DebugProtocolVariableContainer,
+    Position,
+    TextDocument,
+    Uri
+} from 'vscode';
 import { Commands as LSCommands } from '../../activation/commands';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
@@ -204,4 +211,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.TrustNotebook]: [undefined | never | Uri];
     [DSCommands.NotebookEditorExpandAllCells]: [];
     [DSCommands.NotebookEditorCollapseAllCells]: [];
+    [DSCommands.ShowDataViewer]: [
+        { container: DebugProtocolVariableContainer | undefined; variable: DebugProtocolVariable }
+    ];
 }

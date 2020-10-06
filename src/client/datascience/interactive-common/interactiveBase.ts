@@ -38,6 +38,7 @@ import { RunByLine } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
 import { isNil } from 'lodash';
+import { DebugProtocol } from 'vscode-debugprotocol';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -60,10 +61,12 @@ import {
     IRemoteAddCode,
     IRemoteReexecuteCode,
     IShowDataViewer,
+    IShowDataViewerFromVariablePanel,
     ISubmitNewCell,
     SysInfoReason,
     VariableExplorerStateKeys
 } from '../interactive-common/interactiveWindowTypes';
+import { convertDebuggerVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import {
     getDisplayNameOrNameOfKernelConnection,
@@ -221,6 +224,14 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         setTimeout(() => {
             this.createNotebookIfProviderConnectionExists().ignoreErrors();
         }, 0);
+
+        this.disposables.push(
+            this.commandManager.registerCommand(
+                Commands.ShowDataViewer,
+                this.onVariablePanelShowDataViewerRequest,
+                this
+            )
+        );
     }
 
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
@@ -1018,6 +1029,12 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         } catch (e) {
             this.applicationShell.showErrorMessage(e.toString());
         }
+    }
+
+    private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
+        const { variable } = request;
+        const jupyterVariable = convertDebuggerVariableToIJupyterVariable(variable as DebugProtocol.Variable);
+        await this.showDataViewer({ variable: jupyterVariable, columnSize: 1 }); // Need to determine the actual column type here
     }
 
     private onAddedSysInfo(sysInfo: IAddedSysInfo) {

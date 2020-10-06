@@ -111,6 +111,7 @@ export namespace Commands {
         'python.datascience.enableLoadingWidgetScriptsFromThirdPartySource';
     export const NotebookEditorExpandAllCells = 'python.datascience.notebookeditor.expandallcells';
     export const NotebookEditorCollapseAllCells = 'python.datascience.notebookeditor.collapseallcells';
+    export const ShowDataViewer = 'python.datascience.showDataViewer';;
 }
 
 export namespace CodeLensCommands {
