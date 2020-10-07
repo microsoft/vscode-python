@@ -64,7 +64,6 @@ export function createAPI(): [PythonEnvironments, () => void] {
             };
         },
     );
-    // XXX For now we use a noop cache.
     const cachingLocator = new CachingLocator(envsCache, locators);
 
     return [
