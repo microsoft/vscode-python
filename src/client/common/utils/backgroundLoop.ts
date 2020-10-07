@@ -43,11 +43,10 @@ export class BackgroundRequestLooper {
         } = {}
     ) {
         this.opts = {
-            runDefault: opts.runDefault
-                ? opts.runDefault
-                : async () => {
-                      throw Error('no default operation provided');
-                  }
+            runDefault:
+                opts.runDefault ?? (async () => {
+                    throw Error('no default operation provided');
+                })
         };
     }
 
