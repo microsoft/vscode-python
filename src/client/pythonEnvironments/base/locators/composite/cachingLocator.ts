@@ -130,7 +130,6 @@ export class CachingLocator implements ILocator {
         let res = await iterator.next();
         while (!res.done) {
             yield res.value;
-            // eslint-disable-next-line no-await-in-loop
             res = await iterator.next();
         }
     }
@@ -409,13 +408,11 @@ class BackgroundLooper {
         while (!this.done.completed) {
             if (winner === 1) {
                 this.waitUntilReady = createDeferred<void>();
-                // eslint-disable-next-line no-await-in-loop
                 await this.flush();
             } else {
                 // This should not be reachable.
                 throw Error(`unsupported winner ${winner}`);
             }
-            // eslint-disable-next-line no-await-in-loop
             winner = await getWinner();
         }
         this.loopRunning.resolve();
@@ -441,7 +438,6 @@ class BackgroundLooper {
             this.queue.shift();
             const [run, , notify] = this.requests[reqID];
 
-            // eslint-disable-next-line no-await-in-loop
             await run();
 
             // We leave the request until right before `notify()`

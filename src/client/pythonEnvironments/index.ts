@@ -103,11 +103,9 @@ function getWorkspaceFolders() {
     const rootAdded = new vscode.EventEmitter<vscode.Uri>();
     const rootRemoved = new vscode.EventEmitter<vscode.Uri>();
     vscode.workspace.onDidChangeWorkspaceFolders((event) => {
-        // eslint-disable-next-line no-restricted-syntax
         for (const root of event.removed) {
             rootRemoved.fire(root.uri);
         }
-        // eslint-disable-next-line no-restricted-syntax
         for (const root of event.added) {
             rootAdded.fire(root.uri);
         }
