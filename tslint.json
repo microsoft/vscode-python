@@ -52,7 +52,6 @@
         "no-unnecessary-type-assertion": false,
         "no-submodule-imports": false,
         "no-redundant-jsdoc": false,
-        "binary-expression-operand-order": false,
-        "no-use-before-declare": false
+        "binary-expression-operand-order": false
     }
 }
