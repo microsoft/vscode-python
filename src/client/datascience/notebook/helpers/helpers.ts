@@ -18,7 +18,7 @@ import type {
 } from 'vscode-proposed';
 import { NotebookCellRunState } from '../../../../../typings/vscode-proposed';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
-import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
+import { MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { traceError, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
@@ -112,17 +112,16 @@ export function updateKernelInfoInNotebookMetadata(
 /**
  * Converts a NotebookModel into VSCode friendly format.
  */
-export function notebookModelToVSCNotebookData(model: VSCodeNotebookModel): NotebookData {
+export function notebookModelToVSCNotebookData(model: VSCodeNotebookModel, preferredLanguage: string): NotebookData {
     const cells = model.cells
-        .map(createVSCNotebookCellDataFromCell.bind(undefined, model))
+        .map(createVSCNotebookCellDataFromCell.bind(undefined, model, preferredLanguage))
         .filter((item) => !!item)
         .map((item) => item!);
 
-    const defaultLanguage = getDefaultCodeLanguage(model);
     if (cells.length === 0 && isUntitledFile(model.file)) {
         cells.push({
             cellKind: vscodeNotebookEnums.CellKind.Code,
-            language: defaultLanguage,
+            language: preferredLanguage,
             metadata: {},
             outputs: [],
             source: ''
@@ -216,12 +215,6 @@ export function getCustomNotebookCellMetadata(cell: ICell): Record<string, unkno
     return custom;
 }
 
-export function getDefaultCodeLanguage(model: INotebookModel) {
-    return model.metadata?.language_info?.name &&
-        model.metadata?.language_info?.name.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()
-        ? model.metadata?.language_info?.name
-        : PYTHON_LANGUAGE;
-}
 function createRawCellFromVSCNotebookCell(cell: NotebookCell): nbformat.IRawCell {
     const rawCell: nbformat.IRawCell = {
         cell_type: 'raw',
@@ -277,10 +270,13 @@ function createVSCNotebookCellDataFromMarkdownCell(model: INotebookModel, cell: 
         outputs: []
     };
 }
-function createVSCNotebookCellDataFromCodeCell(model: INotebookModel, cell: ICell): NotebookCellData {
+function createVSCNotebookCellDataFromCodeCell(
+    model: INotebookModel,
+    cell: ICell,
+    cellLanguage: string
+): NotebookCellData {
     // tslint:disable-next-line: no-any
     const outputs = createVSCCellOutputsFromOutputs(cell.data.outputs as any);
-    const defaultCodeLanguage = getDefaultCodeLanguage(model);
     // If we have an execution count & no errors, then success state.
     // If we have an execution count &  errors, then error state.
     // Else idle state.
@@ -335,7 +331,7 @@ function createVSCNotebookCellDataFromCodeCell(model: INotebookModel, cell: ICel
     }
     return {
         cellKind: vscodeNotebookEnums.CellKind.Code,
-        language: defaultCodeLanguage,
+        language: cellLanguage,
         metadata: notebookCellMetadata,
         source: concatMultilineString(cell.data.source),
         outputs
@@ -435,7 +431,11 @@ function createCodeCellFromVSCNotebookCell(cell: NotebookCell): nbformat.ICodeCe
         metadata
     };
 }
-export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: ICell): NotebookCellData | undefined {
+export function createVSCNotebookCellDataFromCell(
+    model: INotebookModel,
+    cellLanguage: string,
+    cell: ICell
+): NotebookCellData | undefined {
     switch (cell.data.cell_type) {
         case 'raw': {
             return createVSCNotebookCellDataFromRawCell(model, cell);
@@ -444,7 +444,7 @@ export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: I
             return createVSCNotebookCellDataFromMarkdownCell(model, cell);
         }
         case 'code': {
-            return createVSCNotebookCellDataFromCodeCell(model, cell);
+            return createVSCNotebookCellDataFromCodeCell(model, cell, cellLanguage);
         }
         default: {
             traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.data.cell_type}`);

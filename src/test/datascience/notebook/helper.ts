@@ -452,7 +452,7 @@ export function createNotebookDocument(
         }
     };
     model.cells.forEach((cell, index) => {
-        const vscCell = createVSCNotebookCellDataFromCell(model, cell)!;
+        const vscCell = createVSCNotebookCellDataFromCell(model, PYTHON_LANGUAGE, cell)!;
         const vscDocumentCell: NotebookCell = {
             cellKind: vscCell.cellKind,
             language: vscCell.language,

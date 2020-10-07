@@ -10,6 +10,7 @@ import { JupyterKernelSpec } from './jupyterKernelSpec';
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
 
 // tslint:disable-next-line: no-require-imports
+import { nbformat } from '@jupyterlab/coreutils';
 import cloneDeep = require('lodash/cloneDeep');
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { ReadWrite } from '../../../common/types';
@@ -132,6 +133,18 @@ export function getKernelConnectionLanguage(kernelConnection?: KernelConnectionM
         ? kernelConnection.kernelSpec
         : undefined;
     return model?.language || kernelSpec?.language;
+}
+export function getLanguageInNotebookMetadata(metadata?: nbformat.INotebookMetadata): string | undefined {
+    if (!metadata) {
+        return;
+    }
+    // If kernel spec is defined & we have a language in that, then use that information.
+    // tslint:disable-next-line: no-any
+    const kernelSpec: IJupyterKernelSpec | undefined = metadata.kernelspec as any;
+    if (kernelSpec?.language) {
+        return kernelSpec.language;
+    }
+    return metadata.language_info?.name;
 }
 // Create a default kernelspec with the given display name
 export function createDefaultKernelSpec(interpreter?: PythonEnvironment): IJupyterKernelSpec {

@@ -21,6 +21,7 @@ import { captureTelemetry, sendTelemetryEvent, setSharedProperty } from '../../t
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
+import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { notebookModelToVSCNotebookData } from './helpers/helpers';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -41,6 +42,7 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
     }
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
+        @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService,
         @inject(NotebookEditorCompatibilitySupport)
         private readonly compatibilitySupport: NotebookEditorCompatibilitySupport
     ) {}
@@ -77,7 +79,8 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
         }
         setSharedProperty('ds_notebookeditor', 'native');
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cells.length });
-        return notebookModelToVSCNotebookData(model);
+        const preferredLanguage = this.cellLanguageService.getPreferredLanguage(model.metadata);
+        return notebookModelToVSCNotebookData(model, preferredLanguage);
     }
     @captureTelemetry(Telemetry.Save, undefined, true)
     public async saveNotebook(document: NotebookDocument, cancellation: CancellationToken) {
