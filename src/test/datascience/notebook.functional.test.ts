@@ -25,6 +25,8 @@ import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
+import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
+import { ExportFormat } from '../../client/datascience/export/types';
 import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -669,7 +671,10 @@ suite('DataScience notebook tests', () => {
                 try {
                     await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
                     // Try importing this. This should verify export works and that importing is possible
-                    const usable = await ioc.getJupyterCapableInterpreter();
+                    const exportInterpreterFinder = ioc.serviceManager.get<ExportInterpreterFinder>(
+                        ExportInterpreterFinder
+                    );
+                    const usable = await exportInterpreterFinder.getExportInterpreter(ExportFormat.python, undefined);
                     assert.isDefined(usable);
                     const results = await importer.importFromFile(Uri.file(temp.filePath), usable!);
 
