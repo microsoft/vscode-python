@@ -119,14 +119,8 @@ export async function getInterpreterDataFromRegistry(
     hive:string,
     key:string,
 ): Promise<IRegistryInterpreterData[]> {
-    const registryData:IRegistryInterpreterData[] = [];
     const subKeys = await readRegistryKeys({ arch, hive, key });
     const distroOrgName = key.substr(key.lastIndexOf('\\') + 1);
-    for (const subKey of subKeys) {
-        const data = await getInterpreterDataFromKey(subKey, distroOrgName);
-        if (data) {
-            registryData.push(data);
-        }
-    }
-    return registryData;
+    const allData = await Promise.all(subKeys.map((subKey) => getInterpreterDataFromKey(subKey, distroOrgName)));
+    return (allData.filter((data) => data !== undefined) || []) as IRegistryInterpreterData[];
 }
