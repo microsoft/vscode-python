@@ -221,7 +221,7 @@ export class CachingLocator implements ILocator {
         // If necessary, we could skip if there are no changes.
         this.cache.setAllEnvs(envs);
         await this.cache.flush();
-        this.watcher.fire(event || {}); // Emit an "onCHanged" event.
+        this.watcher.fire(event || {}); // Emit an "onChanged" event.
     }
 }
 
@@ -232,7 +232,7 @@ type NotifyFunc = () => void;
 /**
  * This helps avoid running duplicate expensive operations.
  *
- * The key aspect is that alraedy running or queue requests can be
+ * The key aspect is that already running or queue requests can be
  * re-used instead of creating a duplicate request.
  */
 class BackgroundLooper {
@@ -305,7 +305,7 @@ class BackgroundLooper {
         this.done.resolve();
 
         // It is conceivable that a separate "waitUntilStopped"
-        // operation would be useful.  If it turned out to be desireable
+        // operation would be useful.  If it turned out to be desirable
         // then at the point we could add such a method separately.
         // It would do nothing more than `await this.loopRunning`.
         // Currently there is no need for a separate method since

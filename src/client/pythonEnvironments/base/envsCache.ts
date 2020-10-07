@@ -29,7 +29,7 @@ export interface IEnvsCache {
     setAllEnvs(envs: PythonEnvInfo[]): void;
 
     /**
-     * If the cache has been initialized, return environmnent info objects that match a query object.
+     * If the cache has been initialized, return environment info objects that match a query object.
      * If none of the environments in the cache match the query data, return an empty array.
      * If the in-memory cache has not been initialized prior to calling `filterEnvs`, return `undefined`.
      *
