@@ -19,7 +19,7 @@ import {
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
-import { traceError } from '../../../common/logger';
+import { traceError, traceWarning } from '../../../common/logger';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
@@ -239,7 +239,7 @@ export class Kernel implements IKernel {
         await this.notebook
             .requestKernelInfo()
             .then((item) => (this._info = item.content))
-            .catch(noop);
+            .catch(traceWarning.bind('Failed to request KernelInfo'));
         await this.notebook.waitForIdle(this.launchTimeout);
     }
 
