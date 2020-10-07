@@ -118,7 +118,7 @@ steps:
       python -c "import sys;print(sys.executable)"
     displayName: 'pip install functional requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
-    
+
   # Add CONDA to the path so anaconda works
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
@@ -422,7 +422,7 @@ steps:
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
     displayName: 'Publish functional tests results'
-    condition: or(contains(variables['TestsToRun'], 'testFunctional'), contains(variables['TestsToRun'], 'testParallelFunctional')) 
+    condition: or(contains(variables['TestsToRun'], 'testFunctional'), contains(variables['TestsToRun'], 'testParallelFunctional'))
     inputs:
       testResultsFiles: '$(Build.ArtifactStagingDirectory)/test-junit*.xml'
       testRunTitle: 'functional-$(Agent.Os)-Py$(pythonVersion)'
@@ -446,7 +446,7 @@ steps:
   - script: |
       npm run testDataScience
     continueOnError: true
-    displayName: 'Run DataScience Tests in VSCode Insiders'
+    displayName: 'Run Native Notebook Tests in VSCode Insiders'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScience'), not(contains(variables['TestsToRun'], 'testDataScienceInVSCode')))
     env:
       DISPLAY: :10

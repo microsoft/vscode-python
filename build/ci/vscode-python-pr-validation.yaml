@@ -53,7 +53,7 @@ stages:
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'DataScience':
+            'Native Notebook':
               TestsToRun: 'testDataScience'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
