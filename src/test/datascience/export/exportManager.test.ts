@@ -25,7 +25,7 @@ suite('DataScience - Export Manager', () => {
     let filePicker: IExportManagerFilePicker;
     let appShell: IApplicationShell;
     let exportFileOpener: ExportFileOpener;
-    let exportDependencyChecker: ExportInterpreterFinder;
+    let exportInterpreterFinder: ExportInterpreterFinder;
     const model = mock<INotebookModel>();
     setup(async () => {
         exportUtil = mock<ExportUtil>();
@@ -37,7 +37,7 @@ suite('DataScience - Export Manager', () => {
         exportPdf = mock<IExport>();
         appShell = mock<IApplicationShell>();
         exportFileOpener = mock<ExportFileOpener>();
-        exportDependencyChecker = mock<ExportInterpreterFinder>();
+        exportInterpreterFinder = mock<ExportInterpreterFinder>();
         // tslint:disable-next-line: no-any
         when(filePicker.getExportFileLocation(anything(), anything(), anything())).thenReturn(
             Promise.resolve(Uri.file('test.pdf'))
@@ -49,9 +49,9 @@ suite('DataScience - Export Manager', () => {
         when(exportUtil.makeFileInDirectory(anything(), anything(), anything())).thenResolve('foo');
         // tslint:disable-next-line: no-empty
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
-        when(exportPdf.export(anything(), anything(), anything())).thenResolve();
+        when(exportPdf.export(anything(), anything(), anything(), anything())).thenResolve();
         when(filePicker.getExportFileLocation(anything(), anything())).thenResolve(Uri.file('foo'));
-        when(exportDependencyChecker.checkDependencies(anything())).thenResolve();
+        when(exportInterpreterFinder.getExportInterpreter(anything())).thenResolve();
         when(exportFileOpener.openFile(anything(), anything())).thenResolve();
         // tslint:disable-next-line: no-any
         when(reporter.createProgressIndicator(anything(), anything())).thenReturn(instance(mock<IDisposable>()) as any);
@@ -65,7 +65,7 @@ suite('DataScience - Export Manager', () => {
             instance(exportUtil),
             instance(appShell),
             instance(exportFileOpener),
-            instance(exportDependencyChecker)
+            instance(exportInterpreterFinder)
         );
     });
 
@@ -74,24 +74,24 @@ suite('DataScience - Export Manager', () => {
         verify(exportUtil.removeSvgs(anything())).once();
     });
     test('Erorr message is shown if export fails', async () => {
-        when(exportHtml.export(anything(), anything(), anything())).thenThrow(new Error('failed...'));
+        when(exportHtml.export(anything(), anything(), anything(), anything())).thenThrow(new Error('failed...'));
         await exporter.export(ExportFormat.html, model);
         verify(appShell.showErrorMessage(anything())).once();
         verify(exportFileOpener.openFile(anything(), anything())).never();
     });
     test('Export to PDF is called when export method is PDF', async () => {
         await exporter.export(ExportFormat.pdf, model);
-        verify(exportPdf.export(anything(), anything(), anything())).once();
+        verify(exportPdf.export(anything(), anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.pdf, anything())).once();
     });
     test('Export to HTML is called when export method is HTML', async () => {
         await exporter.export(ExportFormat.html, model);
-        verify(exportHtml.export(anything(), anything(), anything())).once();
+        verify(exportHtml.export(anything(), anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.html, anything())).once();
     });
     test('Export to Python is called when export method is Python', async () => {
         await exporter.export(ExportFormat.python, model);
-        verify(exportPython.export(anything(), anything(), anything())).once();
+        verify(exportPython.export(anything(), anything(), anything(), anything())).once();
         verify(exportFileOpener.openFile(ExportFormat.python, anything())).once();
     });
 });

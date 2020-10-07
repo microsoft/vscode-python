@@ -669,7 +669,9 @@ suite('DataScience notebook tests', () => {
                 try {
                     await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
                     // Try importing this. This should verify export works and that importing is possible
-                    const results = await importer.importFromFile(Uri.file(temp.filePath));
+                    const usable = await ioc.getJupyterCapableInterpreter();
+                    assert.isDefined(usable);
+                    const results = await importer.importFromFile(Uri.file(temp.filePath), usable!);
 
                     // Make sure we have a single chdir in our results
                     const first = results.indexOf('os.chdir');
@@ -868,13 +870,6 @@ suite('DataScience notebook tests', () => {
                     await testCancelableMethod(
                         (t: CancellationToken) => jupyterExecution.isNotebookSupported(t),
                         'Cancel did not cancel isNotebook after {0}ms',
-                        true
-                    )
-                );
-                assert.ok(
-                    await testCancelableMethod(
-                        (t: CancellationToken) => jupyterExecution.getImportPackageVersion(t),
-                        'Cancel did not cancel isImport after {0}ms',
                         true
                     )
                 );
