@@ -137,7 +137,7 @@ export function translateKernelLanguageToMonaco(kernelLanguage: string): string 
         case 'c#':
             return 'csharp';
         case 'f#':
-            return 'csharp';
+            return 'fsharp';
         default:
             return kernelLanguage.toLowerCase();
     }
