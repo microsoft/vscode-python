@@ -500,7 +500,7 @@ export abstract class BaseTestManager implements ITestManager {
         const diagMsg = message.message ? message.message.split('\n')[0] : '';
         const diagnostic = new Diagnostic(
             stackStart.location.range,
-            `${diagPrefix ? `${diagPrefix}: ` : ''}${diagMsg}`,
+            `${diagPrefix ? `${diagPrefix}: ` : 'Ok'}${diagMsg}`,
             severity
         );
         diagnostic.code = message.code;
