@@ -82,7 +82,7 @@ export class CachingLocator implements ILocator {
         // We assume that `getAllEnvs()` is cheap enough that calling
         // it again in `iterFromCache()` is not a problem.
         if (this.cache.getAllEnvs() === undefined) {
-            return this.iterFromDownstream(query);
+            return this.iterFromWrappedLocator(query);
         }
         return this.iterFromCache(query);
     }
@@ -114,11 +114,11 @@ export class CachingLocator implements ILocator {
     }
 
     /**
-     * A generator that yields the envs provided by the downstream locator.
+     * A generator that yields the envs provided by the wrapped locator.
      *
      * Contrast this with `iterFromCache()` that yields only from the cache.
      */
-    private async* iterFromDownstream(query?: PythonLocatorQuery): IPythonEnvsIterator {
+    private async* iterFromWrappedLocator(query?: PythonLocatorQuery): IPythonEnvsIterator {
         // For now we wait for the initial refresh to finish.  If that
         // turns out to be a problem then we can do something more
         // clever here.
@@ -134,8 +134,7 @@ export class CachingLocator implements ILocator {
     /**
      * A generator that yields the envs found in the cache.
      *
-     * Contrast this with `iterFromDownstream()` which relies on
-     * the downstream locator.
+     * Contrast this with `iterFromWrappedLocator()`.
      */
     private async* iterFromCache(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const envs = this.cache.getAllEnvs();
@@ -155,7 +154,7 @@ export class CachingLocator implements ILocator {
     }
 
     /**
-     * Maybe trigger a refresh of the cache from the downstream locator.
+     * Maybe trigger a refresh of the cache from the wrapped locator.
      *
      * If a refresh isn't already running then we request a refresh and
      * wait for it to finish.  Otherwise we do not make a new request,
@@ -174,7 +173,7 @@ export class CachingLocator implements ILocator {
     }
 
     /**
-     * Maybe trigger a refresh of the cache from the downstream locator.
+     * Maybe trigger a refresh of the cache from the wrapped locator.
      *
      * Make sure that a completely new refresh will be started soon and
      * wait for it to finish.  If a refresh isn't already running then
@@ -195,7 +194,7 @@ export class CachingLocator implements ILocator {
     }
 
     /**
-     * Immediately perform a refresh of the cache from the downstream locator.
+     * Immediately perform a refresh of the cache from the wrapped locator.
      *
      * It does not matter if another refresh is already running.
      */
