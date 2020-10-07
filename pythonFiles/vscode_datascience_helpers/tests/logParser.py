@@ -1,0 +1,81 @@
+import sys
+import argparse
+import os
+os.system("color")
+from pathlib import Path
+import re
+
+parser = argparse.ArgumentParser(description='Parse a test log into its parts')
+parser.add_argument('testlog', type=str, nargs=1, help='Log to parse')
+parser.add_argument('--testoutput', action='store_true', help='Show all failures and passes')
+parser.add_argument('--split', action='store_true', help='Split into per process files. Each file will have the pid appended')
+ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+pid_regex = re.compile(r'(\d+).*')
+
+def isUnwantedOutput(s: str):
+    return s.startswith("{\"json") or s.startswith("Content-type") or s.startswith("Content-Type") or s.startswith("Output") or s.startswith("Starting") or s.startswith("Kernel")
+
+def printTestOutput(testlog):
+    # Find all the lines that don't have a PID in them. These are the test output
+    p = Path(testlog[0])
+    with p.open() as f:
+        for line in f.readlines():
+            stripped = line.strip()
+            if (not isUnwantedOutput(stripped) and len(stripped) > 0):
+                if (stripped[0] < '0'):
+                    print(line.rstrip()) # Should be a test line
+                elif (stripped[0] > '9'):
+                    print(line.rstrip()) # Not starting with a number
+
+def splitByPid(testlog):
+    # Split testlog into prefixed logs based on pid
+    baseFile = os.path.splitext(testlog[0])[0]
+    p = Path(testlog[0])
+    pids = set()
+    logs = {}
+    pid = None
+    with p.open() as f:
+        for line in f.readlines():
+            stripped = ansi_escape.sub('', line.strip())
+            # See if starts with a pid
+            if (len(stripped) > 0 and stripped[0] <= '9' and stripped[0] >= '0'):
+                # Pull out the pid
+                match = pid_regex.match(stripped)
+
+                # Pids are at least two digits
+                if (match != None and len(match.group(1)) > 2):
+                    # Pid is found
+                    pid = int(match.group(1))
+
+                    # See if we've created a log for this pid or not
+                    if (not pid in pids):
+                        pids.add(pid)
+                        logFile = '{}_{}.log'.format(baseFile, pid)
+                        print('Writing to new log: ' + logFile)
+                        logs[pid] = Path(logFile).open(mode="w")
+                    
+                # Add this line to the log
+                if (pid != None):
+                    logs[pid].write(line)
+    # Close all of the open logs
+    for key in logs:
+        logs[key].close()
+
+
+    
+
+def doWork(args):
+    if (not args.testlog):
+        print('Test log should be passed')
+    elif (args.testoutput):
+        printTestOutput(args.testlog)
+    elif (args.split):
+        splitByPid(args.testlog)
+    else:
+        parser.print_usage()
+
+def main():
+    doWork(parser.parse_args())
+
+if __name__ == "__main__":
+    main()

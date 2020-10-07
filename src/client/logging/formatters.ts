@@ -37,13 +37,13 @@ function normalizeLevel(name: LogLevelName): string {
 // Return a log entry that can be emitted as-is.
 function formatMessage(level: LogLevelName, timestamp: string, message: string): string {
     const levelFormatted = normalizeLevel(level);
-    return `${levelFormatted} ${timestamp}: ${message}`;
+    return `${process.pid} ${levelFormatted} ${timestamp}: ${message}`;
 }
 
 // Return a log entry that can be emitted as-is.
 function formatLabeledMessage(level: LogLevelName, timestamp: string, label: string, message: string): string {
     const levelFormatted = normalizeLevel(level);
-    return `${levelFormatted} ${label} ${timestamp}: ${message}`;
+    return `${process.pid} ${levelFormatted} ${label} ${timestamp}: ${message}`;
 }
 
 // Return a minimal format object that can be used with a "winston"

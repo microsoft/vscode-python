@@ -41,7 +41,7 @@ use(chaiAsPromised);
         suiteSetup(function () {
             // Skip all tests until flakiness can be resolved.
             // See issue: https://github.com/microsoft/vscode-python/issues/13936
-            if (IS_CI_SERVER) {
+            if (IS_CI_SERVER || process.env.VSC_PYTHON_FORCE_LOGGING) {
                 this.skip();
             }
 
