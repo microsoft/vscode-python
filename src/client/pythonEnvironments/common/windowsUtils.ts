@@ -59,48 +59,51 @@ export async function readRegistryKeys(options: Options): Promise<Registry[]> {
 
 export interface IRegistryInterpreterData{
     interpreterPath: string;
-    versionStr: string;
-    bitnessStr: string;
-    displayName: string;
+    versionStr?: string;
+    sysVersionStr?:string;
+    bitnessStr?: string;
+    displayName?: string;
+    distroOrgName?: string;
 }
 
-async function getInterpreterDataFromKey(key:Registry): Promise<IRegistryInterpreterData | undefined> {
-    const result = {
+async function getInterpreterDataFromKey(
+    { arch, hive, key }:Registry,
+    distroOrgName:string,
+): Promise<IRegistryInterpreterData | undefined> {
+    const result:IRegistryInterpreterData = {
         interpreterPath: '',
-        versionStr: '',
-        bitnessStr: '',
-        displayName: '',
+        distroOrgName,
     };
-    const values:RegistryItem[] = await readRegistryValues({ arch: key.arch, hive: key.hive, key: key.key });
+
+    const values:RegistryItem[] = await readRegistryValues({ arch, hive, key });
     for (const value of values) {
-        if (value.name === 'Version') {
-            result.versionStr = value.value;
-        }
-        if (value.name === 'SysArchitecture') {
-            result.bitnessStr = value.value;
-        }
-        if (value.name === 'DisplayName') {
-            result.displayName = value.value;
+        switch (value.name) {
+            case 'SysArchitecture':
+                result.bitnessStr = value.value;
+                break;
+            case 'SysVersion':
+                result.sysVersionStr = value.value;
+                break;
+            case 'Version':
+                result.versionStr = value.value;
+                break;
+            case 'DisplayName':
+                result.displayName = value.value;
+                break;
+            default:
+                break;
         }
     }
 
-    const subKeys:Registry[] = await readRegistryKeys({ arch: key.arch, hive: key.hive, key: key.key });
-    for (const subKey of subKeys) {
-        if (subKey.key.endsWith('InstallPath')) {
-            const subKeyValues:RegistryItem[] = await readRegistryValues({
-                arch: key.arch,
-                hive: key.hive,
-                key: subKey.key,
-            });
-
-            for (const value of subKeyValues) {
-                if (value.name === 'ExecutablePath') {
-                    if (value.type === REG_SZ) {
-                        result.interpreterPath = value.value;
-                    } else {
-                        traceVerbose(`Registry interpreter path type [${value.type}]: ${value.value}`);
-                    }
-                }
+    const subKeys:Registry[] = await readRegistryKeys({ arch, hive, key });
+    const subKey = subKeys.map((s) => s.key).find((s) => s.endsWith('InstallPath'));
+    if (subKey) {
+        const subKeyValues:RegistryItem[] = await readRegistryValues({ arch, hive, key: subKey });
+        const value = subKeyValues.find((v) => v.name === 'ExecutablePath');
+        if (value) {
+            result.interpreterPath = value.value;
+            if (value.type !== REG_SZ) {
+                traceVerbose(`Registry interpreter path type [${value.type}]: ${value.value}`);
             }
         }
     }
@@ -111,11 +114,16 @@ async function getInterpreterDataFromKey(key:Registry): Promise<IRegistryInterpr
     return undefined;
 }
 
-export async function getInterpreterDataFromRegistry(options: Options): Promise<IRegistryInterpreterData[]> {
+export async function getInterpreterDataFromRegistry(
+    arch:string,
+    hive:string,
+    key:string,
+): Promise<IRegistryInterpreterData[]> {
     const registryData:IRegistryInterpreterData[] = [];
-    const codingPackKeys = await readRegistryKeys({ arch: options.arch, hive: options.hive, key: options.key });
-    for (const key of codingPackKeys) {
-        const data = await getInterpreterDataFromKey(key);
+    const subKeys = await readRegistryKeys({ arch, hive, key });
+    const distroOrgName = key.substr(key.lastIndexOf('\\') + 1);
+    for (const subKey of subKeys) {
+        const data = await getInterpreterDataFromKey(subKey, distroOrgName);
         if (data) {
             registryData.push(data);
         }
