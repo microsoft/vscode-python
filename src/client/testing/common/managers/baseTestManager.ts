@@ -335,9 +335,9 @@ export abstract class BaseTestManager implements ITestManager {
         // Similarly, if running a specific test or test file, don't clear the cache (possible tests have some state information retained)
         const clearDiscoveredTestCache =
             runFailedTests ||
-            moreInfo.Run_Specific_File ||
-            moreInfo.Run_Specific_Class ||
-            moreInfo.Run_Specific_Function
+                moreInfo.Run_Specific_File ||
+                moreInfo.Run_Specific_Class ||
+                moreInfo.Run_Specific_Function
                 ? false
                 : true;
         return this.discoverTests(cmdSource, clearDiscoveredTestCache, true, true)
@@ -500,7 +500,7 @@ export abstract class BaseTestManager implements ITestManager {
         const diagMsg = message.message ? message.message.split('\n')[0] : '';
         const diagnostic = new Diagnostic(
             stackStart.location.range,
-            `${diagPrefix ? `${diagPrefix}: ` : ''}${diagMsg}`,
+            `${diagPrefix ? `${diagPrefix}: ` : 'Ok'}${diagMsg}`,
             severity
         );
         diagnostic.code = message.code;
