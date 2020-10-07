@@ -206,7 +206,6 @@ export class GuestJupyterNotebook
     }
 
     public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
-
         // This is a special case. Ask the shared server
         const service = await this.waitForService();
         if (service) {

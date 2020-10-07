@@ -28,6 +28,7 @@ import { JupyterNotebookView } from '../constants';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
 import { KernelMessage } from '@jupyterlab/services';
+// tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { isUntitledFile } from '../../../common/utils/misc';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
