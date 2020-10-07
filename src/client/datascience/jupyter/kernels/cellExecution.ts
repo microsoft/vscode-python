@@ -97,6 +97,7 @@ export class CellExecution {
      */
     private previousUpdatedToCellHasCompleted = Promise.resolve();
     private disposables: IDisposable[] = [];
+    private cancelHandled = false;
 
     private constructor(
         public readonly editor: VSCNotebookEditor,
@@ -146,6 +147,9 @@ export class CellExecution {
      * If execution has commenced, then interrupt (via cancellation token) else dequeue from execution.
      */
     public async cancel() {
+        if (this.cancelHandled) {
+            return;
+        }
         await this.initPromise;
         // We need to notify cancellation only if execution is in progress,
         // coz if not, we can safely reset the states.
@@ -156,7 +160,7 @@ export class CellExecution {
         if (!this.started) {
             await this.dequeue();
         }
-        this._result.resolve(this.cell.metadata.runState);
+        await this.completedDurToCancellation();
         this.dispose();
     }
     private dispose() {
@@ -206,6 +210,24 @@ export class CellExecution {
                 ...this.cell.metadata,
                 runState,
                 statusMessage
+            })
+        );
+
+        this._completed = true;
+        this._result.resolve(this.cell.metadata.runState);
+    }
+
+    private async completedDurToCancellation() {
+        await updateCellExecutionTimes(this.editor, this.cell, {
+            startTime: this.cell.metadata.runStartTime,
+            lastRunDuration: this.stopWatch.elapsedTime
+        });
+
+        await this.editor.edit((edit) =>
+            edit.replaceCellMetadata(this.cell.index, {
+                ...this.cell.metadata,
+                runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
+                statusMessage: ''
             })
         );
 
@@ -270,7 +292,7 @@ export class CellExecution {
         }
     }
 
-    private execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
+    private async execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         // Generate metadata from our cell (some kernels expect this.)
         const metadata = {
             ...this.cell.metadata,
@@ -281,59 +303,58 @@ export class CellExecution {
         const code = this.cell.document.getText();
 
         // Skip if no code to execute
-        if (code.trim().length > 0) {
-            const request = session.requestExecute(
-                {
-                    code,
-                    silent: false,
-                    stop_on_error: false,
-                    allow_stdin: true,
-                    store_history: true // Silent actually means don't output anything. Store_history is what affects execution_count
-                },
-                false,
-                metadata
-            );
+        if (code.trim().length === 0) {
+            return this.completedSuccessfully().then(noop, noop);
+        }
 
-            // Listen to messages and update our cell execution state appropriately
+        const request = session.requestExecute(
+            {
+                code,
+                silent: false,
+                stop_on_error: false,
+                allow_stdin: true,
+                store_history: true // Silent actually means don't output anything. Store_history is what affects execution_count
+            },
+            false,
+            metadata
+        );
 
-            // Keep track of our clear state
-            const clearState = new RefBool(false);
+        // Listen to messages and update our cell execution state appropriately
 
-            // Listen to the reponse messages and update state as we go
-            if (request) {
-                // Stop handling the request if the subscriber is canceled.
-                const cancelDisposable = this.token.onCancellationRequested(() => {
-                    request.onIOPub = noop;
-                    request.onStdin = noop;
-                    request.onReply = noop;
-                });
+        // Keep track of our clear state
+        const clearState = new RefBool(false);
 
-                // Listen to messages.
-                request.onIOPub = this.handleIOPub.bind(this, clearState, loggers);
-                request.onStdin = this.handleInputRequest.bind(this, session);
-                request.onReply = this.handleReply.bind(this, clearState);
+        // Listen to the reponse messages and update state as we go
+        if (!request) {
+            return this.completedWithErrors(new Error('Session cannot generate requests')).then(noop, noop);
+        }
 
-                // When the request finishes we are done
-                request.done
-                    .then(() => this.completedSuccessfully())
-                    .catch(async (e) => {
-                        // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
-                        // Such an error must be ignored.
-                        if (e && e instanceof Error && e.message === 'Canceled') {
-                            await this.completedSuccessfully();
-                        } else {
-                            await this.completedWithErrors(e);
-                        }
-                    })
-                    .finally(() => {
-                        cancelDisposable.dispose();
-                    })
-                    .ignoreErrors();
+        // Stop handling the request if the subscriber is canceled.
+        const cancelDisposable = this.token.onCancellationRequested(() => {
+            request.onIOPub = noop;
+            request.onStdin = noop;
+            request.onReply = noop;
+        });
+
+        // Listen to messages.
+        request.onIOPub = this.handleIOPub.bind(this, clearState, loggers);
+        request.onStdin = this.handleInputRequest.bind(this, session);
+        request.onReply = this.handleReply.bind(this, clearState);
+
+        // When the request finishes we are done
+        try {
+            await request.done;
+            await this.completedSuccessfully();
+        } catch (ex) {
+            // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
+            // Such an error must be ignored.
+            if (ex && ex instanceof Error && ex.message === 'Canceled') {
+                await this.completedSuccessfully();
             } else {
-                this.completedWithErrors(new Error('Session cannot generate requrests')).then(noop, noop);
+                await this.completedWithErrors(ex);
             }
-        } else {
-            this.completedSuccessfully().then(noop, noop);
+        } finally {
+            cancelDisposable.dispose();
         }
     }
 

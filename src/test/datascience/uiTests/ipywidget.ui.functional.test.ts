@@ -16,6 +16,7 @@ import { Disposable } from 'vscode';
 import { LocalZMQKernel } from '../../../client/common/experiments/groups';
 import { sleep } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
+import { IS_CI_SERVER } from '../../ciConstants';
 import { retryIfFail as retryIfFailOriginal } from '../../common';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
@@ -30,13 +31,20 @@ const retryIfFail = <T>(fn: () => Promise<T>) => retryIfFailOriginal<T>(fn, wait
 
 use(chaiAsPromised);
 
-[false, true].forEach((useRawKernel) => {
+// When using jupyter server, ipywidget tests seem to be a lot flakier. Always use raw kernel
+[true].forEach((useRawKernel) => {
     //import { asyncDump } from '../common/asyncDump';
     suite(`DataScience IPyWidgets (${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'})`, () => {
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
 
         suiteSetup(function () {
+            // Skip all tests until flakiness can be resolved.
+            // See issue: https://github.com/microsoft/vscode-python/issues/13936
+            if (IS_CI_SERVER) {
+                this.skip();
+            }
+
             // These are UI tests, hence nothing to do with platforms.
             this.timeout(30_000); // UI Tests, need time to start jupyter.
             this.retries(3); // UI tests can be flaky.

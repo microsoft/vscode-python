@@ -37,6 +37,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
     let testIPynb: Uri;
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
+        return this.skip();
         this.timeout(15_000);
         api = await initialize();
         if (!(await canRunTests())) {

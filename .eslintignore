@@ -366,7 +366,7 @@ src/test/common/insidersBuild/insidersExtensionService.unit.test.ts
 src/test/pythonFiles/formatting/dummy.ts
 
 src/test/format/extension.dispatch.test.ts
-src/test/format/extension.format.ds.test.ts
+src/test/format/extension.format.native.vscode.test.ts
 src/test/format/extension.onTypeFormat.test.ts
 src/test/format/extension.lineFormatter.test.ts
 src/test/format/extension.sort.test.ts
@@ -574,20 +574,20 @@ src/test/datascience/notebook.functional.test.ts
 src/test/datascience/mockLanguageClient.ts
 src/test/datascience/errorHandler.functional.test.tsx
 src/test/datascience/notebook/notebookStorage.unit.test.ts
-src/test/datascience/notebook/notebookTrust.ds.test.ts
+src/test/datascience/notebook/notebookTrust.native.vscode.test.ts
 src/test/datascience/notebook/rendererExtensionDownloader.unit.test.ts
 src/test/datascience/notebook/survey.unit.test.ts
-src/test/datascience/notebook/interrupRestart.ds.test.ts
-src/test/datascience/notebook/contentProvider.ds.test.ts
+src/test/datascience/notebook/interrupRestart.native.vscode.test.ts
+src/test/datascience/notebook/contentProvider.native.vscode.test.ts
 src/test/datascience/notebook/helper.ts
 src/test/datascience/notebook/contentProvider.unit.test.ts
-src/test/datascience/notebook/edit.ds.test.ts
+src/test/datascience/notebook/edit.native.vscode.test.ts
 src/test/datascience/notebook/rendererExension.unit.test.ts
-src/test/datascience/notebook/saving.ds.test.ts
-src/test/datascience/notebook/notebookEditorProvider.ds.test.ts
+src/test/datascience/notebook/saving.native.vscode.test.ts
+src/test/datascience/notebook/notebookEditorProvider.native.vscode.test.ts
 src/test/datascience/notebook/helpers.unit.test.ts
-src/test/datascience/notebook/executionService.ds.test.ts
-src/test/datascience/notebook/cellOutput.ds.test.ts
+src/test/datascience/notebook/executionService.native.vscode.test.ts
+src/test/datascience/notebook/cellOutput.native.vscode.test.ts
 src/test/datascience/interactiveWindowTestHelpers.tsx
 src/test/datascience/export/exportUtil.test.ts
 src/test/datascience/export/exportToHTML.test.ts

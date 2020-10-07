@@ -3,7 +3,7 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { traceWarning } from '../../../../common/logger';
+import { traceError, traceWarning } from '../../../../common/logger';
 import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
 import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
@@ -138,7 +138,8 @@ export class WindowsStoreLocator extends PythonEnvsWatcher implements ILocator {
         let version:PythonVersion;
         try {
             version = parseVersion(path.basename(exe));
-        } catch (e) {
+        } catch (ex) {
+            traceError(`Failed to parse version from path: ${exe}`, ex);
             version = {
                 major: 3,
                 minor: -1,

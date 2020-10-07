@@ -43,7 +43,7 @@ function waitForMessage(ioc: DataScienceIocContainer, message: string, options?:
         .waitForMessage(message, options);
 }
 // tslint:disable:no-any no-multiline-string
-suite('Notebook trust', () => {
+suite('DataScience Notebook trust', () => {
     let wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
     let ne: { editor: INotebookEditor; mount: IMountedWebView };
     const disposables: Disposable[] = [];

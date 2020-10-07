@@ -35,7 +35,6 @@ export async function _getAssociatedPipfile(
     let heightToSearch = options.lookIntoParentDirectories ? getSearchHeight() : 1;
     while (heightToSearch > 0 && !arePathsSame(searchDir, path.dirname(searchDir))) {
         const pipFile = path.join(searchDir, pipFileName);
-        // eslint-disable-next-line no-await-in-loop
         if (await pathExists(pipFile)) {
             return pipFile;
         }

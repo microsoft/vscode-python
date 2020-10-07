@@ -7,8 +7,9 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
-import { IConfigurationService, IDataScienceSettings, IDisposable } from '../../../client/common/types';
+import { IDisposable } from '../../../client/common/types';
 import { createDeferredFromPromise } from '../../../client/common/utils/async';
+import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
@@ -27,9 +28,8 @@ import {
     trustAllNotebooks,
     waitForTextOutputInVSCode
 } from './helper';
-// tslint:disable-next-line: no-var-requires no-require-imports
 
-// tslint:disable: no-any no-invalid-this
+// tslint:disable: no-any no-invalid-this no-function-expression
 /*
  * This test focuses on interrupting, restarting kernels.
  * We will not use actual kernels, just ensure the appropriate methods are invoked on the appropriate classes.
@@ -45,8 +45,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     let vscEditor: VSCNotebookEditor;
     let vscodeNotebook: IVSCodeNotebook;
     const suiteDisposables: IDisposable[] = [];
-    let oldAskForRestart: boolean | undefined;
-    let dsSettings: IDataScienceSettings;
     suiteSetup(async function () {
         this.timeout(60_000);
         api = await initialize();
@@ -59,11 +57,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined)
-            .datascience;
-        oldAskForRestart = dsSettings.askForKernelRestart;
-        // Disable the prompt (when attempting to restart kernel).
-        dsSettings.askForKernelRestart = false;
     });
     setup(async () => {
         sinon.restore();
@@ -74,12 +67,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         vscEditor = vscodeNotebook.activeNotebookEditor!;
     });
     teardown(() => closeNotebooks(disposables));
-    suiteTeardown(async () => {
-        oldAskForRestart = dsSettings.askForKernelRestart;
-        // Restore.
-        dsSettings.askForKernelRestart = oldAskForRestart;
-        await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
-    });
+    suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables)));
 
     test('Cancelling token will cancel cell execution', async () => {
         await insertPythonCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
@@ -118,7 +106,20 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     test('Restarting kernel will cancel cell execution & we can re-run a cell', async () => {
         await insertPythonCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
         const cell = vscEditor.document.cells[0];
+        // Ensure we click `Yes` when prompted to restart the kernel.
+        const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        const showInformationMessage = sinon
+            .stub(appShell, 'showInformationMessage')
+            .callsFake(function (message: string) {
+                if (message === DataScience.restartKernelMessage()) {
+                    // User clicked ok to restart it.
+                    return DataScience.restartKernelMessageYes();
+                }
+                return (appShell.showInformationMessage as any).wrappedMethod.apply(appShell, arguments);
+            });
+        disposables.push({ dispose: () => showInformationMessage.restore() });
 
+        (editorProvider.activeEditor as any).shouldAskForRestart = () => Promise.resolve(false);
         await executeActiveDocument();
 
         // Wait for cell to get busy.
