@@ -36,6 +36,11 @@ suite('Environment Info cache', () => {
     });
 
     function getGlobalPersistentStore() {
+        // It may look like we are making this call directly, but note
+        // that in `setup()` we have already stubbed the function out.
+        // We take this approach so the tests more closely match how
+        // `PythonEnvInfoCache` will actually be used in the VS Code
+        // extension.
         const store = externalDependencies.getGlobalPersistentStore<PythonEnvInfo[]>('PYTHON_ENV_INFO_CACHE');
         return {
             load: async () => store.get(),
