@@ -141,6 +141,8 @@ export function getLanguageInNotebookMetadata(metadata?: nbformat.INotebookMetad
     // If kernel spec is defined & we have a language in that, then use that information.
     // tslint:disable-next-line: no-any
     const kernelSpec: IJupyterKernelSpec | undefined = metadata.kernelspec as any;
+    // When a kernel spec is stored in ipynb, the `language` of the kernel spec is also saved.
+    // Unfortunately there's no strong typing for this.
     if (kernelSpec?.language) {
         return kernelSpec.language;
     }
