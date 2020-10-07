@@ -38,7 +38,7 @@ export class CachingLocator implements ILocator {
     ) {
         this.onChanged = this.watcher.onChanged;
         this.looper = new BackgroundRequestLooper({
-            runDefault: () => this.refresh(),
+            runDefault: null,
         });
     }
 
@@ -168,8 +168,7 @@ export class CachingLocator implements ILocator {
             return promise;
         }
         // The queue is empty so add a new request.
-        const [, waitUntilDone] = this.looper.addRequest(() => this.refresh());
-        return waitUntilDone;
+        return this.addRefreshRequest();
     }
 
     /**
@@ -188,22 +187,30 @@ export class CachingLocator implements ILocator {
         if (req === undefined) {
             // There isn't already a pending request (due to an
             // onChanged event), so we add one.
-            this.looper.addRequest(() => this.refresh(event));
+            this.addRefreshRequest(event)
+                .ignoreErrors();
         }
         // Otherwise let the pending request take care of it.
     }
 
     /**
-     * Immediately perform a refresh of the cache from the wrapped locator.
+     * Queue up a new request to refresh the cache from the wrapped locator.
      *
-     * It does not matter if another refresh is already running.
+     * Once the request is added, that refresh will run no matter what
+     * at some future point (possibly immediately).  It does not matter
+     * if another refresh is already running.  You probably want to use
+     * `ensureRecentRefresh()` or * `ensureCurrentRefresh()` instead,
+     * to avoid unnecessary refreshes.
      */
-    private async refresh(
+    private addRefreshRequest(
         event?: PythonEnvsChangedEvent,
     ): Promise<void> {
-        const iterator = this.locator.iterEnvs();
-        const envs = await getEnvs(iterator);
-        await this.updateCache(envs, event);
+        const [, waitUntilDone] = this.looper.addRequest(async () => {
+            const iterator = this.locator.iterEnvs();
+            const envs = await getEnvs(iterator);
+            await this.updateCache(envs, event);
+        });
+        return waitUntilDone;
     }
 
     /**
