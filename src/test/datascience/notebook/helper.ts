@@ -432,6 +432,7 @@ export function createNotebookModel(
     });
     const mockVSC = mock<IVSCodeNotebook>();
     when(mockVSC.notebookEditors).thenReturn([]);
+    when(mockVSC.notebookDocuments).thenReturn([]);
     const cellLanguageService = mock<NotebookCellLanguageService>();
     when(cellLanguageService.getPreferredLanguage()).thenReturn(PYTHON_LANGUAGE);
 

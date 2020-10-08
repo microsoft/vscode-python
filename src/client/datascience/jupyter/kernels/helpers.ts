@@ -8,9 +8,8 @@ import { IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
-
-// tslint:disable-next-line: no-require-imports
 import { nbformat } from '@jupyterlab/coreutils';
+// tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { ReadWrite } from '../../../common/types';
