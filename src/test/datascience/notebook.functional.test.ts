@@ -468,7 +468,7 @@ suite('DataScience notebook tests', () => {
             runTest('Remote Password', async () => {
                 const pythonService = await createPythonService(ioc);
 
-                if (pythonService && !useRawKernel && os.platform() !== 'darwin') {
+                if (pythonService && !useRawKernel && os.platform() !== 'darwin' && os.platform() !== 'linux') {
                     const configFile = path.join(
                         EXTENSION_ROOT_DIR,
                         'src',

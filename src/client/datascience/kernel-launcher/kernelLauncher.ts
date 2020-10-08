@@ -96,7 +96,7 @@ export class KernelLauncher implements IKernelLauncher {
         return kernelProcess;
     }
 
-    private async getPorts(): Promise<number[]> {
+    private async getConnectionPorts(): Promise<number[]> {
         const getPorts = promisify(portfinder.getPorts);
 
         // Have to wait for static port lookup (it handles case where two VS code instances are running)
@@ -117,7 +117,7 @@ export class KernelLauncher implements IKernelLauncher {
     }
 
     private async getKernelConnection(): Promise<IKernelConnection> {
-        const ports = await this.getPorts();
+        const ports = await this.getConnectionPorts();
         return {
             version: 1,
             key: uuid(),
