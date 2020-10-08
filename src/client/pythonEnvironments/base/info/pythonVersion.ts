@@ -99,6 +99,14 @@ export function parseVersionInfo(versionInfoStr: string): PythonVersion {
 }
 
 /**
+ * Determine if the version is effectively a blank one.
+ */
+export function isVersionEmpty(version: PythonVersion): boolean {
+    // This is good enough.
+    return version.major === -1;
+}
+
+/**
  * Checks if all the fields in the version object match.
  * @param {PythonVersion} left
  * @param {PythonVersion} right
