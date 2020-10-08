@@ -94,6 +94,9 @@ suite(`DataScience JupyterServerUriProvider tests`, () => {
         ioc.serviceManager.rebindInstance<IExtensions>(IExtensions, new UriMockExtensions(ioc));
         return ioc.activate();
     });
+    suiteTeardown(async () => {
+        return DataScienceIocContainer.suiteDispose();
+    });
 
     teardown(async () => {
         await ioc.dispose();

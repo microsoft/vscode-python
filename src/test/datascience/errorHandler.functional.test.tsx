@@ -25,6 +25,9 @@ suite('DataScience Error Handler Functional Tests', () => {
         ioc = modifyContainer();
         return ioc.activate();
     });
+    suiteTeardown(async () => {
+        return DataScienceIocContainer.suiteDispose();
+    });
 
     teardown(async () => {
         sinon.restore();

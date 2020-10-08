@@ -31,15 +31,15 @@ import { ITestNativeEditorProvider } from './testNativeEditorProvider';
         suiteSetup(() => {
             snapshot = takeSnapshot();
         });
-
         setup(async () => {
             ioc = new DataScienceIocContainer();
             ioc.registerDataScienceTypes(false, languageServerType);
             return ioc.activate();
         });
 
-        suiteTeardown(() => {
+        suiteTeardown(async () => {
             writeDiffSnapshot(snapshot, 'Intellisense');
+            return DataScienceIocContainer.suiteDispose();
         });
 
         teardown(async () => {
@@ -55,10 +55,6 @@ import { ITestNativeEditorProvider } from './testNativeEditorProvider';
             }
             await ioc.dispose();
         });
-
-        // suiteTeardown(() => {
-        //     asyncDump();
-        // });
 
         function getIntellisenseTextLines(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): string[] {
             assert.ok(wrapper);

@@ -86,6 +86,7 @@ suite('DataScience Interactive Window output tests', () => {
 
     suiteTeardown(() => {
         writeDiffSnapshot(snapshot, 'Interactive Window');
+        return DataScienceIocContainer.suiteDispose();
     });
 
     teardown(async () => {
@@ -121,11 +122,6 @@ suite('DataScience Interactive Window output tests', () => {
         iw.update();
         verifyHtmlOnCell(iw, 'InteractiveCell', html, cellIndex);
     }
-
-    // Uncomment this to debug hangs on exit
-    // suiteTeardown(() => {
-    //      asyncDump();
-    // });
 
     runTest(
         'Simple text',

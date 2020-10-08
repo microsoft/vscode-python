@@ -50,13 +50,16 @@ import { concatMultilineString } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
 import { createPythonService, startRemoteServer } from './remoteTestHelpers';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 suite('DataScience notebook tests', () => {
+    suiteTeardown(async () => {
+        return DataScienceIocContainer.suiteDispose();
+    });
+
     [false, true].forEach((useRawKernel) => {
         suite(`${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'}`, () => {
             const disposables: Disposable[] = [];
@@ -65,7 +68,6 @@ suite('DataScience notebook tests', () => {
             let ioc: DataScienceIocContainer;
             let modifiedConfig = false;
             const baseUri = Uri.file('foo.py');
-            let snapshot: any;
 
             // tslint:disable-next-line: no-function-expression
             setup(async function () {
@@ -80,14 +82,6 @@ suite('DataScience notebook tests', () => {
                 ioc.registerDataScienceTypes();
                 await ioc.activate();
                 notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
-            });
-
-            suiteSetup(() => {
-                snapshot = takeSnapshot();
-            });
-
-            suiteTeardown(() => {
-                writeDiffSnapshot(snapshot, `Notebook ${useRawKernel}`);
             });
 
             teardown(async () => {

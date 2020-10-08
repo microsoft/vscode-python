@@ -22,6 +22,9 @@ suite('DataScience - Native Editor Provider', () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
     });
+    suiteTeardown(async () => {
+        return DataScienceIocContainer.suiteDispose();
+    });
 
     function createNotebookProvider() {
         return ioc.get<TestNativeEditorProvider>(INotebookEditorProvider);

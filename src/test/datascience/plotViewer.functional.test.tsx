@@ -25,6 +25,9 @@ suite('DataScience PlotViewer tests', () => {
         ioc.registerDataScienceTypes();
         await ioc.activate();
     });
+    suiteTeardown(async () => {
+        return DataScienceIocContainer.suiteDispose();
+    });
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
         // Setup our webview panel
@@ -135,10 +138,6 @@ suite('DataScience PlotViewer tests', () => {
         }
         await ioc.dispose();
         delete (global as any).ascquireVsCodeApi;
-    });
-
-    suiteTeardown(() => {
-        // asyncDump();
     });
 
     async function waitForPlot(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, svg: string): Promise<void> {

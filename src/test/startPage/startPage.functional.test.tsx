@@ -19,6 +19,9 @@ suite('StartPage tests', () => {
         ioc.registerDataScienceTypes();
         await ioc.activate();
     });
+    suiteTeardown(async () => {
+        return DataScienceIocContainer.suiteDispose();
+    });
 
     teardown(async () => {
         await ioc.dispose();

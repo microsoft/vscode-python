@@ -61,6 +61,7 @@ suite('DataScience Debugger tests', () => {
 
     suiteTeardown(() => {
         writeDiffSnapshot(snapshot, 'Debugger');
+        return DataScienceIocContainer.suiteDispose();
     });
 
     setup(async () => {
@@ -127,10 +128,6 @@ suite('DataScience Debugger tests', () => {
                 await promise;
             }
         }
-    });
-
-    suiteTeardown(() => {
-        //        asyncDump();
     });
 
     async function debugCell(

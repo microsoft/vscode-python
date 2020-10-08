@@ -62,6 +62,7 @@ suite('DataScience - Kernel Launcher', () => {
 
     suiteTeardown(() => {
         writeDiffSnapshot(snapshot, 'KernelLauncher');
+        return DataScienceIocContainer.suiteDispose();
     });
 
     test('Launch from kernelspec', async function () {

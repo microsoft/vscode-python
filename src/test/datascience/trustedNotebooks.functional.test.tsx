@@ -145,6 +145,10 @@ suite('DataScience Notebook trust', () => {
  "nbformat": 4,
  "nbformat_minor": 2
 }`;
+    suiteTeardown(async () => {
+        return DataScienceIocContainer.suiteDispose();
+    });
+
     const addedJSON = JSON.parse(baseFile);
     addedJSON.cells.splice(3, 0, {
         cell_type: 'code',

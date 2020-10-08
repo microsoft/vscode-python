@@ -53,7 +53,6 @@ import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-com
 import { waitForCondition } from '../common';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDocumentManager } from './mockDocumentManager';
 import { IMountedWebView, WaitForMessageOptions } from './mountedWebView';
@@ -110,10 +109,12 @@ suite('DataScience Native Editor', () => {
             };
         })(originalPlatform)
     );
+    suiteTeardown(async () => {
+        return DataScienceIocContainer.suiteDispose();
+    });
 
     [false, true].forEach((useCustomEditorApi) => {
         //import { asyncDump } from '../common/asyncDump';
-        let snapshot: any;
         suite(`${useCustomEditorApi ? 'With' : 'Without'} Custom Editor API`, () => {
             function createFileCell(cell: any, data: any): ICell {
                 const newCell = {
@@ -135,12 +136,6 @@ suite('DataScience Native Editor', () => {
 
                 return newCell;
             }
-            suiteSetup(() => {
-                snapshot = takeSnapshot();
-            });
-            suiteTeardown(() => {
-                writeDiffSnapshot(snapshot, `Native ${useCustomEditorApi}`);
-            });
             suite('Editor tests', () => {
                 const disposables: Disposable[] = [];
                 let ioc: DataScienceIocContainer;
@@ -211,11 +206,6 @@ suite('DataScience Native Editor', () => {
                         noop();
                     }
                 });
-
-                // Uncomment this to debug hangs on exit
-                // suiteTeardown(() => {
-                //      asyncDump();
-                // });
 
                 runMountedTest('Simple text', async () => {
                     // Create an editor so something is listening to messages

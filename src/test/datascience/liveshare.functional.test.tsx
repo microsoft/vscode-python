@@ -69,7 +69,7 @@ suite('DataScience LiveShare tests', () => {
     });
 
     suiteTeardown(() => {
-        //asyncDump();
+        return DataScienceIocContainer.suiteDispose();
     });
 
     function createContainer(role: vsls.Role): DataScienceIocContainer {

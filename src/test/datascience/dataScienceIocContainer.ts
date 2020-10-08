@@ -491,6 +491,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.asyncRegistry = new AsyncDisposableRegistry();
     }
 
+    // This function should be called when an entire suite is shutdown
+    public static async suiteDispose(): Promise<void> {
+        KernelLauncher.cleanupStartPort();
+    }
     public async dispose(): Promise<void> {
         // Make sure to disable all command handling during dispose. Don't want
         // anything to startup again.

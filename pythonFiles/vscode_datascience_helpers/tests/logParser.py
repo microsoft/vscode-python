@@ -12,20 +12,14 @@ parser.add_argument('--split', action='store_true', help='Split into per process
 ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 pid_regex = re.compile(r'(\d+).*')
 
-def isUnwantedOutput(s: str):
-    return s.startswith("{\"json") or s.startswith("Content-type") or s.startswith("Content-Type") or s.startswith("Output") or s.startswith("Starting") or s.startswith("Kernel")
-
 def printTestOutput(testlog):
     # Find all the lines that don't have a PID in them. These are the test output
     p = Path(testlog[0])
     with p.open() as f:
         for line in f.readlines():
             stripped = line.strip()
-            if (not isUnwantedOutput(stripped) and len(stripped) > 0):
-                if (stripped[0] < '0'):
-                    print(line.rstrip()) # Should be a test line
-                elif (stripped[0] > '9'):
-                    print(line.rstrip()) # Not starting with a number
+            if (len(stripped) > 2 and stripped[0] == '\x1B' and stripped[1] == '['):
+                print(line.rstrip()) # Should be a test line as it has color encoding
 
 def splitByPid(testlog):
     # Split testlog into prefixed logs based on pid
