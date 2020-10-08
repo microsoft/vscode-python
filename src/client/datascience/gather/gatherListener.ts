@@ -298,7 +298,7 @@ export class GatherListener implements IInteractiveWindowListener {
         }
 
         const annotatedScript =
-            env.uiKind === UIKind.Web
+            env?.uiKind === UIKind?.Web
                 ? `${localize.DataScience.gatheredScriptDescriptionWithoutSurvey()}${defaultCellMarker}\n${slicedProgram}`
                 : `${localize.DataScience.gatheredScriptDescription()}${defaultCellMarker}\n${slicedProgram}`;
 
