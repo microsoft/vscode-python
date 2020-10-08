@@ -889,7 +889,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         if (
             !serverConnection &&
             this.configService.getSettings(this.owningResource).datascience.jupyterServerURI !==
-            Settings.JupyterServerLocalLaunch &&
+                Settings.JupyterServerLocalLaunch &&
             !this.configService.getSettings(this.owningResource).datascience.disableJupyterAutoStart
         ) {
             serverConnection = await this.notebookProvider.connect({ disableUI: true });
@@ -1444,12 +1444,12 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         const response: IJupyterVariablesResponse = this._notebook
             ? await this.jupyterVariables.getVariables(this._notebook, args)
             : {
-                totalCount: 0,
-                pageResponse: [],
-                pageStartIndex: args?.startIndex,
-                executionCount: args?.executionCount,
-                refreshCount: args?.refreshCount || 0
-            };
+                  totalCount: 0,
+                  pageResponse: [],
+                  pageStartIndex: args?.startIndex,
+                  executionCount: args?.executionCount,
+                  refreshCount: args?.refreshCount || 0
+              };
 
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: response.totalCount });
