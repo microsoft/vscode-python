@@ -271,6 +271,17 @@ jobs:
         run: npx gulp prePublishNonBundle
 
 
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v1
+        with:
+          version: 1.5.2
+
+      - name: Install Jualia Kernel
+        run: |
+          julia -e '
+            using Pkg
+            Pkg.add("IJulia")'
+
       - name: Run VSCode tests
         uses: GabrielBB/xvfb-action@v1.4
         with:
@@ -279,6 +290,7 @@ jobs:
           DISPLAY: 10
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_PYTHON_CI_NON_PYTHON_NB_TEST: 1
           VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE: 'true'
         id: test_functional
 
@@ -407,11 +419,11 @@ jobs:
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
 
-      - name: Compile if not cached
+      - name: Install Julia
         uses: julia-actions/setup-julia@v1
         with:
           version: 1.5.2
-          
+
       - name: Install Jualia Kernel
         run: |
           julia -e '
