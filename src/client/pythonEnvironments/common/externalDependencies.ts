@@ -30,6 +30,15 @@ export function readFile(filePath: string): Promise<string> {
     return fsapi.readFile(filePath, 'utf-8');
 }
 
+export function listDir(dirname: string): Promise<string[]> {
+    return fsapi.readdir(dirname);
+}
+
+export async function isDirectory(filename: string): Promise<boolean> {
+    const stat = await fsapi.lstat(filename);
+    return stat.isDirectory();
+}
+
 export function normCasePath(filePath: string): string {
     return getOSType() === OSType.Windows ? path.normalize(filePath).toUpperCase() : path.normalize(filePath);
 }

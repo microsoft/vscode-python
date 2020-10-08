@@ -8,7 +8,7 @@ import { Event } from 'vscode';
 import {
     createDeferred, flattenIterator, iterable, mapToIterator,
 } from '../../../client/common/utils/async';
-import { Architecture } from '../../../client/common/utils/platform';
+import { getArchitecture } from '../../../client/common/utils/platform';
 import {
     PythonDistroInfo,
     PythonEnvInfo,
@@ -44,7 +44,7 @@ export function createLocatedEnv(
     const env = buildEnvInfo({
         kind, executable, location, version,
     });
-    env.arch = Architecture.x86;
+    env.arch = getArchitecture();
     env.distro = distro;
     if (typeof exec !== 'string') {
         env.executable = exec;

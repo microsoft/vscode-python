@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
@@ -10,6 +9,7 @@ import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from '../discovery/locators/services/condaLocator';
 import { getPythonVersionFromVenv } from '../discovery/locators/services/virtualEnvironmentIdentifier';
+import { isDirectory, listDir } from './externalDependencies';
 import { isPosixPythonBin } from './posixUtils';
 import { isWindowsPythonExe } from './windowsUtils';
 
@@ -28,14 +28,14 @@ export async function* findInterpretersInDir(
     const checkBin = os === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
     const itemFilter = filter ?? (() => true);
 
-    const dirContents = (await fsapi.readdir(root)).filter(itemFilter);
+    const dirContents = (await listDir(root))
+        .map((c) => path.join(root, c))
+        .filter(itemFilter);
 
     const generators = dirContents.map((item) => {
+        const fullPath = path.join(root, item);
         async function* generator() {
-            const fullPath = path.join(root, item);
-            const stat = await fsapi.lstat(fullPath);
-
-            if (stat.isDirectory()) {
+            if (await isDirectory(fullPath)) {
                 if (recurseLevels && recurseLevels > 0) {
                     const subItems = findInterpretersInDir(fullPath, recurseLevels - 1);
 

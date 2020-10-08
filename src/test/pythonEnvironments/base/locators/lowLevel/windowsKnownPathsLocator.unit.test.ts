@@ -2,64 +2,415 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-//import { isEqual as areDeepEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 import * as path from 'path';
-//import { EventEmitter } from 'vscode';
-import { getOSType, OSType } from '../../../../../client/common/utils/platform';
-import { PythonEnvInfo } from '../../../../../client/pythonEnvironments/base/info';
-//import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import * as sinon from 'sinon';
+import * as executablesAPI from '../../../../../client/common/utils/exec';
+import * as platformAPI from '../../../../../client/common/utils/platform';
+import {
+    PythonEnvInfo,
+    PythonEnvKind,
+    PythonExecutableInfo,
+} from '../../../../../client/pythonEnvironments/base/info';
+import * as envInfoAPI from '../../../../../client/pythonEnvironments/base/info/env';
 import { PythonLocatorQuery } from '../../../../../client/pythonEnvironments/base/locator';
-//import { PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../../../../client/pythonEnvironments/base/locator';
 import {
     WindowsKnownPathsLocator,
 } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsKnownPathsLocator';
-//import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
-//import { sleep } from '../../../../core';
-import { getEnvs } from '../../common';
-//import { createNamedEnv, getEnvs } from '../../common';
+import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
+import * as extDeps from '../../../../../client/pythonEnvironments/common/externalDependencies';
+import { createNamedEnv, getEnvs } from '../../common';
 
-const ENV_VAR = getOSType() === OSType.Windows ? 'Path' : 'PATH';
+const EMPTY_EXECUTABLE: PythonExecutableInfo = {
+    filename: '',
+    ctime: -1,
+    mtime: -1,
+    sysPrefix: '',
+};
+
+function createMinEnv(verStr: string, exec: string): PythonEnvInfo {
+    const env = createNamedEnv('', verStr, PythonEnvKind.Unknown, exec);
+    env.arch = platformAPI.Architecture.Unknown;
+    return env;
+}
 
 suite('Python envs locator - WindowsKnownPathsLocator', () => {
-    let oldPATH: string | undefined;
+    let cleanUps: (() => void)[];
+    let stubs: {
+        getPATH: sinon.SinonStub;
+        isExecutable: sinon.SinonStub;
+        listDir: sinon.SinonStub;
+        isDir: sinon.SinonStub;
+        getInfo: sinon.SinonStub;
+        getOSType: sinon.SinonStub;
+    };
 
     setup(function () {
-        if (getOSType() !== OSType.Windows) {
+        cleanUps = [];
+        if (platformAPI.getOSType() !== platformAPI.OSType.Windows) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
 
-        oldPATH = process.env[ENV_VAR];
+        stubs = {
+            getPATH: sinon.stub(executablesAPI, 'getSearchPathEntries'),
+            isExecutable: sinon.stub(executablesAPI, 'isValidAndExecutable'),
+            listDir: sinon.stub(extDeps, 'listDir'),
+            isDir: sinon.stub(extDeps, 'isDirectory'),
+            getInfo: sinon.stub(envInfoAPI, 'getMaxDerivedEnvInfo'),
+            getOSType: sinon.stub(platformAPI, 'getOSType'),
+        };
+        cleanUps.push(
+            stubs.getPATH.restore,
+            stubs.isExecutable.restore,
+            stubs.listDir.restore,
+            stubs.isDir.restore,
+            stubs.getInfo.restore,
+            stubs.getOSType.restore,
+        );
+
+        stubs.getOSType.returns(platformAPI.OSType.Windows);
     });
     teardown(() => {
-        process.env[ENV_VAR] = oldPATH;
+        cleanUps.forEach((f) => f());
     });
 
-    function setPATH(dirnames: string[]): void {
-        process.env[ENV_VAR] = dirnames.join(path.delimiter);
+    function setExecutables(executables: string[]): string[] {
+        function parseInput(exec: string): [string, boolean, boolean] {
+            let file = exec.trim();
+            let isExecutable = true;
+            let isDir = false;
+            if (file.startsWith('(')) {
+                if (!file.endsWith(')')) {
+                    throw Error(`bad input "${exec}"`);
+                }
+                file = file.slice(1, -1);
+                if (file.endsWith('/')) {
+                    throw Error(`bad input "${exec}"`);
+                }
+                isExecutable = false;
+            } else if (file.startsWith(')')) {
+                throw Error(`bad input "${exec}"`);
+            } else if (file.endsWith('/')) {
+                isDir = true;
+                file = file.slice(0, -1);
+            }
+            file = path.normalize(file);
+            return [file, isDir, isExecutable];
+        }
+
+        const filesOnPATH: string[] = [];
+        const roots: string[] = [];
+        let curRoot = '';
+        let curFiles: string[] = [];
+        for (const executable of executables) {
+            const [normalized, isDir, isExecutable] = parseInput(executable);
+            if (!executable.startsWith(' ')) {
+                // It's a $PATH entry.
+                if (!isDir) {
+                    throw Error(`bad input "${executable}"`);
+                }
+                if (curRoot !== '') {
+                    stubs.listDir.withArgs(curRoot).resolves(curFiles);
+                }
+                roots.push(normalized);
+                curRoot = normalized;
+                curFiles = [];
+            } else {
+                const basename = normalized;
+                if (basename.includes('/')) {
+                    throw Error(`bad input "${executable}"`);
+                }
+                curFiles.push(basename);
+                const filename = path.join(curRoot, basename);
+                if (!isDir) {
+                    filesOnPATH.push(filename);
+                    stubs.isExecutable.withArgs(filename).resolves(isExecutable);
+                }
+                stubs.isDir.withArgs(filename).resolves(isDir);
+            }
+        }
+        if (curRoot !== '') {
+            stubs.listDir.withArgs(curRoot).resolves(curFiles);
+        }
+        stubs.getPATH.returns(roots);
+        return filesOnPATH;
     }
 
     suite('onChanged()', () => {
-        test('', async () => {
+        test('not triggered if not initialized', async () => {
+            const locator = new WindowsKnownPathsLocator();
+            let triggered: PythonEnvsChangedEvent | undefined;
+
+            locator.onChanged((event) => {
+                triggered = event;
+            });
+
+            assert.equal(triggered, undefined);
         });
+
+        // For now `onChanged` is never triggered,
+        // so there are no other cases to test.
     });
 
     suite('iterEnvs()', () => {
-        test('', async () => {
+        test('no executables found', async () => {
             const expected: PythonEnvInfo[] = [];
             const locator = new WindowsKnownPathsLocator();
+            setExecutables([]);
+            stubs.getInfo.throws('unexpected');
             const query: PythonLocatorQuery | undefined = undefined;
-            setPATH([]);
 
             const iterator = locator.iterEnvs(query);
             const envs = await getEnvs(iterator);
 
             assert.deepEqual(envs, expected);
         });
+
+        test('no Python executables found', async () => {
+            const expected: PythonEnvInfo[] = [];
+            const locator = new WindowsKnownPathsLocator();
+            setExecutables([
+                '/x/y/z/',
+                '  (spam.txt)',
+                '  spam.exe',
+                '  (python)',
+                '  (python3)',
+                '  (python3.8)',
+                '  python2.7.11.exe',
+                '  python3.8.1.exe',
+                '  python3.8.1rc1.10213.exe',
+                '  pythonX.exe',
+                '  my-python.exe',
+                '  (python.txt)',
+            ]);
+            stubs.getInfo.throws('unexpected');
+            const query: PythonLocatorQuery | undefined = undefined;
+
+            const iterator = locator.iterEnvs(query);
+            const envs = await getEnvs(iterator);
+
+            assert.deepEqual(envs, expected);
+        });
+
+        test('Python executables found (initialized)', async () => {
+            const expected: PythonEnvInfo[] = [
+                createMinEnv('2.7', '/x/y/z/python.exe'),
+                createMinEnv('2.7', '/x/y/z/python2.exe'),
+                createMinEnv('2.7', '/x/y/z/python2.7.exe'),
+                createMinEnv('3', '/x/y/z/python3.exe'),
+                createMinEnv('3.8', '/x/y/z/python3.8.exe'),
+                createMinEnv('3.11', '/x/y/z/python3.11.exe'),
+            ];
+            const locator = new WindowsKnownPathsLocator();
+            setExecutables([
+                '/x/y/z/',
+                '  (spam.txt)',
+                '  spam.exe',
+                '  python.exe',
+                '  python2.exe',
+                '  python2.7.exe',
+                '  python3.exe',
+                '  python3.8.exe',
+                '  python3.11.exe',
+            ]);
+            stubs.getInfo.resolvesArg(0);
+            await locator.initialize();
+            const query: PythonLocatorQuery | undefined = undefined;
+
+            const iterator = locator.iterEnvs(query);
+            const envs = await getEnvs(iterator);
+
+            assert.deepEqual(envs, expected);
+        });
+
+        test('Python executables found (not initialized)', async () => {
+            const expected: PythonEnvInfo[] = [
+                createMinEnv('2.7', '/x/y/z/python.exe'),
+                createMinEnv('3.8', '/x/y/z/python3.8.exe'),
+            ];
+            const locator = new WindowsKnownPathsLocator();
+            setExecutables([
+                '/x/y/z/',
+                '  spam.exe',
+                '  python.exe',
+                '  python3.8.exe',
+            ]);
+            stubs.getInfo.resolvesArg(0);
+            const query: PythonLocatorQuery | undefined = undefined;
+
+            const iterator = locator.iterEnvs(query);
+            const envs = await getEnvs(iterator);
+
+            assert.deepEqual(envs, expected);
+        });
+
+        //test('updates for found executables', async () => {
+        //    const expectedInitial: PythonEnvInfo[] = [
+        //        createMinEnv('2.7', '/x/y/z/python.exe'),
+        //        createMinEnv('3', '/x/y/z/python3.exe'),
+        //        createMinEnv('3.8', '/x/y/z/python3.8.exe'),
+        //    ];
+        //    const expectedRefreshed = expectedInitial.map((old, index) => {
+        //        const updated = cloneDeep(old);
+        //        updated.name = `env${index + 1}`;
+        //        return updated;
+        //    });
+        //    const locator = new WindowsKnownPathsLocator();
+        //    setExecutables([
+        //        '/x/y/z/',
+        //        '  python.exe',
+        //        '  python3.exe',
+        //        '  python3.8.exe',
+        //    ]);
+        //    stubs.getInfo.resolvesArg(0);
+        //    const query: PythonLocatorQuery | undefined = undefined;
+        //    // Trigger the initial envs.
+        //    await locator.initialize();
+        //    const iterator1 = locator.iterEnvs(query);
+        //    // Trigger a refresh.
+        //    const seen : PythonEnvInfo[] = [];
+        //    stubs.getInfo.callsFake((e) => {
+        //        const updated = cloneDeep(e);
+        //        updated.name = `env${seen.length + 1}`;
+        //        seen.push(e);
+        //        return Promise.resolve(updated);
+        //    });
+        //    const iterator2 = locator.iterEnvs(query);
+
+        //    const initial = await getEnvs(iterator1);
+        //    const refreshed = await getEnvs(iterator2);
+
+        //    assert.deepEqual(initial, expectedInitial);
+        //    assert.deepEqual(refreshed, expectedRefreshed);
+        //});
     });
 
     suite('resolveEnv()', () => {
-        test('', async () => {
+        function setFullEnvs(files: string[]) {
+            setExecutables(files);
+
+            const seen : PythonEnvInfo[] = [];
+            stubs.getInfo.callsFake((e) => {
+                const updated = cloneDeep(e);
+                updated.name = `env${seen.length + 1}`;
+                seen.push(e);
+                return Promise.resolve(updated);
+            });
+        }
+
+        test('filename provided, env already known', async () => {
+            const filename = '/x/y/z/python3.8.exe';
+            const expected = createMinEnv('3.8', filename);
+            expected.name = 'env2';
+            const locator = new WindowsKnownPathsLocator();
+            setFullEnvs([
+                '/x/y/z/',
+                '  python3.exe', // env1
+                '  python3.8.exe', // env2
+            ]);
+            await locator.initialize();
+
+            const resolved = await locator.resolveEnv(filename);
+
+            assert.deepEqual(resolved, expected);
+        });
+
+        test('filename provided, env not already known but matches', async () => {
+            const filename = '/x/y/z/python3.8.exe';
+            const expected = createMinEnv('3.8', filename);
+            expected.name = 'env2';
+            const locator = new WindowsKnownPathsLocator();
+            setFullEnvs([
+                '/x/y/z/',
+                '  python3.exe', // env1
+                '  python3.8.exe', // env2
+            ]);
+            // Note that we do not call `locator.initialize()`.
+
+            const resolved = await locator.resolveEnv(filename);
+
+            assert.deepEqual(resolved, expected);
+        });
+
+        test('filename provided, env does not match', async () => {
+            const filename = '/x/y/z/python.exe';
+            const locator = new WindowsKnownPathsLocator();
+            setFullEnvs([
+                '/x/y/z/',
+                '  python3.exe', // env1
+                '  python3.8.exe', // env2
+            ]);
+            await locator.initialize();
+
+            const resolved = await locator.resolveEnv(filename);
+
+            assert.equal(resolved, undefined);
+        });
+
+        test('partial env info provided (with executable filename)', async () => {
+            const filename = '/x/y/z/python3.8.exe';
+            const expected = createMinEnv('3.8', filename);
+            expected.name = 'env2';
+            const partialEnv: Partial<PythonEnvInfo> = {
+                executable: { ...EMPTY_EXECUTABLE, filename },
+            };
+            const locator = new WindowsKnownPathsLocator();
+            setFullEnvs([
+                '/x/y/z/',
+                '  python3.exe', // env1
+                '  python3.8.exe', // env2
+            ]);
+            await locator.initialize();
+
+            const resolved = await locator.resolveEnv(partialEnv);
+
+            assert.deepEqual(resolved, expected);
+        });
+
+        test('partial env info provided (without executable filename)', async () => {
+            const partialEnv: Partial<PythonEnvInfo> = {
+                name: 'env1', // matches the first one
+            };
+            const locator = new WindowsKnownPathsLocator();
+            setFullEnvs([
+                '/x/y/z/',
+                '  python3.exe', // env1
+                '  python3.8.exe', // env2
+            ]);
+            await locator.initialize();
+
+            const resolved = await locator.resolveEnv(partialEnv);
+
+            assert.equal(resolved, undefined);
+        });
+
+        test('empty filename provided', async () => {
+            const locator = new WindowsKnownPathsLocator();
+            setFullEnvs([
+                '/x/y/z/',
+                '  python3.exe', // env1
+                '  python3.8.exe', // env2
+            ]);
+            await locator.initialize();
+
+            const resolved = await locator.resolveEnv('');
+
+            assert.equal(resolved, undefined);
+        });
+
+        test('empty partial env info provided', async () => {
+            const locator = new WindowsKnownPathsLocator();
+            setFullEnvs([
+                '/x/y/z/',
+                '  python3.exe', // env1
+                '  python3.8.exe', // env2
+            ]);
+            await locator.initialize();
+
+            const resolved = await locator.resolveEnv({});
+
+            assert.equal(resolved, undefined);
         });
     });
 });
