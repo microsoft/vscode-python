@@ -183,7 +183,7 @@ export abstract class BasePythonDaemon {
         return this.connectionClosedDeferred.promise;
     }
     protected sendRequest<P, R, E, RO>(type: RequestType<P, R, E, RO>, params?: P): Thenable<R> {
-        if (!this.isAlive || this.proc.exitCode !== null) {
+        if (!this.isAlive || typeof this.proc.exitCode === 'number') {
             traceError('Daemon is handling a request after death.');
         }
         if (this.proc && typeof this.proc.exitCode !== 'number') {
