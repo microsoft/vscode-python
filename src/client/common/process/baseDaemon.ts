@@ -177,7 +177,7 @@ export abstract class BasePythonDaemon {
         return Object.keys(options).every((item) => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
     }
     protected sendRequestWithoutArgs<R, E, RO>(type: RequestType0<R, E, RO>): Thenable<R> {
-        if (this.proc && this.proc.exitCode === null) {
+        if (this.proc && typeof this.proc.exitCode !== 'number') {
             return Promise.race([this.connection.sendRequest(type), this.connectionClosedDeferred.promise]);
         }
         return this.connectionClosedDeferred.promise;
@@ -186,7 +186,7 @@ export abstract class BasePythonDaemon {
         if (!this.isAlive || this.proc.exitCode !== null) {
             traceError('Daemon is handling a request after death.');
         }
-        if (this.proc && this.proc.exitCode === null) {
+        if (this.proc && typeof this.proc.exitCode !== 'number') {
             // Throw an error if the connection has been closed.
             return Promise.race([this.connection.sendRequest(type, params), this.connectionClosedDeferred.promise]);
         }
