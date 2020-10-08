@@ -270,9 +270,13 @@ jobs:
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
 
+
       - name: Run VSCode tests
-        run: npm run testDataScienceInVSCode
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: npm run testDataScienceInVSCode
         env:
+          DISPLAY: 10
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE: 'true'
@@ -415,8 +419,11 @@ jobs:
             Pkg.add("IJulia")'
 
       - name: Run VSCode tests
-        run: npm run testDataScience
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: npm run testDataScience
         env:
+          DISPLAY: 10
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_PYTHON_CI_NON_PYTHON_NB_TEST: 1
