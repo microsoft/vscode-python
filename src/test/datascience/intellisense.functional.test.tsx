@@ -39,7 +39,6 @@ import { ITestNativeEditorProvider } from './testNativeEditorProvider';
 
         suiteTeardown(async () => {
             writeDiffSnapshot(snapshot, 'Intellisense');
-            return DataScienceIocContainer.suiteDispose();
         });
 
         teardown(async () => {

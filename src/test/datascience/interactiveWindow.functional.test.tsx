@@ -86,7 +86,6 @@ suite('DataScience Interactive Window output tests', () => {
 
     suiteTeardown(() => {
         writeDiffSnapshot(snapshot, 'Interactive Window');
-        return DataScienceIocContainer.suiteDispose();
     });
 
     teardown(async () => {

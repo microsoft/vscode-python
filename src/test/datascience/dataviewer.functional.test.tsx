@@ -56,7 +56,6 @@ suite('DataScience DataViewer tests', () => {
 
     suiteTeardown(() => {
         writeDiffSnapshot(snapshot, 'DataViewer');
-        return DataScienceIocContainer.suiteDispose();
     });
 
     setup(async () => {

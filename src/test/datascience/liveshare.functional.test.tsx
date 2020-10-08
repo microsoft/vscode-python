@@ -68,10 +68,6 @@ suite('DataScience LiveShare tests', () => {
         lastErrorMessage = undefined;
     });
 
-    suiteTeardown(() => {
-        return DataScienceIocContainer.suiteDispose();
-    });
-
     function createContainer(role: vsls.Role): DataScienceIocContainer {
         const result = new DataScienceIocContainer();
         result.registerDataScienceTypes();

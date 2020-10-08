@@ -47,9 +47,6 @@ suite('DataScience gotocell tests', () => {
         codeLensFactory = ioc.serviceManager.get<ICodeLensFactory>(ICodeLensFactory);
         await ioc.activate();
     });
-    suiteTeardown(async () => {
-        return DataScienceIocContainer.suiteDispose();
-    });
 
     teardown(async () => {
         try {

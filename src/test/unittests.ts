@@ -82,4 +82,13 @@ if (process.argv.indexOf('--fast') === -1) {
     setupTranspile();
 }
 
+exports.mochaHooks = {
+    afterAll() {
+        const kernelLauncherMod = require('../client/datascience/kernel-launcher/kernelLauncher');
+
+        // After all tests run, clean up the kernel launcher mutex files
+        return kernelLauncherMod.KernelLauncher.cleanupStartPort();
+    }
+};
+
 initialize();

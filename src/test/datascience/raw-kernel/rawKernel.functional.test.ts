@@ -45,9 +45,6 @@ suite('DataScience raw kernel tests', () => {
             rawKernel = await connectToKernel(port);
         }
     });
-    suiteTeardown(async () => {
-        return DataScienceIocContainer.suiteDispose();
-    });
 
     teardown(async () => {
         await disconnectFromKernel();

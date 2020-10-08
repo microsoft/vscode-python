@@ -56,10 +56,6 @@ import { createPythonService, startRemoteServer } from './remoteTestHelpers';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 suite('DataScience notebook tests', () => {
-    suiteTeardown(async () => {
-        return DataScienceIocContainer.suiteDispose();
-    });
-
     [false, true].forEach((useRawKernel) => {
         suite(`${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'}`, () => {
             const disposables: Disposable[] = [];

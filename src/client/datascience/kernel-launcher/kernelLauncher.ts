@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
+import { isTestExecution } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { Resource } from '../../common/types';
@@ -27,7 +28,6 @@ const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // If the selected interpreter doesn't have a kernel, it will find a kernel on disk and use that.
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
-    private static startPortFS: number = 0;
     private static startPortPromise = KernelLauncher.computeStartPort();
     private static nextFreePortToTryAndUsePromise = KernelLauncher.startPortPromise;
     constructor(
@@ -37,54 +37,44 @@ export class KernelLauncher implements IKernelLauncher {
     ) {}
 
     // This function is public so it can be called when a test shuts down
-    public static cleanupStartPort() {
-        // Cleanup our start port file
-        fsextra.close(KernelLauncher.startPortFS).ignoreErrors();
+    public static async cleanupStartPort() {
+        try {
+            // Destroy the file
+            const port = await KernelLauncher.startPortPromise;
+            traceInfo(`Cleaning up port start file : ${port}`);
 
-        // Destroy the file
-        KernelLauncher.startPortPromise
-            .then((p) => {
-                traceInfo(`Cleaning up port start file : ${p}`);
-
-                const filePath = path.join(os.tmpdir(), PortFormatString.format(p.toString()));
-                return fsextra.pathExists(filePath).then((e) => {
-                    if (e) {
-                        return fsextra.remove(filePath);
-                    }
-                });
-            })
-            .ignoreErrors();
+            const filePath = path.join(os.tmpdir(), PortFormatString.format(port.toString()));
+            await fsextra.remove(filePath);
+        } catch (exc) {
+            // If it fails it doesn't really matter. Just a temp file
+            traceInfo(`Kernel port mutex failed to cleanup: `, exc);
+        }
     }
 
     private static async computeStartPort(): Promise<number> {
-        // Since multiple instances of VS code may be running, write our best guess to a shared file
-        let portStart = 9_000;
-        let result = 0;
-        while (result === 0 && portStart < 65_000) {
-            try {
-                // Try creating a file (not worrying about two instances starting at exactly the same time. That's much less likely)
-                const filePath = path.join(os.tmpdir(), PortFormatString.format(portStart.toString()));
+        if (isTestExecution()) {
+            // Since multiple instances of a test may be running, write our best guess to a shared file
+            let portStart = 9_000;
+            let result = 0;
+            while (result === 0 && portStart < 65_000) {
+                try {
+                    // Try creating a file with the port in the name
+                    const filePath = path.join(os.tmpdir(), PortFormatString.format(portStart.toString()));
+                    await fsextra.open(filePath, 'wx');
 
-                // Create a file stream object that should fail if the file exists
-                KernelLauncher.startPortFS = await fsextra.open(filePath, 'wx');
-
-                // If that works, we have our port
-                result = portStart;
-            } catch {
-                // If that fails, it should mean the file already exists
-                portStart += 1_000;
+                    // If that works, we have our port
+                    result = portStart;
+                } catch {
+                    // If that fails, it should mean the file already exists
+                    portStart += 1_000;
+                }
             }
+            traceInfo(`Computed port start for KernelLauncher is : ${result}`);
+
+            return result;
+        } else {
+            return 9_000;
         }
-
-        traceInfo(`Computed port start for KernelLauncher is : ${result}`);
-
-        // Before finishing setup an on exit handler for the current process.
-        // Note we have to do this as a proc exit handler instead of IDisposable because
-        // during a test run the container is destroyed over and over again. What we need
-        // is for the same process to always use the same start port.
-        process.on('exit', KernelLauncher.cleanupStartPort);
-
-        return result;
     }
 
     @captureTelemetry(Telemetry.KernelLauncherPerf)

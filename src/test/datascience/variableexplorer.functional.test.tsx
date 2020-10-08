@@ -35,10 +35,6 @@ const rangeInclusive = require('range-inclusive');
                 this.skip();
             }
         });
-        suiteTeardown(async () => {
-            return DataScienceIocContainer.suiteDispose();
-        });
-
         setup(async () => {
             ioc = new DataScienceIocContainer();
             ioc.setExperimentState(RunByLine.experiment, runByLine);

@@ -109,9 +109,6 @@ suite('DataScience Native Editor', () => {
             };
         })(originalPlatform)
     );
-    suiteTeardown(async () => {
-        return DataScienceIocContainer.suiteDispose();
-    });
 
     [false, true].forEach((useCustomEditorApi) => {
         //import { asyncDump } from '../common/asyncDump';

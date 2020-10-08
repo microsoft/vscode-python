@@ -25,9 +25,6 @@ suite('DataScience PlotViewer tests', () => {
         ioc.registerDataScienceTypes();
         await ioc.activate();
     });
-    suiteTeardown(async () => {
-        return DataScienceIocContainer.suiteDispose();
-    });
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
         // Setup our webview panel

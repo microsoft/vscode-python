@@ -46,9 +46,6 @@ use(chaiAsPromised);
                 this.skip();
             }
         });
-        suiteTeardown(async () => {
-            return DataScienceIocContainer.suiteDispose();
-        });
         setup(async function () {
             ioc = new DataScienceIocContainer(true);
             ioc.setExtensionRootPath(EXTENSION_ROOT_DIR);
