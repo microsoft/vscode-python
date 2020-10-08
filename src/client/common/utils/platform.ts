@@ -47,8 +47,19 @@ export function getEnvironmentVariable(key: string): string | undefined {
     return ((process.env as any) as EnvironmentVariables)[key];
 }
 
+// Code under `src/client/common/platform` duplicates some of the
+// following functionality.  The code here is authoritative.
+
+/**
+ * Get the env var name to use for the OS executable lookup "path".
+ */
+export function getPathEnvironmentVariableName(): 'Path' | 'PATH' {
+    return getOSType() === OSType.Windows ? 'Path' : 'PATH';
+}
+
 export function getPathEnvironmentVariable(): string | undefined {
-    return getEnvironmentVariable('Path') || getEnvironmentVariable('PATH');
+    const envVarName = getPathEnvironmentVariableName();
+    return getEnvironmentVariable(envVarName);
 }
 
 export function getUserHomeDir(): string | undefined {
