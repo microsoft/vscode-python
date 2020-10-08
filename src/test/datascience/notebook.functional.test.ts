@@ -670,8 +670,12 @@ suite('DataScience notebook tests', () => {
                     // Make sure we have a cell in our results
                     assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
                 } finally {
-                    importer.dispose();
-                    temp.dispose();
+                    try {
+                        importer.dispose();
+                        temp.dispose();
+                    } catch {
+                        // Don't care if they don't delete
+                    }
                 }
             });
 
