@@ -3,7 +3,8 @@
 
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as platformApis from '../../../../client/common/utils/platform';
+import * as executablesAPI from '../../../../client/common/utils/exec';
+import { Architecture } from '../../../../client/common/utils/platform';
 import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
 } from '../../../../client/pythonEnvironments/base/info';
@@ -51,7 +52,7 @@ suite('Posix Known Path Locator', () => {
         }
         return {
             version,
-            arch: platformApis.Architecture.Unknown,
+            arch: Architecture.Unknown,
             executable: {
                 filename: executable,
                 sysPrefix: sysPrefix ?? '',
@@ -62,7 +63,7 @@ suite('Posix Known Path Locator', () => {
     }
 
     setup(() => {
-        getPathEnvVar = sinon.stub(platformApis, 'getExecutableSearchPathEntries');
+        getPathEnvVar = sinon.stub(executablesAPI, 'getSearchPathEntries');
     });
     teardown(() => {
         getPathEnvVar.restore();
@@ -125,7 +126,7 @@ suite('Posix Known Path Locator', () => {
             location: '',
             kind: PythonEnvKind.Unknown,
             distro: { org: '' },
-            arch: platformApis.Architecture.Unknown,
+            arch: Architecture.Unknown,
             executable: {
                 filename: pythonPath,
                 sysPrefix: '',

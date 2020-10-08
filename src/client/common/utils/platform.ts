@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as path from 'path';
 import { EnvironmentVariables } from '../variables/types';
 
 export enum Architecture {
@@ -49,27 +48,6 @@ export function getArchitecture(): Architecture {
 export function getEnvironmentVariable(key: string): string | undefined {
     // tslint:disable-next-line: no-any
     return ((process.env as any) as EnvironmentVariables)[key];
-}
-
-// Code under `src/client/common/platform` duplicates some of the
-// following functionality.  The code here is authoritative.
-
-/**
- * Get the env var name to use for the OS executable lookup "path".
- */
-export function getPathEnvironmentVariableName(): 'Path' | 'PATH' {
-    return getOSType() === OSType.Windows ? 'Path' : 'PATH';
-}
-
-/**
- * Get the OS executable lookup "path" from the appropriate env var.
- */
-export function getExecutableSearchPathEntries(): string[] {
-    const envVarName = getPathEnvironmentVariableName();
-    return (getEnvironmentVariable(envVarName) || '')
-        .split(path.delimiter)
-        .map((entry) => entry.trim())
-        .filter((entry) => entry.length > 0);
 }
 
 /**

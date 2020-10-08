@@ -3,7 +3,7 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { getExecutableSearchPathEntries } from '../../common/utils/platform';
+import { getSearchPathEntries } from '../../common/utils/exec';
 
 /**
  * Checks if a given path ends with python*.exe
@@ -24,7 +24,7 @@ export function isPosixPythonBin(interpreterPath:string): boolean {
 }
 
 export async function commonPosixBinPaths(): Promise<string[]> {
-    const searchPaths = getExecutableSearchPathEntries();
+    const searchPaths = getSearchPathEntries();
 
     const paths: string[] = Array.from(new Set(
         [
