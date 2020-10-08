@@ -30,21 +30,31 @@ suite('DataScience - Kernels Finder', () => {
         assert.isUndefined(kernelSpec);
     });
     test('No kernel returned if no matching kernel found for language', async () => {
-        const kernelSpec = await kernelFinder.findKernelSpec(resourceToUse, { language: 'foobar' });
+        const kernelSpec = await kernelFinder.findKernelSpec(resourceToUse, {
+            language_info: { name: 'foobar' },
+            orig_nbformat: 4
+        });
         assert.isUndefined(kernelSpec);
     });
     test('No kernel returned if no matching kernel found', async () => {
         const kernelSpec = await kernelFinder.findKernelSpec(resourceToUse, {
-            kernelSpecMetadata: { display_name: 'foobar', name: 'foobar' }
+            kernelspec: { display_name: 'foobar', name: 'foobar' },
+            orig_nbformat: 4
         });
         assert.isUndefined(kernelSpec);
     });
     test('No kernel returned if kernelspec metadata not provided', async () => {
-        const kernelSpec = await kernelFinder.findKernelSpec(resourceToUse, { kernelSpecMetadata: undefined });
+        const kernelSpec = await kernelFinder.findKernelSpec(resourceToUse, {
+            kernelspec: undefined,
+            orig_nbformat: 4
+        });
         assert.isUndefined(kernelSpec);
     });
     test('Can find a Python kernel based on language', async () => {
-        const kernelSpec = await kernelFinder.findKernelSpec(resourceToUse, { language: PYTHON_LANGUAGE });
+        const kernelSpec = await kernelFinder.findKernelSpec(resourceToUse, {
+            language_info: { name: PYTHON_LANGUAGE },
+            orig_nbformat: 4
+        });
         assert.ok(kernelSpec);
         assert.equal(kernelSpec?.language, PYTHON_LANGUAGE);
     });
@@ -53,7 +63,10 @@ suite('DataScience - Kernels Finder', () => {
             return this.skip();
         }
 
-        const kernelSpec = await kernelFinder.findKernelSpec(resourceToUse, { language: 'julia' });
+        const kernelSpec = await kernelFinder.findKernelSpec(resourceToUse, {
+            language_info: { name: 'julia' },
+            orig_nbformat: 4
+        });
         assert.ok(kernelSpec);
         assert.equal(kernelSpec?.language, 'julia');
     });
@@ -66,7 +79,8 @@ suite('DataScience - Kernels Finder', () => {
         assert.ok(juliaKernelSpec);
 
         const kernelSpec = await kernelFinder.findKernelSpec(resourceToUse, {
-            kernelSpecMetadata: juliaKernelSpec as any
+            kernelspec: juliaKernelSpec as any,
+            orig_nbformat: 4
         });
         assert.ok(kernelSpec);
         assert.deepEqual(kernelSpec, juliaKernelSpec);

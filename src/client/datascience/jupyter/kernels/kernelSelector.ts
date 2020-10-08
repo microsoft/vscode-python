@@ -521,13 +521,12 @@ export class KernelSelector implements IKernelSelectionUsage {
         }
 
         // First use our kernel finder to locate a kernelspec on disk
-        // If we do not have kernel spec metadata, but have the language name, then use that to find a kernel
-        // Else use the kernel spec metadata.
-        const query =
-            !notebookMetadata?.kernelspec && notebookMetadata?.language_info?.name
-                ? { language: notebookMetadata?.language_info?.name }
-                : { kernelSpecMetadata: notebookMetadata?.kernelspec };
-        const kernelSpec = await this.kernelFinder.findKernelSpec(resource, query, cancelToken, ignoreDependencyCheck);
+        const kernelSpec = await this.kernelFinder.findKernelSpec(
+            resource,
+            notebookMetadata,
+            cancelToken,
+            ignoreDependencyCheck
+        );
         const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
         if (!kernelSpec && !activeInterpreter) {
             return;
