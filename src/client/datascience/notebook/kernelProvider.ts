@@ -29,7 +29,7 @@ import {
     updateKernelInNotebookMetadata
 } from './helpers/helpers';
 
-class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
+export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     get preloads(): Uri[] {
         return [];
     }

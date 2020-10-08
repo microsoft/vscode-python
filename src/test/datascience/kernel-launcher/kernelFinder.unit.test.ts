@@ -8,18 +8,18 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 
 import { Uri } from 'vscode';
-import { IWorkspaceService } from '../../client/common/application/types';
-import { IPlatformService } from '../../client/common/platform/types';
-import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
-import { IExtensionContext, IPathUtils, Resource } from '../../client/common/types';
-import { Architecture } from '../../client/common/utils/platform';
-import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
-import { JupyterKernelSpec } from '../../client/datascience/jupyter/kernels/jupyterKernelSpec';
-import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
-import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
-import { IDataScienceFileSystem, IJupyterKernelSpec } from '../../client/datascience/types';
-import { IInterpreterLocatorService, IInterpreterService } from '../../client/interpreter/contracts';
-import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { IPlatformService } from '../../../client/common/platform/types';
+import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
+import { IExtensionContext, IPathUtils, Resource } from '../../../client/common/types';
+import { Architecture } from '../../../client/common/utils/platform';
+import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import { JupyterKernelSpec } from '../../../client/datascience/jupyter/kernels/jupyterKernelSpec';
+import { KernelFinder } from '../../../client/datascience/kernel-launcher/kernelFinder';
+import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types';
+import { IDataScienceFileSystem, IJupyterKernelSpec } from '../../../client/datascience/types';
+import { IInterpreterLocatorService, IInterpreterService } from '../../../client/interpreter/contracts';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Kernel Finder', () => {
     let interpreterService: typemoq.IMock<IInterpreterService>;
@@ -419,7 +419,7 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
-            const spec = await kernelFinder.findKernelSpec(resource, testKernelMetadata);
+            const spec = await kernelFinder.findKernelSpec(resource, { kernelSpecMetadata: testKernelMetadata });
             assert.deepEqual(spec, kernel, 'The found kernel spec is not the same.');
             fileSystem.reset();
         });
@@ -434,7 +434,7 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
-            const spec = await kernelFinder.findKernelSpec(resource, testKernelMetadata);
+            const spec = await kernelFinder.findKernelSpec(resource, { kernelSpecMetadata: testKernelMetadata });
             expect(spec).to.deep.include(kernel);
             fileSystem.reset();
         });
@@ -483,7 +483,9 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
-            const spec = await kernelFinder.findKernelSpec(activeInterpreter, testKernelMetadata);
+            const spec = await kernelFinder.findKernelSpec(activeInterpreter, {
+                kernelSpecMetadata: testKernelMetadata
+            });
             expect(spec).to.deep.include(kernel);
             fileSystem.reset();
         });
@@ -504,7 +506,9 @@ suite('Kernel Finder', () => {
             interpreterService
                 .setup((is) => is.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => Promise.resolve(undefined));
-            const spec = await kernelFinder.findKernelSpec(activeInterpreter, testKernelMetadata);
+            const spec = await kernelFinder.findKernelSpec(activeInterpreter, {
+                kernelSpecMetadata: testKernelMetadata
+            });
             expect(spec).to.deep.include(kernel);
             fileSystem.reset();
         });
@@ -542,7 +546,9 @@ suite('Kernel Finder', () => {
                     return Promise.resolve('');
                 });
 
-            const spec = await kernelFinder.findKernelSpec(resource, { name: 'kernelA', display_name: '' });
+            const spec = await kernelFinder.findKernelSpec(resource, {
+                kernelSpecMetadata: { name: 'kernelA', display_name: '' }
+            });
             assert.equal(spec!.name.includes('kernelA'), true);
             fileSystem.reset();
 
@@ -570,7 +576,9 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve('{}');
                 });
-            const spec2 = await kernelFinder.findKernelSpec(resource, { name: 'kernelB', display_name: '' });
+            const spec2 = await kernelFinder.findKernelSpec(resource, {
+                kernelSpecMetadata: { name: 'kernelB', display_name: '' }
+            });
             assert.equal(spec2!.name.includes('kernelB'), true);
         });
     });

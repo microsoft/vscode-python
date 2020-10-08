@@ -13,7 +13,7 @@ export class MockKernelFinder implements IKernelFinder {
 
     public async findKernelSpec(
         interpreterUri: InterpreterUri,
-        kernelSpecMetadata?: nbformat.IKernelspecMetadata
+        query?: { kernelSpecMetadata?: nbformat.IKernelspecMetadata } | { language: string }
     ): Promise<IJupyterKernelSpec | undefined> {
         const spec = interpreterUri?.path
             ? this.dummySpecs.get(interpreterUri.path)
@@ -21,7 +21,7 @@ export class MockKernelFinder implements IKernelFinder {
         if (spec) {
             return spec;
         }
-        return this.realFinder.findKernelSpec(interpreterUri, kernelSpecMetadata);
+        return this.realFinder.findKernelSpec(interpreterUri, query);
     }
 
     public async listKernelSpecs(): Promise<IJupyterKernelSpec[]> {
