@@ -66,6 +66,7 @@ import {
     SysInfoReason,
     VariableExplorerStateKeys
 } from '../interactive-common/interactiveWindowTypes';
+import { convertDebugProtocolVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import {
     getDisplayNameOrNameOfKernelConnection,
@@ -1031,10 +1032,22 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
-        const coercedVariable = request.variable as DebugProtocol.Variable;
-        const jupyterVariable = await this.jupyterVariables.getMatchingVariable(this._notebook!, coercedVariable.name);
-        if (jupyterVariable) {
-            await this.showDataViewer({ variable: jupyterVariable, columnSize: 0 }); // Need to determine the actual column type here
+        const jupyterVariable = convertDebugProtocolVariableToIJupyterVariable(
+            request.variable as DebugProtocol.Variable
+        );
+        try {
+            const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
+                jupyterVariable,
+                this._notebook!
+            );
+            const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
+            const columnSize = dataFrameInfo?.columns?.length;
+            if (columnSize && (await this.checkColumnSize(columnSize))) {
+                const title: string = `${localize.DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
+                await this.dataExplorerFactory.create(jupyterVariableDataProvider, title);
+            }
+        } catch (e) {
+            this.applicationShell.showErrorMessage(e.toString());
         }
     }
 

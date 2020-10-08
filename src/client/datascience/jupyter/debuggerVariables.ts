@@ -322,19 +322,23 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
             });
 
         this.lastKnownVariables = allowedVariables.map((v) => {
-            return {
-                name: v.name,
-                type: v.type!,
-                count: 0,
-                shape: '',
-                size: 0,
-                supportsDataExplorer: DataViewableTypes.has(v.type || ''),
-                value: v.value,
-                truncated: true,
-                frameId: v.variablesReference
-            };
+            return convertDebugProtocolVariableToIJupyterVariable(v);
         });
 
         this.refreshEventEmitter.fire();
     }
+}
+
+export function convertDebugProtocolVariableToIJupyterVariable(variable: DebugProtocol.Variable) {
+    return {
+        name: variable.name,
+        type: variable.type!,
+        count: 0,
+        shape: '',
+        size: 0,
+        supportsDataExplorer: DataViewableTypes.has(variable.type || ''),
+        value: variable.value,
+        truncated: true,
+        frameId: variable.variablesReference
+    };
 }
