@@ -61,23 +61,23 @@ export class KernelFinder implements IKernelFinder {
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernelSpec(
         resource: Resource,
-        notebookMetadat?: nbformat.INotebookMetadata
+        notebookMetadata?: nbformat.INotebookMetadata
     ): Promise<IJupyterKernelSpec | undefined> {
         await this.readCache();
 
         const searchBasedOnKernelSpecMetadata = this.findKernelSpecBasedOnKernelSpecMetadata(
             resource,
-            notebookMetadat && notebookMetadat.kernelspec ? notebookMetadat.kernelspec : undefined
+            notebookMetadata && notebookMetadata.kernelspec ? notebookMetadata.kernelspec : undefined
         );
 
-        if (!notebookMetadat || notebookMetadat.kernelspec || !notebookMetadat.language_info?.name) {
+        if (!notebookMetadata || notebookMetadata.kernelspec || !notebookMetadata.language_info?.name) {
             return searchBasedOnKernelSpecMetadata;
         }
 
         // If given a language, then find based on language else revert to default behaviour.
         const searchBasedOnLanguage = await this.findKernelSpecBasedOnLanguage(
             resource,
-            notebookMetadat.language_info.name
+            notebookMetadata.language_info.name
         );
         // If none found based on language, then return the default.s
         return searchBasedOnLanguage || searchBasedOnKernelSpecMetadata;

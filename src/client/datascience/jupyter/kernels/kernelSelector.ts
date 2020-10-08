@@ -521,12 +521,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         }
 
         // First use our kernel finder to locate a kernelspec on disk
-        const kernelSpec = await this.kernelFinder.findKernelSpec(
-            resource,
-            notebookMetadata,
-            cancelToken,
-            ignoreDependencyCheck
-        );
+        const kernelSpec = await this.kernelFinder.findKernelSpec(resource, notebookMetadata, cancelToken);
         const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
         if (!kernelSpec && !activeInterpreter) {
             return;
