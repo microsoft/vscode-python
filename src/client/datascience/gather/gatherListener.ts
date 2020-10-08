@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Position, Uri, ViewColumn } from 'vscode';
+import { env, Event, EventEmitter, Position, UIKind, Uri, ViewColumn } from 'vscode';
 import { createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -290,7 +290,10 @@ export class GatherListener implements IInteractiveWindowListener {
             slicedProgram = slicedProgram.replace(re, '');
         }
 
-        const annotatedScript = `${localize.DataScience.gatheredScriptDescription()}${defaultCellMarker}\n${slicedProgram}`;
+        const annotatedScript =
+            env.uiKind === UIKind.Web
+                ? `${defaultCellMarker}\n${slicedProgram}`
+                : `${localize.DataScience.gatheredScriptDescription()}${defaultCellMarker}\n${slicedProgram}`;
 
         // Don't want to open the gathered code on top of the interactive window
         let viewColumn: ViewColumn | undefined;
