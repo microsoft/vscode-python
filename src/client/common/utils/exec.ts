@@ -3,6 +3,7 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
+import { normalizeFilename } from './filesystem';
 import { getEnvironmentVariable, getOSType, OSType } from './platform';
 
 export const ENV_VAR = getOSType() === OSType.Windows ? 'Path' : 'PATH';
@@ -35,4 +36,44 @@ export function getSearchPathEntries(): string[] {
         .split(path.delimiter)
         .map((entry: string) => entry.trim())
         .filter((entry) => entry.length > 0);
+}
+
+/**
+ * Identify executables in a specific directory.
+ *
+ * @param matchExecutable - if provided, is used to filter the results
+ */
+export function getExecutablesInDirectorySync(
+    dirname: string,
+    matchExecutable?: (filename: string) => boolean,
+): string[] {
+    const normDir= normalizeFilename(dirname);
+    let entries: fsapi.Dirent[] = [];
+    try {
+        entries = fsapi.readdirSync(normDir, { withFileTypes: true });
+    } catch {
+        // It must not be there.
+        return [];
+    }
+
+    return entries
+        .filter((dirent) => dirent.isFile())
+        .map((dirent) => dirent.name)
+        .filter((basename) => !matchExecutable || matchExecutable(basename))
+        .map((basename) => path.join(normDir, basename))
+        .filter((filename) => isExecutableSync(filename));
+}
+
+/**
+ * Identify executables found on the executable search path.
+ */
+export function getSearchPathExecutablesSync(
+    matchExecutable?: (filename: string) => boolean,
+): string[] {
+    const executables: string[] = [];
+    getSearchPathEntries()
+        .forEach((dirname) => {
+            executables.push(...getExecutablesInDirectorySync(dirname, matchExecutable));
+        });
+    return executables;
 }
