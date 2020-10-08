@@ -42,6 +42,9 @@ export function getArchitecture(): Architecture {
     return architectures[process.arch] || Architecture.Unknown;
 }
 
+/**
+ * Look up the requested env var value (or  undefined` if not set).
+ */
 export function getEnvironmentVariable(key: string): string | undefined {
     // tslint:disable-next-line: no-any
     return ((process.env as any) as EnvironmentVariables)[key];
@@ -57,11 +60,19 @@ export function getPathEnvironmentVariableName(): 'Path' | 'PATH' {
     return getOSType() === OSType.Windows ? 'Path' : 'PATH';
 }
 
+/**
+ * Get the OS executable lookup "path" from the appropriate env var.
+ */
 export function getPathEnvironmentVariable(): string | undefined {
     const envVarName = getPathEnvironmentVariableName();
     return getEnvironmentVariable(envVarName);
 }
 
+/**
+ * Get the current user's home directory.
+ *
+ * The lookup is limited to environment variables.
+ */
 export function getUserHomeDir(): string | undefined {
     if (getOSType() === OSType.Windows) {
         return getEnvironmentVariable('USERPROFILE');
