@@ -30,6 +30,18 @@ export function getOSType(platform: string = process.platform): OSType {
     }
 }
 
+const architectures: Record<string, Architecture> = {
+    x86: Architecture.x86, // 32-bit
+    x64: Architecture.x64, // 64-bit
+};
+
+/**
+ * Identify the host's native architecture/bitness.
+ */
+export function getArchitecture(): Architecture {
+    return architectures[process.arch] || Architecture.Unknown;
+}
+
 export function getEnvironmentVariable(key: string): string | undefined {
     // tslint:disable-next-line: no-any
     return ((process.env as any) as EnvironmentVariables)[key];
