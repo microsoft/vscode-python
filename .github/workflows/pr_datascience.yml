@@ -271,7 +271,7 @@ jobs:
         run: npx gulp prePublishNonBundle
 
       - name: Run VSCode tests
-        run: npm run test:testDataScienceInVSCode
+        run: npm run testDataScienceInVSCode
         env:
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
