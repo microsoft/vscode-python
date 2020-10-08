@@ -115,9 +115,6 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         }
     }
     protected getDefaultNotebookContent() {
-        if (!this.cellLanguageService) {
-            return getDefaultNotebookContentForNativeNotebooks();
-        }
         return getDefaultNotebookContentForNativeNotebooks(this.cellLanguageService?.getPreferredLanguage());
     }
     protected generateNotebookJson() {
