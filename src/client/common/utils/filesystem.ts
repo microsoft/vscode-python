@@ -15,3 +15,15 @@ export function normalizeFilename(filename: string): string {
     const resolved = path.resolve(filename);
     return (getOSType() === OSType.Windows) ? resolved.toLowerCase() : resolved;
 }
+
+/**
+ * Decide if the two filenames are the same file.
+ *
+ * This only checks the filenames (after normalizing) and does not
+ * resolve symlinks or other indirection.
+ */
+export function areSameFilename(filename1: string, filename2: string): boolean {
+    const norm1 = normalizeFilename(filename1);
+    const norm2 = normalizeFilename(filename2);
+    return norm1 === norm2;
+}
