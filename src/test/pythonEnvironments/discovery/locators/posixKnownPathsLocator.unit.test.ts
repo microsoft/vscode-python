@@ -62,14 +62,14 @@ suite('Posix Known Path Locator', () => {
     }
 
     setup(() => {
-        getPathEnvVar = sinon.stub(platformApis, 'getPathEnvironmentVariable');
+        getPathEnvVar = sinon.stub(platformApis, 'getExecutableSearchPathEntries');
     });
     teardown(() => {
         getPathEnvVar.restore();
     });
     test('iterEnvs(): get python bin from known test roots', async () => {
         const testLocations = [testLocation1, testLocation2, testLocation3];
-        getPathEnvVar.returns(testLocations.join(path.delimiter));
+        getPathEnvVar.returns(testLocations);
 
         const envs:PythonEnvInfo[] = [];
         testLocations.forEach((location) => {

@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as path from 'path';
 import { EnvironmentVariables } from '../variables/types';
 
 export enum Architecture {
@@ -63,9 +64,12 @@ export function getPathEnvironmentVariableName(): 'Path' | 'PATH' {
 /**
  * Get the OS executable lookup "path" from the appropriate env var.
  */
-export function getPathEnvironmentVariable(): string | undefined {
+export function getExecutableSearchPathEntries(): string[] {
     const envVarName = getPathEnvironmentVariableName();
-    return getEnvironmentVariable(envVarName);
+    return (getEnvironmentVariable(envVarName) || '')
+        .split(path.delimiter)
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0);
 }
 
 /**
