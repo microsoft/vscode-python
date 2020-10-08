@@ -66,7 +66,6 @@ import {
     SysInfoReason,
     VariableExplorerStateKeys
 } from '../interactive-common/interactiveWindowTypes';
-import { convertDebuggerVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import {
     getDisplayNameOrNameOfKernelConnection,
@@ -890,7 +889,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         if (
             !serverConnection &&
             this.configService.getSettings(this.owningResource).datascience.jupyterServerURI !==
-                Settings.JupyterServerLocalLaunch &&
+            Settings.JupyterServerLocalLaunch &&
             !this.configService.getSettings(this.owningResource).datascience.disableJupyterAutoStart
         ) {
             serverConnection = await this.notebookProvider.connect({ disableUI: true });
@@ -1032,9 +1031,11 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
-        const { variable } = request;
-        const jupyterVariable = convertDebuggerVariableToIJupyterVariable(variable as DebugProtocol.Variable);
-        await this.showDataViewer({ variable: jupyterVariable, columnSize: 1 }); // Need to determine the actual column type here
+        const coercedVariable = request.variable as DebugProtocol.Variable;
+        const jupyterVariable = await this.jupyterVariables.getMatchingVariable(this._notebook!, coercedVariable.name);
+        if (jupyterVariable) {
+            await this.showDataViewer({ variable: jupyterVariable, columnSize: 0 }); // Need to determine the actual column type here
+        }
     }
 
     private onAddedSysInfo(sysInfo: IAddedSysInfo) {
@@ -1443,12 +1444,12 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         const response: IJupyterVariablesResponse = this._notebook
             ? await this.jupyterVariables.getVariables(this._notebook, args)
             : {
-                  totalCount: 0,
-                  pageResponse: [],
-                  pageStartIndex: args?.startIndex,
-                  executionCount: args?.executionCount,
-                  refreshCount: args?.refreshCount || 0
-              };
+                totalCount: 0,
+                pageResponse: [],
+                pageStartIndex: args?.startIndex,
+                executionCount: args?.executionCount,
+                refreshCount: args?.refreshCount || 0
+            };
 
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: response.totalCount });

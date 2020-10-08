@@ -19,7 +19,7 @@ import {
     INotebook
 } from '../types';
 
-const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'ndarray', 'Series', 'Tensor']);
+const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'ndarray', 'Series']);
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 
 @injectable()
@@ -27,6 +27,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
     private refreshEventEmitter = new EventEmitter<void>();
     private lastKnownVariables: IJupyterVariable[] = [];
     private topMostFrameId = 0;
+    private stackFrameRequestSequenceNumber = -1;
     private importedIntoKernel = new Set<string>();
     private watchedNotebooks = new Map<string, Disposable[]>();
     private debuggingStarted = false;
@@ -164,6 +165,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
         return output;
     }
 
+    // This special DebugAdapterTracker function listens to messages sent from the debug adapter to VS Code
     // tslint:disable-next-line: no-any
     public onDidSendMessage(message: any) {
         // When the initialize response comes back, indicate we have started.
@@ -174,7 +176,11 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: Figure out what resource to use
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
-        } else if (message.type === 'response' && message.command === 'stackTrace') {
+        } else if (
+            message.type === 'response' &&
+            message.command === 'stackTrace' &&
+            message.request_seq === this.stackFrameRequestSequenceNumber
+        ) {
             // This should be the top frame. We need to use this to compute the value of a variable
             this.updateStackFrame(message as DebugProtocol.StackTraceResponse);
         } else if (message.type === 'event' && message.event === 'terminated') {
@@ -183,6 +189,20 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
             this.topMostFrameId = 0;
             this.debuggingStarted = false;
             this.refreshEventEmitter.fire();
+        }
+    }
+
+    // This special DebugAdapterTracker function listens to messages sent from VSCode to the debug adapter
+    // tslint:disable-next-line: no-any
+    public onWillReceiveMessage(message: any) {
+        if (message.type === 'request' && message.command === 'stackTrace' && message.arguments.startFrame === 0) {
+            // We need to keep track of the topmost stack frame ID in order to retrieve variable values.
+            // We maintain this state in the topMostFrameId variable.
+            // However we should not update the topMostFrameId for all stackTrace responses, because VSCode
+            // sometimes sends multiple stackTrace requests. We only want to remember the sequence number on
+            // the stackTrace request where the startFrame is 0 (i.e. this request retrieves all frames).
+            // Then update the topMostFrameId only on a response with a matching request_seq number.
+            this.stackFrameRequestSequenceNumber = message.seq;
         }
     }
 
