@@ -440,10 +440,17 @@ suite('DataScience Notebook trust', () => {
             // Reopen
             const newNativeEditor = await openEditor(ioc, baseFile, notebookFile.filePath);
             const newWrapper = newNativeEditor.mount.wrapper;
+            assert.ok(
+                trustService.isNotebookTrusted(
+                    newNativeEditor.editor.model.file,
+                    newNativeEditor.editor.model.getContent()
+                ),
+                'Notebook not trusted after opening'
+            );
 
             // Verify notebook is now trusted
             const after = newWrapper.find(TrustMessage);
-            assert.equal(after.text(), 'Trusted');
+            assert.equal(after.text(), 'Trusted', 'Notebook UI not reflecting trust state');
         });
     });
 });

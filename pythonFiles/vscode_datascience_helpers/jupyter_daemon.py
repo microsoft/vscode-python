@@ -146,8 +146,8 @@ class PythonDaemon(BasePythonDaemon):
         try:
             sys.argv = [""] + args
             app.main()
-        except:
-            self.log.info("Nbconvert error:", sys.exc_info()[0])
+        except Exception as e:
+            self.log.info("Nbconvert error: %s", e)
             raise
 
     def _start_notebook(self, args, cwd, env):

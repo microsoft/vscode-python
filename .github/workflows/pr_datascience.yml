@@ -151,7 +151,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Functional Test Report
+          check_name: Functional Test Report ${{matrix.test-suite}}
         if: steps.test_functional_group.outcome == 'failure' && failure()
 
   testsInVSCode:
