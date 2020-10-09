@@ -150,3 +150,11 @@ export type PythonEnvInfo = _PythonEnvInfo & {
     defaultDisplayName?: string;
     searchLocation?: Uri;
 };
+
+export const UNKNOWN_PYTHON_VERSION:PythonVersion = {
+    major: -1,
+    minor: -1,
+    micro: -1,
+    release: { level: PythonReleaseLevel.Final, serial: -1 },
+    sysVersion: undefined,
+};
