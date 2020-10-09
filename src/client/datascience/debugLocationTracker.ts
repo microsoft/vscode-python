@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { injectable } from 'inversify';
 import { DebugAdapterTracker, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
 import { IDebugLocation } from './types';
 
 // When a python debugging session is active keep track of the current debug location
+@injectable()
 export class DebugLocationTracker implements DebugAdapterTracker {
     protected topMostFrameId = 0;
     protected stackFrameRequestSequenceNumber: number = -1; // Keep track of the sequence number
