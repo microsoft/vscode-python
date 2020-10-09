@@ -3,17 +3,19 @@
 'use strict';
 import { DebugAdapterTracker, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { DebugStackTraceTracker } from './jupyter/debugStackTraceTracker';
 
 import { IDebugLocation } from './types';
 
 // When a python debugging session is active keep track of the current debug location
-export class DebugLocationTracker implements DebugAdapterTracker {
+export class DebugLocationTracker extends DebugStackTraceTracker implements DebugAdapterTracker {
     private waitingForStackTrace: boolean = false;
     private _debugLocation: IDebugLocation | undefined;
     private debugLocationUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
     private sessionEndedEmitter: EventEmitter<DebugLocationTracker> = new EventEmitter<DebugLocationTracker>();
 
     constructor(private _sessionId: string) {
+        super();
         this.DebugLocation = undefined;
     }
 
@@ -34,7 +36,8 @@ export class DebugLocationTracker implements DebugAdapterTracker {
     }
 
     // tslint:disable-next-line:no-any
-    public onDidSendMessage(message: DebugProtocol.ProtocolMessage) {
+    public onDidSendMessage(message: DebugProtocol.Response) {
+        super.onDidSendMessage(message);
         if (this.isStopEvent(message)) {
             // Some type of stop, wait to see our next stack trace to find our location
             this.waitingForStackTrace = true;
@@ -88,7 +91,10 @@ export class DebugLocationTracker implements DebugAdapterTracker {
             const responseMessage = message as DebugProtocol.Response;
             if (responseMessage.command === 'stackTrace') {
                 const messageBody = responseMessage.body;
-                if (messageBody.stackFrames.length > 0) {
+                if (
+                    messageBody.stackFrames.length > 0 &&
+                    this.stackFrameRequestSequenceNumber === responseMessage.request_seq
+                ) {
                     const lineNumber = messageBody.stackFrames[0].line;
                     const fileName = this.normalizeFilePath(messageBody.stackFrames[0].source.path);
                     const column = messageBody.stackFrames[0].column;
