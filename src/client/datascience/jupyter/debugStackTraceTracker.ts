@@ -1,7 +1,6 @@
-import { DebugAdapterTracker } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
-export class DebugStackTraceTracker implements DebugAdapterTracker {
+export class DebugStackTraceTracker {
     protected topMostFrameId = 0;
     protected stackFrameRequestSequenceNumber: number = -1; // Keep track of the sequence number
 
