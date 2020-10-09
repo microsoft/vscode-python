@@ -146,8 +146,6 @@ jobs:
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_PYTHON_WEBVIEW_LOG_FILE: ./${{matrix.test-suite}}-webview.log
         id: test_functional_group
-
-      - name: Upload webview log
         uses: actions/upload-artifact@v2
         with:
           name: ${{matrix.test-suite}}-webview.log
