@@ -30,7 +30,7 @@ export class NotebookSurveyBanner {
     public get enabled(): boolean {
         return (
             !this.persistentState.createGlobalPersistentState<NotebookSurveyUsageData>(storageKey, {}).value
-                .surveyDisabled && env.uiKind !== UIKind.Web
+                .surveyDisabled && env.uiKind !== UIKind?.Web
         );
     }
     private disabledInCurrentSession: boolean = false;
@@ -38,7 +38,7 @@ export class NotebookSurveyBanner {
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService
-    ) {}
+    ) { }
 
     public async showBanner(): Promise<void> {
         if (!this.enabled || this.disabledInCurrentSession) {
@@ -135,7 +135,7 @@ export class NotebookSurveyDataLogger implements IExtensionSingleActivationServi
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         // tslint:disable-next-line: no-use-before-declare
         @inject(NotebookSurveyBanner) private readonly survey: NotebookSurveyBanner
-    ) {}
+    ) { }
     public async activate() {
         if (!this.survey.enabled) {
             return;

@@ -38,7 +38,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         @inject(IPlatformService) private platformService: IPlatformService,
         @optional() private sampleSizePerOneHundredUsers: number = 10,
         @optional() private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY
-    ) {}
+    ) { }
 
     public async activate(): Promise<void> {
         if (!this.experiments.inExperiment(ShowExtensionSurveyPrompt.enabled)) {
@@ -54,7 +54,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
 
     @traceDecorators.error('Failed to check whether to display prompt for extension survey')
     public shouldShowBanner(): boolean {
-        if (env.uiKind === UIKind.Web) {
+        if (env.uiKind === UIKind?.Web) {
             return false;
         }
         const doNotShowSurveyAgain = this.persistentState.createGlobalPersistentState(

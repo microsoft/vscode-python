@@ -55,7 +55,7 @@ export class GatherListener implements IInteractiveWindowListener {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem
-    ) {}
+    ) { }
 
     public dispose() {
         noop();
@@ -225,10 +225,10 @@ export class GatherListener implements IInteractiveWindowListener {
                 cell.file === Identifiers.EmptyFileName && this.notebookUri ? this.notebookUri.fsPath : cell.file;
 
             const data =
-                env.uiKind === UIKind.Web
+                env.uiKind === UIKind?.Web
                     ? createMarkdownCell(
-                          localize.DataScience.gatheredNotebookDescriptionInMarkdownWithoutSurvey().format(file)
-                      )
+                        localize.DataScience.gatheredNotebookDescriptionInMarkdownWithoutSurvey().format(file)
+                    )
                     : createMarkdownCell(localize.DataScience.gatheredNotebookDescriptionInMarkdown().format(file));
 
             let cells: ICell[] = [

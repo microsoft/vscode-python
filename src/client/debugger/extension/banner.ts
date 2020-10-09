@@ -28,7 +28,7 @@ export class DebuggerBanner implements IDebuggerBanner {
     private disabledInCurrentSession?: boolean;
     private userSelected?: boolean;
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
 
     public initialize() {
         if (this.initialized) {
@@ -63,7 +63,7 @@ export class DebuggerBanner implements IDebuggerBanner {
     // showing banner
 
     public async shouldShow(): Promise<boolean> {
-        if (!this.isEnabled() || this.disabledInCurrentSession || env.uiKind === UIKind.Web) {
+        if (!this.isEnabled() || this.disabledInCurrentSession || env.uiKind === UIKind?.Web) {
             return false;
         }
         if (!(await this.passedThreshold())) {

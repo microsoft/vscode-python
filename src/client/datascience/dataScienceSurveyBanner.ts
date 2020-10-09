@@ -41,7 +41,7 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
         @inject(IPythonExtensionBanner)
         @named(BANNER_NAME_DS_SURVEY)
         private readonly dataScienceSurveyBanner: IPythonExtensionBanner
-    ) {}
+    ) { }
     // tslint:disable-next-line: no-any
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
@@ -102,7 +102,7 @@ export class DataScienceSurveyBanner implements IPythonExtensionBanner {
     public get enabled(): boolean {
         return (
             this.persistentState.createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, true).value &&
-            env.uiKind !== UIKind.Web
+            env.uiKind !== UIKind?.Web
         );
     }
 
