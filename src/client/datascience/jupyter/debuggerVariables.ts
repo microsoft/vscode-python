@@ -10,6 +10,7 @@ import { traceError } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DataFrameLoading, Identifiers, Telemetry } from '../constants';
+import { DebugLocationTracker } from '../debugLocationTracker';
 import {
     IConditionalJupyterVariables,
     IJupyterDebugService,
@@ -18,13 +19,12 @@ import {
     IJupyterVariablesResponse,
     INotebook
 } from '../types';
-import { DebugStackTraceTracker } from './debugStackTraceTracker';
 
 const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'ndarray', 'Series']);
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 
 @injectable()
-export class DebuggerVariables extends DebugStackTraceTracker
+export class DebuggerVariables extends DebugLocationTracker
     implements IConditionalJupyterVariables, DebugAdapterTracker {
     private refreshEventEmitter = new EventEmitter<void>();
     private lastKnownVariables: IJupyterVariable[] = [];
@@ -35,7 +35,7 @@ export class DebuggerVariables extends DebugStackTraceTracker
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {
-        super();
+        super(undefined);
     }
 
     public get refreshRequired(): Event<void> {
