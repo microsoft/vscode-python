@@ -144,7 +144,14 @@ jobs:
         env:
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_PYTHON_WEBVIEW_LOG_FILE: ./${{matrix.test-suite}}-webview.log
         id: test_functional_group
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{matrix.test-suite}}-webview.log
+          path: ./${{matrix.test-suite}}-webview.log
+
 
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
@@ -293,7 +300,7 @@ jobs:
           VSC_PYTHON_CI_NON_PYTHON_NB_TEST: 1
           VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE: 'true'
         id: test_functional
-
+      
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
         with:
