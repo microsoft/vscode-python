@@ -49,7 +49,8 @@ export class ExportBase implements IExport {
             '--output',
             path.basename(tempTarget.filePath),
             '--output-dir',
-            path.dirname(tempTarget.filePath)
+            path.dirname(tempTarget.filePath),
+            '--debug'
         ];
         const result = await service.execModule('jupyter', ['nbconvert'].concat(args), {
             throwOnStdErr: false,

@@ -673,8 +673,8 @@ suite('DataScience notebook tests', () => {
                     try {
                         importer.dispose();
                         temp.dispose();
-                    } catch {
-                        // Don't care if they don't delete
+                    } catch (exc) {
+                        console.log(exc);
                     }
                 }
             });

@@ -3,8 +3,6 @@
 //tslint:disable:trailing-comma no-any
 import * as child_process from 'child_process';
 import { ReactWrapper } from 'enzyme';
-import * as fs from 'fs-extra';
-import * as glob from 'glob';
 import { interfaces } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -27,7 +25,6 @@ import {
 import * as vsls from 'vsls/vscode';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 
-import { promisify } from 'util';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import { LanguageServerDownloader } from '../../client/activation/common/downloader';
 import { JediExtensionActivator } from '../../client/activation/jedi';
@@ -496,18 +493,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Make sure to disable all command handling during dispose. Don't want
         // anything to startup again.
         this.commandManager.dispose();
-        try {
-            // Make sure to delete any temp files written by native editor storage
-            const globPr = promisify(glob);
-            const tempLocation = os.tmpdir;
-            const tempFiles = await globPr(`${tempLocation}/*.ipynb`);
-            if (tempFiles && tempFiles.length) {
-                await Promise.all(tempFiles.map((t) => fs.remove(t)));
-            }
-        } catch (exc) {
-            // tslint:disable-next-line: no-console
-            console.log(`Exception on cleanup: ${exc}`);
-        }
         await this.asyncRegistry.dispose();
         await super.dispose();
         this.disposed = true;

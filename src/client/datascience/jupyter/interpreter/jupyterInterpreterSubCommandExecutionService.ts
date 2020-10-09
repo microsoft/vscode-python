@@ -179,8 +179,8 @@ export class JupyterInterpreterSubCommandExecutionService
         });
         // Wait for the nbconvert to finish
         const args = template
-            ? [file.fsPath, '--to', 'python', '--stdout', '--template', template]
-            : [file.fsPath, '--to', 'python', '--stdout'];
+            ? [file.fsPath, '--to', 'python', '--stdout', '--template', template, '--debug']
+            : [file.fsPath, '--to', 'python', '--stdout', '--debug'];
 
         // Ignore stderr, as nbconvert writes conversion result to stderr.
         // stdout contains the generated python code.

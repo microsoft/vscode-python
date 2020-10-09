@@ -53,13 +53,12 @@ def splitByPid(testlog):
     with p.open() as f:
         for line in readStripLines(f):
             stripped = ansi_escape.sub("", line.strip())
-            # See if starts with a pid
-            if len(stripped) > 0 and stripped[0] <= "9" and stripped[0] >= "0":
+            if len(stripped) > 0:
                 # Pull out the pid
                 match = pid_regex.match(stripped)
 
                 # Pids are at least two digits
-                if match != None and len(match.group(1)) > 2:
+                if match and len(match.group(1)) > 2:
                     # Pid is found
                     pid = int(match.group(1))
 
