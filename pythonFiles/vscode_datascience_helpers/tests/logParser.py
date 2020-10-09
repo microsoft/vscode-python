@@ -21,14 +21,17 @@ ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 pid_regex = re.compile(r"(\d+).*")
 timestamp_regex = re.compile(r"\d{4}-\d{2}-\d{2}T.*\dZ")
 
-def stripTimestamp(line: str):  
+
+def stripTimestamp(line: str):
     match = timestamp_regex.match(line)
-    if (match):
-        return line[match.endpos]
+    if match:
+        return line[match.end() :]
     return line
 
+
 def readStripLines(f: TextIOWrapper):
-    return map(f.readlines(), stripTimestamp)
+    return map(stripTimestamp, f.readlines())
+
 
 def printTestOutput(testlog):
     # Find all the lines that don't have a PID in them. These are the test output
