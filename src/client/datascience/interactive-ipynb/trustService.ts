@@ -38,7 +38,13 @@ export class TrustService implements ITrustService {
             this.computeDigest(this.getFormattedContents(notebookContents))
         ]);
 
-        return this.digestStorage.containsDigest(uri, digest1) || this.digestStorage.containsDigest(uri, digest2);
+        // return this.digestStorage.containsDigest(uri, digest1) || this.digestStorage.containsDigest(uri, digest2);
+        const [digest1Valid, digest2Valid] = await Promise.all([
+            this.digestStorage.containsDigest(uri, digest1),
+            this.digestStorage.containsDigest(uri, digest2)
+        ]);
+
+        return digest1Valid || digest2Valid;
     }
 
     /**
