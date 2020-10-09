@@ -65,10 +65,10 @@ export class DebugLocationTracker implements DebugAdapterTracker {
     public onWillReceiveMessage(message: DebugProtocol.Request) {
         if (this.isRequestToFetchAllFrames(message)) {
             // VSCode sometimes sends multiple stackTrace requests. The true topmost frame is determined
-            // based on the response to a stackTrace request where the startFrame is 0 (i.e. this request
-            // retrieves all frames). Here, remember the sequence number of the outgoing request whose
-            // startFrame === 0, and update this.topMostFrameId only when we receive the response with a
-            // matching sequence number.
+            // based on the response to a stackTrace request where the startFrame is 0 or undefined (i.e.
+            // this request retrieves all frames). Here, remember the sequence number of the outgoing
+            // request whose startFrame === 0 or undefined, and update this.topMostFrameId only when we
+            // receive the response with a matching sequence number.
             this.stackFrameRequestSequenceNumber = message.seq;
         }
     }
