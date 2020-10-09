@@ -63,7 +63,7 @@ export class DebugLocationTracker implements DebugAdapterTracker {
     }
 
     public onWillReceiveMessage(message: DebugProtocol.Request) {
-        if (message.type === 'request' && message.command === 'stackTrace' && message.arguments.startFrame === 0) {
+        if (this.isRequestToFetchAllFrames(message)) {
             // VSCode sometimes sends multiple stackTrace requests. The true topmost frame is determined
             // based on the response to a stackTrace request where the startFrame is 0 (i.e. this request
             // retrieves all frames). Here, remember the sequence number of the outgoing request whose
@@ -117,6 +117,14 @@ export class DebugLocationTracker implements DebugAdapterTracker {
         }
 
         return false;
+    }
+
+    private isRequestToFetchAllFrames(message: DebugProtocol.Request) {
+        return (
+            message.type === 'request' &&
+            message.command === 'stackTrace' &&
+            (message.arguments.startFrame === 0 || message.arguments.startFrame === undefined)
+        );
     }
 
     private isResponseForRequestToFetchAllFrames(message: DebugProtocol.Response) {
