@@ -41,7 +41,7 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
         @inject(IPythonExtensionBanner)
         @named(BANNER_NAME_DS_SURVEY)
         private readonly dataScienceSurveyBanner: IPythonExtensionBanner
-    ) { }
+    ) {}
     // tslint:disable-next-line: no-any
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;

@@ -28,7 +28,7 @@ export class DebuggerBanner implements IDebuggerBanner {
     private disabledInCurrentSession?: boolean;
     private userSelected?: boolean;
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
 
     public initialize() {
         if (this.initialized) {
