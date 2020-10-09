@@ -440,14 +440,10 @@ suite('DataScience Notebook trust', () => {
             // Reopen
             const newNativeEditor = await openEditor(ioc, baseFile, notebookFile.filePath);
             const newWrapper = newNativeEditor.mount.wrapper;
-            assert.ok(
-                trustService.isNotebookTrusted(
-                    newNativeEditor.editor.model.file,
-                    newNativeEditor.editor.model.getContent()
-                ),
-                'Notebook not trusted after opening'
-            );
-            newWrapper.update();
+            assert.ok(newNativeEditor.editor.model.isTrusted, 'Editor did not open as trusted');
+            
+            // Wait a bit. UI doesn't seem to update right away
+            await sleep(500);
 
             // Verify notebook is now trusted
             const after = newWrapper.find(TrustMessage);

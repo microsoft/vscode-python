@@ -762,7 +762,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         this.postMessageToListeners(type.toString(), payload);
 
         // Then send it to the webview
-        traceInfo(`Window ${this._id} is posting ${type} ${JSON.stringify(payload)} to Webview UI`);
         return super.postMessage(type, payload);
     }
 
