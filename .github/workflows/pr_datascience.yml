@@ -147,11 +147,11 @@ jobs:
           VSC_PYTHON_WEBVIEW_LOG_FILE: ./${{matrix.test-suite}}-webview.log
         id: test_functional_group
 
-      - uses: actions/upload-artifact@v2
+      - name: Upload webview log
+        uses: actions/upload-artifact@v2
         with:
           name: ${{matrix.test-suite}}-webview.log
           path: ./${{matrix.test-suite}}-webview.log
-
 
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
