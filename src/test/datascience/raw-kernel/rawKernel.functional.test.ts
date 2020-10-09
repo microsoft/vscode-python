@@ -120,7 +120,13 @@ suite('DataScience raw kernel tests', () => {
         // Hence timeout is a test failure.
         const longCellExecutionRequest = requestExecute(
             rawKernel,
-            'import time\nfor i in range(300):\n    time.sleep(1)',
+            `import time
+import sys
+for i in range(3000):
+    sys.stdout.write('.')
+    sys.stdout.flush()
+    time.sleep(0.1)
+    sys.stdout.write('\r')`,
             executionStarted
         );
 

@@ -68,12 +68,13 @@ async function generateGroups(files) {
 
 async function runIndividualTest(extraArgs, file, index) {
     var subMochaFile = `${mochaBaseFile}_${index}_${path.basename(file)}${mochaFileExt}`;
-    process.env['MOCHA_FILE'] = subMochaFile;
     var args = gatherArgs(extraArgs, file);
     console.log(`Running functional test for file ${file} ...`);
     var exitCode = await new Promise((resolve) => {
         // Spawn the sub node process
-        var proc = child_process.fork('./node_modules/mocha/bin/_mocha', args);
+        var proc = child_process.fork('./node_modules/mocha/bin/_mocha', args, {
+            env: { ...process.env, MOCHA_FILE: subMochaFile }
+        });
         proc.on('exit', resolve);
     });
 
