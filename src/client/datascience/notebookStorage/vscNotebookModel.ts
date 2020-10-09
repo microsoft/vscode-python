@@ -19,7 +19,7 @@ import { BaseNotebookModel, getDefaultNotebookContentForNativeNotebooks } from '
 
 // https://github.com/microsoft/vscode-python/issues/13155
 // tslint:disable-next-line: no-any
-function sortObjectPropertiesRecursively(obj: any): any {
+export function sortObjectPropertiesRecursively(obj: any): any {
     if (Array.isArray(obj)) {
         return obj.map(sortObjectPropertiesRecursively);
     }

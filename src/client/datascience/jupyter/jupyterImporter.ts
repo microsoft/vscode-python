@@ -14,11 +14,12 @@ import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { CodeSnippets, Identifiers } from '../constants';
 import {
     IDataScienceFileSystem,
-    IJupyterExecution,
-    IJupyterInterpreterDependencyManager,
+    INbConvertExportToPythonService,
+    INbConvertInterpreterDependencyChecker,
     INotebookImporter
 } from '../types';
 
@@ -47,14 +48,14 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IJupyterInterpreterDependencyManager)
-        private readonly dependencyManager: IJupyterInterpreterDependencyManager
+        @inject(INbConvertInterpreterDependencyChecker)
+        private readonly nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker,
+        @inject(INbConvertExportToPythonService) private readonly exportToPythonService: INbConvertExportToPythonService
     ) {}
 
-    public async importFromFile(sourceFile: Uri): Promise<string> {
+    public async importFromFile(sourceFile: Uri, interpreter: PythonEnvironment): Promise<string> {
         // If the user has requested it, add a cd command to the imported file so that relative paths still work
         const settings = this.configuration.getSettings();
         let directoryChange: string | undefined;
@@ -62,12 +63,7 @@ export class JupyterImporter implements INotebookImporter {
             directoryChange = await this.calculateDirectoryChange(sourceFile);
         }
 
-        // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
-        if (!(await this.jupyterExecution.getImportPackageVersion())) {
-            await this.dependencyManager.installMissingDependencies();
-        }
-
-        const nbConvertVersion = await this.jupyterExecution.getImportPackageVersion();
+        const nbConvertVersion = await this.nbConvertDependencyChecker.getNbConvertVersion(interpreter);
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (nbConvertVersion) {
             // nbconvert 5 and 6 use a different base template file
@@ -87,7 +83,11 @@ export class JupyterImporter implements INotebookImporter {
                 template = await this.template5Promise;
             }
 
-            let fileOutput: string = await this.jupyterExecution.importNotebook(sourceFile, template);
+            let fileOutput: string = await this.exportToPythonService.exportNotebookToPython(
+                sourceFile,
+                interpreter,
+                template
+            );
             if (fileOutput.includes('get_ipython()')) {
                 fileOutput = this.addIPythonImport(fileOutput);
             }

@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Disposable } from 'vscode';
+import { Disposable, env, UIKind } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
@@ -63,7 +63,7 @@ export class DebuggerBanner implements IDebuggerBanner {
     // showing banner
 
     public async shouldShow(): Promise<boolean> {
-        if (!this.isEnabled() || this.disabledInCurrentSession) {
+        if (!this.isEnabled() || this.disabledInCurrentSession || env.uiKind === UIKind?.Web) {
             return false;
         }
         if (!(await this.passedThreshold())) {

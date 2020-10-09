@@ -774,7 +774,14 @@ df.head()`;
                     const model = editor!.model!;
                     ioc.serviceManager.rebindInstance<ICommandManager>(ICommandManager, commandManager.object);
                     commandManager
-                        .setup((cmd) => cmd.executeCommand(Commands.Export, model, undefined))
+                        .setup((cmd) =>
+                            cmd.executeCommand(
+                                Commands.Export,
+                                model,
+                                undefined,
+                                editor?.notebook?.getMatchingInterpreter()
+                            )
+                        )
                         .returns(() => {
                             commandFired.resolve();
                             return Promise.resolve();

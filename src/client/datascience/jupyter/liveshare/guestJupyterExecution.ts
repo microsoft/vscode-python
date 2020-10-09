@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import { injectable } from 'inversify';
-import { SemVer } from 'semver';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 
@@ -82,18 +81,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
         }
 
         return false;
-    }
-    public async getImportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
-        const service = await this.waitForService();
-
-        // Make a remote call on the proxy
-        if (service) {
-            const result = await service.request(LiveShareCommands.getImportPackageVersion, [], cancelToken);
-
-            if (result) {
-                return result as SemVer;
-            }
-        }
     }
     public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);

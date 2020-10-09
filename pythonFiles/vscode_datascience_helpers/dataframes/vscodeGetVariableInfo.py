@@ -5,6 +5,21 @@ import pandas.io.json as _VSCODE_pd_json
 import builtins as _VSCODE_builtins
 import vscodeDataFrameHelpers as _VSCODE_dataFrameHelpers
 
+
+def _VSCODE_maybeParseTensorShape(var, result):
+    try:
+        vartype = type(var)
+        if (hasattr(vartype, "__name__")) and vartype.__name__ == "Tensor":
+            varshape = str(var.shape)
+            start = varshape.index("[")
+            end = varshape.index("]")
+            if start > 0 and end > 0:
+                res = "(" + varshape[start + 1 : end] + ")"
+                result["shape"] = res
+    except TypeError:
+        pass
+
+
 # Function to do our work. It will return the object
 def _VSCODE_getVariableInfo(var):
     # Start out without the information
@@ -26,6 +41,7 @@ def _VSCODE_getVariableInfo(var):
                 ):
                     result["shape"] = _VSCODE_shapeStr
                 del _VSCODE_shapeStr
+            _VSCODE_maybeParseTensorShape(var, result)
         except TypeError:
             pass
 

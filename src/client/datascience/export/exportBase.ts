@@ -3,6 +3,7 @@ import * as path from 'path';
 import { CancellationToken, Uri } from 'vscode';
 
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IDataScienceFileSystem, IJupyterSubCommandExecutionService, INotebookImporter } from '../types';
@@ -18,21 +19,27 @@ export class ExportBase implements IExport {
         @inject(INotebookImporter) protected readonly importer: INotebookImporter
     ) {}
 
-    // tslint:disable-next-line: no-empty
-    public async export(_source: Uri, _target: Uri, _token: CancellationToken): Promise<void> {}
+    public async export(
+        _source: Uri,
+        _target: Uri,
+        _interpreter: PythonEnvironment,
+        _token: CancellationToken
+        // tslint:disable-next-line: no-empty
+    ): Promise<void> {}
 
     @reportAction(ReportableAction.PerformingExport)
     public async executeCommand(
         source: Uri,
         target: Uri,
         format: ExportFormat,
+        interpreter: PythonEnvironment,
         token: CancellationToken
     ): Promise<void> {
         if (token.isCancellationRequested) {
             return;
         }
 
-        const service = await this.getExecutionService(source);
+        const service = await this.getExecutionService(source, interpreter);
         if (!service) {
             return;
         }
@@ -76,11 +83,10 @@ export class ExportBase implements IExport {
         }
     }
 
-    protected async getExecutionService(source: Uri): Promise<IPythonExecutionService | undefined> {
-        const interpreter = await this.jupyterService.getSelectedInterpreter();
-        if (!interpreter) {
-            return;
-        }
+    protected async getExecutionService(
+        source: Uri,
+        interpreter: PythonEnvironment
+    ): Promise<IPythonExecutionService | undefined> {
         return this.pythonExecutionFactory.createActivatedEnvironment({
             resource: source,
             interpreter,

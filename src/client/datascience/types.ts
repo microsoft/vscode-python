@@ -284,14 +284,12 @@ export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     serverStarted: Event<INotebookServerOptions | undefined>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    getImportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined>;
     isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined>;
     spawnNotebook(file: string): Promise<void>;
-    importNotebook(file: Uri, template: string | undefined): Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
@@ -435,7 +433,7 @@ export interface IJupyterKernelSpec {
 
 export const INotebookImporter = Symbol('INotebookImporter');
 export interface INotebookImporter extends Disposable {
-    importFromFile(contentsFile: Uri): Promise<string>;
+    importFromFile(contentsFile: Uri, interpreter: PythonEnvironment): Promise<string>;
 }
 
 export const INotebookExporter = Symbol('INotebookExporter');
@@ -995,11 +993,6 @@ export interface IJupyterSubCommandExecutionService {
      */
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     /**
-     * If exporting is supported return the version of nbconvert available
-     * otherwise undefined.
-     */
-    getExportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined>;
-    /**
      * Error message indicating why jupyter notebook isn't supported.
      *
      * @returns {Promise<string>}
@@ -1039,16 +1032,6 @@ export interface IJupyterSubCommandExecutionService {
      */
     getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined>;
     /**
-     * Exports a given notebook into a python file.
-     *
-     * @param {string} file
-     * @param {string} [template]
-     * @param {CancellationToken} [token]
-     * @returns {Promise<string>}
-     * @memberof IJupyterSubCommandExecutionService
-     */
-    exportNotebookToPython(file: Uri, template?: string, token?: CancellationToken): Promise<string>;
-    /**
      * Opens an ipynb file in a new instance of a jupyter notebook server.
      *
      * @param {string} notebookFile
@@ -1076,6 +1059,22 @@ export interface IJupyterInterpreterDependencyManager {
      * @memberof IJupyterInterpreterDependencyManager
      */
     installMissingDependencies(err?: JupyterInstallError): Promise<void>;
+}
+
+export const INbConvertInterpreterDependencyChecker = Symbol('INbConvertInterpreterDependencyChecker');
+export interface INbConvertInterpreterDependencyChecker {
+    isNbConvertInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
+    getNbConvertVersion(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<SemVer | undefined>;
+}
+
+export const INbConvertExportToPythonService = Symbol('INbConvertExportToPythonService');
+export interface INbConvertExportToPythonService {
+    exportNotebookToPython(
+        file: Uri,
+        interpreter: PythonEnvironment,
+        template?: string,
+        token?: CancellationToken
+    ): Promise<string>;
 }
 
 export interface INotebookModel {
