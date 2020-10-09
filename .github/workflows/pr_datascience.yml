@@ -144,7 +144,6 @@ jobs:
         env:
           VSCODE_PYTHON_ROLLING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
-          VSC_PYTHON_WEBVIEW_LOG_FILE: ./${{matrix.test-suite}}-webview.log
         id: test_functional_group
 
       - name: Publish Test Report
@@ -154,12 +153,6 @@ jobs:
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Functional Test Report ${{matrix.test-suite}}
         if: steps.test_functional_group.outcome == 'failure' && failure()
-
-      - uses: actions/upload-artifact@v2
-        name: Upload webview files
-        with:
-          name: ${{ matrix.test-suite }}-webview.log
-          path: ${{ matrix.test-suite }}-webview.log
 
   testsInVSCode:
     name: Tests in VS Code
