@@ -574,6 +574,7 @@ export namespace LiveShareCommands {
     export const getUsableJupyterPython = 'getUsableJupyterPython';
     export const executeObservable = 'executeObservable';
     export const getSysInfo = 'getSysInfo';
+    export const requestKernelInfo = 'requestKernelInfo';
     export const serverResponse = 'serverResponse';
     export const catchupRequest = 'catchupRequest';
     export const syncRequest = 'synchRequest';

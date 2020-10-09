@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { cloneDeep } from 'lodash';
-import { getGlobalPersistentStore, IPersistentStore } from '../common/externalDependencies';
 import { PythonEnvInfo } from './info';
 import { areSameEnv } from './info/env';
 
@@ -13,7 +12,7 @@ export interface IEnvsCache {
     /**
      * Initialization logic to be done outside of the constructor, for example reading from persistent storage.
      */
-    initialize(): void;
+    initialize(): Promise<void>;
 
     /**
      * Return all environment info currently in memory for this session.
@@ -30,7 +29,7 @@ export interface IEnvsCache {
     setAllEnvs(envs: PythonEnvInfo[]): void;
 
     /**
-     * If the cache has been initialized, return environmnent info objects that match a query object.
+     * If the cache has been initialized, return environment info objects that match a query object.
      * If none of the environments in the cache match the query data, return an empty array.
      * If the in-memory cache has not been initialized prior to calling `filterEnvs`, return `undefined`.
      *
@@ -40,12 +39,17 @@ export interface IEnvsCache {
      * @return The environment info objects matching the `env` param,
      * or `undefined` if the in-memory cache is not initialized.
      */
-    filterEnvs(env: PythonEnvInfo | string): PythonEnvInfo[] | undefined;
+    filterEnvs(query: Partial<PythonEnvInfo>): PythonEnvInfo[] | undefined;
 
     /**
      * Writes the content of the in-memory cache to persistent storage.
      */
     flush(): Promise<void>;
+}
+
+export interface IPersistentStorage {
+    load(): Promise<PythonEnvInfo[] | undefined>;
+    store(envs: PythonEnvInfo[]): Promise<void>;
 }
 
 type CompleteEnvInfoFunction = (envInfo: PythonEnvInfo) => boolean;
@@ -58,18 +62,23 @@ export class PythonEnvInfoCache implements IEnvsCache {
 
     private envsList: PythonEnvInfo[] | undefined;
 
-    private persistentStorage: IPersistentStore<PythonEnvInfo[]> | undefined;
+    private persistentStorage: IPersistentStorage | undefined;
 
-    constructor(private readonly isComplete: CompleteEnvInfoFunction) {}
+    constructor(
+        private readonly isComplete: CompleteEnvInfoFunction,
+        private readonly getPersistentStorage?: () => IPersistentStorage,
+    ) {}
 
-    public initialize(): void {
+    public async initialize(): Promise<void> {
         if (this.initialized) {
             return;
         }
 
         this.initialized = true;
-        this.persistentStorage = getGlobalPersistentStore<PythonEnvInfo[]>('PYTHON_ENV_INFO_CACHE');
-        this.envsList = this.persistentStorage?.get();
+        if (this.getPersistentStorage !== undefined) {
+            this.persistentStorage = this.getPersistentStorage();
+            this.envsList = await this.persistentStorage.load();
+        }
     }
 
     public getAllEnvs(): PythonEnvInfo[] | undefined {
@@ -80,21 +89,19 @@ export class PythonEnvInfoCache implements IEnvsCache {
         this.envsList = cloneDeep(envs);
     }
 
-    public filterEnvs(env: PythonEnvInfo | string): PythonEnvInfo[] | undefined {
-        const result = this.envsList?.filter((info) => areSameEnv(info, env));
-
-        if (result) {
-            return cloneDeep(result);
+    public filterEnvs(query: Partial<PythonEnvInfo>): PythonEnvInfo[] | undefined {
+        if (this.envsList === undefined) {
+            return undefined;
         }
-
-        return undefined;
+        const result = this.envsList.filter((info) => areSameEnv(info, query));
+        return cloneDeep(result);
     }
 
     public async flush(): Promise<void> {
         const completeEnvs = this.envsList?.filter(this.isComplete);
 
         if (completeEnvs?.length) {
-            await this.persistentStorage?.set(completeEnvs);
+            await this.persistentStorage?.store(completeEnvs);
         }
     }
 }

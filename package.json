@@ -3344,6 +3344,16 @@
                 "extensions": [
                     ".ipynb"
                 ]
+            },
+            {
+                "id": "julia",
+                "aliases": [
+                    "Julia",
+                    "julia"
+                ],
+                "extensions": [
+                    ".jl"
+                ]
             }
         ],
         "grammars": [

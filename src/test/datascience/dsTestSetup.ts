@@ -4,7 +4,7 @@
 import * as fs from 'fs-extra';
 import { applyEdits, ModificationOptions, modify } from 'jsonc-parser';
 import * as path from 'path';
-import { IS_CI_SERVER } from '../ciConstants';
+// import { IS_CI_SERVER } from '../ciConstants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 const settingsFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.vscode/settings.json');
@@ -18,31 +18,16 @@ function updateTestsForNativeNotebooks() {
     const content = JSON.parse(fs.readFileSync(packageJsonFile).toString());
 
     // This code is temporary.
-    if (
-        !content.enableProposedApi ||
-        !Array.isArray(content.contributes.notebookOutputRenderer) ||
-        !Array.isArray(content.contributes.notebookProvider)
-    ) {
-        content.enableProposedApi = true;
-        content.contributes.notebookProvider = [
-            {
-                viewType: 'jupyter-notebook',
-                displayName: 'Jupyter Notebook',
-                selector: [
-                    {
-                        filenamePattern: '*.ipynb'
-                    }
-                ]
-            }
-        ];
-    }
+    content.enableProposedApi = true;
+    delete content.contributes.notebookProvider[0].priority;
 
     // Update package.json to pick experiments from our custom settings.json file.
     content.contributes.configuration.properties['python.experiments.optInto'].scope = 'resource';
     content.contributes.configuration.properties['python.logging.level'].scope = 'resource';
 
     fs.writeFileSync(packageJsonFile, JSON.stringify(content, undefined, 4));
-
+    // tslint:disable-next-line: no-console
+    console.error('Updated');
     updateSettings(true);
 }
 
@@ -69,13 +54,15 @@ function updateTestsForOldNotebooks() {
     updateSettings(false);
 }
 
-if (!IS_CI_SERVER) {
-    // Noop.
-} else if (
+if (
     process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL === 'insiders' &&
     process.env.TEST_FILES_SUFFIX === 'native.vscode.test'
 ) {
+    // tslint:disable-next-line: no-console
+    console.error('Insider Tests');
     updateTestsForNativeNotebooks();
 } else {
+    // tslint:disable-next-line: no-console
+    console.error('Stable Tests');
     updateTestsForOldNotebooks();
 }

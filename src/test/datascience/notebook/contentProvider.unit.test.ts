@@ -5,29 +5,47 @@
 
 import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
+import { IDisposable } from 'monaco-editor';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { Memento, Uri } from 'vscode';
+import { EventEmitter, Memento, Uri } from 'vscode';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
-import type { NotebookContentProvider as VSCodeNotebookContentProvider } from 'vscode-proposed';
+import type { NotebookContentProvider as VSCodeNotebookContentProvider, NotebookDocument } from 'vscode-proposed';
+import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { ICryptoUtils } from '../../../client/common/types';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
+import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/notebook/notebookEditorCompatibilitySupport';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
-import { createNotebookModel } from './helper';
+import { createNotebookModel, disposeAllDisposables } from './helper';
 // tslint:disable: no-any
 suite('DataScience - NativeNotebook ContentProvider', () => {
     let storageProvider: INotebookStorageProvider;
     let contentProvider: VSCodeNotebookContentProvider;
     const fileUri = Uri.file('a.ipynb');
+    const disposables: IDisposable[] = [];
     setup(async () => {
         storageProvider = mock<INotebookStorageProvider>();
         const compatSupport = mock(NotebookEditorCompatibilitySupport);
         when(compatSupport.canOpenWithOurNotebookEditor(anything())).thenReturn(true);
         when(compatSupport.canOpenWithVSCodeNotebookEditor(anything())).thenReturn(true);
-        contentProvider = new NotebookContentProvider(instance(storageProvider), instance(compatSupport));
+        const vscNotebooks = mock<IVSCodeNotebook>();
+        when(vscNotebooks.onDidSaveNotebookDocument).thenReturn(new EventEmitter<NotebookDocument>().event);
+        const memento = mock<Memento>();
+        when(memento.get(anything())).thenReturn();
+        const cellLanguageService = new NotebookCellLanguageService(
+            instance(vscNotebooks),
+            disposables,
+            instance(memento)
+        );
+        contentProvider = new NotebookContentProvider(
+            instance(storageProvider),
+            cellLanguageService,
+            instance(compatSupport)
+        );
     });
+    teardown(() => disposeAllDisposables(disposables));
     [true, false].forEach((isNotebookTrusted) => {
         suite(isNotebookTrusted ? 'Trusted Notebook' : 'Un-trusted notebook', () => {
             test('Return notebook with 2 cells', async () => {

@@ -8,13 +8,14 @@ import { IVSCodeNotebook } from '../../common/application/types';
 import { ICryptoUtils } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
+import { NotebookCellLanguageService } from '../notebook/defaultCellLanguageService';
 import {
     createCellFromVSCNotebookCell,
     getNotebookMetadata,
     updateVSCNotebookAfterTrustingNotebook
 } from '../notebook/helpers/helpers';
 import { ICell } from '../types';
-import { BaseNotebookModel } from './baseModel';
+import { BaseNotebookModel, getDefaultNotebookContentForNativeNotebooks } from './baseModel';
 
 // https://github.com/microsoft/vscode-python/issues/13155
 // tslint:disable-next-line: no-any
@@ -65,8 +66,6 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         }
         return this._isDisposed === true;
     }
-
-    private document?: NotebookDocument;
     public get notebookContentWithoutCells(): Partial<nbformat.INotebookContent> {
         return {
             ...this.notebookJson,
@@ -77,6 +76,8 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         return this.document ? this.document.isUntitled : super.isUntitled;
     }
 
+    private document?: NotebookDocument;
+
     constructor(
         isTrusted: boolean,
         file: Uri,
@@ -86,10 +87,15 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         json: Partial<nbformat.INotebookContent> = {},
         indentAmount: string = ' ',
         pythonNumber: number = 3,
-        private readonly vscodeNotebook?: IVSCodeNotebook
+        private readonly vscodeNotebook: IVSCodeNotebook,
+        private readonly cellLanguageService: NotebookCellLanguageService
     ) {
-        super(isTrusted, file, cells, globalMemento, crypto, json, indentAmount, pythonNumber);
+        super(isTrusted, file, cells, globalMemento, crypto, json, indentAmount, pythonNumber, false);
+        // Do not change this code without changing code in base class.
+        // We cannot invoke this in base class as `cellLanguageService` is not available in base class.
+        this.ensureNotebookJson();
     }
+
     /**
      * Unfortunately Notebook models are created early, well before a VSC Notebook Document is created.
      * We can associate an INotebookModel with a VSC Notebook, only after the Notebook has been opened.
@@ -107,6 +113,9 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             // We don't need old cells.
             this._cells = [];
         }
+    }
+    protected getDefaultNotebookContent() {
+        return getDefaultNotebookContentForNativeNotebooks(this.cellLanguageService?.getPreferredLanguage());
     }
     protected generateNotebookJson() {
         const json = super.generateNotebookJson();

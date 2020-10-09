@@ -301,7 +301,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
-          path: .nyc_output
+          path: ${{ env.special-working-directory }}/.nyc_output
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
       # Run the Python and IPython tests in our codebase.

@@ -32,7 +32,7 @@ import {
     INotebookProviderConnection,
     KernelInterpreterDependencyResponse
 } from '../../types';
-import { createDefaultKernelSpec, getDisplayNameOrNameOfKernelConnection } from './helpers';
+import { createDefaultKernelSpec, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import {
@@ -521,12 +521,7 @@ export class KernelSelector implements IKernelSelectionUsage {
         }
 
         // First use our kernel finder to locate a kernelspec on disk
-        const kernelSpec = await this.kernelFinder.findKernelSpec(
-            resource,
-            notebookMetadata?.kernelspec,
-            cancelToken,
-            ignoreDependencyCheck
-        );
+        const kernelSpec = await this.kernelFinder.findKernelSpec(resource, notebookMetadata, cancelToken);
         const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
         if (!kernelSpec && !activeInterpreter) {
             return;
@@ -542,11 +537,16 @@ export class KernelSelector implements IKernelSelectionUsage {
             // Locate the interpreter that matches our kernelspec
             const interpreter = await this.kernelService.findMatchingInterpreter(kernelSpec, cancelToken);
 
-            if (interpreter) {
+            const connectionInfo: KernelSpecConnectionMetadata = {
+                kind: 'startUsingKernelSpec',
+                kernelSpec,
+                interpreter
+            };
+            // Install missing depednencies only if we're dealing with a Python kernel.
+            if (interpreter && isPythonKernelConnection(connectionInfo)) {
                 await this.installDependenciesIntoInterpreter(interpreter, ignoreDependencyCheck, cancelToken);
             }
-
-            return { kind: 'startUsingKernelSpec', kernelSpec, interpreter };
+            return connectionInfo;
         }
     }
 
