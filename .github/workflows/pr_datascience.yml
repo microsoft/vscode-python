@@ -155,6 +155,12 @@ jobs:
           check_name: Functional Test Report ${{matrix.test-suite}}
         if: steps.test_functional_group.outcome == 'failure' && failure()
 
+      - uses: actions/upload-artifact@v2
+        name: Upload webview files
+        with:
+          name: ${{ matrix.test-suite }}-webview.log
+          path: ${{ matrix.test-suite }}-webview.log
+
   testsInVSCode:
     name: Tests in VS Code
     runs-on: ${{ matrix.os }}
