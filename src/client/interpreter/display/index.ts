@@ -102,7 +102,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
             this.currentlySelectedInterpreterPath = interpreter.path;
         } else {
             this.statusBar.tooltip = '';
-            this.statusBar.color = 'yellow';
+            this.statusBar.color = '';
             this.statusBar.text = '$(alert) Select Python Interpreter';
             this.currentlySelectedInterpreterPath = undefined;
         }
