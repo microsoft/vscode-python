@@ -447,6 +447,7 @@ suite('DataScience Notebook trust', () => {
                 ),
                 'Notebook not trusted after opening'
             );
+            newWrapper.update();
 
             // Verify notebook is now trusted
             const after = newWrapper.find(TrustMessage);
