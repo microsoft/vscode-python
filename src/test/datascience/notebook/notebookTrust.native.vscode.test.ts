@@ -45,7 +45,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
         }
     });
     let oldTrustSetting: boolean;
-    let dsSettings: IDataScienceSettings;
+    let dsSettings: IDataScienceSettings | undefined;
     suiteSetup(() => {
         const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
         dsSettings = configService.getSettings(testIPynb).datascience;
@@ -54,7 +54,7 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
     });
     setup(async () => {
         sinon.restore();
-        dsSettings.alwaysTrustNotebooks = false;
+        dsSettings!.alwaysTrustNotebooks = false;
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
@@ -64,7 +64,11 @@ suite('DataScience - VSCode Notebook - (Trust)', function () {
         await fs.writeFile(testIPynb.fsPath, JSON.stringify(nb, undefined, 4));
     });
     teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
-    suiteTeardown(() => (dsSettings.alwaysTrustNotebooks = oldTrustSetting === true));
+    suiteTeardown(() => {
+        if (dsSettings) {
+            dsSettings.alwaysTrustNotebooks = oldTrustSetting === true;
+        }
+    });
 
     function assertDocumentTrust(document: NotebookDocument, trusted: boolean) {
         assert.equal(document.metadata.cellEditable, trusted);

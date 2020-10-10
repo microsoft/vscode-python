@@ -159,6 +159,28 @@ export function getDefaultNotebookContent(pythonNumber: number = 3): Partial<nbf
         nbformat_minor: 2
     };
 }
+/**
+ * Generates the metadata stored in ipynb for new notebooks.
+ * If a preferred language is provided we use that.
+ * We do not default to Python, as selecting a kernel will update the language_info in the ipynb file (after a kernel is successfully started).
+ */
+export function getDefaultNotebookContentForNativeNotebooks(language?: string): Partial<nbformat.INotebookContent> {
+    const metadata: undefined | nbformat.INotebookMetadata = language
+        ? {
+              language_info: {
+                  name: language,
+                  nbconvert_exporter: 'python'
+              },
+              orig_nbformat: 2
+          }
+        : undefined;
+
+    return {
+        metadata,
+        nbformat: 4,
+        nbformat_minor: 2
+    };
+}
 export abstract class BaseNotebookModel implements INotebookModel {
     public get onDidDispose() {
         return this._disposed.event;
@@ -212,9 +234,16 @@ export abstract class BaseNotebookModel implements INotebookModel {
         private crypto: ICryptoUtils,
         protected notebookJson: Partial<nbformat.INotebookContent> = {},
         public readonly indentAmount: string = ' ',
-        private readonly pythonNumber: number = 3
+        private readonly pythonNumber: number = 3,
+        initializeJsonIfRequired = true
     ) {
-        this.ensureNotebookJson();
+        // VSCode Notebook Model will execute this itself.
+        // THe problem is we need to overide this behavior, however the overriding doesn't work in JS
+        // as some of the dependencies passed as ctor arguments are not available in the ctor.
+        // E.g. in the ctor of the base class, the private members (passed as ctor ares) initialized in child class are not available (unlike other languages).
+        if (initializeJsonIfRequired) {
+            this.ensureNotebookJson();
+        }
         this.kernelId = this.getStoredKernelId();
     }
     public dispose() {
@@ -255,6 +284,15 @@ export abstract class BaseNotebookModel implements INotebookModel {
         json.cells = this.cells.map((c) => pruneCell(c.data));
         return json;
     }
+    protected getDefaultNotebookContent() {
+        return getDefaultNotebookContent(this.pythonNumber);
+    }
+
+    protected ensureNotebookJson() {
+        if (!this.notebookJson || !this.notebookJson.metadata) {
+            this.notebookJson = this.getDefaultNotebookContent();
+        }
+    }
 
     private handleModelChange(change: NotebookModelChange) {
         const oldDirty = this.isDirty;
@@ -291,12 +329,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
         this.setStoredKernelId(kernelId);
 
         return changed;
-    }
-
-    private ensureNotebookJson() {
-        if (!this.notebookJson || !this.notebookJson.metadata) {
-            this.notebookJson = getDefaultNotebookContent(this.pythonNumber);
-        }
     }
 
     private generateNotebookContent(): string {

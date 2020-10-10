@@ -497,7 +497,7 @@ suite('DataScience - KernelSelector', () => {
         });
         teardown(() => sinon.restore());
         test('Raw kernel connection finds a valid kernel spec and interpreter', async () => {
-            when(kernelFinder.findKernelSpec(anything(), anything(), anything(), anything())).thenResolve(kernelSpec);
+            when(kernelFinder.findKernelSpec(anything(), anything(), anything())).thenResolve(kernelSpec);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(

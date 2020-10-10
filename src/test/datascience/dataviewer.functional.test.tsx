@@ -95,10 +95,6 @@ suite('DataScience DataViewer tests', () => {
         delete (global as any).ascquireVsCodeApi;
     });
 
-    suiteTeardown(() => {
-        // asyncDump();
-    });
-
     function createJupyterVariable(variable: string, type: string): IJupyterVariable {
         return {
             name: variable,

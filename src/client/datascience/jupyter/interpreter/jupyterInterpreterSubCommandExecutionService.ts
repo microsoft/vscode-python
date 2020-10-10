@@ -5,8 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { SemVer } from 'semver';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 
@@ -24,8 +23,6 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, JupyterDaemonModule, Telemetry } from '../../constants';
-import { reportAction } from '../../progress/decorator';
-import { ReportableAction } from '../../progress/types';
 import {
     IDataScienceFileSystem,
     IJupyterInterpreterDependencyManager,
@@ -76,17 +73,6 @@ export class JupyterInterpreterSubCommandExecutionService
             return false;
         }
         return this.jupyterDependencyService.areDependenciesInstalled(interpreter, token);
-    }
-    public async getExportPackageVersion(token?: CancellationToken): Promise<SemVer | undefined> {
-        const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
-        if (!interpreter) {
-            return;
-        }
-
-        // If nbconvert is there check and return the version
-        if (await this.jupyterDependencyService.isExportSupported(interpreter, token)) {
-            return this.jupyterDependencyService.getNbConvertVersion(interpreter, token);
-        }
     }
     public async getReasonForJupyterNotebookNotBeingSupported(token?: CancellationToken): Promise<string> {
         let interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
@@ -157,46 +143,6 @@ export class JupyterInterpreterSubCommandExecutionService
         return serverInfos;
     }
 
-    @reportAction(ReportableAction.ExportNotebookToPython)
-    public async exportNotebookToPython(file: Uri, template?: string, token?: CancellationToken): Promise<string> {
-        // Before we export check if our selected interpreter is available and supports export
-        let interpreter = await this.getSelectedInterpreter(token);
-        if (!interpreter || !(await this.jupyterDependencyService.isExportSupported(interpreter, token))) {
-            // If not available or not supported install missing dependecies
-            await this.installMissingDependencies();
-
-            // Install missing dependencies might change the selected interpreter, so check the new one
-            interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
-
-            if (!(await this.jupyterDependencyService.isExportSupported(interpreter, token))) {
-                throw new Error(DataScience.jupyterNbConvertNotSupported());
-            }
-        }
-
-        const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
-            daemonModule: JupyterDaemonModule,
-            pythonPath: interpreter.path
-        });
-        // Wait for the nbconvert to finish
-        const args = template
-            ? [file.fsPath, '--to', 'python', '--stdout', '--template', template]
-            : [file.fsPath, '--to', 'python', '--stdout'];
-
-        // Ignore stderr, as nbconvert writes conversion result to stderr.
-        // stdout contains the generated python code.
-        return daemon
-            .execModule('jupyter', ['nbconvert'].concat(args), { throwOnStdErr: false, encoding: 'utf8', token })
-            .then((output) => {
-                // We can't check stderr (as nbconvert puts diag output there) but we need to verify here that we actually
-                // converted something. If it's zero size then just raise an error
-                if (output.stdout === '') {
-                    traceError('nbconvert zero size output');
-                    throw new Error(output.stderr);
-                } else {
-                    return output.stdout;
-                }
-            });
-    }
     public async openNotebook(notebookFile: string): Promise<void> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable();
         // Do  not use the daemon for this, its a waste resources. The user will manage the lifecycle of this process.

@@ -3,6 +3,7 @@
 'use strict';
 
 import { format } from 'winston';
+import { isTestExecution } from '../common/constants';
 import { getLevel, LogLevel, LogLevelName } from './levels';
 
 const TIMESTAMP = 'YYYY-MM-DD HH:mm:ss';
@@ -37,13 +38,17 @@ function normalizeLevel(name: LogLevelName): string {
 // Return a log entry that can be emitted as-is.
 function formatMessage(level: LogLevelName, timestamp: string, message: string): string {
     const levelFormatted = normalizeLevel(level);
-    return `${levelFormatted} ${timestamp}: ${message}`;
+    return isTestExecution()
+        ? `${process.pid} ${levelFormatted} ${timestamp}: ${message}`
+        : `${levelFormatted} ${timestamp}: ${message}`;
 }
 
 // Return a log entry that can be emitted as-is.
 function formatLabeledMessage(level: LogLevelName, timestamp: string, label: string, message: string): string {
     const levelFormatted = normalizeLevel(level);
-    return `${levelFormatted} ${label} ${timestamp}: ${message}`;
+    return isTestExecution()
+        ? `${process.pid} ${levelFormatted} ${label} ${timestamp}: ${message}`
+        : `${levelFormatted} ${label} ${timestamp}: ${message}`;
 }
 
 // Return a minimal format object that can be used with a "winston"

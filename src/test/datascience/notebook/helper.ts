@@ -9,7 +9,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
-import { instance, mock } from 'ts-mockito';
+import { instance, mock, when } from 'ts-mockito';
 import { commands, Memento, TextDocument, Uri } from 'vscode';
 import {
     CellDisplayOutput,
@@ -23,7 +23,10 @@ import { IConfigurationService, ICryptoUtils, IDisposable } from '../../../clien
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
 import { Identifiers } from '../../../client/datascience/constants';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
+import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { createVSCNotebookCellDataFromCell } from '../../../client/datascience/notebook/helpers/helpers';
+import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelProvider';
+import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import {
@@ -68,19 +71,19 @@ export async function insertMarkdownCell(source: string) {
         ])
     );
 }
-export async function insertPythonCell(source: string, index?: number) {
+export async function insertCodeCell(source: string, options?: { language?: string; index?: number }) {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
     if (!activeEditor) {
         assert.fail('No active editor');
         return;
     }
-    const startNumber = index ?? activeEditor.document.cells.length;
+    const startNumber = options?.index ?? activeEditor.document.cells.length;
     await activeEditor.edit((edit) =>
         edit.replaceCells(startNumber, 0, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Code,
-                language: PYTHON_LANGUAGE,
+                language: options?.language || PYTHON_LANGUAGE,
                 source,
                 metadata: {
                     hasExecutionOrder: false
@@ -181,6 +184,47 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     disposeAllDisposables(disposables);
 }
 
+export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) {
+    const { vscodeNotebook } = await getServices();
+
+    // Wait for the active kernel to be a julia kernel.
+    await waitForCondition(
+        async () => !!vscodeNotebook.activeNotebookEditor?.kernel,
+        10_000,
+        'Kernel not auto selected'
+    );
+
+    const isRightKernel = () => {
+        if (!vscodeNotebook.activeNotebookEditor) {
+            return false;
+        }
+        if (!vscodeNotebook.activeNotebookEditor.kernel) {
+            return false;
+        }
+        if (!expectedLanguage) {
+            return true;
+        }
+        if (vscodeNotebook.activeNotebookEditor.kernel instanceof VSCodeNotebookKernelMetadata) {
+            if (vscodeNotebook.activeNotebookEditor.kernel.selection.kind === 'startUsingKernelSpec') {
+                return (
+                    vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec.language.toLowerCase() ===
+                    expectedLanguage.toLowerCase()
+                );
+            }
+            if (vscodeNotebook.activeNotebookEditor.kernel.selection.kind === 'startUsingPythonInterpreter') {
+                return expectedLanguage.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
+            }
+            // We don't support testing other kernels, not required hence not added.
+            // tslint:disable-next-line: no-console
+            console.error('Testing other kernel connections not supported');
+        }
+        return false;
+    };
+
+    // Wait for the active kernel to be a julia kernel.
+    const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
+    await waitForCondition(async () => isRightKernel(), 15_000, errorMessage);
+}
 export async function trustAllNotebooks() {
     const api = await initialize();
     const dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().datascience;
@@ -196,7 +240,7 @@ export async function startJupyter(closeInitialEditor: boolean) {
     const disposables: IDisposable[] = [];
     try {
         await editorProvider.createNew();
-        await insertPythonCell('print("Hello World")', 0);
+        await insertCodeCell('print("Hello World")', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
         await executeActiveDocument();
         // Wait for Jupyter to start.
@@ -350,10 +394,14 @@ export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
 export async function saveActiveNotebook(disposables: IDisposable[]) {
     const api = await initialize();
     const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
-    const savedEvent = createEventHandler(editorProvider.activeEditor!.model!, 'changed', disposables);
-    await commands.executeCommand('workbench.action.files.saveAll');
+    if (editorProvider.activeEditor instanceof NotebookEditor) {
+        await commands.executeCommand('workbench.action.files.saveAll');
+    } else {
+        const savedEvent = createEventHandler(editorProvider.activeEditor!.model!, 'changed', disposables);
+        await commands.executeCommand('workbench.action.files.saveAll');
 
-    await waitForCondition(async () => savedEvent.all.some((e) => e.kind === 'save'), 5_000, 'Not saved');
+        await waitForCondition(async () => savedEvent.all.some((e) => e.kind === 'save'), 5_000, 'Not saved');
+    }
 }
 
 export function createNotebookModel(
@@ -382,7 +430,24 @@ export function createNotebookModel(
             data: c
         };
     });
-    return new VSCodeNotebookModel(trusted, uri, JSON.parse(JSON.stringify(cells)), globalMemento, crypto, nbJson);
+    const mockVSC = mock<IVSCodeNotebook>();
+    when(mockVSC.notebookEditors).thenReturn([]);
+    when(mockVSC.notebookDocuments).thenReturn([]);
+    const cellLanguageService = mock<NotebookCellLanguageService>();
+    when(cellLanguageService.getPreferredLanguage()).thenReturn(PYTHON_LANGUAGE);
+
+    return new VSCodeNotebookModel(
+        trusted,
+        uri,
+        JSON.parse(JSON.stringify(cells)),
+        globalMemento,
+        crypto,
+        nbJson,
+        ' ',
+        3,
+        instance(mockVSC),
+        instance(cellLanguageService)
+    );
 }
 export async function executeCell(cell: NotebookCell) {
     const api = await initialize();
@@ -452,7 +517,7 @@ export function createNotebookDocument(
         }
     };
     model.cells.forEach((cell, index) => {
-        const vscCell = createVSCNotebookCellDataFromCell(model, cell)!;
+        const vscCell = createVSCNotebookCellDataFromCell(model, PYTHON_LANGUAGE, cell)!;
         const vscDocumentCell: NotebookCell = {
             cellKind: vscCell.cellKind,
             language: vscCell.language,

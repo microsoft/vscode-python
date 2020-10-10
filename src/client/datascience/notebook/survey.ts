@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { env, UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -27,8 +28,10 @@ export type NotebookSurveyUsageData = {
 @injectable()
 export class NotebookSurveyBanner {
     public get enabled(): boolean {
-        return !this.persistentState.createGlobalPersistentState<NotebookSurveyUsageData>(storageKey, {}).value
-            .surveyDisabled;
+        return (
+            !this.persistentState.createGlobalPersistentState<NotebookSurveyUsageData>(storageKey, {}).value
+                .surveyDisabled && env.uiKind !== UIKind?.Web
+        );
     }
     private disabledInCurrentSession: boolean = false;
     constructor(

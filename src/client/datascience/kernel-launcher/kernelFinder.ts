@@ -61,47 +61,27 @@ export class KernelFinder implements IKernelFinder {
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernelSpec(
         resource: Resource,
-        kernelSpecMetadata?: nbformat.IKernelspecMetadata
+        notebookMetadata?: nbformat.INotebookMetadata
     ): Promise<IJupyterKernelSpec | undefined> {
         await this.readCache();
-        let foundKernel: IJupyterKernelSpec | undefined;
 
-        const kernelName = kernelSpecMetadata?.name;
+        const searchBasedOnKernelSpecMetadata = this.findKernelSpecBasedOnKernelSpecMetadata(
+            resource,
+            notebookMetadata && notebookMetadata.kernelspec ? notebookMetadata.kernelspec : undefined
+        );
 
-        if (kernelSpecMetadata && kernelName) {
-            let kernelSpec = await this.searchCache(kernelName);
-
-            if (kernelSpec) {
-                return kernelSpec;
-            }
-
-            // Check in active interpreter first
-            kernelSpec = await this.getKernelSpecFromActiveInterpreter(kernelName, resource);
-
-            if (kernelSpec) {
-                this.writeCache().ignoreErrors();
-                return kernelSpec;
-            }
-
-            const diskSearch = this.findDiskPath(kernelName);
-            const interpreterSearch = this.getInterpreterPaths(resource).then((interpreterPaths) => {
-                return this.findInterpreterPath(interpreterPaths, kernelName);
-            });
-
-            let result = await Promise.race([diskSearch, interpreterSearch]);
-            if (!result) {
-                const both = await Promise.all([diskSearch, interpreterSearch]);
-                result = both[0] ? both[0] : both[1];
-            }
-
-            foundKernel = result;
+        if (!notebookMetadata || notebookMetadata.kernelspec || !notebookMetadata.language_info?.name) {
+            return searchBasedOnKernelSpecMetadata;
         }
 
-        this.writeCache().ignoreErrors();
-
-        return foundKernel;
+        // If given a language, then find based on language else revert to default behaviour.
+        const searchBasedOnLanguage = await this.findKernelSpecBasedOnLanguage(
+            resource,
+            notebookMetadata.language_info.name
+        );
+        // If none found based on language, then return the default.s
+        return searchBasedOnLanguage || searchBasedOnKernelSpecMetadata;
     }
-
     // Search all our local file system locations for installed kernel specs and return them
     public async listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
         if (!resource) {
@@ -121,6 +101,50 @@ export class KernelFinder implements IKernelFinder {
 
         // ! as the has and set above verify that we have a return here
         return this.workspaceToKernels.get(workspaceFolderId)!;
+    }
+
+    private async findKernelSpecBasedOnKernelSpecMetadata(
+        resource: Resource,
+        kernelSpecMetadata?: nbformat.IKernelspecMetadata
+    ) {
+        const kernelName = kernelSpecMetadata?.name;
+        if (!kernelName) {
+            return;
+        }
+
+        try {
+            let kernelSpec = await this.searchCache(kernelName);
+            if (kernelSpec) {
+                return kernelSpec;
+            }
+
+            // Check in active interpreter first
+            kernelSpec = await this.getKernelSpecFromActiveInterpreter(kernelName, resource);
+
+            if (kernelSpec) {
+                return kernelSpec;
+            }
+
+            const diskSearch = this.findDiskPath(kernelName);
+            const interpreterSearch = this.getInterpreterPaths(resource).then((interpreterPaths) => {
+                return this.findInterpreterPath(interpreterPaths, kernelName);
+            });
+
+            let result = await Promise.race([diskSearch, interpreterSearch]);
+            if (!result) {
+                const both = await Promise.all([diskSearch, interpreterSearch]);
+                result = both[0] ? both[0] : both[1];
+            }
+
+            return result;
+        } finally {
+            this.writeCache().ignoreErrors();
+        }
+    }
+
+    private async findKernelSpecBasedOnLanguage(resource: Resource, language: string) {
+        const specs = await this.listKernelSpecs(resource);
+        return specs.find((item) => item.language.toLowerCase() === language.toLowerCase());
     }
 
     private async findResourceKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {

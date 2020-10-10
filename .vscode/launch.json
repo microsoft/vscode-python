@@ -292,7 +292,9 @@
                 // Remove `X` prefix and update path to test with real python interpreter (for DS functional tests).
                 "XCI_PYTHON_PATH": "<Python Path>",
                 // Remove 'X' prefix to dump output for debugger. Directory has to exist prior to launch
-                "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output"
+                "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output",
+                // Remove 'X' prefix to dump webview redux action log
+                "XVSC_PYTHON_WEBVIEW_LOG_FILE": "${workspaceRoot}/test-webview.log"
             },
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",

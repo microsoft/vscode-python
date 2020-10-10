@@ -23,7 +23,7 @@ import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     executeActiveDocument,
-    insertPythonCell,
+    insertCodeCell,
     startJupyter,
     trustAllNotebooks,
     waitForTextOutputInVSCode
@@ -55,7 +55,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await startJupyter(true);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
-        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
     });
     setup(async () => {
@@ -70,7 +69,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables)));
 
     test('Cancelling token will cancel cell execution', async () => {
-        await insertPythonCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
+        await insertCodeCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', { index: 0 });
         const cell = vscEditor.document.cells[0];
         const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const showInformationMessage = sinon.stub(appShell, 'showInformationMessage');
@@ -104,7 +103,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         }
     });
     test('Restarting kernel will cancel cell execution & we can re-run a cell', async () => {
-        await insertPythonCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
+        await insertCodeCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', { index: 0 });
         const cell = vscEditor.document.cells[0];
         // Ensure we click `Yes` when prompted to restart the kernel.
         const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);

@@ -23,7 +23,7 @@ import {
     InterruptResult,
     IStatusProvider
 } from '../types';
-import { getDefaultCodeLanguage } from './helpers/helpers';
+import { NotebookCellLanguageService } from './defaultCellLanguageService';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -86,7 +86,8 @@ export class NotebookEditor implements INotebookEditor {
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
-        private readonly nbExtensibility: INotebookExtensibility
+        private readonly nbExtensibility: INotebookExtensibility,
+        private readonly cellLanguageService: NotebookCellLanguageService
     ) {
         disposables.push(model.onDidEdit(() => this._modified.fire(this)));
         disposables.push(
@@ -132,7 +133,7 @@ export class NotebookEditor implements INotebookEditor {
         if (!this.vscodeNotebook.activeNotebookEditor) {
             return;
         }
-        const defaultLanguage = getDefaultCodeLanguage(this.model);
+        const defaultLanguage = this.cellLanguageService.getPreferredLanguage(this.model.metadata);
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
             editor
