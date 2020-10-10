@@ -36,7 +36,7 @@ export class JupyterImporter implements INotebookImporter {
 {% endblock codecell %}
 {% block in_prompt %}{% endblock in_prompt %}
 {% block input %}{{ cell.source | ipython2python }}{% endblock input %}
-{% block markdowncell scoped %}{0} [markdown]
+{% block markdowncell scoped %}{1} [markdown]
 {{ cell.source | comment_lines }}
 {% endblock markdowncell %}`;
     private readonly nbconvert5Null = 'null.tpl';
@@ -53,7 +53,7 @@ export class JupyterImporter implements INotebookImporter {
         @inject(INbConvertInterpreterDependencyChecker)
         private readonly nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker,
         @inject(INbConvertExportToPythonService) private readonly exportToPythonService: INbConvertExportToPythonService
-    ) {}
+    ) { }
 
     public async importFromFile(sourceFile: Uri, interpreter: PythonEnvironment): Promise<string> {
         // If the user has requested it, add a cd command to the imported file so that relative paths still work
