@@ -53,7 +53,7 @@ export class JupyterImporter implements INotebookImporter {
         @inject(INbConvertInterpreterDependencyChecker)
         private readonly nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker,
         @inject(INbConvertExportToPythonService) private readonly exportToPythonService: INbConvertExportToPythonService
-    ) { }
+    ) {}
 
     public async importFromFile(sourceFile: Uri, interpreter: PythonEnvironment): Promise<string> {
         // If the user has requested it, add a cd command to the imported file so that relative paths still work
