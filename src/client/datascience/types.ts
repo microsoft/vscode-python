@@ -860,28 +860,28 @@ export interface IJupyterVariable {
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
 export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {
-    setDependencies(variable: IJupyterVariable, notebook: INotebook): void;
+    setDependencies(variable: IJupyterVariable, notebook?: INotebook): void;
 }
 
 export const IJupyterVariableDataProviderFactory = Symbol('IJupyterVariableDataProviderFactory');
 export interface IJupyterVariableDataProviderFactory {
-    create(variable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariableDataProvider>;
+    create(variable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariableDataProvider>;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     readonly refreshRequired: Event<void>;
-    getVariables(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse>;
-    getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable>;
+    getVariables(request: IJupyterVariablesRequest, notebook?: INotebook): Promise<IJupyterVariablesResponse>;
+    getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariable>;
     getDataFrameRows(
         targetVariable: IJupyterVariable,
-        notebook: INotebook,
         start: number,
-        end: number
+        end: number,
+        notebook?: INotebook
     ): Promise<JSONObject>;
     getMatchingVariable(
-        notebook: INotebook,
         name: string,
+        notebook?: INotebook,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable | undefined>;
 }

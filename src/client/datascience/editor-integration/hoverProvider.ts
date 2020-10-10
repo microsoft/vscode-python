@@ -109,7 +109,7 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
                     if (notebooks && notebooks.length) {
                         // Just use the first one to reply if more than one.
                         const match = await Promise.race(
-                            notebooks.map((n) => this.variableProvider.getMatchingVariable(n, word, t))
+                            notebooks.map((n) => this.variableProvider.getMatchingVariable(word, n, t))
                         );
                         if (match) {
                             return {

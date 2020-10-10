@@ -38,7 +38,6 @@ import { RunByLine } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
 import { isNil } from 'lodash';
-import { DebugProtocol } from 'vscode-debugprotocol';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -61,12 +60,10 @@ import {
     IRemoteAddCode,
     IRemoteReexecuteCode,
     IShowDataViewer,
-    IShowDataViewerFromVariablePanel,
     ISubmitNewCell,
     SysInfoReason,
     VariableExplorerStateKeys
 } from '../interactive-common/interactiveWindowTypes';
-import { convertDebugProtocolVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import {
     getDisplayNameOrNameOfKernelConnection,
@@ -224,14 +221,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         setTimeout(() => {
             this.createNotebookIfProviderConnectionExists().ignoreErrors();
         }, 0);
-
-        this.disposables.push(
-            this.commandManager.registerCommand(
-                Commands.ShowDataViewer,
-                this.onVariablePanelShowDataViewerRequest,
-                this
-            )
-        );
     }
 
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
@@ -1031,26 +1020,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     }
 
-    private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
-        const jupyterVariable = convertDebugProtocolVariableToIJupyterVariable(
-            request.variable as DebugProtocol.Variable
-        );
-        try {
-            const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
-                jupyterVariable,
-                this._notebook!
-            );
-            const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
-            const columnSize = dataFrameInfo?.columns?.length;
-            if (columnSize && (await this.checkColumnSize(columnSize))) {
-                const title: string = `${localize.DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
-                await this.dataExplorerFactory.create(jupyterVariableDataProvider, title);
-            }
-        } catch (e) {
-            this.applicationShell.showErrorMessage(e.toString());
-        }
-    }
-
     private onAddedSysInfo(sysInfo: IAddedSysInfo) {
         // See if this is from us or not.
         if (sysInfo.id !== this.id) {
@@ -1455,7 +1424,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
         // Request our new list of variables
         const response: IJupyterVariablesResponse = this._notebook
-            ? await this.jupyterVariables.getVariables(this._notebook, args)
+            ? await this.jupyterVariables.getVariables(args, this._notebook)
             : {
                   totalCount: 0,
                   pageResponse: [],

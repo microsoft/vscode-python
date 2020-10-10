@@ -58,7 +58,7 @@ export class OldJupyterVariables implements IJupyterVariables {
     constructor(
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IConfigurationService) private configService: IConfigurationService
-    ) {}
+    ) { }
 
     public get refreshRequired(): Event<void> {
         return this.refreshEventEmitter.event;
@@ -66,14 +66,14 @@ export class OldJupyterVariables implements IJupyterVariables {
 
     // IJupyterVariables implementation
     public async getVariables(
-        notebook: INotebook,
-        request: IJupyterVariablesRequest
+        request: IJupyterVariablesRequest,
+        notebook: INotebook
     ): Promise<IJupyterVariablesResponse> {
         // Run the language appropriate variable fetch
         return this.getVariablesBasedOnKernel(notebook, request);
     }
 
-    public async getMatchingVariable(_notebook: INotebook, _name: string): Promise<IJupyterVariable | undefined> {
+    public async getMatchingVariable(_name: string, _notebook: INotebook): Promise<IJupyterVariable | undefined> {
         // Not supported with old method.
         return undefined;
     }
@@ -91,9 +91,9 @@ export class OldJupyterVariables implements IJupyterVariables {
 
     public async getDataFrameRows(
         targetVariable: IJupyterVariable,
-        notebook: INotebook,
         start: number,
-        end: number
+        end: number,
+        notebook: INotebook
     ): Promise<{}> {
         // Run the get dataframe rows script
         return this.runScript<{}>(notebook, targetVariable, {}, () => this.fetchDataFrameRowsScript, [
@@ -324,7 +324,7 @@ export class OldJupyterVariables implements IJupyterVariables {
             result.pageStartIndex = startPos;
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
-            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
+            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length;) {
                 const fullVariable = list.variables[i].value
                     ? list.variables[i]
                     : await this.getVariableValueFromKernel(list.variables[i], notebook);

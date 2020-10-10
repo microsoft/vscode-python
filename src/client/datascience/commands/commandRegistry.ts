@@ -5,6 +5,7 @@
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
 import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { Commands as coreCommands } from '../../common/constants';
@@ -15,11 +16,15 @@ import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
+import { ColumnWarningSize, IDataViewerFactory } from '../data-viewing/types';
+import { IShowDataViewerFromVariablePanel } from '../interactive-common/interactiveWindowTypes';
+import { convertDebugProtocolVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceFileSystem,
+    IJupyterVariableDataProviderFactory,
     INotebookEditorProvider
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
@@ -48,6 +53,9 @@ export class CommandRegistry implements IDisposable {
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
         @inject(IStartPage) private startPage: IStartPage,
         @inject(ExportCommands) private readonly exportCommand: ExportCommands,
+        @inject(IJupyterVariableDataProviderFactory)
+        private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
+        @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
         @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem
     ) {
         this.disposables.push(this.serverSelectedCommand);
@@ -96,6 +104,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
         this.registerCommand(Commands.GatherQuality, this.reportGatherQuality);
         this.registerCommand(Commands.LatestExtension, this.openPythonExtensionPage);
+        this.registerCommand(Commands.ShowDataViewer, this.onVariablePanelShowDataViewerRequest);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
@@ -465,5 +474,26 @@ export class CommandRegistry implements IDisposable {
 
     private openPythonExtensionPage() {
         env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-python.python`));
+    }
+
+    private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
+        if (this.debugService.activeDebugSession) {
+            const jupyterVariable = convertDebugProtocolVariableToIJupyterVariable(
+                request.variable as DebugProtocol.Variable
+            );
+            try {
+                const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
+                    jupyterVariable
+                );
+                const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
+                const columnSize = dataFrameInfo?.columns?.length;
+                if (columnSize && columnSize <= ColumnWarningSize) {
+                    const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
+                    await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
+                }
+            } catch (e) {
+                this.appShell.showErrorMessage(e.toString());
+            }
+        }
     }
 }

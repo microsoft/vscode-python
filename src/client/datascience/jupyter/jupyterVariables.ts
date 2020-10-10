@@ -48,34 +48,34 @@ export class JupyterVariables implements IJupyterVariables {
     // IJupyterVariables implementation
     @captureTelemetry(Telemetry.VariableExplorerFetchTime, undefined, true)
     public async getVariables(
-        notebook: INotebook,
-        request: IJupyterVariablesRequest
+        request: IJupyterVariablesRequest,
+        notebook?: INotebook
     ): Promise<IJupyterVariablesResponse> {
-        return this.getVariableHandler(notebook).getVariables(notebook, request);
+        return this.getVariableHandler(notebook).getVariables(request, notebook);
     }
 
-    public getMatchingVariable(notebook: INotebook, name: string): Promise<IJupyterVariable | undefined> {
-        return this.getVariableHandler(notebook).getMatchingVariable(notebook, name);
+    public getMatchingVariable(name: string, notebook?: INotebook): Promise<IJupyterVariable | undefined> {
+        return this.getVariableHandler(notebook).getMatchingVariable(name, notebook);
     }
 
-    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
+    public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariable> {
         return this.getVariableHandler(notebook).getDataFrameInfo(targetVariable, notebook);
     }
 
     public async getDataFrameRows(
         targetVariable: IJupyterVariable,
-        notebook: INotebook,
         start: number,
-        end: number
+        end: number,
+        notebook?: INotebook
     ): Promise<JSONObject> {
-        return this.getVariableHandler(notebook).getDataFrameRows(targetVariable, notebook, start, end);
+        return this.getVariableHandler(notebook).getDataFrameRows(targetVariable, start, end, notebook);
     }
 
-    private getVariableHandler(notebook: INotebook): IJupyterVariables {
+    private getVariableHandler(notebook?: INotebook): IJupyterVariables {
         if (!this.experimentsManager.inExperiment(RunByLine.experiment)) {
             return this.oldVariables;
         }
-        if (this.debuggerVariables.active && notebook.status === ServerStatus.Busy) {
+        if (this.debuggerVariables.active && (!notebook || notebook.status === ServerStatus.Busy)) {
             return this.debuggerVariables;
         }
 

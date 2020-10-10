@@ -56,16 +56,16 @@ export class KernelVariables implements IJupyterVariables {
 
     // IJupyterVariables implementation
     public async getVariables(
-        notebook: INotebook,
-        request: IJupyterVariablesRequest
+        request: IJupyterVariablesRequest,
+        notebook: INotebook
     ): Promise<IJupyterVariablesResponse> {
         // Run the language appropriate variable fetch
         return this.getVariablesBasedOnKernel(notebook, request);
     }
 
     public async getMatchingVariable(
-        notebook: INotebook,
         name: string,
+        notebook: INotebook,
         token?: CancellationToken
     ): Promise<IJupyterVariable | undefined> {
         // See if in the cache
@@ -124,9 +124,9 @@ export class KernelVariables implements IJupyterVariables {
 
     public async getDataFrameRows(
         targetVariable: IJupyterVariable,
-        notebook: INotebook,
         start: number,
-        end: number
+        end: number,
+        notebook: INotebook
     ): Promise<{}> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
