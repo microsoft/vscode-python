@@ -126,6 +126,13 @@ export namespace Pylance {
     );
 }
 
+export namespace Jupyter {
+    export const jupyterExtensionRequired = localize(
+        'Jupyter.extensionRequired',
+        'The Jupyter extension is required to perform that task. Click Yes to open the Jupyter extension installation page.'
+    );
+}
+
 export namespace LanguageService {
     export const startingJedi = localize('LanguageService.startingJedi', 'Starting Jedi Python language engine.');
     export const startingMicrosoft = localize(

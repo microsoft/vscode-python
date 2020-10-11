@@ -499,6 +499,12 @@ export interface ICommandManager {
     getCommands(filterInternal?: boolean): Thenable<string[]>;
 }
 
+export const IJupyterExtensionDependencyManager = Symbol('IJupyterExtensionDependencyManager');
+export interface IJupyterExtensionDependencyManager {
+    readonly isJupyterExtensionInstalled: boolean;
+    installJupyterExtension(): Promise<undefined>;
+}
+
 export const IDocumentManager = Symbol('IDocumentManager');
 
 export interface IDocumentManager {

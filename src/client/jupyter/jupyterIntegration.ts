@@ -10,6 +10,7 @@ import { dirname } from 'path';
 import { CancellationToken, Disposable, Event, Memento, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
 import { ILanguageServerCache, ILanguageServerConnection } from '../activation/types';
+import { JUPYTER_EXTENSION_ID } from '../common/constants';
 import { InterpreterUri } from '../common/installer/types';
 import {
     GLOBAL_MEMENTO,
@@ -144,7 +145,7 @@ export class JupyterExtensionIntegration {
     }
 
     public async integrateWithJupyterExtension(): Promise<void> {
-        const jupyterExtension = this.extensions.getExtension<JupyterExtensionApi>('ms-toolsai.jupyter');
+        const jupyterExtension = this.extensions.getExtension<JupyterExtensionApi>(JUPYTER_EXTENSION_ID);
         if (!jupyterExtension) {
             return;
         }

@@ -3,6 +3,7 @@
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IExperimentService, IFileDownloader, IHttpClient, IInterpreterPathService } from '../common/types';
 import { IServiceManager } from '../ioc/types';
+import { JupyterExtensionDependencyManager } from '../jupyter/jupyterExtensionDependencyManager';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
 import { ActiveResourceService } from './application/activeResource';
@@ -28,6 +29,7 @@ import {
     ICustomEditorService,
     IDebugService,
     IDocumentManager,
+    IJupyterExtensionDependencyManager,
     ILanguageService,
     ITerminalManager,
     IVSCodeNotebook,
@@ -129,6 +131,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
     serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
+    serviceManager.addSingleton<IJupyterExtensionDependencyManager>(
+        IJupyterExtensionDependencyManager,
+        JupyterExtensionDependencyManager
+    );
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);

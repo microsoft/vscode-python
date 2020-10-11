@@ -207,5 +207,6 @@
     "StartPage.sampleNotebook": "Notebooks intro",
     "StartPage.openFolder": "Open a Folder or Workspace",
     "StartPage.folderDesc": "- Open a <div class=\"link\" role=\"button\" onclick={0}>Folder</div><br /> - Open a <div class=\"link\" role=\"button\" onclick={1}>Workspace</div>",
-    "StartPage.badWebPanelFormatString": "<html><body><h1>{0} is not a valid file name</h1></body></html>"
+    "StartPage.badWebPanelFormatString": "<html><body><h1>{0} is not a valid file name</h1></body></html>",
+    "Jupyter.extensionRequired": "The Jupyter extension is required to perform that task. Click Yes to open the Jupyter extension installation page."
 }

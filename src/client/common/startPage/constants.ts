@@ -34,6 +34,6 @@ export enum Telemetry {
 }
 
 export namespace Commands {
-    export const RunAllCells = 'python.datascience.runallcells';
-    export const OpenNotebook = 'python.datascience.opennotebook';
+    export const RunAllCells = 'jupyter.runallcells';
+    export const OpenNotebook = 'jupyter.opennotebook';
 }

@@ -130,7 +130,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
 
                 if (savedVersion) {
                     await this.commandManager.executeCommand(
-                        'python.datascience.opennotebook',
+                        'jupyter.opennotebook',
                         undefined,
                         CommandSource.commandPalette
                     );
@@ -157,7 +157,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
                     content: `#%%\nprint("${localize.StartPage.helloWorld()}")`
                 });
                 await this.documentManager.showTextDocument(doc2, 1, true);
-                await this.commandManager.executeCommand('python.datascience.runallcells', Uri.parse(''));
+                await this.commandManager.executeCommand('jupyter.runallcells', Uri.parse(''));
                 break;
             case StartPageMessages.OpenCommandPalette:
                 sendTelemetryEvent(Telemetry.StartPageOpenCommandPalette);
@@ -296,7 +296,7 @@ export class StartPage extends WebviewPanelHost<IStartPageMapping>
         }
 
         await this.commandManager.executeCommand(
-            'python.datascience.opennotebook',
+            'jupyter.opennotebook',
             Uri.file(sampleNotebookPath),
             CommandSource.commandPalette
         );
