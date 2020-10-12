@@ -201,9 +201,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public get isUntitled(): boolean {
         return isUntitledFile(this.file);
     }
-    // public get cells(): ICell[] {
-    //     return this._cells;
-    // }
     public get onDidEdit(): Event<NotebookModelChange> {
         return this._editEventEmitter.event;
     }
