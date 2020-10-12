@@ -64,6 +64,7 @@ export function createNamedEnv(
 
 export class SimpleLocator extends Locator {
     private deferred = createDeferred<void>();
+
     constructor(
         private envs: PythonEnvInfo[],
         public callbacks: {
@@ -74,21 +75,24 @@ export class SimpleLocator extends Locator {
             beforeEach?(e: PythonEnvInfo): Promise<void>;
             afterEach?(e: PythonEnvInfo): Promise<void>;
             onQuery?(query: PythonLocatorQuery | undefined, envs: PythonEnvInfo[]): Promise<PythonEnvInfo[]>;
-        }
+        } = {},
     ) {
         super();
     }
+
     public get done(): Promise<void> {
         return this.deferred.promise;
     }
+
     public fire(event: PythonEnvsChangedEvent) {
         this.emitter.fire(event);
     }
+
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
-        const deferred = this.deferred;
-        const callbacks = this.callbacks;
-        let envs = this.envs;
-        const iterator: IPythonEnvsIterator = async function*() {
+        const { deferred } = this;
+        const { callbacks } = this;
+        let { envs } = this;
+        const iterator: IPythonEnvsIterator = (async function* () {
             if (callbacks?.onQuery !== undefined) {
                 envs = await callbacks.onQuery(query, envs);
             }
@@ -115,23 +119,23 @@ export class SimpleLocator extends Locator {
                     }
                 }
             }
-            if (callbacks?.after!== undefined) {
+            if (callbacks?.after !== undefined) {
                 await callbacks.after;
             }
             deferred.resolve();
-        }();
+        }());
         iterator.onUpdated = this.callbacks?.onUpdated;
         return iterator;
     }
+
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const envInfo: PythonEnvInfo = typeof env === 'string' ? createLocatedEnv('', '', undefined, env) : env;
         if (this.callbacks.resolve === undefined) {
             return envInfo;
-        } else if (this.callbacks?.resolve === null) {
+        } if (this.callbacks?.resolve === null) {
             return undefined;
-        } else {
-            return this.callbacks.resolve(envInfo);
         }
+        return this.callbacks.resolve(envInfo);
     }
 }
 
