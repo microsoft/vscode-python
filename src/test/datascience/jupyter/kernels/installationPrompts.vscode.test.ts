@@ -17,12 +17,7 @@ import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../..
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { openNotebook } from '../../helpers';
-import {
-    closeNotebooksAndCleanUpAfterTests,
-    hijackPrompt,
-    trustAllNotebooks,
-    waitForKernelToGetAutoSelected
-} from '../../notebook/helper';
+import { closeNotebooksAndCleanUpAfterTests, hijackPrompt, trustAllNotebooks } from '../../notebook/helper';
 
 // tslint:disable: no-invalid-this max-func-body-length no-function-expression no-any
 suite('DataScience Install IPyKernel (slow) (install)', () => {
@@ -97,7 +92,6 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         );
 
         await openNotebook(api.serviceContainer, nbFile);
-        await waitForKernelToGetAutoSelected();
 
         // Run all cells
         editorProvider.activeEditor!.runAllCells();
