@@ -3354,15 +3354,6 @@
                 "extensions": [
                     ".jl"
                 ]
-            },
-            {
-                "id": "xml",
-                "aliases": [
-                    "svg"
-                ]
-            },
-            {
-                "id": "raw"
             }
         ],
         "grammars": [
