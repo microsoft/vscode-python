@@ -4,136 +4,69 @@
 'use strict';
 
 // tslint:disable:no-require-imports no-var-requires
-import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { assert, expect } from 'chai';
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { commands, Uri } from 'vscode';
-import {
-    NotebookCell,
-    NotebookContentProvider as VSCNotebookContentProvider
-} from '../../../../typings/vscode-proposed';
+import { Uri } from 'vscode';
+import { NotebookCell } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
-import { sleep } from '../../../client/common/utils/async';
-import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
-import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common';
+import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
+import { openNotebook } from '../helpers';
 import {
     assertHasExecutionCompletedSuccessfully,
     assertHasExecutionCompletedWithErrors,
     assertHasTextOutputInVSCode,
     assertVSCCellHasErrorOutput,
-    assertVSCCellStateIsUndefined,
+    assertVSCCellStateIsUndefinedOrIdle,
     canRunTests,
+    closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
     executeActiveDocument,
     insertCodeCell,
     saveActiveNotebook,
-    startJupyter,
     trustAllNotebooks
 } from './helper';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 // tslint:disable: no-any no-invalid-this
-suite('DataScience - VSCode Notebook - (Saving)', function () {
+suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     this.timeout(60_000);
     let api: IExtensionTestApi;
-    let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
+    const templateIPynbEmpty = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'test',
+        'datascience',
+        'notebook',
+        'empty.ipynb'
+    );
+    let testEmptyIPynb: Uri;
     suiteSetup(async function () {
         this.timeout(60_000);
         api = await initialize();
         if (!(await canRunTests())) {
             return this.skip();
         }
-        await startJupyter(true);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     });
     setup(async () => {
         sinon.restore();
         await trustAllNotebooks();
-    });
-    teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Clearing output will mark document as dirty', async function () {
-        // https://github.com/microsoft/vscode-python/issues/13162
-        return this.skip();
-        const templateIPynb = path.join(
-            EXTENSION_ROOT_DIR_FOR_TESTS,
-            'src',
-            'test',
-            'datascience',
-            'notebook',
-            'test.ipynb'
-        );
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        const testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
-        await editorProvider.open(testIPynb);
-        const contentProvider = api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider);
-        const changedEvent = createEventHandler(contentProvider, 'onDidChangeNotebook', disposables);
-
-        // Clear the output & then save the notebook.
-        await commands.executeCommand('notebook.clearAllCellsOutputs');
-
-        // Wait till execution count changes & it is marked as dirty
-        await changedEvent.assertFired(5_000);
+        testEmptyIPynb = Uri.file(await createTemporaryNotebook(templateIPynbEmpty, disposables));
     });
-    test('Saving after clearing should result in execution_count=null in ipynb file', async function () {
-        // https://github.com/microsoft/vscode-python/issues/13159
-        return this.skip();
-        const templateIPynb = path.join(
-            EXTENSION_ROOT_DIR_FOR_TESTS,
-            'src',
-            'test',
-            'datascience',
-            'notebook',
-            'test.ipynb'
-        );
-        // Don't use same file (due to dirty handling, we might save in dirty.)
-        // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        const testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
-        await editorProvider.open(testIPynb);
-        const notebookDocument = vscodeNotebook.activeNotebookEditor?.document!;
-        const vscCells = notebookDocument.cells!;
-        const contentProvider = api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider);
-        const changedEvent = createEventHandler(contentProvider, 'onDidChangeNotebook', disposables);
-
-        // Clear the output & then save the notebook.
-        await commands.executeCommand('notebook.clearAllCellsOutputs');
-
-        // Wait till execution count changes & it is marked as dirty
-        await waitForCondition(
-            async () => !vscCells[0].metadata.executionOrder && changedEvent.fired,
-            5_000,
-            'Cell did not get cleared'
-        );
-
-        await saveActiveNotebook(disposables);
-
-        // Open nb json and validate execution_count = null.
-        const json = JSON.parse(fs.readFileSync(testIPynb.fsPath, { encoding: 'utf8' })) as nbformat.INotebookContent;
-        assert.ok(json.cells[0].execution_count === null);
-    });
+    // teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
+    teardown(() => closeNotebooks(disposables));
+    suiteTeardown(closeNotebooksAndCleanUpAfterTests);
     test('Verify output & metadata when re-opening (slow)', async () => {
-        const templateIPynb = path.join(
-            EXTENSION_ROOT_DIR_FOR_TESTS,
-            'src',
-            'test',
-            'datascience',
-            'notebook',
-            'empty.ipynb'
-        );
-        // Don't use same file (due to dirty handling, we might save in dirty.)
-        // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        const testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
-        await editorProvider.open(testIPynb);
+        await openNotebook(api.serviceContainer, testEmptyIPynb.fsPath);
 
         await insertCodeCell('print(1)');
         await insertCodeCell('print(a)');
@@ -152,14 +85,13 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         }
         initializeCells();
         await executeActiveDocument();
-        await sleep(5_000);
         // Wait till 1 & 2 finish & 3rd cell starts executing.
         await waitForCondition(
             async () =>
                 assertHasExecutionCompletedSuccessfully(cell1) &&
                 assertHasExecutionCompletedWithErrors(cell2) &&
-                assertVSCCellStateIsUndefined(cell3) &&
-                assertVSCCellStateIsUndefined(cell4),
+                assertVSCCellStateIsUndefinedOrIdle(cell3) &&
+                assertVSCCellStateIsUndefinedOrIdle(cell4),
             15_000,
             'Cells did not finish executing'
         );
@@ -203,10 +135,13 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
             assert.isEmpty(cell3.metadata.statusMessage || '', 'Cell 3 status should be empty'); // Not executed.
             assert.isEmpty(cell4.metadata.statusMessage || '', 'Cell 4 status should be empty'); // Not executed.
 
-            // assert.isOk(cell1.metadata.runStartTime, 'Start time should be > 0'); // Flaky with VSC as we're using NB as source of truth.
-            // assert.isOk(cell1.metadata.lastRunDuration, 'Duration should be > 0'); // Flaky with VSC as we're using NB as source of truth.
-            // assert.isOk(cell2.metadata.runStartTime, 'Start time should be > 0'); // Flaky with VSC as we're using NB as source of truth.
-            // assert.isOk(cell2.metadata.lastRunDuration, 'Duration should be > 0'); // Flaky with VSC as we're using NB as source of truth.
+            // Persisting these require us to save custom metadata in ipynb. Not sure users would like this. We'll have more changes in ipynb files.
+            // tslint:disable-next-line: no-suspicious-comment
+            // TODO: Discuss whether we need to persist these.
+            // assert.isOk(cell1.metadata.runStartTime, 'Start time should be > 0');
+            // assert.isOk(cell1.metadata.lastRunDuration, 'Duration should be > 0');
+            // assert.isOk(cell2.metadata.runStartTime, 'Start time should be > 0');
+            // assert.isOk(cell2.metadata.lastRunDuration, 'Duration should be > 0');
             assert.isUndefined(cell3.metadata.runStartTime, 'Cell 3 did should not have run');
             assert.isUndefined(cell3.metadata.lastRunDuration, 'Cell 3 did should not have run');
             assert.isUndefined(cell4.metadata.runStartTime, 'Cell 4 did should not have run');
@@ -220,7 +155,7 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         await closeActiveWindows();
 
         // Reopen the notebook & validate the metadata.
-        await editorProvider.open(testIPynb);
+        await openNotebook(api.serviceContainer, testEmptyIPynb.fsPath);
         initializeCells();
         verifyCelMetadata();
     });

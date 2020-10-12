@@ -17,13 +17,12 @@ import {
     canRunTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    disposeAllDisposables,
     trustAllNotebooks
 } from '../datascience/notebook/helper';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize, initializeTest } from '../initialize';
 
 // tslint:disable: no-any no-invalid-this
-suite('Formatting - Notebooks', () => {
+suite('Formatting - Notebooks (slow)', () => {
     let api: IExtensionTestApi;
     suiteSetup(async function () {
         api = await initialize();
@@ -69,7 +68,7 @@ suite('Formatting - Notebooks', () => {
                 fs = api.serviceContainer.get<IFileSystem>(IFileSystem);
             });
             teardown(closeNotebooksAndCleanUpAfterTests);
-            suiteTeardown(() => disposeAllDisposables(disposables));
+            suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
             test('Formatted with temporary file when formatting existing saved notebooks (without changes)', async () => {
                 // Open a new notebook & add a cell
                 await editorProvider.open(testIPynb);

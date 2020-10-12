@@ -17,16 +17,19 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
     public get id() {
         return this._id;
     }
-    private _id = uuid();
-    private saveChangeCount: number = 0;
-    private changeCount: number = 0;
     public get isDirty(): boolean {
         return this.changeCount !== this.saveChangeCount;
     }
+    public get cells(): ICell[] {
+        return this._cells;
+    }
+    private _id = uuid();
+    private saveChangeCount: number = 0;
+    private changeCount: number = 0;
     constructor(
         isTrusted: boolean,
         file: Uri,
-        cells: ICell[],
+        private _cells: ICell[],
         globalMemento: Memento,
         crypto: ICryptoUtils,
         json: Partial<nbformat.INotebookContent> = {},
@@ -34,11 +37,14 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
         pythonNumber: number = 3,
         isInitiallyDirty: boolean = false
     ) {
-        super(isTrusted, file, cells, globalMemento, crypto, json, indentAmount, pythonNumber);
+        super(isTrusted, file, globalMemento, crypto, json, indentAmount, pythonNumber);
         if (isInitiallyDirty) {
             // This means we're dirty. Indicate dirty and load from this content
             this.saveChangeCount = -1;
         }
+    }
+    public update(change: NotebookModelChange): void {
+        this.handleModelChange(change);
     }
 
     public async applyEdits(edits: readonly NotebookModelChange[]): Promise<void> {
@@ -47,7 +53,15 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
     public async undoEdits(edits: readonly NotebookModelChange[]): Promise<void> {
         edits.forEach((e) => this.update({ ...e, source: 'undo' }));
     }
-
+    public getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[] {
+        return this._cells.map((cell) => ({ data: cell.data, id: cell.id, state: cell.state }));
+    }
+    protected getCellCount() {
+        return this._cells.length;
+    }
+    protected getJupyterCells(): nbformat.IBaseCell[] {
+        return this._cells.map((cell) => cell.data);
+    }
     protected handleRedo(change: NotebookModelChange): boolean {
         let changed = false;
         switch (change.kind) {
@@ -141,6 +155,31 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
         this.changeCount -= 1;
 
         return changed;
+    }
+    private handleModelChange(change: NotebookModelChange) {
+        const oldDirty = this.isDirty;
+        let changed = false;
+
+        switch (change.source) {
+            case 'redo':
+            case 'user':
+                changed = this.handleRedo(change);
+                break;
+            case 'undo':
+                changed = this.handleUndo(change);
+                break;
+            default:
+                break;
+        }
+
+        // Forward onto our listeners if necessary
+        if (changed || this.isDirty !== oldDirty) {
+            this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty, model: this });
+        }
+        // Slightly different for the event we send to VS code. Skip version and file changes. Only send user events.
+        if ((changed || this.isDirty !== oldDirty) && change.kind !== 'version' && change.source === 'user') {
+            this._editEventEmitter.fire(change);
+        }
     }
 
     private removeAllCells(newCellId: string) {

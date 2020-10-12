@@ -17,7 +17,7 @@ import {
     kernelConnectionMetadataHasKernelModel
 } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { ICell, INotebookMetadataLive, INotebookModel } from '../types';
+import { CellState, INotebookMetadataLive, INotebookModel } from '../types';
 
 export const ActiveKernelIdList = `Active_Kernel_Id_List`;
 // This is the number of kernel ids that will be remembered between opening and closing VS code
@@ -201,9 +201,9 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public get isUntitled(): boolean {
         return isUntitledFile(this.file);
     }
-    public get cells(): ICell[] {
-        return this._cells;
-    }
+    // public get cells(): ICell[] {
+    //     return this._cells;
+    // }
     public get onDidEdit(): Event<NotebookModelChange> {
         return this._editEventEmitter.event;
     }
@@ -220,7 +220,9 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public get isTrusted() {
         return this._isTrusted;
     }
-
+    public get cellCount(): number {
+        return this.getCellCount();
+    }
     protected _disposed = new EventEmitter<void>();
     protected _isDisposed?: boolean;
     protected _changedEmitter = new EventEmitter<NotebookModelChange>();
@@ -229,7 +231,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
     constructor(
         protected _isTrusted: boolean,
         protected _file: Uri,
-        protected _cells: ICell[],
+        // protected _cells: ICell[],
         protected globalMemento: Memento,
         private crypto: ICryptoUtils,
         protected notebookJson: Partial<nbformat.INotebookContent> = {},
@@ -238,7 +240,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
         initializeJsonIfRequired = true
     ) {
         // VSCode Notebook Model will execute this itself.
-        // THe problem is we need to overide this behavior, however the overriding doesn't work in JS
+        // THe problem is we need to override this behavior, however the overriding doesn't work in JS
         // as some of the dependencies passed as ctor arguments are not available in the ctor.
         // E.g. in the ctor of the base class, the private members (passed as ctor ares) initialized in child class are not available (unlike other languages).
         if (initializeJsonIfRequired) {
@@ -250,16 +252,17 @@ export abstract class BaseNotebookModel implements INotebookModel {
         this._isDisposed = true;
         this._disposed.fire();
     }
-    public update(change: NotebookModelChange): void {
-        this.handleModelChange(change);
-    }
-
+    public abstract getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
+    // {
+    //     return this._cells.map((cell) => ({ data: cell.data, id: cell.id, state: cell.state }));
+    // }
     public getContent(): string {
         return this.generateNotebookContent();
     }
     public trust() {
         this._isTrusted = true;
     }
+    protected abstract getCellCount(): number;
     protected handleUndo(_change: NotebookModelChange): boolean {
         return false;
     }
@@ -281,9 +284,10 @@ export abstract class BaseNotebookModel implements INotebookModel {
 
         // Reuse our original json except for the cells.
         const json = { ...this.notebookJson };
-        json.cells = this.cells.map((c) => pruneCell(c.data));
+        json.cells = this.getJupyterCells().map(pruneCell);
         return json;
     }
+    protected abstract getJupyterCells(): nbformat.IBaseCell[];
     protected getDefaultNotebookContent() {
         return getDefaultNotebookContent(this.pythonNumber);
     }
@@ -294,31 +298,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
         }
     }
 
-    private handleModelChange(change: NotebookModelChange) {
-        const oldDirty = this.isDirty;
-        let changed = false;
-
-        switch (change.source) {
-            case 'redo':
-            case 'user':
-                changed = this.handleRedo(change);
-                break;
-            case 'undo':
-                changed = this.handleUndo(change);
-                break;
-            default:
-                break;
-        }
-
-        // Forward onto our listeners if necessary
-        if (changed || this.isDirty !== oldDirty) {
-            this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty, model: this });
-        }
-        // Slightly different for the event we send to VS code. Skip version and file changes. Only send user events.
-        if ((changed || this.isDirty !== oldDirty) && change.kind !== 'version' && change.source === 'user') {
-            this._editEventEmitter.fire(change);
-        }
-    }
     // tslint:disable-next-line: cyclomatic-complexity
     private updateVersionInfo(kernelConnection: KernelConnectionMetadata | undefined): boolean {
         const { changed, kernelId } = updateNotebookMetadata(this.notebookJson.metadata, kernelConnection);

@@ -7,6 +7,8 @@ import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { traceError } from '../../common/logger';
 import { isFileNotFoundError } from '../../common/platform/errors';
 
+// tslint:disable-next-line:no-require-imports no-var-requires
+import detectIndent = require('detect-indent');
 import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -22,10 +24,7 @@ import {
     INotebookStorage,
     ITrustService
 } from '../types';
-
-// tslint:disable-next-line:no-require-imports no-var-requires
-import detectIndent = require('detect-indent');
-import { VSCodeNotebookModel } from './vscNotebookModel';
+import { NativeEditorNotebookModel } from './notebookModel';
 
 export const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
@@ -86,6 +85,10 @@ export class NativeEditorStorage implements INotebookStorage {
             parallelize.push(this.trustService.trustNotebook(model.file, contents));
         }
         await Promise.all(parallelize);
+        if (!(model instanceof NativeEditorNotebookModel)) {
+            traceError('Attempted to Save with a model that is not NativeEditorNotebookModel');
+            return;
+        }
         model.update({
             source: 'user',
             kind: 'save',
@@ -101,7 +104,8 @@ export class NativeEditorStorage implements INotebookStorage {
             parallelize.push(this.trustService.trustNotebook(file, contents));
         }
         await Promise.all(parallelize);
-        if (model instanceof VSCodeNotebookModel) {
+        if (!(model instanceof NativeEditorNotebookModel)) {
+            traceError('Attempted to SaveAs with a model that is not NativeEditorNotebookModel');
             return;
         }
         model.update({

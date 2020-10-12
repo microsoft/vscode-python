@@ -6,47 +6,32 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
+import { Uri } from 'vscode';
 import type { CellOutput } from 'vscode-proposed';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
-import { CellState, INotebookModel } from '../../../client/datascience/types';
 
 suite('DataScience - NativeNotebook helpers', () => {
     test('Convert NotebookModel to VSCode NotebookData', async () => {
-        const model: Partial<INotebookModel> = {
-            cells: [
-                {
-                    data: {
-                        cell_type: 'code',
-                        execution_count: 10,
-                        outputs: [],
-                        source: 'print(1)',
-                        metadata: {}
-                    },
-                    file: 'a.ipynb',
-                    id: 'MyCellId1',
-                    line: 0,
-                    state: CellState.init
-                },
-                {
-                    data: {
-                        cell_type: 'markdown',
-                        source: '# HEAD',
-                        metadata: {}
-                    },
-                    file: 'a.ipynb',
-                    id: 'MyCellId2',
-                    line: 0,
-                    state: CellState.init
-                }
-            ],
-            isTrusted: true
-        };
+        const cells = [
+            {
+                cell_type: 'code',
+                execution_count: 10,
+                outputs: [],
+                source: 'print(1)',
+                metadata: {}
+            },
+            {
+                cell_type: 'markdown',
+                source: '# HEAD',
+                metadata: {}
+            }
+        ];
 
         // tslint:disable-next-line: no-any
-        const notebook = notebookModelToVSCNotebookData(model as any, PYTHON_LANGUAGE);
+        const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells, PYTHON_LANGUAGE);
 
         assert.isOk(notebook);
         assert.deepEqual(notebook.languages, ['*']);
@@ -89,26 +74,17 @@ suite('DataScience - NativeNotebook helpers', () => {
     });
     suite('Outputs', () => {
         function validateCellOutputTranslation(outputs: nbformat.IOutput[], expectedOutputs: CellOutput[]) {
-            const model: Partial<INotebookModel> = {
-                cells: [
-                    {
-                        data: {
-                            cell_type: 'code',
-                            execution_count: 10,
-                            outputs,
-                            source: 'print(1)',
-                            metadata: {}
-                        },
-                        file: 'a.ipynb',
-                        id: 'MyCellId1',
-                        line: 0,
-                        state: CellState.init
-                    }
-                ],
-                isTrusted: true
-            };
+            const cells = [
+                {
+                    cell_type: 'code',
+                    execution_count: 10,
+                    outputs,
+                    source: 'print(1)',
+                    metadata: {}
+                }
+            ];
             // tslint:disable-next-line: no-any
-            const notebook = notebookModelToVSCNotebookData(model as any, PYTHON_LANGUAGE);
+            const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells, PYTHON_LANGUAGE);
 
             assert.deepEqual(notebook.cells[0].outputs, expectedOutputs);
         }

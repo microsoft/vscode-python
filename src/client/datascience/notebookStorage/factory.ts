@@ -38,7 +38,6 @@ export class NotebookModelFactory implements INotebookModelFactory {
             return new VSCodeNotebookModel(
                 options.trusted,
                 options.file,
-                options.cells,
                 options.globalMemento,
                 options.crypto,
                 options.notebookJson,

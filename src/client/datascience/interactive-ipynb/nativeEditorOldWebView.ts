@@ -29,6 +29,7 @@ import { Commands, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import {
     ICodeCssGenerator,
@@ -42,7 +43,6 @@ import {
     INotebookExporter,
     INotebookExtensibility,
     INotebookImporter,
-    INotebookModel,
     INotebookProvider,
     IStatusProvider,
     IThemeFinder,
@@ -100,7 +100,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         useCustomEditorApi: boolean,
         private readonly storage: INotebookStorageProvider,
         trustService: ITrustService,
-        model: INotebookModel,
+        model: NativeEditorNotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
         notebookExtensibility: INotebookExtensibility

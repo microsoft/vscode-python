@@ -20,7 +20,7 @@ import { getNotebookMetadata } from './helpers/helpers';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
-const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUAGE';
+export const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUAGE';
 /**
  * Responsible for determining the default language of a cell for new notebooks.
  * It should not always be `Python`, not all data scientists or users of notebooks use Python.

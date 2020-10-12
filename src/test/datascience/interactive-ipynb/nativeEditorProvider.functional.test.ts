@@ -8,6 +8,7 @@
 import { expect } from 'chai';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-languageclient/node';
+import { NativeEditorNotebookModel } from '../../../client/datascience/notebookStorage/notebookModel';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { INotebookEditorProvider, INotebookModel } from '../../../client/datascience/types';
 import { concatMultilineString } from '../../../datascience-ui/common';
@@ -54,6 +55,9 @@ suite('DataScience - Native Editor Provider', () => {
     });
 
     function insertCell(nbm: INotebookModel, index: number, code: string) {
+        if (!(nbm instanceof NativeEditorNotebookModel)) {
+            throw new Error('Incorrect Model');
+        }
         const cell = createEmptyCell(undefined, 1);
         cell.data.source = code;
         return nbm.update({
@@ -69,7 +73,7 @@ suite('DataScience - Native Editor Provider', () => {
     test('Untitled files reopening with changed contents', async () => {
         let provider = createNotebookProvider();
         const n1 = await provider.createNew();
-        let cells = n1.model!.cells;
+        let cells = n1.model!.getCellsWithId();
         expect(cells).to.be.lengthOf(1);
         insertCell(n1.model!, 0, 'a=1');
         await ioc.get<INotebookStorageProvider>(INotebookStorageProvider).backup(n1.model!, CancellationToken.None);
@@ -78,14 +82,14 @@ suite('DataScience - Native Editor Provider', () => {
         // Act like a reboot
         provider = createNotebookProvider();
         const n2 = await provider.open(uri);
-        cells = n2.model!.cells;
+        cells = n2.model!.getCellsWithId();
         expect(cells).to.be.lengthOf(2);
         expect(concatMultilineString(cells[0].data.source)).to.be.eq('a=1');
 
         // Act like another reboot but create a new file
         provider = createNotebookProvider();
         const n3 = await provider.createNew();
-        cells = n3.model!.cells;
+        cells = n3.model!.getCellsWithId();
         expect(cells).to.be.lengthOf(1);
     });
 });

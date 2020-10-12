@@ -64,6 +64,7 @@ import {
     ITrustService
 } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';
+import { NativeEditorNotebookModel } from './notebookModel';
 import { NotebookModelEditEvent } from './notebookModelEditEvent';
 import { INotebookStorageProvider } from './notebookStorageProvider';
 
@@ -215,7 +216,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         return this.open(uri);
     }
 
-    public async loadModel(options: IModelLoadOptions): Promise<INotebookModel> {
+    public async loadModel(options: IModelLoadOptions): Promise<NativeEditorNotebookModel> {
         // Get the model that may match this file
         let model = [...this.models.values()].find((m) => this.fs.arePathsSame(m.file, options.file));
         if (!model) {
@@ -228,10 +229,10 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             // Make sure to listen to events on the model
             this.trackModel(model);
         }
-        return model;
+        return model as NativeEditorNotebookModel;
     }
 
-    protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): NativeEditor {
+    protected createNotebookEditor(model: NativeEditorNotebookModel, panel?: WebviewPanel): NativeEditor {
         const editor = new NativeEditor(
             this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
             this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),

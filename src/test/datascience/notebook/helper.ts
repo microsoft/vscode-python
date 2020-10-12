@@ -6,7 +6,6 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert, expect } from 'chai';
 import * as fs from 'fs-extra';
-import { Func } from 'mocha';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
@@ -20,24 +19,25 @@ import {
 } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { IConfigurationService, ICryptoUtils, IDisposable } from '../../../client/common/types';
+import {
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    ICryptoUtils,
+    IDisposable,
+    IMemento
+} from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
-import { noop, swallowExceptions } from '../../../client/common/utils/misc';
-import { Identifiers } from '../../../client/datascience/constants';
+import { swallowExceptions } from '../../../client/common/utils/misc';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
-import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
-import { createVSCNotebookCellDataFromCell } from '../../../client/datascience/notebook/helpers/helpers';
+import {
+    LastSavedNotebookCellLanguage,
+    NotebookCellLanguageService
+} from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelProvider';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
-import {
-    CellState,
-    ICell,
-    INotebookEditorProvider,
-    INotebookModel,
-    INotebookProvider
-} from '../../../client/datascience/types';
+import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
 import { createEventHandler, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
@@ -48,7 +48,8 @@ async function getServices() {
     return {
         contentProvider: api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider),
         vscodeNotebook: api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
-        editorProvider: api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider)
+        editorProvider: api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider),
+        serviceContainer: api.serviceContainer
     };
 }
 
@@ -147,19 +148,6 @@ export async function canRunTests() {
     return appEnv.extensionChannel !== 'stable';
 }
 
-/**
- * We will be editing notebooks, to close notebooks them we need to ensure changes are saved.
- * Else when we close notebooks as part of teardown in tests, things will not work as nbs are dirty.
- * Solution - swallow saves this way when VSC fires save, we resolve and VSC thinks nb got saved and marked as not dirty.
- */
-export async function swallowSavingOfNotebooks() {
-    const api = await initialize();
-    // We will be editing notebooks, to close notebooks them we need to ensure changes are saved.
-    const contentProvider = api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider);
-    sinon.stub(contentProvider, 'saveNotebook').callsFake(noop as any);
-    sinon.stub(contentProvider, 'saveNotebookAs').callsFake(noop as any);
-}
-
 export async function shutdownAllNotebooks() {
     const api = await initialize();
     const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
@@ -227,6 +215,12 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
     const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
     await waitForCondition(async () => isRightKernel(), 15_000, errorMessage);
 }
+export async function trustNotebook(ipynbFile: string | Uri) {
+    const api = await initialize();
+    const uri = typeof ipynbFile === 'string' ? Uri.file(ipynbFile) : ipynbFile;
+    const content = await fs.readFile(uri.fsPath, { encoding: 'utf8' });
+    await api.serviceContainer.get<ITrustService>(ITrustService).trustNotebook(uri, content);
+}
 export async function trustAllNotebooks() {
     const api = await initialize();
     const dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().datascience;
@@ -236,13 +230,19 @@ export async function trustAllNotebooks() {
     dsSettings.alwaysTrustNotebooks = true;
 }
 export async function startJupyter(closeInitialEditor: boolean) {
-    const { editorProvider, vscodeNotebook } = await getServices();
+    const { editorProvider, vscodeNotebook, serviceContainer } = await getServices();
     await closeActiveWindows();
 
     const disposables: IDisposable[] = [];
     try {
+        // Ensure preferred language is always Python.
+        const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
+        if (memento.get(LastSavedNotebookCellLanguage) !== PYTHON_LANGUAGE) {
+            await memento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE);
+        }
         await editorProvider.createNew();
         await insertCodeCell('print("Hello World")', { index: 0 });
+        await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
         await executeActiveDocument();
         // Wait for Jupyter to start.
@@ -275,36 +275,11 @@ export function assertExecutionOrderInVSCCell(cell: NotebookCell, executionOrder
     assert.equal(cell.metadata.executionOrder, executionOrder);
     return true;
 }
-export async function waitForExecutionOrderInVSCCell(cell: NotebookCell, executionOrder: number | undefined) {
-    await waitForCondition(
-        async () => assertExecutionOrderInVSCCell(cell, executionOrder),
-        1_000,
-        `Execution count not '${executionOrder}' for Cell ${cell.index + 1}`
-    );
-}
-export async function waitForExecutionOrderInCell(cell: NotebookCell, executionOrder: number | undefined) {
-    await waitForCondition(
-        async () => {
-            if (executionOrder === undefined || executionOrder === null) {
-                return cell.metadata.executionOrder === undefined;
-            }
-            return cell.metadata.executionOrder === executionOrder;
-        },
-        15_000,
-        `Execution count not '${executionOrder}' for Cell ${cell.index}`
-    );
-}
 export function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
     return (
         (cell.metadata.executionOrder ?? 0) > 0 &&
         cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Error
     );
-}
-export function assertHasOutputInVSCell(cell: NotebookCell) {
-    assert.ok(cell.outputs.length, `No output in Cell ${cell.index + 1}`);
-}
-export function assertHasOutputInICell(cell: ICell, model: INotebookModel) {
-    assert.ok((cell.data.outputs as nbformat.IOutput[]).length, `No output in ICell ${model.cells.indexOf(cell) + 1}`);
 }
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number = 0, isExactMatch = true) {
     const cellOutputs = cell.outputs;
@@ -343,11 +318,6 @@ export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string,
     }
     return true;
 }
-export function assertHasTextOutputInICell(cell: ICell, text: string, index: number) {
-    const cellOutputs = cell.data.outputs as nbformat.IOutput[];
-    assert.ok(cellOutputs, 'No output');
-    assert.equal((cellOutputs[index].text as string).trim(), text, 'Incorrect output');
-}
 export function assertVSCCellIsRunning(cell: NotebookCell) {
     assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
     return true;
@@ -359,26 +329,15 @@ export async function waitForVSCCellHasEmptyOutput(cell: NotebookCell) {
         `Cell ${cell.index + 1} output did not get cleared`
     );
 }
-export async function waitForCellHasEmptyOutput(cell: ICell, model: INotebookModel) {
-    await waitForCondition(
-        async () => !Array.isArray(cell.data.outputs) || cell.data.outputs.length === 0,
-        1_000,
-        `ICell ${model.cells.indexOf(cell) + 1} output did not get cleared`
-    );
-}
-export async function waitForVSCCellIsRunning(cell: NotebookCell) {
-    await waitForCondition(async () => assertVSCCellIsRunning(cell), 1_000, `Cell ${cell.index + 1} did not start`);
-}
 export function assertVSCCellIsNotRunning(cell: NotebookCell) {
     assert.notEqual(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
     return true;
 }
-export function assertVSCCellIsIdle(cell: NotebookCell) {
+export function assertVSCCellStateIsUndefinedOrIdle(cell: NotebookCell) {
+    if (cell.metadata.runState === undefined) {
+        return true;
+    }
     assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
-    return true;
-}
-export function assertVSCCellStateIsUndefined(cell: NotebookCell) {
-    assert.isUndefined(cell.metadata.runState);
     return true;
 }
 export function assertVSCCellHasErrors(cell: NotebookCell) {
@@ -422,16 +381,6 @@ export function createNotebookModel(
         nbformat_minor: 4,
         ...(nb || {})
     };
-
-    const cells = nbJson.cells.map((c, index) => {
-        return {
-            id: `NotebookImport#${index}`,
-            file: Identifiers.EmptyFileName,
-            line: 0,
-            state: CellState.finished,
-            data: c
-        };
-    });
     const mockVSC = mock<IVSCodeNotebook>();
     when(mockVSC.notebookEditors).thenReturn([]);
     when(mockVSC.notebookDocuments).thenReturn([]);
@@ -441,7 +390,6 @@ export function createNotebookModel(
     return new VSCodeNotebookModel(
         trusted,
         uri,
-        JSON.parse(JSON.stringify(cells)),
         globalMemento,
         crypto,
         nbJson,
@@ -518,17 +466,16 @@ export function createNotebookDocument(
             runnable: model.isTrusted
         }
     };
-    model.cells.forEach((cell, index) => {
-        const vscCell = createVSCNotebookCellDataFromCell(model, PYTHON_LANGUAGE, cell)!;
+    model.getNotebookData().cells.forEach((cell, index) => {
         const vscDocumentCell: NotebookCell = {
-            cellKind: vscCell.cellKind,
-            language: vscCell.language,
-            metadata: vscCell.metadata || {},
+            cellKind: cell.cellKind,
+            language: cell.language,
+            metadata: cell.metadata || {},
             uri: model.file.with({ fragment: `cell${index}` }),
             notebook: doc,
             index,
             document: instance(mock<TextDocument>()),
-            outputs: vscCell.outputs
+            outputs: cell.outputs
         };
         cells.push(vscDocumentCell);
     });
@@ -545,7 +492,12 @@ export async function hijackPrompt(
     message: { exactMatch: string } | { endsWith: string },
     buttonToClick?: { text?: string; clickImmediately?: boolean },
     disposables: IDisposable[] = []
-): Promise<{ dispose: Function; displayed: Promise<boolean>; clickButton(text?: string): void }> {
+): Promise<{
+    dispose: Function;
+    displayed: Promise<boolean>;
+    clickButton(text?: string): void;
+    getDisplayCount(): number;
+}> {
     const api = await initialize();
     const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
     const displayed = createDeferred<boolean>();
@@ -553,12 +505,14 @@ export async function hijackPrompt(
     if (buttonToClick?.clickImmediately && buttonToClick.text) {
         clickButton.resolve(buttonToClick.text);
     }
+    let displayCount = 0;
     // tslint:disable-next-line: no-function-expression
     const showErrorMessage = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
         if (
             ('exactMatch' in message && msg === message.exactMatch) ||
             ('endsWith' in message && msg.endsWith(message.endsWith))
         ) {
+            displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {
                 return clickButton.promise;
@@ -573,6 +527,7 @@ export async function hijackPrompt(
     }
     return {
         dispose: () => showErrorMessage.restore(),
+        getDisplayCount: () => displayCount,
         displayed: displayed.promise,
         clickButton: (text?: string) => clickButton.resolve(text || buttonToClick?.text)
     };

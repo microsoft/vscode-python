@@ -23,8 +23,6 @@ import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { INotebookModel } from '../types';
-import { NotebookCellLanguageService } from './defaultCellLanguageService';
-import { notebookModelToVSCNotebookData } from './helpers/helpers';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -45,7 +43,6 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
     private readonly nativeNotebookModelsWaitingToGetReloaded = new WeakMap<INotebookModel, Deferred<void>>();
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
-        @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService,
         @inject(NotebookEditorCompatibilitySupport)
         private readonly compatibilitySupport: NotebookEditorCompatibilitySupport
     ) {}
@@ -83,10 +80,9 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
             throw new Error('Incorrect NotebookModel, expected VSCodeNotebookModel');
         }
         setSharedProperty('ds_notebookeditor', 'native');
-        sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cells.length });
-        const preferredLanguage = this.cellLanguageService.getPreferredLanguage(model.metadata);
+        sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cellCount });
         try {
-            return notebookModelToVSCNotebookData(model, preferredLanguage);
+            return model.getNotebookData();
         } finally {
             // Check if we're waiting in `saveNoteBook` method for document to get re-loaded after reverting it.
             if (existingModel && existingModel instanceof VSCodeNotebookModel) {
