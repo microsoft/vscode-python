@@ -549,7 +549,9 @@ steps:
       npm run clean
       npx tsc -p ./
       mkdir -p ./tmp/client/logging
+      mkdir -p ./tmp/client/common
       cp -r ./out/client/logging ./tmp/client
+      cp -r ./out/client/common ./tmp/client
       npx gulp clean:cleanExceptTests
       cp -r ./out/test ./tmp/test
       npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
