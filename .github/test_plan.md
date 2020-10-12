@@ -520,9 +520,9 @@ def test_failure():
         1. Use `X` to delete all cells
         1. Undo the delete action with `Undo`
         1. Redo the delete action with `Redo`
-        1. In manualTestFile.py modify the trange command in the progress bar from 100 to 2000. Run the Cell. As the cell is running hit the `Interrupt iPython Kernel` button
+        1. In manualTestFile.py modify the trange command in the progress bar from 100 to 2000. Run the Cell. As the cell is running hit the `Interrupt Jupyter Kernel` button
         1. The progress bar should be interrupted and you should see a KeyboardInterrupt error message in the output
-        1. Test the `Restart iPython kernel` command. Kernel should be restarted and you should see a status output message for the kernel restart
+        1. Test the `Restart Jupyter kernel` command. Kernel should be restarted and you should see a status output message for the kernel restart
         1. Use the expand all input and collapse all input commands to collapse all cell inputs
 -   [ ] Verify theming works
     1. Start Python Interactive window

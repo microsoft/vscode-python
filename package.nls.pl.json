@@ -39,8 +39,8 @@
     "python.command.python.datascience.undocells.title": "Cofnij ostatnią akcję IPythona",
     "python.command.python.datascience.redocells.title": "Ponów ostatnią akcję IPythona",
     "python.command.python.datascience.removeallcells.title": "Usuń wszystkie komórki IPythona",
-    "python.command.python.datascience.interruptkernel.title": "Przerwij IPython Kernel",
-    "python.command.python.datascience.restartkernel.title": "Restartuj IPython Kernel",
+    "python.command.python.datascience.interruptkernel.title": "Przerwij Jupyter Kernel",
+    "python.command.python.datascience.restartkernel.title": "Restartuj Jupyter Kernel",
     "python.command.python.datascience.expandallcells.title": "Rozwiń wszystkie komórki IPythona",
     "python.command.python.datascience.collapseallcells.title": "Zwiń wszystkie komórki IPythona"
 }
