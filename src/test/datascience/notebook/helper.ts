@@ -9,7 +9,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
-import { instance, mock, when } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { commands, Memento, TextDocument, Uri } from 'vscode';
 import {
     CellDisplayOutput,
@@ -385,7 +385,9 @@ export function createNotebookModel(
     when(mockVSC.notebookEditors).thenReturn([]);
     when(mockVSC.notebookDocuments).thenReturn([]);
     const cellLanguageService = mock<NotebookCellLanguageService>();
-    when(cellLanguageService.getPreferredLanguage()).thenReturn(PYTHON_LANGUAGE);
+    when(cellLanguageService.getPreferredLanguage(anything())).thenReturn(
+        nb?.metadata?.language_info?.name || PYTHON_LANGUAGE
+    );
 
     return new VSCodeNotebookModel(
         trusted,

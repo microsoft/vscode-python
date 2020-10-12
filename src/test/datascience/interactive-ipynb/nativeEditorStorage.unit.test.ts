@@ -352,7 +352,7 @@ suite('DataScience - Native Editor Storage', () => {
         const mockVSC = mock<IVSCodeNotebook>();
         when(mockVSC.notebookEditors).thenReturn([]);
         const cellLanguageService = mock<NotebookCellLanguageService>();
-        when(cellLanguageService.getPreferredLanguage()).thenReturn(PYTHON_LANGUAGE);
+        when(cellLanguageService.getPreferredLanguage(anything())).thenReturn(PYTHON_LANGUAGE);
         const notebookStorage = new NativeEditorStorage(
             instance(executionProvider),
             fileSystem.object, // Use typemoq so can save values in returns
