@@ -405,40 +405,42 @@ export async function updateCellExecutionTimes(
 ) {
     if (!times || !times.lastRunDuration || !times.startTime) {
         // Based on feedback from VSC, its best to clone these objects when updating them.
-        const cellMetadata = cloneDeep(cell.metadata);
-        let updated = false;
-        if (cellMetadata.custom?.metadata?.vscode?.start_execution_time) {
-            delete cellMetadata.custom.metadata.vscode.start_execution_time;
-            updated = true;
-        }
-        if (cellMetadata.custom?.metadata?.vscode?.end_execution_time) {
-            delete cellMetadata.custom.metadata.vscode.end_execution_time;
-            updated = true;
-        }
-        if (updated) {
-            await editor.edit((edit) =>
-                edit.replaceCellMetadata(cell.index, {
-                    ...cellMetadata
-                })
-            );
-        }
+        // const cellMetadata = cloneDeep(cell.metadata);
+        // let updated = false;
+        // if (cellMetadata.custom?.metadata?.vscode?.start_execution_time) {
+        //     delete cellMetadata.custom.metadata.vscode.start_execution_time;
+        //     updated = true;
+        // }
+        // if (cellMetadata.custom?.metadata?.vscode?.end_execution_time) {
+        //     delete cellMetadata.custom.metadata.vscode.end_execution_time;
+        //     updated = true;
+        // }
+        // if (updated) {
+        //     await editor.edit((edit) =>
+        //         edit.replaceCellMetadata(cell.index, {
+        //             ...cellMetadata
+        //         })
+        //     );
+        // }
         return;
     }
-
-    const startTimeISO = new Date(times.startTime).toISOString();
-    const endTimeISO = new Date(times.startTime + times.lastRunDuration).toISOString();
+    // Persisting these require us to save custom metadata in ipynb. Not sure users would like this. We'll have more changes in ipynb files.
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: Discuss whether we need to persist these.
+    // const startTimeISO = new Date(times.startTime).toISOString();
+    // const endTimeISO = new Date(times.startTime + times.lastRunDuration).toISOString();
     // Based on feedback from VSC, its best to clone these objects when updating them.
-    const customMetadata = cloneDeep(cell.metadata.custom || {});
-    customMetadata.metadata = customMetadata.metadata || {};
-    customMetadata.metadata.vscode = customMetadata.metadata.vscode || {};
-    // We store it in the metadata (stored in ipynb) so we can display this when user opens a notebook again.
-    customMetadata.metadata.vscode.end_execution_time = endTimeISO;
-    customMetadata.metadata.vscode.start_execution_time = startTimeISO;
+    // const customMetadata = cloneDeep(cell.metadata.custom || {});
+    // customMetadata.metadata = customMetadata.metadata || {};
+    // customMetadata.metadata.vscode = customMetadata.metadata.vscode || {};
+    // // We store it in the metadata (stored in ipynb) so we can display this when user opens a notebook again.
+    // customMetadata.metadata.vscode.end_execution_time = endTimeISO;
+    // customMetadata.metadata.vscode.start_execution_time = startTimeISO;
     const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;
     await editor.edit((edit) =>
         edit.replaceCellMetadata(cell.index, {
             ...cell.metadata,
-            custom: customMetadata,
+            // custom: customMetadata,
             lastRunDuration
         })
     );
