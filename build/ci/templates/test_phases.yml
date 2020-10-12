@@ -556,7 +556,9 @@ steps:
       npm run package
       npx gulp clean:cleanExceptTests
       mkdir -p ./out/client/logging
+      mkdir -p ./out/client/common
       cp -r ./tmp/client/logging ./out/client
+      cp -r ./tmp/client/common ./out/client
       cp -r ./tmp/test ./out/test
       node --no-force-async-hooks-checks ./out/test/smokeTest.js
     displayName: 'Run Smoke Tests'
