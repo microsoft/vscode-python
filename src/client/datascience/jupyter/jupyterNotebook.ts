@@ -277,6 +277,8 @@ export class JupyterNotebookBase implements INotebook {
         this.ranInitialSetup = true;
         this._workingDirectory = undefined;
 
+        traceInfo(`Initial setup for ${this.identity.toString()} starting ...`);
+
         try {
             // When we start our notebook initial, change to our workspace or user specified root directory
             await this.updateWorkingDirectoryAndPath();
