@@ -579,6 +579,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Actually don't close, just let the error bubble out
     }
 
+    protected async setFileInKernel(_file: string, _cancelToken: CancellationToken | undefined): Promise<void> {
+        // Native editor doesn't set this as the ipython file should be set for a notebook.
+    }
+
     protected async close(): Promise<void> {
         // Fire our event
         this.closedEvent.fire(this);

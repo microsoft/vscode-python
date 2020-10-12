@@ -123,7 +123,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     protected abstract get notebookMetadata(): INotebookMetadataLive | undefined;
 
     protected abstract get notebookIdentity(): INotebookIdentity;
-
+    protected fileInKernel: string | undefined;
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
     private perceivedJupyterStartupTelemetryCaptured: boolean = false;
@@ -538,6 +538,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     protected abstract updateNotebookOptions(kernelConnection: KernelConnectionMetadata): Promise<void>;
 
+    protected abstract setFileInKernel(file: string, cancelToken: CancellationToken | undefined): Promise<void>;
+
     protected async clearResult(id: string): Promise<void> {
         await this.ensureConnectionAndNotebook();
         if (this._notebook) {
@@ -631,16 +633,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 }
 
                 // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-                if (file !== Identifiers.EmptyFileName) {
-                    await this._notebook.execute(
-                        `__file__ = '${file.replace(/\\/g, '\\\\')}'`,
-                        file,
-                        line,
-                        uuid(),
-                        cancelToken,
-                        true
-                    );
-                }
+                await this.setFileInKernel(file, cancelToken);
+
+                // Setup telemetry
                 if (stopWatch && !this.perceivedJupyterStartupTelemetryCaptured) {
                     this.perceivedJupyterStartupTelemetryCaptured = true;
                     sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch?.elapsedTime);
