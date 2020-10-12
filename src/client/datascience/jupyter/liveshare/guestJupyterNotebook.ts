@@ -205,6 +205,16 @@ export class GuestJupyterNotebook
         }
     }
 
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+        // This is a special case. Ask the shared server
+        const service = await this.waitForService();
+        if (service) {
+            return service.request(LiveShareCommands.getSysInfo, []);
+        } else {
+            throw new Error('No LiveShare service to get KernelInfo');
+        }
+    }
+
     public async getCompletion(
         _cellCode: string,
         _offsetInCode: number,

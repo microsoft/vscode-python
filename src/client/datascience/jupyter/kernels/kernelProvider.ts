@@ -9,8 +9,6 @@ import { Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
-import { IInterpreterService } from '../../../interpreter/contracts';
-import { INotebookContentProvider } from '../../notebook/types';
 import { IDataScienceErrorHandler, INotebookEditorProvider, INotebookProvider } from '../../types';
 import { Kernel } from './kernel';
 import { KernelSelector } from './kernelSelector';
@@ -25,9 +23,7 @@ export class KernelProvider implements IKernelProvider {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider,
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(KernelSelector) private readonly kernelSelectionUsage: IKernelSelectionUsage,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
@@ -52,9 +48,7 @@ export class KernelProvider implements IKernelProvider {
             this.disposables,
             waitForIdleTimeout,
             this.commandManager,
-            this.interpreterService,
             this.errorHandler,
-            this.contentProvider,
             this.editorProvider,
             this,
             this.kernelSelectionUsage,

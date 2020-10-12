@@ -5,6 +5,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import * as querystring from 'querystring';
+import { env, UIKind } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import { ShowExtensionSurveyPrompt } from '../common/experiments/groups';
 import '../common/extensions';
@@ -53,6 +54,9 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
 
     @traceDecorators.error('Failed to check whether to display prompt for extension survey')
     public shouldShowBanner(): boolean {
+        if (env.uiKind === UIKind?.Web) {
+            return false;
+        }
         const doNotShowSurveyAgain = this.persistentState.createGlobalPersistentState(
             extensionSurveyStateKeys.doNotShowAgain,
             false

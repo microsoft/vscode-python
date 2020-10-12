@@ -6,8 +6,6 @@ import { assert } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { injectable } from 'inversify';
-// tslint:disable-next-line: no-require-imports
-import escape = require('lodash/escape');
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
@@ -27,6 +25,8 @@ import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
+import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
+import { ExportFormat } from '../../client/datascience/export/types';
 import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -52,7 +52,6 @@ import { concatMultilineString } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
 import { createPythonService, startRemoteServer } from './remoteTestHelpers';
@@ -67,7 +66,6 @@ suite('DataScience notebook tests', () => {
             let ioc: DataScienceIocContainer;
             let modifiedConfig = false;
             const baseUri = Uri.file('foo.py');
-            let snapshot: any;
 
             // tslint:disable-next-line: no-function-expression
             setup(async function () {
@@ -82,14 +80,6 @@ suite('DataScience notebook tests', () => {
                 ioc.registerDataScienceTypes();
                 await ioc.activate();
                 notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
-            });
-
-            suiteSetup(() => {
-                snapshot = takeSnapshot();
-            });
-
-            suiteTeardown(() => {
-                writeDiffSnapshot(snapshot, `Notebook ${useRawKernel}`);
             });
 
             teardown(async () => {
@@ -130,7 +120,7 @@ suite('DataScience notebook tests', () => {
                 return path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
             }
 
-            function extractDataOutput(cell: ICell): any {
+            function extractDataOutput(cell: ICell): string | undefined {
                 assert.equal(cell.data.cell_type, 'code', `Wrong type of cell returned`);
                 const codeCell = cell.data as nbformat.ICodeCell;
                 if (codeCell.outputs.length > 0) {
@@ -145,7 +135,7 @@ suite('DataScience notebook tests', () => {
                         // For linter
                         assert.ok(data.hasOwnProperty('text/plain'), `Cell mime type not correct`);
                         assert.ok((data as any)['text/plain'], `Cell mime type not correct`);
-                        return (data as any)['text/plain'];
+                        return concatMultilineString((data as any)['text/plain']);
                     }
                 }
             }
@@ -159,9 +149,9 @@ suite('DataScience notebook tests', () => {
                 const cells = await notebook!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
                 assert.equal(cells.length, 1, `Wrong number of cells returned`);
                 const data = extractDataOutput(cells[0]);
-                if (pathVerify) {
+                if (pathVerify && data) {
                     // For a path comparison normalize output
-                    const normalizedOutput = path.normalize(data).toUpperCase().replace(/&#39;/g, '');
+                    const normalizedOutput = path.normalize(data).toUpperCase().replace(/'/g, '');
                     const normalizedTarget = path.normalize(expectedValue).toUpperCase().replace(/'/g, '');
                     assert.equal(normalizedOutput, normalizedTarget, 'Cell path values does not match');
                 } else {
@@ -216,10 +206,10 @@ suite('DataScience notebook tests', () => {
                         );
                         const actualMimeType = data.hasOwnProperty(mimeType) ? mimeType : 'text/plain';
                         assert.ok((data as any)[actualMimeType], `${index}: Cell mime type not correct`);
-                        verifyValue((data as any)[actualMimeType]);
+                        verifyValue(concatMultilineString((data as any)[actualMimeType]));
                     }
                     if (text) {
-                        verifyValue(text);
+                        verifyValue(concatMultilineString(text as any));
                     }
                 } else if (cellType === 'markdown') {
                     assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
@@ -480,7 +470,7 @@ suite('DataScience notebook tests', () => {
             runTest('Remote Password', async () => {
                 const pythonService = await createPythonService(ioc);
 
-                if (pythonService && !useRawKernel && os.platform() !== 'darwin') {
+                if (pythonService && !useRawKernel && os.platform() !== 'darwin' && os.platform() !== 'linux') {
                     const configFile = path.join(
                         EXTENSION_ROOT_DIR,
                         'src',
@@ -671,7 +661,12 @@ suite('DataScience notebook tests', () => {
                 try {
                     await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
                     // Try importing this. This should verify export works and that importing is possible
-                    const results = await importer.importFromFile(Uri.file(temp.filePath));
+                    const exportInterpreterFinder = ioc.serviceManager.get<ExportInterpreterFinder>(
+                        ExportInterpreterFinder
+                    );
+                    const usable = await exportInterpreterFinder.getExportInterpreter(ExportFormat.python, undefined);
+                    assert.isDefined(usable);
+                    const results = await importer.importFromFile(Uri.file(temp.filePath), usable!);
 
                     // Make sure we have a single chdir in our results
                     const first = results.indexOf('os.chdir');
@@ -682,8 +677,12 @@ suite('DataScience notebook tests', () => {
                     // Make sure we have a cell in our results
                     assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
                 } finally {
-                    importer.dispose();
-                    temp.dispose();
+                    try {
+                        importer.dispose();
+                        temp.dispose();
+                    } catch (exc) {
+                        console.log(exc);
+                    }
                 }
             });
 
@@ -873,13 +872,6 @@ suite('DataScience notebook tests', () => {
                         true
                     )
                 );
-                assert.ok(
-                    await testCancelableMethod(
-                        (t: CancellationToken) => jupyterExecution.isImportSupported(t),
-                        'Cancel did not cancel isImport after {0}ms',
-                        true
-                    )
-                );
             });
 
             async function interruptExecute(
@@ -1031,7 +1023,7 @@ a`,
                     mimeType: 'text/plain',
                     cellType: 'code',
                     result: `<a href=f>`,
-                    verifyValue: (d) => assert.ok(d.includes(escape(`<a href=f>`)), 'XML not escaped')
+                    verifyValue: (d) => assert.ok(d.includes(`<a href=f>`), 'Should not escape at the notebook level')
                 },
                 {
                     markdownRegEx: undefined,
@@ -1043,7 +1035,7 @@ df.head()`,
                     cellType: 'error',
                     // tslint:disable-next-line:quotemark
                     verifyValue: (d) =>
-                        assert.ok((d as string).includes(escape("has no attribute 'read'")), 'Unexpected error result')
+                        assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
                 },
                 {
                     markdownRegEx: undefined,
@@ -1340,7 +1332,10 @@ plt.show()`,
                     }
                     public async postExecute(cell: ICell, silent: boolean): Promise<void> {
                         if (!silent) {
-                            outputs.push(extractDataOutput(cell));
+                            const data = extractDataOutput(cell);
+                            if (data) {
+                                outputs.push(data);
+                            }
                         }
                     }
                 }

@@ -6,6 +6,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
 import { Disposable } from 'vscode';
+import { sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider, ITrustService } from '../../client/datascience/types';
@@ -43,7 +44,7 @@ function waitForMessage(ioc: DataScienceIocContainer, message: string, options?:
         .waitForMessage(message, options);
 }
 // tslint:disable:no-any no-multiline-string
-suite('Notebook trust', () => {
+suite('DataScience Notebook trust', () => {
     let wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
     let ne: { editor: INotebookEditor; mount: IMountedWebView };
     const disposables: Disposable[] = [];
@@ -440,10 +441,14 @@ suite('Notebook trust', () => {
             // Reopen
             const newNativeEditor = await openEditor(ioc, baseFile, notebookFile.filePath);
             const newWrapper = newNativeEditor.mount.wrapper;
+            assert.ok(newNativeEditor.editor.model.isTrusted, 'Editor did not open as trusted');
+
+            // Wait a bit. UI doesn't seem to update right away
+            await sleep(500);
 
             // Verify notebook is now trusted
             const after = newWrapper.find(TrustMessage);
-            assert.equal(after.text(), 'Trusted');
+            assert.equal(after.text(), 'Trusted', 'Notebook UI not reflecting trust state');
         });
     });
 });

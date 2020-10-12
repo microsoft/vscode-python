@@ -3,8 +3,6 @@
 //tslint:disable:trailing-comma no-any
 import * as child_process from 'child_process';
 import { ReactWrapper } from 'enzyme';
-import * as fs from 'fs-extra';
-import * as glob from 'glob';
 import { interfaces } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -27,7 +25,6 @@ import {
 import * as vsls from 'vsls/vscode';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 
-import { promisify } from 'util';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import { LanguageServerDownloader } from '../../client/activation/common/downloader';
 import { JediExtensionActivator } from '../../client/activation/jedi';
@@ -209,8 +206,8 @@ import { CodeWatcher } from '../../client/datascience/editor-integration/codewat
 import { HoverProvider } from '../../client/datascience/editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { ExportBase } from '../../client/datascience/export/exportBase';
-import { ExportDependencyChecker } from '../../client/datascience/export/exportDependencyChecker';
 import { ExportFileOpener } from '../../client/datascience/export/exportFileOpener';
+import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
 import { ExportManager } from '../../client/datascience/export/exportManager';
 import { ExportManagerFilePicker } from '../../client/datascience/export/exportManagerFilePicker';
 import { ExportToHTML } from '../../client/datascience/export/exportToHTML';
@@ -244,6 +241,8 @@ import { JupyterInterpreterSelector } from '../../client/datascience/jupyter/int
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterInterpreterStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterStateStore';
 import { JupyterInterpreterSubCommandExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
+import { NbConvertExportToPythonService } from '../../client/datascience/jupyter/interpreter/nbconvertExportToPythonService';
+import { NbConvertInterpreterDependencyChecker } from '../../client/datascience/jupyter/interpreter/nbconvertInterpreterDependencyChecker';
 import { JupyterDebugger } from '../../client/datascience/jupyter/jupyterDebugger';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
@@ -269,6 +268,7 @@ import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelFinder, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
+import { NotebookCellLanguageService } from '../../client/datascience/notebook/defaultCellLanguageService';
 import { NotebookAndInteractiveWindowUsageTracker } from '../../client/datascience/notebookAndInteractiveTracker';
 import { NotebookExtensibility } from '../../client/datascience/notebookExtensibility';
 import { NotebookModelFactory } from '../../client/datascience/notebookStorage/factory';
@@ -317,6 +317,8 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IKernelDependencyService,
+    INbConvertExportToPythonService,
+    INbConvertInterpreterDependencyChecker,
     INotebookAndInteractiveWindowUsageTracker,
     INotebookEditor,
     INotebookEditorProvider,
@@ -495,18 +497,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Make sure to disable all command handling during dispose. Don't want
         // anything to startup again.
         this.commandManager.dispose();
-        try {
-            // Make sure to delete any temp files written by native editor storage
-            const globPr = promisify(glob);
-            const tempLocation = os.tmpdir;
-            const tempFiles = await globPr(`${tempLocation}/*.ipynb`);
-            if (tempFiles && tempFiles.length) {
-                await Promise.all(tempFiles.map((t) => fs.remove(t)));
-            }
-        } catch (exc) {
-            // tslint:disable-next-line: no-console
-            console.log(`Exception on cleanup: ${exc}`);
-        }
         await this.asyncRegistry.dispose();
         await super.dispose();
         this.disposed = true;
@@ -597,7 +587,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         this.serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
         this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
-        this.serviceManager.addSingleton<ExportDependencyChecker>(ExportDependencyChecker, ExportDependencyChecker);
+        this.serviceManager.addSingleton<ExportInterpreterFinder>(ExportInterpreterFinder, ExportInterpreterFinder);
         this.serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
         this.serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
         this.serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
@@ -606,6 +596,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
         this.serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
         this.serviceManager.addSingleton<IExportManagerFilePicker>(IExportManagerFilePicker, ExportManagerFilePicker);
+        this.serviceManager.addSingleton<INbConvertInterpreterDependencyChecker>(
+            INbConvertInterpreterDependencyChecker,
+            NbConvertInterpreterDependencyChecker
+        );
+        this.serviceManager.addSingleton<INbConvertExportToPythonService>(
+            INbConvertExportToPythonService,
+            NbConvertExportToPythonService
+        );
 
         this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
         this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
@@ -653,6 +651,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
         this.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
         this.serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
+        this.serviceManager.addSingleton<NotebookCellLanguageService>(
+            NotebookCellLanguageService,
+            NotebookCellLanguageService
+        );
         this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(
             IAsyncDisposableRegistry,
             this.asyncRegistry

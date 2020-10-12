@@ -4,7 +4,7 @@ updates:
     directory: /
     schedule:
       interval: daily
-    default_labels:
+    labels:
       - 'skip news'
 
   # Not skipping the news for Python dependencies in case it's actually useful to communicate to users.
@@ -20,7 +20,7 @@ updates:
     directory: /news
     schedule:
       interval: monthly
-    default_labels:
+    labels:
       - 'skip news'
   # Activate when we feel ready to keep up with frequency.
   # - package-ecosystem: 'npm'

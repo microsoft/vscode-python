@@ -256,7 +256,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 break;
 
             case InteractiveWindowMessages.ExportNotebookAs:
-                this.handleMessage(message, payload, this.exportAs.bind);
+                this.handleMessage(message, payload, this.exportAs);
                 break;
 
             case InteractiveWindowMessages.HasCellResponse:
@@ -501,7 +501,13 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 const lastSubmitter = this.submitters[this.submitters.length - 1];
                 defaultFileName = path.basename(lastSubmitter.fsPath, path.extname(lastSubmitter.fsPath));
             }
-            this.commandManager.executeCommand(Commands.Export, model, defaultFileName);
+
+            this.commandManager.executeCommand(
+                Commands.Export,
+                model,
+                defaultFileName,
+                this.notebook?.getMatchingInterpreter()
+            );
         }
     }
 

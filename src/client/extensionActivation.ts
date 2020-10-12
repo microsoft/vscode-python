@@ -19,7 +19,6 @@ import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
-import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -102,7 +101,6 @@ async function activateLegacy(
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, jupyterOutputChannel, JUPYTER_OUTPUT_CHANNEL);
 
     // Core registrations (non-feature specific).
-    commonRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
 

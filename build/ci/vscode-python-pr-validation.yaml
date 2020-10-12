@@ -11,7 +11,6 @@ pr:
       - 'main'
       - 'release*'
       - 'ds*'
-      - 'logging-changes-and-drop-old-debugger'
   paths:
     exclude: ['/news/1 Enhancements', '/news/2 Fixes', '/news/3 Code Health', '/.vscode']
 
@@ -46,16 +45,19 @@ stages:
               TestsToRun: 'pythonUnitTests, pythonInternalTools, pythonIPythonTests'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
-            'Functional':
+            'Functional Non DataScience':
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
-              SplitFunctionalTests: false
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'DataScience':
+            'Native Notebook':
               TestsToRun: 'testDataScience'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'DataScience in VSCode':
+              TestsToRun: 'testDataScienceInVSCode'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
             'Smoke':
@@ -76,7 +78,7 @@ stages:
               # Note: "pythonInternalTools" tests are 3.7+.
               TestsToRun: 'pythonUnitTests'
               NeedsPythonTestReqs: true
-            'Functional':
+            'Functional Non DS':
               PythonVersion: '2.7'
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
@@ -116,7 +118,7 @@ stages:
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
             # This gives us our best functional coverage for the OS.
-            'Functional':
+            'Functional Non DS':
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true

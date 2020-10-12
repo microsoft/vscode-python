@@ -90,7 +90,12 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         const uri = this.getNextNewNotebookUri(forVSCodeNotebooks);
 
         // Always skip loading from the hot exit file. When creating a new file we want a new file.
-        return this.getOrCreateModel({ file: uri, possibleContents, skipLoadingDirtyContents: true });
+        return this.getOrCreateModel({
+            file: uri,
+            possibleContents,
+            skipLoadingDirtyContents: true,
+            isNative: forVSCodeNotebooks
+        });
     }
 
     private getNextNewNotebookUri(forVSCodeNotebooks?: boolean): Uri {

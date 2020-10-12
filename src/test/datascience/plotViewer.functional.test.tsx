@@ -137,10 +137,6 @@ suite('DataScience PlotViewer tests', () => {
         delete (global as any).ascquireVsCodeApi;
     });
 
-    suiteTeardown(() => {
-        // asyncDump();
-    });
-
     async function waitForPlot(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, svg: string): Promise<void> {
         // Get a render promise with the expected number of renders
         const renderPromise = waitForUpdate(wrapper, MainPanel, 1);

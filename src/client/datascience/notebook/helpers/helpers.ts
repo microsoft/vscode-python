@@ -18,7 +18,7 @@ import type {
 } from 'vscode-proposed';
 import { NotebookCellRunState } from '../../../../../typings/vscode-proposed';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
-import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
+import { MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { traceError, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
@@ -26,6 +26,8 @@ import { CellState, ICell, INotebookModel } from '../../types';
 import { JupyterNotebookView } from '../constants';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
+// tslint:disable-next-line: no-require-imports
+import { KernelMessage } from '@jupyterlab/services';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { isUntitledFile } from '../../../common/utils/misc';
@@ -54,7 +56,10 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     }
 }
 
-const kernelInformationForNotebooks = new WeakMap<NotebookDocument, KernelConnectionMetadata | undefined>();
+const kernelInformationForNotebooks = new WeakMap<
+    NotebookDocument,
+    { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: KernelMessage.IInfoReplyMsg['content'] }
+>();
 
 export function getNotebookMetadata(document: NotebookDocument): nbformat.INotebookMetadata | undefined {
     // tslint:disable-next-line: no-any
@@ -70,8 +75,9 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
         notebookContent = { ...content, metadata: { ...metadata, language_info } } as any;
     }
     notebookContent = cloneDeep(notebookContent);
-    if (kernelInformationForNotebooks.has(document)) {
-        updateNotebookMetadata(notebookContent.metadata, kernelInformationForNotebooks.get(document));
+    const data = kernelInformationForNotebooks.get(document);
+    if (data && data.metadata) {
+        updateNotebookMetadata(notebookContent.metadata, data.metadata, data.kernelInfo);
     }
 
     return notebookContent.metadata;
@@ -88,22 +94,34 @@ export function updateKernelInNotebookMetadata(
     document: NotebookDocument,
     kernelConnection: KernelConnectionMetadata | undefined
 ) {
-    kernelInformationForNotebooks.set(document, kernelConnection);
+    const data = { ...(kernelInformationForNotebooks.get(document) || {}) };
+    data.metadata = kernelConnection;
+    kernelInformationForNotebooks.set(document, data);
+}
+export function updateKernelInfoInNotebookMetadata(
+    document: NotebookDocument,
+    kernelInfo: KernelMessage.IInfoReplyMsg['content']
+) {
+    if (kernelInformationForNotebooks.get(document)?.kernelInfo === kernelInfo) {
+        return;
+    }
+    const data = { ...(kernelInformationForNotebooks.get(document) || {}) };
+    data.kernelInfo = kernelInfo;
+    kernelInformationForNotebooks.set(document, data);
 }
 /**
  * Converts a NotebookModel into VSCode friendly format.
  */
-export function notebookModelToVSCNotebookData(model: VSCodeNotebookModel): NotebookData {
+export function notebookModelToVSCNotebookData(model: VSCodeNotebookModel, preferredLanguage: string): NotebookData {
     const cells = model.cells
-        .map(createVSCNotebookCellDataFromCell.bind(undefined, model))
+        .map(createVSCNotebookCellDataFromCell.bind(undefined, model, preferredLanguage))
         .filter((item) => !!item)
         .map((item) => item!);
 
-    const defaultLanguage = getDefaultCodeLanguage(model);
     if (cells.length === 0 && isUntitledFile(model.file)) {
         cells.push({
             cellKind: vscodeNotebookEnums.CellKind.Code,
-            language: defaultLanguage,
+            language: preferredLanguage,
             metadata: {},
             outputs: [],
             source: ''
@@ -197,12 +215,6 @@ export function getCustomNotebookCellMetadata(cell: ICell): Record<string, unkno
     return custom;
 }
 
-export function getDefaultCodeLanguage(model: INotebookModel) {
-    return model.metadata?.language_info?.name &&
-        model.metadata?.language_info?.name.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()
-        ? model.metadata?.language_info?.name
-        : PYTHON_LANGUAGE;
-}
 function createRawCellFromVSCNotebookCell(cell: NotebookCell): nbformat.IRawCell {
     const rawCell: nbformat.IRawCell = {
         cell_type: 'raw',
@@ -258,10 +270,13 @@ function createVSCNotebookCellDataFromMarkdownCell(model: INotebookModel, cell: 
         outputs: []
     };
 }
-function createVSCNotebookCellDataFromCodeCell(model: INotebookModel, cell: ICell): NotebookCellData {
+function createVSCNotebookCellDataFromCodeCell(
+    model: INotebookModel,
+    cell: ICell,
+    cellLanguage: string
+): NotebookCellData {
     // tslint:disable-next-line: no-any
     const outputs = createVSCCellOutputsFromOutputs(cell.data.outputs as any);
-    const defaultCodeLanguage = getDefaultCodeLanguage(model);
     // If we have an execution count & no errors, then success state.
     // If we have an execution count &  errors, then error state.
     // Else idle state.
@@ -316,7 +331,7 @@ function createVSCNotebookCellDataFromCodeCell(model: INotebookModel, cell: ICel
     }
     return {
         cellKind: vscodeNotebookEnums.CellKind.Code,
-        language: defaultCodeLanguage,
+        language: cellLanguage,
         metadata: notebookCellMetadata,
         source: concatMultilineString(cell.data.source),
         outputs
@@ -343,16 +358,15 @@ export function createIOutputFromCellOutputs(cellOutputs: CellOutput[]): nbforma
 }
 
 export async function clearCellForExecution(editor: NotebookEditor, cell: NotebookCell) {
-    const cellIndex = cell.notebook.cells.indexOf(cell);
     await editor.edit((edit) => {
-        edit.replaceCellMetadata(cellIndex, {
+        edit.replaceCellMetadata(cell.index, {
             ...cell.metadata,
             statusMessage: undefined,
             executionOrder: undefined,
             lastRunDuration: undefined,
             runStartTime: undefined
         });
-        edit.replaceCellOutput(cellIndex, []);
+        edit.replaceCellOutput(cell.index, []);
     });
     await updateCellExecutionTimes(editor, cell);
 }
@@ -366,8 +380,6 @@ export async function updateCellExecutionTimes(
     cell: NotebookCell,
     times?: { startTime?: number; lastRunDuration?: number }
 ) {
-    const cellIndex = cell.notebook.cells.indexOf(cell);
-
     if (!times || !times.lastRunDuration || !times.startTime) {
         // Based on feedback from VSC, its best to clone these objects when updating them.
         const cellMetadata = cloneDeep(cell.metadata);
@@ -382,7 +394,7 @@ export async function updateCellExecutionTimes(
         }
         if (updated) {
             await editor.edit((edit) =>
-                edit.replaceCellMetadata(cellIndex, {
+                edit.replaceCellMetadata(cell.index, {
                     ...cellMetadata
                 })
             );
@@ -401,7 +413,7 @@ export async function updateCellExecutionTimes(
     customMetadata.metadata.vscode.start_execution_time = startTimeISO;
     const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;
     await editor.edit((edit) =>
-        edit.replaceCellMetadata(cellIndex, {
+        edit.replaceCellMetadata(cell.index, {
             ...cell.metadata,
             custom: customMetadata,
             lastRunDuration
@@ -419,7 +431,11 @@ function createCodeCellFromVSCNotebookCell(cell: NotebookCell): nbformat.ICodeCe
         metadata
     };
 }
-export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: ICell): NotebookCellData | undefined {
+export function createVSCNotebookCellDataFromCell(
+    model: INotebookModel,
+    cellLanguage: string,
+    cell: ICell
+): NotebookCellData | undefined {
     switch (cell.data.cell_type) {
         case 'raw': {
             return createVSCNotebookCellDataFromRawCell(model, cell);
@@ -428,7 +444,7 @@ export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: I
             return createVSCNotebookCellDataFromMarkdownCell(model, cell);
         }
         case 'code': {
-            return createVSCNotebookCellDataFromCodeCell(model, cell);
+            return createVSCNotebookCellDataFromCodeCell(model, cell, cellLanguage);
         }
         default: {
             traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.data.cell_type}`);

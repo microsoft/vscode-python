@@ -38,15 +38,14 @@ export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) 
         if (env.searchLocation === undefined) {
             // It is not a "rooted" env.
             return includeNonRooted;
-        } else {
-            // It is a "rooted" env.
-            const loc = env.searchLocation;
-            if (locationFilters !== undefined) {
-                // Check against the requested roots.  (There may be none.)
-                return locationFilters.some((filter) => filter(loc));
-            }
-            return true;
         }
+        // It is a "rooted" env.
+        const loc = env.searchLocation;
+        if (locationFilters !== undefined) {
+            // Check against the requested roots.  (There may be none.)
+            return locationFilters.some((filter) => filter(loc));
+        }
+        return true;
     }
     return (env) => {
         if (!checkKind(env)) {
@@ -101,7 +100,6 @@ export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvI
     let result = await iterator.next();
     while (!result.done) {
         envs.push(result.value);
-        // eslint-disable-next-line no-await-in-loop
         result = await iterator.next();
     }
 

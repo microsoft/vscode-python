@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import type {
     NotebookCommunication,
+    NotebookContentProvider as VSCNotebookContentProvider,
     NotebookData,
     NotebookDocument,
     NotebookDocumentBackup,
@@ -20,12 +21,11 @@ import { captureTelemetry, sendTelemetryEvent, setSharedProperty } from '../../t
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
+import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { notebookModelToVSCNotebookData } from './helpers/helpers';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
-import { INotebookContentProvider } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
-
 /**
  * This class is responsible for reading a notebook file (ipynb or other files) and returning VS Code with the NotebookData.
  * Its up to extension authors to read the files and return it in a format that VSCode understands.
@@ -35,19 +35,17 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  * When saving, VSC will provide their model and we need to take that and merge it with an existing ipynb json (if any, to preserve metadata).
  */
 @injectable()
-export class NotebookContentProvider implements INotebookContentProvider {
+export class NotebookContentProvider implements VSCNotebookContentProvider {
     private notebookChanged = new EventEmitter<NotebookDocumentContentChangeEvent>();
     public get onDidChangeNotebook() {
         return this.notebookChanged.event;
     }
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
+        @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService,
         @inject(NotebookEditorCompatibilitySupport)
         private readonly compatibilitySupport: NotebookEditorCompatibilitySupport
     ) {}
-    public notifyChangesToDocument(_document: NotebookDocument) {
-        // this.notebookChanged.fire({ document });
-    }
     public async resolveNotebook(_document: NotebookDocument, _webview: NotebookCommunication): Promise<void> {
         // Later
     }
@@ -81,7 +79,8 @@ export class NotebookContentProvider implements INotebookContentProvider {
         }
         setSharedProperty('ds_notebookeditor', 'native');
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cells.length });
-        return notebookModelToVSCNotebookData(model);
+        const preferredLanguage = this.cellLanguageService.getPreferredLanguage(model.metadata);
+        return notebookModelToVSCNotebookData(model, preferredLanguage);
     }
     @captureTelemetry(Telemetry.Save, undefined, true)
     public async saveNotebook(document: NotebookDocument, cancellation: CancellationToken) {

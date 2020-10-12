@@ -4,6 +4,7 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
+import { IPersistentStateFactory } from '../../common/types';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 
@@ -36,4 +37,40 @@ export function arePathsSame(path1: string, path2: string): boolean {
         return path1.toUpperCase() === path2.toUpperCase();
     }
     return path1 === path2;
+}
+
+function getPersistentStateFactory(): IPersistentStateFactory {
+    return internalServiceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+}
+
+export interface IPersistentStore<T> {
+    get(): T | undefined;
+    set(value: T): Promise<void>;
+}
+
+export function getGlobalPersistentStore<T>(key: string): IPersistentStore<T> {
+    const factory = getPersistentStateFactory();
+    const state = factory.createGlobalPersistentState<T>(key, undefined);
+
+    return {
+        get() { return state.value; },
+        set(value: T) { return state.updateValue(value); },
+    };
+}
+
+export async function getFileInfo(filePath: string): Promise<{ctime:number, mtime:number}> {
+    const data = await fsapi.lstat(filePath);
+    return {
+        ctime: data.ctime.valueOf(),
+        mtime: data.mtime.valueOf(),
+    };
+}
+
+export async function resolveSymbolicLink(filepath:string): Promise<string> {
+    const stats = await fsapi.lstat(filepath);
+    if (stats.isSymbolicLink()) {
+        const link = await fsapi.readlink(filepath);
+        return resolveSymbolicLink(link);
+    }
+    return filepath;
 }

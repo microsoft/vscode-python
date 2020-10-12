@@ -140,11 +140,15 @@ class PythonDaemon(BasePythonDaemon):
         sys.stdout.flush()
 
     def _convert(self, args):
-        self.log.info("nbconvert")
+        self.log.info("Starting nbconvert wirth args %s", args)
         from nbconvert import nbconvertapp as app
 
-        sys.argv = [""] + args
-        app.main()
+        try:
+            sys.argv = [""] + args
+            app.main()
+        except Exception as e:
+            self.log.info("Nbconvert error: %s", e)
+            raise
 
     def _start_notebook(self, args, cwd, env):
         from notebook import notebookapp as app

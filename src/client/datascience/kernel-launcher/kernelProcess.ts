@@ -151,10 +151,7 @@ export class KernelProcess implements IKernelProcess {
         let kernelSpec = this._kernelConnectionMetadata.kernelSpec;
         // If there is no kernelspec & when launching a Python process, generate a dummy `kernelSpec`
         if (!kernelSpec && this._kernelConnectionMetadata.kind === 'startUsingPythonInterpreter') {
-            kernelSpec = createDefaultKernelSpec(
-                this._kernelConnectionMetadata.interpreter.displayName ||
-                    this._kernelConnectionMetadata.interpreter.path
-            );
+            kernelSpec = createDefaultKernelSpec(this._kernelConnectionMetadata.interpreter);
         }
         // We always expect a kernel spec.
         if (!kernelSpec) {

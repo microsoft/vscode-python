@@ -75,10 +75,8 @@ function getIdentifiers(): Map<EnvironmentType, (path:string) => Promise<boolean
 export async function identifyEnvironment(interpreterPath: string): Promise<EnvironmentType> {
     const identifiers = getIdentifiers();
     const prioritizedEnvTypes = getPrioritizedEnvironmentType();
-    // eslint-disable-next-line no-restricted-syntax
     for (const e of prioritizedEnvTypes) {
         const identifier = identifiers.get(e);
-        // eslint-disable-next-line no-await-in-loop
         if (identifier && await identifier(interpreterPath)) {
             return e;
         }
