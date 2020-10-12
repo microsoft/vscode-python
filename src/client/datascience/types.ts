@@ -1089,6 +1089,10 @@ export interface INotebookModel {
     readonly metadata: INotebookMetadataLive | undefined;
     readonly isTrusted: boolean;
     readonly cellCount: number;
+    /**
+     * @deprecated
+     * Use only with old notebooks, when using with new Notebooks, use VSC API instead.
+     */
     getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
     getContent(): string;
     /**
