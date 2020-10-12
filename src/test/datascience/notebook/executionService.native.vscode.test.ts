@@ -34,9 +34,7 @@ import {
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 // tslint:disable: no-any no-invalid-this
-suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
-    this.timeout(1320_000);
-
+suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
@@ -119,7 +117,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Wait till execution count changes and status is success.
         await waitForCondition(
             async () => assertHasExecutionCompletedSuccessfully(cell),
-            150_000,
+            15_000,
             'Cell did not get executed'
         );
         // Verify output.
