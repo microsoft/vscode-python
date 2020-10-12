@@ -270,8 +270,8 @@ export class GatherListener implements IInteractiveWindowListener {
             const data =
                 env.uiKind === UIKind?.Web
                     ? createMarkdownCell(
-                          localize.DataScience.gatheredNotebookDescriptionInMarkdownWithoutSurvey().format(file)
-                      )
+                        localize.DataScience.gatheredNotebookDescriptionInMarkdownWithoutSurvey().format(file)
+                    )
                     : createMarkdownCell(localize.DataScience.gatheredNotebookDescriptionInMarkdown().format(file));
 
             let cells: ICell[] = [
