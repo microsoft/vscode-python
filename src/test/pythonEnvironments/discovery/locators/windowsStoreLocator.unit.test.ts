@@ -16,6 +16,7 @@ import * as externalDep from '../../../../client/pythonEnvironments/common/exter
 import { getWindowsStorePythonExes, WindowsStoreLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
 import { getEnvs } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
+import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
 suite('Windows Store', () => {
     suite('Utils', () => {
@@ -131,23 +132,6 @@ suite('Windows Store', () => {
             getEnvVar.restore();
         });
 
-        function assertEnvEqual(actual:PythonEnvInfo | undefined, expected: PythonEnvInfo | undefined):void {
-            assert.notStrictEqual(actual, undefined);
-            assert.notStrictEqual(expected, undefined);
-
-            if (actual) {
-            // ensure ctime and mtime are greater than -1
-                assert.ok(actual?.executable.ctime > -1);
-                assert.ok(actual?.executable.mtime > -1);
-
-                // No need to match these, so reset them
-                actual.executable.ctime = -1;
-                actual.executable.mtime = -1;
-
-                assert.deepStrictEqual(actual, expected);
-            }
-        }
-
         test('iterEnvs()', async () => {
             const expectedEnvs = [...pathToData.keys()]
                 .sort((a: string, b: string) => a.localeCompare(b))
@@ -171,10 +155,7 @@ suite('Windows Store', () => {
             const actualEnvs = (await getEnvs(iterator))
                 .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-            zip(actualEnvs, expectedEnvs).forEach((value) => {
-                const [actual, expected] = value;
-                assertEnvEqual(actual, expected);
-            });
+            assertEnvsEqual(actualEnvs, expectedEnvs);
         });
 
         test('resolveEnv(string)', async () => {

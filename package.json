@@ -1897,6 +1897,16 @@
                 "extensions": [
                     ".ipynb"
                 ]
+            },
+            {
+                "id": "julia",
+                "aliases": [
+                    "Julia",
+                    "julia"
+                ],
+                "extensions": [
+                    ".jl"
+                ]
             }
         ],
         "grammars": [
@@ -1961,7 +1971,7 @@
         "test:functional:perf": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.perf.json",
         "test:functional:memleak": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.json",
         "test:functional:cover": "npm run test:functional",
-        "test:functional:split": "node ./build/ci/scripts/runFunctionalTests.js",
+        "test:functional:parallel": "cross-env VSC_PYTHON_CI_TEST_PARALLEL=1 node ./build/ci/scripts/runFunctionalTests.js",
         "test:cover:report": "nyc --nycrc-path build/.nycrc  report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
         "testDebugger": "node ./out/test/testBootstrap.js ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",
@@ -2207,7 +2217,7 @@
         "node-html-parser": "^1.1.13",
         "nyc": "^15.0.0",
         "playwright-chromium": "^0.13.0",
-        "plotly.js-dist": "^1.55.2",
+        "plotly.js-dist": "^1.56.0",
         "postcss": "^7.0.27",
         "postcss-cssnext": "^3.1.0",
         "postcss-import": "^12.0.1",

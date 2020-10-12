@@ -18,7 +18,6 @@ suite('StartPage tests', () => {
         ioc = new StartPageIocContainer();
         ioc.registerStartPageTypes();
     });
-
     teardown(async () => {
         await ioc.dispose();
     });

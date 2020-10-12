@@ -50,7 +50,7 @@ export class SimpleLocator extends Locator {
     private deferred = createDeferred<void>();
     constructor(
         private envs: PythonEnvInfo[],
-        private callbacks?: {
+        public callbacks: {
             resolve?: null | ((env: PythonEnvInfo) => Promise<PythonEnvInfo | undefined>);
             before?: Promise<void>;
             after?: Promise<void>;
@@ -58,7 +58,7 @@ export class SimpleLocator extends Locator {
             beforeEach?(e: PythonEnvInfo): Promise<void>;
             afterEach?(e: PythonEnvInfo): Promise<void>;
             onQuery?(query: PythonLocatorQuery | undefined, envs: PythonEnvInfo[]): Promise<PythonEnvInfo[]>;
-        }
+        } = {},
     ) {
         super();
     }
@@ -73,13 +73,13 @@ export class SimpleLocator extends Locator {
         const callbacks = this.callbacks;
         let envs = this.envs;
         const iterator: IPythonEnvsIterator = async function*() {
-            if (callbacks?.onQuery !== undefined) {
+            if (callbacks.onQuery !== undefined) {
                 envs = await callbacks.onQuery(query, envs);
             }
-            if (callbacks?.before !== undefined) {
+            if (callbacks.before !== undefined) {
                 await callbacks.before;
             }
-            if (callbacks?.beforeEach !== undefined) {
+            if (callbacks.beforeEach !== undefined) {
                 // The results will likely come in a different order.
                 const mapped = mapToIterator(envs, async (env) => {
                     await callbacks.beforeEach!(env);
@@ -87,31 +87,31 @@ export class SimpleLocator extends Locator {
                 });
                 for await (const env of iterable(mapped)) {
                     yield env;
-                    if (callbacks?.afterEach !== undefined) {
+                    if (callbacks.afterEach !== undefined) {
                         await callbacks.afterEach(env);
                     }
                 }
             } else {
                 for (const env of envs) {
                     yield env;
-                    if (callbacks?.afterEach !== undefined) {
+                    if (callbacks.afterEach !== undefined) {
                         await callbacks.afterEach(env);
                     }
                 }
             }
-            if (callbacks?.after!== undefined) {
+            if (callbacks.after!== undefined) {
                 await callbacks.after;
             }
             deferred.resolve();
         }();
-        iterator.onUpdated = this.callbacks?.onUpdated;
+        iterator.onUpdated = this.callbacks.onUpdated;
         return iterator;
     }
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const envInfo: PythonEnvInfo = typeof env === 'string' ? createLocatedEnv('', '', undefined, env) : env;
-        if (this.callbacks?.resolve === undefined) {
+        if (this.callbacks.resolve === undefined) {
             return envInfo;
-        } else if (this.callbacks?.resolve === null) {
+        } else if (this.callbacks.resolve === null) {
             return undefined;
         } else {
             return this.callbacks.resolve(envInfo);

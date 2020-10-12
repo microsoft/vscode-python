@@ -61,7 +61,16 @@ export function getGlobalPersistentStore<T>(key: string): IPersistentStore<T> {
 export async function getFileInfo(filePath: string): Promise<{ctime:number, mtime:number}> {
     const data = await fsapi.lstat(filePath);
     return {
-        ctime: data.ctime.getUTCDate(),
-        mtime: data.mtime.getUTCDate(),
+        ctime: data.ctime.valueOf(),
+        mtime: data.mtime.valueOf(),
     };
+}
+
+export async function resolveSymbolicLink(filepath:string): Promise<string> {
+    const stats = await fsapi.lstat(filepath);
+    if (stats.isSymbolicLink()) {
+        const link = await fsapi.readlink(filepath);
+        return resolveSymbolicLink(link);
+    }
+    return filepath;
 }

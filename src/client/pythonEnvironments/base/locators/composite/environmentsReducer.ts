@@ -38,7 +38,6 @@ export class PythonEnvsReducer implements ILocator {
             if (areSameEnv(result.value, env)) {
                 environment = result.value;
             }
-            // eslint-disable-next-line no-await-in-loop
             result = await iterator.next();
         }
         if (!environment) {
@@ -72,15 +71,13 @@ async function* iterEnvsIterator(
             if (event === null) {
                 state.done = true;
                 checkIfFinishedAndNotify(state, didUpdate);
+            } else if (seen[event.index] !== undefined) {
+                state.pending += 1;
+                resolveDifferencesInBackground(event.index, event.update, state, didUpdate, seen)
+                    .ignoreErrors();
             } else {
-                if (seen[event.index] !== undefined) {
-                    state.pending += 1;
-                    resolveDifferencesInBackground(event.index, event.update, state, didUpdate, seen)
-                        .ignoreErrors();
-                } else {
-                    // This implies a problem in a downstream locator
-                    traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
-                }
+                // This implies a problem in a downstream locator
+                traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
             }
         });
     }
@@ -97,7 +94,6 @@ async function* iterEnvsIterator(
             yield currEnv;
             seen.push(currEnv);
         }
-        // eslint-disable-next-line no-await-in-loop
         result = await iterator.next();
     }
     if (iterator.onUpdated === undefined) {

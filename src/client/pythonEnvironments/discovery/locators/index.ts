@@ -130,7 +130,6 @@ export class WorkspaceLocators extends Locator {
         // Fall back to checking all the roots.
         // The eslint disable below should be removed after we have a
         // better solution for these. We need asyncFind for this.
-        // eslint-disable-next-line no-restricted-syntax
         for (const key of Object.keys(this.locators)) {
             // eslint-disable-next-line no-await-in-loop
             const resolved = await this.locators[key].resolveEnv(env);

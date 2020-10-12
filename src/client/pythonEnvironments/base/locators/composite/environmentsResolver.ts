@@ -61,16 +61,14 @@ export class PythonEnvsResolver implements ILocator {
                 if (event === null) {
                     state.done = true;
                     checkIfFinishedAndNotify(state, didUpdate);
+                } else if (seen[event.index] !== undefined) {
+                    seen[event.index] = event.update;
+                    state.pending += 1;
+                    this.resolveInBackground(event.index, state, didUpdate, seen)
+                        .ignoreErrors();
                 } else {
-                    if (seen[event.index] !== undefined) {
-                        seen[event.index] = event.update;
-                        state.pending += 1;
-                        this.resolveInBackground(event.index, state, didUpdate, seen)
-                            .ignoreErrors();
-                    } else {
-                        // This implies a problem in a downstream locator
-                        traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
-                    }
+                    // This implies a problem in a downstream locator
+                    traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
                 }
             });
         }
@@ -82,7 +80,6 @@ export class PythonEnvsResolver implements ILocator {
             yield currEnv;
             state.pending += 1;
             this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();
-            // eslint-disable-next-line no-await-in-loop
             result = await iterator.next();
         }
         if (iterator.onUpdated === undefined) {
