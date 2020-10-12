@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable: no-this-assignment
+
 import * as path from 'path';
 import { Event } from 'vscode';
 import {
@@ -84,7 +86,7 @@ export class SimpleLocator extends Locator {
         return this.deferred.promise;
     }
 
-    public fire(event: PythonEnvsChangedEvent) {
+    public fire(event: PythonEnvsChangedEvent): void {
         this.emitter.fire(event);
     }
 
