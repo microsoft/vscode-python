@@ -228,7 +228,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
     constructor(
         protected _isTrusted: boolean,
         protected _file: Uri,
-        // protected _cells: ICell[],
         protected globalMemento: Memento,
         private crypto: ICryptoUtils,
         protected notebookJson: Partial<nbformat.INotebookContent> = {},
@@ -250,9 +249,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
         this._disposed.fire();
     }
     public abstract getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
-    // {
-    //     return this._cells.map((cell) => ({ data: cell.data, id: cell.id, state: cell.state }));
-    // }
     public getContent(): string {
         return this.generateNotebookContent();
     }
