@@ -99,6 +99,7 @@ async function activateLegacy(
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
 
     // Core registrations (non-feature specific).
+    commonRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
 

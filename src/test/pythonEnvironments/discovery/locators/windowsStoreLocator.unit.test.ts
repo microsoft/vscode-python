@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import { zip } from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { ExecutionResult } from '../../../../client/common/process/types';
