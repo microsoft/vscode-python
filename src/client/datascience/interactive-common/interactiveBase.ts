@@ -943,6 +943,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 await this.ensureNotebook(serverConnection);
             }
         } catch (exc) {
+            traceError(`Exception attempting to start notebook: `, exc);
             // We should dispose ourselves if the load fails. Othewise the user
             // updates their install and we just fail again because the load promise is the same.
             await this.closeBecauseOfFailure(exc);
