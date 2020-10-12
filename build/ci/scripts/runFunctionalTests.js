@@ -152,7 +152,7 @@ async function main() {
     var endTime = Date.now();
 
     // Indicate error code and total time of the run
-    console.log(`Functional test run result: ${returnCode} after ${(endTime - startTime) / 1000} seconds`);
+    console.log(`Functional test run result: ${returnCode} after ${(endTime - startTime) / 1_000} seconds`);
     process.exit(returnCode);
 }
 
