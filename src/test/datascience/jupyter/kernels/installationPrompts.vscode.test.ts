@@ -89,7 +89,7 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         disposables.push({ dispose: () => showInformationMessage.restore() });
 
         // Confirm message is displayed & we click 'Install` button.
-        const prompt = hijackPrompt(
+        const prompt = await hijackPrompt(
             'showErrorMessage',
             { endsWith: expectedPromptMessageSuffix },
             { text: Common.install(), clickImmediately: true },
@@ -105,7 +105,7 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         // The prompt should be displayed & ipykernel should get installed.
         await waitForCondition(
             async () => {
-                await Promise.all([(await prompt).displayed, installed.promise]);
+                await Promise.all([await prompt.displayed, installed.promise]);
                 return true;
             },
             delayForUITest,
