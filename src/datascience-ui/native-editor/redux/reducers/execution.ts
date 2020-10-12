@@ -85,7 +85,7 @@ export namespace Execution {
     export function executeCellAndAdvance(arg: NativeEditorReducerArg<IExecuteAction>): IMainState {
         queueIncomingActionWithPayload(arg, CommonActionType.EXECUTE_CELL, {
             cellId: arg.payload.data.cellId,
-            moveOp: 'none'
+            moveOp: arg.payload.data.moveOp
         });
         if (arg.payload.data.moveOp === 'add') {
             const newCellId = uuid();
