@@ -65,7 +65,7 @@ suite('Module Installer only', () => {
     [undefined, Uri.file('resource')].forEach((resource) => {
         // tslint:disable-next-line: cyclomatic-complexity
         getNamesAndValues<Product>(Product)
-            .concat([{ name: 'Unkown product', value: 404 }])
+            .concat([{ name: 'Unknown product', value: 404 }])
             // tslint:disable-next-line: cyclomatic-complexity
             .forEach((product) => {
                 let disposables: Disposable[] = [];
@@ -83,6 +83,9 @@ suite('Module Installer only', () => {
                 const productService = new ProductService();
 
                 setup(function () {
+                    if (new ProductService().getProductType(product.value) === ProductType.DataScience) {
+                        return this.skip();
+                    }
                     promptDeferred = createDeferred<string>();
                     serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                     outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
