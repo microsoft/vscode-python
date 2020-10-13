@@ -229,36 +229,44 @@ export class GatherListener implements IInteractiveWindowListener {
     };
 
     private reportStaleCells = async (cell: ICell) => {
+        this.gatherTimer = new StopWatch();
         try {
-            const cellIds = this.gatherProvider ? this.gatherProvider.getStaleCells(cell) : [];
-            for (const cellId of cellIds) {
+            const staleCells = this.gatherProvider ? this.gatherProvider.getStaleCells(cell) : [];
+            sendTelemetryEvent(Telemetry.StaleCellsCompleted, this.gatherTimer?.elapsedTime, {
+                staleCount: staleCells.length
+            });
+            for (const staleCell of staleCells) {
                 this.postEmitter.fire({
                     message: InteractiveWindowMessages.Stale,
-                    payload: { cellId, stale: true }
+                    payload: { cellId: staleCell.id, executionCount: staleCell.executionCount, stale: true }
                 });
             }
         } catch (e) {
             traceError('Gather: Exception at getStaleCells', e);
-            sendTelemetryEvent(Telemetry.GatherException, undefined, { exceptionType: 'gather' });
+            sendTelemetryEvent(Telemetry.StaleCellsException, undefined, { exceptionType: 'report' });
         }
     };
 
     private runStaleCells = async (cell: ICell) => {
+        this.gatherTimer = new StopWatch();
         try {
             this.postEmitter.fire({
                 message: CommonActionType.EXECUTE_CELL,
                 payload: { cellId: cell.id, moveOp: 'none' }
             });
-            const cellIds = this.gatherProvider ? this.gatherProvider.getStaleCells(cell) : [];
-            for (const cellId of cellIds) {
+            const staleCells = this.gatherProvider ? this.gatherProvider.getStaleCells(cell) : [];
+            sendTelemetryEvent(Telemetry.StaleCellsCompleted, this.gatherTimer?.elapsedTime, {
+                staleCount: staleCells.length
+            });
+            for (const staleCell of staleCells) {
                 this.postEmitter.fire({
                     message: CommonActionType.EXECUTE_CELL,
-                    payload: { cellId, moveOp: 'none' }
+                    payload: { cellId: staleCell.id, moveOp: 'none' }
                 });
             }
         } catch (e) {
             traceError('Gather: Exception at getStaleCells', e);
-            sendTelemetryEvent(Telemetry.GatherException, undefined, { exceptionType: 'gather' });
+            sendTelemetryEvent(Telemetry.StaleCellsException, undefined, { exceptionType: 'run' });
         }
     };
 

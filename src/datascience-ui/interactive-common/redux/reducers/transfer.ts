@@ -8,7 +8,7 @@ import {
     NotebookModelChange
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
-import { ICell } from '../../../../client/datascience/types';
+import { CellState, ICell } from '../../../../client/datascience/types';
 import { extractInputText, getSelectedAndFocusedInfo, ICellViewModel, IMainState } from '../../mainState';
 import { isSyncingMessage, postActionToExtension } from '../helpers';
 import { Helpers } from './helpers';
@@ -367,13 +367,17 @@ export namespace Transfer {
     }
 
     export function stale(arg: CommonReducerArg<CommonActionType, IChangeStaleStatus>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
+        const data = arg.payload.data;
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === data.cellId);
         if (index >= 0) {
             const cellVMs = [...arg.prevState.cellVMs];
             const current = arg.prevState.cellVMs[index];
+            const staleRelevant =
+                current.cell.state !== CellState.executing && // execution isn't in progress
+                (current.cell.data.execution_count || 0) <= data.executionCount; // execution isn't done
             const newCell: ICellViewModel = {
                 ...current,
-                stale: arg.payload.data.stale
+                stale: staleRelevant ? data.stale : false
             };
             cellVMs[index] = newCell;
 

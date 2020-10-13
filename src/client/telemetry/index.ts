@@ -2078,6 +2078,9 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the user reports whether Gathered notebook was good or not
      */
     [Telemetry.GatherQualityReport]: { result: 'yes' | 'no' };
+
+    [Telemetry.StaleCellsCompleted]: { staleCount: number };
+    [Telemetry.StaleCellsException]: { exceptionType: 'report' | 'run' };
     /**
      * Telemetry event sent when the ZMQ native binaries do not work.
      */

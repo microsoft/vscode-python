@@ -268,6 +268,7 @@ export interface IChangeGatherStatus {
 
 export interface IChangeStaleStatus {
     cellId: string;
+    executionCount: number; // the executionCount when it went stale
     stale: boolean;
 }
 
