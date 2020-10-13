@@ -1,6 +1,6 @@
 **/*.map
 **/*.analyzer.html
-!out/startPage-ui/viewers/commons.initial.bundle.js.map
+!out/startPage-ui/viewers/
 *.vsix
 .appveyor.yml
 .editorconfig
@@ -69,10 +69,6 @@ obj/**
 out/**/*.stats.json
 out/client/**/*.analyzer.html
 out/coverconfig.json
-out/startPage-ui/common/**
-out/startPage-ui/startPage/**
-out/startPage-ui/react-common/**
-out/startPage-ui/viewers/**
 out/pythonFiles/**
 out/src/**
 out/test/**
