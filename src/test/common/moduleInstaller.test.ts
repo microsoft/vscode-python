@@ -28,6 +28,7 @@ import {
     ICustomEditorService,
     IDebugService,
     IDocumentManager,
+    IJupyterExtensionDependencyManager,
     IWorkspaceService
 } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -125,6 +126,7 @@ import {
     PIPENV_SERVICE
 } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
+import { JupyterExtensionDependencyManager } from '../../client/jupyter/jupyterExtensionDependencyManager';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
@@ -234,6 +236,10 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
             ioc.serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
             ioc.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
+            ioc.serviceManager.addSingleton<IJupyterExtensionDependencyManager>(
+                IJupyterExtensionDependencyManager,
+                JupyterExtensionDependencyManager
+            );
             ioc.serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
             ioc.serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
             ioc.serviceManager.addSingleton<IFileDownloader>(IFileDownloader, FileDownloader);
