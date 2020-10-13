@@ -61,7 +61,7 @@ import { sleep } from '../../common';
 
 use(chaiAsPromised);
 
-suite('Module Installer only', () => {
+suite('Module Installer onlyxxx', () => {
     [undefined, Uri.file('resource')].forEach((resource) => {
         // tslint:disable-next-line: cyclomatic-complexity
         getNamesAndValues<Product>(Product)
@@ -149,6 +149,10 @@ suite('Module Installer only', () => {
                     installer = new ProductInstaller(serviceContainer.object, outputChannel.object);
                 });
                 teardown(() => {
+                    if (new ProductService().getProductType(product.value) === ProductType.DataScience) {
+                        sinon.restore();
+                        return;
+                    }
                     // This must be resolved, else all subsequent tests will fail (as this same promise will be used for other tests).
                     promptDeferred.resolve();
                     disposables.forEach((disposable) => {
