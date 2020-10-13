@@ -111,7 +111,7 @@ export class KernelService {
         const specs = await this.getKernelSpecs(sessionManager, cancelToken);
         if (isInterpreter(option)) {
             return specs.find((item) => {
-                if (item.language.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()) {
+                if (item.language?.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()) {
                     return false;
                 }
                 return (
