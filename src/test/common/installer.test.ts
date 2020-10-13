@@ -324,7 +324,11 @@ suite('Installer', () => {
         await checkInstalledDef.promise;
     }
     getNamesAndValues<Product>(Product).forEach((prod) => {
-        test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async () => {
+        test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async function () {
+            if (new ProductService().getProductType(prod.value) === ProductType.DataScience) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
                 IModuleInstaller,
                 new MockModuleInstaller('one', false)
@@ -357,7 +361,11 @@ suite('Installer', () => {
         await checkInstalledDef.promise;
     }
     getNamesAndValues<Product>(Product).forEach((prod) => {
-        test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async () => {
+        test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async function () {
+            if (new ProductService().getProductType(prod.value) === ProductType.DataScience) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
                 IModuleInstaller,
                 new MockModuleInstaller('one', false)
