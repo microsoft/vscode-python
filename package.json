@@ -12,9 +12,6 @@
     "author": {
         "name": "Microsoft Corporation"
     },
-    "extensionDependencies": [
-        "ms-toolsai.jupyter"
-    ],
     "license": "MIT",
     "homepage": "https://github.com/Microsoft/vscode-python",
     "repository": {
