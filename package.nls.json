@@ -104,6 +104,8 @@
     "Installer.noCondaOrPipInstaller": "There is no Conda or Pip installer available in the selected environment.",
     "Installer.noPipInstaller": "There is no Pip installer available in the selected environment.",
     "Installer.searchForHelp": "Search for help",
+    "Installer.couldNotInstallLibrary":
+        "Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.",
     "diagnostics.removedPythonPathFromSettings": "We removed the \"python.pythonPath\" setting from your settings.json file as the setting is no longer used by the Python extension. You can get the path of your selected interpreter in the Python output channel. [Learn more](https://aka.ms/AA7jfor).",
     "diagnostics.warnSourceMaps": "Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.",
     "diagnostics.disableSourceMaps": "Disable Source Map Support",

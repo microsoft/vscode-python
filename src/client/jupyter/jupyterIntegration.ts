@@ -35,6 +35,28 @@ export interface ILanguageServer extends Disposable {
     readonly capabilities: lsp.ServerCapabilities;
 }
 
+/**
+ * This allows Python exntension to update Product enum without breaking Jupyter.
+ * I.e. we have a strict contract, else using numbers (in enums) is bound to break across products.
+ */
+enum JupyterProductToInstall {
+    jupyter = 'jupyter',
+    ipykernel = 'ipykernel',
+    notebook = 'notebook',
+    kernelspec = 'kernelspec',
+    nbconvert = 'nbconvert',
+    pandas = 'pandas'
+}
+
+const ProductMapping: { [key in JupyterProductToInstall]: Product } = {
+    [JupyterProductToInstall.ipykernel]: Product.ipykernel,
+    [JupyterProductToInstall.jupyter]: Product.jupyter,
+    [JupyterProductToInstall.kernelspec]: Product.kernelspec,
+    [JupyterProductToInstall.nbconvert]: Product.nbconvert,
+    [JupyterProductToInstall.notebook]: Product.notebook,
+    [JupyterProductToInstall.pandas]: Product.pandas
+};
+
 type PythonApiForJupyterExtension = {
     /**
      * IInterpreterService
@@ -69,7 +91,11 @@ type PythonApiForJupyterExtension = {
     /**
      * IInstaller
      */
-    install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
+    install(
+        product: JupyterProductToInstall,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse>;
     /**
      * Returns path to where `debugpy` is. In python extension this is `/pythonFiles/lib/python`.
      */
@@ -119,10 +145,10 @@ export class JupyterExtensionIntegration {
             getSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
                 this.interpreterSelector.getSuggestions(resource),
             install: async (
-                product: Product,
+                product: JupyterProductToInstall,
                 resource?: InterpreterUri,
                 cancel?: CancellationToken
-            ): Promise<InstallerResponse> => this.installer.install(product, resource, cancel),
+            ): Promise<InstallerResponse> => this.installer.install(ProductMapping[product], resource, cancel),
             getDebuggerPath: async () => dirname(getDebugpyPackagePath()),
             getInterpreterPathSelectedForJupyterServer: () =>
                 this.globalState.get<string | undefined>('INTERPRETER_PATH_SELECTED_FOR_JUPYTER_SERVER'),

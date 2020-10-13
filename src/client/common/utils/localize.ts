@@ -297,6 +297,10 @@ export namespace Installer {
         'There is no Pip installer available in the selected environment.'
     );
     export const searchForHelp = localize('Installer.searchForHelp', 'Search for help');
+    export const couldNotInstallLibrary = localize(
+        'Installer.couldNotInstallLibrary',
+        'Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.'
+    );
 }
 
 export namespace ExtensionSurveyBanner {
