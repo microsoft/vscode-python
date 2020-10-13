@@ -61,7 +61,7 @@ import { sleep } from '../../common';
 
 use(chaiAsPromised);
 
-suite('Module Installer onlyxxx', () => {
+suite('Module Installer only', () => {
     [undefined, Uri.file('resource')].forEach((resource) => {
         // tslint:disable-next-line: cyclomatic-complexity
         getNamesAndValues<Product>(Product)
@@ -74,7 +74,7 @@ suite('Module Installer onlyxxx', () => {
                 let moduleInstaller: TypeMoq.IMock<IModuleInstaller>;
                 let serviceContainer: TypeMoq.IMock<IServiceContainer>;
                 let app: TypeMoq.IMock<IApplicationShell>;
-                let promptDeferred: Deferred<string>;
+                let promptDeferred: Deferred<string> | undefined;
                 let workspaceService: TypeMoq.IMock<IWorkspaceService>;
                 let persistentStore: TypeMoq.IMock<IPersistentStateFactory>;
                 let outputChannel: TypeMoq.IMock<OutputChannel>;
@@ -154,7 +154,9 @@ suite('Module Installer onlyxxx', () => {
                         return;
                     }
                     // This must be resolved, else all subsequent tests will fail (as this same promise will be used for other tests).
-                    promptDeferred.resolve();
+                    if (promptDeferred) {
+                        promptDeferred.resolve();
+                    }
                     disposables.forEach((disposable) => {
                         if (disposable) {
                             disposable.dispose();
@@ -330,7 +332,7 @@ suite('Module Installer onlyxxx', () => {
                                     )
                                 )
                                     .returns(() => {
-                                        return promptDeferred.promise;
+                                        return promptDeferred!.promise;
                                     })
                                     .verifiable(TypeMoq.Times.once());
                                 const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
