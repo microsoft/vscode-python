@@ -55,7 +55,10 @@ suite('Product Path', () => {
             let workspaceSymnbolSettings: TypeMoq.IMock<IWorkspaceSymbolSettings>;
             let configService: TypeMoq.IMock<IConfigurationService>;
             let productInstaller: ProductInstaller;
-            setup(() => {
+            setup(function () {
+                if (new ProductService().getProductType(product.value) === ProductType.DataScience) {
+                    return this.skip();
+                }
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 configService = TypeMoq.Mock.ofType<IConfigurationService>();
                 formattingSettings = TypeMoq.Mock.ofType<IFormattingSettings>();

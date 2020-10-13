@@ -82,11 +82,13 @@ suite('Module Installer only', () => {
                 let interpreterService: TypeMoq.IMock<IInterpreterService>;
                 const productService = new ProductService();
 
-                setup(() => {
+                setup(function () {
                     promptDeferred = createDeferred<string>();
                     serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                     outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
-
+                    if (new ProductService().getProductType(product.value) === ProductType.DataScience) {
+                        return this.skip();
+                    }
                     disposables = [];
                     serviceContainer
                         .setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
