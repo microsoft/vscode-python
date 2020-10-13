@@ -9,7 +9,7 @@ import {
 } from 'winreg';
 import { Architecture } from '../../../../client/common/utils/platform';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
+    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
@@ -194,6 +194,7 @@ suite('Windows Registry', () => {
             ],
         },
     };
+
     function fakeRegistryValues({ arch, hive, key }: Options): Promise<winutils.IRegistryValue[]> {
         const regArch = arch === 'x86' ? registryData.x86 : registryData.x64;
         const regHive = hive === HKCU ? regArch.HKCU : regArch.HKLM;
@@ -267,13 +268,7 @@ suite('Windows Registry', () => {
         try {
             version = parseVersion(versionStr);
         } catch (ex) {
-            version = {
-                major: -1,
-                minor: -1,
-                micro: -1,
-                release: { level: PythonReleaseLevel.Final, serial: -1 },
-                sysVersion: undefined,
-            };
+            version = UNKNOWN_PYTHON_VERSION;
         }
 
         return {
@@ -308,11 +303,13 @@ suite('Windows Registry', () => {
         stubReadRegistryKeys.callsFake(fakeRegistryKeys);
         stubGetInterpreterDataFromRegistry.callsFake(fakeGetInterpreterDataFromRegistry);
     });
+
     teardown(() => {
         stubReadRegistryValues.restore();
         stubReadRegistryKeys.restore();
         stubGetInterpreterDataFromRegistry.restore();
     });
+
     test('iterEnvs()', async () => {
         const expectedEnvs: PythonEnvInfo[] = (await Promise.all(
             [
