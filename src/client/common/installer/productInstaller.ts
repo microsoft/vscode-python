@@ -511,6 +511,18 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
             return 'rope';
         case Product.bandit:
             return 'bandit';
+        case Product.jupyter:
+            return 'jupyter';
+        case Product.notebook:
+            return 'notebook';
+        case Product.pandas:
+            return 'pandas';
+        case Product.ipykernel:
+            return 'ipykernel';
+        case Product.nbconvert:
+            return 'nbconvert';
+        case Product.kernelspec:
+            return 'kernelspec';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }
