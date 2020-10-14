@@ -231,7 +231,7 @@ export class GatherListener implements IInteractiveWindowListener {
     private reportStaleCells = async (cell: ICell) => {
         this.gatherTimer = new StopWatch();
         try {
-            const staleCells = this.gatherProvider ? this.gatherProvider.getStaleCells(cell) : [];
+            const staleCells = this.gatherProvider ? this.gatherProvider.getDependentCells(cell) : [];
             sendTelemetryEvent(Telemetry.StaleCellsCompleted, this.gatherTimer?.elapsedTime, {
                 staleCount: staleCells.length
             });
@@ -254,7 +254,7 @@ export class GatherListener implements IInteractiveWindowListener {
                 message: CommonActionType.EXECUTE_CELL,
                 payload: { cellId: cell.id, moveOp: 'none' }
             });
-            const staleCells = this.gatherProvider ? this.gatherProvider.getStaleCells(cell) : [];
+            const staleCells = this.gatherProvider ? this.gatherProvider.getDependentCells(cell) : [];
             sendTelemetryEvent(Telemetry.StaleCellsCompleted, this.gatherTimer?.elapsedTime, {
                 staleCount: staleCells.length
             });

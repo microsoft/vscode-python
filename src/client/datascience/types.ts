@@ -272,7 +272,7 @@ export interface INotebookExecutionLogger extends IDisposable {
 export interface IGatherProvider {
     logExecution(vscCell: ICell): void;
     gatherCode(vscCell: ICell): string;
-    getStaleCells(vscCell: ICell): { id: string; executionCount: number }[];
+    getDependentCells(vscCell: ICell): { id: string; executionCount: number }[];
     resetLog(): void;
 }
 
