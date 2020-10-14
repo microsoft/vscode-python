@@ -6,7 +6,12 @@ import * as path from 'path';
 import { normalizeFilename } from './filesystem';
 import { getEnvironmentVariable, getOSType, OSType } from './platform';
 
-export const ENV_VAR = getOSType() === OSType.Windows ? 'Path' : 'PATH';
+/**
+ * Determine the env var to use for the executable search path.
+ */
+export function getSearchPathEnvVarName(ostype = getOSType()): 'Path' | 'PATH' {
+    return ostype === OSType.Windows ? 'Path' : 'PATH';
+}
 
 /**
  * Determine if the given file is executable by the current user.
@@ -32,7 +37,8 @@ export function isExecutableSync(filename: string): boolean | undefined {
  * Get the OS executable lookup "path" from the appropriate env var.
  */
 export function getSearchPathEntries(): string[] {
-    return (getEnvironmentVariable(ENV_VAR) || '')
+    const envVar = getSearchPathEnvVarName();
+    return (getEnvironmentVariable(envVar) || '')
         .split(path.delimiter)
         .map((entry: string) => entry.trim())
         .filter((entry) => entry.length > 0);
