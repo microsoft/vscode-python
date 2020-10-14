@@ -50,7 +50,6 @@
     ],
     "activationEvents": [
         "onLanguage:python",
-        "onLanguage:jupyter",
         "onDebugResolve:python",
         "onCommand:python.execInTerminal",
         "onCommand:python.sortImports",
@@ -1887,16 +1886,6 @@
                 "aliases": [
                     "Jinja"
                 ]
-            },
-            {
-                "id": "jupyter",
-                "aliases": [
-                    "Jupyter",
-                    "Notebook"
-                ],
-                "extensions": [
-                    ".ipynb"
-                ]
             }
         ],
         "grammars": [
@@ -1953,7 +1942,6 @@
         "compile-webviews-watchd": "deemon npm run compile-webviews-watch",
         "kill-compile-webviews-watchd": "deemon --kill npm run compile-webviews-watch",
         "checkDependencies": "gulp checkDependencies",
-        "postinstall": "node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "mocha --config ./build/.mocha.unittests.js.json",
         "test:unittests:cover": "nyc --no-clean --nycrc-path build/.nycrc mocha --config ./build/.mocha.unittests.ts.json",
@@ -1981,7 +1969,6 @@
     "dependencies": {
         "@jupyter-widgets/schema": "^0.4.0",
         "@jupyterlab/coreutils": "^3.1.0",
-        "@jupyterlab/services": "^4.2.0",
         "@loadable/component": "^5.12.0",
         "@nteract/messaging": "^7.0.0",
         "@types/tcp-port-used": "^1.0.0",

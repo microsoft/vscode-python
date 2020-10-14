@@ -82,7 +82,6 @@
     "OutputChannelNames.languageServer": "Python Language Server",
     "OutputChannelNames.python": "Python",
     "OutputChannelNames.pythonTest": "Python Test Log",
-    "OutputChannelNames.jupyter": "Jupyter",
     "ExtensionSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Python extension is working for you?",
     "ExtensionSurveyBanner.bannerLabelYes": "Yes, take survey now",
     "ExtensionSurveyBanner.bannerLabelNo": "No, thanks",

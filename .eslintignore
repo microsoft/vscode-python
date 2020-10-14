@@ -18,7 +18,6 @@ build/webpack/pdfkit.js
 build/webpack/webpack.extension.dependencies.config.js
 build/webpack/common.js
 build/webpack/webpack.startPage-ui-viewers.config.js
-build/webpack/loaders/fixNodeFetch.js
 build/webpack/loaders/remarkLoader.js
 build/webpack/loaders/jsonloader.js
 build/webpack/loaders/externalizeDependencies.js

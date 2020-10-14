@@ -388,17 +388,6 @@ export function setUpDomEnvironment() {
         toString: () => '{Selection}'
     };
 
-    // For Jupyter server to load correctly. It expects the window object to not be defined
-    // tslint:disable-next-line:no-eval no-any
-    const fetchMod = eval('require')('node-fetch');
-    // tslint:disable-next-line:no-string-literal no-any
-    (global as any)['fetch'] = fetchMod;
-    // tslint:disable-next-line:no-string-literal no-any
-    (global as any)['Request'] = fetchMod.Request;
-    // tslint:disable-next-line:no-string-literal no-any
-    (global as any)['Headers'] = fetchMod.Headers;
-    // tslint:disable-next-line:no-string-literal no-eval no-any
-    (global as any)['WebSocket'] = eval('require')('ws');
     (global as any)['DOMParser'] = dom.window.DOMParser;
     (global as any)['Blob'] = dom.window.Blob;
 
@@ -418,17 +407,6 @@ export function setUpDomEnvironment() {
             _oldLoader(mod, filename);
         }
     };
-}
-
-export function setupTranspile() {
-    // Some special work for getting the monaco editor to work.
-    // We need to babel transpile some modules. Monaco-editor is not in commonJS format so imports
-    // can't be loaded.
-    require('@babel/register')({ plugins: ['@babel/transform-modules-commonjs'], only: [/monaco-editor/] });
-
-    // Special case for editor api. Webpack bundles editor.all.js as well. Tests don't.
-    require('monaco-editor/esm/vs/editor/editor.api');
-    require('monaco-editor/esm/vs/editor/editor.all');
 }
 
 function copyProps(src: any, target: any) {

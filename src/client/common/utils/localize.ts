@@ -268,7 +268,6 @@ export namespace OutputChannelNames {
     export const languageServer = localize('OutputChannelNames.languageServer', 'Python Language Server');
     export const python = localize('OutputChannelNames.python', 'Python');
     export const pythonTest = localize('OutputChannelNames.pythonTest', 'Python Test Log');
-    export const jupyter = localize('OutputChannelNames.jupyter', 'Jupyter');
 }
 
 export namespace Logging {

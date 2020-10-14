@@ -20,7 +20,6 @@ import {
     WorkspaceFolder,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
-import * as vsls from 'vsls/vscode';
 import { LanguageServerType } from '../../client/activation/types';
 
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
@@ -30,8 +29,6 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    ILiveShareApi,
-    ILiveShareTestingApi,
     IWebviewPanelOptions,
     IWebviewPanelProvider,
     IWorkspaceService
@@ -89,8 +86,6 @@ import { WebBrowserPanelProvider } from './webBrowserPanelProvider';
 export class StartPageIocContainer extends UnitTestIocContainer {
     private static foundPythonPath: string | undefined;
 
-    public shouldMockJupyter: boolean;
-
     public applicationShell!: ApplicationShell;
 
     public platformService!: PlatformService;
@@ -141,8 +136,6 @@ export class StartPageIocContainer extends UnitTestIocContainer {
         super();
         // this.pythonEnvs = mock(PythonEnvironments);
         this.useVSCodeAPI = false;
-        const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
-        this.shouldMockJupyter = !isRollingBuild;
         this.asyncRegistry = new AsyncDisposableRegistry();
     }
 
@@ -277,17 +270,7 @@ export class StartPageIocContainer extends UnitTestIocContainer {
     }
 
     // tslint:disable:any
-    public createWebView(
-        mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
-        id: string,
-        role: vsls.Role = vsls.Role.None
-    ) {
-        // Force the container to mock actual live share if necessary
-        if (role !== vsls.Role.None) {
-            const liveShareTest = this.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
-            liveShareTest.forceRole(role);
-        }
-
+    public createWebView(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, id: string) {
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
         this.pendingWebPanel = this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(id, mount);
         return this.pendingWebPanel;
