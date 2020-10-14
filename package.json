@@ -930,7 +930,8 @@
             {
                 "command": "python.datascience.showDataViewer",
                 "title": "%python.command.python.datascience.showDataViewer.title%",
-                "category": "Python"
+                "category": "Python",
+                "when": false
             },
             {
                 "command": "python.analysis.restartLanguageServer",
@@ -1552,6 +1553,11 @@
                 {
                     "command": "python.datascience.latestExtension",
                     "title": "%DataScience.latestExtension%",
+                    "category": "Python",
+                    "when": "false"
+                },
+                {
+                    "command": "python.datascience.showDataViewer",
                     "category": "Python",
                     "when": "false"
                 },
