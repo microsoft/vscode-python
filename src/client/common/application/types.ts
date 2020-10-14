@@ -1149,7 +1149,6 @@ export interface IWebviewPanelProvider {
     create(options: IWebviewPanelOptions): Promise<IWebviewPanel>;
 }
 
-
 export const ILanguageService = Symbol('ILanguageService');
 export interface ILanguageService {
     /**
