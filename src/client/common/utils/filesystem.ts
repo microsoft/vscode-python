@@ -13,7 +13,7 @@ import { getOSType, OSType } from './platform';
 export function normalizeFilename(filename: string): string {
     // This also duplicates what `path.normalize()` does.
     const resolved = path.resolve(filename);
-    return (getOSType() === OSType.Windows) ? resolved.toLowerCase() : resolved;
+    return getOSType() === OSType.Windows ? resolved.toLowerCase() : resolved;
 }
 
 /**

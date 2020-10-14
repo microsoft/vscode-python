@@ -33,6 +33,7 @@ export function getOSType(platform: string = process.platform): OSType {
 const architectures: Record<string, Architecture> = {
     x86: Architecture.x86, // 32-bit
     x64: Architecture.x64, // 64-bit
+    '': Architecture.Unknown
 };
 
 /**

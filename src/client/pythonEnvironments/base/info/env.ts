@@ -11,8 +11,8 @@ import { arePathsSame } from '../../common/externalDependencies';
 import {
     areEqualVersions,
     areEquivalentVersions,
-    parseVersion,
     isVersionEmpty,
+    parseVersion,
 } from './pythonVersion';
 
 import {
@@ -123,7 +123,10 @@ export function getMinimalPartialInfo(env: string | Partial<PythonEnvInfo>): Par
         }
         return {
             executable: {
-                filename: env, sysPrefix: '', ctime: -1, mtime: -1,
+                filename: env,
+                sysPrefix: '',
+                ctime: -1,
+                mtime: -1,
             },
         };
     }

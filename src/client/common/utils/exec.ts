@@ -15,7 +15,7 @@ export const ENV_VAR = getOSType() === OSType.Windows ? 'Path' : 'PATH';
  */
 export function isExecutableSync(filename: string): boolean | undefined {
     try {
-        fsapi.accessSync(filename, fsapi.constants.X_OK)
+        fsapi.accessSync(filename, fsapi.constants.X_OK);
     } catch (err) {
         if (err.code === 'EEXIST') {
             return undefined;
@@ -45,9 +45,9 @@ export function getSearchPathEntries(): string[] {
  */
 export function getExecutablesInDirectorySync(
     dirname: string,
-    matchExecutable?: (filename: string) => boolean,
+    matchExecutable?: (filename: string) => boolean
 ): string[] {
-    const normDir= normalizeFilename(dirname);
+    const normDir = normalizeFilename(dirname);
     let entries: fsapi.Dirent[] = [];
     try {
         entries = fsapi.readdirSync(normDir, { withFileTypes: true });
@@ -61,19 +61,19 @@ export function getExecutablesInDirectorySync(
         .map((dirent) => dirent.name)
         .filter((basename) => !matchExecutable || matchExecutable(basename))
         .map((basename) => path.join(normDir, basename))
-        .filter((filename) => isExecutableSync(filename));
+        .filter(isExecutableSync);
 }
 
 /**
  * Identify executables found on the executable search path.
  */
 export function getSearchPathExecutablesSync(
-    matchExecutable?: (filename: string) => boolean,
+    // This is purposefully very basic:
+    matchExecutable?: (filename: string) => boolean
 ): string[] {
     const executables: string[] = [];
-    getSearchPathEntries()
-        .forEach((dirname) => {
-            executables.push(...getExecutablesInDirectorySync(dirname, matchExecutable));
-        });
+    getSearchPathEntries().forEach((dirname) => {
+        executables.push(...getExecutablesInDirectorySync(dirname, matchExecutable));
+    });
     return executables;
 }
