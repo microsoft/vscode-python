@@ -9,6 +9,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { Commands as coreCommands } from '../../common/constants';
+import { traceError } from '../../common/logger';
 
 import { IStartPage } from '../../common/startPage/types';
 import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
@@ -492,6 +493,7 @@ export class CommandRegistry implements IDisposable {
                     await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
                 }
             } catch (e) {
+                traceError(e);
                 this.appShell.showErrorMessage(e.toString());
             }
         }
