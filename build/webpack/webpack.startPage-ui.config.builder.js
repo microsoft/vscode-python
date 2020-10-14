@@ -24,7 +24,7 @@ function getEntry(bundle) {
     switch (bundle) {
         case 'viewers':
             return {
-                startPage: ['babel-polyfill', `./src/startPage-ui/startPage/index.tsx`]
+                startPage: [`./src/startPage-ui/startPage/index.tsx`]
             };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
