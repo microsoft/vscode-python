@@ -31,7 +31,7 @@ suite('DataScience - NativeNotebook helpers', () => {
         ];
 
         // tslint:disable-next-line: no-any
-        const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells, PYTHON_LANGUAGE);
+        const notebook = notebookModelToVSCNotebookData(true, {}, Uri.file(''), cells as any, PYTHON_LANGUAGE);
 
         assert.isOk(notebook);
         assert.deepEqual(notebook.languages, ['*']);
