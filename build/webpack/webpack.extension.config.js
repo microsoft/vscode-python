@@ -43,9 +43,7 @@ const config = {
         ]
     },
     externals: ['vscode', 'commonjs', ...existingModulesInOutDir],
-    plugins: [
-        ...common.getDefaultPlugins('extension'),
-    ],
+    plugins: [...common.getDefaultPlugins('extension')],
     resolve: {
         alias: {
             // Pointing pdfkit to a dummy js file so webpack doesn't fall over.

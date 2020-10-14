@@ -24,7 +24,7 @@ exports.nodeModulesToExternalize = [
     'diff-match-patch',
     'sudo-prompt',
     'node-stream-zip',
-    'xml2js',
+    'xml2js'
 ];
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {
