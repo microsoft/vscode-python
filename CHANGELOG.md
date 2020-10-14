@@ -4,6 +4,7 @@
 
 ### Enhancements
 
+1. `debugpy` updated to stable version.
 1. Do not opt users out of the insiders program if they have a stable version installed.
    ([#14090](https://github.com/Microsoft/vscode-python/issues/14090))
 
