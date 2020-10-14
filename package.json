@@ -930,8 +930,7 @@
             {
                 "command": "python.datascience.showDataViewer",
                 "title": "%python.command.python.datascience.showDataViewer.title%",
-                "category": "Python",
-                "when": false
+                "category": "Python"
             },
             {
                 "command": "python.analysis.restartLanguageServer",
