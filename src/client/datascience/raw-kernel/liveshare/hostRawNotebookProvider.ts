@@ -136,6 +136,7 @@ export class HostRawNotebookProvider
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
+        traceInfo(`Creating raw notebook for ${identity.toString()}`);
         const notebookPromise = createDeferred<INotebook>();
         this.setNotebook(identity, notebookPromise.promise);
 
@@ -143,6 +144,7 @@ export class HostRawNotebookProvider
             ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingIPyKernel())
             : undefined;
 
+        traceInfo(`Computing working directory ${identity.toString()}`);
         const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
 
         const rawSession = new RawJupyterSession(
@@ -155,6 +157,8 @@ export class HostRawNotebookProvider
         );
         try {
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
+
+            traceInfo(`Getting preferred kernel for ${identity.toString()}`);
 
             // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
             const kernelConnectionMetadata = await this.kernelSelector.getPreferredKernelForLocalConnection(
@@ -173,6 +177,7 @@ export class HostRawNotebookProvider
             ) {
                 notebookPromise.reject('Failed to find a kernelspec to use for ipykernel launch');
             } else {
+                traceInfo(`Connecting to raw session for ${identity.toString()}`);
                 await rawSession.connect(kernelConnectionMetadata, launchTimeout, cancelToken);
 
                 // Get the execution info for our notebook

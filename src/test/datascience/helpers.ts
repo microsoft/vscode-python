@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 'use strict';
-
 import { noop } from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';

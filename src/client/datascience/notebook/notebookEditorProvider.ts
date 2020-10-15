@@ -209,6 +209,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 editor.model.dispose();
             }
         }
+        const model = this.storage.get(uri);
+        if (model) {
+            model.dispose();
+        }
         this.notebookEditorsByUri.delete(uri.toString());
         this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());
     }

@@ -515,7 +515,7 @@ export namespace DataScience {
     );
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter server');
-    export const connectingIPyKernel = localize('DataScience.connectingToIPyKernel', 'Connecting to IPython kernel');
+    export const connectingIPyKernel = localize('DataScience.connectingToIPyKernel', 'Connecting to Jupyter kernel');
     export const connectedToIPyKernel = localize('DataScience.connectedToIPyKernel', 'Connected.');
     export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
     export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
@@ -550,7 +550,7 @@ export namespace DataScience {
         "Don't Ask Again"
     );
     export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel');
-    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting IPython Kernel');
+    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Jupyter Kernel');
     export const restartingKernelFailed = localize(
         'DataScience.restartingKernelFailed',
         'Kernel restart failed. Jupyter server is hung. Please reload VS code.'
@@ -569,7 +569,7 @@ export namespace DataScience {
     export const collapseSingle = localize('DataScience.collapseSingle', 'Collapse');
     export const expandSingle = localize('DataScience.expandSingle', 'Expand');
     export const exportKey = localize('DataScience.export', 'Export as Jupyter notebook');
-    export const restartServer = localize('DataScience.restartServer', 'Restart IPython Kernel');
+    export const restartServer = localize('DataScience.restartServer', 'Restart Jupyter Kernel');
     export const undo = localize('DataScience.undo', 'Undo');
     export const redo = localize('DataScience.redo', 'Redo');
     export const save = localize('DataScience.save', 'Save file');
@@ -662,15 +662,15 @@ export namespace DataScience {
     export const notebookVersionFormat = localize('DataScience.notebookVersionFormat', 'Jupyter Notebook Version: {0}');
     export const jupyterKernelSpecNotFound = localize(
         'DataScience.jupyterKernelSpecNotFound',
-        'Cannot create a IPython kernel spec and none are available for use'
+        'Cannot create a Jupyter kernel spec and none are available for use'
     );
     export const jupyterKernelSpecModuleNotFound = localize(
         'DataScience.jupyterKernelSpecModuleNotFound',
         "'Kernelspec' module not installed in the selected interpreter ({0}).\n Please re-install or update 'jupyter'."
     );
-    export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt IPython Kernel');
+    export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt Jupyter Kernel');
     export const clearAllOutput = localize('DataScience.clearAllOutput', 'Clear All Output');
-    export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting IPython Kernel');
+    export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting Jupyter Kernel');
     export const exportCancel = localize('DataScience.exportCancel', 'Cancel');
     export const exportPythonQuickPickLabel = localize('DataScience.exportPythonQuickPickLabel', 'Python Script');
     export const exportHTMLQuickPickLabel = localize('DataScience.exportHTMLQuickPickLabel', 'HTML');

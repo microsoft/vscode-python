@@ -12,6 +12,7 @@ import { Commands, Telemetry, VSCodeNativeTelemetry } from '../../constants';
 import { MultiCancellationTokenSource } from '../../notebook/helpers/multiCancellationToken';
 import { IDataScienceErrorHandler, INotebook, INotebookEditorProvider } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
+import { isPythonKernelConnection } from './helpers';
 import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -53,7 +54,7 @@ export class KernelExecution implements IDisposable {
         if (this.cellExecutions.has(cell) || cell.document.getText().trim().length === 0) {
             return;
         }
-        const cellExecution = this.executionFactory.create(cell);
+        const cellExecution = this.executionFactory.create(cell, isPythonKernelConnection(this.metadata));
         this.cellExecutions.set(cell, cellExecution);
 
         const kernel = this.getKernel(cell.notebook);
@@ -89,7 +90,7 @@ export class KernelExecution implements IDisposable {
             .filter((cell) => cell.cellKind === vscodeNotebookEnums.CellKind.Code)
             .filter((cell) => cell.document.getText().trim().length > 0)
             .map((cell) => {
-                const cellExecution = this.executionFactory.create(cell);
+                const cellExecution = this.executionFactory.create(cell, isPythonKernelConnection(this.metadata));
                 this.cellExecutions.set(cellExecution.cell, cellExecution);
                 return cellExecution;
             });

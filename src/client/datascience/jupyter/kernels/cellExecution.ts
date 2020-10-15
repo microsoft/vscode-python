@@ -50,14 +50,15 @@ export class CellExecutionFactory {
         private readonly vscNotebook: IVSCodeNotebook
     ) {}
 
-    public create(cell: NotebookCell) {
+    public create(cell: NotebookCell, isPythonKernelConnection: boolean) {
         // tslint:disable-next-line: no-use-before-declare
         return CellExecution.fromCell(
             this.vscNotebook.notebookEditors.find((e) => e.document === cell.notebook)!,
             cell,
             this.errorHandler,
             this.editorProvider,
-            this.appShell
+            this.appShell,
+            isPythonKernelConnection
         );
     }
 }
@@ -104,7 +105,8 @@ export class CellExecution {
         public readonly cell: NotebookCell,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
-        private readonly applicationService: IApplicationShell
+        private readonly applicationService: IApplicationShell,
+        private readonly isPythonKernelConnection: boolean
     ) {
         this.oldCellRunState = cell.metadata.runState;
         this.initPromise = this.enqueue();
@@ -115,12 +117,16 @@ export class CellExecution {
         cell: NotebookCell,
         errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
-        appService: IApplicationShell
+        appService: IApplicationShell,
+        isPythonKernelConnection: boolean
     ) {
-        return new CellExecution(editor, cell, errorHandler, editorProvider, appService);
+        return new CellExecution(editor, cell, errorHandler, editorProvider, appService, isPythonKernelConnection);
     }
 
     public async start(kernelPromise: Promise<IKernel>, notebook: INotebook) {
+        if (!this.canExecuteCell()) {
+            return;
+        }
         await this.initPromise;
         this.started = true;
         // Ensure we clear the cell state and trigger a change.
@@ -147,13 +153,14 @@ export class CellExecution {
      * If execution has commenced, then interrupt (via cancellation token) else dequeue from execution.
      */
     public async cancel() {
-        if (this.cancelHandled) {
+        if (this.cancelHandled || this._completed) {
             return;
         }
+        this.cancelHandled = true;
         await this.initPromise;
         // We need to notify cancellation only if execution is in progress,
         // coz if not, we can safely reset the states.
-        if (this.started && !this._completed) {
+        if (this.started) {
             this.source.cancel();
         }
 
@@ -274,6 +281,9 @@ export class CellExecution {
      * (mark it as busy).
      */
     private async enqueue() {
+        if (!this.canExecuteCell()) {
+            return;
+        }
         await this.editor.edit((edit) =>
             edit.replaceCellMetadata(this.cell.index, {
                 ...this.cell.metadata,
@@ -291,16 +301,27 @@ export class CellExecution {
             sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, this.stopWatch.elapsedTime, props);
         }
     }
+    private canExecuteCell() {
+        // Raw cells cannot be executed.
+        if (this.isPythonKernelConnection && (this.cell.language === 'raw' || this.cell.language === 'plaintext')) {
+            return false;
+        }
+
+        const code = this.cell.document.getText();
+        return code.trim().length > 0;
+    }
 
     private async execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
+        const code = this.cell.document.getText();
+        return this.executeCodeCell(code, session, loggers);
+    }
+
+    private async executeCodeCell(code: string, session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         // Generate metadata from our cell (some kernels expect this.)
         const metadata = {
             ...this.cell.metadata,
             ...{ cellId: this.cell.uri.toString() }
         };
-
-        // Create our initial request
-        const code = this.cell.document.getText();
 
         // Skip if no code to execute
         if (code.trim().length === 0) {
@@ -324,7 +345,7 @@ export class CellExecution {
         // Keep track of our clear state
         const clearState = new RefBool(false);
 
-        // Listen to the reponse messages and update state as we go
+        // Listen to the response messages and update state as we go
         if (!request) {
             return this.completedWithErrors(new Error('Session cannot generate requests')).then(noop, noop);
         }

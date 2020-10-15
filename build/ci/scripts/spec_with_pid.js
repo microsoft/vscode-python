@@ -24,6 +24,8 @@ var color = Base.color;
 
 exports = module.exports = Spec;
 
+const prefix = process.env.VSC_PYTHON_CI_TEST_PARALLEL ? `${process.pid}   ` : '';
+
 /**
  * Constructs a new `Spec` reporter instance.
  *
@@ -51,7 +53,7 @@ function Spec(runner, options) {
 
     runner.on(EVENT_SUITE_BEGIN, function (suite) {
         ++indents;
-        Base.consoleLog(color('suite', `${process.pid} %s%s`), indent(), suite.title);
+        Base.consoleLog(color('suite', `${prefix}%s%s`), indent(), suite.title);
     });
 
     runner.on(EVENT_SUITE_END, function () {
@@ -62,19 +64,19 @@ function Spec(runner, options) {
     });
 
     runner.on(EVENT_TEST_PENDING, function (test) {
-        var fmt = indent() + color('pending', `${process.pid}   - %s`);
+        var fmt = indent() + color('pending', `${prefix} %s`);
         Base.consoleLog(fmt, test.title);
     });
 
     runner.on(EVENT_TEST_PASS, function (test) {
         var fmt;
         if (test.speed === 'fast') {
-            fmt = indent() + color('checkmark', `${process.pid}   ` + Base.symbols.ok) + color('pass', ' %s');
+            fmt = indent() + color('checkmark', prefix + Base.symbols.ok) + color('pass', ' %s');
             Base.consoleLog(fmt, test.title);
         } else {
             fmt =
                 indent() +
-                color('checkmark', `${process.pid}   ` + Base.symbols.ok) +
+                color('checkmark', prefix + Base.symbols.ok) +
                 color('pass', ' %s') +
                 color(test.speed, ' (%dms)');
             Base.consoleLog(fmt, test.title, test.duration);
@@ -82,7 +84,7 @@ function Spec(runner, options) {
     });
 
     runner.on(EVENT_TEST_FAIL, function (test) {
-        Base.consoleLog(indent() + color('fail', `${process.pid}  %d) %s`), ++n, test.title);
+        Base.consoleLog(indent() + color('fail', `${prefix}%d) %s`), ++n, test.title);
     });
 
     runner.once(EVENT_RUN_END, self.epilogue.bind(self));

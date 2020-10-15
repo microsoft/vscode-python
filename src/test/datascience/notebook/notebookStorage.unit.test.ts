@@ -33,6 +33,9 @@ suite('DataScience - Notebook Storage', () => {
     }
 
     function updateModelKernel(model: BaseNotebookModel, id: string) {
+        if (!(model instanceof NativeEditorNotebookModel)) {
+            throw new Error('Incorrect Model');
+        }
         const kernelModel = {
             name: 'foo',
             // tslint:disable-next-line: no-any

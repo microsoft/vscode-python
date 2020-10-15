@@ -4,10 +4,10 @@
 // tslint:disable: no-var-requires no-require-imports no-invalid-this no-any
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { ExportUtil } from '../../../client/datascience/export/exportUtil';
-import { INotebookStorage } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
@@ -31,13 +31,12 @@ suite('DataScience - Export Util', () => {
     suiteTeardown(closeActiveWindows);
     test('Remove svgs from model', async () => {
         const exportUtil = api.serviceContainer.get<ExportUtil>(ExportUtil);
-        const notebookStorage = api.serviceContainer.get<INotebookStorage>(INotebookStorage);
         const file = Uri.file(
             path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'testPDF.ipynb')
         );
 
         await exportUtil.removeSvgs(file);
-        const model = await notebookStorage.getOrCreateModel({ file });
+        const model = JSON.parse(fs.readFileSync(file.fsPath).toString());
 
         // make sure no svg exists in model
         const SVG = 'image/svg+xml';

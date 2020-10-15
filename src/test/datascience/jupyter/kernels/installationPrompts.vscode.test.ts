@@ -5,7 +5,6 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { IApplicationShell } from '../../../../client/common/application/types';
 import { ProductNames } from '../../../../client/common/installer/productNames';
 import { BufferDecoder } from '../../../../client/common/process/decoder';
 import { ProcessService } from '../../../../client/common/process/proc';
@@ -18,7 +17,7 @@ import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../..
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { openNotebook } from '../../helpers';
-import { closeNotebooksAndCleanUpAfterTests } from '../../notebook/helper';
+import { closeNotebooksAndCleanUpAfterTests, hijackPrompt, trustAllNotebooks } from '../../notebook/helper';
 
 // tslint:disable: no-invalid-this max-func-body-length no-function-expression no-any
 suite('DataScience Install IPyKernel (slow) (install)', () => {
@@ -30,7 +29,6 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
 
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
-    let appShell: IApplicationShell;
     let installer: IInstaller;
     const delayForUITest = 30_000;
     /*
@@ -45,8 +43,8 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
             // Virtual env does not exist.
             return this.skip();
         }
+        await trustAllNotebooks();
         api = await initialize();
-        appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
         installer = api.serviceContainer.get<IInstaller>(IInstaller);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
 
@@ -69,7 +67,6 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
     });
 
     test('Ensure prompt is displayed when ipykernel module is not found and it gets installed', async () => {
-        const promptDisplayed = createDeferred();
         const installed = createDeferred();
 
         // Confirm it is installed.
@@ -87,14 +84,12 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         disposables.push({ dispose: () => showInformationMessage.restore() });
 
         // Confirm message is displayed & we click 'Install` button.
-        sinon.stub(appShell, 'showErrorMessage').callsFake(function (message: string) {
-            if (message.endsWith(expectedPromptMessageSuffix)) {
-                promptDisplayed.resolve();
-                // User clicked ok to install it.
-                return Common.install();
-            }
-            return (appShell.showErrorMessage as any).wrappedMethod.apply(appShell, arguments);
-        });
+        const prompt = await hijackPrompt(
+            'showErrorMessage',
+            { endsWith: expectedPromptMessageSuffix },
+            { text: Common.install(), clickImmediately: true },
+            disposables
+        );
 
         await openNotebook(api.serviceContainer, nbFile);
 
@@ -104,7 +99,7 @@ suite('DataScience Install IPyKernel (slow) (install)', () => {
         // The prompt should be displayed & ipykernel should get installed.
         await waitForCondition(
             async () => {
-                await Promise.all([promptDisplayed.promise, installed.promise]);
+                await Promise.all([await prompt.displayed, installed.promise]);
                 return true;
             },
             delayForUITest,

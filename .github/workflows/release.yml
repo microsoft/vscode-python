@@ -61,6 +61,7 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME_VSIX }}
           path: ${{ env.VSIX_NAME }}
+          retention-days: 14
 
   lint:
     # Unlike for the insiders build, we skip linting file formatting as that

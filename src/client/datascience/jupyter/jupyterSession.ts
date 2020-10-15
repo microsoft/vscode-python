@@ -23,6 +23,7 @@ import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IJupyterConnection, ISessionWithSocket } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterWebSockets } from './jupyterWebSocket';
 import { getNameOfKernelConnection } from './kernels/helpers';
 import { KernelConnectionMetadata } from './kernels/types';
@@ -90,9 +91,13 @@ export class JupyterSession extends BaseJupyterSession {
             // Make sure it is idle before we return
             await this.waitForIdleOnSession(newSession, timeoutMS);
         } catch (exc) {
-            traceError('Failed to change kernel', exc);
-            // Throw a new exception indicating we cannot change.
-            throw new JupyterInvalidKernelError(kernelConnection);
+            if (exc instanceof JupyterWaitForIdleError) {
+                throw exc;
+            } else {
+                traceError('Failed to change kernel', exc);
+                // Throw a new exception indicating we cannot change.
+                throw new JupyterInvalidKernelError(kernelConnection);
+            }
         }
 
         return newSession;

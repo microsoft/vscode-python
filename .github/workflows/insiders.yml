@@ -59,6 +59,7 @@ jobs:
         with:
           name: ${{env.ARTIFACT_NAME_VSIX}}
           path: ${{env.VSIX_NAME}}
+          retention-days: 7
 
   lint:
     name: Lint
@@ -298,10 +299,11 @@ jobs:
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: ${{ env.special-working-directory }}/.nyc_output
+          retention-days: 1
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
       # Run the Python and IPython tests in our codebase.

@@ -15,7 +15,6 @@ import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { ICryptoUtils } from '../../../client/common/types';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
-import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/notebook/notebookEditorCompatibilitySupport';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { createNotebookModel, disposeAllDisposables } from './helper';
@@ -34,16 +33,7 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
         when(vscNotebooks.onDidSaveNotebookDocument).thenReturn(new EventEmitter<NotebookDocument>().event);
         const memento = mock<Memento>();
         when(memento.get(anything())).thenReturn();
-        const cellLanguageService = new NotebookCellLanguageService(
-            instance(vscNotebooks),
-            disposables,
-            instance(memento)
-        );
-        contentProvider = new NotebookContentProvider(
-            instance(storageProvider),
-            cellLanguageService,
-            instance(compatSupport)
-        );
+        contentProvider = new NotebookContentProvider(instance(storageProvider), instance(compatSupport));
     });
     teardown(() => disposeAllDisposables(disposables));
     [true, false].forEach((isNotebookTrusted) => {

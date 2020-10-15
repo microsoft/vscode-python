@@ -34,9 +34,7 @@ import {
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 // tslint:disable: no-any no-invalid-this
-suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
-    this.timeout(120_000);
-
+suite('DataScience - VSCode Notebook - (Execution) (slow)', () => {
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
@@ -53,6 +51,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     });
+    // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(deleteAllCellsAndWait);
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell using VSCode Kernel', async () => {
@@ -112,17 +111,15 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Verify Cell output, execution count and status', async () => {
         await insertCodeCell('print("Hello World")');
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-
         await executeActiveDocument();
 
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
         // Wait till execution count changes and status is success.
         await waitForCondition(
             async () => assertHasExecutionCompletedSuccessfully(cell),
             15_000,
             'Cell did not get executed'
         );
-
         // Verify output.
         assertHasTextOutputInVSCode(cell, 'Hello World', 0);
 

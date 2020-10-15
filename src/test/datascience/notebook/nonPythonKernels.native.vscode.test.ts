@@ -32,7 +32,7 @@ import {
 } from './helper';
 
 // tslint:disable: no-any no-invalid-this
-suite('DataScience - VSCode Notebook - Kernels (non-python-kernel)', () => {
+suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () => {
     const juliaNb = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',

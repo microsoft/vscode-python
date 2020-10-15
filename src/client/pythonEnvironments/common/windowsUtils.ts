@@ -29,7 +29,23 @@ export function isWindowsPythonExe(interpreterPath:string): boolean {
     return windowsPythonExes.test(path.basename(interpreterPath));
 }
 
-export async function readRegistryValues(options: Options): Promise<RegistryItem[]> {
+export interface IRegistryKey{
+    hive:string;
+    arch:string;
+    key:string;
+    parentKey?:IRegistryKey;
+}
+
+export interface IRegistryValue{
+    hive:string;
+    arch:string;
+    key:string;
+    name:string;
+    type:string;
+    value:string;
+}
+
+export async function readRegistryValues(options: Options): Promise<IRegistryValue[]> {
     // tslint:disable-next-line:no-require-imports
     const WinReg = require('winreg');
     const regKey = new WinReg(options);
@@ -43,7 +59,7 @@ export async function readRegistryValues(options: Options): Promise<RegistryItem
     return deferred.promise;
 }
 
-export async function readRegistryKeys(options: Options): Promise<Registry[]> {
+export async function readRegistryKeys(options: Options): Promise<IRegistryKey[]> {
     // tslint:disable-next-line:no-require-imports
     const WinReg = require('winreg');
     const regKey = new WinReg(options);
@@ -67,7 +83,7 @@ export interface IRegistryInterpreterData{
 }
 
 async function getInterpreterDataFromKey(
-    { arch, hive, key }:Registry,
+    { arch, hive, key }:IRegistryKey,
     distroOrgName:string,
 ): Promise<IRegistryInterpreterData | undefined> {
     const result:IRegistryInterpreterData = {
@@ -75,7 +91,7 @@ async function getInterpreterDataFromKey(
         distroOrgName,
     };
 
-    const values:RegistryItem[] = await readRegistryValues({ arch, hive, key });
+    const values:IRegistryValue[] = await readRegistryValues({ arch, hive, key });
     for (const value of values) {
         switch (value.name) {
             case 'SysArchitecture':
@@ -95,10 +111,10 @@ async function getInterpreterDataFromKey(
         }
     }
 
-    const subKeys:Registry[] = await readRegistryKeys({ arch, hive, key });
+    const subKeys:IRegistryKey[] = await readRegistryKeys({ arch, hive, key });
     const subKey = subKeys.map((s) => s.key).find((s) => s.endsWith('InstallPath'));
     if (subKey) {
-        const subKeyValues:RegistryItem[] = await readRegistryValues({ arch, hive, key: subKey });
+        const subKeyValues:IRegistryValue[] = await readRegistryValues({ arch, hive, key: subKey });
         const value = subKeyValues.find((v) => v.name === 'ExecutablePath');
         if (value) {
             result.interpreterPath = value.value;

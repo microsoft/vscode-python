@@ -9,21 +9,36 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { CellErrorOutput, Uri } from 'vscode';
+import { CellErrorOutput, commands, Uri } from 'vscode';
 import { CellDisplayOutput } from '../../../../types/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { IExtensionTestApi } from '../../common';
+import { IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
-import { canRunTests, closeNotebooksAndCleanUpAfterTests, createTemporaryNotebook, trustAllNotebooks } from './helper';
+import { openNotebook } from '../helpers';
+import {
+    canRunTests,
+    closeNotebooksAndCleanUpAfterTests,
+    createTemporaryNotebook,
+    saveActiveNotebook,
+    trustAllNotebooks
+} from './helper';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 // tslint:disable: no-any no-invalid-this
 suite('DataScience - VSCode Notebook - (Open)', function () {
     this.timeout(15_000);
+    const templateIPynbWithOutput = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'test',
+        'datascience',
+        'notebook',
+        'test.ipynb'
+    );
     const templateIPynb = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',
@@ -34,6 +49,8 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
     );
     let api: IExtensionTestApi;
     let testIPynb: Uri;
+    let testIPynbWithOutput: Uri;
+    let vscodeNotebook: IVSCodeNotebook;
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
         this.timeout(15_000);
@@ -41,12 +58,14 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         if (!(await canRunTests())) {
             return this.skip();
         }
+        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     });
     setup(async () => {
         sinon.restore();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
+        testIPynbWithOutput = Uri.file(await createTemporaryNotebook(templateIPynbWithOutput, disposables));
         await trustAllNotebooks();
     });
     teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
@@ -73,14 +92,13 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.deepEqual(JSON.parse(jsonStr), JSON.parse(model.getContent()));
     });
     test('Verify cells (content, metadata & output)', async () => {
-        const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         const model = (await editorProvider.open(testIPynb))!.model!;
         model.trust(); // We want to test the output as well.
 
         const notebook = vscodeNotebook.activeNotebookEditor?.document!;
 
-        assert.equal(notebook.cells.length, model?.cells.length, 'Incorrect number of cells');
+        assert.equal(notebook.cells.length, model?.cellCount, 'Incorrect number of cells');
         assert.equal(notebook.cells.length, 6, 'Incorrect number of cells');
 
         // Cell 1.
@@ -171,5 +189,31 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.deepEqual(JSON.parse(model.getContent()), originalJson, 'Trusted notebook json content is invalid');
         // https://github.com/microsoft/vscode-python/issues/13155
         // assert.equal(model.getContent(), originalJsonStr, 'Trusted notebook json not identical');
+    });
+    test('Saving after clearing should result in execution_count=null in ipynb file', async () => {
+        const originalJson = JSON.parse(
+            fs.readFileSync(testIPynbWithOutput.fsPath, { encoding: 'utf8' })
+        ) as nbformat.INotebookContent;
+        // Confirm execution count is a number in existing ipynb file.
+        assert.isNumber(originalJson.cells[0].execution_count);
+
+        // Clear the output & then save the notebook.
+        await openNotebook(api.serviceContainer, testIPynbWithOutput.fsPath);
+        await commands.executeCommand('notebook.clearAllCellsOutputs');
+
+        // Wait till execution count changes & it is marked as dirty
+        const notebookDocument = vscodeNotebook.activeNotebookEditor?.document!;
+        await waitForCondition(
+            async () => !notebookDocument.cells.some((cell) => cell.outputs.length > 0),
+            5_000,
+            'Cell output not cleared'
+        );
+        await saveActiveNotebook(disposables);
+
+        // Open nb json and validate execution_count = null.
+        const json = JSON.parse(
+            fs.readFileSync(testIPynbWithOutput.fsPath, { encoding: 'utf8' })
+        ) as nbformat.INotebookContent;
+        assert.isNull(json.cells[0].execution_count);
     });
 });

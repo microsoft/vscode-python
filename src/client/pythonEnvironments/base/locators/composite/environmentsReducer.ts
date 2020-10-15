@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { cloneDeep, isEqual } from 'lodash';
+import { isEqual } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
 import { traceVerbose } from '../../../../common/logger';
-import { createDeferred } from '../../../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
-import { areSameEnv } from '../../info/env';
+import { areSameEnv, mergeEnvironments } from '../../info/env';
 import {
     ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery,
 } from '../../locator';
+import { getEnvs } from '../../locatorUtils';
 import { PythonEnvsChangedEvent } from '../../watcher';
 
 /**
@@ -23,27 +23,11 @@ export class PythonEnvsReducer implements ILocator {
     constructor(private readonly parentLocator: ILocator) {}
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        let environment: PythonEnvInfo | undefined;
-        const waitForUpdatesDeferred = createDeferred<void>();
-        const iterator = this.iterEnvs();
-        iterator.onUpdated!((event) => {
-            if (event === null) {
-                waitForUpdatesDeferred.resolve();
-            } else if (environment && areSameEnv(environment, event.update)) {
-                environment = event.update;
-            }
-        });
-        let result = await iterator.next();
-        while (!result.done) {
-            if (areSameEnv(result.value, env)) {
-                environment = result.value;
-            }
-            result = await iterator.next();
-        }
+        const environments = await getEnvs(this.iterEnvs());
+        const environment = environments.find((e) => areSameEnv(e, env));
         if (!environment) {
             return undefined;
         }
-        await waitForUpdatesDeferred.promise;
         return this.parentLocator.resolveEnv(environment);
     }
 
@@ -73,8 +57,7 @@ async function* iterEnvsIterator(
                 checkIfFinishedAndNotify(state, didUpdate);
             } else if (seen[event.index] !== undefined) {
                 state.pending += 1;
-                resolveDifferencesInBackground(event.index, event.update, state, didUpdate, seen)
-                    .ignoreErrors();
+                resolveDifferencesInBackground(event.index, event.update, state, didUpdate, seen).ignoreErrors();
             } else {
                 // This implies a problem in a downstream locator
                 traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
@@ -110,7 +93,7 @@ async function resolveDifferencesInBackground(
     seen: PythonEnvInfo[],
 ) {
     const oldEnv = seen[oldIndex];
-    const merged = mergeEnvironments(oldEnv, newEnv);
+    const merged = resolveEnvCollision(oldEnv, newEnv);
     if (!isEqual(oldEnv, merged)) {
         seen[oldIndex] = merged;
         didUpdate.fire({ index: oldIndex, old: oldEnv, update: merged });
@@ -134,29 +117,63 @@ function checkIfFinishedAndNotify(
     }
 }
 
-export function mergeEnvironments(environment: PythonEnvInfo, other: PythonEnvInfo): PythonEnvInfo {
-    const result = cloneDeep(environment);
-    // Preserve type information.
-    // Possible we identified environment as unknown, but a later provider has identified env type.
-    if (environment.kind === PythonEnvKind.Unknown && other.kind && other.kind !== PythonEnvKind.Unknown) {
-        result.kind = other.kind;
-    }
-    const props: (keyof PythonEnvInfo)[] = [
-        'version',
-        'kind',
-        'executable',
-        'name',
-        'arch',
-        'distro',
-        'defaultDisplayName',
-        'searchLocation',
+function resolveEnvCollision(oldEnv: PythonEnvInfo, newEnv: PythonEnvInfo): PythonEnvInfo {
+    const [env, other] = sortEnvInfoByPriority(oldEnv, newEnv);
+    return mergeEnvironments(env, other);
+}
+
+/**
+ * Selects an environment based on the environment selection priority. This should
+ * match the priority in the environment identifier.
+ */
+function sortEnvInfoByPriority(...envs: PythonEnvInfo[]): PythonEnvInfo[] {
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: When we consolidate the PythonEnvKind and EnvironmentType we should have
+    // one location where we define priority.
+    const envKindByPriority: PythonEnvKind[] = getPrioritizedEnvironmentKind();
+    return envs.sort(
+        (a: PythonEnvInfo, b: PythonEnvInfo) => envKindByPriority.indexOf(a.kind) - envKindByPriority.indexOf(b.kind),
+    );
+}
+
+/**
+ * Gets a prioritized list of environment types for identification.
+ * @returns {PythonEnvKind[]} : List of environments ordered by identification priority
+ *
+ * Remarks: This is the order of detection based on how the various distributions and tools
+ * configure the environment, and the fall back for identification.
+ * Top level we have the following environment types, since they leave a unique signature
+ * in the environment or * use a unique path for the environments they create.
+ *  1. Conda
+ *  2. Windows Store
+ *  3. PipEnv
+ *  4. Pyenv
+ *  5. Poetry
+ *
+ * Next level we have the following virtual environment tools. The are here because they
+ * are consumed by the tools above, and can also be used independently.
+ *  1. venv
+ *  2. virtualenvwrapper
+ *  3. virtualenv
+ *
+ * Last category is globally installed python, or system python.
+ */
+function getPrioritizedEnvironmentKind(): PythonEnvKind[] {
+    return [
+        PythonEnvKind.CondaBase,
+        PythonEnvKind.Conda,
+        PythonEnvKind.WindowsStore,
+        PythonEnvKind.Pipenv,
+        PythonEnvKind.Pyenv,
+        PythonEnvKind.Poetry,
+        PythonEnvKind.Venv,
+        PythonEnvKind.VirtualEnvWrapper,
+        PythonEnvKind.VirtualEnv,
+        PythonEnvKind.OtherVirtual,
+        PythonEnvKind.OtherGlobal,
+        PythonEnvKind.MacDefault,
+        PythonEnvKind.System,
+        PythonEnvKind.Custom,
+        PythonEnvKind.Unknown,
     ];
-    props.forEach((prop) => {
-        if (!result[prop] && other[prop]) {
-            // tslint:disable: no-any
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (result as any)[prop] = other[prop];
-        }
-    });
-    return result;
 }

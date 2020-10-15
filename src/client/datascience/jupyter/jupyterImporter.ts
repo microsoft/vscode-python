@@ -36,7 +36,7 @@ export class JupyterImporter implements INotebookImporter {
 {% endblock codecell %}
 {% block in_prompt %}{% endblock in_prompt %}
 {% block input %}{{ cell.source | ipython2python }}{% endblock input %}
-{% block markdowncell scoped %}{0} [markdown]
+{% block markdowncell scoped %}{1} [markdown]
 {{ cell.source | comment_lines }}
 {% endblock markdowncell %}`;
     private readonly nbconvert5Null = 'null.tpl';

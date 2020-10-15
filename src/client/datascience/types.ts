@@ -1084,13 +1084,17 @@ export interface INotebookModel {
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
     readonly changed: Event<NotebookModelChange>;
-    readonly cells: readonly Readonly<ICell>[];
     readonly onDidEdit: Event<NotebookModelChange>;
     readonly isDisposed: boolean;
     readonly metadata: INotebookMetadataLive | undefined;
     readonly isTrusted: boolean;
+    readonly cellCount: number;
+    /**
+     * @deprecated
+     * Use only with old notebooks, when using with new Notebooks, use VSC API instead.
+     */
+    getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
     getContent(): string;
-    update(change: NotebookModelChange): void;
     /**
      * Dispose of the Notebook model.
      *
