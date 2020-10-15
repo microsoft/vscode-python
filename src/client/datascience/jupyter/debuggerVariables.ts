@@ -34,7 +34,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
     constructor(
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
         @inject(IConfigurationService) private configService: IConfigurationService
-    ) { }
+    ) {}
 
     public get refreshRequired(): Event<void> {
         return this.refreshEventEmitter.event;
@@ -251,10 +251,15 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
 
     private async importDataFrameScripts(): Promise<void> {
         try {
-            await this.evaluate(DataFrameLoading.DataFrameSysImport);
-            await this.evaluate(DataFrameLoading.DataFrameInfoImport);
-            await this.evaluate(DataFrameLoading.DataFrameRowImport);
-            await this.evaluate(DataFrameLoading.VariableInfoImport);
+            // Run our dataframe scripts only once per session because they're slow
+            const key = this.debugService.activeDebugSession?.id;
+            if (key && !this.importedIntoKernel.has(key)) {
+                await this.evaluate(DataFrameLoading.DataFrameSysImport);
+                await this.evaluate(DataFrameLoading.DataFrameInfoImport);
+                await this.evaluate(DataFrameLoading.DataFrameRowImport);
+                await this.evaluate(DataFrameLoading.VariableInfoImport);
+                this.importedIntoKernel.add(key);
+            }
         } catch (exc) {
             traceError('Error attempting to import in debugger', exc);
         }

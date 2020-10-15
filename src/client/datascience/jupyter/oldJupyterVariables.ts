@@ -58,7 +58,7 @@ export class OldJupyterVariables implements IJupyterVariables {
     constructor(
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IConfigurationService) private configService: IConfigurationService
-    ) { }
+    ) {}
 
     public get refreshRequired(): Event<void> {
         return this.refreshEventEmitter.event;
@@ -324,7 +324,7 @@ export class OldJupyterVariables implements IJupyterVariables {
             result.pageStartIndex = startPos;
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
-            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length;) {
+            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
                 const fullVariable = list.variables[i].value
                     ? list.variables[i]
                     : await this.getVariableValueFromKernel(list.variables[i], notebook);

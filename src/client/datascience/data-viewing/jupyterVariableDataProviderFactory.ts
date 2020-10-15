@@ -15,7 +15,7 @@ import {
 
 @injectable()
 export class JupyterVariableDataProviderFactory implements IJupyterVariableDataProviderFactory {
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
 
     public async create(variable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariableDataProvider> {
         const jupyterVariableDataProvider = this.serviceContainer.get<IJupyterVariableDataProvider>(
