@@ -6,6 +6,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { ReactWrapper } from 'enzyme';
 import * as fs from 'fs-extra';
 import { Disposable } from 'vscode';
+import { sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider, ITrustService } from '../../client/datascience/types';
@@ -43,7 +44,7 @@ function waitForMessage(ioc: DataScienceIocContainer, message: string, options?:
         .waitForMessage(message, options);
 }
 // tslint:disable:no-any no-multiline-string
-suite('Notebook trust', () => {
+suite('DataScience Notebook trust', () => {
     let wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
     let ne: { editor: INotebookEditor; mount: IMountedWebView };
     const disposables: Disposable[] = [];
@@ -273,9 +274,9 @@ suite('Notebook trust', () => {
     suite('Open an untrusted notebook', async () => {
         test('Outputs are not rendered', () => {
             // No outputs should have rendered
-            assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 0));
-            assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '<span>2</span>', 1));
-            assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '<span>3</span>', 2));
+            assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '1', 0));
+            assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '2', 1));
+            assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '3', 2));
         });
         test('Cannot edit cell contents', async () => {
             await focusCell(0);
@@ -332,7 +333,7 @@ suite('Notebook trust', () => {
                 // Waiting for an execution rendered message should timeout
                 await expect(promise).to.eventually.be.rejected;
                 // No output should have been rendered
-                assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '<span>2</span>', cellIndex));
+                assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '2', cellIndex));
             });
             test('Shift+enter does not execute cell or advance to next cell', async () => {
                 const cellIndex = 1;
@@ -344,7 +345,7 @@ suite('Notebook trust', () => {
                 // Waiting for an execution rendered message should timeout
                 await expect(promise).to.eventually.be.rejected;
                 // No output should have been rendered
-                assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '<span>2</span>', cellIndex));
+                assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '2', cellIndex));
                 // 3rd cell should be neither selected nor focused
                 assert.isFalse(isCellSelected(wrapper, 'NativeCell', cellIndex + 1));
                 assert.isFalse(isCellFocused(wrapper, 'NativeCell', cellIndex + 1));
@@ -360,7 +361,7 @@ suite('Notebook trust', () => {
                 // Waiting for an execution rendered message should timeout
                 await expect(promise).to.eventually.be.rejected;
                 // No output should have been rendered
-                assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '<span>2</span>', cellIndex));
+                assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '2', cellIndex));
                 // No cell should have been added
                 assert.equal(wrapper.find('NativeCell').length, 3, 'Cell added');
             });
@@ -440,10 +441,14 @@ suite('Notebook trust', () => {
             // Reopen
             const newNativeEditor = await openEditor(ioc, baseFile, notebookFile.filePath);
             const newWrapper = newNativeEditor.mount.wrapper;
+            assert.ok(newNativeEditor.editor.model.isTrusted, 'Editor did not open as trusted');
+
+            // Wait a bit. UI doesn't seem to update right away
+            await sleep(500);
 
             // Verify notebook is now trusted
             const after = newWrapper.find(TrustMessage);
-            assert.equal(after.text(), 'Trusted');
+            assert.equal(after.text(), 'Trusted', 'Notebook UI not reflecting trust state');
         });
     });
 });

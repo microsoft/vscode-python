@@ -1,11 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { injectable } from 'inversify';
+import * as vscode from 'vscode';
+import { getVersionString, parseVersion } from '../common/utils/version';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
     GLOBAL_VIRTUAL_ENV_SERVICE,
+    IComponentAdapter,
     ICondaService,
     IInterpreterLocatorHelper,
     IInterpreterLocatorProgressService,
@@ -22,10 +26,15 @@ import {
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
+import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
+import { buildEnvInfo } from './base/info/env';
+import { ILocator, PythonLocatorQuery } from './base/locator';
+import { getEnvs } from './base/locatorUtils';
 import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
+import { CondaEnvironmentInfo } from './discovery/locators/services/conda';
 import { CondaEnvFileService } from './discovery/locators/services/condaEnvFileService';
 import { CondaEnvService } from './discovery/locators/services/condaEnvService';
 import { CondaService } from './discovery/locators/services/condaService';
@@ -47,9 +56,235 @@ import {
     WorkspaceVirtualEnvService,
 } from './discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './discovery/locators/services/workspaceVirtualEnvWatcherService';
+import { EnvironmentType, PythonEnvironment } from './info';
 import { EnvironmentInfoService, IEnvironmentInfoService } from './info/environmentInfoService';
 
-export function registerForIOC(serviceManager: IServiceManager, serviceContainer: IServiceContainer) {
+const convertedKinds = new Map(Object.entries({
+    [PythonEnvKind.System]: EnvironmentType.System,
+    [PythonEnvKind.MacDefault]: EnvironmentType.System,
+    [PythonEnvKind.WindowsStore]: EnvironmentType.WindowsStore,
+    [PythonEnvKind.Pyenv]: EnvironmentType.Pyenv,
+    [PythonEnvKind.Conda]: EnvironmentType.Conda,
+    [PythonEnvKind.CondaBase]: EnvironmentType.Conda,
+    [PythonEnvKind.VirtualEnv]: EnvironmentType.VirtualEnv,
+    [PythonEnvKind.Pipenv]: EnvironmentType.Pipenv,
+    [PythonEnvKind.Venv]: EnvironmentType.Venv,
+}));
+
+function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
+    const {
+        name,
+        location,
+        executable,
+        arch,
+        kind,
+        searchLocation,
+        version,
+        distro,
+    } = info;
+    const { filename, sysPrefix } = executable;
+    const env: PythonEnvironment = {
+        sysPrefix,
+        envType: EnvironmentType.Unknown,
+        envName: name,
+        envPath: location,
+        path: filename,
+        architecture: arch,
+    };
+
+    const envType = convertedKinds.get(kind);
+    if (envType !== undefined) {
+        env.envType = envType;
+    }
+    // Otherwise it stays Unknown.
+
+    if (searchLocation !== undefined) {
+        if (kind === PythonEnvKind.Pipenv) {
+            env.pipEnvWorkspaceFolder = searchLocation.fsPath;
+        }
+    }
+
+    if (version !== undefined) {
+        const { release, sysVersion } = version;
+        if (release === undefined) {
+            const versionStr = `${getVersionString(version)}-final`;
+            env.version = parseVersion(versionStr);
+            env.sysVersion = '';
+        } else {
+            const { level, serial } = release;
+            const releaseStr = level === PythonReleaseLevel.Final
+                ? 'final'
+                : `${level}${serial}`;
+            const versionStr = `${getVersionString(version)}-${releaseStr}`;
+            env.version = parseVersion(versionStr);
+            env.sysVersion = sysVersion;
+        }
+    }
+
+    if (distro !== undefined && distro.org !== '') {
+        env.companyDisplayName = distro.org;
+    }
+    // We do not worry about using distro.defaultDisplayName
+    // or info.defaultDisplayName.
+
+    return env;
+}
+
+interface IPythonEnvironments extends ILocator {}
+
+@injectable()
+class ComponentAdapter implements IComponentAdapter {
+    constructor(
+        // The adapter only wraps one thing: the component API.
+        private readonly api: IPythonEnvironments,
+        // For now we effectively disable the component.
+        private readonly enabled = false,
+    ) {}
+
+    // IInterpreterHelper
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonEnvironment>> {
+        if (!this.enabled) {
+            return undefined;
+        }
+        const env = await this.api.resolveEnv(pythonPath);
+        if (env === undefined) {
+            return undefined;
+        }
+        return convertEnvInfo(env);
+    }
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public async isMacDefaultPythonPath(pythonPath: string): Promise<boolean | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
+        const env = await this.api.resolveEnv(pythonPath);
+        if (env === undefined) {
+            return undefined;
+        }
+        return env.kind === PythonEnvKind.MacDefault;
+    }
+
+    // IInterpreterService
+
+    // We use the same getInterpreters() here as for IInterpreterLocatorService.
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public async getInterpreterDetails(
+        pythonPath: string,
+        resource?: vscode.Uri,
+    ): Promise<undefined | PythonEnvironment> {
+        if (!this.enabled) {
+            return undefined;
+        }
+        const info = buildEnvInfo({ executable: pythonPath });
+        if (resource !== undefined) {
+            const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
+            if (wsFolder !== undefined) {
+                info.searchLocation = wsFolder.uri;
+            }
+        }
+        const env = await this.api.resolveEnv(info);
+        if (env === undefined) {
+            return undefined;
+        }
+        return convertEnvInfo(env);
+    }
+
+    // ICondaService
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public async isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
+        const env = await this.api.resolveEnv(interpreterPath);
+        if (env === undefined) {
+            return undefined;
+        }
+        return env.kind === PythonEnvKind.Conda;
+    }
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public async getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
+        const env = await this.api.resolveEnv(interpreterPath);
+        if (env === undefined) {
+            return undefined;
+        }
+        if (env.kind !== PythonEnvKind.Conda) {
+            return undefined;
+        }
+        if (env.name !== '') {
+            return { name: env.name, path: '' };
+        }
+        // else
+        return { name: '', path: env.location };
+    }
+
+    // IWindowsStoreInterpreter
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
+        const env = await this.api.resolveEnv(pythonPath);
+        if (env === undefined) {
+            return undefined;
+        }
+        return env.kind === PythonEnvKind.WindowsStore;
+    }
+
+    // IInterpreterLocatorService
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public get hasInterpreters(): Promise<boolean | undefined> {
+        if (!this.enabled) {
+            return Promise.resolve(undefined);
+        }
+        const iterator = this.api.iterEnvs();
+        return iterator.next().then((res) => !res.done);
+    }
+
+    // A result of `undefined` means "Fall back to the old code!"
+    public async getInterpreters(
+        resource?: vscode.Uri,
+        // Currently we have no plans to support GetInterpreterLocatorOptions:
+        // {
+        //     ignoreCache?: boolean
+        //     onSuggestion?: boolean;
+        // }
+    ): Promise<PythonEnvironment[] | undefined> {
+        if (!this.enabled) {
+            return undefined;
+        }
+        const query: PythonLocatorQuery = {};
+        if (resource !== undefined) {
+            const wsFolder = vscode.workspace.getWorkspaceFolder(resource);
+            if (wsFolder !== undefined) {
+                query.searchLocations = { roots: [wsFolder.uri] };
+            }
+        }
+
+        const iterator = this.api.iterEnvs(query);
+        const envs = await getEnvs(iterator);
+        return envs.map(convertEnvInfo);
+    }
+}
+
+export function registerForIOC(
+    serviceManager: IServiceManager,
+    serviceContainer: IServiceContainer,
+    api: IPythonEnvironments,
+): void {
+    const adapter = new ComponentAdapter(api);
+    serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, adapter);
+
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,

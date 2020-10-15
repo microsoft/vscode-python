@@ -182,7 +182,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.outputChannel,
             this.restartSessionCreatedEvent.fire.bind(this.restartSessionCreatedEvent),
             this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent),
-            workingDirectory
+            workingDirectory,
+            this.configService.getSettings().datascience.jupyterLaunchTimeout
         );
         try {
             await session.connect(this.configService.getSettings().datascience.jupyterLaunchTimeout, cancelToken);

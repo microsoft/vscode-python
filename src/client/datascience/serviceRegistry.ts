@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
 import { NotebookEditorSupport } from '../common/experiments/groups';
@@ -39,8 +40,8 @@ import { Decorator } from './editor-integration/decorator';
 import { HoverProvider } from './editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
 import { ExportBase } from './export/exportBase';
-import { ExportDependencyChecker } from './export/exportDependencyChecker';
 import { ExportFileOpener } from './export/exportFileOpener';
+import { ExportInterpreterFinder } from './export/exportInterpreterFinder';
 import { ExportManager } from './export/exportManager';
 import { ExportManagerFilePicker } from './export/exportManagerFilePicker';
 import { ExportToHTML } from './export/exportToHTML';
@@ -85,6 +86,8 @@ import { JupyterInterpreterSelector } from './jupyter/interpreter/jupyterInterpr
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
 import { JupyterInterpreterStateStore } from './jupyter/interpreter/jupyterInterpreterStateStore';
 import { JupyterInterpreterSubCommandExecutionService } from './jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
+import { NbConvertExportToPythonService } from './jupyter/interpreter/nbconvertExportToPythonService';
+import { NbConvertInterpreterDependencyChecker } from './jupyter/interpreter/nbconvertInterpreterDependencyChecker';
 import { CellOutputMimeTypeTracker } from './jupyter/jupyterCellOutputMimeTypeTracker';
 import { JupyterDebugger } from './jupyter/jupyterDebugger';
 import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
@@ -118,6 +121,7 @@ import { NotebookEditorProvider } from './notebook/notebookEditorProvider';
 import { NotebookEditorProviderWrapper } from './notebook/notebookEditorProviderWrapper';
 import { registerTypes as registerNotebookTypes } from './notebook/serviceRegistry';
 import { NotebookAndInteractiveWindowUsageTracker } from './notebookAndInteractiveTracker';
+import { NotebookExtensibility } from './notebookExtensibility';
 import { NotebookModelFactory } from './notebookStorage/factory';
 import { NativeEditorProvider } from './notebookStorage/nativeEditorProvider';
 import { NativeEditorStorage } from './notebookStorage/nativeEditorStorage';
@@ -163,11 +167,14 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IKernelDependencyService,
+    INbConvertExportToPythonService,
+    INbConvertInterpreterDependencyChecker,
     INotebookAndInteractiveWindowUsageTracker,
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExecutionLogger,
     INotebookExporter,
+    INotebookExtensibility,
     INotebookImporter,
     INotebookProvider,
     INotebookServer,
@@ -186,9 +193,9 @@ import {
 // tslint:disable-next-line: max-func-body-length
 export function registerTypes(serviceManager: IServiceManager) {
     const experiments = serviceManager.get<IExperimentsManager>(IExperimentsManager);
-    const useVSCodeNotebookAPI = experiments.inExperiment(NotebookEditorSupport.nativeNotebookExperiment);
     const inCustomEditorApiExperiment = experiments.inExperiment(NotebookEditorSupport.customEditorExperiment);
-    const usingCustomEditor = inCustomEditorApiExperiment;
+    const usingCustomEditor = inCustomEditorApiExperiment && !vscode.env.appName.includes('Insider'); // Don't use app manager as it's not available yet.
+    const useVSCodeNotebookAPI = experiments.inExperiment(NotebookEditorSupport.nativeNotebookExperiment) && !usingCustomEditor;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
     serviceManager.addSingletonInstance<boolean>(UseVSCodeNotebookEditorApi, useVSCodeNotebookAPI);
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
@@ -272,6 +279,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);
     serviceManager.addSingleton<JupyterCommandLineSelectorCommand>(JupyterCommandLineSelectorCommand, JupyterCommandLineSelectorCommand);
     serviceManager.addSingleton<JupyterInterpreterDependencyService>(JupyterInterpreterDependencyService, JupyterInterpreterDependencyService);
+    serviceManager.addSingleton<INbConvertInterpreterDependencyChecker>(INbConvertInterpreterDependencyChecker, NbConvertInterpreterDependencyChecker);
+    serviceManager.addSingleton<INbConvertExportToPythonService>(INbConvertExportToPythonService, NbConvertExportToPythonService);
     serviceManager.addSingleton<JupyterInterpreterOldCacheStateStore>(JupyterInterpreterOldCacheStateStore, JupyterInterpreterOldCacheStateStore);
     serviceManager.addSingleton<JupyterInterpreterSelector>(JupyterInterpreterSelector, JupyterInterpreterSelector);
     serviceManager.addSingleton<JupyterInterpreterService>(JupyterInterpreterService, JupyterInterpreterService);
@@ -301,7 +310,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
     serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory, JupyterVariableDataProviderFactory);
     serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
-    serviceManager.addSingleton<ExportDependencyChecker>(ExportDependencyChecker, ExportDependencyChecker);
+    serviceManager.addSingleton<ExportInterpreterFinder>(ExportInterpreterFinder, ExportInterpreterFinder);
     serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
     serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
     serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
@@ -315,6 +324,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
     serviceManager.addSingleton<IDataScienceFileSystem>(IDataScienceFileSystem, DataScienceFileSystem);
     serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
+    serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
 
     registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);

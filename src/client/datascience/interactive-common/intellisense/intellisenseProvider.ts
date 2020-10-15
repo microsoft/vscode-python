@@ -22,7 +22,6 @@ import {
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
 import { concatMultilineString } from '../../../../datascience-ui/common';
-import { ILanguageServer, ILanguageServerCache } from '../../../activation/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
 import { traceError, traceWarning } from '../../../common/logger';
@@ -34,6 +33,7 @@ import { HiddenFileFormatString } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryWhenDone } from '../../../telemetry';
+import { JupyterExtensionIntegration } from '../../api/jupyterIntegration';
 import { Identifiers, Settings, Telemetry } from '../../constants';
 import {
     ICell,
@@ -65,6 +65,7 @@ import {
     convertToVSCodeCompletionItem
 } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
+import { NotebookLanguageServer } from './notebookLanguageServer';
 
 // These regexes are used to get the text from jupyter output by recognizing escape charactor \x1b
 const DocStringRegex = /\x1b\[1;31mDocstring:\x1b\[0m\s+([\s\S]*?)\r?\n\x1b\[1;31m/;
@@ -101,7 +102,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private notebookType: 'interactive' | 'native' = 'interactive';
     private potentialResource: Uri | undefined;
     private sentOpenDocument: boolean = false;
-    private languageServer: ILanguageServer | undefined;
+    private languageServer: NotebookLanguageServer | undefined;
     private resource: Resource;
     private interpreter: PythonEnvironment | undefined;
 
@@ -110,7 +111,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(ILanguageServerCache) private languageServerCache: ILanguageServerCache,
+        @inject(JupyterExtensionIntegration) private jupyterApiProvider: JupyterExtensionIntegration,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableProvider: IJupyterVariables
     ) {}
 
@@ -198,7 +199,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         return this.documentPromise.promise;
     }
 
-    protected async getLanguageServer(token: CancellationToken): Promise<ILanguageServer | undefined> {
+    protected async getLanguageServer(token: CancellationToken): Promise<NotebookLanguageServer | undefined> {
         // Resource should be our potential resource if its set. Otherwise workspace root
         const resource =
             this.potentialResource ||
@@ -225,22 +226,26 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
             // Get an instance of the language server (so we ref count it )
             try {
-                const languageServer = await this.languageServerCache.get(resource, interpreter);
+                const languageServer = await NotebookLanguageServer.create(
+                    this.jupyterApiProvider,
+                    resource,
+                    interpreter
+                );
 
                 // Dispose of our old language service
                 this.languageServer?.dispose();
 
                 // This new language server does not know about our document, so tell it.
                 const document = await this.getDocument();
-                if (document && languageServer.handleOpen && languageServer.handleChanges) {
+                if (document && languageServer) {
                     // If we already sent an open document, that means we need to send both the open and
                     // the new changes
                     if (this.sentOpenDocument) {
-                        languageServer.handleOpen(document);
-                        languageServer.handleChanges(document, document.getFullContentChanges());
+                        languageServer.sendOpen(document);
+                        languageServer.sendChanges(document, document.getFullContentChanges());
                     } else {
                         this.sentOpenDocument = true;
-                        languageServer.handleOpen(document);
+                        languageServer.sendOpen(document);
                     }
                 }
 
@@ -352,7 +357,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         token: CancellationToken
     ): Promise<monacoEditor.languages.CompletionItem> {
         const [languageServer, document] = await Promise.all([this.getLanguageServer(token), this.getDocument()]);
-        if (languageServer && languageServer.resolveCompletionItem && document) {
+        if (languageServer && document) {
             const vscodeCompItem: CompletionItem = convertToVSCodeCompletionItem(item);
 
             // Needed by Jedi in completionSource.ts to resolve the item
@@ -378,12 +383,12 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         if (document) {
             // Broadcast an update to the language server
             const languageServer = await this.getLanguageServer(CancellationToken.None);
-            if (languageServer && languageServer.handleChanges && languageServer.handleOpen) {
+            if (languageServer) {
                 if (!this.sentOpenDocument) {
                     this.sentOpenDocument = true;
-                    return languageServer.handleOpen(document);
+                    return languageServer.sendOpen(document);
                 } else {
-                    return languageServer.handleChanges(document, changes);
+                    return languageServer.sendChanges(document, changes);
                 }
             }
         }

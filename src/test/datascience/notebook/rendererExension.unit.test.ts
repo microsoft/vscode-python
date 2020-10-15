@@ -29,7 +29,24 @@ suite('DataScience - NativeNotebook Renderer Extension', () => {
         languages: [],
         metadata: {},
         isUntitled: false,
-        viewType: JupyterNotebookView
+        viewType: JupyterNotebookView,
+        contentOptions: {
+            transientOutputs: false,
+            transientMetadata: {
+                breakpointMargin: true,
+                editable: true,
+                hasExecutionOrder: true,
+                inputCollapsed: true,
+                lastRunDuration: true,
+                outputCollapsed: true,
+                runStartTime: true,
+                runnable: true,
+                executionOrder: false,
+                custom: false,
+                runState: false,
+                statusMessage: false
+            }
+        }
     };
     const nonJupyterNotebook: NotebookDocument = {
         cells: [],
@@ -40,7 +57,24 @@ suite('DataScience - NativeNotebook Renderer Extension', () => {
         isDirty: false,
         languages: [],
         metadata: {},
-        viewType: 'somethingElse'
+        viewType: 'somethingElse',
+        contentOptions: {
+            transientOutputs: false,
+            transientMetadata: {
+                breakpointMargin: true,
+                editable: true,
+                hasExecutionOrder: true,
+                inputCollapsed: true,
+                lastRunDuration: true,
+                outputCollapsed: true,
+                runStartTime: true,
+                runnable: true,
+                executionOrder: false,
+                custom: false,
+                runState: false,
+                statusMessage: false
+            }
+        }
     };
     const extension: Extension<{}> = {
         activate: () => Promise.resolve({}),

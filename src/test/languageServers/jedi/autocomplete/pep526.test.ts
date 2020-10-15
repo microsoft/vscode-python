@@ -15,7 +15,7 @@ const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles',
 const filePep526 = path.join(autoCompPath, 'pep526.py');
 
 // tslint:disable-next-line:max-func-body-length
-suite('Autocomplete PEP 526', () => {
+suite('Language Server: Autocomplete PEP 526', () => {
     let ioc: UnitTestIocContainer;
     suiteSetup(async function () {
         // Pep526 only valid for 3.6+ (#2545)

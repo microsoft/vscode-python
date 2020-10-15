@@ -234,7 +234,7 @@ def foo():pass
 
 ### [Debugging](https://code.visualstudio.com/docs/python/debugging)
 
--   [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work (see [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) and the `"configurationSnippets"` section for all of the possible configurations)
+-   [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work (see [`package.json`](https://github.com/Microsoft/vscode-python/blob/main/package.json) and the `"configurationSnippets"` section for all of the possible configurations)
 -   [ ] Running code from start to finish w/ no special debugging options (e.g. no breakpoints)
 -   [ ] Breakpoint-like things
     -   [ ] Breakpoint
@@ -492,6 +492,13 @@ def test_failure():
     1. Verify the variables explorer window shows output not available while debugging
     1. When you get to the end of the cell, the debugger should stop
     1. Output from the cell should show up in the Interactive Window (sometimes you have to finish debugging the cell first)
+-   [ ] Verify installing ipykernel in a new environment
+    1. Create a brand new folder on your machine
+    1. Create a new venv in that folder via command line / terminal `python3 -m venv .newEnv`
+    1. Open that folder in VS Code and copy the manual test file there
+    1. Select the newly created venv by running Ctrl+Shift+P, typing 'Python: Select Interpreter' into the VS Code command palette, and selecting the new venv from the dropdown. If the new venv doesn't appear in the quickpick you may need to reload VS Code and reattempt this step.
+    1. Execute the manual test file, you should be prompted to install ipykernel in `.newEnv`
+    1. After ipykernel is installed execution of the file should continue successfully
 
 #### P1 Test Scenarios
 
@@ -513,9 +520,9 @@ def test_failure():
         1. Use `X` to delete all cells
         1. Undo the delete action with `Undo`
         1. Redo the delete action with `Redo`
-        1. In manualTestFile.py modify the trange command in the progress bar from 100 to 2000. Run the Cell. As the cell is running hit the `Interrupt iPython Kernel` button
+        1. In manualTestFile.py modify the trange command in the progress bar from 100 to 2000. Run the Cell. As the cell is running hit the `Interrupt Jupyter Kernel` button
         1. The progress bar should be interrupted and you should see a KeyboardInterrupt error message in the output
-        1. Test the `Restart iPython kernel` command. Kernel should be restarted and you should see a status output message for the kernel restart
+        1. Test the `Restart Jupyter kernel` command. Kernel should be restarted and you should see a status output message for the kernel restart
         1. Use the expand all input and collapse all input commands to collapse all cell inputs
 -   [ ] Verify theming works
     1. Start Python Interactive window

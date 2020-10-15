@@ -13,15 +13,15 @@ export class MockKernelFinder implements IKernelFinder {
 
     public async findKernelSpec(
         interpreterUri: InterpreterUri,
-        kernelSpecMetadata?: nbformat.IKernelspecMetadata
-    ): Promise<IJupyterKernelSpec> {
+        metadata?: nbformat.INotebookMetadata
+    ): Promise<IJupyterKernelSpec | undefined> {
         const spec = interpreterUri?.path
             ? this.dummySpecs.get(interpreterUri.path)
             : this.dummySpecs.get((interpreterUri || '').toString());
         if (spec) {
             return spec;
         }
-        return this.realFinder.findKernelSpec(interpreterUri, kernelSpecMetadata);
+        return this.realFinder.findKernelSpec(interpreterUri, metadata);
     }
 
     public async listKernelSpecs(): Promise<IJupyterKernelSpec[]> {

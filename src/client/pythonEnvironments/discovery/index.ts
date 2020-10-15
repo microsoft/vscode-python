@@ -4,6 +4,6 @@
 /**
  * Decide if the given Python executable looks like the MacOS default Python.
  */
-export function isMacDefaultPythonPath(pythonPath: string) {
+export function isMacDefaultPythonPath(pythonPath: string): boolean {
     return pythonPath === 'python' || pythonPath === '/usr/bin/python';
 }

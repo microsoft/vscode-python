@@ -8,11 +8,12 @@
 import { Container } from 'inversify';
 import { Disposable, Memento } from 'vscode';
 
+import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from './common/types';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
-import { registerForIOC } from './pythonEnvironments/legacyIOC';
+import { activate as activatePythonEnvironments } from './pythonEnvironments';
 
 // The code in this module should do nothing more complex than register
 // objects to DI and simple init (e.g. no side effects).  That implies
@@ -35,11 +36,21 @@ export function initializeGlobals(context: IExtensionContext): [IServiceManager,
     return [serviceManager, serviceContainer];
 }
 
+export function initializeCommon(
+    _context: IExtensionContext,
+    serviceManager: IServiceManager,
+    _serviceContainer: IServiceContainer
+): void {
+    // Core registrations (non-feature specific).
+    commonRegisterTypes(serviceManager);
+
+    // We will be pulling other code over from activateLegacy().
+}
+
 export function initializeComponents(
     _context: IExtensionContext,
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer
 ) {
-    registerForIOC(serviceManager, serviceContainer);
-    // We will be pulling code over from activateLegacy().
+    activatePythonEnvironments(serviceManager, serviceContainer);
 }

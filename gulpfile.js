@@ -95,7 +95,7 @@ gulp.task('hygiene-watch-branch', () => gulp.watch(tsFilter, gulp.series('hygien
 
 gulp.task('hygiene-all', (done) => run({ mode: 'all' }, done));
 
-gulp.task('hygiene-branch', (done) => run({ mode: 'diffMaster' }, done));
+gulp.task('hygiene-branch', (done) => run({ mode: 'diffMain' }, done));
 
 gulp.task('output:clean', () => del(['coverage']));
 
@@ -116,7 +116,6 @@ gulp.task('checkNativeDependencies', (done) => {
 gulp.task('compile-ipywidgets', () => buildIPyWidgets());
 
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
-
 
 async function buildIPyWidgets() {
     // if the output ipywidgest file exists, then no need to re-build.
@@ -667,7 +666,7 @@ function hasNativeDependencies() {
 
 /**
  * @typedef {Object} hygieneOptions - creates a new type named 'SpecialType'
- * @property {'changes'|'staged'|'all'|'compile'|'diffMaster'} [mode=] - Mode.
+ * @property {'changes'|'staged'|'all'|'compile'|'diffMain'} [mode=] - Mode.
  * @property {boolean=} skipIndentationCheck - Skip indentation checks.
  * @property {boolean=} skipFormatCheck - Skip format checks.
  * @property {boolean=} skipLinter - Skip linter.
@@ -1016,7 +1015,7 @@ function getModifiedFilesSync() {
             return [];
         }
         const targetBranch = process.env.TRAVIS_BRANCH || getAzureDevOpsVarValue('System.PullRequest.TargetBranch');
-        if (targetBranch !== 'master') {
+        if (targetBranch !== 'main') {
             return [];
         }
 
@@ -1028,9 +1027,9 @@ function getModifiedFilesSync() {
                 : 'upstream';
 
         // If on CI, get a list of modified files comparing against
-        // PR branch and master of current (assumed 'origin') repo.
+        // PR branch and main of current (assumed 'origin') repo.
         try {
-            cp.execSync(`git remote set-branches --add ${originOrUpstream} master`, {
+            cp.execSync(`git remote set-branches --add ${originOrUpstream} main`, {
                 encoding: 'utf8',
                 cwd: __dirname
             });
@@ -1038,7 +1037,7 @@ function getModifiedFilesSync() {
         } catch (ex) {
             return [];
         }
-        const cmd = `git diff --name-only HEAD ${originOrUpstream}/master`;
+        const cmd = `git diff --name-only HEAD ${originOrUpstream}/main`;
         console.info(cmd);
         const out = cp.execSync(cmd, { encoding: 'utf8', cwd: __dirname });
         return out
@@ -1059,8 +1058,8 @@ function getModifiedFilesSync() {
     }
 }
 
-function getDifferentFromMasterFilesSync() {
-    const out = git(['diff', '--name-status', 'master']);
+function getDifferentFromMainFilesSync() {
+    const out = git(['diff', '--name-status', 'main']);
     return out
         .split(/\r?\n/)
         .filter((l) => !!l)
@@ -1091,8 +1090,8 @@ function getFileListToProcess(options) {
         return getStagedFilesSync().filter((f) => fs.existsSync(f));
     }
 
-    if (options && options.mode === 'diffMaster') {
-        return getDifferentFromMasterFilesSync().filter((f) => fs.existsSync(f));
+    if (options && options.mode === 'diffMain') {
+        return getDifferentFromMainFilesSync().filter((f) => fs.existsSync(f));
     }
 
     return all;

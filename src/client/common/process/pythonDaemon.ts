@@ -11,7 +11,7 @@ import { extractInterpreterInfo } from '../../pythonEnvironments/info/interprete
 import { traceWarning } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { BasePythonDaemon } from './baseDaemon';
-import { PythonEnvInfo } from './internal/scripts';
+import { InterpreterInfoJson } from './internal/scripts';
 import {
     IPythonDaemonExecutionService,
     IPythonExecutionService,
@@ -45,7 +45,9 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
     public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
         try {
             this.throwIfRPCConnectionIsDead();
-            const request = new RequestType0<PythonEnvInfo & ErrorResponse, void, void>('get_interpreter_information');
+            const request = new RequestType0<InterpreterInfoJson & ErrorResponse, void, void>(
+                'get_interpreter_information'
+            );
             const response = await this.sendRequestWithoutArgs(request);
             if (response.error) {
                 throw Error(response.error);

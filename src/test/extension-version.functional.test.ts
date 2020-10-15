@@ -31,15 +31,15 @@ suite('Extension version tests', () => {
         version = applicationEnvironment.packageJson.version;
     });
 
-    test('If we are running a pipeline in the master branch, the extension version in `package.json` should have the "-dev" suffix', async function () {
-        if (branchName !== 'master') {
+    test('If we are running a pipeline in the main branch, the extension version in `package.json` should have the "-dev" suffix', async function () {
+        if (branchName !== 'main') {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
 
         return expect(
             version.endsWith('-dev'),
-            'When running a pipeline in the master branch, the extension version in package.json should have the -dev suffix'
+            'When running a pipeline in the main branch, the extension version in package.json should have the -dev suffix'
         ).to.be.true;
     });
 

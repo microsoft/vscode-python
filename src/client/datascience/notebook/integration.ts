@@ -3,6 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
+import { NotebookContentProvider as VSCNotebookContentProvider } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
     IApplicationEnvironment,
@@ -33,7 +34,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
+        @inject(INotebookContentProvider) private readonly notebookContentProvider: VSCNotebookContentProvider,
         @inject(VSCodeKernelPickerProvider) private readonly kernelProvider: VSCodeKernelPickerProvider,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
@@ -56,7 +57,23 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         }
         try {
             this.disposables.push(
-                this.vscNotebook.registerNotebookContentProvider(JupyterNotebookView, this.notebookContentProvider)
+                this.vscNotebook.registerNotebookContentProvider(JupyterNotebookView, this.notebookContentProvider, {
+                    transientOutputs: false,
+                    transientMetadata: {
+                        breakpointMargin: true,
+                        editable: true,
+                        hasExecutionOrder: true,
+                        inputCollapsed: true,
+                        lastRunDuration: true,
+                        outputCollapsed: true,
+                        runStartTime: true,
+                        runnable: true,
+                        executionOrder: false,
+                        custom: false,
+                        runState: false,
+                        statusMessage: false
+                    }
+                })
             );
             this.disposables.push(
                 this.vscNotebook.registerNotebookKernelProvider(

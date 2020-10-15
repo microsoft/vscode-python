@@ -100,7 +100,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             return;
         }
         this.hasNativeNotebookCells
-            .set((this.notebookEditorProvider.activeEditor?.model?.cells?.length || 0) > 0)
+            .set((this.notebookEditorProvider.activeEditor?.model?.cellCount || 0) > 0)
             .ignoreErrors();
     }
     private onDidChangeActiveInteractiveWindow(e?: IInteractiveWindow) {

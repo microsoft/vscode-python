@@ -25,6 +25,7 @@ import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
+    IComponentAdapter,
     IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterLocatorService,
@@ -39,6 +40,11 @@ const EXPITY_DURATION = 24 * 60 * 60 * 1000;
 export type GetInterpreterOptions = {
     onSuggestion?: boolean;
 };
+
+// The parts of IComponentAdapter used here.
+interface IComponent {
+    getInterpreterDetails(pythonPath: string): Promise<undefined | PythonEnvironment>;
+}
 
 @injectable()
 export class InterpreterService implements Disposable, IInterpreterService {
@@ -70,7 +76,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory
+        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponent
     ) {
         this.locator = serviceContainer.get<IInterpreterLocatorService>(
             IInterpreterLocatorService,
@@ -160,6 +167,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.getInterpreterDetails(fullyQualifiedPath, resource);
     }
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<PythonEnvironment | undefined> {
+        const info = await this.pyenvs.getInterpreterDetails(pythonPath);
+        if (info !== undefined) {
+            return info;
+        }
+
         // If we don't have the fully qualified path, then get it.
         if (path.basename(pythonPath) === pythonPath) {
             const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);

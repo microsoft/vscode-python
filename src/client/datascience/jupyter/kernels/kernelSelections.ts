@@ -207,8 +207,8 @@ export class KernelSelectionProvider {
     private remoteSuggestionsCache: IKernelSpecQuickPickItem<
         LiveKernelConnectionMetadata | KernelSpecConnectionMetadata
     >[] = [];
-    private _listChanged = new EventEmitter<void>();
-    public get SelectionsChanged() {
+    private _listChanged = new EventEmitter<Resource>();
+    public get onDidChangeSelections() {
         return this._listChanged.event;
     }
     constructor(
@@ -357,7 +357,7 @@ export class KernelSelectionProvider {
                             liveItemsList.length > 0 &&
                             JSON.stringify(liveItemsList) !== JSON.stringify(cachedItemsList)
                         ) {
-                            this._listChanged.fire();
+                            this._listChanged.fire(resource);
                         }
                     } catch (ex) {
                         traceError('Error in fetching kernel selections', ex);

@@ -70,9 +70,6 @@ export function getDefaultSettings() {
         variableOptions: {
             enableDuringDebugger: false
         },
-        webviewExperiments: {
-            removeKernelToolbarInInteractiveWindow: false
-        },
         gatherIsInstalled: false,
         runStartupCommands: '',
         debugJustMyCode: true,

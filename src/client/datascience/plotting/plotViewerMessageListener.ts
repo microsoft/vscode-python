@@ -3,19 +3,19 @@
 'use strict';
 import '../../common/extensions';
 
-import { IWebPanel, IWebPanelMessageListener } from '../../common/application/types';
+import { IWebviewPanel, IWebviewPanelMessageListener } from '../../common/application/types';
 
 // tslint:disable:no-any
 
 // This class listens to messages that come from the local Plot Viewer window
-export class PlotViewerMessageListener implements IWebPanelMessageListener {
+export class PlotViewerMessageListener implements IWebviewPanelMessageListener {
     private disposedCallback: () => void;
     private callback: (message: string, payload: any) => void;
-    private viewChanged: (panel: IWebPanel) => void;
+    private viewChanged: (panel: IWebviewPanel) => void;
 
     constructor(
         callback: (message: string, payload: any) => void,
-        viewChanged: (panel: IWebPanel) => void,
+        viewChanged: (panel: IWebviewPanel) => void,
         disposed: () => void
     ) {
         // Save our dispose callback so we remove our history window
@@ -37,7 +37,7 @@ export class PlotViewerMessageListener implements IWebPanelMessageListener {
         this.callback(message, payload);
     }
 
-    public onChangeViewState(panel: IWebPanel) {
+    public onChangeViewState(panel: IWebviewPanel) {
         // Forward this onto our callback
         if (this.viewChanged) {
             this.viewChanged(panel);

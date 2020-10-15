@@ -68,8 +68,8 @@ function generateDefaultState(
             monacoReady: testMode, // When testing, monaco starts out ready
             loaded: false,
             kernel: {
-                displayName: getLocString('DataScience.noKernel', 'No Kernel'),
-                localizedUri: getLocString('DataScience.serverNotStarted', 'Not Started'),
+                kernelName: getLocString('DataScience.noKernel', 'No Kernel'),
+                serverName: getLocString('DataScience.serverNotStarted', 'Not Started'),
                 jupyterServerStatus: ServerStatus.NotStarted,
                 language: PYTHON_LANGUAGE
             },

@@ -23,6 +23,8 @@ import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { noop } from '../core';
 
+// tslint:disable: no-any
+
 export class MockJupyterNotebook implements INotebook {
     public get connection(): INotebookProviderConnection | undefined {
         return this.providerConnection;
@@ -60,6 +62,26 @@ export class MockJupyterNotebook implements INotebook {
 
     constructor(private providerConnection: INotebookProviderConnection | undefined) {
         noop();
+    }
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+        return {
+            channel: 'shell',
+            content: {
+                protocol_version: '',
+                banner: '',
+                language_info: {
+                    name: 'py',
+                    version: '3'
+                },
+                status: 'ok',
+                implementation: '',
+                implementation_version: '',
+                help_links: []
+            },
+            header: {} as any,
+            metadata: {} as any,
+            parent_header: {} as any
+        };
     }
     public registerIOPubListener(_listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void {
         noop();

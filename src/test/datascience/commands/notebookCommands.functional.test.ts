@@ -217,7 +217,7 @@ suite('DataScience - Notebook Commands', () => {
                         )
                     ).never();
                 });
-                test('Should switch kernel using the provided notebookxxx', async () => {
+                test('Should switch kernel using the provided notebook', async () => {
                     const notebook = createNotebookMock();
                     when((notebook as any).then).thenReturn(undefined);
                     const uri = Uri.file('test.ipynb');

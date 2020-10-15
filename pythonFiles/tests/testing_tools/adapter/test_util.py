@@ -17,7 +17,7 @@ import pytest
 try:
     from pathlib import Path
 except ImportError:
-    from pathlib2 import Path
+    from pathlib2 import Path  # type: ignore (for Pylance)
 
 from testing_tools.adapter.util import (
     fix_path,
@@ -29,7 +29,6 @@ from testing_tools.adapter.util import (
 
 @unittest.skipIf(sys.version_info < (3,), "Python 2 does not have subTest")
 class FilePathTests(unittest.TestCase):
-    @pytest.mark.functional
     def test_isolated_imports(self):
         import testing_tools.adapter
         from testing_tools.adapter import util
@@ -129,7 +128,7 @@ class FilePathTests(unittest.TestCase):
             ("eggs/spam/", posixpath, "./eggs/spam/"),
             (r"\spam.py", posixpath, r"./\spam.py"),
             ("spam.py", ntpath, r".\spam.py"),
-            (r"eggs\spam.py", ntpath, ".\eggs\spam.py"),
+            (r"eggs\spam.py", ntpath, r".\eggs\spam.py"),
             ("eggs\\spam\\", ntpath, ".\\eggs\\spam\\"),
             ("/spam.py", ntpath, r"\spam.py"),  # Note the fixed "/".
             # absolute
@@ -214,7 +213,7 @@ class FilePathTests(unittest.TestCase):
         # with rootdir
         common = [
             ("spam.py", "/eggs", "./spam.py"),
-            ("spam.py", "\eggs", "./spam.py"),
+            ("spam.py", r"\eggs", "./spam.py"),
             # absolute
             ("/spam.py", "/", "./spam.py"),
             ("/eggs/spam.py", "/eggs", "./spam.py"),

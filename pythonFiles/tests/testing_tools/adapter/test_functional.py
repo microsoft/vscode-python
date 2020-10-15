@@ -10,8 +10,6 @@ import subprocess
 import sys
 import unittest
 
-import pytest
-
 from ...__main__ import TESTING_TOOLS_ROOT
 from testing_tools.adapter.util import fix_path, PATH_SEP
 
@@ -19,7 +17,7 @@ from testing_tools.adapter.util import fix_path, PATH_SEP
 try:
     from pathlib import Path
 except ImportError:
-    from pathlib2 import Path
+    from pathlib2 import Path  # type: ignore (for Pylance)
 
 
 CWD = os.getcwd()
@@ -83,12 +81,20 @@ def fix_source(tests, testid, srcfile, lineno):
     test["source"] = fix_path("{}:{}".format(srcfile, lineno))
 
 
+def sorted_object(obj):
+    if isinstance(obj, dict):
+        return sorted((key, sorted_object(obj[key])) for key in obj.keys())
+    if isinstance(obj, list):
+        return sorted((sorted_object(x) for x in obj))
+    else:
+        return obj
+
+
 # Note that these tests are skipped if util.PATH_SEP is not os.path.sep.
 # This is because the functional tests should reflect the actual
 # operating environment.
 
 
-@pytest.mark.functional
 class PytestTests(unittest.TestCase):
     def setUp(self):
         if PATH_SEP is not os.path.sep:
@@ -160,7 +166,7 @@ class PytestTests(unittest.TestCase):
         result[0]["tests"] = fix_test_order(result[0]["tests"])
 
         self.maxDiff = None
-        self.assertEqual(result, expected)
+        self.assertEqual(sorted_object(result), sorted_object(expected))
 
     def test_discover_complex_doctest(self):
         projroot, _ = resolve_testroot("complex")
@@ -244,7 +250,7 @@ class PytestTests(unittest.TestCase):
         result[0]["tests"] = fix_test_order(result[0]["tests"])
 
         self.maxDiff = None
-        self.assertEqual(result, expected)
+        self.assertEqual(sorted_object(result), sorted_object(expected))
 
     def test_discover_not_found(self):
         projroot, testroot = resolve_testroot("notests")

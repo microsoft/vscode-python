@@ -13,11 +13,10 @@ import {
     HoverProvider,
     ReferenceProvider,
     RenameProvider,
-    SignatureHelpProvider,
-    TextDocument,
-    TextDocumentContentChangeEvent
+    SignatureHelpProvider
 } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
+import * as lsp from 'vscode-languageserver-protocol';
 import { NugetPackage } from '../common/nuget/types';
 import { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
@@ -74,15 +73,18 @@ export const DotNetLanguageServerFolder = 'languageServer';
 export const NodeLanguageServerFolder = 'nodeLanguageServer';
 
 // tslint:disable-next-line: interface-name
-export interface DocumentHandler {
-    handleOpen(document: TextDocument): void;
-    handleChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]): void;
-}
-
-// tslint:disable-next-line: interface-name
 export interface LanguageServerCommandHandler {
     clearAnalysisCache(): void;
 }
+
+/**
+ * This interface is a subset of the vscode-protocol connection interface.
+ * It's the minimum set of functions needed in order to talk to a language server.
+ */
+export type ILanguageServerConnection = Pick<
+    lsp.ProtocolConnection,
+    'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'
+>;
 
 export interface ILanguageServer
     extends RenameProvider,
@@ -93,9 +95,11 @@ export interface ILanguageServer
         CodeLensProvider,
         DocumentSymbolProvider,
         SignatureHelpProvider,
-        Partial<DocumentHandler>,
         Partial<LanguageServerCommandHandler>,
-        IDisposable {}
+        IDisposable {
+    readonly connection?: ILanguageServerConnection;
+    readonly capabilities?: lsp.ServerCapabilities;
+}
 
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
 export interface ILanguageServerActivator extends ILanguageServer {

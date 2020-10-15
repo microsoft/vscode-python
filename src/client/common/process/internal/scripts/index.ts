@@ -41,19 +41,19 @@ export * as vscode_datascience_helpers from './vscode_datascience_helpers';
 
 type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final';
 type PythonVersionInfo = [number, number, number, ReleaseLevel, number];
-export type PythonEnvInfo = {
+export type InterpreterInfoJson = {
     versionInfo: PythonVersionInfo;
     sysPrefix: string;
     sysVersion: string;
     is64Bit: boolean;
 };
 
-export function interpreterInfo(): [string[], (out: string) => PythonEnvInfo] {
+export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJson] {
     const script = path.join(SCRIPTS_DIR, 'interpreterInfo.py');
     const args = [ISOLATED, script];
 
-    function parse(out: string): PythonEnvInfo {
-        let json: PythonEnvInfo;
+    function parse(out: string): InterpreterInfoJson {
+        let json: InterpreterInfoJson;
         try {
             json = JSON.parse(out);
         } catch (ex) {

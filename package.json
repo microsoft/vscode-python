@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2020.9.0-dev",
+    "version": "2020.11.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -100,9 +100,10 @@
         "onCommand:python.datascience.selectJupyterInterpreter",
         "onCommand:python.datascience.selectjupytercommandline",
         "onCommand:python.enableSourceMapSupport",
-        "onNotebookEditor:jupyter-notebook",
+        "onNotebook:jupyter-notebook",
         "workspaceContains:mspythonconfig.json",
-        "workspaceContains:pyproject.toml"
+        "workspaceContains:pyproject.toml",
+        "onCustomEditor:ms-python.python.notebook.ipynb"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -861,18 +862,18 @@
                 "category": "Python"
             },
             {
-                "command": "python.datascience.newNotebook.removeallcells",
-                "title": "%python.command.python.datascience.newNotebook.removeallcells.title%",
+                "command": "python.datascience.notebookeditor.removeallcells",
+                "title": "%python.command.python.datascience.notebookeditor.removeallcells.title%",
                 "category": "Python"
             },
             {
-                "command": "python.datascience.newNotebook.expandallcells",
-                "title": "%python.command.python.datascience.newNotebook.expandallcells.title%",
+                "command": "python.datascience.notebookeditor.expandallcells",
+                "title": "%python.command.python.datascience.notebookeditor.expandallcells.title%",
                 "category": "Python"
             },
             {
-                "command": "python.datascience.newNotebook.collapseallcells",
-                "title": "%python.command.python.datascience.newNotebook.collapseallcells.title%",
+                "command": "python.datascience.notebookeditor.collapseallcells",
+                "title": "%python.command.python.datascience.notebookeditor.collapseallcells.title%",
                 "category": "Python"
             },
             {
@@ -1435,20 +1436,20 @@
                     "when": "python.datascience.isnativeactive && python.datascience.featureenabled && python.datascience.isnotebooktrusted"
                 },
                 {
-                    "command": "python.datascience.newNotebook.removeallcells",
-                    "title": "%python.command.python.datascience.newNotebook.removeallcells.title%",
+                    "command": "python.datascience.notebookeditor.removeallcells",
+                    "title": "%python.command.python.datascience.removeallcells.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled && notebookEditorFocused"
                 },
                 {
-                    "command": "python.datascience.newNotebook.expandallcells",
-                    "title": "%python.command.python.datascience.newNotebook.expandallcells.title%",
+                    "command": "python.datascience.notebookeditor.expandallcells",
+                    "title": "%python.command.python.datascience.expandallcells.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled && notebookEditorFocused"
                 },
                 {
-                    "command": "python.datascience.newNotebook.collapseallcells",
-                    "title": "%python.command.python.datascience.newNotebook.collapseallcells.title%",
+                    "command": "python.datascience.notebookeditor.collapseallcells",
+                    "title": "%python.command.python.datascience.collapseallcells.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled && notebookEditorFocused"
                 },
@@ -2108,6 +2109,7 @@
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
                             "tryPylance",
+                            "jediLSP",
                             "All"
                         ]
                     },
@@ -2132,6 +2134,7 @@
                             "DeprecatePythonPath - experiment",
                             "RunByLine - experiment",
                             "tryPylance",
+                            "jediLSP",
                             "All"
                         ]
                     },
@@ -2267,12 +2270,6 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Automatically scroll the interactive window to show the output of the last statement executed. If false, the interactive window will only automatically scroll if the bottom of the prior cell is visible.",
-                    "scope": "resource"
-                },
-                "python.dataScience.showKernelSelectionOnInteractiveWindow": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "When set to true, enables the kernel selector in the Interactive Window. By default, the Interactive Window will use your Python Interpreters kernel.",
                     "scope": "resource"
                 },
                 "python.dataScience.enableScrollingForCellOutputs": {
@@ -2593,12 +2590,6 @@
                     "description": "Defines type of the language server.",
                     "scope": "window"
                 },
-                "python.analysis.openFilesOnly": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Only show errors and warnings for open files rather than for the entire workspace.",
-                    "scope": "resource"
-                },
                 "python.analysis.diagnosticPublishDelay": {
                     "type": "integer",
                     "default": 1000,
@@ -2661,12 +2652,6 @@
                     "description": "Allows code analysis to keep parser trees in memory. Increases memory consumption but may improve performance with large library analysis.",
                     "scope": "resource"
                 },
-                "python.analysis.memory.keepLibraryLocalVariables": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Allows code analysis to keep library function local variables. Allows code navigation in Python libraries function bodies. Increases memory consumption.",
-                    "scope": "resource"
-                },
                 "python.analysis.logLevel": {
                     "type": "string",
                     "enum": [
@@ -2683,18 +2668,6 @@
                     "type": "integer",
                     "default": 10,
                     "description": "Limits depth of the symbol tree in the document outline.",
-                    "scope": "resource"
-                },
-                "python.analysis.cachingLevel": {
-                    "type": "string",
-                    "enum": [
-                        "Default",
-                        "None",
-                        "System",
-                        "Library"
-                    ],
-                    "default": "Default",
-                    "description": "Defines which types of modules get their analysis cached.",
                     "scope": "resource"
                 },
                 "python.linting.enabled": {
@@ -3371,6 +3344,16 @@
                 "extensions": [
                     ".ipynb"
                 ]
+            },
+            {
+                "id": "julia",
+                "aliases": [
+                    "Julia",
+                    "julia"
+                ],
+                "extensions": [
+                    ".jl"
+                ]
             }
         ],
         "grammars": [
@@ -3441,13 +3424,26 @@
                     "image/jpeg",
                     "text/latex",
                     "text/vnd.plotly.v1+html"
-                ]
+                ],
+                "viewType": "jupyter-notebook"
             }
         ],
         "notebookProvider": [
             {
                 "viewType": "jupyter-notebook",
                 "displayName": "Jupyter Notebook (preview)",
+                "selector": [
+                    {
+                        "filenamePattern": "*.ipynb"
+                    }
+                ],
+                "priority": "option"
+            }
+        ],
+        "customEditors": [
+            {
+                "viewType": "ms-python.python.notebook.ipynb",
+                "displayName": "Jupyter Notebook",
                 "selector": [
                     {
                         "filenamePattern": "*.ipynb"
@@ -3462,7 +3458,7 @@
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
-        "compile-webviews-watch": "gulp compile-ipywidgets && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
+        "compile-webviews-watch": "gulp compile-ipywidgets && gulp compile-renderers && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
         "compile-webviews-watchd": "deemon npm run compile-webviews-watch",
         "kill-compile-webviews-watchd": "deemon --kill npm run compile-webviews-watch",
         "build-ipywidgets": "npm run build-ipywidgets-clean && npm run build-ipywidgets-compile && npm run build-ipywidgets-webpack",
@@ -3478,12 +3474,16 @@
         "test:functional:perf": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.perf.json",
         "test:functional:memleak": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.json",
         "test:functional:cover": "npm run test:functional",
-        "test:functional:split": "node ./build/ci/scripts/runFunctionalTests.js",
+        "test:functional:parallel": "cross-env VSC_PYTHON_CI_TEST_PARALLEL=1 node ./build/ci/scripts/runFunctionalTests.js",
         "test:cover:report": "nyc --nycrc-path build/.nycrc  report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
         "testDebugger": "node ./out/test/testBootstrap.js ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",
+        "preTestJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js",
+        "testJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js && cross-env CODE_TESTS_WORKSPACE=src/test VSC_PYTHON_CI_TEST_GREP='Language Server:' node ./out/test/testBootstrap.js ./out/test/standardTest.js && node ./out/test/languageServers/jedi/lspTeardown.js",
         "pretestDataScience": "node ./out/test/datascience/dsTestSetup.js",
-        "testDataScience": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_PYTHON_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=ds.test VSC_PYTHON_FORCE_LOGGING=1 VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
+        "testDataScience": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_PYTHON_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=native.vscode.test VSC_PYTHON_FORCE_LOGGING=1 VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
+        "pretestDataScienceInVSCode": "node ./out/test/datascience/dsTestSetup.js",
+        "testDataScienceInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_PYTHON_CI_TEST_VSC_CHANNEL=stable TEST_FILES_SUFFIX=vscode.test VSC_PYTHON_FORCE_LOGGING=1 VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testMultiWorkspace": "node ./out/test/testBootstrap.js ./out/test/multiRootTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
         "testSmoke": "node ./out/test/smokeTest.js",
@@ -3524,7 +3524,7 @@
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
         "named-js-regexp": "^1.3.3",
-        "node-fetch": "^2.6.0",
+        "node-fetch": "^2.6.1",
         "node-stream-zip": "^1.6.0",
         "onigasm": "^2.2.2",
         "pdfkit": "^0.11.0",
@@ -3553,10 +3553,10 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.1.4",
-        "vscode-jsonrpc": "^6.0.0-next.4",
-        "vscode-languageclient": "^7.0.0-next.8",
-        "vscode-languageserver": "^7.0.0-next.6",
-        "vscode-languageserver-protocol": "^3.16.0-next.6",
+        "vscode-jsonrpc": "6.0.0-next.5",
+        "vscode-languageclient": "7.0.0-next.9",
+        "vscode-languageserver": "7.0.0-next.7",
+        "vscode-languageserver-protocol": "3.16.0-next.7",
         "vscode-tas-client": "^0.1.4",
         "vsls": "^0.3.1291",
         "winreg": "^1.2.4",
@@ -3724,7 +3724,7 @@
         "node-html-parser": "^1.1.13",
         "nyc": "^15.0.0",
         "playwright-chromium": "^0.13.0",
-        "plotly.js-dist": "^1.54.5",
+        "plotly.js-dist": "^1.56.0",
         "postcss": "^7.0.27",
         "postcss-cssnext": "^3.1.0",
         "postcss-import": "^12.0.1",
@@ -3774,7 +3774,7 @@
         "tslint-plugin-prettier": "^2.1.0",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
-        "typescript": "^3.9.7",
+        "typescript": "^4.0.2",
         "typescript-formatter": "^7.1.0",
         "unicode-properties": "^1.3.1",
         "url-loader": "^1.1.2",

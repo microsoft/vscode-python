@@ -301,6 +301,7 @@ src/test/common/utils/regexp.unit.test.ts
 src/test/common/utils/cacheUtils.unit.test.ts
 src/test/common/utils/decorators.unit.test.ts
 src/test/common/utils/localize.functional.test.ts
+src/test/common/utils/version.unit.test.ts
 src/test/common/utils/workerPool.functional.test.ts
 src/test/common/configSettings/configSettings.pythonPath.unit.test.ts
 src/test/common/configSettings/configSettings.unit.test.ts
@@ -365,7 +366,7 @@ src/test/common/insidersBuild/insidersExtensionService.unit.test.ts
 src/test/pythonFiles/formatting/dummy.ts
 
 src/test/format/extension.dispatch.test.ts
-src/test/format/extension.format.ds.test.ts
+src/test/format/extension.format.native.vscode.test.ts
 src/test/format/extension.onTypeFormat.test.ts
 src/test/format/extension.lineFormatter.test.ts
 src/test/format/extension.sort.test.ts
@@ -415,6 +416,7 @@ src/test/startPage/startPage.functional.test.tsx
 src/test/telemetry/index.unit.test.ts
 src/test/telemetry/importTracker.unit.test.ts
 src/test/telemetry/envFileTelemetry.unit.test.ts
+src/test/telemetry/extensionInstallTelemetry.unit.test.ts
 
 src/test/linters/pylint.unit.test.ts
 src/test/linters/mypy.unit.test.ts
@@ -454,6 +456,7 @@ src/test/application/diagnostics/commands/ignore.unit.test.ts
 src/test/application/diagnostics/commands/launchBrowser.unit.test.ts
 src/test/application/diagnostics/commands/execVSCCommands.unit.test.ts
 src/test/application/diagnostics/commands/factory.unit.test.ts
+src/test/application/misc/joinMailingListPrompt.unit.test.ts
 
 src/test/performance/load.perf.test.ts
 
@@ -571,20 +574,20 @@ src/test/datascience/notebook.functional.test.ts
 src/test/datascience/mockLanguageClient.ts
 src/test/datascience/errorHandler.functional.test.tsx
 src/test/datascience/notebook/notebookStorage.unit.test.ts
-src/test/datascience/notebook/notebookTrust.ds.test.ts
+src/test/datascience/notebook/notebookTrust.native.vscode.test.ts
 src/test/datascience/notebook/rendererExtensionDownloader.unit.test.ts
 src/test/datascience/notebook/survey.unit.test.ts
-src/test/datascience/notebook/interrupRestart.ds.test.ts
-src/test/datascience/notebook/contentProvider.ds.test.ts
+src/test/datascience/notebook/interrupRestart.native.vscode.test.ts
+src/test/datascience/notebook/contentProvider.native.vscode.test.ts
 src/test/datascience/notebook/helper.ts
 src/test/datascience/notebook/contentProvider.unit.test.ts
-src/test/datascience/notebook/edit.ds.test.ts
+src/test/datascience/notebook/edit.native.vscode.test.ts
 src/test/datascience/notebook/rendererExension.unit.test.ts
-src/test/datascience/notebook/saving.ds.test.ts
-src/test/datascience/notebook/notebookEditorProvider.ds.test.ts
+src/test/datascience/notebook/saving.native.vscode.test.ts
+src/test/datascience/notebook/notebookEditorProvider.native.vscode.test.ts
 src/test/datascience/notebook/helpers.unit.test.ts
-src/test/datascience/notebook/executionService.ds.test.ts
-src/test/datascience/notebook/cellOutput.ds.test.ts
+src/test/datascience/notebook/executionService.native.vscode.test.ts
+src/test/datascience/notebook/cellOutput.native.vscode.test.ts
 src/test/datascience/interactiveWindowTestHelpers.tsx
 src/test/datascience/export/exportUtil.test.ts
 src/test/datascience/export/exportToHTML.test.ts
@@ -1192,6 +1195,7 @@ src/client/telemetry/importTracker.ts
 src/client/telemetry/constants.ts
 src/client/telemetry/index.ts
 src/client/telemetry/envFileTelemetry.ts
+src/client/telemetry/extensionInstallTelemetry.ts
 
 src/client/linters/pydocstyle.ts
 src/client/linters/serviceRegistry.ts
@@ -1240,6 +1244,7 @@ src/client/application/diagnostics/commands/factory.ts
 src/client/application/diagnostics/commands/execVSCCommand.ts
 src/client/application/diagnostics/commands/types.ts
 src/client/application/diagnostics/commands/launchBrowser.ts
+src/client/application/misc/joinMailingListPrompt.ts
 
 src/client/datascience/baseJupyterSession.ts
 src/client/datascience/data-viewing/jupyterVariableDataProviderFactory.ts
@@ -1396,7 +1401,6 @@ src/client/datascience/export/types.ts
 src/client/datascience/export/exportToPDF.ts
 src/client/datascience/export/exportManagerFilePicker.ts
 src/client/datascience/export/exportBase.ts
-src/client/datascience/export/exportDependencyChecker.ts
 src/client/datascience/export/exportFileOpener.ts
 src/client/datascience/notebookAndInteractiveTracker.ts
 src/client/datascience/statusProvider.ts

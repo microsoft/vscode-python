@@ -5,7 +5,9 @@ import pandas.io.json as _VSCODE_pd_json
 import builtins as _VSCODE_builtins
 
 # _VSCode_sub_supportsDataExplorer will contain our list of data explorer supported types
-_VSCode_supportsDataExplorer = "['list', 'Series', 'dict', 'ndarray', 'DataFrame']"
+_VSCode_supportsDataExplorer = (
+    "['list', 'Series', 'dict', 'ndarray', 'DataFrame', 'Tensor']"
+)
 
 # In IJupyterVariables.getValue this '_VSCode_JupyterTestValue' will be replaced with the json stringified value of the target variable
 # Indexes off of _VSCODE_targetVariable need to index types that are part of IJupyterVariable

@@ -55,9 +55,6 @@ class ErroringMemoryStream extends Writable {
  * @extends {Readable}
  */
 class DelayedReadMemoryStream extends Readable {
-    public get readableLength() {
-        return 1024 * 10;
-    }
     private readCounter = 0;
     constructor(
         private readonly totalKb: number,
@@ -65,6 +62,10 @@ class DelayedReadMemoryStream extends Readable {
         private readonly kbPerIteration: number
     ) {
         super();
+    }
+    // @ts-ignore https://devblogs.microsoft.com/typescript/announcing-typescript-4-0-rc/#properties-overridding-accessors-and-vice-versa-is-an-error
+    public get readableLength() {
+        return 1024 * 10;
     }
     public _read() {
         // Delay reading data, mimicking slow file downloads.

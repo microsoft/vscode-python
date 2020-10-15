@@ -5,22 +5,19 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { IExtensionContext, IInstaller, InstallerResponse, IPathUtils, Product, Resource } from '../../common/types';
+import { IExtensionContext, IPathUtils, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterLocatorService, IInterpreterService, KNOWN_PATH_SERVICE } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { getRealPath } from '../common';
 import { Telemetry } from '../constants';
-import { createDefaultKernelSpec, defaultKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import { IDataScienceFileSystem, IJupyterKernelSpec } from '../types';
-import { getKernelInterpreter } from './helpers';
 import { IKernelFinder } from './types';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
@@ -39,7 +36,7 @@ const cacheFile = 'kernelSpecPathCache.json';
 // Before returning the IJupyterKernelSpec it makes sure that ipykernel is installed into the kernel spec interpreter
 @injectable()
 export class KernelFinder implements IKernelFinder {
-    private cache: string[] = [];
+    private cache?: string[];
     private cacheDirty = false;
 
     // Store our results when listing all possible kernelspecs for a resource
@@ -56,68 +53,35 @@ export class KernelFinder implements IKernelFinder {
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(IInstaller) private installer: IInstaller,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonExecutionFactory) private readonly exeFactory: IPythonExecutionFactory,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider
     ) {}
-
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernelSpec(
         resource: Resource,
-        kernelSpecMetadata?: nbformat.IKernelspecMetadata,
-        cancelToken?: CancellationToken
-    ): Promise<IJupyterKernelSpec> {
-        this.cache = await this.readCache();
-        let foundKernel: IJupyterKernelSpec | undefined;
+        notebookMetadata?: nbformat.INotebookMetadata
+    ): Promise<IJupyterKernelSpec | undefined> {
+        await this.readCache();
 
-        const kernelName = kernelSpecMetadata?.name;
+        const searchBasedOnKernelSpecMetadata = this.findKernelSpecBasedOnKernelSpecMetadata(
+            resource,
+            notebookMetadata && notebookMetadata.kernelspec ? notebookMetadata.kernelspec : undefined
+        );
 
-        if (kernelSpecMetadata && kernelName) {
-            // For a non default kernelspec search for it
-            if (!kernelName.includes(defaultKernelSpecName)) {
-                let kernelSpec = await this.searchCache(kernelName);
-
-                if (kernelSpec) {
-                    return kernelSpec;
-                }
-
-                // Check in active interpreter first
-                kernelSpec = await this.getKernelSpecFromActiveInterpreter(kernelName, resource);
-
-                if (kernelSpec) {
-                    this.writeCache(this.cache).ignoreErrors();
-                    return kernelSpec;
-                }
-
-                const diskSearch = this.findDiskPath(kernelName);
-                const interpreterSearch = this.getInterpreterPaths(resource).then((interpreterPaths) => {
-                    return this.findInterpreterPath(interpreterPaths, kernelName);
-                });
-
-                let result = await Promise.race([diskSearch, interpreterSearch]);
-                if (!result) {
-                    const both = await Promise.all([diskSearch, interpreterSearch]);
-                    result = both[0] ? both[0] : both[1];
-                }
-
-                foundKernel = result ? result : await this.getDefaultKernelSpec(resource);
-            } else {
-                // For a previous default kernel spec, just use it again
-                foundKernel = this.reuseExistingDefaultSpec(kernelSpecMetadata);
-            }
-        } else {
-            // If we don't have kernel metadata then just get a default spec to use
-            foundKernel = await this.getDefaultKernelSpec(resource);
+        if (!notebookMetadata || notebookMetadata.kernelspec || !notebookMetadata.language_info?.name) {
+            return searchBasedOnKernelSpecMetadata;
         }
 
-        this.writeCache(this.cache).ignoreErrors();
-
-        // Verify that ipykernel is installed into the given kernelspec interpreter
-        return this.verifyIpyKernel(foundKernel, cancelToken);
+        // If given a language, then find based on language else revert to default behaviour.
+        const searchBasedOnLanguage = await this.findKernelSpecBasedOnLanguage(
+            resource,
+            notebookMetadata.language_info.name
+        );
+        // If none found based on language, then return the default.s
+        return searchBasedOnLanguage || searchBasedOnKernelSpecMetadata;
     }
-
     // Search all our local file system locations for installed kernel specs and return them
     public async listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
         if (!resource) {
@@ -133,14 +97,54 @@ export class KernelFinder implements IKernelFinder {
             this.workspaceToKernels.set(workspaceFolderId, this.findResourceKernelSpecs(resource));
         }
 
-        this.writeCache(this.cache).ignoreErrors();
+        this.writeCache().ignoreErrors();
 
         // ! as the has and set above verify that we have a return here
         return this.workspaceToKernels.get(workspaceFolderId)!;
     }
 
-    private reuseExistingDefaultSpec(kernelMetadata: nbformat.IKernelspecMetadata): IJupyterKernelSpec {
-        return createDefaultKernelSpec(kernelMetadata.display_name);
+    private async findKernelSpecBasedOnKernelSpecMetadata(
+        resource: Resource,
+        kernelSpecMetadata?: nbformat.IKernelspecMetadata
+    ) {
+        const kernelName = kernelSpecMetadata?.name;
+        if (!kernelName) {
+            return;
+        }
+
+        try {
+            let kernelSpec = await this.searchCache(kernelName);
+            if (kernelSpec) {
+                return kernelSpec;
+            }
+
+            // Check in active interpreter first
+            kernelSpec = await this.getKernelSpecFromActiveInterpreter(kernelName, resource);
+
+            if (kernelSpec) {
+                return kernelSpec;
+            }
+
+            const diskSearch = this.findDiskPath(kernelName);
+            const interpreterSearch = this.getInterpreterPaths(resource).then((interpreterPaths) => {
+                return this.findInterpreterPath(interpreterPaths, kernelName);
+            });
+
+            let result = await Promise.race([diskSearch, interpreterSearch]);
+            if (!result) {
+                const both = await Promise.all([diskSearch, interpreterSearch]);
+                result = both[0] ? both[0] : both[1];
+            }
+
+            return result;
+        } finally {
+            this.writeCache().ignoreErrors();
+        }
+    }
+
+    private async findKernelSpecBasedOnLanguage(resource: Resource, language: string) {
+        const specs = await this.listKernelSpecs(resource);
+        return specs.find((item) => item.language.toLowerCase() === language.toLowerCase());
     }
 
     private async findResourceKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
@@ -181,7 +185,7 @@ export class KernelFinder implements IKernelFinder {
 
             // If we failed to get a kernelspec pull path from our cache and loaded list
             this.pathToKernelSpec.delete(specPath);
-            this.cache = this.cache.filter((itempath) => itempath !== specPath);
+            this.cache = this.cache?.filter((itempath) => itempath !== specPath);
             return undefined;
         });
     }
@@ -328,30 +332,6 @@ export class KernelFinder implements IKernelFinder {
         return flatten(fullPathResults);
     }
 
-    // For the given kernelspec return back the kernelspec with ipykernel installed into it or error
-    private async verifyIpyKernel(
-        kernelSpec: IJupyterKernelSpec,
-        cancelToken?: CancellationToken
-    ): Promise<IJupyterKernelSpec> {
-        const interpreter = await getKernelInterpreter(kernelSpec, this.interpreterService);
-
-        if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
-            return kernelSpec;
-        } else {
-            const token = new CancellationTokenSource();
-            const response = await this.installer.promptToInstall(
-                Product.ipykernel,
-                interpreter,
-                wrapCancellationTokens(cancelToken, token.token)
-            );
-            if (response === InstallerResponse.Installed) {
-                return kernelSpec;
-            }
-        }
-
-        throw new Error(`IPyKernel not installed into interpreter ${interpreter.displayName}`);
-    }
-
     private async getKernelSpecFromActiveInterpreter(
         kernelName: string,
         resource: Resource
@@ -387,39 +367,39 @@ export class KernelFinder implements IKernelFinder {
         return this.searchCache(kernelName);
     }
 
-    private async getDefaultKernelSpec(resource: Resource): Promise<IJupyterKernelSpec> {
-        const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
-
-        return createDefaultKernelSpec(activeInterpreter?.displayName);
-    }
-
-    private async readCache(): Promise<string[]> {
+    private async readCache(): Promise<void> {
         try {
-            return JSON.parse(
+            if (Array.isArray(this.cache) && this.cache.length > 0) {
+                return;
+            }
+            this.cache = JSON.parse(
                 await this.fs.readLocalFile(path.join(this.context.globalStoragePath, cacheFile))
             ) as string[];
         } catch {
             traceInfo('No kernelSpec cache found.');
-            return [];
         }
     }
 
     private updateCache(newPath: string) {
+        this.cache = Array.isArray(this.cache) ? this.cache : [];
         if (!this.cache.includes(newPath)) {
             this.cache.push(newPath);
             this.cacheDirty = true;
         }
     }
 
-    private async writeCache(cache: string[]) {
-        if (this.cacheDirty) {
-            await this.fs.writeLocalFile(path.join(this.context.globalStoragePath, cacheFile), JSON.stringify(cache));
+    private async writeCache() {
+        if (this.cacheDirty && Array.isArray(this.cache)) {
+            await this.fs.writeLocalFile(
+                path.join(this.context.globalStoragePath, cacheFile),
+                JSON.stringify(this.cache)
+            );
             this.cacheDirty = false;
         }
     }
 
     private async searchCache(kernelName: string): Promise<IJupyterKernelSpec | undefined> {
-        const kernelJsonFile = this.cache.find((kernelPath) => {
+        const kernelJsonFile = this.cache?.find((kernelPath) => {
             try {
                 return path.basename(path.dirname(kernelPath)) === kernelName;
             } catch (e) {

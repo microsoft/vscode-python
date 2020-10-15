@@ -21,7 +21,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
@@ -31,7 +31,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager,
     Resource
 } from '../../common/types';
@@ -65,9 +64,9 @@ import {
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
+    INotebookExtensibility,
     INotebookImporter,
     INotebookMetadataLive,
-    INotebookModel,
     INotebookProvider,
     IStatusProvider,
     IThemeFinder,
@@ -87,11 +86,15 @@ import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
+    }
+    public get notebookExtensibility(): INotebookExtensibility {
+        return this.nbExtensibility;
     }
 
     public get visible(): boolean {
@@ -131,7 +134,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get isDirty(): boolean {
         return this.model ? this.model.isDirty : false;
     }
-    public get model(): Readonly<INotebookModel> {
+    public get model(): Readonly<NativeEditorNotebookModel> {
         return this._model;
     }
     public readonly type: 'old' | 'custom' = 'custom';
@@ -153,7 +156,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         liveShare: ILiveShareApi,
         applicationShell: IApplicationShell,
         documentManager: IDocumentManager,
-        provider: IWebPanelProvider,
+        provider: IWebviewPanelProvider,
         disposables: IDisposableRegistry,
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
@@ -178,10 +181,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private trustService: ITrustService,
-        expService: IExperimentService,
-        private _model: INotebookModel,
+        private _model: NativeEditorNotebookModel,
         webviewPanel: WebviewPanel | undefined,
-        selector: KernelSelector
+        selector: KernelSelector,
+        private nbExtensibility: INotebookExtensibility
     ) {
         super(
             listeners,
@@ -218,7 +221,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             experimentsManager,
             notebookProvider,
             useCustomEditorApi,
-            expService,
             selector
         );
         asyncRegistry.push(this);
@@ -238,7 +240,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.previouslyNotTrusted = !this._model.isTrusted;
     }
 
-    public async show(preserveFocus?: boolean) {
+    public async show(preserveFocus: boolean = true) {
         await this.loadPromise;
         return super.show(preserveFocus);
     }
@@ -577,6 +579,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Actually don't close, just let the error bubble out
     }
 
+    protected async setFileInKernel(_file: string, _cancelToken: CancellationToken | undefined): Promise<void> {
+        // Native editor doesn't set this as the ipython file should be set for a notebook.
+    }
+
     protected async close(): Promise<void> {
         // Fire our event
         this.closedEvent.fire(this);
@@ -729,7 +735,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (!activeEditor || !activeEditor.model) {
             return;
         }
-        this.commandManager.executeCommand(Commands.Export, activeEditor.model, undefined);
+        this.commandManager.executeCommand(
+            Commands.Export,
+            activeEditor.model,
+            undefined,
+            activeEditor.notebook?.getMatchingInterpreter()
+        );
     }
 
     private logNativeCommand(args: INativeCommand) {
@@ -749,8 +760,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             if (!this.notebook && metadata?.kernelspec) {
                 this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                     jupyterServerStatus: ServerStatus.NotStarted,
-                    localizedUri: '',
-                    displayName: metadata.kernelspec.display_name ?? metadata.kernelspec.name,
+                    serverName: await this.getServerDisplayName(undefined),
+                    kernelName: metadata.kernelspec.display_name ?? metadata.kernelspec.name,
                     language: translateKernelLanguageToMonaco(
                         (metadata.kernelspec.language as string) ?? PYTHON_LANGUAGE
                     )

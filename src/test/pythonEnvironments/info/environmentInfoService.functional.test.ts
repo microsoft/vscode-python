@@ -8,8 +8,9 @@ import * as sinon from 'sinon';
 import { ImportMock } from 'ts-mock-imports';
 import { ExecutionResult } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
+import { InterpreterInformation } from '../../../client/pythonEnvironments/base/info/interpreter';
+import { parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
 import * as ExternalDep from '../../../client/pythonEnvironments/common/externalDependencies';
-import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import {
     EnvironmentInfoService,
     EnvironmentInfoServiceQueuePriority,
@@ -18,27 +19,16 @@ import {
 suite('Environment Info Service', () => {
     let stubShellExec: sinon.SinonStub;
 
-    function createExpectedEnvInfo(path: string): PythonEnvironment {
+    function createExpectedEnvInfo(executable: string): InterpreterInformation {
         return {
-            path,
-            architecture: Architecture.x64,
-            sysVersion: undefined,
-            sysPrefix: 'path',
-            pipEnvWorkspaceFolder: undefined,
-            version: {
-                build: [],
-                major: 3,
-                minor: 8,
-                patch: 3,
-                prerelease: ['final'],
-                raw: '3.8.3-final',
+            version: { ...parseVersion('3.8.3-final'), sysVersion: '3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]' },
+            arch: Architecture.x64,
+            executable: {
+                filename: executable,
+                sysPrefix: 'path',
+                mtime: -1,
+                ctime: -1,
             },
-            companyDisplayName: '',
-            displayName: '',
-            envType: EnvironmentType.Unknown,
-            envName: '',
-            envPath: '',
-            cachedEntry: false,
         };
     }
 
@@ -49,7 +39,7 @@ suite('Environment Info Service', () => {
             new Promise<ExecutionResult<string>>((resolve) => {
                 resolve({
                     stdout:
-                        '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "version": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
+                        '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
                 });
             }),
         );
@@ -59,8 +49,8 @@ suite('Environment Info Service', () => {
     });
     test('Add items to queue and get results', async () => {
         const envService = new EnvironmentInfoService();
-        const promises: Promise<PythonEnvironment | undefined>[] = [];
-        const expected: PythonEnvironment[] = [];
+        const promises: Promise<InterpreterInformation | undefined>[] = [];
+        const expected: InterpreterInformation[] = [];
         for (let i = 0; i < 10; i = i + 1) {
             const path = `any-path${i}`;
             if (i < 5) {
@@ -82,8 +72,8 @@ suite('Environment Info Service', () => {
 
     test('Add same item to queue', async () => {
         const envService = new EnvironmentInfoService();
-        const promises: Promise<PythonEnvironment | undefined>[] = [];
-        const expected: PythonEnvironment[] = [];
+        const promises: Promise<InterpreterInformation | undefined>[] = [];
+        const expected: InterpreterInformation[] = [];
 
         const path = 'any-path';
         // Clear call counts

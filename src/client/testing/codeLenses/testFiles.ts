@@ -121,8 +121,8 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
                         symbol.kind === SymbolKind.Class
                 )
                 .map((symbol) => {
-                    // This is bloody crucial, if the start and end columns are the same
-                    // then vscode goes bonkers when ever you edit a line (start scrolling magically).
+                    // This is crucial, if the start and end columns are the same then vscode bugs out
+                    // whenever you edit a line (start scrolling magically).
                     const range = new Range(
                         symbol.location.range.start,
                         new Position(symbol.location.range.end.line, symbol.location.range.end.character + 1)

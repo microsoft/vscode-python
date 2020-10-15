@@ -7,7 +7,6 @@ import { min } from 'lodash';
 import * as path from 'path';
 import * as React from 'react';
 import { Provider } from 'react-redux';
-import { isString } from 'util';
 import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
@@ -90,11 +89,12 @@ export function addMockData(
     code: string,
     result: string | number | undefined | string[],
     mimeType?: string | string[],
-    cellType?: string
+    cellType?: string,
+    traceback?: string[]
 ) {
     if (ioc.mockJupyter) {
         if (cellType && cellType === 'error') {
-            ioc.mockJupyter.addError(code, result ? result.toString() : '');
+            ioc.mockJupyter.addError(code, result ? result.toString() : '', traceback);
         } else {
             if (result) {
                 ioc.mockJupyter.addCell(code, result, mimeType);
@@ -221,6 +221,15 @@ export function verifyCellSource(
     assert.deepStrictEqual(inst.state.model?.getValue(), source, 'Source does not match on cell');
 }
 
+export function verifyServerStatus(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, statusText: string) {
+    wrapper.update();
+
+    const foundResult = wrapper.find('div.kernel-status-server');
+    assert.ok(foundResult.length >= 1, "Didn't find server status");
+    const html = foundResult.html();
+    assert.ok(html.includes(statusText), `${statusText} not found in server status`);
+}
+
 export function verifyHtmlOnCell(
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
     cellType: 'NativeCell' | 'InteractiveCell',
@@ -264,7 +273,7 @@ export function verifyHtmlOnCell(
         output = targetCell!.find('div.markdown-cell-output');
     }
     const outputHtml = output.length > 0 ? output.html() : undefined;
-    if (html && isString(html)) {
+    if (html && typeof html === 'string') {
         // Extract only the first 100 chars from the input string
         const sliced = html.substr(0, min([html.length, 100]));
         assert.ok(output.length > 0, 'No output cell found');

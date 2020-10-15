@@ -2,10 +2,10 @@ import { ReactWrapper } from 'enzyme';
 import { noop } from 'lodash';
 import { Event, EventEmitter, Uri } from 'vscode';
 import {
-    IWebPanel,
-    IWebPanelMessageListener,
-    IWebPanelOptions,
-    WebPanelMessage
+    IWebviewPanel,
+    IWebviewPanelMessageListener,
+    IWebviewPanelOptions,
+    WebviewMessage
 } from '../../client/common/application/types';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
@@ -36,22 +36,22 @@ export type WaitForMessageOptions = {
 };
 
 // tslint:disable: no-any
-export interface IMountedWebView extends IWebPanel, IDisposable {
+export interface IMountedWebView extends IWebviewPanel, IDisposable {
     readonly id: string;
     readonly wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
     readonly onDisposed: Event<void>;
-    postMessage(ev: WebPanelMessage): void;
+    postMessage(ev: WebviewMessage): void;
     changeViewState(active: boolean, visible: boolean): void;
     addMessageListener(callback: (m: string, p: any) => void): void;
     removeMessageListener(callback: (m: string, p: any) => void): void;
-    attach(options: IWebPanelOptions): void;
+    attach(options: IWebviewPanelOptions): void;
     waitForMessage(message: string, options?: WaitForMessageOptions): Promise<void>;
 }
 
 export class MountedWebView implements IMountedWebView, IDisposable {
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
     private missedMessages: any[] = [];
-    private webPanelListener: IWebPanelMessageListener | undefined;
+    private webPanelListener: IWebviewPanelMessageListener | undefined;
     private reactMessageCallback: ((ev: MessageEvent) => void) | undefined;
     private extraListeners: ((m: string, p: any) => void)[] = [];
     private disposed = false;
@@ -101,7 +101,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
     public get loadFailed(): Event<void> {
         return this.loadFailedEmitter.event;
     }
-    public attach(options: IWebPanelOptions) {
+    public attach(options: IWebviewPanelOptions) {
         this.webPanelListener = options.listener;
 
         // Send messages that were already posted but were missed.
@@ -187,7 +187,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
     public isVisible(): boolean {
         return this.visible;
     }
-    public postMessage(m: WebPanelMessage): void {
+    public postMessage(m: WebviewMessage): void {
         // Actually send to the UI
         if (this.reactMessageCallback) {
             // tslint:disable-next-line: no-require-imports

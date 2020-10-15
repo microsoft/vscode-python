@@ -11,7 +11,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { UseCustomEditorApi } from '../../common/constants';
@@ -22,7 +22,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager,
     IMemento,
     InteractiveWindowMode,
@@ -171,7 +170,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<IDocumentManager>(IDocumentManager),
             this.serviceContainer.get<IStatusProvider>(IStatusProvider),
-            this.serviceContainer.get<IWebPanelProvider>(IWebPanelProvider),
+            this.serviceContainer.get<IWebviewPanelProvider>(IWebviewPanelProvider),
             this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
             this.serviceContainer.get<ICodeCssGenerator>(ICodeCssGenerator),
             this.serviceContainer.get<IThemeFinder>(IThemeFinder),
@@ -192,7 +191,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<IExperimentsManager>(IExperimentsManager),
             this.serviceContainer.get<INotebookProvider>(INotebookProvider),
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
-            this.serviceContainer.get<IExperimentService>(IExperimentService),
             this.serviceContainer.get<ExportUtil>(ExportUtil),
             resource,
             mode,

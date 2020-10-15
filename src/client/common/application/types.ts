@@ -60,11 +60,14 @@ import {
 } from 'vscode';
 import type {
     NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
+    NotebookCellMetadata,
+    NotebookCellMetadataChangeEvent as VSCNotebookCellMetadataChangeEvent,
     NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookDocument,
     NotebookDocumentFilter,
+    NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
     NotebookKernel,
     NotebookKernelProvider
@@ -1030,22 +1033,24 @@ export interface IApplicationEnvironment {
     readonly uriScheme: string;
 }
 
-export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
-export interface IWebPanelMessageListener extends IAsyncDisposable {
+export interface IWebviewMessageListener {
     /**
-     * Listens to web panel messages
+     * Listens to webview messages
      * @param message: the message being sent
      * @param payload: extra data that came with the message
-     * @return A IWebPanel that can be used to show html pages.
      */
     onMessage(message: string, payload: any): void;
+}
+
+export const IWebviewPanelMessageListener = Symbol('IWebviewPanelMessageListener');
+export interface IWebviewPanelMessageListener extends IWebviewMessageListener, IAsyncDisposable {
     /**
      * Listens to web panel state changes
      */
-    onChangeViewState(panel: IWebPanel): void;
+    onChangeViewState(panel: IWebviewPanel): void;
 }
 
-export type WebPanelMessage = {
+export type WebviewMessage = {
     /**
      * Message type
      */
@@ -1057,13 +1062,13 @@ export type WebPanelMessage = {
     payload?: any;
 };
 
-// Wraps the VS Code webview panel
-export const IWebPanel = Symbol('IWebPanel');
-export interface IWebPanel {
+// Wraps a VS Code webview
+export const IWebview = Symbol('IWebview');
+export interface IWebview {
     /**
-     * Event is fired when the load for a web panel fails
+     * Sends a message to the hosted html page
      */
-    readonly loadFailed: Event<void>;
+    postMessage(message: WebviewMessage): void;
     /**
      * Convert a uri for the local file system to one that can be used inside webviews.
      *
@@ -1076,6 +1081,15 @@ export interface IWebPanel {
      * ```
      */
     asWebviewUri(localResource: Uri): Uri;
+}
+
+// Wraps the VS Code webview panel
+export const IWebviewPanel = Symbol('IWebviewPanel');
+export interface IWebviewPanel extends IWebview {
+    /**
+     * Event is fired when the load for a web panel fails
+     */
+    readonly loadFailed: Event<void>;
     setTitle(val: string): void;
     /**
      * Makes the webpanel show up.
@@ -1087,11 +1101,6 @@ export interface IWebPanel {
      * Indicates if this web panel is visible or not.
      */
     isVisible(): boolean;
-
-    /**
-     * Sends a message to the hosted html page
-     */
-    postMessage(message: WebPanelMessage): void;
 
     /**
      * Attempts to close the panel if it's visible
@@ -1108,18 +1117,21 @@ export interface IWebPanel {
     updateCwd(cwd: string): void;
 }
 
-export interface IWebPanelOptions {
-    viewColumn: ViewColumn;
-    listener: IWebPanelMessageListener;
-    title: string;
+export interface IWebviewOptions {
     rootPath: string;
+    cwd: string;
+    scripts: string[];
+}
+
+export interface IWebviewPanelOptions extends IWebviewOptions {
+    viewColumn: ViewColumn;
+    listener: IWebviewPanelMessageListener;
+    title: string;
     /**
      * Additional paths apart from cwd and rootPath, that webview would allow loading resources/files from.
      * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
      */
     additionalPaths?: string[];
-    scripts: string[];
-    cwd: string;
     // tslint:disable-next-line: no-any
     settings?: any;
     // Web panel to use if supplied by VS code instead
@@ -1127,16 +1139,9 @@ export interface IWebPanelOptions {
 }
 
 // Wraps the VS Code api for creating a web panel
-export const IWebPanelProvider = Symbol('IWebPanelProvider');
-export interface IWebPanelProvider {
-    /**
-     * Creates a new webpanel
-     *
-     * @param {IWebPanelOptions} options - params for creating an IWebPanel
-     * @returns {IWebPanel}
-     * @memberof IWebPanelProvider
-     */
-    create(options: IWebPanelOptions): Promise<IWebPanel>;
+export const IWebviewPanelProvider = Symbol('IWebviewPanelProvider');
+export interface IWebviewPanelProvider {
+    create(options: IWebviewPanelOptions): Promise<IWebviewPanel>;
 }
 
 // Wraps the vsls liveshare API
@@ -1523,10 +1528,16 @@ export interface IClipboard {
 
 export type NotebookCellsChangeEvent = { type: 'changeCells' } & VSCNotebookCellsChangeEvent;
 export type NotebookCellOutputsChangeEvent = { type: 'changeCellOutputs' } & VSCNotebookCellOutputsChangeEvent;
+export type NotebookCellMetadataChangeEvent = { type: 'changeCellMetadata' } & VSCNotebookCellMetadataChangeEvent;
 export type NotebookCellLanguageChangeEvent = { type: 'changeCellLanguage' } & VSCNotebookCellLanguageChangeEvent;
+export type NotebookDocumentMetadataChangeEvent = {
+    type: 'changeNotebookMetadata';
+} & VSCNotebookDocumentMetadataChangeEvent;
 export type NotebookCellChangedEvent =
     | NotebookCellsChangeEvent
     | NotebookCellOutputsChangeEvent
+    | NotebookCellMetadataChangeEvent
+    | NotebookDocumentMetadataChangeEvent
     | NotebookCellLanguageChangeEvent;
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
@@ -1537,11 +1548,27 @@ export interface IVSCodeNotebook {
     readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
+    readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     readonly notebookEditors: Readonly<NotebookEditor[]>;
     readonly activeNotebookEditor: NotebookEditor | undefined;
-    registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable;
+    registerNotebookContentProvider(
+        notebookType: string,
+        provider: NotebookContentProvider,
+        options?: {
+            /**
+             * Controls if outputs change will trigger notebook document content change and if it will be used in the diff editor
+             * Default to false. If the content provider doesn't persisit the outputs in the file document, this should be set to true.
+             */
+            transientOutputs: boolean;
+            /**
+             * Controls if a meetadata property change will trigger notebook document content change and if it will be used in the diff editor
+             * Default to false. If the content provider doesn't persisit a metadata property in the file document, it should be set to true.
+             */
+            transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
+        }
+    ): Disposable;
 
     registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
 }

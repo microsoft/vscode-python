@@ -80,13 +80,6 @@ export enum NotebookEditorSupport {
     nativeNotebookExperiment = 'NativeNotebook - experiment'
 }
 
-// Experiment to remove the Kernel/Server Tooblar in the Interactive Window when running a local Jupyter Server.
-// It doesn't make sense to have it there, the user can already change the kernel
-// by changing the python interpreter on the status bar.
-export enum RemoveKernelToolbarInInteractiveWindow {
-    experiment = 'RemoveKernelToolbarInInteractiveWindow'
-}
-
 // Experiment to offer switch to Pylance language server
 export enum TryPylance {
     experiment = 'tryPylance'
@@ -97,4 +90,15 @@ export enum TryPylance {
 export enum SurveyAndInterpreterTipNotification {
     tipExperiment = 'pythonTipPromptWording',
     surveyExperiment = 'pythonMailingListPromptWording'
+}
+
+// Experiment to switch Jedi to use an LSP instead of direct providers
+export enum JediLSP {
+    experiment = 'jediLSP'
+}
+// Experiment to show a prompt asking users to join python mailing list.
+export enum JoinMailingListPromptVariants {
+    variant1 = 'pythonJoinMailingListVar1',
+    variant2 = 'pythonJoinMailingListVar2',
+    variant3 = 'pythonJoinMailingListVar3'
 }

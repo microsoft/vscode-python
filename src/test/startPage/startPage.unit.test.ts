@@ -10,7 +10,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -23,7 +23,7 @@ import { MockAutoSelectionService } from '../mocks/autoSelector';
 
 suite('StartPage tests', () => {
     let startPage: IStartPage;
-    let provider: typemoq.IMock<IWebPanelProvider>;
+    let provider: typemoq.IMock<IWebviewPanelProvider>;
     let cssGenerator: typemoq.IMock<ICodeCssGenerator>;
     let themeFinder: typemoq.IMock<IThemeFinder>;
     let configuration: typemoq.IMock<IConfigurationService>;
@@ -57,7 +57,7 @@ suite('StartPage tests', () => {
     }
 
     setup(async () => {
-        provider = typemoq.Mock.ofType<IWebPanelProvider>();
+        provider = typemoq.Mock.ofType<IWebviewPanelProvider>();
         cssGenerator = typemoq.Mock.ofType<ICodeCssGenerator>();
         themeFinder = typemoq.Mock.ofType<IThemeFinder>();
         configuration = typemoq.Mock.ofType<IConfigurationService>();

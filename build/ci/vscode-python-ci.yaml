@@ -2,15 +2,15 @@
 
 name: '$(Year:yyyy).$(Month).0.$(BuildID)-ci'
 
-# Notes: Only trigger a commit for master and release, and skip build/rebuild
+# Notes: Only trigger a commit for main and release, and skip build/rebuild
 #        on changes in the news and .vscode folders.
 trigger:
   branches:
-    include: ['master', 'main', 'release*']
+    include: ['main', 'release*']
   paths:
     exclude: ['/news/1 Enhancements', '/news/2 Fixes', '/news/3 Code Health', '/.vscode']
 
-# Not the PR build for merges to master and release.
+# Not the PR build for merges to main and release.
 pr: none
 
 # Variables that are available for the entire pipeline.
@@ -66,13 +66,17 @@ stages:
             'Debugger':
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
+            'DataScience in VSCode':
+              TestsToRun: 'testDataScienceInVSCode'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
           maxParallel: 2
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-20.04'
         steps:
           - template: templates/test_phases.yml
 
@@ -100,7 +104,7 @@ stages:
               NeedsPythonTestReqs: true
           maxParallel: 2
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-20.04'
         steps:
           - template: templates/test_phases.yml
 
@@ -134,6 +138,10 @@ stages:
             'Debugger':
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
+            'DataScience in VSCode':
+              TestsToRun: 'testDataScienceInVSCode'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true

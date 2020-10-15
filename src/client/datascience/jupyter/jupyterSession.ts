@@ -23,6 +23,7 @@ import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IJupyterConnection, ISessionWithSocket } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterWebSockets } from './jupyterWebSocket';
 import { getNameOfKernelConnection } from './kernels/helpers';
 import { KernelConnectionMetadata } from './kernels/types';
@@ -37,7 +38,8 @@ export class JupyterSession extends BaseJupyterSession {
         private readonly outputChannel: IOutputChannel,
         private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
-        readonly workingDirectory: string
+        readonly workingDirectory: string,
+        private readonly idleTimeout: number
     ) {
         super(restartSessionUsed, workingDirectory);
         this.kernelConnectionMetadata = kernelSpec;
@@ -89,9 +91,13 @@ export class JupyterSession extends BaseJupyterSession {
             // Make sure it is idle before we return
             await this.waitForIdleOnSession(newSession, timeoutMS);
         } catch (exc) {
-            traceError('Failed to change kernel', exc);
-            // Throw a new exception indicating we cannot change.
-            throw new JupyterInvalidKernelError(kernelConnection);
+            if (exc instanceof JupyterWaitForIdleError) {
+                throw exc;
+            } else {
+                traceError('Failed to change kernel', exc);
+                // Throw a new exception indicating we cannot change.
+                throw new JupyterInvalidKernelError(kernelConnection);
+            }
         }
 
         return newSession;
@@ -106,7 +112,6 @@ export class JupyterSession extends BaseJupyterSession {
         if (!session || !this.contentsManager || !this.sessionManager) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
-
         let result: ISessionWithSocket | undefined;
         let tryCount = 0;
         // tslint:disable-next-line: no-any
@@ -114,7 +119,7 @@ export class JupyterSession extends BaseJupyterSession {
         while (tryCount < 3) {
             try {
                 result = await this.createSession(session.serverSettings, kernelConnection, cancelToken);
-                await this.waitForIdleOnSession(result, 30000);
+                await this.waitForIdleOnSession(result, this.idleTimeout);
                 this.restartSessionCreated(result.kernel);
                 return result;
             } catch (exc) {

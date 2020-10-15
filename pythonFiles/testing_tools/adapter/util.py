@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import contextlib
+import io
 
 try:
     from io import StringIO
@@ -180,7 +181,7 @@ def _replace_fd(file, target):
     """
     try:
         fd = file.fileno()
-    except AttributeError:
+    except (AttributeError, io.UnsupportedOperation):
         # `file` does not have fileno() so it's been replaced from the
         # default sys.stdout, etc. Return with noop.
         yield

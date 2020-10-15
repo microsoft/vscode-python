@@ -350,7 +350,6 @@ function patch_fromText(textline: string): Patch[] {
             } else if (sign === '') {
                 // Blank line?  Whatever.
             } else {
-                // WTF?
                 throw new Error(`Invalid patch mode '${sign}' in: ${line}`);
             }
             textPointer += 1;

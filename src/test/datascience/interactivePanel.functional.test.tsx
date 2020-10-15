@@ -76,9 +76,9 @@ suite('DataScience Interactive Panel', () => {
             interruptKernel: noopAny,
             isAtBottom: false,
             kernel: {
-                displayName: '',
+                kernelName: '',
                 jupyterServerStatus: ServerStatus.Busy,
-                localizedUri: '',
+                serverName: '',
                 language: PYTHON_LANGUAGE
             },
             knownDark: false,

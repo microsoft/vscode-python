@@ -6,8 +6,8 @@
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, EventEmitter } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
-import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../../client/common/application/types';
-import { WebPanelProvider } from '../../../client/common/application/webPanels/webPanelProvider';
+import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../../client/common/application/types';
+import { WebviewPanelProvider } from '../../../client/common/application/webviewPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
@@ -21,7 +21,7 @@ import { ICodeCssGenerator, IThemeFinder } from '../../../client/datascience/typ
 
 suite('DataScience - DataViewer', () => {
     let dataViewer: IDataViewer;
-    let webPanelProvider: IWebPanelProvider;
+    let webPanelProvider: IWebviewPanelProvider;
     let configService: IConfigurationService;
     let codeCssGenerator: ICodeCssGenerator;
     let themeFinder: IThemeFinder;
@@ -31,7 +31,7 @@ suite('DataScience - DataViewer', () => {
     const title: string = 'Data Viewer - Title';
 
     setup(async () => {
-        webPanelProvider = mock(WebPanelProvider);
+        webPanelProvider = mock(WebviewPanelProvider);
         configService = mock(ConfigurationService);
         codeCssGenerator = mock(CodeCssGenerator);
         themeFinder = mock(ThemeFinder);

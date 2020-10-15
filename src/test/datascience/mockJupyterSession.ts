@@ -25,9 +25,6 @@ export class MockJupyterSession implements IJupyterSession {
     private dict: Record<string, ICell>;
     private restartedEvent: EventEmitter<void> = new EventEmitter<void>();
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
-    private onIoPubMessageEvent: EventEmitter<KernelMessage.IIOPubMessage> = new EventEmitter<
-        KernelMessage.IIOPubMessage
-    >();
     private timedelay: number;
     private executionCount: number = 0;
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
@@ -58,10 +55,6 @@ export class MockJupyterSession implements IJupyterSession {
         }
         return this.onStatusChangedEvent.event;
     }
-    public get onIoPubMessage(): Event<KernelMessage.IIOPubMessage> {
-        return this.onIoPubMessageEvent.event;
-    }
-
     public get status(): ServerStatus {
         return this._status;
     }
@@ -89,7 +82,26 @@ export class MockJupyterSession implements IJupyterSession {
         }
         return sleep(this.timedelay);
     }
-
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+        return {
+            channel: 'shell',
+            content: {
+                protocol_version: '',
+                banner: '',
+                language_info: {
+                    name: 'py',
+                    version: '3'
+                },
+                status: 'ok',
+                implementation: '',
+                implementation_version: '',
+                help_links: []
+            },
+            header: {} as any,
+            metadata: {} as any,
+            parent_header: {} as any
+        };
+    }
     public prolongRestarts() {
         this.forceRestartTimeout = true;
     }

@@ -71,7 +71,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             processService,
             this.fileSystem,
             undefined,
-            this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)
+            await this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)
         );
     }
 

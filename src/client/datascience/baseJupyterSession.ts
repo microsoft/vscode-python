@@ -68,9 +68,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     public get isConnected(): boolean {
         return this.connected;
     }
-    public get onIoPubMessage() {
-        return this.ioPubEventEmitter.event;
-    }
     protected onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     protected statusHandler: Slot<ISessionWithSocket, Kernel.Status>;
     protected connected: boolean = false;
@@ -125,7 +122,12 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             );
         }
     }
-
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+        if (!this.session) {
+            throw new Error('Cannot request KernelInfo, Session not initialized.');
+        }
+        return this.session.kernel.requestKernelInfo();
+    }
     public async changeKernel(kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void> {
         let newSession: ISessionWithSocket | undefined;
 

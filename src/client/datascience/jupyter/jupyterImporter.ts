@@ -14,11 +14,12 @@ import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { CodeSnippets, Identifiers } from '../constants';
 import {
     IDataScienceFileSystem,
-    IJupyterExecution,
-    IJupyterInterpreterDependencyManager,
+    INbConvertExportToPythonService,
+    INbConvertInterpreterDependencyChecker,
     INotebookImporter
 } from '../types';
 
@@ -26,37 +27,35 @@ import {
 export class JupyterImporter implements INotebookImporter {
     public isDisposed: boolean = false;
     // Template that changes markdown cells to have # %% [markdown] in the comments
-    private readonly nbconvertTemplateFormat =
+    private readonly nbconvertBaseTemplateFormat =
         // tslint:disable-next-line:no-multiline-string
-        `{%- extends 'null.tpl' -%}
+        `{%- extends '{0}' -%}
 {% block codecell %}
-{0}
+{1}
 {{ super() }}
 {% endblock codecell %}
 {% block in_prompt %}{% endblock in_prompt %}
 {% block input %}{{ cell.source | ipython2python }}{% endblock input %}
-{% block markdowncell scoped %}{0} [markdown]
+{% block markdowncell scoped %}{1} [markdown]
 {{ cell.source | comment_lines }}
 {% endblock markdowncell %}`;
-
-    private templatePromise: Promise<string | undefined>;
+    private readonly nbconvert5Null = 'null.tpl';
+    private readonly nbconvert6Null = 'base/null.j2';
+    private template5Promise?: Promise<string | undefined>;
+    private template6Promise?: Promise<string | undefined>;
 
     constructor(
         @inject(IDataScienceFileSystem) private fs: IDataScienceFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IJupyterInterpreterDependencyManager)
-        private readonly dependencyManager: IJupyterInterpreterDependencyManager
-    ) {
-        this.templatePromise = this.createTemplateFile();
-    }
+        @inject(INbConvertInterpreterDependencyChecker)
+        private readonly nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker,
+        @inject(INbConvertExportToPythonService) private readonly exportToPythonService: INbConvertExportToPythonService
+    ) {}
 
-    public async importFromFile(sourceFile: Uri): Promise<string> {
-        const template = await this.templatePromise;
-
+    public async importFromFile(sourceFile: Uri, interpreter: PythonEnvironment): Promise<string> {
         // If the user has requested it, add a cd command to the imported file so that relative paths still work
         const settings = this.configuration.getSettings();
         let directoryChange: string | undefined;
@@ -64,14 +63,31 @@ export class JupyterImporter implements INotebookImporter {
             directoryChange = await this.calculateDirectoryChange(sourceFile);
         }
 
-        // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
-        if (!(await this.jupyterExecution.isImportSupported())) {
-            await this.dependencyManager.installMissingDependencies();
-        }
-
+        const nbConvertVersion = await this.nbConvertDependencyChecker.getNbConvertVersion(interpreter);
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
-        if (await this.jupyterExecution.isImportSupported()) {
-            let fileOutput: string = await this.jupyterExecution.importNotebook(sourceFile, template);
+        if (nbConvertVersion) {
+            // nbconvert 5 and 6 use a different base template file
+            // Create and select the correct one
+            let template: string | undefined;
+            if (nbConvertVersion.major >= 6) {
+                if (!this.template6Promise) {
+                    this.template6Promise = this.createTemplateFile(true);
+                }
+
+                template = await this.template6Promise;
+            } else {
+                if (!this.template5Promise) {
+                    this.template5Promise = this.createTemplateFile(false);
+                }
+
+                template = await this.template5Promise;
+            }
+
+            let fileOutput: string = await this.exportToPythonService.exportNotebookToPython(
+                sourceFile,
+                interpreter,
+                template
+            );
             if (fileOutput.includes('get_ipython()')) {
                 fileOutput = this.addIPythonImport(fileOutput);
             }
@@ -153,7 +169,7 @@ export class JupyterImporter implements INotebookImporter {
         }
     }
 
-    private async createTemplateFile(): Promise<string | undefined> {
+    private async createTemplateFile(nbconvert6: boolean): Promise<string | undefined> {
         // Create a temp file on disk
         const file = await this.fs.createTemporaryLocalFile('.tpl');
 
@@ -164,7 +180,10 @@ export class JupyterImporter implements INotebookImporter {
                 this.disposableRegistry.push(file);
                 await this.fs.appendLocalFile(
                     file.filePath,
-                    this.nbconvertTemplateFormat.format(this.defaultCellMarker)
+                    this.nbconvertBaseTemplateFormat.format(
+                        nbconvert6 ? this.nbconvert6Null : this.nbconvert5Null,
+                        this.defaultCellMarker
+                    )
                 );
 
                 // Now we should have a template that will convert

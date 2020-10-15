@@ -7,6 +7,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import type { JSONObject } from '@phosphor/coreutils';
 import { WriteStream } from 'fs-extra';
 import { Observable } from 'rxjs/Observable';
+import { SemVer } from 'semver';
 import {
     CancellationToken,
     CodeLens,
@@ -23,6 +24,7 @@ import {
     Uri
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import type { NotebookCell } from 'vscode-proposed';
 import type { Data as WebSocketData } from 'ws';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
@@ -201,6 +203,7 @@ export interface INotebook extends IAsyncDisposable {
     interruptKernel(timeoutInMs: number): Promise<InterruptResult>;
     setLaunchingFile(file: string): Promise<void>;
     getSysInfo(): Promise<ICell | undefined>;
+    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     getMatchingInterpreter(): PythonEnvironment | undefined;
     /**
@@ -281,14 +284,12 @@ export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     serverStarted: Event<INotebookServerOptions | undefined>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    isImportSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined>;
     spawnNotebook(file: string): Promise<void>;
-    importNotebook(file: Uri, template: string | undefined): Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
@@ -318,7 +319,6 @@ export interface IJupyterPasswordConnect {
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
-    onIoPubMessage: Event<KernelMessage.IIOPubMessage>;
     readonly status: ServerStatus;
     readonly workingDirectory: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
@@ -359,6 +359,7 @@ export interface IJupyterSession extends IAsyncDisposable {
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void;
     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
+    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
 }
 
 export type ISessionWithSocket = Session.ISession & {
@@ -432,7 +433,7 @@ export interface IJupyterKernelSpec {
 
 export const INotebookImporter = Symbol('INotebookImporter');
 export interface INotebookImporter extends Disposable {
-    importFromFile(contentsFile: Uri): Promise<string>;
+    importFromFile(contentsFile: Uri, interpreter: PythonEnvironment): Promise<string>;
 }
 
 export const INotebookExporter = Symbol('INotebookExporter');
@@ -566,6 +567,7 @@ export interface INotebookEditor extends Disposable {
     readonly executed: Event<INotebookEditor>;
     readonly modified: Event<INotebookEditor>;
     readonly saved: Event<INotebookEditor>;
+    readonly notebookExtensibility: INotebookExtensibility;
     /**
      * Is this notebook representing an untitled file which has never been saved yet.
      */
@@ -591,6 +593,15 @@ export interface INotebookEditor extends Disposable {
     collapseAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
+}
+
+export const INotebookExtensibility = Symbol('INotebookExtensibility');
+
+export interface INotebookExtensibility {
+    readonly onKernelPostExecute: Event<NotebookCell>;
+    readonly onKernelRestart: Event<void>;
+    fireKernelRestart(): void;
+    fireKernelPostExecute(cell: NotebookCell): void;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
@@ -826,10 +837,6 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
         enableDuringDebugger: boolean;
     };
 
-    webviewExperiments: {
-        removeKernelToolbarInInteractiveWindow: boolean;
-    };
-
     gatherIsInstalled: boolean;
 }
 
@@ -986,14 +993,6 @@ export interface IJupyterSubCommandExecutionService {
      */
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     /**
-     * Checks whether exporting of ipynb is supported.
-     *
-     * @param {CancellationToken} [cancelToken]
-     * @returns {Promise<boolean>}
-     * @memberof IJupyterSubCommandExecutionService
-     */
-    isExportSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    /**
      * Error message indicating why jupyter notebook isn't supported.
      *
      * @returns {Promise<string>}
@@ -1033,16 +1032,6 @@ export interface IJupyterSubCommandExecutionService {
      */
     getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined>;
     /**
-     * Exports a given notebook into a python file.
-     *
-     * @param {string} file
-     * @param {string} [template]
-     * @param {CancellationToken} [token]
-     * @returns {Promise<string>}
-     * @memberof IJupyterSubCommandExecutionService
-     */
-    exportNotebookToPython(file: Uri, template?: string, token?: CancellationToken): Promise<string>;
-    /**
      * Opens an ipynb file in a new instance of a jupyter notebook server.
      *
      * @param {string} notebookFile
@@ -1072,6 +1061,22 @@ export interface IJupyterInterpreterDependencyManager {
     installMissingDependencies(err?: JupyterInstallError): Promise<void>;
 }
 
+export const INbConvertInterpreterDependencyChecker = Symbol('INbConvertInterpreterDependencyChecker');
+export interface INbConvertInterpreterDependencyChecker {
+    isNbConvertInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
+    getNbConvertVersion(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<SemVer | undefined>;
+}
+
+export const INbConvertExportToPythonService = Symbol('INbConvertExportToPythonService');
+export interface INbConvertExportToPythonService {
+    exportNotebookToPython(
+        file: Uri,
+        interpreter: PythonEnvironment,
+        template?: string,
+        token?: CancellationToken
+    ): Promise<string>;
+}
+
 export interface INotebookModel {
     readonly indentAmount: string;
     readonly onDidDispose: Event<void>;
@@ -1079,13 +1084,17 @@ export interface INotebookModel {
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
     readonly changed: Event<NotebookModelChange>;
-    readonly cells: readonly Readonly<ICell>[];
     readonly onDidEdit: Event<NotebookModelChange>;
     readonly isDisposed: boolean;
     readonly metadata: INotebookMetadataLive | undefined;
     readonly isTrusted: boolean;
+    readonly cellCount: number;
+    /**
+     * @deprecated
+     * Use only with old notebooks, when using with new Notebooks, use VSC API instead.
+     */
+    getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
     getContent(): string;
-    update(change: NotebookModelChange): void;
     /**
      * Dispose of the Notebook model.
      *
@@ -1099,6 +1108,14 @@ export interface INotebookModel {
     trust(): void;
 }
 
+export interface IModelLoadOptions {
+    isNative?: boolean;
+    file: Uri;
+    possibleContents?: string;
+    backupId?: string;
+    skipLoadingDirtyContents?: boolean;
+}
+
 export const INotebookStorage = Symbol('INotebookStorage');
 
 export interface INotebookStorage {
@@ -1107,19 +1124,7 @@ export interface INotebookStorage {
     saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
     backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string): Promise<void>;
     get(file: Uri): INotebookModel | undefined;
-    getOrCreateModel(
-        file: Uri,
-        contents?: string,
-        backupId?: string,
-        forVSCodeNotebook?: boolean
-    ): Promise<INotebookModel>;
-    getOrCreateModel(
-        file: Uri,
-        contents?: string,
-        // tslint:disable-next-line: unified-signatures
-        skipDirtyContents?: boolean,
-        forVSCodeNotebook?: boolean
-    ): Promise<INotebookModel>;
+    getOrCreateModel(options: IModelLoadOptions): Promise<INotebookModel>;
     revert(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     deleteBackup(model: INotebookModel, backupId?: string): Promise<void>;
 }

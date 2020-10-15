@@ -12,7 +12,7 @@ import {
     ICustomEditorService,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { JUPYTER_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
@@ -22,7 +22,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager,
     IMemento,
     WORKSPACE_MEMENTO
@@ -35,6 +34,7 @@ import { IDataViewerFactory } from '../data-viewing/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { NativeEditorProvider } from '../notebookStorage/nativeEditorProvider';
+import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import {
@@ -48,6 +48,7 @@ import {
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
+    INotebookExtensibility,
     INotebookImporter,
     INotebookModel,
     INotebookProvider,
@@ -193,13 +194,13 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         }
     }
 
-    protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): NativeEditor {
+    protected createNotebookEditor(model: NativeEditorNotebookModel, panel?: WebviewPanel): NativeEditor {
         const editor = new NativeEditorOldWebView(
             this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
             this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<IDocumentManager>(IDocumentManager),
-            this.serviceContainer.get<IWebPanelProvider>(IWebPanelProvider),
+            this.serviceContainer.get<IWebviewPanelProvider>(IWebviewPanelProvider),
             this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
             this.serviceContainer.get<ICodeCssGenerator>(ICodeCssGenerator),
             this.serviceContainer.get<IThemeFinder>(IThemeFinder),
@@ -225,10 +226,10 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
             this.serviceContainer.get<INotebookStorageProvider>(INotebookStorageProvider),
             this.serviceContainer.get<ITrustService>(ITrustService),
-            this.serviceContainer.get<IExperimentService>(IExperimentService),
             model,
             panel,
-            this.serviceContainer.get<KernelSelector>(KernelSelector)
+            this.serviceContainer.get<KernelSelector>(KernelSelector),
+            this.serviceContainer.get<INotebookExtensibility>(INotebookExtensibility)
         );
         this.activeEditors.set(model.file.fsPath, editor);
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
@@ -299,7 +300,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         this.activeEditors.set(e.file.fsPath, e);
 
         // Remove backup storage
-        this.loadModel(Uri.file(oldPath))
+        this.loadModel({ file: Uri.file(oldPath) })
             .then((m) => this.storage.deleteBackup(m))
             .ignoreErrors();
     }
@@ -347,7 +348,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
      * I.e. document is already opened in a VSC Notebook.
      */
     private async isDocumentOpenedInVSCodeNotebook(document: TextDocument): Promise<boolean> {
-        const model = await this.loadModel(document.uri);
+        const model = await this.loadModel({ file: document.uri });
         // This is temporary code.
         return model instanceof VSCodeNotebookModel;
     }
@@ -378,7 +379,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             (editorUri) =>
                 editorUri.document &&
                 editorUri.document.uri.scheme === 'git' &&
-                this.fs.arePathsSame(editorUri.document.uri, editor.document.uri)
+                editorUri.document.uri.fsPath === editor.document.uri.fsPath
         );
 
         if (!gitSchemeEditor) {

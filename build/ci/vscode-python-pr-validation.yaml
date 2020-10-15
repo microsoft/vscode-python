@@ -2,21 +2,19 @@
 
 name: '$(Year:yyyy).$(Month).0.$(BuildID)-pr'
 
-# Notes: Only trigger a PR build for master and release, and skip build/rebuild
+# Notes: Only trigger a PR build for main and release, and skip build/rebuild
 #        on changes in the news and .vscode folders.
 pr:
   autoCancel: true
   branches:
     include:
-      - 'master'
       - 'main'
       - 'release*'
       - 'ds*'
-      - 'logging-changes-and-drop-old-debugger'
   paths:
     exclude: ['/news/1 Enhancements', '/news/2 Fixes', '/news/3 Code Health', '/.vscode']
 
-# Not the CI build for merges to master and release.
+# Not the CI build for merges to main and release.
 trigger: none
 
 # Variables that are available for the entire pipeline.
@@ -47,16 +45,19 @@ stages:
               TestsToRun: 'pythonUnitTests, pythonInternalTools, pythonIPythonTests'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
-            'Functional':
+            'Functional Non DataScience':
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
-              SplitFunctionalTests: false
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'DataScience':
+            'Native Notebook':
               TestsToRun: 'testDataScience'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'DataScience in VSCode':
+              TestsToRun: 'testDataScienceInVSCode'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
             'Smoke':
@@ -64,7 +65,7 @@ stages:
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-20.04'
         steps:
           - template: templates/test_phases.yml
 
@@ -77,13 +78,13 @@ stages:
               # Note: "pythonInternalTools" tests are 3.7+.
               TestsToRun: 'pythonUnitTests'
               NeedsPythonTestReqs: true
-            'Functional':
+            'Functional Non DS':
               PythonVersion: '2.7'
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-20.04'
         steps:
           - template: templates/test_phases.yml
 
@@ -112,8 +113,12 @@ stages:
         timeoutInMinutes: 90
         strategy:
           matrix:
+            'Unit':
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
             # This gives us our best functional coverage for the OS.
-            'Functional':
+            'Functional Non DS':
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true

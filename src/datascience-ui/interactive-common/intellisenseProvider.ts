@@ -119,7 +119,7 @@ export class IntellisenseProvider
             // Our code strips out _documentPosition and possibly other items that are too large to send
             // so instead of returning the new resolve completion item, just return the old item with documentation added in
             // which is what we are resolving the item to get
-            return Promise.resolve({ ...item, documentation: newItem.documentation });
+            return Promise.resolve({ ...item, documentation: newItem?.documentation });
         } else {
             return Promise.resolve(item);
         }

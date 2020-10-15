@@ -204,6 +204,9 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
     public asUri(_uri: code.Uri): string {
         throw new Error('Method not implemented.');
     }
+    public asCallHierarchyItem(_value: code.CallHierarchyItem): proto.CallHierarchyItem {
+        throw new Error('Method not implemented.');
+    }
     private isTextDocumentChangeEvent(value: any): value is code.TextDocumentChangeEvent {
         const candidate = <code.TextDocumentChangeEvent>value;
         return !!candidate.document && !!candidate.contentChanges;

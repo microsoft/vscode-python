@@ -8,7 +8,7 @@ import { IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
-
+import { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { PYTHON_LANGUAGE } from '../../../common/constants';
@@ -24,8 +24,6 @@ import {
 } from './types';
 
 // Helper functions for dealing with kernels and kernelspecs
-
-export const defaultKernelSpecName = 'python_defaultSpec_';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 const connectionFilePlaceholder = '{connection_file}';
@@ -64,7 +62,12 @@ export function getDisplayNameOrNameOfKernelConnection(
         kernelConnection.kind === 'connectToLiveKernel'
             ? kernelConnection.kernelModel.name
             : kernelConnection.kernelSpec?.name;
-    return displayName || name || defaultValue;
+
+    const interpeterName =
+        kernelConnection.kind === 'startUsingPythonInterpreter' ? kernelConnection.interpreter.displayName : undefined;
+
+    const defaultKernelName = kernelConnection.kind === 'startUsingDefaultKernel' ? 'Python 3' : undefined;
+    return displayName || name || interpeterName || defaultKernelName || defaultValue;
 }
 
 export function getNameOfKernelConnection(
@@ -111,6 +114,9 @@ export function isPythonKernelConnection(kernelConnection?: KernelConnectionMeta
     if (!kernelConnection) {
         return false;
     }
+    if (kernelConnection.kind === 'startUsingPythonInterpreter') {
+        return true;
+    }
     const model = kernelConnectionMetadataHasKernelModel(kernelConnection) ? kernelConnection.kernelModel : undefined;
     const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
         ? kernelConnection.kernelSpec
@@ -127,14 +133,28 @@ export function getKernelConnectionLanguage(kernelConnection?: KernelConnectionM
         : undefined;
     return model?.language || kernelSpec?.language;
 }
+export function getLanguageInNotebookMetadata(metadata?: nbformat.INotebookMetadata): string | undefined {
+    if (!metadata) {
+        return;
+    }
+    // If kernel spec is defined & we have a language in that, then use that information.
+    // tslint:disable-next-line: no-any
+    const kernelSpec: IJupyterKernelSpec | undefined = metadata.kernelspec as any;
+    // When a kernel spec is stored in ipynb, the `language` of the kernel spec is also saved.
+    // Unfortunately there's no strong typing for this.
+    if (kernelSpec?.language) {
+        return kernelSpec.language;
+    }
+    return metadata.language_info?.name;
+}
 // Create a default kernelspec with the given display name
-export function createDefaultKernelSpec(displayName?: string): IJupyterKernelSpec {
+export function createDefaultKernelSpec(interpreter?: PythonEnvironment): IJupyterKernelSpec {
     // This creates a default kernel spec. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
     const defaultSpec: Kernel.ISpecModel = {
-        name: defaultKernelSpecName + Date.now().toString(),
+        name: interpreter?.displayName || 'Python 3',
         language: 'python',
-        display_name: displayName || 'Python 3',
+        display_name: interpreter?.displayName || 'Python 3',
         metadata: {},
         argv: ['python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
         env: {},

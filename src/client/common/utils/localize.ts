@@ -60,6 +60,10 @@ export namespace Diagnostics {
         'Your settings needs to be updated to change the setting "python.unitTest." to "python.testing.", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?'
     );
     export const updateSettings = localize('diagnostics.updateSettings', 'Yes, update settings');
+    export const checkIsort5UpgradeGuide = localize(
+        'diagnostics.checkIsort5UpgradeGuide',
+        'We found outdated configuration for sorting imports in this workspace. Check the [isort upgrade guide](https://aka.ms/AA9j5x4) to update your settings.'
+    );
 }
 
 export namespace Common {
@@ -511,7 +515,7 @@ export namespace DataScience {
     );
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter server');
-    export const connectingIPyKernel = localize('DataScience.connectingToIPyKernel', 'Connecting to IPython kernel');
+    export const connectingIPyKernel = localize('DataScience.connectingToIPyKernel', 'Connecting to Jupyter kernel');
     export const connectedToIPyKernel = localize('DataScience.connectedToIPyKernel', 'Connected.');
     export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
     export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
@@ -546,7 +550,7 @@ export namespace DataScience {
         "Don't Ask Again"
     );
     export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel');
-    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting IPython Kernel');
+    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Jupyter Kernel');
     export const restartingKernelFailed = localize(
         'DataScience.restartingKernelFailed',
         'Kernel restart failed. Jupyter server is hung. Please reload VS code.'
@@ -565,7 +569,7 @@ export namespace DataScience {
     export const collapseSingle = localize('DataScience.collapseSingle', 'Collapse');
     export const expandSingle = localize('DataScience.expandSingle', 'Expand');
     export const exportKey = localize('DataScience.export', 'Export as Jupyter notebook');
-    export const restartServer = localize('DataScience.restartServer', 'Restart IPython Kernel');
+    export const restartServer = localize('DataScience.restartServer', 'Restart Jupyter Kernel');
     export const undo = localize('DataScience.undo', 'Undo');
     export const redo = localize('DataScience.redo', 'Redo');
     export const save = localize('DataScience.save', 'Save file');
@@ -658,15 +662,15 @@ export namespace DataScience {
     export const notebookVersionFormat = localize('DataScience.notebookVersionFormat', 'Jupyter Notebook Version: {0}');
     export const jupyterKernelSpecNotFound = localize(
         'DataScience.jupyterKernelSpecNotFound',
-        'Cannot create a IPython kernel spec and none are available for use'
+        'Cannot create a Jupyter kernel spec and none are available for use'
     );
     export const jupyterKernelSpecModuleNotFound = localize(
         'DataScience.jupyterKernelSpecModuleNotFound',
         "'Kernelspec' module not installed in the selected interpreter ({0}).\n Please re-install or update 'jupyter'."
     );
-    export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt IPython Kernel');
+    export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt Jupyter Kernel');
     export const clearAllOutput = localize('DataScience.clearAllOutput', 'Clear All Output');
-    export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting IPython Kernel');
+    export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting Jupyter Kernel');
     export const exportCancel = localize('DataScience.exportCancel', 'Cancel');
     export const exportPythonQuickPickLabel = localize('DataScience.exportPythonQuickPickLabel', 'Python Script');
     export const exportHTMLQuickPickLabel = localize('DataScience.exportHTMLQuickPickLabel', 'HTML');
@@ -886,9 +890,13 @@ export namespace DataScience {
     );
     export const openExportFileYes = localize('DataScience.openExportFileYes', 'Yes');
     export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
+    export const exportFailedGeneralMessage = localize(
+        'DataScience.exportFailedGeneralMessage',
+        `Please check the 'Python' [output](command:python.viewOutput) panel for further details.`
+    );
     export const exportToPDFDependencyMessage = localize(
         'DataScience.exportToPDFDependencyMessage',
-        'If you have not installed xelatex (TeX) you will need to do so before you can export to PDF, for further instructions please look [here](https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex). \r\nTo avoid installing xelatex (TeX) you might want to try exporting to HTML and using your browsers "Print to PDF" feature.'
+        'If you have not installed xelatex (TeX) you will need to do so before you can export to PDF, for further instructions please look https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex. \r\nTo avoid installing xelatex (TeX) you might want to try exporting to HTML and using your browsers "Print to PDF" feature.'
     );
     export const failedExportMessage = localize('DataScience.failedExportMessage', 'Export failed.');
     export const runCell = localize('DataScience.runCell', 'Run cell');
@@ -927,9 +935,17 @@ export namespace DataScience {
         'DataScience.gatheredScriptDescription',
         '# This file was generated by the Gather Extension.\n# It requires version 2020.7.94776 (or newer) of the Python Extension.\n#\n#     The intent is that it contains only the code required to produce\n#     the same results as the cell originally selected for gathering.\n#     Please note that the Python analysis is quite conservative, so if\n#     it is unsure whether a line of code is necessary for execution, it\n#     will err on the side of including it.\n#\n# Please let us know if you are satisfied with what was gathered here:\n# https://aka.ms/gatherfeedback\n\n'
     );
+    export const gatheredScriptDescriptionWithoutSurvey = localize(
+        'DataScience.gatheredScriptDescriptionWithoutSurvey',
+        '# This file was generated by the Gather Extension.\n# It requires version 2020.7.94776 (or newer) of the Python Extension.\n#\n#     The intent is that it contains only the code required to produce\n#     the same results as the cell originally selected for gathering.\n#     Please note that the Python analysis is quite conservative, so if\n#     it is unsure whether a line of code is necessary for execution, it\n#     will err on the side of including it.\n'
+    );
     export const gatheredNotebookDescriptionInMarkdown = localize(
         'DataScience.gatheredNotebookDescriptionInMarkdown',
         '# Gathered Notebook\nGathered from ```{0}```\n\n|   |   |\n|---|---|\n|&nbsp;&nbsp;&nbsp|This notebook was generated by the Gather Extension. It requires version 2020.7.94776 (or newer) of the Python Extension, please update [here](https://command:python.datascience.latestExtension). The intent is that it contains only the code and cells required to produce the same results as the cell originally selected for gathering. Please note that the Python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.|\n\n**Are you satisfied with the code that was gathered?**\n\n[Yes](https://command:python.datascience.gatherquality?yes) [No](https://command:python.datascience.gatherquality?no)'
+    );
+    export const gatheredNotebookDescriptionInMarkdownWithoutSurvey = localize(
+        'DataScience.gatheredNotebookDescriptionInMarkdown',
+        '# Gathered Notebook\nGathered from ```{0}```\n\n|   |   |\n|---|---|\n|&nbsp;&nbsp;&nbsp|This notebook was generated by the Gather Extension. It requires version 2020.7.94776 (or newer) of the Python Extension, please update [here](https://command:python.datascience.latestExtension). The intent is that it contains only the code and cells required to produce the same results as the cell originally selected for gathering. Please note that the Python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.|\n\n'
     );
     export const savePngTitle = localize('DataScience.savePngTitle', 'Save Image');
     export const fallbackToUseActiveInterpreterAsKernel = localize(
@@ -1108,6 +1124,10 @@ export namespace DataScience {
     );
     export const connected = localize('DataScience.connected', 'Connected');
     export const disconnected = localize('DataScience.disconnected', 'Disconnected');
+    export const ipykernelNotInstalled = localize(
+        'DataScience.ipykernelNotInstalled',
+        'IPyKernel not installed into interpreter {0}'
+    );
 }
 
 export namespace StartPage {

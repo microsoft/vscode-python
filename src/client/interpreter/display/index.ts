@@ -21,8 +21,8 @@ import {
  */
 @injectable()
 export class AlwaysDisplayStatusBar implements IInterpreterStatusbarVisibilityFilter {
-    public get visible(): boolean {
-        return true;
+    public get hidden(): boolean {
+        return false;
     }
 }
 // tslint:disable-next-line:completed-docs
@@ -113,7 +113,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         if (!this.statusBarCanBeDisplayed) {
             return;
         }
-        if (this.visibilityFilters.length === 0 || this.visibilityFilters.every((filter) => filter.visible)) {
+        if (this.visibilityFilters.length === 0 || this.visibilityFilters.every((filter) => !filter.hidden)) {
             this.statusBar.show();
         } else {
             this.statusBar.hide();

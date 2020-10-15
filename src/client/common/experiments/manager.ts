@@ -39,7 +39,7 @@ export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KE
  * as about 40% of the users never come back for the second session.
  */
 const configFile = path.join(EXTENSION_ROOT_DIR, 'experiments.json');
-export const configUri = 'https://raw.githubusercontent.com/microsoft/vscode-python/master/experiments.json';
+export const configUri = 'https://raw.githubusercontent.com/microsoft/vscode-python/main/experiments.json';
 export const EXPERIMENTS_EFFORT_TIMEOUT_MS = 2000;
 // The old experiments which are working fine using the `SHA512` algorithm
 export const oldExperimentSalts = ['ShowExtensionSurveyPrompt', 'ShowPlayIcon', 'AlwaysDisplayTestExplorer', 'LS'];
@@ -163,10 +163,10 @@ export class ExperimentsManager implements IExperimentsManager {
                 ) {
                     continue;
                 }
-                // User cannot belong to CustomEditor Experiment if they are not using Insiders.
+                // User cannot belong to CustomEditor Experiment if they are using Insiders.
                 if (
                     experiment.name === NotebookEditorSupport.customEditorExperiment &&
-                    this.appEnvironment.channel === 'stable'
+                    this.appEnvironment.channel === 'insiders'
                 ) {
                     continue;
                 }

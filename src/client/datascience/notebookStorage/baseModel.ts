@@ -2,6 +2,10 @@
 // Licensed under the MIT License.
 
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
+import { KernelMessage } from '@jupyterlab/services';
+import * as fastDeepEqual from 'fast-deep-equal';
+import { sha256 } from 'hash.js';
+import { cloneDeep } from 'lodash';
 import { Event, EventEmitter, Memento, Uri } from 'vscode';
 import { ICryptoUtils } from '../../common/types';
 import { isUntitledFile } from '../../common/utils/misc';
@@ -9,10 +13,11 @@ import { pruneCell } from '../common';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
     getInterpreterFromKernelConnectionMetadata,
+    isPythonKernelConnection,
     kernelConnectionMetadataHasKernelModel
 } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { ICell, INotebookMetadataLive, INotebookModel } from '../types';
+import { CellState, INotebookMetadataLive, INotebookModel } from '../types';
 
 export const ActiveKernelIdList = `Active_Kernel_Id_List`;
 // This is the number of kernel ids that will be remembered between opening and closing VS code
@@ -22,36 +27,80 @@ type KernelIdListEntry = {
     kernelId: string | undefined;
 };
 
+export function getInterpreterInfoStoredInMetadata(
+    metadata?: nbformat.INotebookMetadata
+): { displayName: string; hash: string } | undefined {
+    if (!metadata || !metadata.kernelspec || !metadata.kernelspec.name) {
+        return;
+    }
+    // See `updateNotebookMetadata` to determine how & where exactly interpreter hash is stored.
+    // tslint:disable-next-line: no-any
+    const kernelSpecMetadata: undefined | any = metadata.kernelspec.metadata as any;
+    const interpreterHash = kernelSpecMetadata?.interpreter?.hash;
+    return interpreterHash ? { displayName: metadata.kernelspec.name, hash: interpreterHash } : undefined;
+}
+
 // tslint:disable-next-line: cyclomatic-complexity
 export function updateNotebookMetadata(
-    metadata: nbformat.INotebookMetadata | undefined,
-    kernelConnection?: KernelConnectionMetadata
+    metadata?: nbformat.INotebookMetadata,
+    kernelConnection?: KernelConnectionMetadata,
+    kernelInfo?: KernelMessage.IInfoReplyMsg['content']
 ) {
     let changed = false;
     let kernelId: string | undefined;
-    // Get our kernel_info and language_info from the current notebook
-    const interpreter = getInterpreterFromKernelConnectionMetadata(kernelConnection);
-    if (
-        interpreter &&
-        interpreter.version &&
-        metadata &&
-        metadata.language_info &&
-        metadata.language_info.version !== interpreter.version.raw
-    ) {
-        metadata.language_info.version = interpreter.version.raw;
-        changed = true;
-    } else if (!interpreter && metadata?.language_info) {
-        // It's possible, such as with raw kernel and a default kernelspec to not have interpreter info
-        // for this case clear out old invalid language_info entries as they are related to the previous execution
-        metadata.language_info = undefined;
-        changed = true;
+    if (!metadata) {
+        return { changed, kernelId };
+    }
+
+    if (kernelInfo && kernelInfo.status === 'ok') {
+        if (!fastDeepEqual(metadata.language_info, kernelInfo.language_info)) {
+            metadata.language_info = cloneDeep(kernelInfo.language_info);
+            changed = true;
+        }
+    } else {
+        // Get our kernel_info and language_info from the current notebook
+        const isPythonConnection = isPythonKernelConnection(kernelConnection);
+        const interpreter = isPythonConnection
+            ? getInterpreterFromKernelConnectionMetadata(kernelConnection)
+            : undefined;
+        if (
+            interpreter &&
+            interpreter.version &&
+            metadata &&
+            metadata.language_info &&
+            metadata.language_info.version !== interpreter.version.raw
+        ) {
+            metadata.language_info.version = interpreter.version.raw;
+            changed = true;
+        } else if (!interpreter && metadata?.language_info && isPythonConnection) {
+            // It's possible, such as with raw kernel and a default kernelspec to not have interpreter info
+            // for this case clear out old invalid language_info entries as they are related to the previous execution
+            // However we should clear previous language info only if language is python, else just leave it as is.
+            metadata.language_info = undefined;
+            changed = true;
+        }
     }
 
     const kernelSpecOrModel =
         kernelConnection && kernelConnectionMetadataHasKernelModel(kernelConnection)
             ? kernelConnection.kernelModel
             : kernelConnection?.kernelSpec;
-    if (kernelSpecOrModel && metadata && !metadata.kernelspec) {
+    if (kernelConnection?.kind === 'startUsingPythonInterpreter') {
+        // Store interpreter name, we expect the kernel finder will find the corresponding interpreter based on this name.
+        const name = kernelConnection.interpreter.displayName || '';
+        if (metadata.kernelspec?.name !== name || metadata.kernelspec?.display_name !== name) {
+            changed = true;
+            metadata.kernelspec = {
+                name,
+                display_name: name,
+                metadata: {
+                    interpreter: {
+                        hash: sha256().update(kernelConnection.interpreter.path).digest('hex')
+                    }
+                }
+            };
+        }
+    } else if (kernelSpecOrModel && !metadata.kernelspec) {
         // Add a new spec in this case
         metadata.kernelspec = {
             name: kernelSpecOrModel.name || kernelSpecOrModel.display_name || '',
@@ -59,7 +108,7 @@ export function updateNotebookMetadata(
         };
         kernelId = kernelSpecOrModel.id;
         changed = true;
-    } else if (kernelSpecOrModel && metadata && metadata.kernelspec) {
+    } else if (kernelSpecOrModel && metadata.kernelspec) {
         // Spec exists, just update name and display_name
         const name = kernelSpecOrModel.name || kernelSpecOrModel.display_name || '';
         const displayName = kernelSpecOrModel.display_name || kernelSpecOrModel.name || '';
@@ -72,6 +121,13 @@ export function updateNotebookMetadata(
             metadata.kernelspec.name = name;
             metadata.kernelspec.display_name = displayName;
             kernelId = kernelSpecOrModel.id;
+        }
+        try {
+            // This is set only for when we select an interpreter.
+            // tslint:disable-next-line: no-any
+            delete (metadata.kernelspec as any).metadata;
+        } catch {
+            // Noop.
         }
     }
     return { changed, kernelId };
@@ -103,6 +159,28 @@ export function getDefaultNotebookContent(pythonNumber: number = 3): Partial<nbf
         nbformat_minor: 2
     };
 }
+/**
+ * Generates the metadata stored in ipynb for new notebooks.
+ * If a preferred language is provided we use that.
+ * We do not default to Python, as selecting a kernel will update the language_info in the ipynb file (after a kernel is successfully started).
+ */
+export function getDefaultNotebookContentForNativeNotebooks(language?: string): Partial<nbformat.INotebookContent> {
+    const metadata: undefined | nbformat.INotebookMetadata = language
+        ? {
+              language_info: {
+                  name: language,
+                  nbconvert_exporter: 'python'
+              },
+              orig_nbformat: 2
+          }
+        : undefined;
+
+    return {
+        metadata,
+        nbformat: 4,
+        nbformat_minor: 2
+    };
+}
 export abstract class BaseNotebookModel implements INotebookModel {
     public get onDidDispose() {
         return this._disposed.event;
@@ -123,9 +201,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public get isUntitled(): boolean {
         return isUntitledFile(this.file);
     }
-    public get cells(): ICell[] {
-        return this._cells;
-    }
     public get onDidEdit(): Event<NotebookModelChange> {
         return this._editEventEmitter.event;
     }
@@ -142,7 +217,9 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public get isTrusted() {
         return this._isTrusted;
     }
-
+    public get cellCount(): number {
+        return this.getCellCount();
+    }
     protected _disposed = new EventEmitter<void>();
     protected _isDisposed?: boolean;
     protected _changedEmitter = new EventEmitter<NotebookModelChange>();
@@ -151,30 +228,34 @@ export abstract class BaseNotebookModel implements INotebookModel {
     constructor(
         protected _isTrusted: boolean,
         protected _file: Uri,
-        protected _cells: ICell[],
         protected globalMemento: Memento,
         private crypto: ICryptoUtils,
         protected notebookJson: Partial<nbformat.INotebookContent> = {},
         public readonly indentAmount: string = ' ',
-        private readonly pythonNumber: number = 3
+        private readonly pythonNumber: number = 3,
+        initializeJsonIfRequired = true
     ) {
-        this.ensureNotebookJson();
+        // VSCode Notebook Model will execute this itself.
+        // THe problem is we need to override this behavior, however the overriding doesn't work in JS
+        // as some of the dependencies passed as ctor arguments are not available in the ctor.
+        // E.g. in the ctor of the base class, the private members (passed as ctor ares) initialized in child class are not available (unlike other languages).
+        if (initializeJsonIfRequired) {
+            this.ensureNotebookJson();
+        }
         this.kernelId = this.getStoredKernelId();
     }
     public dispose() {
         this._isDisposed = true;
         this._disposed.fire();
     }
-    public update(change: NotebookModelChange): void {
-        this.handleModelChange(change);
-    }
-
+    public abstract getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
     public getContent(): string {
         return this.generateNotebookContent();
     }
     public trust() {
         this._isTrusted = true;
     }
+    protected abstract getCellCount(): number;
     protected handleUndo(_change: NotebookModelChange): boolean {
         return false;
     }
@@ -196,35 +277,20 @@ export abstract class BaseNotebookModel implements INotebookModel {
 
         // Reuse our original json except for the cells.
         const json = { ...this.notebookJson };
-        json.cells = this.cells.map((c) => pruneCell(c.data));
+        json.cells = this.getJupyterCells().map(pruneCell);
         return json;
     }
+    protected abstract getJupyterCells(): nbformat.IBaseCell[];
+    protected getDefaultNotebookContent() {
+        return getDefaultNotebookContent(this.pythonNumber);
+    }
 
-    private handleModelChange(change: NotebookModelChange) {
-        const oldDirty = this.isDirty;
-        let changed = false;
-
-        switch (change.source) {
-            case 'redo':
-            case 'user':
-                changed = this.handleRedo(change);
-                break;
-            case 'undo':
-                changed = this.handleUndo(change);
-                break;
-            default:
-                break;
-        }
-
-        // Forward onto our listeners if necessary
-        if (changed || this.isDirty !== oldDirty) {
-            this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty, model: this });
-        }
-        // Slightly different for the event we send to VS code. Skip version and file changes. Only send user events.
-        if ((changed || this.isDirty !== oldDirty) && change.kind !== 'version' && change.source === 'user') {
-            this._editEventEmitter.fire(change);
+    protected ensureNotebookJson() {
+        if (!this.notebookJson || !this.notebookJson.metadata) {
+            this.notebookJson = this.getDefaultNotebookContent();
         }
     }
+
     // tslint:disable-next-line: cyclomatic-complexity
     private updateVersionInfo(kernelConnection: KernelConnectionMetadata | undefined): boolean {
         const { changed, kernelId } = updateNotebookMetadata(this.notebookJson.metadata, kernelConnection);
@@ -235,12 +301,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
         this.setStoredKernelId(kernelId);
 
         return changed;
-    }
-
-    private ensureNotebookJson() {
-        if (!this.notebookJson || !this.notebookJson.metadata) {
-            this.notebookJson = getDefaultNotebookContent(this.pythonNumber);
-        }
     }
 
     private generateNotebookContent(): string {

@@ -4,11 +4,11 @@
 from collections import namedtuple
 
 
-class TestPath(namedtuple("TestPath", "root relfile func sub")):
+class SingleTestPath(namedtuple("TestPath", "root relfile func sub")):
     """Where to find a single test."""
 
     def __new__(cls, root, relfile, func, sub=None):
-        self = super(TestPath, cls).__new__(
+        self = super(SingleTestPath, cls).__new__(
             cls,
             str(root) if root else None,
             str(relfile) if relfile else None,
@@ -62,14 +62,16 @@ class ParentInfo(namedtuple("ParentInfo", "id kind name root relpath parentid"))
             raise TypeError("missing relpath")
 
 
-class TestInfo(namedtuple("TestInfo", "id name path source markers parentid kind")):
+class SingleTestInfo(
+    namedtuple("TestInfo", "id name path source markers parentid kind")
+):
     """Info for a single test."""
 
     MARKERS = ("skip", "skip-if", "expected-failure")
     KINDS = ("function", "doctest")
 
     def __new__(cls, id, name, path, source, markers, parentid, kind="function"):
-        self = super(TestInfo, cls).__new__(
+        self = super(SingleTestInfo, cls).__new__(
             cls,
             str(id) if id else None,
             str(name) if name else None,

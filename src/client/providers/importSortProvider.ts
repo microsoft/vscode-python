@@ -7,13 +7,22 @@ import { Commands, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/co
 import { traceError } from '../common/logger';
 import * as internalScripts from '../common/process/internal/scripts';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
-import { IConfigurationService, IDisposableRegistry, IEditorUtils, IOutputChannel } from '../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IEditorUtils,
+    IOutputChannel,
+    IPersistentStateFactory
+} from '../common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../common/utils/async';
+import { Common, Diagnostics } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { ISortImportsEditingProvider } from './types';
+
+const doNotDisplayPromptStateKey = 'ISORT5_UPGRADE_WARNING_KEY';
 
 @injectable()
 export class SortImportsEditingProvider implements ISortImportsEditingProvider {
@@ -24,9 +33,11 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     private readonly processServiceFactory: IProcessServiceFactory;
     private readonly pythonExecutionFactory: IPythonExecutionFactory;
     private readonly shell: IApplicationShell;
+    private readonly persistentStateFactory: IPersistentStateFactory;
     private readonly documentManager: IDocumentManager;
     private readonly configurationService: IConfigurationService;
     private readonly editorUtils: IEditorUtils;
+    private readonly output: IOutputChannel;
 
     public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.shell = serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -35,6 +46,8 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         this.pythonExecutionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.editorUtils = serviceContainer.get<IEditorUtils>(IEditorUtils);
+        this.output = serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.persistentStateFactory = serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
 
     @captureTelemetry(EventName.FORMAT_SORT_IMPORTS)
@@ -122,6 +135,26 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         }
     }
 
+    public async _showWarningAndOptionallyShowOutput() {
+        const neverShowAgain = this.persistentStateFactory.createGlobalPersistentState(
+            doNotDisplayPromptStateKey,
+            false
+        );
+        if (neverShowAgain.value) {
+            return;
+        }
+        const selection = await this.shell.showWarningMessage(
+            Diagnostics.checkIsort5UpgradeGuide(),
+            Common.openOutputPanel(),
+            Common.doNotShowAgain()
+        );
+        if (selection === Common.openOutputPanel()) {
+            this.output.show(true);
+        } else if (selection === Common.doNotShowAgain()) {
+            await neverShowAgain.updateValue(true);
+        }
+    }
+
     private async getExecIsort(
         document: TextDocument,
         uri: Uri,
@@ -141,7 +174,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
 
         const spawnOptions = {
             token,
-            throwOnStdErr: true,
             cwd: path.dirname(uri.fsPath)
         };
 
@@ -169,11 +201,20 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     ): Promise<string> {
         // Configure our listening to the output from isort ...
         let outputBuffer = '';
+        let isAnyErrorRelatedToUpgradeGuide = false;
         const isortOutput = createDeferred<string>();
         observableResult.out.subscribe({
             next: (output) => {
                 if (output.source === 'stdout') {
                     outputBuffer += output.out;
+                } else {
+                    // All the W0500 warning codes point to isort5 upgrade guide: https://pycqa.github.io/isort/docs/warning_and_error_codes/W0500/
+                    // Do not throw error on these types of stdErrors
+                    isAnyErrorRelatedToUpgradeGuide = isAnyErrorRelatedToUpgradeGuide || output.out.includes('W050');
+                    traceError(output.out);
+                    if (!output.out.includes('W050')) {
+                        isortOutput.reject(output.out);
+                    }
                 }
             },
             complete: () => {
@@ -188,6 +229,9 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         // .. and finally wait for isort to do its thing
         await isortOutput.promise;
 
+        if (isAnyErrorRelatedToUpgradeGuide) {
+            this._showWarningAndOptionallyShowOutput().ignoreErrors();
+        }
         return outputBuffer;
     }
 }

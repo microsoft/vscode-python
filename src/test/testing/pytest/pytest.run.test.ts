@@ -24,6 +24,7 @@ import { IEnvironmentActivationService } from '../../../client/interpreter/activ
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { PythonEnvironments } from '../../../client/pythonEnvironments';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { registerForIOC } from '../../../client/pythonEnvironments/legacyIOC';
@@ -383,6 +384,7 @@ async function testDiagnosticRelatedInformation(
 
 suite('Unit Tests - pytest - run with mocked process output', () => {
     let ioc: UnitTestIocContainer;
+    let pythonEnvs: PythonEnvironments;
     const configTarget = IS_MULTI_ROOT_TEST
         ? vscode.ConfigurationTarget.WorkspaceFolder
         : vscode.ConfigurationTarget.Workspace;
@@ -460,7 +462,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         );
         ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
 
-        registerForIOC(ioc.serviceManager, ioc.serviceContainer);
+        registerForIOC(ioc.serviceManager, ioc.serviceContainer, instance(pythonEnvs));
         ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
     }
 
@@ -518,6 +520,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                 // tslint:disable-next-line: no-invalid-this
                 this.timeout(TEST_TIMEOUT * 2);
                 await initializeTest();
+                pythonEnvs = mock(PythonEnvironments);
                 initializeDI();
                 await injectTestDiscoveryOutput(scenario.discoveryOutput);
                 await injectTestRunOutput(scenario.runOutput);

@@ -72,10 +72,15 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
     }
 
     public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isNotebookSupported, cancelToken);
-    }
-    public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isImportSupported, cancelToken);
+        const service = await this.waitForService();
+
+        // Make a remote call on the proxy
+        if (service) {
+            const result = await service.request(LiveShareCommands.isNotebookSupported, [], cancelToken);
+            return result as boolean;
+        }
+
+        return false;
     }
     public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);
@@ -143,17 +148,5 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
 
     public async getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
         return this.serverCache.get(options);
-    }
-
-    private async checkSupported(command: string, cancelToken?: CancellationToken): Promise<boolean> {
-        const service = await this.waitForService();
-
-        // Make a remote call on the proxy
-        if (service) {
-            const result = await service.request(command, [], cancelToken);
-            return result as boolean;
-        }
-
-        return false;
     }
 }

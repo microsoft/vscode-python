@@ -23,7 +23,7 @@ const fileEncodingUsed = path.join(autoCompPath, 'five.py');
 const fileSuppress = path.join(autoCompPath, 'suppress.py');
 
 // tslint:disable-next-line:max-func-body-length
-suite('Autocomplete Base Tests', function () {
+suite('Language Server: Autocomplete Base Tests', function () {
     // Attempt to fix #1301
     // tslint:disable-next-line:no-invalid-this
     this.timeout(60000);

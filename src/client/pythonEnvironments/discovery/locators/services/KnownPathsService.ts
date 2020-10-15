@@ -83,7 +83,7 @@ export class KnownPathsService extends CacheableLocatorService {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         return fs
             .directoryExists(dir)
-            .then((exists) => (exists ? lookForInterpretersInDirectory(dir, fs) : Promise.resolve<string[]>([])));
+            .then((exists) => (exists ? lookForInterpretersInDirectory(dir) : Promise.resolve<string[]>([])));
     }
 }
 

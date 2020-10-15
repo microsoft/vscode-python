@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
-import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
+import * as uuid from 'uuid';
+import { CancellationToken, Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
 import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    IWebPanelProvider,
+    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
@@ -18,7 +19,6 @@ import { traceError } from '../../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExperimentsManager,
     InteractiveWindowMode,
     IPersistentStateFactory,
@@ -104,7 +104,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         applicationShell: IApplicationShell,
         documentManager: IDocumentManager,
         statusProvider: IStatusProvider,
-        provider: IWebPanelProvider,
+        provider: IWebviewPanelProvider,
         disposables: IDisposableRegistry,
         cssGenerator: ICodeCssGenerator,
         themeFinder: IThemeFinder,
@@ -125,7 +125,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         experimentsManager: IExperimentsManager,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
-        expService: IExperimentService,
         private exportUtil: ExportUtil,
         owner: Resource,
         mode: InteractiveWindowMode,
@@ -167,7 +166,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             experimentsManager,
             notebookProvider,
             useCustomEditorApi,
-            expService,
             selector
         );
 
@@ -200,7 +198,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    public async show(preserveFocus?: boolean): Promise<void> {
+    public async show(preserveFocus: boolean = true): Promise<void> {
         await this.loadPromise;
         return super.show(preserveFocus);
     }
@@ -423,6 +421,38 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
         this.dispose();
     }
+
+    protected async setFileInKernel(file: string, cancelToken: CancellationToken | undefined): Promise<void> {
+        // If in perFile mode, set only once
+        if (this.mode === 'perFile' && !this.fileInKernel && this.notebook && file !== Identifiers.EmptyFileName) {
+            this.fileInKernel = file;
+            await this.notebook.execute(
+                `__file__ = '${file.replace(/\\/g, '\\\\')}'`,
+                file,
+                0,
+                uuid(),
+                cancelToken,
+                true
+            );
+        } else if (
+            (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
+            this.mode !== 'perFile' &&
+            this.notebook &&
+            file !== Identifiers.EmptyFileName
+        ) {
+            // Otherwise we need to reset it every time
+            this.fileInKernel = file;
+            await this.notebook.execute(
+                `__file__ = '${file.replace(/\\/g, '\\\\')}'`,
+                file,
+                0,
+                uuid(),
+                cancelToken,
+                true
+            );
+        }
+    }
+
     protected ensureConnectionAndNotebook(): Promise<void> {
         // Keep track of users who have used interactive window in a worksapce folder.
         // To be used if/when changing workflows related to startup of jupyter.
@@ -504,7 +534,13 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 const lastSubmitter = this.submitters[this.submitters.length - 1];
                 defaultFileName = path.basename(lastSubmitter.fsPath, path.extname(lastSubmitter.fsPath));
             }
-            this.commandManager.executeCommand(Commands.Export, model, defaultFileName);
+
+            this.commandManager.executeCommand(
+                Commands.Export,
+                model,
+                defaultFileName,
+                this.notebook?.getMatchingInterpreter()
+            );
         }
     }
 

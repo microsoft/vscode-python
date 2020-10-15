@@ -14,7 +14,7 @@ import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'autocomp');
 const filePep484 = path.join(autoCompPath, 'pep484.py');
 
-suite('Autocomplete PEP 484', () => {
+suite('Language Server: Autocomplete PEP 484', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
     suiteSetup(async function () {

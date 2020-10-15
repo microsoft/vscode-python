@@ -27,15 +27,17 @@ export class InterpreterSelectionTip implements IExtensionSingleActivationServic
 
     constructor(
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
-        @inject(IPersistentStateFactory) private readonly factory: IPersistentStateFactory,
+        @inject(IPersistentStateFactory) factory: IPersistentStateFactory,
         @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IBrowserService) private browserService: IBrowserService
     ) {
-        this.storage = this.factory.createGlobalPersistentState('InterpreterSelectionTip', false);
+        this.storage = factory.createGlobalPersistentState('InterpreterSelectionTip', false);
         this.notificationType = NotificationType.NoPrompt;
     }
 
     public async activate(): Promise<void> {
+        // Only show the prompt if we have never shown it before. True here, means we have
+        // shown the prompt before.
         if (this.storage.value) {
             return;
         }
@@ -53,6 +55,12 @@ export class InterpreterSelectionTip implements IExtensionSingleActivationServic
         }
 
         this.showTip().ignoreErrors();
+
+        // We will disable this prompt for all users even if they are not
+        // in any experiment. The idea is that people should get either the
+        // tip or survey or nothing, on first load. If we are here then that
+        // means we are done with this prompt (even if it was not shown).
+        await this.storage.updateValue(true);
     }
     @swallowExceptions('Failed to display tip')
     private async showTip() {
@@ -71,7 +79,5 @@ export class InterpreterSelectionTip implements IExtensionSingleActivationServic
                 this.browserService.launch('https://aka.ms/mailingListSurvey');
             }
         }
-
-        await this.storage.updateValue(true);
     }
 }

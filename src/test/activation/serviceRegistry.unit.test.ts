@@ -9,7 +9,6 @@ import { DownloadBetaChannelRule, DownloadDailyChannelRule } from '../../client/
 import { LanguageServerDownloader } from '../../client/activation/common/downloader';
 import { LanguageServerDownloadChannel } from '../../client/activation/common/packageRepository';
 import { ExtensionSurveyPrompt } from '../../client/activation/extensionSurvey';
-import { JediExtensionActivator } from '../../client/activation/jedi';
 import { DotNetLanguageServerActivator } from '../../client/activation/languageServer/activator';
 import { DotNetLanguageServerAnalysisOptions } from '../../client/activation/languageServer/analysisOptions';
 import { DotNetLanguageClientFactory } from '../../client/activation/languageServer/languageClientFactory';
@@ -83,13 +82,6 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         ).once();
         verify(
             serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager)
-        ).once();
-        verify(
-            serviceManager.add<ILanguageServerActivator>(
-                ILanguageServerActivator,
-                JediExtensionActivator,
-                LanguageServerType.Jedi
-            )
         ).once();
         verify(
             serviceManager.add<ILanguageServerActivator>(

@@ -289,13 +289,13 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.makeActive(interpreter);
     }
 
-    public addError(code: string, message: string) {
+    public addError(code: string, message: string, traceback?: string[]) {
         // Turn the message into an nbformat.IError
         const result: nbformat.IError = {
             output_type: 'error',
             ename: message,
             evalue: message,
-            traceback: [message]
+            traceback: traceback ? traceback : [message]
         };
 
         this.addCell(code, result);

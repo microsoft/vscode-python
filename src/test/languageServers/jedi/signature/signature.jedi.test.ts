@@ -24,7 +24,7 @@ class SignatureHelpResult {
 }
 
 // tslint:disable-next-line:max-func-body-length
-suite('Signatures (Jedi)', () => {
+suite('Language Server: Signatures (Jedi)', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
     suiteSetup(async () => {

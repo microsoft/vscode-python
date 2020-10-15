@@ -4,25 +4,25 @@
 jobs:
   - job: Compile
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-20.04'
     steps:
       - template: ../steps/compile.yml
 
   - job: Build
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-20.04'
     steps:
       - template: ../steps/build.yml
 
   - job: Dependencies
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-20.04'
     steps:
       - template: ../steps/dependencies.yml
 
   - job: Hygiene
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-20.04'
     steps:
       - template: ../steps/initialization.yml
         parameters:

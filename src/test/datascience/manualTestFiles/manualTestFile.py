@@ -10,6 +10,9 @@ x = np.linspace(0, 20, 100)
 plt.plot(x, np.sin(x))
 plt.show()
 
+#%% Test exception
+raise Exception("<This is bracketed>")
+
 # %% Bokeh Plot
 from bokeh.io import output_notebook, show
 from bokeh.plotting import figure

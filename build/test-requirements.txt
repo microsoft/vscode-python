@@ -15,6 +15,7 @@ rope
 flask
 django
 isort
+
 # Python 2.7 support.
 pytest==4.6.9 ; python_version == '2.7'
 py==1.8.1 ; python_version == '2.7'  # via pytest 4

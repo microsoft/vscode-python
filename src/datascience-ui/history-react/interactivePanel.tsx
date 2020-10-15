@@ -136,7 +136,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.restartKernel}
-                            tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
+                            tooltip={getLocString('DataScience.restartServer', 'Restart Jupyter kernel')}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}
@@ -147,7 +147,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.interruptKernel}
-                            tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
+                            tooltip={getLocString('DataScience.interruptKernel', 'Interrupt Jupyter kernel')}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}
@@ -223,26 +223,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     }
 
     private renderKernelSelection() {
-        if (
-            this.props.settings &&
-            this.props.settings.webviewExperiments &&
-            this.props.settings.webviewExperiments.removeKernelToolbarInInteractiveWindow
-        ) {
-            if (this.props.settings.showKernelSelectionOnInteractiveWindow) {
-                return (
-                    <JupyterInfo
-                        baseTheme={this.props.baseTheme}
-                        font={this.props.font}
-                        kernel={this.props.kernel}
-                        selectServer={this.props.selectServer}
-                        selectKernel={this.props.selectKernel}
-                        shouldShowTrustMessage={false}
-                        settings={this.props.settings}
-                    />
-                );
-            } else if (this.props.kernel.localizedUri === getLocString('DataScience.localJupyterServer', 'local')) {
-                return;
-            }
+        if (this.props.kernel.serverName === getLocString('DataScience.localJupyterServer', 'local')) {
+            return;
         }
 
         return (
@@ -253,7 +235,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                 selectServer={this.props.selectServer}
                 selectKernel={this.props.selectKernel}
                 shouldShowTrustMessage={false}
-                settings={this.props.settings}
             />
         );
     }

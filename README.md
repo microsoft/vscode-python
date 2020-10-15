@@ -1,6 +1,6 @@
 # Python extension for Visual Studio Code
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the language: 2.7, >=3.6), including features such as IntelliSense, linting, debugging, code navigation, code formatting, Jupyter notebook support, refactoring, variable explorer, test explorer, snippets, and more!
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the language: >=3.6), including features such as IntelliSense, linting, debugging, code navigation, code formatting, Jupyter notebook support, refactoring, variable explorer, test explorer, snippets, and more!
 
 ## Quick start
 
@@ -14,21 +14,21 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 
 -   Select your Python interpreter by clicking on the status bar
 
-     <img src=https://raw.githubusercontent.com/microsoft/vscode-python/master/images/InterpreterSelectionZoom.gif width=280 height=100>
+     <img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/images/InterpreterSelectionZoom.gif width=280 height=100>
 
 -   Configure the debugger through the Debug Activity Bar
 
-      <img src=https://raw.githubusercontent.com/microsoft/vscode-python/master/images/ConfigureDebugger.gif width=734 height=413>
+      <img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/images/ConfigureDebugger.gif width=734 height=413>
 
 -   Configure tests by running the `Configure Tests` command
 
-      <img src=https://raw.githubusercontent.com/microsoft/vscode-python/master/images/ConfigureTests.gif width=734 height=413>
+      <img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/images/ConfigureTests.gif width=734 height=413>
 
 ## Jupyter Notebook quick start
 
 -   Open or create a Jupyter Notebook file (.ipynb) and start coding in our Notebook Editor!
 
-      <img src=https://raw.githubusercontent.com/microsoft/vscode-python/master/images/OpenOrCreateNotebook.gif width=1029 height=602>
+      <img src=https://raw.githubusercontent.com/microsoft/vscode-python/main/images/OpenOrCreateNotebook.gif width=1029 height=602>
 
 For more information you can:
 
@@ -77,11 +77,11 @@ The extension is available in multiple languages: `de`, `en`, `es`, `fa`, `fr`, 
 
 -   If you have a question about how to accomplish something with the extension, please [ask on Stack Overflow](https://stackoverflow.com/questions/tagged/visual-studio-code+python)
 -   If you come across a problem with the extension, please [file an issue](https://github.com/microsoft/vscode-python)
--   Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md) for more details
+-   Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-python/blob/main/CONTRIBUTING.md) for more details
 -   Any and all feedback is appreciated and welcome!
     -   If someone has already [filed an issue](https://github.com/Microsoft/vscode-python) that encompasses your feedback, please leave a 👍/👎 reaction on the issue
     -   Otherwise please file a new issue
--   If you're interested in the development of the extension, you can read about our [development process](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md#development-process)
+-   If you're interested in the development of the extension, you can read about our [development process](https://github.com/Microsoft/vscode-python/blob/main/CONTRIBUTING.md#development-process)
 
 ## Data and telemetry
 

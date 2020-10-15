@@ -5,29 +5,37 @@
 
 import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
+import { IDisposable } from 'monaco-editor';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { Memento, Uri } from 'vscode';
+import { EventEmitter, Memento, Uri } from 'vscode';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
-import type { NotebookContentProvider as VSCodeNotebookContentProvider } from 'vscode-proposed';
+import type { NotebookContentProvider as VSCodeNotebookContentProvider, NotebookDocument } from 'vscode-proposed';
+import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { ICryptoUtils } from '../../../client/common/types';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
 import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/notebook/notebookEditorCompatibilitySupport';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
-import { createNotebookModel } from './helper';
+import { createNotebookModel, disposeAllDisposables } from './helper';
 // tslint:disable: no-any
 suite('DataScience - NativeNotebook ContentProvider', () => {
     let storageProvider: INotebookStorageProvider;
     let contentProvider: VSCodeNotebookContentProvider;
     const fileUri = Uri.file('a.ipynb');
+    const disposables: IDisposable[] = [];
     setup(async () => {
         storageProvider = mock<INotebookStorageProvider>();
         const compatSupport = mock(NotebookEditorCompatibilitySupport);
         when(compatSupport.canOpenWithOurNotebookEditor(anything())).thenReturn(true);
         when(compatSupport.canOpenWithVSCodeNotebookEditor(anything())).thenReturn(true);
+        const vscNotebooks = mock<IVSCodeNotebook>();
+        when(vscNotebooks.onDidSaveNotebookDocument).thenReturn(new EventEmitter<NotebookDocument>().event);
+        const memento = mock<Memento>();
+        when(memento.get(anything())).thenReturn();
         contentProvider = new NotebookContentProvider(instance(storageProvider), instance(compatSupport));
     });
+    teardown(() => disposeAllDisposables(disposables));
     [true, false].forEach((isNotebookTrusted) => {
         suite(isNotebookTrusted ? 'Trusted Notebook' : 'Un-trusted notebook', () => {
             test('Return notebook with 2 cells', async () => {
@@ -55,14 +63,12 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         ]
                     }
                 );
-                when(storageProvider.getOrCreateModel(anything(), anything(), anything(), anything())).thenResolve(
-                    model
-                );
+                when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
 
                 const notebook = await contentProvider.openNotebook(fileUri, {});
 
                 assert.isOk(notebook);
-                assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
+                assert.deepEqual(notebook.languages, ['*']);
                 // ignore metadata we add.
                 const cellsWithoutCustomMetadata = notebook.cells.map((cell) => {
                     const cellToCompareWith = cloneDeep(cell);
@@ -85,8 +91,11 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             editable: isNotebookTrusted,
                             executionOrder: 10,
                             hasExecutionOrder: true,
+                            lastRunDuration: undefined,
+                            runStartTime: undefined,
                             runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
-                            runnable: isNotebookTrusted
+                            runnable: isNotebookTrusted,
+                            statusMessage: undefined
                         }
                     },
                     {
@@ -135,14 +144,12 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                         ]
                     }
                 );
-                when(storageProvider.getOrCreateModel(anything(), anything(), anything(), anything())).thenResolve(
-                    model
-                );
+                when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
 
                 const notebook = await contentProvider.openNotebook(fileUri, {});
 
                 assert.isOk(notebook);
-                assert.deepEqual(notebook.languages, ['csharp']);
+                assert.deepEqual(notebook.languages, ['*']);
 
                 assert.equal(notebook.metadata.cellEditable, isNotebookTrusted);
                 assert.equal(notebook.metadata.cellRunnable, isNotebookTrusted);
@@ -167,7 +174,10 @@ suite('DataScience - NativeNotebook ContentProvider', () => {
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
-                            runnable: isNotebookTrusted
+                            runnable: isNotebookTrusted,
+                            statusMessage: undefined,
+                            runStartTime: undefined,
+                            lastRunDuration: undefined
                         }
                     },
                     {

@@ -4,18 +4,28 @@ updates:
     directory: /
     schedule:
       interval: daily
+    labels:
+      - 'skip news'
 
+  # Not skipping the news for Python dependencies in case it's actually useful to communicate to users.
   - package-ecosystem: 'pip'
     directory: /
     schedule:
       interval: daily
+    ignore:
+      - dependency-name: pytest # Due to Python 2.7 and #13776.
+      - dependency-name: py # Due to Python 2.7.
 
   - package-ecosystem: 'pip'
     directory: /news
     schedule:
       interval: monthly
+    labels:
+      - 'skip news'
   # Activate when we feel ready to keep up with frequency.
   # - package-ecosystem: 'npm'
   #   directory: /
   #   schedule:
   #     interval: daily
+  #   default_labels:
+  #     - "skip news"
