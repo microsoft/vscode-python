@@ -8,7 +8,7 @@ import { coerce, SemVer } from 'semver';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName, PlatformErrors } from '../../telemetry/constants';
 import { getSearchPathEnvVarName } from '../utils/exec';
-import { getOSType, OSType } from '../utils/platform';
+import { Architecture, getArchitecture, getOSType, OSType } from '../utils/platform';
 import { parseVersion } from '../utils/version';
 import { IPlatformService } from './types';
 
@@ -72,8 +72,6 @@ export class PlatformService implements IPlatformService {
         return os.release();
     }
     public get is64bit(): boolean {
-        // tslint:disable-next-line:no-require-imports
-        const arch = require('arch');
-        return arch() === 'x64';
+        return getArchitecture() === Architecture.x64;
     }
 }

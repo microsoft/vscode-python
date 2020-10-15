@@ -30,9 +30,6 @@ export function isExecutableSync(filename: string): boolean | undefined {
     return true;
 }
 
-// Code under `src/client/common/platform` duplicates some of the
-// following functionality.  The code here is authoritative.
-
 /**
  * Get the OS executable lookup "path" from the appropriate env var.
  */
