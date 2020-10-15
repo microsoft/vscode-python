@@ -113,10 +113,12 @@ export class DebuggerVariables extends DebugLocationTracker
         );
 
         // Results should be the updated variable.
-        return {
-            ...targetVariable,
-            ...JSON.parse(results.result.slice(1, -1))
-        };
+        return results
+            ? {
+                  ...targetVariable,
+                  ...JSON.parse(results.result.slice(1, -1))
+              }
+            : targetVariable;
     }
 
     public async getDataFrameRows(
