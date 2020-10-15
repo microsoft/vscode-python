@@ -11,7 +11,8 @@ import { getOSType, OSType } from './platform';
  * as a key (e.g. in a mapping).
  */
 export function normalizeFilename(filename: string): string {
-    // This also duplicates what `path.normalize()` does.
+    // `path.resolve()` returns the absolute path.  Note that it also
+    // has the same behavior as `path.normalize()`.
     const resolved = path.resolve(filename);
     return getOSType() === OSType.Windows ? resolved.toLowerCase() : resolved;
 }
