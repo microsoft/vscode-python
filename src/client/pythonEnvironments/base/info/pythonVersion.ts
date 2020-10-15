@@ -4,7 +4,11 @@
 import * as path from 'path';
 import { PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION } from '.';
 import { traceError } from '../../../common/logger';
-import { EMPTY_VERSION, parseBasicVersionInfo } from '../../../common/utils/version';
+import {
+    EMPTY_VERSION,
+    isVersionInfoEmpty,
+    parseBasicVersionInfo,
+} from '../../../common/utils/version';
 
 export function getPythonVersionFromPath(exe:string): PythonVersion {
     let version = UNKNOWN_PYTHON_VERSION;
@@ -102,8 +106,9 @@ export function parseVersionInfo(versionInfoStr: string): PythonVersion {
  * Determine if the version is effectively a blank one.
  */
 export function isVersionEmpty(version: PythonVersion): boolean {
-    // This is good enough.
-    return version.major === -1;
+    // We really only care the `version.major` is -1.  However, using
+    // generic util is better in the long run.
+    return isVersionInfoEmpty(version);
 }
 
 /**
