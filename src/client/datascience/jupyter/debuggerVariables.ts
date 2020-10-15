@@ -193,6 +193,10 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
             this.topMostFrameId = 0;
             this.debuggingStarted = false;
             this.refreshEventEmitter.fire();
+            const key = this.debugService.activeDebugSession?.id;
+            if (key) {
+                this.importedIntoKernel.delete(key);
+            }
         }
     }
 
