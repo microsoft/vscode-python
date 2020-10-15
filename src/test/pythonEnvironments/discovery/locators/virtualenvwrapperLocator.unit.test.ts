@@ -111,7 +111,7 @@ suite('VirtualEnvWrapper Locator', () => {
         getOSTypeStub.returns(platformUtils.OSType.Windows);
 
         const expectedEnvs = [
-            createExpectedEnvInfo(path.join(testVirtualEnvsPath, 'env1', 'python.exe')),
+            createExpectedEnvInfo(path.join(testVirtualEnvsPath, 'env1', 'Scripts', 'python.exe')),
             createExpectedEnvInfo(path.join(testVirtualEnvsPath, 'env2', 'Scripts', 'python.exe')),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
@@ -125,7 +125,7 @@ suite('VirtualEnvWrapper Locator', () => {
 
     test('iterEnvs(): Non-Windows', async () => {
         const expectedEnvs = [
-            createExpectedEnvInfo(path.join(testVirtualEnvsPath, 'env3', 'python')),
+            createExpectedEnvInfo(path.join(testVirtualEnvsPath, 'env3', 'bin', 'python')),
             createExpectedEnvInfo(path.join(testVirtualEnvsPath, 'env4', 'bin', 'python')),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
@@ -147,7 +147,7 @@ suite('VirtualEnvWrapper Locator', () => {
         assertEnvEqual(actual, expected);
     });
 
-    test('resolveEnv(string)', async () => {
+    test('resolveEnv(PythonEnvInfo)', async () => {
         const interpreterPath = path.join(testVirtualEnvsPath, 'env4', 'bin', 'python');
         const expected = createExpectedEnvInfo(interpreterPath);
 

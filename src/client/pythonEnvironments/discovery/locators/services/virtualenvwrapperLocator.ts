@@ -74,9 +74,15 @@ export class VirtualEnvWrapperLocator extends PythonEnvsWatcher implements ILoca
         const buildEnvInfo = (interpreterPath:string) => this.buildEnvInfo(interpreterPath);
         const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
         const iterator = async function* () {
+            const virtualEnvs:string[] = [];
             const workOnHomeDir = await getWorkOnHome();
-            const exes = await findInterpretersInDir(workOnHomeDir, searchDepth);
-            yield* exes.map(buildEnvInfo);
+            const envs = await findInterpretersInDir(workOnHomeDir, searchDepth);
+            for (const env of envs) {
+                if (await isVirtualenvwrapperEnvironment(env)) {
+                    virtualEnvs.push(env);
+                }
+            }
+            yield* virtualEnvs.map(buildEnvInfo);
         };
         return iterator();
     }
