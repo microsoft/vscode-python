@@ -64,6 +64,10 @@ export class DebugLocationTracker implements DebugAdapterTracker {
         }
     }
 
+    public onWillStopSession() {
+        this.sessionEndedEmitter.fire(this);
+    }
+
     public onWillReceiveMessage(message: DebugProtocol.Request) {
         if (this.isRequestToFetchAllFrames(message)) {
             // VSCode sometimes sends multiple stackTrace requests. The true topmost frame is determined
