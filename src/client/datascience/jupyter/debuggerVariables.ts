@@ -252,8 +252,9 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
     }
 
     private updateStackFrame(stackResponse: DebugProtocol.StackTraceResponse) {
-        if (stackResponse.body.stackFrames[0]) {
-            this.topMostFrameId = stackResponse.body.stackFrames[0].id;
+        const topMostStackFrame = stackResponse.body.stackFrames[0];
+        if (topMostStackFrame && topMostStackFrame.id) {
+            this.topMostFrameId = topMostStackFrame.id;
         }
     }
 
