@@ -144,7 +144,7 @@ export class KernelFinder implements IKernelFinder {
 
     private async findKernelSpecBasedOnLanguage(resource: Resource, language: string) {
         const specs = await this.listKernelSpecs(resource);
-        return specs.find((item) => item.language.toLowerCase() === language.toLowerCase());
+        return specs.find((item) => item.language?.toLowerCase() === language.toLowerCase());
     }
 
     private async findResourceKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
