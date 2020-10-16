@@ -9,6 +9,7 @@ import { ImportMock } from 'ts-mock-imports';
 import * as platformUtils from '../../../../client/common/utils/platform';
 import * as fileUtils from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment } from '../../../../client/pythonEnvironments/discovery/locators/services/virtualEnvironmentIdentifier';
+import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 
 suite('isVenvEnvironment Tests', () => {
     const pyvenvCfg = 'pyvenv.cfg';
@@ -84,17 +85,20 @@ suite('isVirtualenvEnvironment Tests', () => {
 });
 
 suite('isVirtualenvwrapperEnvironment Tests', () => {
-    const envDirectory = 'myenv';
-    const homeDir = path.join('path', 'to', 'home');
-    const envRootDirectory = '.virtualenvs';
+    const homeDir = path.join(TEST_LAYOUT_ROOT, 'virutalhome');
 
     let getEnvVariableStub: sinon.SinonStub;
     let getUserHomeDirStub: sinon.SinonStub;
     let pathExistsStub:sinon.SinonStub;
+    let readDirStub: sinon.SinonStub;
 
     setup(() => {
         getEnvVariableStub = sinon.stub(platformUtils, 'getEnvironmentVariable');
         getUserHomeDirStub = sinon.stub(platformUtils, 'getUserHomeDir');
+
+        readDirStub = sinon.stub(fsapi, 'readdir');
+        readDirStub.resolves(['activate', 'python']);
+
         pathExistsStub = sinon.stub(fileUtils, 'pathExists');
         pathExistsStub.resolves(true);
         // This is windows specific path. For test purposes we will use the common path
@@ -106,10 +110,11 @@ suite('isVirtualenvwrapperEnvironment Tests', () => {
         getEnvVariableStub.restore();
         getUserHomeDirStub.restore();
         pathExistsStub.restore();
+        readDirStub.restore();
     });
 
-    test('WORKON_HOME is not set, and the interpreter is in a subfolder of virtualenvwrapper', async () => {
-        const interpreter = path.join(homeDir, envRootDirectory, envDirectory, 'bin', 'python');
+    test('WORKON_HOME is not set, and the interpreter is in a sub-folder of virtualenvwrapper', async () => {
+        const interpreter = path.join(homeDir, '.virtualenvs', 'win2', 'bin', 'python.exe');
 
         getEnvVariableStub.withArgs('WORKON_HOME').returns(undefined);
         getUserHomeDirStub.returns(homeDir);
@@ -118,18 +123,18 @@ suite('isVirtualenvwrapperEnvironment Tests', () => {
     });
 
     test('WORKON_HOME is set to a custom value, and the interpreter is is in a sub-folder', async () => {
-        const workonHomeDirectory = path.join('path', 'to', 'workonHome');
-        const interpreter = path.join(workonHomeDirectory, envDirectory, 'bin', 'python');
+        const workonHomeDirectory = path.join(homeDir, 'workonhome');
+        const interpreter = path.join(workonHomeDirectory, 'win2', 'bin', 'python.exe');
 
         getEnvVariableStub.withArgs('WORKON_HOME').returns(workonHomeDirectory);
-        pathExistsStub.withArgs(path.join(workonHomeDirectory, envDirectory)).resolves(true);
+        pathExistsStub.withArgs(path.join(workonHomeDirectory)).resolves(true);
 
         assert.ok(await isVirtualenvwrapperEnvironment(interpreter));
     });
 
     test('The interpreter is not in a sub-folder of WORKON_HOME', async () => {
-        const workonHomeDirectory = path.join('path', 'to', 'workonHome');
-        const interpreter = path.join('some', 'path', envDirectory, 'bin', 'python');
+        const workonHomeDirectory = path.join('path', 'to', 'workonhome');
+        const interpreter = path.join('some', 'path', 'env', 'bin', 'python');
 
         getEnvVariableStub.withArgs('WORKON_HOME').returns(workonHomeDirectory);
 
