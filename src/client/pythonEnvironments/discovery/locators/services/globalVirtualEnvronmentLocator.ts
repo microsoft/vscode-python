@@ -119,8 +119,7 @@ export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implement
         // interpreters
         const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
 
-        const { virtualEnvKinds } = this;
-        const iterator = async function* () {
+        const iterator = async function* (virtualEnvKinds:PythonEnvKind[]) {
             const envRootDirs = await getGlobalVirtualEnvDirs();
 
             for (const envRootDir of envRootDirs) {
@@ -154,7 +153,7 @@ export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implement
             }
         };
 
-        return iterator();
+        return iterator(this.virtualEnvKinds);
     }
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {

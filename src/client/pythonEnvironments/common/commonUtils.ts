@@ -20,9 +20,10 @@ export async function* findInterpretersInDir(root:string, recurseLevels?:number)
                     yield subItem;
                 }
             }
-        } else if (os === OSType.Windows && isWindowsPythonExe(item)) {
-            yield item;
-        } else if (os !== OSType.Windows && isPosixPythonBin(item)) {
+        } else if (
+            (os === OSType.Windows && isWindowsPythonExe(item))
+            || (os !== OSType.Windows && isPosixPythonBin(item))
+        ) {
             yield item;
         }
     }
