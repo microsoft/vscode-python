@@ -26,6 +26,7 @@ export function assertEnvsEqual(
     actualEnvs:(PythonEnvInfo | undefined)[],
     expectedEnvs: (PythonEnvInfo | undefined)[],
 ):void{
+    assert.deepStrictEqual(actualEnvs.length, expectedEnvs.length, 'Number of envs');
     zip(actualEnvs, expectedEnvs).forEach((value) => {
         const [actual, expected] = value;
         assertEnvEqual(actual, expected);
