@@ -24,6 +24,14 @@ const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 
 @injectable()
 export class DebuggerVariables implements IConditionalJupyterVariables, DebugAdapterTracker {
+    public get refreshRequired(): Event<void> {
+        return this.refreshEventEmitter.event;
+    }
+
+    public get active(): boolean {
+        return this.debugService.activeDebugSession !== undefined && this.debuggingStarted;
+    }
+    protected stackFrameRequestSequenceNumber: number = -1; // Keep track of the sequence number
     private refreshEventEmitter = new EventEmitter<void>();
     private lastKnownVariables: IJupyterVariable[] = [];
     private topMostFrameId = 0;
@@ -34,14 +42,6 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {}
-
-    public get refreshRequired(): Event<void> {
-        return this.refreshEventEmitter.event;
-    }
-
-    public get active(): boolean {
-        return this.debugService.activeDebugSession !== undefined && this.debuggingStarted;
-    }
 
     // IJupyterVariables implementation
     public async getVariables(
@@ -174,7 +174,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: Figure out what resource to use
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
-        } else if (message.type === 'response' && message.command === 'stackTrace') {
+        } else if (this.isResponseForRequestToFetchAllFrames(message)) {
             // This should be the top frame. We need to use this to compute the value of a variable
             this.updateStackFrame(message as DebugProtocol.StackTraceResponse);
         } else if (message.type === 'event' && message.event === 'terminated') {
@@ -183,6 +183,17 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
             this.topMostFrameId = 0;
             this.debuggingStarted = false;
             this.refreshEventEmitter.fire();
+        }
+    }
+
+    public onWillReceiveMessage(message: DebugProtocol.Request) {
+        if (this.isRequestToFetchAllFrames(message)) {
+            // VSCode sometimes sends multiple stackTrace requests. The true topmost frame is determined
+            // based on the response to a stackTrace request where the startFrame is 0 or undefined (i.e.
+            // this request retrieves all frames). Here, remember the sequence number of the outgoing
+            // request whose startFrame === 0 or undefined, and update this.topMostFrameId only when we
+            // receive the response with a matching sequence number.
+            this.stackFrameRequestSequenceNumber = message.seq;
         }
     }
 
@@ -308,5 +319,22 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
         });
 
         this.refreshEventEmitter.fire();
+    }
+
+    private isResponseForRequestToFetchAllFrames(message: DebugProtocol.Response) {
+        return (
+            message.type === 'response' &&
+            message.command === 'stackTrace' &&
+            message.body.stackFrames[0] &&
+            (message.request_seq === this.stackFrameRequestSequenceNumber || message.request_seq === undefined)
+        );
+    }
+
+    private isRequestToFetchAllFrames(message: DebugProtocol.Request) {
+        return (
+            message.type === 'request' &&
+            message.command === 'stackTrace' &&
+            (message.arguments.startFrame === 0 || message.arguments.startFrame === undefined)
+        );
     }
 }
