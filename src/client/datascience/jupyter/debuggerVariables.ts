@@ -6,7 +6,7 @@ import { inject, injectable, named } from 'inversify';
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugService } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DataFrameLoading, Identifiers, Telemetry } from '../constants';
@@ -253,6 +253,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
     private updateStackFrame(stackResponse: DebugProtocol.StackTraceResponse) {
         const topMostStackFrame = stackResponse.body.stackFrames[0];
         if (topMostStackFrame && topMostStackFrame.id) {
+            traceInfo(`Received full stackframe response: ${JSON.stringify(stackResponse.body.stackFrames)}`);
             this.topMostFrameId = topMostStackFrame.id;
         }
     }
