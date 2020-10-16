@@ -14,6 +14,7 @@ import { PipInstaller } from './pipInstaller';
 import { PoetryInstaller } from './poetryInstaller';
 import {
     CTagsProductPathService,
+    DataScienceProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
@@ -68,6 +69,11 @@ export function registerTypes(serviceManager: IServiceManager) {
         IProductPathService,
         RefactoringLibraryProductPathService,
         ProductType.RefactoringLibrary
+    );
+    serviceManager.addSingleton<IProductPathService>(
+        IProductPathService,
+        DataScienceProductPathService,
+        ProductType.DataScience
     );
     serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
 }

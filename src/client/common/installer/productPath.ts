@@ -101,3 +101,13 @@ export class RefactoringLibraryProductPathService extends BaseProductPathsServic
         return this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
     }
 }
+
+@injectable()
+export class DataScienceProductPathService extends BaseProductPathsService {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        super(serviceContainer);
+    }
+    public getExecutableNameFromSettings(product: Product, _?: Uri): string {
+        return this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
+    }
+}
