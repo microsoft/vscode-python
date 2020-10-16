@@ -343,8 +343,12 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         const sequenceNumber = this.sequence;
         this.protocolParser.on(`response_${command}`, (resp: any) => {
             if (resp.request_seq === sequenceNumber) {
+                // sometimes request messages show up here?
                 this.sendToTrackers(resp);
-                traceInfo(`Received response from debugger: ${JSON.stringify(args)}`);
+                traceInfo(
+                    `Received response from debugger for request with the following args: ${JSON.stringify(args)}`
+                );
+                traceInfo(`Response was: ${JSON.stringify(resp)}`);
                 disposable.dispose();
                 response.resolve(resp.body);
             }
