@@ -327,7 +327,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
             message.type === 'response' &&
             message.command === 'stackTrace' &&
             message.body.stackFrames[0] &&
-            (message.request_seq === this.stackFrameRequestSequenceNumber || message.request_seq === undefined)
+            message.request_seq === this.stackFrameRequestSequenceNumber
         );
     }
 
