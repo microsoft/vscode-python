@@ -34,7 +34,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
     protected stackFrameRequestSequenceNumber: number = -1; // Keep track of the sequence number
     private refreshEventEmitter = new EventEmitter<void>();
     private lastKnownVariables: IJupyterVariable[] = [];
-    private topMostFrameId = 0;
+    private topMostFrameId: number | undefined;
     private importedIntoKernel = new Set<string>();
     private watchedNotebooks = new Map<string, Disposable[]>();
     private debuggingStarted = false;
