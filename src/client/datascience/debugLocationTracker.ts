@@ -11,7 +11,7 @@ import { IDebugLocation } from './types';
 @injectable()
 export class DebugLocationTracker implements DebugAdapterTracker {
     protected topMostFrameId = 0;
-    protected stackFrameRequestSequenceNumber: number = -1; // Keep track of the sequence number
+    protected sequenceNumbersOfRequestsPendingResponses = new Set<number>();
     private waitingForStackTrace = false;
     private _debugLocation: IDebugLocation | undefined;
     private debugLocationUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
@@ -75,7 +75,7 @@ export class DebugLocationTracker implements DebugAdapterTracker {
             // this request retrieves all frames). Here, remember the sequence number of the outgoing
             // request whose startFrame === 0 or undefined, and update this.topMostFrameId only when we
             // receive the response with a matching sequence number.
-            this.stackFrameRequestSequenceNumber = message.seq;
+            this.sequenceNumbersOfRequestsPendingResponses.add(message.seq);
         }
     }
 
@@ -125,20 +125,20 @@ export class DebugLocationTracker implements DebugAdapterTracker {
         return false;
     }
 
-    private isRequestToFetchAllFrames(message: DebugProtocol.Request) {
-        return (
-            message.type === 'request' &&
-            message.command === 'stackTrace' &&
-            (message.arguments.startFrame === 0 || message.arguments.startFrame === undefined)
-        );
-    }
-
     private isResponseForRequestToFetchAllFrames(message: DebugProtocol.Response) {
         return (
             message.type === 'response' &&
             message.command === 'stackTrace' &&
             message.body.stackFrames[0] &&
-            (message.request_seq === this.stackFrameRequestSequenceNumber || message.request_seq === undefined)
+            this.sequenceNumbersOfRequestsPendingResponses.has(message.request_seq)
+        );
+    }
+
+    private isRequestToFetchAllFrames(message: DebugProtocol.Request) {
+        return (
+            message.type === 'request' &&
+            message.command === 'stackTrace' &&
+            (message.arguments.startFrame === 0 || message.arguments.startFrame === undefined)
         );
     }
 }
