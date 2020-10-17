@@ -31,7 +31,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
     public get active(): boolean {
         return this.debugService.activeDebugSession !== undefined && this.debuggingStarted;
     }
-    protected stackFrameRequestSequenceNumber: number = -1; // Keep track of the sequence number
+    protected sequenceNumbersOfRequestsPendingResponses = new Set<number>();
     private refreshEventEmitter = new EventEmitter<void>();
     private lastKnownVariables: IJupyterVariable[] = [];
     private topMostFrameId: number | undefined;
@@ -189,13 +189,12 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
     public onWillReceiveMessage(message: DebugProtocol.Request) {
         traceInfo(`Received request: ${JSON.stringify(message)}`);
         if (this.isRequestToFetchAllFrames(message)) {
-            traceInfo(`Replacing sequence number ${this.stackFrameRequestSequenceNumber} with ${message.seq}`);
             // VSCode sometimes sends multiple stackTrace requests. The true topmost frame is determined
             // based on the response to a stackTrace request where the startFrame is 0 or undefined (i.e.
             // this request retrieves all frames). Here, remember the sequence number of the outgoing
             // request whose startFrame === 0 or undefined, and update this.topMostFrameId only when we
             // receive the response with a matching sequence number.
-            this.stackFrameRequestSequenceNumber = message.seq;
+            this.sequenceNumbersOfRequestsPendingResponses.add(message.seq);
         }
     }
 
@@ -333,7 +332,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
             message.type === 'response' &&
             message.command === 'stackTrace' &&
             message.body.stackFrames[0] &&
-            message.request_seq === this.stackFrameRequestSequenceNumber
+            this.sequenceNumbersOfRequestsPendingResponses.has(message.request_seq)
         );
     }
 
