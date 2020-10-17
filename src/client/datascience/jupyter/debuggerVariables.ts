@@ -187,6 +187,8 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
 
     public onWillReceiveMessage(message: DebugProtocol.Request) {
         if (this.isRequestToFetchAllFrames(message)) {
+            traceInfo(`Received request to fetch all frames: ${JSON.stringify(message)}`);
+            traceInfo(`Replacing sequence number ${this.stackFrameRequestSequenceNumber} with ${message.seq}`);
             // VSCode sometimes sends multiple stackTrace requests. The true topmost frame is determined
             // based on the response to a stackTrace request where the startFrame is 0 or undefined (i.e.
             // this request retrieves all frames). Here, remember the sequence number of the outgoing
@@ -220,7 +222,9 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
     // tslint:disable-next-line: no-any
     private async evaluate(code: string, frameId?: number): Promise<any> {
         if (this.debugService.activeDebugSession) {
-            traceInfo(`Evaluating code ${code} with respect to frameId ${frameId}`);
+            traceInfo(
+                `Evaluating code ${code} with respect to frameId ${frameId} where topMostFrameId is ${this.topMostFrameId}`
+            );
             const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
                 expression: code,
                 frameId: this.topMostFrameId || frameId,
