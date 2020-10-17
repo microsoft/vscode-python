@@ -42,6 +42,7 @@ export class DebugLocationTracker implements DebugAdapterTracker {
             // This should be the top frame. We need to use this to compute the value of a variable
             const topMostFrame = message.body.stackFrames[0];
             this.topMostFrameId = topMostFrame?.id;
+            this.sequenceNumbersOfRequestsPendingResponses.delete(message.request_seq);
             // If we are waiting for a stack trace, check our messages for one
             if (this.waitingForStackTrace) {
                 this.DebugLocation = {
