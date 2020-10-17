@@ -3,6 +3,7 @@
 
 import * as path from 'path';
 import { traceError, traceVerbose } from '../../../../common/logger';
+import { chain, iterable } from '../../../../common/utils/async';
 import {
     Architecture, getEnvironmentVariable, getUserHomeDir,
 } from '../../../../common/utils/platform';
@@ -34,9 +35,11 @@ async function getGlobalVirtualEnvDirs(): Promise<string[]> {
 
     const homeDir = getUserHomeDir();
     if (homeDir) {
-        dirPaths.push(path.join(homeDir, 'Envs'));
+        dirPaths.push(path.join(homeDir, 'envs'));
+        dirPaths.push(path.join(homeDir, '.direnv'));
         dirPaths.push(path.join(homeDir, '.venvs'));
         dirPaths.push(path.join(homeDir, '.virtualenvs'));
+        dirPaths.push(path.join(homeDir, '.local', 'share', 'virtualenvs'));
     }
 
     const exists = await Promise.all(dirPaths.map(pathExists));
@@ -119,39 +122,43 @@ export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implement
         // interpreters
         const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
 
-        const iterator = async function* (virtualEnvKinds:PythonEnvKind[]) {
+        async function* iterator(virtualEnvKinds:PythonEnvKind[]) {
             const envRootDirs = await getGlobalVirtualEnvDirs();
+            const envGenerators = envRootDirs.map((envRootDir) => {
+                async function* generator() {
+                    traceVerbose(`Searching for global virtual envs in: ${envRootDir}`);
 
-            for (const envRootDir of envRootDirs) {
-                traceVerbose(`Searching for global virtual envs in: ${envRootDir}`);
+                    const envGenerator = findInterpretersInDir(envRootDir, searchDepth);
 
-                const generator = findInterpretersInDir(envRootDir, searchDepth);
-
-                for await (const env of generator) {
+                    for await (const env of envGenerator) {
                     // We only care about python.exe (on windows) and python (on linux/mac)
                     // Other version like python3.exe or python3.8 are often symlinks to
                     // python.exe or python in the same directory in the case od virtual
                     // environments.
-                    const name = path.basename(env).toLowerCase();
-                    if (name === 'python.exe' || name === 'python') {
+                        const name = path.basename(env).toLowerCase();
+                        if (name === 'python.exe' || name === 'python') {
                         // We should extract the kind here to avoid doing is*Environment()
                         // check multiple times. Those checks are file system heavy and
                         // we can use the kind to determine this anyway.
-                        const kind = await getVirtualEnvKind(env);
+                            const kind = await getVirtualEnvKind(env);
 
-                        if (virtualEnvKinds.includes(kind)) {
-                            traceVerbose(`Global Virtual Environment: [added] ${env}`);
+                            if (virtualEnvKinds.includes(kind)) {
+                                traceVerbose(`Global Virtual Environment: [added] ${env}`);
 
-                            yield buildEnvInfo(env, kind);
+                                yield buildEnvInfo(env, kind);
+                            } else {
+                                traceVerbose(`Global Virtual Environment: [skipped] ${env}`);
+                            }
                         } else {
                             traceVerbose(`Global Virtual Environment: [skipped] ${env}`);
                         }
-                    } else {
-                        traceVerbose(`Global Virtual Environment: [skipped] ${env}`);
                     }
                 }
-            }
-        };
+                return generator();
+            });
+
+            yield* iterable(chain(envGenerators));
+        }
 
         return iterator(this.virtualEnvKinds);
     }

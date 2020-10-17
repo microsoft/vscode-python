@@ -64,8 +64,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.venvs', 'win2', 'bin', 'python.exe'), PythonEnvKind.Venv),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.virtualenvs', 'win1', 'python.exe'), PythonEnvKind.VirtualEnv),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.virtualenvs', 'win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnv),
-            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'Envs', 'wrapper_win1', 'python.exe'), PythonEnvKind.VirtualEnv),
-            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'Envs', 'wrapper_win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnv),
+            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'envs', 'wrapper_win1', 'python.exe'), PythonEnvKind.VirtualEnv),
+            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'envs', 'wrapper_win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnv),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, 'workonhome', 'win1', 'python.exe'), PythonEnvKind.VirtualEnvWrapper),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, 'workonhome', 'win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnvWrapper),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -87,8 +87,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.venvs', 'win2', 'bin', 'python.exe'), PythonEnvKind.Venv),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.virtualenvs', 'win1', 'python.exe'), PythonEnvKind.VirtualEnv),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.virtualenvs', 'win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnv),
-            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'Envs', 'wrapper_win1', 'python.exe'), PythonEnvKind.VirtualEnvWrapper),
-            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'Envs', 'wrapper_win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnvWrapper),
+            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'envs', 'wrapper_win1', 'python.exe'), PythonEnvKind.VirtualEnvWrapper),
+            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'envs', 'wrapper_win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnvWrapper),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
         const locator = new GlobalVirtualEnvironmentLocator();
