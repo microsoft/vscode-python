@@ -3,19 +3,21 @@
 flake8
 autopep8
 bandit
-black ; python_version>='3.6'
+black ; python_version > '2.7'
 yapf
 pylint
 pycodestyle
-prospector==1.2.0 # Last version of prospector with Python 2.7 support
 pydocstyle
+prospector ; python_version > '2.7'
 nose
-pytest < 6.0.0; python_version > '2.7' # Tests do not support pytest 6 yet.
+pytest<6 ; python_version > '2.7'  # Tests currently fail against pytest 6.
 rope
 flask
 django
 isort
- # Python 2.7 compatibility (pytest)
-pytest==4.6.9; python_version == '2.7'
-pathlib2>=2.2.0; python_version == '2.7'
-py==1.8.1; python_version == '2.7'
+
+# Python 2.7 support.
+pytest==4.6.9 ; python_version == '2.7'
+py==1.8.1 ; python_version == '2.7'  # via pytest 4
+pathlib2>=2.2.0 ; python_version == '2.7'  # via pytest 4
+prospector==1.2.0 ; python_version == '2.7'

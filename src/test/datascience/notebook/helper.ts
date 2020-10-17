@@ -197,7 +197,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string) 
         if (vscodeNotebook.activeNotebookEditor.kernel instanceof VSCodeNotebookKernelMetadata) {
             if (vscodeNotebook.activeNotebookEditor.kernel.selection.kind === 'startUsingKernelSpec') {
                 return (
-                    vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec.language.toLowerCase() ===
+                    vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec.language?.toLowerCase() ===
                     expectedLanguage.toLowerCase()
                 );
             }

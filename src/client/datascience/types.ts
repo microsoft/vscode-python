@@ -412,9 +412,9 @@ export interface IJupyterKernelSpec {
      */
     id?: string;
     name: string;
-    language: string;
+    language?: string;
     path: string;
-    env: NodeJS.ProcessEnv | undefined;
+    env?: NodeJS.ProcessEnv | undefined;
     /**
      * Kernel display name.
      *
