@@ -50,7 +50,7 @@ function makeStackTraceMessage(): DebugProtocol.Response {
         success: true,
         seq: 43,
         body: {
-            stackFrames: [{ line: 1, column: 1, source: { path: 'testpath' } }]
+            stackFrames: [{ id: 9000, line: 1, column: 1, source: { path: 'testpath' } }]
         }
     };
 }
@@ -59,6 +59,11 @@ function makeStackTraceRequest(): DebugProtocol.Request {
     return {
         type: 'request',
         command: 'stackTrace',
-        seq: 42
+        seq: 42,
+        arguments: {
+            levels: 1,
+            startFrame: 0,
+            threadId: 1
+        }
     };
 }
