@@ -166,6 +166,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
 
     // tslint:disable-next-line: no-any
     public onDidSendMessage(message: any) {
+        traceInfo(`Received response: ${JSON.stringify(message)}`);
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
         } else if (message.type === 'response' && message.command === 'variables' && message.body) {
@@ -186,8 +187,8 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
     }
 
     public onWillReceiveMessage(message: DebugProtocol.Request) {
+        traceInfo(`Received request: ${JSON.stringify(message)}`);
         if (this.isRequestToFetchAllFrames(message)) {
-            traceInfo(`Received request to fetch all frames: ${JSON.stringify(message)}`);
             traceInfo(`Replacing sequence number ${this.stackFrameRequestSequenceNumber} with ${message.seq}`);
             // VSCode sometimes sends multiple stackTrace requests. The true topmost frame is determined
             // based on the response to a stackTrace request where the startFrame is 0 or undefined (i.e.
