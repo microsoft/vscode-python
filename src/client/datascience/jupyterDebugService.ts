@@ -260,6 +260,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
     }
 
     private sendToTrackers(args: any) {
+        traceInfo(`Sending to trackers: ${JSON.stringify(args)}`);
         switch (args.type) {
             case 'request':
                 this.debugAdapterTrackers.forEach((d) => {
