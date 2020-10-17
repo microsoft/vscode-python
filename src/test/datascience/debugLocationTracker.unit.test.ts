@@ -3,6 +3,7 @@
 'use strict';
 //tslint:disable:max-func-body-length match-default-export-name no-any no-multiline-string no-trailing-whitespace
 import { expect } from 'chai';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 import { DebugLocationTracker } from '../../client/datascience/debugLocationTracker';
 import { IDebugLocation } from '../../client/datascience/types';
@@ -21,6 +22,7 @@ suite('Debug Location Tracker', () => {
 
         expect(debugTracker.debugLocation).to.be.equal(undefined, 'After stop location is empty');
 
+        debugTracker.onWillReceiveMessage(makeStackTraceRequest());
         debugTracker.onDidSendMessage(makeStackTraceMessage());
 
         const testLocation: IDebugLocation = { lineNumber: 1, column: 1, fileName: 'testpath' };
@@ -40,12 +42,28 @@ function makeContinueMessage(): any {
     return { type: 'event', event: 'continue' };
 }
 
-function makeStackTraceMessage(): any {
+function makeStackTraceMessage(): DebugProtocol.Response {
     return {
         type: 'response',
         command: 'stackTrace',
+        request_seq: 42,
+        success: true,
+        seq: 43,
         body: {
-            stackFrames: [{ line: 1, column: 1, source: { path: 'testpath' } }]
+            stackFrames: [{ id: 9000, line: 1, column: 1, source: { path: 'testpath' } }]
+        }
+    };
+}
+
+function makeStackTraceRequest(): DebugProtocol.Request {
+    return {
+        type: 'request',
+        command: 'stackTrace',
+        seq: 42,
+        arguments: {
+            levels: 1,
+            startFrame: 0,
+            threadId: 1
         }
     };
 }

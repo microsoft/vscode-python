@@ -50,7 +50,9 @@ export class DebugLocationTrackerFactory implements IDebugLocationTracker, Debug
     }
 
     private onSessionEnd(locationTracker: DebugLocationTracker) {
-        this.activeTrackers.delete(locationTracker.sessionId);
+        if (locationTracker.sessionId) {
+            this.activeTrackers.delete(locationTracker.sessionId);
+        }
     }
 
     private onLocationUpdated() {
