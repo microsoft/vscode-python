@@ -141,8 +141,8 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                         typeof data[prop] === 'string'
                             ? data[prop]
                             : typeof data[prop] === 'object'
-                            ? 'object'
-                            : data[prop].toString();
+                                ? 'object'
+                                : data[prop].toString();
                 } catch (ex) {
                     traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
                 }
@@ -1772,6 +1772,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;
     [Telemetry.ShowDataViewer]: { rows: number | undefined; columns: number | undefined };
+    [Telemetry.OpenDataViewerFromVariableWindowRequest]: never | undefined;
+    [Telemetry.OpenDataViewerFromVariableWindowError]: never | undefined;
+    [Telemetry.OpenDataViewerFromVariableWindowSuccess]: never | undefined;
     [Telemetry.CreateNewInteractive]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.StartJupyterProcess]: never | undefined;

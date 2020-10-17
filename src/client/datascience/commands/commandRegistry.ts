@@ -478,6 +478,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
+        sendTelemetryEvent(Telemetry.OpenDataViewerFromVariableWindowRequest);
         if (this.debugService.activeDebugSession) {
             const jupyterVariable = convertDebugProtocolVariableToIJupyterVariable(
                 request.variable as DebugProtocol.Variable
@@ -491,8 +492,10 @@ export class CommandRegistry implements IDisposable {
                 if (columnSize && columnSize <= ColumnWarningSize) {
                     const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
                     await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
+                    sendTelemetryEvent(Telemetry.OpenDataViewerFromVariableWindowSuccess);
                 }
             } catch (e) {
+                sendTelemetryEvent(Telemetry.OpenDataViewerFromVariableWindowError);
                 traceError(e);
                 this.appShell.showErrorMessage(e.toString());
             }
