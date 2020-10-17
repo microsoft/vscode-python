@@ -220,6 +220,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
     // tslint:disable-next-line: no-any
     private async evaluate(code: string, frameId?: number): Promise<any> {
         if (this.debugService.activeDebugSession) {
+            traceInfo(`Evaluating code ${code} with respect to frameId ${frameId}`);
             const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
                 expression: code,
                 frameId: this.topMostFrameId || frameId,
