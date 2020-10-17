@@ -99,7 +99,8 @@ suite('Import Tracker', () => {
         const notebook = TypeMoq.Mock.ofType<INotebookEditor>();
         const model = TypeMoq.Mock.ofType<INotebookModel>();
         notebook.setup((n) => n.model).returns(() => model.object);
-        model.setup((m) => m.cells).returns(() => generateCells(undefined, code, 'foo.py', 0, false, '1'));
+        // model.setup((m) => m.cells).returns(() => generateCells(undefined, code, 'foo.py', 0, false, '1'));
+        model.setup((m) => m.getCellsWithId()).returns(() => generateCells(undefined, code, 'foo.py', 0, false, '1'));
         ev.fire(notebook.object);
     }
 

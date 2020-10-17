@@ -46,14 +46,16 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
             this.scheduleCheck(e.file.fsPath, this.checkNotebook.bind(this, e));
         }
     }
-    private getCellOutputMimeTypes(cell: ICell): string[] {
+    private getCellOutputMimeTypes(cell: { data: nbformat.IBaseCell; id: string; state: CellState }): string[] {
         if (cell.data.cell_type === 'markdown') {
             return ['markdown'];
         }
         if (cell.data.cell_type !== 'code') {
             return [];
         }
-        if (!Array.isArray(cell.data.outputs)) {
+        // tslint:disable-next-line: no-any
+        const outputs: nbformat.IOutput[] = cell.data.outputs as any;
+        if (!Array.isArray(outputs)) {
             return [];
         }
         switch (cell.state) {
@@ -62,7 +64,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
             case CellState.executing:
                 return [];
             default: {
-                return flatten(cell.data.outputs.map(this.getOutputMimeTypes.bind(this)));
+                return flatten(outputs.map(this.getOutputMimeTypes.bind(this)));
             }
         }
     }
@@ -100,12 +102,12 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         this.pendingChecks.set(id, setTimeout(check, 5000));
     }
 
-    private createCellKey(cell: ICell): string {
-        return `${cell.file}${cell.id}`;
+    private createCellKey(cell: { id: string }): string {
+        return cell.id;
     }
 
     @captureTelemetry(Telemetry.HashedCellOutputMimeTypePerf)
-    private checkCell(cell: ICell) {
+    private checkCell(cell: { data: nbformat.IBaseCell; id: string; state: CellState }) {
         this.pendingChecks.delete(this.createCellKey(cell));
         this.getCellOutputMimeTypes(cell).forEach(this.sendTelemetry.bind(this));
     }
@@ -113,7 +115,10 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
     @captureTelemetry(Telemetry.HashedNotebookCellOutputMimeTypePerf)
     private checkNotebook(e: INotebookEditor) {
         this.pendingChecks.delete(e.file.fsPath);
-        e.model?.cells.forEach(this.checkCell.bind(this));
+        if (!e.model) {
+            return;
+        }
+        e.model?.getCellsWithId().forEach(this.checkCell.bind(this));
     }
 
     private sendTelemetry(mimeType: string) {

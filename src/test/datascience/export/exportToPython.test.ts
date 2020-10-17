@@ -6,6 +6,7 @@ import { assert } from 'chai';
 import * as path from 'path';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { IDocumentManager } from '../../../client/common/application/types';
+import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
 import { ExportFormat, IExport } from '../../../client/datascience/export/types';
 import { IDataScienceFileSystem } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
@@ -34,9 +35,12 @@ suite('DataScience - Export Python', () => {
         const exportToPython = api.serviceContainer.get<IExport>(IExport, ExportFormat.python);
         const target = Uri.file((await fileSystem.createTemporaryLocalFile('.py')).filePath);
         const token = new CancellationTokenSource();
+        const exportInterpreterFinder = api.serviceContainer.get<ExportInterpreterFinder>(ExportInterpreterFinder);
+        const interpreter = await exportInterpreterFinder.getExportInterpreter(ExportFormat.html);
         await exportToPython.export(
             Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb')),
             target,
+            interpreter,
             token.token
         );
 

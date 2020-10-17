@@ -37,6 +37,8 @@ export function buildEnvInfo(init?: {
         },
         name: '',
         location: '',
+        searchLocation: undefined,
+        defaultDisplayName: undefined,
         version: {
             major: -1,
             minor: -1,
@@ -109,7 +111,9 @@ export function getMinimalPartialInfo(env: string | Partial<PythonEnvInfo>): Par
             return undefined;
         }
         return {
-            executable: { filename: env, sysPrefix: '', ctime: -1, mtime: -1 },
+            executable: {
+                filename: env, sysPrefix: '', ctime: -1, mtime: -1,
+            },
         };
     }
     if (env.executable === undefined) {
@@ -136,7 +140,7 @@ export function getMinimalPartialInfo(env: string | Partial<PythonEnvInfo>): Par
 export function areSameEnv(
     left: string | Partial<PythonEnvInfo>,
     right: string | Partial<PythonEnvInfo>,
-    allowPartialMatch?: boolean,
+    allowPartialMatch = true,
 ): boolean | undefined {
     const leftInfo = getMinimalPartialInfo(left);
     const rightInfo = getMinimalPartialInfo(right);
@@ -173,7 +177,7 @@ export function areSameEnv(
  * weighted by most important to least important fields.
  * Wn > Wn-1 + Wn-2 + ... W0
  */
-function getPythonVersionInfoHeuristic(version:PythonVersion): number {
+function getPythonVersionInfoHeuristic(version: PythonVersion): number {
     let infoLevel = 0;
     if (version.major > 0) {
         infoLevel += 20; // W4
@@ -205,7 +209,7 @@ function getPythonVersionInfoHeuristic(version:PythonVersion): number {
  * weighted by most important to least important fields.
  * Wn > Wn-1 + Wn-2 + ... W0
  */
-function getFileInfoHeuristic(file:FileInfo): number {
+function getFileInfoHeuristic(file: FileInfo): number {
     let infoLevel = 0;
     if (file.filename.length > 0) {
         infoLevel += 5; // W2
@@ -229,7 +233,7 @@ function getFileInfoHeuristic(file:FileInfo): number {
  * weighted by most important to least important fields.
  * Wn > Wn-1 + Wn-2 + ... W0
  */
-function getDistroInfoHeuristic(distro:PythonDistroInfo):number {
+function getDistroInfoHeuristic(distro: PythonDistroInfo): number {
     let infoLevel = 0;
     if (distro.org.length > 0) {
         infoLevel += 20; // W3
@@ -251,62 +255,6 @@ function getDistroInfoHeuristic(distro:PythonDistroInfo):number {
 }
 
 /**
- * Gets a prioritized list of environment types for identification.
- * @returns {PythonEnvKind[]} : List of environments ordered by identification priority
- *
- * Remarks: This is the order of detection based on how the various distributions and tools
- * configure the environment, and the fall back for identification.
- * Top level we have the following environment types, since they leave a unique signature
- * in the environment or * use a unique path for the environments they create.
- *  1. Conda
- *  2. Windows Store
- *  3. PipEnv
- *  4. Pyenv
- *  5. Poetry
- *
- * Next level we have the following virtual environment tools. The are here because they
- * are consumed by the tools above, and can also be used independently.
- *  1. venv
- *  2. virtualenvwrapper
- *  3. virtualenv
- *
- * Last category is globally installed python, or system python.
- */
-export function getPrioritizedEnvironmentKind(): PythonEnvKind[] {
-    return [
-        PythonEnvKind.CondaBase,
-        PythonEnvKind.Conda,
-        PythonEnvKind.WindowsStore,
-        PythonEnvKind.Pipenv,
-        PythonEnvKind.Pyenv,
-        PythonEnvKind.Poetry,
-        PythonEnvKind.Venv,
-        PythonEnvKind.VirtualEnvWrapper,
-        PythonEnvKind.VirtualEnv,
-        PythonEnvKind.OtherVirtual,
-        PythonEnvKind.OtherGlobal,
-        PythonEnvKind.MacDefault,
-        PythonEnvKind.System,
-        PythonEnvKind.Custom,
-        PythonEnvKind.Unknown,
-    ];
-}
-
-/**
- * Selects an environment based on the environment selection priority. This should
- * match the priority in the environment identifier.
- */
-export function sortEnvInfoByPriority(...envs: PythonEnvInfo[]): PythonEnvInfo[] {
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: When we consolidate the PythonEnvKind and EnvironmentType we should have
-    // one location where we define priority and
-    const envKindByPriority:PythonEnvKind[] = getPrioritizedEnvironmentKind();
-    return envs.sort(
-        (a:PythonEnvInfo, b:PythonEnvInfo) => envKindByPriority.indexOf(a.kind) - envKindByPriority.indexOf(b.kind),
-    );
-}
-
-/**
  * Merges properties of the `target` environment and `other` environment and returns the merged environment.
  * if the value in the `target` environment is not defined or has less information. This does not mutate
  * the `target` instead it returns a new object that contains the merged results.
@@ -318,18 +266,19 @@ export function mergeEnvironments(target: PythonEnvInfo, other: PythonEnvInfo): 
 
     const version = cloneDeep(
         getPythonVersionInfoHeuristic(target.version) > getPythonVersionInfoHeuristic(other.version)
-            ? target.version : other.version,
+            ? target.version
+            : other.version,
     );
 
     const executable = cloneDeep(
         getFileInfoHeuristic(target.executable) > getFileInfoHeuristic(other.executable)
-            ? target.executable : other.executable,
+            ? target.executable
+            : other.executable,
     );
     executable.sysPrefix = target.executable.sysPrefix ?? other.executable.sysPrefix;
 
     const distro = cloneDeep(
-        getDistroInfoHeuristic(target.distro) > getDistroInfoHeuristic(other.distro)
-            ? target.distro : other.distro,
+        getDistroInfoHeuristic(target.distro) > getDistroInfoHeuristic(other.distro) ? target.distro : other.distro,
     );
 
     merged.arch = merged.arch === Architecture.Unknown ? other.arch : target.arch;
@@ -341,8 +290,8 @@ export function mergeEnvironments(target: PythonEnvInfo, other: PythonEnvInfo): 
     // preferred env based on kind.
     merged.kind = target.kind;
 
-    merged.location = merged.location ?? other.location;
-    merged.name = merged.name ?? other.name;
+    merged.location = merged.location.length ? merged.location : other.location;
+    merged.name = merged.name.length ? merged.name : other.name;
     merged.searchLocation = merged.searchLocation ?? other.searchLocation;
     merged.version = version;
 

@@ -10,6 +10,7 @@ import { IServiceManager } from '../../ioc/types';
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { NotebookContentProvider } from './contentProvider';
+import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { NotebookIntegration } from './integration';
 import { InterpreterStatusBarVisibility } from './interpreterStatusBarVisbility';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
@@ -39,4 +40,9 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         NotebookSurveyDataLogger
     );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        NotebookCellLanguageService
+    );
+    serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
 }

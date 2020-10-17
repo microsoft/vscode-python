@@ -25,6 +25,8 @@ import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
+import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
+import { ExportFormat } from '../../client/datascience/export/types';
 import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -50,7 +52,6 @@ import { concatMultilineString } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
 import { createPythonService, startRemoteServer } from './remoteTestHelpers';
@@ -65,7 +66,6 @@ suite('DataScience notebook tests', () => {
             let ioc: DataScienceIocContainer;
             let modifiedConfig = false;
             const baseUri = Uri.file('foo.py');
-            let snapshot: any;
 
             // tslint:disable-next-line: no-function-expression
             setup(async function () {
@@ -80,14 +80,6 @@ suite('DataScience notebook tests', () => {
                 ioc.registerDataScienceTypes();
                 await ioc.activate();
                 notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
-            });
-
-            suiteSetup(() => {
-                snapshot = takeSnapshot();
-            });
-
-            suiteTeardown(() => {
-                writeDiffSnapshot(snapshot, `Notebook ${useRawKernel}`);
             });
 
             teardown(async () => {
@@ -214,10 +206,10 @@ suite('DataScience notebook tests', () => {
                         );
                         const actualMimeType = data.hasOwnProperty(mimeType) ? mimeType : 'text/plain';
                         assert.ok((data as any)[actualMimeType], `${index}: Cell mime type not correct`);
-                        verifyValue((data as any)[actualMimeType]);
+                        verifyValue(concatMultilineString((data as any)[actualMimeType]));
                     }
                     if (text) {
-                        verifyValue(text);
+                        verifyValue(concatMultilineString(text as any));
                     }
                 } else if (cellType === 'markdown') {
                     assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
@@ -478,7 +470,7 @@ suite('DataScience notebook tests', () => {
             runTest('Remote Password', async () => {
                 const pythonService = await createPythonService(ioc);
 
-                if (pythonService && !useRawKernel && os.platform() !== 'darwin') {
+                if (pythonService && !useRawKernel && os.platform() !== 'darwin' && os.platform() !== 'linux') {
                     const configFile = path.join(
                         EXTENSION_ROOT_DIR,
                         'src',
@@ -669,7 +661,12 @@ suite('DataScience notebook tests', () => {
                 try {
                     await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
                     // Try importing this. This should verify export works and that importing is possible
-                    const results = await importer.importFromFile(Uri.file(temp.filePath));
+                    const exportInterpreterFinder = ioc.serviceManager.get<ExportInterpreterFinder>(
+                        ExportInterpreterFinder
+                    );
+                    const usable = await exportInterpreterFinder.getExportInterpreter(ExportFormat.python, undefined);
+                    assert.isDefined(usable);
+                    const results = await importer.importFromFile(Uri.file(temp.filePath), usable!);
 
                     // Make sure we have a single chdir in our results
                     const first = results.indexOf('os.chdir');
@@ -679,9 +676,14 @@ suite('DataScience notebook tests', () => {
 
                     // Make sure we have a cell in our results
                     assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
+                    assert.ok(!results.includes('tpl'), 'Formatted template with wrong arguments');
                 } finally {
-                    importer.dispose();
-                    temp.dispose();
+                    try {
+                        importer.dispose();
+                        temp.dispose();
+                    } catch (exc) {
+                        console.log(exc);
+                    }
                 }
             });
 
@@ -868,13 +870,6 @@ suite('DataScience notebook tests', () => {
                     await testCancelableMethod(
                         (t: CancellationToken) => jupyterExecution.isNotebookSupported(t),
                         'Cancel did not cancel isNotebook after {0}ms',
-                        true
-                    )
-                );
-                assert.ok(
-                    await testCancelableMethod(
-                        (t: CancellationToken) => jupyterExecution.getImportPackageVersion(t),
-                        'Cancel did not cancel isImport after {0}ms',
                         true
                     )
                 );

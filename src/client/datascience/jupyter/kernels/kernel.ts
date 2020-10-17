@@ -4,6 +4,7 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
+import { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
@@ -18,11 +19,10 @@ import {
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
-import { traceError } from '../../../common/logger';
+import { traceError, traceWarning } from '../../../common/logger';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
-import { IInterpreterService } from '../../../interpreter/contracts';
 import { CodeSnippets } from '../../constants';
 import { getDefaultNotebookContent, updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import {
@@ -50,6 +50,10 @@ export class Kernel implements IKernel {
     }
     get onDisposed(): Event<void> {
         return this._onDisposed.event;
+    }
+    private _info?: KernelMessage.IInfoReplyMsg['content'];
+    get info(): KernelMessage.IInfoReplyMsg['content'] | undefined {
+        return this._info;
     }
     get status(): ServerStatus {
         return this.notebook?.status ?? ServerStatus.NotStarted;
@@ -79,7 +83,6 @@ export class Kernel implements IKernel {
         private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,
         commandManager: ICommandManager,
-        interpreterService: IInterpreterService,
         private readonly errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
         private readonly kernelProvider: IKernelProvider,
@@ -90,12 +93,12 @@ export class Kernel implements IKernel {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
             commandManager,
-            interpreterService,
             errorHandler,
             editorProvider,
             kernelSelectionUsage,
             appShell,
-            vscNotebook
+            vscNotebook,
+            metadata
         );
     }
     public async executeCell(cell: NotebookCell): Promise<void> {
@@ -124,8 +127,9 @@ export class Kernel implements IKernel {
         } else {
             await this.validate(this.uri);
             const metadata = ((getDefaultNotebookContent().metadata || {}) as unknown) as nbformat.INotebookMetadata;
+            // Create a dummy notebook metadata & update the metadata before starting the notebook (required to ensure we fetch & start the right kernel).
+            // Lower layers of code below getOrCreateNotebook searches for kernels again using the metadata.
             updateNotebookMetadata(metadata, this.metadata);
-
             this._notebookPromise = this.notebookProvider.getOrCreateNotebook({
                 identity: this.uri,
                 resource: this.uri,
@@ -232,6 +236,10 @@ export class Kernel implements IKernel {
         if (isPythonKernelConnection(this.metadata)) {
             await this.notebook.setLaunchingFile(this.uri.fsPath);
         }
+        await this.notebook
+            .requestKernelInfo()
+            .then((item) => (this._info = item.content))
+            .catch(traceWarning.bind('Failed to request KernelInfo'));
         await this.notebook.waitForIdle(this.launchTimeout);
     }
 

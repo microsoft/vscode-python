@@ -82,7 +82,26 @@ export class MockJupyterSession implements IJupyterSession {
         }
         return sleep(this.timedelay);
     }
-
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+        return {
+            channel: 'shell',
+            content: {
+                protocol_version: '',
+                banner: '',
+                language_info: {
+                    name: 'py',
+                    version: '3'
+                },
+                status: 'ok',
+                implementation: '',
+                implementation_version: '',
+                help_links: []
+            },
+            header: {} as any,
+            metadata: {} as any,
+            parent_header: {} as any
+        };
+    }
     public prolongRestarts() {
         this.forceRestartTimeout = true;
     }

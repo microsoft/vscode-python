@@ -148,8 +148,19 @@ export async function run(): Promise<void> {
         reactHelpers.setUpDomEnvironment();
     }
 
-    // Ignore `ds.test.js` test files when running other tests.
-    const ignoreGlob = options.testFilesSuffix.toLowerCase() === 'ds.test' ? [] : ['**/**.ds.test.js'];
+    const ignoreGlob: string[] = [];
+    switch (options.testFilesSuffix.toLowerCase()) {
+        case 'native.vscode.test': {
+            break;
+        }
+        case 'vscode.test': {
+            ignoreGlob.push('**/**.native.vscode.test.js');
+            break;
+        }
+        default: {
+            ignoreGlob.push('**/**.vscode.test.js');
+        }
+    }
     const testFiles = await new Promise<string[]>((resolve, reject) => {
         glob(
             `**/**.${options.testFilesSuffix}.js`,

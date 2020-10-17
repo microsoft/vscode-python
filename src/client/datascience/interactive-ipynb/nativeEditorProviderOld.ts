@@ -34,6 +34,7 @@ import { IDataViewerFactory } from '../data-viewing/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { NativeEditorProvider } from '../notebookStorage/nativeEditorProvider';
+import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import {
@@ -193,7 +194,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         }
     }
 
-    protected createNotebookEditor(model: INotebookModel, panel?: WebviewPanel): NativeEditor {
+    protected createNotebookEditor(model: NativeEditorNotebookModel, panel?: WebviewPanel): NativeEditor {
         const editor = new NativeEditorOldWebView(
             this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
             this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),

@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
+import { env, Event, EventEmitter, UIKind } from 'vscode';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import {
@@ -100,7 +100,10 @@ export class DataScienceSurveyBanner implements IPythonExtensionBanner {
         this.isInitialized = true;
     }
     public get enabled(): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, true).value;
+        return (
+            this.persistentState.createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, true).value &&
+            env.uiKind !== UIKind?.Web
+        );
     }
 
     public async showBanner(): Promise<void> {

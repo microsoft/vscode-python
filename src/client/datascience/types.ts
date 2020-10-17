@@ -203,6 +203,7 @@ export interface INotebook extends IAsyncDisposable {
     interruptKernel(timeoutInMs: number): Promise<InterruptResult>;
     setLaunchingFile(file: string): Promise<void>;
     getSysInfo(): Promise<ICell | undefined>;
+    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     getMatchingInterpreter(): PythonEnvironment | undefined;
     /**
@@ -283,14 +284,12 @@ export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     serverStarted: Event<INotebookServerOptions | undefined>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    getImportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined>;
     isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined>;
     spawnNotebook(file: string): Promise<void>;
-    importNotebook(file: Uri, template: string | undefined): Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
@@ -360,6 +359,7 @@ export interface IJupyterSession extends IAsyncDisposable {
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void;
     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
+    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
 }
 
 export type ISessionWithSocket = Session.ISession & {
@@ -412,9 +412,9 @@ export interface IJupyterKernelSpec {
      */
     id?: string;
     name: string;
-    language: string;
+    language?: string;
     path: string;
-    env: NodeJS.ProcessEnv | undefined;
+    env?: NodeJS.ProcessEnv | undefined;
     /**
      * Kernel display name.
      *
@@ -433,7 +433,7 @@ export interface IJupyterKernelSpec {
 
 export const INotebookImporter = Symbol('INotebookImporter');
 export interface INotebookImporter extends Disposable {
-    importFromFile(contentsFile: Uri): Promise<string>;
+    importFromFile(contentsFile: Uri, interpreter: PythonEnvironment): Promise<string>;
 }
 
 export const INotebookExporter = Symbol('INotebookExporter');
@@ -993,11 +993,6 @@ export interface IJupyterSubCommandExecutionService {
      */
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     /**
-     * If exporting is supported return the version of nbconvert available
-     * otherwise undefined.
-     */
-    getExportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined>;
-    /**
      * Error message indicating why jupyter notebook isn't supported.
      *
      * @returns {Promise<string>}
@@ -1037,16 +1032,6 @@ export interface IJupyterSubCommandExecutionService {
      */
     getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined>;
     /**
-     * Exports a given notebook into a python file.
-     *
-     * @param {string} file
-     * @param {string} [template]
-     * @param {CancellationToken} [token]
-     * @returns {Promise<string>}
-     * @memberof IJupyterSubCommandExecutionService
-     */
-    exportNotebookToPython(file: Uri, template?: string, token?: CancellationToken): Promise<string>;
-    /**
      * Opens an ipynb file in a new instance of a jupyter notebook server.
      *
      * @param {string} notebookFile
@@ -1076,6 +1061,22 @@ export interface IJupyterInterpreterDependencyManager {
     installMissingDependencies(err?: JupyterInstallError): Promise<void>;
 }
 
+export const INbConvertInterpreterDependencyChecker = Symbol('INbConvertInterpreterDependencyChecker');
+export interface INbConvertInterpreterDependencyChecker {
+    isNbConvertInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
+    getNbConvertVersion(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<SemVer | undefined>;
+}
+
+export const INbConvertExportToPythonService = Symbol('INbConvertExportToPythonService');
+export interface INbConvertExportToPythonService {
+    exportNotebookToPython(
+        file: Uri,
+        interpreter: PythonEnvironment,
+        template?: string,
+        token?: CancellationToken
+    ): Promise<string>;
+}
+
 export interface INotebookModel {
     readonly indentAmount: string;
     readonly onDidDispose: Event<void>;
@@ -1083,13 +1084,17 @@ export interface INotebookModel {
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
     readonly changed: Event<NotebookModelChange>;
-    readonly cells: readonly Readonly<ICell>[];
     readonly onDidEdit: Event<NotebookModelChange>;
     readonly isDisposed: boolean;
     readonly metadata: INotebookMetadataLive | undefined;
     readonly isTrusted: boolean;
+    readonly cellCount: number;
+    /**
+     * @deprecated
+     * Use only with old notebooks, when using with new Notebooks, use VSC API instead.
+     */
+    getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
     getContent(): string;
-    update(change: NotebookModelChange): void;
     /**
      * Dispose of the Notebook model.
      *

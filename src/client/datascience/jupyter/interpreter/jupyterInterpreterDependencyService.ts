@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
@@ -15,7 +14,6 @@ import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { parseSemVer } from '../../common';
 import { HelpLinks, JupyterCommands, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
@@ -109,13 +107,6 @@ export class JupyterInterpreterDependencyService {
      * @memberof JupyterInterpreterDependencyService
      */
     private readonly dependenciesInstalledInInterpreter = new Set<string>();
-    /**
-     * Same as `dependenciesInstalledInInterpreter`.
-     *
-     * @private
-     * @memberof JupyterInterpreterDependencyService
-     */
-    private readonly nbconvertInstalledInInterpreter = new Set<string>();
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
@@ -224,49 +215,11 @@ export class JupyterInterpreterDependencyService {
     }
 
     /**
-     * Whether its possible to export ipynb to other formats.
-     * Basically checks whether nbconvert is installed.
-     *
-     * @param {PythonEnvironment} interpreter
-     * @param {CancellationToken} [_token]
-     * @returns {Promise<boolean>}
-     * @memberof JupyterInterpreterConfigurationService
-     */
-    public async isExportSupported(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
-        if (this.nbconvertInstalledInInterpreter.has(interpreter.path)) {
-            return true;
-        }
-        const installed = this.installer.isInstalled(Product.nbconvert, interpreter).then((result) => result === true);
-        if (installed) {
-            this.nbconvertInstalledInInterpreter.add(interpreter.path);
-        }
-        return installed;
-    }
-
-    public async getNbConvertVersion(
-        interpreter: PythonEnvironment,
-        _token?: CancellationToken
-    ): Promise<SemVer | undefined> {
-        const command = this.commandFactory.createInterpreterCommand(
-            JupyterCommands.ConvertCommand,
-            'jupyter',
-            ['-m', 'jupyter', 'nbconvert'],
-            interpreter,
-            false
-        );
-
-        const result = await command.exec(['--version'], { throwOnStdErr: true });
-
-        return parseSemVer(result.stdout);
-    }
-
-    /**
      * Gets a list of the dependencies not installed, dependencies that are required to launch the jupyter notebook server.
      *
      * @param {PythonEnvironment} interpreter
      * @param {CancellationToken} [token]
      * @returns {Promise<Product[]>}
-     * @memberof JupyterInterpreterConfigurationService
      */
     public async getDependenciesNotInstalled(
         interpreter: PythonEnvironment,
@@ -313,7 +266,6 @@ export class JupyterInterpreterDependencyService {
      * @param {PythonEnvironment} interpreter
      * @param {CancellationToken} [_token]
      * @returns {Promise<boolean>}
-     * @memberof JupyterInterpreterConfigurationService
      */
     private async isKernelSpecAvailable(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
         const command = this.commandFactory.createInterpreterCommand(
@@ -343,7 +295,6 @@ export class JupyterInterpreterDependencyService {
      * @param {PythonEnvironment} interpreter
      * @param {CancellationToken} [token]
      * @returns {Promise<JupyterInterpreterDependencyResponse>}
-     * @memberof JupyterInterpreterConfigurationService
      */
     private async checkKernelSpecAvailability(
         interpreter: PythonEnvironment,

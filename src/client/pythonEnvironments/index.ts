@@ -6,14 +6,16 @@ import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonEnvInfoCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
 import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from './base/locator';
+import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsChangedEvent } from './base/watcher';
+import { getGlobalPersistentStore } from './common/externalDependencies';
 import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
 import { registerForIOC } from './legacyIOC';
 
 /**
  * Activate the Python environments component (during extension activation).'
  */
-export function activate(serviceManager: IServiceManager, serviceContainer: IServiceContainer) {
+export function activate(serviceManager: IServiceManager, serviceContainer: IServiceContainer): void {
     const [api, activateAPI] = createAPI();
     registerForIOC(serviceManager, serviceContainer, api);
     activateAPI();
@@ -27,7 +29,7 @@ export function activate(serviceManager: IServiceManager, serviceContainer: ISer
 export class PythonEnvironments implements ILocator {
     constructor(
         // These are the sub-components the full component is composed of:
-        private readonly locators: ILocator
+        private readonly locators: ILocator,
     ) {}
 
     public get onChanged(): vscode.Event<PythonEnvsChangedEvent> {
@@ -52,14 +54,25 @@ export function createAPI(): [PythonEnvironments, () => void] {
     const [locators, activateLocators] = initLocators();
 
     // Update this to pass in an actual function that checks for env info completeness.
-    const envsCache = new PythonEnvInfoCache(() => true);
+    const envsCache = new PythonEnvInfoCache(
+        () => true, // "isComplete"
+        () => {
+            const storage = getGlobalPersistentStore<PythonEnvInfo[]>('PYTHON_ENV_INFO_CACHE');
+            return {
+                load: async () => storage.get(),
+                store: async (e) => storage.set(e),
+            };
+        },
+    );
+    const cachingLocator = new CachingLocator(envsCache, locators);
 
     return [
-        new PythonEnvironments(locators),
+        new PythonEnvironments(cachingLocator),
         () => {
             activateLocators();
+            envsCache.initialize().ignoreErrors();
+            cachingLocator.initialize().ignoreErrors();
             // Any other activation needed for the API will go here later.
-            envsCache.initialize();
         },
     ];
 }
@@ -81,7 +94,7 @@ function initLocators(): [ExtensionLocators, () => void] {
         () => {
             // Any non-workspace locator activation goes here.
             workspaceLocators.activate(getWorkspaceFolders());
-        }
+        },
     ];
 }
 
@@ -100,6 +113,6 @@ function getWorkspaceFolders() {
     return {
         roots: folders ? folders.map((f) => f.uri) : [],
         onAdded: rootAdded.event,
-        onRemoved: rootRemoved.event
+        onRemoved: rootRemoved.event,
     };
 }

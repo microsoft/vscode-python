@@ -122,11 +122,6 @@ suite('DataScience Interactive Window output tests', () => {
         verifyHtmlOnCell(iw, 'InteractiveCell', html, cellIndex);
     }
 
-    // Uncomment this to debug hangs on exit
-    // suiteTeardown(() => {
-    //      asyncDump();
-    // });
-
     runTest(
         'Simple text',
         async () => {

@@ -5,7 +5,9 @@ import json as _VSCODE_json
 from IPython import get_ipython as _VSCODE_get_ipython
 
 # _VSCode_supportsDataExplorer will contain our list of data explorer supported types
-_VSCode_supportsDataExplorer = "['list', 'Series', 'dict', 'ndarray', 'DataFrame']"
+_VSCode_supportsDataExplorer = (
+    "['list', 'Series', 'dict', 'ndarray', 'DataFrame', 'Tensor']"
+)
 
 # who_ls is a Jupyter line magic to fetch currently defined vars
 _VSCode_JupyterVars = _VSCODE_get_ipython().run_line_magic("who_ls", "")

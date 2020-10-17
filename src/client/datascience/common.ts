@@ -131,11 +131,16 @@ export function traceCellResults(prefix: string, results: ICell[]) {
 }
 
 export function translateKernelLanguageToMonaco(kernelLanguage: string): string {
-    // The only known translation is C# to csharp at the moment
-    if (kernelLanguage === 'C#' || kernelLanguage === 'c#') {
-        return 'csharp';
+    // At the moment these are the only translations.
+    // python, julia, r, javascript, powershell, etc can be left as is.
+    switch (kernelLanguage.toLowerCase()) {
+        case 'c#':
+            return 'csharp';
+        case 'f#':
+            return 'fsharp';
+        default:
+            return kernelLanguage.toLowerCase();
     }
-    return kernelLanguage.toLowerCase();
 }
 
 export function generateNewNotebookUri(

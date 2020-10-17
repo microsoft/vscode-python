@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationTokenSource, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { TemporaryDirectory } from '../../common/platform/types';
 import { sleep } from '../../common/utils/async';
 import { ICell, IDataScienceFileSystem, INotebookExporter, INotebookModel, INotebookStorage } from '../types';
@@ -68,24 +68,15 @@ export class ExportUtil {
 
     public async removeSvgs(source: Uri) {
         const model = await this.notebookStorage.getOrCreateModel({ file: source });
-
-        const newCells: ICell[] = [];
-        for (const cell of model.cells) {
-            const outputs = cell.data.outputs;
-            if (outputs as nbformat.IOutput[]) {
-                this.removeSvgFromOutputs(outputs as nbformat.IOutput[]);
+        const content = JSON.parse(model.getContent()) as nbformat.INotebookContent;
+        for (const cell of content.cells) {
+            const outputs = cell.outputs as nbformat.IOutput[];
+            if (Array.isArray(outputs)) {
+                this.removeSvgFromOutputs(outputs);
             }
-            newCells.push(cell);
         }
-        model.update({
-            kind: 'modify',
-            newCells: newCells,
-            oldCells: model.cells as ICell[],
-            oldDirty: false,
-            newDirty: false,
-            source: 'user'
-        });
-        await this.notebookStorage.save(model, new CancellationTokenSource().token);
+        await this.fs.writeFile(source, JSON.stringify(content, undefined, model.indentAmount));
+        model.dispose(); // We're modifying the JSON in file manually, hence blow away cached model.
     }
 
     private removeSvgFromOutputs(outputs: nbformat.IOutput[]) {

@@ -152,7 +152,7 @@
             "skipFiles": ["<node_internals>/**"]
         },
         {
-            "name": "Tests (DataScience, *.ds.test.ts)",
+            "name": "Tests (DataScience, *.native.vscode.test.ts)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -169,13 +169,42 @@
                 "CI_PYTHON_PATH": "<PythonPath>", // Initialize this to invert the grep (exclude tests with value defined in grep).
 
                 "VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "true",
-                "TEST_FILES_SUFFIX": "ds.test"
+                "TEST_FILES_SUFFIX": "native.vscode.test"
             },
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
             "skipFiles": ["<node_internals>/**"]
+        },
+        {
+            "name": "DataScience tests in VS Code (*.vscode.ts)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/test/datascience",
+                "--disable-extensions",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "env": {
+                "VSC_PYTHON_CI_TEST_GREP": "", // Modify this to run a subset of the single workspace tests
+                "VSC_PYTHON_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
+                "CI_PYTHON_PATH": "<PythonPath>", // Initialize this to invert the grep (exclude tests with value defined in grep).
+                "VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "true",
+                "TEST_FILES_SUFFIX": "vscode.test"
+            },
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
+            "preLaunchTask": "Compile",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         },
         {
             "name": "Tests (Multiroot, VS Code, *.test.ts)",
@@ -263,7 +292,9 @@
                 // Remove `X` prefix and update path to test with real python interpreter (for DS functional tests).
                 "XCI_PYTHON_PATH": "<Python Path>",
                 // Remove 'X' prefix to dump output for debugger. Directory has to exist prior to launch
-                "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output"
+                "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output",
+                // Remove 'X' prefix to dump webview redux action log
+                "XVSC_PYTHON_WEBVIEW_LOG_FILE": "${workspaceRoot}/test-webview.log"
             },
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",

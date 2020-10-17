@@ -26,6 +26,7 @@ import {
     IStatusProvider
 } from '../types';
 import { JupyterNotebookView } from './constants';
+import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
 
@@ -70,7 +71,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IDataScienceFileSystem) private readonly fs: IDataScienceFileSystem,
-        @inject(INotebookExtensibility) private readonly notebookExtensibility: INotebookExtensibility
+        @inject(INotebookExtensibility) private readonly notebookExtensibility: INotebookExtensibility,
+        @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService
     ) {
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
@@ -165,7 +167,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 this.appShell,
                 this.configurationService,
                 this.disposables,
-                this.notebookExtensibility
+                this.notebookExtensibility,
+                this.cellLanguageService
             );
             this.onEditorOpened(editor);
         }
@@ -205,6 +208,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             if (editor.model) {
                 editor.model.dispose();
             }
+        }
+        const model = this.storage.get(uri);
+        if (model) {
+            model.dispose();
         }
         this.notebookEditorsByUri.delete(uri.toString());
         this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());

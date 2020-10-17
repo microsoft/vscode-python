@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import * as path from 'path';
-import { SemVer } from 'semver';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
@@ -20,8 +19,6 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { reportAction } from '../progress/decorator';
-import { ReportableAction } from '../progress/types';
 import {
     IJupyterConnection,
     IJupyterExecution,
@@ -121,12 +118,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
             );
         }
         return this.usablePythonInterpreter;
-    }
-
-    @reportAction(ReportableAction.CheckingIfImportIsSupported)
-    public async getImportPackageVersion(cancelToken?: CancellationToken): Promise<SemVer | undefined> {
-        // See if we can find the command nbconvert
-        return this.jupyterInterpreterService.getExportPackageVersion(cancelToken);
     }
 
     public isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
@@ -344,10 +335,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     public async spawnNotebook(file: string): Promise<void> {
         return this.jupyterInterpreterService.openNotebook(file);
-    }
-
-    public async importNotebook(file: Uri, template: string | undefined): Promise<string> {
-        return this.jupyterInterpreterService.exportNotebookToPython(file, template);
     }
 
     public getServer(_options?: INotebookServerOptions): Promise<INotebookServer | undefined> {

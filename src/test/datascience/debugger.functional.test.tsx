@@ -129,10 +129,6 @@ suite('DataScience Debugger tests', () => {
         }
     });
 
-    suiteTeardown(() => {
-        //        asyncDump();
-    });
-
     async function debugCell(
         type: 'notebook' | 'interactive',
         code: string,

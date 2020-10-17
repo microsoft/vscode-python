@@ -172,7 +172,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             onClick={this.props.restartKernel}
                             disabled={!canRestartAndInterruptKernel || !this.props.isNotebookTrusted}
                             className="native-button"
-                            tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
+                            tooltip={getLocString('DataScience.restartServer', 'Restart Jupyter kernel')}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}
@@ -185,7 +185,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             onClick={this.props.interruptKernel}
                             disabled={!canRestartAndInterruptKernel || !this.props.isNotebookTrusted}
                             className="native-button"
-                            tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
+                            tooltip={getLocString('DataScience.interruptKernel', 'Interrupt Jupyter kernel')}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}

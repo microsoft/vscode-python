@@ -30,7 +30,8 @@ const retryIfFail = <T>(fn: () => Promise<T>) => retryIfFailOriginal<T>(fn, wait
 
 use(chaiAsPromised);
 
-[false, true].forEach((useRawKernel) => {
+// When using jupyter server, ipywidget tests seem to be a lot flakier. Always use raw kernel
+[true].forEach((useRawKernel) => {
     //import { asyncDump } from '../common/asyncDump';
     suite(`DataScience IPyWidgets (${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'})`, () => {
         const disposables: Disposable[] = [];

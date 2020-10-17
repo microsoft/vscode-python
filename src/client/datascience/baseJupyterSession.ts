@@ -122,7 +122,12 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             );
         }
     }
-
+    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
+        if (!this.session) {
+            throw new Error('Cannot request KernelInfo, Session not initialized.');
+        }
+        return this.session.kernel.requestKernelInfo();
+    }
     public async changeKernel(kernelConnection: KernelConnectionMetadata, timeoutMS: number): Promise<void> {
         let newSession: ISessionWithSocket | undefined;
 

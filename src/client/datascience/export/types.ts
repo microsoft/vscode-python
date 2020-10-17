@@ -1,4 +1,5 @@
 import { CancellationToken, Uri } from 'vscode';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { INotebookModel } from '../types';
 
 export enum ExportFormat {
@@ -14,7 +15,7 @@ export interface IExportManager {
 
 export const IExport = Symbol('IExport');
 export interface IExport {
-    export(source: Uri, target: Uri, token: CancellationToken): Promise<void>;
+    export(source: Uri, target: Uri, interpreter: PythonEnvironment, token: CancellationToken): Promise<void>;
 }
 
 export const IExportManagerFilePicker = Symbol('IExportManagerFilePicker');

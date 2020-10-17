@@ -8,7 +8,7 @@ import { IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
-
+import { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { PYTHON_LANGUAGE } from '../../../common/constants';
@@ -132,6 +132,20 @@ export function getKernelConnectionLanguage(kernelConnection?: KernelConnectionM
         ? kernelConnection.kernelSpec
         : undefined;
     return model?.language || kernelSpec?.language;
+}
+export function getLanguageInNotebookMetadata(metadata?: nbformat.INotebookMetadata): string | undefined {
+    if (!metadata) {
+        return;
+    }
+    // If kernel spec is defined & we have a language in that, then use that information.
+    // tslint:disable-next-line: no-any
+    const kernelSpec: IJupyterKernelSpec | undefined = metadata.kernelspec as any;
+    // When a kernel spec is stored in ipynb, the `language` of the kernel spec is also saved.
+    // Unfortunately there's no strong typing for this.
+    if (kernelSpec?.language) {
+        return kernelSpec.language;
+    }
+    return metadata.language_info?.name;
 }
 // Create a default kernelspec with the given display name
 export function createDefaultKernelSpec(interpreter?: PythonEnvironment): IJupyterKernelSpec {
