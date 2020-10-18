@@ -53,7 +53,7 @@
     "python.command.python.execSelectionInDjangoShell.title": "Run Selection/Line in Django Shell",
     "python.command.python.goToPythonObject.title": "Go to Python Object",
     "python.command.python.setLinter.title": "Select Linter",
-    "python.command.python.enableLinting.title": "Enable Linting",
+    "python.command.python.enableLinting.title": "Enable/Disable Linting",
     "python.command.python.runLinting.title": "Run Linting",
     "python.command.python.datascience.runFileInteractive.title": "Run Current File in Python Interactive Window",
     "python.command.python.datascience.debugFileInteractive.title": "Debug Current File in Python Interactive Window",
