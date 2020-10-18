@@ -17,7 +17,8 @@ import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
-import { ColumnWarningSize, IDataViewerFactory } from '../data-viewing/types';
+import { IDataViewerFactory } from '../data-viewing/types';
+import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import { IShowDataViewerFromVariablePanel } from '../interactive-common/interactiveWindowTypes';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
 import {
@@ -36,6 +37,7 @@ import { JupyterServerSelectorCommand } from './serverSelector';
 @injectable()
 export class CommandRegistry implements IDisposable {
     private readonly disposables: IDisposable[] = [];
+    private dataViewerChecker: DataViewerChecker;
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
@@ -61,6 +63,7 @@ export class CommandRegistry implements IDisposable {
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
+        this.dataViewerChecker = new DataViewerChecker(configService, appShell);
     }
     public register() {
         this.commandLineCommand.register();
@@ -489,7 +492,7 @@ export class CommandRegistry implements IDisposable {
                 );
                 const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
                 const columnSize = dataFrameInfo?.columns?.length;
-                if (columnSize && columnSize <= ColumnWarningSize) {
+                if (columnSize && (await this.dataViewerChecker.checkColumnSize(columnSize))) {
                     const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
                     await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
                     sendTelemetryEvent(Telemetry.OpenDataViewerFromVariableWindowSuccess);
