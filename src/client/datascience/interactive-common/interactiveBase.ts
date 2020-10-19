@@ -153,7 +153,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         protected configuration: IConfigurationService,
         protected jupyterExporter: INotebookExporter,
         workspaceService: IWorkspaceService,
-        private dataExplorerFactory: IDataViewerFactory,
+        private dataViewerFactory: IDataViewerFactory,
         private jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         private jupyterVariables: IJupyterVariables,
         private jupyterDebugger: IJupyterDebugger,
@@ -982,9 +982,10 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     this._notebook!
                 );
                 const title: string = `${localize.DataScience.dataExplorerTitle()} - ${request.variable.name}`;
-                await this.dataExplorerFactory.create(jupyterVariableDataProvider, title);
+                await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
             }
         } catch (e) {
+            traceError(e);
             this.applicationShell.showErrorMessage(e.toString());
         }
     }
