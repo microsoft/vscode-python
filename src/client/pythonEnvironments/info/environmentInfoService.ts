@@ -19,6 +19,7 @@ export interface IEnvironmentInfoService {
         interpreterPath: string,
         priority?: EnvironmentInfoServiceQueuePriority
     ): Promise<InterpreterInformation | undefined>;
+    isInfoProvided(interpreterPath: string): boolean;
 }
 
 async function buildEnvironmentInfo(interpreterPath: string): Promise<InterpreterInformation | undefined> {
