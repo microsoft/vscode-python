@@ -9,5 +9,5 @@ variables:
   VSC_PYTHON_WEBVIEW_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc_webview.log'
   CI_BRANCH_NAME: ${Build.SourceBranchName}
   npm_config_cache: $(Pipeline.Workspace)/.npm
-  vmImageMacOS: 'macOS-10.15'
+  vmImageMacOS: 'macOS-latest'
   TS_NODE_FILES: true # Temporarily enabled to allow using types from vscode.proposed.d.ts from ts-node (for tests).
