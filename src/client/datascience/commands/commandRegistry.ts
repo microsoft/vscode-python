@@ -492,7 +492,7 @@ export class CommandRegistry implements IDisposable {
                 );
                 const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
                 const columnSize = dataFrameInfo?.columns?.length;
-                if (columnSize && (await this.dataViewerChecker.checkColumnSize(columnSize))) {
+                if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
                     const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
                     await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
                     sendTelemetryEvent(Telemetry.OpenDataViewerFromVariableWindowSuccess);

@@ -976,7 +976,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
-            if (await this.dataViewerChecker.checkColumnSize(request.columnSize, this.owningResource)) {
+            if (await this.dataViewerChecker.isRequestedColumnSizeAllowed(request.columnSize, this.owningResource)) {
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     request.variable,
                     this._notebook!

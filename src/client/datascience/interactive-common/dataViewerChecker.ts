@@ -4,10 +4,11 @@ import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { ColumnWarningSize } from '../data-viewing/types';
 
+// This helper class validates requests to show large data in the data viewer and configures related settings.
 export class DataViewerChecker {
     constructor(private configuration: IConfigurationService, private applicationShell: IApplicationShell) {}
 
-    public async checkColumnSize(columnSize: number, owningResource?: Resource): Promise<boolean> {
+    public async isRequestedColumnSizeAllowed(columnSize: number, owningResource?: Resource): Promise<boolean> {
         if (columnSize > ColumnWarningSize && (await this.shouldAskForLargeData(owningResource))) {
             const message = localize.DataScience.tooManyColumnsMessage();
             const yes = localize.DataScience.tooManyColumnsYes();
