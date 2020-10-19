@@ -229,7 +229,7 @@ export class VSCodeKernelPickerProvider implements NotebookKernelProvider {
         // If we already have a kernel selected, then return that.
         const editor =
             this.notebook.notebookEditors.find((e) => e.document === document) ||
-            (this.window.activeNotebookEditor?.document === document ? this.window.activeNotebookEditor : undefined);
+            (this.notebook.activeNotebookEditor?.document === document ? this.notebook.activeNotebookEditor : undefined);
         if (editor && editor.kernel && editor.kernel instanceof VSCodeNotebookKernelMetadata) {
             return editor.kernel.selection;
         }
