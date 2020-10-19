@@ -57,7 +57,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         return;
     }
 
-    public setDependencies(variable: IJupyterVariable, notebook: INotebook): void {
+    public setDependencies(variable: IJupyterVariable, notebook?: INotebook): void {
         this.notebook = notebook;
         this.variable = variable;
     }
@@ -65,7 +65,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
     public async getDataFrameInfo(): Promise<IDataFrameInfo> {
         let dataFrameInfo: IDataFrameInfo = {};
         await this.ensureInitialized();
-        if (this.variable && this.notebook) {
+        if (this.variable) {
             dataFrameInfo = {
                 columns: this.variable.columns
                     ? JupyterVariableDataProvider.getNormalizedColumns(this.variable.columns)
@@ -80,12 +80,12 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
     public async getAllRows() {
         let allRows: IRowsResponse = [];
         await this.ensureInitialized();
-        if (this.variable && this.variable.rowCount && this.notebook) {
+        if (this.variable && this.variable.rowCount) {
             const dataFrameRows = await this.variableManager.getDataFrameRows(
                 this.variable,
-                this.notebook,
                 0,
-                this.variable.rowCount
+                this.variable.rowCount,
+                this.notebook
             );
             allRows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
         }
@@ -95,8 +95,8 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
     public async getRows(start: number, end: number) {
         let rows: IRowsResponse = [];
         await this.ensureInitialized();
-        if (this.variable && this.variable.rowCount && this.notebook) {
-            const dataFrameRows = await this.variableManager.getDataFrameRows(this.variable, this.notebook, start, end);
+        if (this.variable && this.variable.rowCount) {
+            const dataFrameRows = await this.variableManager.getDataFrameRows(this.variable, start, end, this.notebook);
             rows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
         }
         return rows;
@@ -104,9 +104,9 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
 
     private async ensureInitialized(): Promise<void> {
         // Postpone pre-req and variable initialization until data is requested.
-        if (!this.initialized && this.variable && this.notebook) {
+        if (!this.initialized && this.variable) {
             this.initialized = true;
-            await this.dependencyService.checkAndInstallMissingDependencies(this.notebook.getMatchingInterpreter());
+            await this.dependencyService.checkAndInstallMissingDependencies(this.notebook?.getMatchingInterpreter());
             this.variable = await this.variableManager.getDataFrameInfo(this.variable, this.notebook);
         }
     }

@@ -111,6 +111,7 @@ export namespace Commands {
         'python.datascience.enableLoadingWidgetScriptsFromThirdPartySource';
     export const NotebookEditorExpandAllCells = 'python.datascience.notebookeditor.expandallcells';
     export const NotebookEditorCollapseAllCells = 'python.datascience.notebookeditor.collapseallcells';
+    export const ShowDataViewer = 'python.datascience.showDataViewer';
 }
 
 export namespace CodeLensCommands {
@@ -409,7 +410,10 @@ export enum Telemetry {
     TrustAllNotebooks = 'DATASCIENCE.TRUST_ALL_NOTEBOOKS',
     TrustNotebook = 'DATASCIENCE.TRUST_NOTEBOOK',
     DoNotTrustNotebook = 'DATASCIENCE.DO_NOT_TRUST_NOTEBOOK',
-    NotebookTrustPromptShown = 'DATASCIENCE.NOTEBOOK_TRUST_PROMPT_SHOWN'
+    NotebookTrustPromptShown = 'DATASCIENCE.NOTEBOOK_TRUST_PROMPT_SHOWN',
+    OpenDataViewerFromVariableWindowRequest = 'DATASCIENCE.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST',
+    OpenDataViewerFromVariableWindowError = 'DATASCIENCE.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR',
+    OpenDataViewerFromVariableWindowSuccess = 'DATASCIENCE.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS'
 }
 
 export enum NativeKeyboardCommandTelemetry {

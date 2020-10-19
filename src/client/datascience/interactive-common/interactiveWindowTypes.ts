@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-import { Uri } from 'vscode';
+import { DebugProtocolVariable, DebugProtocolVariableContainer, Uri } from 'vscode';
 import { DebugState, IServerState } from '../../../datascience-ui/interactive-common/mainState';
 
 import type { KernelMessage } from '@jupyterlab/services';
@@ -332,6 +332,11 @@ export interface IInsertCell {
 export interface IShowDataViewer {
     variable: IJupyterVariable;
     columnSize: number;
+}
+
+export interface IShowDataViewerFromVariablePanel {
+    container: DebugProtocolVariableContainer | undefined;
+    variable: DebugProtocolVariable;
 }
 
 export interface IRefreshVariablesRequest {

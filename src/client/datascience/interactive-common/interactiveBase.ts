@@ -48,7 +48,7 @@ import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { addToUriList, translateKernelLanguageToMonaco } from '../common';
 import { Commands, Identifiers, Settings, Telemetry } from '../constants';
-import { ColumnWarningSize, IDataViewerFactory } from '../data-viewing/types';
+import { IDataViewerFactory } from '../data-viewing/types';
 import {
     IAddedSysInfo,
     ICopyCode,
@@ -101,6 +101,7 @@ import {
     WebViewViewChangeEventArgs
 } from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
+import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
 
@@ -124,6 +125,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     protected abstract get notebookIdentity(): INotebookIdentity;
     protected fileInKernel: string | undefined;
+    protected dataViewerChecker: DataViewerChecker;
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
     private perceivedJupyterStartupTelemetryCaptured: boolean = false;
@@ -151,7 +153,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         protected configuration: IConfigurationService,
         protected jupyterExporter: INotebookExporter,
         workspaceService: IWorkspaceService,
-        private dataExplorerFactory: IDataViewerFactory,
+        private dataViewerFactory: IDataViewerFactory,
         private jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         private jupyterVariables: IJupyterVariables,
         private jupyterDebugger: IJupyterDebugger,
@@ -205,6 +207,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 l.onMessage(InteractiveWindowMessages.NotebookIdentity, this.notebookIdentity)
             );
         }, 0);
+
+        this.dataViewerChecker = new DataViewerChecker(configuration, applicationShell);
 
         // When a notebook provider first makes its connection check it to see if we should create a notebook
         this.disposables.push(
@@ -970,48 +974,18 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     }
 
-    private async shouldAskForLargeData(): Promise<boolean> {
-        const settings = this.configuration.getSettings(this.owningResource);
-        return settings && settings.datascience && settings.datascience.askForLargeDataFrames === true;
-    }
-
-    private async disableAskForLargeData(): Promise<void> {
-        const settings = this.configuration.getSettings(this.owningResource);
-        if (settings && settings.datascience) {
-            settings.datascience.askForLargeDataFrames = false;
-            this.configuration
-                .updateSetting('dataScience.askForLargeDataFrames', false, undefined, ConfigurationTarget.Global)
-                .ignoreErrors();
-        }
-    }
-
-    private async checkColumnSize(columnSize: number): Promise<boolean> {
-        if (columnSize > ColumnWarningSize && (await this.shouldAskForLargeData())) {
-            const message = localize.DataScience.tooManyColumnsMessage();
-            const yes = localize.DataScience.tooManyColumnsYes();
-            const no = localize.DataScience.tooManyColumnsNo();
-            const dontAskAgain = localize.DataScience.tooManyColumnsDontAskAgain();
-
-            const result = await this.applicationShell.showWarningMessage(message, yes, no, dontAskAgain);
-            if (result === dontAskAgain) {
-                await this.disableAskForLargeData();
-            }
-            return result === yes;
-        }
-        return true;
-    }
-
     private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
-            if (await this.checkColumnSize(request.columnSize)) {
+            if (await this.dataViewerChecker.isRequestedColumnSizeAllowed(request.columnSize, this.owningResource)) {
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     request.variable,
                     this._notebook!
                 );
                 const title: string = `${localize.DataScience.dataExplorerTitle()} - ${request.variable.name}`;
-                await this.dataExplorerFactory.create(jupyterVariableDataProvider, title);
+                await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
             }
         } catch (e) {
+            traceError(e);
             this.applicationShell.showErrorMessage(e.toString());
         }
     }
@@ -1420,7 +1394,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
         // Request our new list of variables
         const response: IJupyterVariablesResponse = this._notebook
-            ? await this.jupyterVariables.getVariables(this._notebook, args)
+            ? await this.jupyterVariables.getVariables(args, this._notebook)
             : {
                   totalCount: 0,
                   pageResponse: [],

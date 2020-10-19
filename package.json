@@ -928,6 +928,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.showDataViewer",
+                "title": "%python.command.python.datascience.showDataViewer.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.analysis.restartLanguageServer",
                 "title": "%python.command.python.analysis.restartLanguageServer.title%",
                 "category": "Python"
@@ -1551,6 +1556,11 @@
                     "when": "false"
                 },
                 {
+                    "command": "python.datascience.showDataViewer",
+                    "category": "Python",
+                    "when": "false"
+                },
+                {
                     "command": "python.datascience.export",
                     "title": "%DataScience.notebookExportAs%",
                     "category": "Python",
@@ -1654,6 +1664,13 @@
                     "command": "python.runTestNode",
                     "when": "view == python_tests && viewItem == suite && !busyTests",
                     "group": "inline@0"
+                }
+            ],
+            "debug/variables/context": [
+                {
+                    "command": "python.datascience.showDataViewer",
+                    "group": "1_view",
+                    "when": "debugProtocolVariableMenuContext == 'viewableInDataViewer'"
                 }
             ]
         },

@@ -66,14 +66,14 @@ export class OldJupyterVariables implements IJupyterVariables {
 
     // IJupyterVariables implementation
     public async getVariables(
-        notebook: INotebook,
-        request: IJupyterVariablesRequest
+        request: IJupyterVariablesRequest,
+        notebook: INotebook
     ): Promise<IJupyterVariablesResponse> {
         // Run the language appropriate variable fetch
         return this.getVariablesBasedOnKernel(notebook, request);
     }
 
-    public async getMatchingVariable(_notebook: INotebook, _name: string): Promise<IJupyterVariable | undefined> {
+    public async getMatchingVariable(_name: string, _notebook: INotebook): Promise<IJupyterVariable | undefined> {
         // Not supported with old method.
         return undefined;
     }
@@ -91,9 +91,9 @@ export class OldJupyterVariables implements IJupyterVariables {
 
     public async getDataFrameRows(
         targetVariable: IJupyterVariable,
-        notebook: INotebook,
         start: number,
-        end: number
+        end: number,
+        notebook: INotebook
     ): Promise<{}> {
         // Run the get dataframe rows script
         return this.runScript<{}>(notebook, targetVariable, {}, () => this.fetchDataFrameRowsScript, [

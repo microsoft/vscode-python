@@ -140,21 +140,24 @@ export async function verifyCanFetchData<T>(
         identity: getDefaultInteractiveIdentity()
     });
     expect(notebook).to.not.be.undefined;
-    const variableList = await variableFetcher.getVariables(notebook!, {
-        executionCount,
-        startIndex: 0,
-        pageSize: 100,
-        sortAscending: true,
-        sortColumn: 'INDEX',
-        refreshCount: 0
-    });
+    const variableList = await variableFetcher.getVariables(
+        {
+            executionCount,
+            startIndex: 0,
+            pageSize: 100,
+            sortAscending: true,
+            sortColumn: 'INDEX',
+            refreshCount: 0
+        },
+        notebook!
+    );
     expect(variableList.pageResponse.length).to.be.greaterThan(0, 'No variables returned');
     const variable = variableList.pageResponse.find((v) => v.name === name);
     expect(variable).to.not.be.undefined;
     expect(variable?.supportsDataExplorer).to.eq(true, `Variable ${name} does not support data explorer`);
     const withInfo = await variableFetcher.getDataFrameInfo(variable!, notebook!);
     expect(withInfo.count).to.eq(rows.length, 'Wrong number of rows for variable');
-    const fetchedRows = await variableFetcher.getDataFrameRows(withInfo!, notebook!, 0, rows.length);
+    const fetchedRows = await variableFetcher.getDataFrameRows(withInfo!, 0, rows.length, notebook!);
     expect(fetchedRows.data).to.have.length(rows.length, 'Fetched rows data is not the correct size');
     for (let i = 0; i < rows.length; i += 1) {
         const fetchedRow = (fetchedRows.data as any)[i];
