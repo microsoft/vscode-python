@@ -70,4 +70,9 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
             return r;
         });
     }
+
+    public isInfoProvided(interpreterPath: string): boolean {
+        const result = this.cache.get(interpreterPath);
+        return !!(result && result.completed);
+    }
 }
