@@ -131,15 +131,15 @@ export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implement
                     const envGenerator = findInterpretersInDir(envRootDir, searchDepth);
 
                     for await (const env of envGenerator) {
-                    // We only care about python.exe (on windows) and python (on linux/mac)
-                    // Other version like python3.exe or python3.8 are often symlinks to
-                    // python.exe or python in the same directory in the case od virtual
-                    // environments.
+                        // We only care about python.exe (on windows) and python (on linux/mac)
+                        // Other version like python3.exe or python3.8 are often symlinks to
+                        // python.exe or python in the same directory in the case of virtual
+                        // environments.
                         const name = path.basename(env).toLowerCase();
                         if (name === 'python.exe' || name === 'python') {
-                        // We should extract the kind here to avoid doing is*Environment()
-                        // check multiple times. Those checks are file system heavy and
-                        // we can use the kind to determine this anyway.
+                            // We should extract the kind here to avoid doing is*Environment()
+                            // check multiple times. Those checks are file system heavy and
+                            // we can use the kind to determine this anyway.
                             const kind = await getVirtualEnvKind(env);
 
                             if (virtualEnvKinds.includes(kind)) {

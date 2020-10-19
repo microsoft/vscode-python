@@ -16,20 +16,29 @@ import { pathExists } from '../../../common/externalDependencies';
 export async function isVenvEnvironment(interpreterPath:string): Promise<boolean> {
     const pyvenvConfigFile = 'pyvenv.cfg';
 
-    // Check if the pyvenv.cfg file is in the directory as the interpreter.
-    // env
-    // |__ pyvenv.cfg  <--- check if this file exists
-    // |__ python  <--- interpreterPath
-    const venvPath1 = path.join(path.dirname(interpreterPath), pyvenvConfigFile);
-
     // Check if the pyvenv.cfg file is in the parent directory relative to the interpreter.
     // env
     // |__ pyvenv.cfg  <--- check if this file exists
     // |__ bin or Scripts
     //     |__ python  <--- interpreterPath
-    const venvPath2 = path.join(path.dirname(path.dirname(interpreterPath)), pyvenvConfigFile);
+    const venvPath1 = path.join(path.dirname(path.dirname(interpreterPath)), pyvenvConfigFile);
 
-    return [await pathExists(venvPath1), await pathExists(venvPath2)].includes(true);
+    // Check if the pyvenv.cfg file is in the directory as the interpreter.
+    // env
+    // |__ pyvenv.cfg  <--- check if this file exists
+    // |__ python  <--- interpreterPath
+    const venvPath2 = path.join(path.dirname(interpreterPath), pyvenvConfigFile);
+
+    // The paths are ordered in the most common to least common
+    const venvPaths = [venvPath1, venvPath2];
+
+    // We don't need to test all at once, testing each one here
+    for (const venvPath of venvPaths) {
+        if (await pathExists(venvPath)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -45,7 +54,7 @@ export async function isVirtualenvEnvironment(interpreterPath:string): Promise<b
     // |__ python  <--- interpreterPath
     const directory = path.dirname(interpreterPath);
     const files = await fsapi.readdir(directory);
-    const regex = /^activate(\.([A-z]|\d)+)?$/;
+    const regex = /^activate(\.([A-z]|\d)+)?$/i;
 
     return files.find((file) => regex.test(file)) !== undefined;
 }

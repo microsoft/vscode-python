@@ -11,6 +11,7 @@ import { isWindowsPythonExe } from './windowsUtils';
 export async function* findInterpretersInDir(root:string, recurseLevels?:number): AsyncIterableIterator<string> {
     const dirContents = (await fsapi.readdir(root)).map((c) => path.join(root, c));
     const os = getOSType();
+    const checkBin = os === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
     const generators = dirContents.map((item) => {
         async function* generator() {
             const stat = await fsapi.lstat(item);
@@ -23,10 +24,7 @@ export async function* findInterpretersInDir(root:string, recurseLevels?:number)
                         yield subItem;
                     }
                 }
-            } else if (
-                (os === OSType.Windows && isWindowsPythonExe(item))
-                || (os !== OSType.Windows && isPosixPythonBin(item))
-            ) {
+            } else if (checkBin(item)) {
                 yield item;
             }
         }
