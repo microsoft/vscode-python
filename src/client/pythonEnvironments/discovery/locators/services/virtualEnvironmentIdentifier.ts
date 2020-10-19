@@ -57,7 +57,7 @@ async function getDefaultVirtualenvwrapperDir(): Promise<string> {
     // If 'Envs' is not available we should default to '.virtualenvs'. Since that
     // is also valid for windows.
     if (getOSType() === OSType.Windows) {
-        const envs = path.join(homeDir, 'Envs');
+        const envs = path.join(homeDir, 'envs');
         if (await pathExists(envs)) {
             return envs;
         }
