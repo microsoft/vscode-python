@@ -4,8 +4,6 @@ import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
-import * as localize from '../../common/utils/localize';
-import { Telemetry } from '../../datascience/constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
@@ -28,8 +26,8 @@ import {
     Product,
     ProductType
 } from '../types';
+import { Installer } from '../utils/localize';
 import { isResource, noop } from '../utils/misc';
-import { StopWatch } from '../utils/stopWatch';
 import { ProductNames } from './productNames';
 import {
     IInstallationChannelManager,
@@ -382,9 +380,7 @@ export class DataScienceInstaller extends BaseInstaller {
 
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         if (!installerModule) {
-            this.appShell
-                .showErrorMessage(localize.DataScience.couldNotInstallLibrary().format(moduleName))
-                .then(noop, noop);
+            this.appShell.showErrorMessage(Installer.couldNotInstallLibrary().format(moduleName)).then(noop, noop);
             return InstallerResponse.Ignore;
         }
 
@@ -396,6 +392,10 @@ export class DataScienceInstaller extends BaseInstaller {
             isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
         );
     }
+    /**
+     * This method will not get invoked for Jupyter extension.
+     * Implemented as a backup.
+     */
     protected async promptToInstallImplementation(
         product: Product,
         resource?: InterpreterUri,
@@ -403,24 +403,12 @@ export class DataScienceInstaller extends BaseInstaller {
     ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(
-            localize.DataScience.libraryNotInstalled().format(productName),
+            'Data Science library {0} is not installed. Install?'.format(productName),
             'Yes',
             'No'
         );
         if (item === 'Yes') {
-            const stopWatch = new StopWatch();
-            try {
-                const response = await this.install(product, resource, cancel);
-                const event =
-                    product === Product.jupyter ? Telemetry.UserInstalledJupyter : Telemetry.UserInstalledModule;
-                sendTelemetryEvent(event, stopWatch.elapsedTime, { product: productName });
-                return response;
-            } catch (e) {
-                if (product === Product.jupyter) {
-                    sendTelemetryEvent(Telemetry.JupyterInstallFailed);
-                }
-                throw e;
-            }
+            return this.install(product, resource, cancel);
         }
         return InstallerResponse.Ignore;
     }

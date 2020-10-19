@@ -1,6 +1,7 @@
 // tslint:disable:no-unnecessary-callback-wrapper no-require-imports no-var-requires
 
 import { injectable, unmanaged } from 'inversify';
+import { flatten, noop } from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../../../common/logger';
@@ -11,8 +12,6 @@ import { IServiceContainer } from '../../../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
-
-const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 @injectable()
 export class BaseVirtualEnvService extends CacheableLocatorService {
@@ -34,8 +33,10 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
-    // tslint:disable-next-line:no-empty
-    public dispose() {}
+    // eslint-disable-next-line class-methods-use-this
+    public dispose(): void {
+        noop();
+    }
 
     protected getInterpretersImplementation(resource?: Uri): Promise<PythonEnvironment[]> {
         return this.suggestionsFromKnownVenvs(resource);
@@ -53,7 +54,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             .getSubDirectories(pathToCheck)
             .then((subDirs) => Promise.all(this.getProspectiveDirectoriesForLookup(subDirs)))
             .then((dirs) => dirs.filter((dir) => dir.length > 0))
-            .then((dirs) => Promise.all(dirs.map((d) => lookForInterpretersInDirectory(d, this.fileSystem))))
+            .then((dirs) => Promise.all(dirs.map((d) => lookForInterpretersInDirectory(d))))
             .then((pathsWithInterpreters) => flatten(pathsWithInterpreters))
             .then((interpreters) => Promise.all(
                 interpreters.map((interpreter) => this.getVirtualEnvDetails(interpreter, resource)),
@@ -92,16 +93,16 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             this.helper.getInterpreterInformation(interpreter),
             this.virtualEnvMgr.getEnvironmentName(interpreter, resource),
             this.virtualEnvMgr.getEnvironmentType(interpreter, resource),
-        ]).then(([details, virtualEnvName, type]) => {
+        ]).then(([details, virtualEnvName, type]):Promise<PythonEnvironment | undefined> => {
             if (!details) {
-                return;
+                return Promise.resolve(undefined);
             }
             this._hasInterpreters.resolve(true);
-            return {
+            return Promise.resolve({
                 ...(details as PythonEnvironment),
                 envName: virtualEnvName,
                 type: type! as EnvironmentType,
-            };
+            });
         });
     }
 }

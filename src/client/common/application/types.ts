@@ -61,16 +61,17 @@ import {
 import type {
     NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
     NotebookCellMetadata,
+    NotebookCellMetadataChangeEvent as VSCNotebookCellMetadataChangeEvent,
     NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookDocument,
     NotebookDocumentFilter,
+    NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
     NotebookKernel,
     NotebookKernelProvider
 } from 'vscode-proposed';
-import * as vsls from 'vsls/vscode';
 
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
@@ -497,6 +498,12 @@ export interface ICommandManager {
      * @return Thenable that resolves to a list of command ids.
      */
     getCommands(filterInternal?: boolean): Thenable<string[]>;
+}
+
+export const IJupyterExtensionDependencyManager = Symbol('IJupyterExtensionDependencyManager');
+export interface IJupyterExtensionDependencyManager {
+    readonly isJupyterExtensionInstalled: boolean;
+    installJupyterExtension(): Promise<undefined>;
 }
 
 export const IDocumentManager = Symbol('IDocumentManager');
@@ -1142,22 +1149,6 @@ export interface IWebviewPanelProvider {
     create(options: IWebviewPanelOptions): Promise<IWebviewPanel>;
 }
 
-// Wraps the vsls liveshare API
-export const ILiveShareApi = Symbol('ILiveShareApi');
-export interface ILiveShareApi {
-    getApi(): Promise<vsls.LiveShare | null>;
-}
-
-// Wraps the liveshare api for testing
-export const ILiveShareTestingApi = Symbol('ILiveShareTestingApi');
-export interface ILiveShareTestingApi extends ILiveShareApi {
-    isSessionStarted: boolean;
-    forceRole(role: vsls.Role): void;
-    startSession(): Promise<void>;
-    stopSession(): Promise<void>;
-    disableGuestChecker(): void;
-}
-
 export const ILanguageService = Symbol('ILanguageService');
 export interface ILanguageService {
     /**
@@ -1526,10 +1517,16 @@ export interface IClipboard {
 
 export type NotebookCellsChangeEvent = { type: 'changeCells' } & VSCNotebookCellsChangeEvent;
 export type NotebookCellOutputsChangeEvent = { type: 'changeCellOutputs' } & VSCNotebookCellOutputsChangeEvent;
+export type NotebookCellMetadataChangeEvent = { type: 'changeCellMetadata' } & VSCNotebookCellMetadataChangeEvent;
 export type NotebookCellLanguageChangeEvent = { type: 'changeCellLanguage' } & VSCNotebookCellLanguageChangeEvent;
+export type NotebookDocumentMetadataChangeEvent = {
+    type: 'changeNotebookMetadata';
+} & VSCNotebookDocumentMetadataChangeEvent;
 export type NotebookCellChangedEvent =
     | NotebookCellsChangeEvent
     | NotebookCellOutputsChangeEvent
+    | NotebookCellMetadataChangeEvent
+    | NotebookDocumentMetadataChangeEvent
     | NotebookCellLanguageChangeEvent;
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
@@ -1540,6 +1537,7 @@ export interface IVSCodeNotebook {
     readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
+    readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     readonly notebookEditors: Readonly<NotebookEditor[]>;

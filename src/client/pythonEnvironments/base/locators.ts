@@ -1,10 +1,47 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { EventEmitter } from 'vscode';
 import { chain } from '../../common/utils/async';
 import { PythonEnvInfo } from './info';
-import { ILocator, NOOP_ITERATOR, PythonEnvsIterator, PythonLocatorQuery } from './locator';
+import {
+    ILocator,
+    IPythonEnvsIterator,
+    NOOP_ITERATOR,
+    PythonEnvUpdatedEvent,
+    PythonLocatorQuery
+} from './locator';
 import { DisableableEnvsWatcher, PythonEnvsWatchers } from './watchers';
+
+/**
+ * Combine the `onUpdated` event of the given iterators into a single event.
+ */
+export function combineIterators(iterators: IPythonEnvsIterator[]): IPythonEnvsIterator {
+    const result: IPythonEnvsIterator = chain(iterators);
+    const events = iterators.map((it) => it.onUpdated).filter((v) => v);
+    if (!events || events.length === 0) {
+        // There are no sub-events, so we leave `onUpdated` undefined.
+        return result;
+    }
+
+    const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
+    let numActive = events.length;
+    events.forEach((event) => {
+        event!((e: PythonEnvUpdatedEvent | null) => {
+            if (e === null) {
+                numActive -= 1;
+                if (numActive === 0) {
+                    // All the sub-events are done so we're done.
+                    emitter.fire(null);
+                }
+            } else {
+                emitter.fire(e);
+            }
+        });
+    });
+    result.onUpdated = emitter.event;
+    return result;
+}
 
 /**
  * A wrapper around a set of locators, exposing them as a single locator.
@@ -19,9 +56,9 @@ export class Locators extends PythonEnvsWatchers implements ILocator {
         super(locators);
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): PythonEnvsIterator {
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const iterators = this.locators.map((loc) => loc.iterEnvs(query));
-        return chain(iterators);
+        return combineIterators(iterators);
     }
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
@@ -50,7 +87,7 @@ export class DisableableLocator extends DisableableEnvsWatcher implements ILocat
         super(locator);
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): PythonEnvsIterator {
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         if (!this.enabled) {
             return NOOP_ITERATOR;
         }

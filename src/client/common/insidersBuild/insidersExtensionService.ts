@@ -61,7 +61,7 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
         const channel = this.extensionChannelService.getChannel();
         const isDefault = this.extensionChannelService.isChannelUsingDefaultConfiguration;
 
-        const alreadyHandled = await this.handleEdgeCases(channel, isDefault);
+        const alreadyHandled = await this.handleEdgeCases(isDefault);
         if (!alreadyHandled) {
             this.handleChannel(channel).ignoreErrors();
         }
@@ -84,13 +84,11 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
      * Choose what to do in miscellaneous situations
      * @returns `true` if install channel is handled in these miscellaneous cases, `false` if install channel needs further handling
      */
-    public async handleEdgeCases(installChannel: ExtensionChannels, isDefault: boolean): Promise<boolean> {
+    public async handleEdgeCases(isDefault: boolean): Promise<boolean> {
         // When running UI Tests we might want to disable these prompts.
         if (process.env.UITEST_DISABLE_INSIDERS) {
             return true;
         } else if (await this.promptToInstallInsidersIfApplicable(isDefault)) {
-            return true;
-        } else if (await this.setInsidersChannelToOffIfApplicable(installChannel)) {
             return true;
         } else {
             return false;
@@ -113,23 +111,6 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
         }
 
         await this.insidersPrompt.promptToInstallInsiders();
-        return true;
-    }
-
-    /**
-     * When install channel is not in sync with what is installed, resolve discrepency by setting channel to "off"
-     * @returns `true` if channel is set to off, `false` otherwise
-     */
-    private async setInsidersChannelToOffIfApplicable(installChannel: ExtensionChannels): Promise<boolean> {
-        if (installChannel === 'off') {
-            return false;
-        }
-        if (this.appEnvironment.extensionChannel !== 'stable') {
-            return false;
-        }
-
-        // Install channel is set to "weekly" or "daily" but stable version of extension is installed. Switch channel to "off" to use the installed version
-        await this.extensionChannelService.updateChannel('off');
         return true;
     }
 }

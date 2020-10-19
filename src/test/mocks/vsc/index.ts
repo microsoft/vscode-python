@@ -13,6 +13,11 @@ import * as vscode from 'vscode';
 export * from './extHostedTypes';
 export * from './uri';
 
+const escapeCodiconsRegex = /(\\)?\$\([a-z0-9\-]+?(?:~[a-z0-9\-]*?)?\)/gi;
+export function escapeCodicons(text: string): string {
+    return text.replace(escapeCodiconsRegex, (match, escaped) => (escaped ? match : `\\${match}`));
+}
+
 export namespace vscMock {
     export enum ExtensionKind {
         /**
@@ -163,6 +168,78 @@ export namespace vscMock {
         Indent = 1,
         IndentOutdent = 2,
         Outdent = 3
+    }
+
+    export enum CompletionTriggerKind {
+        Invoke = 0,
+        TriggerCharacter = 1,
+        TriggerForIncompleteCompletions = 2
+    }
+
+    export class MarkdownString {
+        public value: string;
+        public isTrusted?: boolean;
+        public readonly supportThemeIcons?: boolean;
+
+        constructor(value?: string, supportThemeIcons: boolean = false) {
+            this.value = value ?? '';
+            this.supportThemeIcons = supportThemeIcons;
+        }
+
+        public static isMarkdownString(thing: any): thing is vscode.MarkdownString {
+            if (thing instanceof MarkdownString) {
+                return true;
+            }
+            return (
+                thing && thing.appendCodeblock && thing.appendMarkdown && thing.appendText && thing.value !== undefined
+            );
+        }
+
+        public appendText(value: string): MarkdownString {
+            // escape markdown syntax tokens: http://daringfireball.net/projects/markdown/syntax#backslash
+            this.value += (this.supportThemeIcons ? escapeCodicons(value) : value)
+                .replace(/[\\`*_{}[\]()#+\-.!]/g, '\\$&')
+                .replace(/\n/, '\n\n');
+
+            return this;
+        }
+
+        public appendMarkdown(value: string): MarkdownString {
+            this.value += value;
+
+            return this;
+        }
+
+        public appendCodeblock(code: string, language: string = ''): MarkdownString {
+            this.value += '\n```';
+            this.value += language;
+            this.value += '\n';
+            this.value += code;
+            this.value += '\n```\n';
+            return this;
+        }
+    }
+
+    export class Hover {
+        public contents: vscode.MarkdownString[] | vscode.MarkedString[];
+        public range: vscode.Range | undefined;
+
+        constructor(
+            contents: vscode.MarkdownString | vscode.MarkedString | vscode.MarkdownString[] | vscode.MarkedString[],
+            range?: vscode.Range
+        ) {
+            if (!contents) {
+                throw new Error('Illegal argument, contents must be defined');
+            }
+            if (Array.isArray(contents)) {
+                this.contents = <vscode.MarkdownString[] | vscode.MarkedString[]>contents;
+            } else if (MarkdownString.isMarkdownString(contents)) {
+                this.contents = [contents];
+            } else {
+                this.contents = [contents];
+            }
+            this.range = range;
+        }
     }
 
     export class CodeActionKind {

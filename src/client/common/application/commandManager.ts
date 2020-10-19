@@ -3,13 +3,18 @@
 
 // tslint:disable:no-any
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { commands, Disposable, TextEditor, TextEditorEdit } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from './commands';
-import { ICommandManager } from './types';
+import { ICommandManager, IJupyterExtensionDependencyManager } from './types';
 
 @injectable()
 export class CommandManager implements ICommandManager {
+    constructor(
+        @inject(IJupyterExtensionDependencyManager)
+        private jupyterExtensionDependencyManager: IJupyterExtensionDependencyManager
+    ) {}
+
     /**
      * Registers a command that can be invoked via a keyboard shortcut,
      * a menu item, an action, or directly.
@@ -70,7 +75,11 @@ export class CommandManager implements ICommandManager {
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
     >(command: E, ...rest: U): Thenable<T | undefined> {
-        return commands.executeCommand<T>(command, ...rest);
+        if (command.includes('jupyter') && !this.jupyterExtensionDependencyManager.isJupyterExtensionInstalled) {
+            return this.jupyterExtensionDependencyManager.installJupyterExtension();
+        } else {
+            return commands.executeCommand<T>(command, ...rest);
+        }
     }
 
     /**

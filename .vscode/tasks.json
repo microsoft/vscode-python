@@ -48,15 +48,6 @@
             }
         },
         {
-            "label": "Inject DS WebBrowser UI",
-            "type": "shell",
-            "command": "node",
-            "args": [
-                "build/debug/replaceWithWebBrowserPanel.js"
-            ],
-            "problemMatcher": []
-        },
-        {
             "type": "npm",
             "script": "preTestJediLSP",
             "problemMatcher": [],

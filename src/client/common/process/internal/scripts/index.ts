@@ -34,26 +34,25 @@ const ISOLATED = _ISOLATED;
 //  * install_debugpy.py  (used only for extension development)
 
 export * as testing_tools from './testing_tools';
-export * as vscode_datascience_helpers from './vscode_datascience_helpers';
 
 //============================
 // interpreterInfo.py
 
 type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final';
 type PythonVersionInfo = [number, number, number, ReleaseLevel, number];
-export type PythonEnvInfo = {
+export type InterpreterInfoJson = {
     versionInfo: PythonVersionInfo;
     sysPrefix: string;
     sysVersion: string;
     is64Bit: boolean;
 };
 
-export function interpreterInfo(): [string[], (out: string) => PythonEnvInfo] {
+export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJson] {
     const script = path.join(SCRIPTS_DIR, 'interpreterInfo.py');
     const args = [ISOLATED, script];
 
-    function parse(out: string): PythonEnvInfo {
-        let json: PythonEnvInfo;
+    function parse(out: string): InterpreterInfoJson {
+        let json: InterpreterInfoJson;
         try {
             json = JSON.parse(out);
         } catch (ex) {
@@ -306,7 +305,7 @@ export function shell_exec(command: string, lockfile: string, shellArgs: string[
     // We don't bother with a "parse" function since the output
     // could be anything.
     return [
-        ISOLATED.fileToCommandArgument(),
+        ISOLATED,
         script,
         command.fileToCommandArgument(),
         // The shell args must come after the command

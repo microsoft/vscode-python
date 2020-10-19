@@ -9,8 +9,7 @@ import {
     Position,
     ReferenceContext,
     SignatureHelpContext,
-    TextDocument,
-    TextDocumentContentChangeEvent
+    TextDocument
 } from 'vscode';
 // tslint:disable-next-line: import-name
 import { IWorkspaceService } from '../../common/application/types';
@@ -73,15 +72,15 @@ export class MultiplexingJediLanguageServerActivator implements ILanguageServerA
         return this.onDidChangeCodeLensesEmitter.event;
     }
 
-    public handleChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]) {
-        if (this.realLanguageServer && this.realLanguageServer.handleChanges) {
-            this.realLanguageServer.handleChanges(document, changes);
+    public get connection() {
+        if (this.realLanguageServer) {
+            return this.realLanguageServer.connection;
         }
     }
 
-    public handleOpen(document: TextDocument) {
-        if (this.realLanguageServer && this.realLanguageServer.handleOpen) {
-            this.realLanguageServer.handleOpen(document);
+    public get capabilities() {
+        if (this.realLanguageServer) {
+            return this.realLanguageServer.capabilities;
         }
     }
 

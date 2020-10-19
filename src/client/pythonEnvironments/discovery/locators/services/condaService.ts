@@ -13,7 +13,7 @@ import { IFileSystem, IPlatformService } from '../../../../common/platform/types
 import { IProcessServiceFactory } from '../../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
-import { ICondaService, IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE } from '../../../../interpreter/contracts';
+import { IComponentAdapter, ICondaService, IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE } from '../../../../interpreter/contracts';
 import { EnvironmentType, PythonEnvironment } from '../../../info';
 import { CondaEnvironmentInfo, CondaInfo } from './conda';
 import { parseCondaEnvFileContents } from './condaHelper';
@@ -49,6 +49,12 @@ export const CondaLocationsGlobWin = `{${condaGlobPathsForWindows.join(',')}}`;
 
 export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
 
+// The parts of IComponentAdapter used here.
+interface IComponent {
+    isCondaEnvironment(interpreterPath: string): Promise<boolean | undefined>;
+    getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
+}
+
 /**
  * A wrapper around a conda installation.
  */
@@ -66,6 +72,7 @@ export class CondaService implements ICondaService {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponent,
         @inject(IInterpreterLocatorService)
         @named(WINDOWS_REGISTRY_SERVICE)
         @optional()
@@ -183,6 +190,10 @@ export class CondaService implements ICondaService {
      * @memberof CondaService
      */
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean> {
+        const result = await this.pyenvs.isCondaEnvironment(interpreterPath);
+        if (result !== undefined) {
+            return result;
+        }
         const dir = path.dirname(interpreterPath);
         const { isWindows } = this.platform;
         const condaMetaDirectory = isWindows ? path.join(dir, 'conda-meta') : path.join(dir, '..', 'conda-meta');
@@ -193,6 +204,10 @@ export class CondaService implements ICondaService {
      * Return (env name, interpreter filename) for the interpreter.
      */
     public async getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined> {
+        const found = await this.pyenvs.getCondaEnvironment(interpreterPath);
+        if (found !== undefined) {
+            return found;
+        }
         const isCondaEnv = await this.isCondaEnvironment(interpreterPath);
         if (!isCondaEnv) {
             return;

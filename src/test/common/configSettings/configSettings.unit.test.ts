@@ -5,7 +5,7 @@
 
 // tslint:disable:no-any
 
-import { assert, expect } from 'chai';
+import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
@@ -17,7 +17,6 @@ import { PythonSettings } from '../../../client/common/configSettings';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
-    IDataScienceSettings,
     IExperiments,
     IFormattingSettings,
     ILintingSettings,
@@ -117,7 +116,6 @@ suite('Python Settings', async () => {
             .returns(() => sourceSettings.workspaceSymbols);
         config.setup((c) => c.get<ITestingSettings>('testing')).returns(() => sourceSettings.testing);
         config.setup((c) => c.get<ITerminalSettings>('terminal')).returns(() => sourceSettings.terminal);
-        config.setup((c) => c.get<IDataScienceSettings>('dataScience')).returns(() => sourceSettings.datascience);
         config.setup((c) => c.get<IExperiments>('experiments')).returns(() => sourceSettings.experiments);
     }
 
@@ -302,54 +300,5 @@ suite('Python Settings', async () => {
             expect((settings.formatting as any)[key]).to.be.equal(expectedPath);
         }
         config.verifyAll();
-    });
-
-    test('File env variables remain in settings', () => {
-        expected.datascience = {
-            allowImportFromNotebook: true,
-            alwaysTrustNotebooks: true,
-            jupyterLaunchTimeout: 20000,
-            jupyterLaunchRetries: 3,
-            enabled: true,
-            jupyterServerURI: 'local',
-            // tslint:disable-next-line: no-invalid-template-strings
-            notebookFileRoot: '${fileDirname}',
-            changeDirOnImportExport: true,
-            useDefaultConfigForJupyter: true,
-            jupyterInterruptTimeout: 10000,
-            searchForJupyter: true,
-            showCellInputCode: true,
-            collapseCellInputCodeByDefault: true,
-            allowInput: true,
-            maxOutputSize: 400,
-            enableScrollingForCellOutputs: true,
-            errorBackgroundColor: '#FFFFFF',
-            sendSelectionToInteractiveWindow: false,
-            variableExplorerExclude: 'module;function;builtin_function_or_method',
-            codeRegularExpression: '',
-            markdownRegularExpression: '',
-            enablePlotViewer: true,
-            runStartupCommands: '',
-            debugJustMyCode: true,
-            variableQueries: [],
-            jupyterCommandLineArguments: [],
-            widgetScriptSources: [],
-            interactiveWindowMode: 'single'
-        };
-        expected.pythonPath = 'python3';
-        // tslint:disable-next-line:no-any
-        expected.experiments = {
-            enabled: false,
-            optInto: [],
-            optOutFrom: []
-        };
-        initializeConfig(expected);
-        config
-            .setup((c) => c.get<IExperiments>('experiments'))
-            .returns(() => expected.experiments)
-            .verifiable(TypeMoq.Times.once());
-
-        settings.update(config.object);
-        assert.equal(expected.datascience.notebookFileRoot, settings.datascience.notebookFileRoot);
     });
 });

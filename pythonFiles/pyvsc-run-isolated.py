@@ -4,14 +4,20 @@
 if __name__ != "__main__":
     raise Exception("{} cannot be imported".format(__name__))
 
+import os
 import os.path
 import runpy
 import sys
 
-# We "isolate" the script/module (sys.argv[1]) by
-# replacing sys.path[0] with a dummy path and then sending the target
-# on to runpy.
-sys.path[0] = os.path.join(os.path.dirname(__file__), ".does-not-exist")
+
+def normalize(path):
+    return os.path.normcase(os.path.normpath(path))
+
+
+# We "isolate" the script/module (sys.argv[1]) by removing current working
+# directory or '' in sys.path and then sending the target on to runpy.
+cwd = normalize(os.getcwd())
+sys.path[:] = (p for p in sys.path if p != "" and normalize(p) != cwd)
 del sys.argv[0]
 module = sys.argv[0]
 if module == "-c":

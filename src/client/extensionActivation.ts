@@ -19,7 +19,8 @@ import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
-import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
+import { StartPage } from './common/startPage/startPage';
+import { IStartPage } from './common/startPage/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -31,9 +32,6 @@ import {
 import { OutputChannelNames } from './common/utils/localize';
 import { noop } from './common/utils/misc';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
-import { JUPYTER_OUTPUT_CHANNEL } from './datascience/constants';
-import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
-import { IDataScience } from './datascience/types';
 import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
@@ -96,13 +94,10 @@ async function activateLegacy(
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
     addOutputChannelLogging(standardOutputChannel);
     const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
-    const jupyterOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, jupyterOutputChannel, JUPYTER_OUTPUT_CHANNEL);
 
     // Core registrations (non-feature specific).
-    commonRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
 
@@ -132,10 +127,6 @@ async function activateLegacy(
     const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     await abExperiments.activate();
 
-    // Register datascience types after experiments have loaded.
-    // To ensure we can register types based on experiments.
-    dataScienceRegisterTypes(serviceManager);
-
     const languageServerType = configuration.getSettings().languageServer;
 
     // Language feature registrations.
@@ -156,6 +147,8 @@ async function activateLegacy(
     const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
     const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
+    const startPage = serviceManager.get<StartPage>(IStartPage);
+    cmdManager.registerCommand(Commands.OpenStartPage, () => startPage.open());
     cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
 
     // Display progress of interpreter refreshes only after extension has activated.
@@ -187,10 +180,6 @@ async function activateLegacy(
     interpreterManager
         .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
         .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
-
-    // Activate data science features
-    const dataScience = serviceManager.get<IDataScience>(IDataScience);
-    dataScience.activate().ignoreErrors();
 
     context.subscriptions.push(new LinterCommands(serviceManager));
 

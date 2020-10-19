@@ -95,7 +95,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             return [];
         }
 
-        if (!this.helper.isMacDefaultPythonPath(settings.pythonPath)) {
+        if (!(await this.helper.isMacDefaultPythonPath(settings.pythonPath))) {
             return [];
         }
         if (!currentInterpreter || currentInterpreter.envType !== EnvironmentType.Unknown) {
@@ -103,18 +103,19 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         }
 
         const interpreters = await this.interpreterService.getInterpreters(resource);
-        if (interpreters.filter((i) => !this.helper.isMacDefaultPythonPath(i.path)).length === 0) {
-            return [
-                new InvalidMacPythonInterpreterDiagnostic(
-                    DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
-                    resource
-                )
-            ];
+        for (const info of interpreters) {
+            if (!(await this.helper.isMacDefaultPythonPath(info.path))) {
+                return [
+                    new InvalidMacPythonInterpreterDiagnostic(
+                        DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
+                        resource
+                    )
+                ];
+            }
         }
-
         return [
             new InvalidMacPythonInterpreterDiagnostic(
-                DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
+                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
                 resource
             )
         ];

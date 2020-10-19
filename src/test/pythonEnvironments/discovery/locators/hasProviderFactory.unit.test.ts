@@ -40,7 +40,7 @@ suite('Interpretersx - Interpreter Hash Provider Factory', () => {
     });
     test('When provided python path is not a window store interpreter return standard hash provider', async () => {
         const pythonPath = 'NonWindowsInterpreterPath';
-        when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(false);
+        when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(Promise.resolve(false));
 
         const provider = await factory.create({ pythonPath });
 
@@ -49,7 +49,7 @@ suite('Interpretersx - Interpreter Hash Provider Factory', () => {
     });
     test('When provided python path is a windows store interpreter return windows store hash provider', async () => {
         const pythonPath = 'NonWindowsInterpreterPath';
-        when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(true);
+        when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(Promise.resolve(true));
 
         const provider = await factory.create({ pythonPath });
 
@@ -60,7 +60,7 @@ suite('Interpretersx - Interpreter Hash Provider Factory', () => {
         const pythonPath = 'NonWindowsInterpreterPath';
         const resource = Uri.file('1');
         when(configService.getSettings(resource)).thenReturn({ pythonPath } as any);
-        when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(false);
+        when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(Promise.resolve(false));
 
         const provider = await factory.create({ resource });
 
@@ -71,7 +71,7 @@ suite('Interpretersx - Interpreter Hash Provider Factory', () => {
         const pythonPath = 'NonWindowsInterpreterPath';
         const resource = Uri.file('1');
         when(configService.getSettings(resource)).thenReturn({ pythonPath } as any);
-        when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(true);
+        when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(Promise.resolve(true));
 
         const provider = await factory.create({ resource });
 

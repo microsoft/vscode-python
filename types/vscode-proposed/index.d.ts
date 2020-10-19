@@ -17,6 +17,8 @@ import {
 } from 'vscode';
 
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
+//#region @rebornix: Notebook
+
 export enum CellKind {
     Markdown = 1,
     Code = 2
@@ -98,60 +100,60 @@ export interface NotebookCellMetadata {
     /**
      * Controls whether a cell's editor is editable/readonly.
      */
-    editable?: boolean;
+    readonly editable?: boolean;
 
     /**
      * Controls if the cell is executable.
      * This metadata is ignored for markdown cell.
      */
-    runnable?: boolean;
+    readonly runnable?: boolean;
 
     /**
      * Controls if the cell has a margin to support the breakpoint UI.
      * This metadata is ignored for markdown cell.
      */
-    breakpointMargin?: boolean;
+    readonly breakpointMargin?: boolean;
 
     /**
      * Whether the [execution order](#NotebookCellMetadata.executionOrder) indicator will be displayed.
      * Defaults to true.
      */
-    hasExecutionOrder?: boolean;
+    readonly hasExecutionOrder?: boolean;
 
     /**
      * The order in which this cell was executed.
      */
-    executionOrder?: number;
+    readonly executionOrder?: number;
 
     /**
      * A status message to be shown in the cell's status bar
      */
-    statusMessage?: string;
+    readonly statusMessage?: string;
 
     /**
      * The cell's current run state
      */
-    runState?: NotebookCellRunState;
+    readonly runState?: NotebookCellRunState;
 
     /**
      * If the cell is running, the time at which the cell started running
      */
-    runStartTime?: number;
+    readonly runStartTime?: number;
 
     /**
      * The total duration of the cell's last run
      */
-    lastRunDuration?: number;
+    readonly lastRunDuration?: number;
 
     /**
      * Whether a code cell's editor is collapsed
      */
-    inputCollapsed?: boolean;
+    readonly inputCollapsed?: boolean;
 
     /**
      * Whether a code cell's outputs are collapsed
      */
-    outputCollapsed?: boolean;
+    readonly outputCollapsed?: boolean;
 
     /**
      * Additional attributes of a cell metadata.
@@ -160,13 +162,14 @@ export interface NotebookCellMetadata {
 }
 
 export interface NotebookCell {
+    readonly index: number;
     readonly notebook: NotebookDocument;
     readonly uri: Uri;
     readonly cellKind: CellKind;
     readonly document: TextDocument;
     readonly language: string;
-    outputs: CellOutput[];
-    metadata: NotebookCellMetadata;
+    readonly outputs: CellOutput[];
+    readonly metadata: NotebookCellMetadata;
 }
 
 export interface NotebookDocumentMetadata {
@@ -174,43 +177,57 @@ export interface NotebookDocumentMetadata {
      * Controls if users can add or delete cells
      * Defaults to true
      */
-    editable?: boolean;
+    readonly editable?: boolean;
 
     /**
      * Controls whether the full notebook can be run at once.
      * Defaults to true
      */
-    runnable?: boolean;
+    readonly runnable?: boolean;
 
     /**
      * Default value for [cell editable metadata](#NotebookCellMetadata.editable).
      * Defaults to true.
      */
-    cellEditable?: boolean;
+    readonly cellEditable?: boolean;
 
     /**
      * Default value for [cell runnable metadata](#NotebookCellMetadata.runnable).
      * Defaults to true.
      */
-    cellRunnable?: boolean;
+    readonly cellRunnable?: boolean;
 
     /**
      * Default value for [cell hasExecutionOrder metadata](#NotebookCellMetadata.hasExecutionOrder).
      * Defaults to true.
      */
-    cellHasExecutionOrder?: boolean;
+    readonly cellHasExecutionOrder?: boolean;
 
-    displayOrder?: GlobPattern[];
+    readonly displayOrder?: GlobPattern[];
 
     /**
      * Additional attributes of the document metadata.
      */
-    custom?: { [key: string]: any };
+    readonly custom?: { [key: string]: any };
 
     /**
      * The document's current run state
      */
-    runState?: NotebookRunState;
+    readonly runState?: NotebookRunState;
+}
+
+export interface NotebookDocumentContentOptions {
+    /**
+     * Controls if outputs change will trigger notebook document content change and if it will be used in the diff editor
+     * Default to false. If the content provider doesn't persisit the outputs in the file document, this should be set to true.
+     */
+    readonly transientOutputs: boolean;
+
+    /**
+     * Controls if a meetadata property change will trigger notebook document content change and if it will be used in the diff editor
+     * Default to false. If the content provider doesn't persisit a metadata property in the file document, it should be set to true.
+     */
+    readonly transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
 }
 
 export interface NotebookDocument {
@@ -221,8 +238,9 @@ export interface NotebookDocument {
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
     readonly cells: ReadonlyArray<NotebookCell>;
-    languages: string[];
-    metadata: NotebookDocumentMetadata;
+    readonly contentOptions: Readonly<NotebookDocumentContentOptions>;
+    readonly languages: string[];
+    readonly metadata: Readonly<NotebookDocumentMetadata>;
 }
 
 export interface NotebookConcatTextDocument {
@@ -245,15 +263,21 @@ export interface NotebookConcatTextDocument {
 }
 
 export interface WorkspaceEdit {
-    replaceCells(
+    replaceNotebookMetadata(uri: Uri, value: NotebookDocumentMetadata): void;
+    replaceNotebookCells(
         uri: Uri,
         start: number,
         end: number,
         cells: NotebookCellData[],
         metadata?: WorkspaceEditEntryMetadata
     ): void;
-    replaceCellOutput(uri: Uri, index: number, outputs: CellOutput[], metadata?: WorkspaceEditEntryMetadata): void;
-    replaceCellMetadata(
+    replaceNotebookCellOutput(
+        uri: Uri,
+        index: number,
+        outputs: CellOutput[],
+        metadata?: WorkspaceEditEntryMetadata
+    ): void;
+    replaceNotebookCellMetadata(
         uri: Uri,
         index: number,
         cellMetadata: NotebookCellMetadata,
@@ -261,26 +285,18 @@ export interface WorkspaceEdit {
     ): void;
 }
 
-export interface NotebookEditorCellEdit {
+export interface NotebookEditorEdit {
+    replaceMetadata(value: NotebookDocumentMetadata): void;
     replaceCells(start: number, end: number, cells: NotebookCellData[]): void;
-    replaceOutput(index: number, outputs: CellOutput[]): void;
-    replaceMetadata(index: number, metadata: NotebookCellMetadata): void;
-
-    /** @deprecated */
-    insert(
-        index: number,
-        content: string | string[],
-        language: string,
-        type: CellKind,
-        outputs: CellOutput[],
-        metadata: NotebookCellMetadata | undefined
-    ): void;
-    /** @deprecated */
-    delete(index: number): void;
+    replaceCellOutput(index: number, outputs: CellOutput[]): void;
+    replaceCellMetadata(index: number, metadata: NotebookCellMetadata): void;
 }
 
 export interface NotebookCellRange {
     readonly start: number;
+    /**
+     * exclusive
+     */
     readonly end: number;
 }
 
@@ -359,7 +375,19 @@ export interface NotebookEditor {
      */
     asWebviewUri(localResource: Uri): Uri;
 
-    edit(callback: (editBuilder: NotebookEditorCellEdit) => void): Thenable<boolean>;
+    /**
+     * Perform an edit on the notebook associated with this notebook editor.
+     *
+     * The given callback-function is invoked with an [edit-builder](#NotebookEditorEdit) which must
+     * be used to make edits. Note that the edit-builder is only valid while the
+     * callback executes.
+     *
+     * @param callback A function which can create edits using an [edit-builder](#NotebookEditorEdit).
+     * @return A promise that resolves with a value indicating if the edits could be applied.
+     */
+    edit(callback: (editBuilder: NotebookEditorEdit) => void): Thenable<boolean>;
+
+    setDecorations(decorationType: NotebookEditorDecorationType, range: NotebookCellRange): void;
 
     revealRange(range: NotebookCellRange, revealType?: NotebookEditorRevealType): void;
 }
@@ -372,6 +400,10 @@ export interface NotebookRenderRequest {
     output: CellDisplayOutput;
     mimeType: string;
     outputId: string;
+}
+
+export interface NotebookDocumentMetadataChangeEvent {
+    readonly document: NotebookDocument;
 }
 
 export interface NotebookCellsChangeData {
@@ -541,6 +573,10 @@ export interface NotebookCommunication {
 }
 
 export interface NotebookContentProvider {
+    readonly options?: NotebookDocumentContentOptions;
+    readonly onDidChangeNotebookContentOptions?: Event<NotebookDocumentContentOptions>;
+    readonly onDidChangeNotebook: Event<NotebookDocumentContentChangeEvent | NotebookDocumentEditEvent>;
+
     /**
      * Content providers should always use [file system providers](#FileSystemProvider) to
      * resolve the raw content for `uri` as the resouce is not necessarily a file on disk.
@@ -549,7 +585,6 @@ export interface NotebookContentProvider {
     resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Promise<void>;
     saveNotebook(document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
     saveNotebookAs(targetResource: Uri, document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
-    readonly onDidChangeNotebook: Event<NotebookDocumentContentChangeEvent | NotebookDocumentEditEvent>;
     backupNotebook(
         document: NotebookDocument,
         context: NotebookDocumentBackupContext,
@@ -570,9 +605,11 @@ export interface NotebookKernel {
     cancelAllCellsExecution(document: NotebookDocument): void;
 }
 
+export type NotebookFilenamePattern = GlobPattern | { include: GlobPattern; exclude: GlobPattern };
+
 export interface NotebookDocumentFilter {
     viewType?: string | string[];
-    filenamePattern?: GlobPattern | { include: GlobPattern; exclude: GlobPattern };
+    filenamePattern?: NotebookFilenamePattern;
 }
 
 export interface NotebookKernelProvider<T extends NotebookKernel = NotebookKernel> {
@@ -614,21 +651,24 @@ export interface NotebookCellStatusBarItem {
     dispose(): void;
 }
 
+export interface NotebookEditorDecorationType {
+    readonly key: string;
+    dispose(): void;
+}
+
 export namespace notebook {
     export function registerNotebookContentProvider(
         notebookType: string,
         provider: NotebookContentProvider,
-        options?: {
+        options?: NotebookDocumentContentOptions & {
             /**
-             * Controls if outputs change will trigger notebook document content change and if it will be used in the diff editor
-             * Default to false. If the content provider doesn't persisit the outputs in the file document, this should be set to true.
+             * Not ready for production or development use yet.
              */
-            transientOutputs: boolean;
-            /**
-             * Controls if a meetadata property change will trigger notebook document content change and if it will be used in the diff editor
-             * Default to false. If the content provider doesn't persisit a metadata property in the file document, it should be set to true.
-             */
-            transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
+            viewOptions?: {
+                displayName: string;
+                filenamePattern: NotebookFilenamePattern[];
+                exclusive?: boolean;
+            };
         }
     ): Disposable;
 
@@ -653,6 +693,7 @@ export namespace notebook {
     export const onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     export const onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
     export const onDidChangeNotebookEditorVisibleRanges: Event<NotebookEditorVisibleRangesChangeEvent>;
+    export const onDidChangeNotebookDocumentMetadata: Event<NotebookDocumentMetadataChangeEvent>;
     export const onDidChangeNotebookCells: Event<NotebookCellsChangeEvent>;
     export const onDidChangeCellOutputs: Event<NotebookCellOutputsChangeEvent>;
     export const onDidChangeCellLanguage: Event<NotebookCellLanguageChangeEvent>;

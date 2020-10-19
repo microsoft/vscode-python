@@ -8,6 +8,7 @@ import * as platformApis from '../../../client/common/utils/platform';
 import { identifyEnvironment } from '../../../client/pythonEnvironments/common/environmentIdentifier';
 import * as externalDependencies from '../../../client/pythonEnvironments/common/externalDependencies';
 import { EnvironmentType } from '../../../client/pythonEnvironments/info';
+import { getOSType as getOSTypeForTest, OSType } from '../../common';
 import { TEST_LAYOUT_ROOT } from './commonTestConstants';
 
 suite('Environment Identifier', () => {
@@ -132,6 +133,92 @@ suite('Environment Identifier', () => {
         });
     });
 
+    suite('Pyenv', () => {
+        let getEnvVarStub: sinon.SinonStub;
+        let getOsTypeStub: sinon.SinonStub;
+        let getUserHomeDirStub: sinon.SinonStub;
+
+        suiteSetup(() => {
+            getEnvVarStub = sinon.stub(platformApis, 'getEnvironmentVariable');
+            getOsTypeStub = sinon.stub(platformApis, 'getOSType');
+            getUserHomeDirStub = sinon.stub(platformApis, 'getUserHomeDir');
+        });
+
+        suiteTeardown(() => {
+            getEnvVarStub.restore();
+            getOsTypeStub.restore();
+            getUserHomeDirStub.restore();
+        });
+
+        test('PYENV_ROOT is not set on non-Windows, fallback to the default value ~/.pyenv', async function () {
+            if (getOSTypeForTest() === OSType.Windows) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
+
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv1', '.pyenv', 'versions', '3.6.9', 'bin', 'python');
+
+            getUserHomeDirStub.returns(path.join(TEST_LAYOUT_ROOT, 'pyenv1'));
+            getEnvVarStub.withArgs('PYENV_ROOT').returns(undefined);
+
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.Pyenv);
+
+            return undefined;
+        });
+
+        test('PYENV is not set on Windows, fallback to the default value %USERPROFILE%\\.pyenv\\pyenv-win', async function () {
+            if (getOSTypeForTest() !== OSType.Windows) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
+
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv2', '.pyenv', 'pyenv-win', 'versions', '3.6.9', 'bin', 'python.exe');
+
+            getUserHomeDirStub.returns(path.join(TEST_LAYOUT_ROOT, 'pyenv2'));
+            getEnvVarStub.withArgs('PYENV').returns(undefined);
+            getOsTypeStub.returns(platformApis.OSType.Windows);
+
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.Pyenv);
+
+            return undefined;
+        });
+
+        test('PYENV_ROOT is set to a custom value on non-Windows', async function () {
+            if (getOSTypeForTest() === OSType.Windows) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
+
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv3', 'versions', '3.6.9', 'bin', 'python');
+
+            getEnvVarStub.withArgs('PYENV_ROOT').returns(path.join(TEST_LAYOUT_ROOT, 'pyenv3'));
+
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.Pyenv);
+
+            return undefined;
+        });
+
+        test('PYENV is set to a custom value on Windows', async function () {
+            if (getOSTypeForTest() !== OSType.Windows) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
+
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'pyenv3', 'versions', '3.6.9', 'bin', 'python.exe');
+
+            getEnvVarStub.withArgs('PYENV').returns(path.join(TEST_LAYOUT_ROOT, 'pyenv3'));
+            getOsTypeStub.returns(platformApis.OSType.Windows);
+
+            const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.Pyenv);
+
+            return undefined;
+        });
+    });
+
     suite('Venv', () => {
         test('Pyvenv.cfg is in the same directory as the interpreter', async () => {
             const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'venv1', 'python');
@@ -142,6 +229,69 @@ suite('Environment Identifier', () => {
             const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'venv2', 'bin', 'python');
             const envType: EnvironmentType = await identifyEnvironment(interpreterPath);
             assert.deepEqual(envType, EnvironmentType.Venv);
+        });
+    });
+
+    suite('Virtualenvwrapper', () => {
+        let getEnvVarStub: sinon.SinonStub;
+        let getOsTypeStub: sinon.SinonStub;
+        let getUserHomeDirStub: sinon.SinonStub;
+
+        suiteSetup(() => {
+            getEnvVarStub = sinon.stub(platformApis, 'getEnvironmentVariable');
+            getOsTypeStub = sinon.stub(platformApis, 'getOSType');
+            getUserHomeDirStub = sinon.stub(platformApis, 'getUserHomeDir');
+
+            getUserHomeDirStub.returns(path.join(TEST_LAYOUT_ROOT, 'virtualenvwrapper1'));
+        });
+
+        suiteTeardown(() => {
+            getEnvVarStub.restore();
+            getOsTypeStub.restore();
+            getUserHomeDirStub.restore();
+        });
+
+        test('WORKON_HOME is set to its default value ~/.virtualenvs on non-Windows', async function () {
+            if (getOSTypeForTest() === OSType.Windows) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
+
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'virtualenvwrapper1', '.virtualenvs', 'myenv', 'bin', 'python');
+
+            getEnvVarStub.withArgs('WORKON_HOME').returns(undefined);
+
+            const envType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
+
+            return undefined;
+        });
+
+        test('WORKON_HOME is set to its default value %USERPROFILE%\\Envs on Windows', async function () {
+            if (getOSTypeForTest() !== OSType.Windows) {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
+
+            const interpreterPath = path.join(TEST_LAYOUT_ROOT, 'virtualenvwrapper1', 'Envs', 'myenv', 'Scripts', 'python');
+
+            getEnvVarStub.withArgs('WORKON_HOME').returns(undefined);
+            getOsTypeStub.returns(platformApis.OSType.Windows);
+
+            const envType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
+
+            return undefined;
+        });
+
+        test('WORKON_HOME is set to a custom value', async () => {
+            const workonHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualenvwrapper2');
+            const interpreterPath = path.join(workonHomeDir, 'myenv', 'bin', 'python');
+
+            getEnvVarStub.withArgs('WORKON_HOME').returns(workonHomeDir);
+
+            const envType = await identifyEnvironment(interpreterPath);
+            assert.deepStrictEqual(envType, EnvironmentType.VirtualEnvWrapper);
         });
     });
 

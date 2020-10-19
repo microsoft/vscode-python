@@ -14,8 +14,6 @@ import { buildApi } from '../client/api';
 import { ConfigurationService } from '../client/common/configuration/service';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
 import { IConfigurationService } from '../client/common/types';
-import { NotebookExtensibility } from '../client/datascience/notebookExtensibility';
-import { INotebookExtensibility } from '../client/datascience/types';
 import { IInterpreterService } from '../client/interpreter/contracts';
 import { InterpreterService } from '../client/interpreter/interpreterService';
 import { ServiceContainer } from '../client/ioc/container';
@@ -31,22 +29,17 @@ suite('Extension API', () => {
     let serviceManager: IServiceManager;
     let configurationService: IConfigurationService;
     let interpreterService: IInterpreterService;
-    let notebookExtensibility: INotebookExtensibility;
 
     setup(() => {
         serviceContainer = mock(ServiceContainer);
         serviceManager = mock(ServiceManager);
         configurationService = mock(ConfigurationService);
         interpreterService = mock(InterpreterService);
-        notebookExtensibility = mock(NotebookExtensibility);
 
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
             instance(configurationService)
         );
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
-        when(serviceContainer.get<INotebookExtensibility>(INotebookExtensibility)).thenReturn(
-            instance(notebookExtensibility)
-        );
     });
 
     test('Execution details settings API returns expected object if interpreter is set', async () => {

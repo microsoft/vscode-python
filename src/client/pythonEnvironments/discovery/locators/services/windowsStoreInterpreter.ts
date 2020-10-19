@@ -9,6 +9,7 @@ import { traceDecorators } from '../../../../common/logger';
 import { IFileSystem } from '../../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../../common/process/types';
 import { IPersistentStateFactory } from '../../../../common/types';
+import { IComponentAdapter } from '../../../../interpreter/contracts';
 import { IInterpreterHashProvider, IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
 
@@ -29,6 +30,11 @@ export function isRestrictedWindowsStoreInterpreterPath(pythonPath: string): boo
         pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase())
         || pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
     );
+}
+
+// The parts of IComponentAdapter used here.
+interface IComponent {
+    isWindowsStoreInterpreter(pythonPath: string): Promise<boolean | undefined>;
 }
 
 /**
@@ -60,6 +66,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private readonly persistentFactory: IPersistentStateFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IComponentAdapter) private readonly pyenvs: IComponent
     ) {}
 
     /**
@@ -69,7 +76,11 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
      * @returns {boolean}
      * @memberof WindowsStoreInterpreter
      */
-    public isWindowsStoreInterpreter(pythonPath: string): boolean {
+    public async isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
+        const result = await this.pyenvs.isWindowsStoreInterpreter(pythonPath);
+        if (result !== undefined) {
+            return result;
+        }
         const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
         return (
             pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\'.toUpperCase())

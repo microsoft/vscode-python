@@ -178,11 +178,11 @@ export function cache(expiryDurationMs: number) {
  * @param {string} [scopeName] Scope for the error message to be logged along with the error.
  * @returns void
  */
-export function swallowExceptions(scopeName: string) {
+export function swallowExceptions(scopeName?: string) {
     // tslint:disable-next-line:no-any no-function-expression
     return function (_target: any, propertyName: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value!;
-        const errorMessage = `Python Extension (Error in ${scopeName}, method:${propertyName}):`;
+        const errorMessage = `Python Extension (Error in ${scopeName || propertyName}, method:${propertyName}):`;
         // tslint:disable-next-line:no-any no-function-expression
         descriptor.value = function (...args: any[]) {
             try {

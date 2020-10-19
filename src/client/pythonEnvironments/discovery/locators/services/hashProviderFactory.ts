@@ -28,7 +28,7 @@ export class InterpeterHashProviderFactory implements IInterpreterHashProviderFa
             ? options.pythonPath
             : this.configService.getSettings(options.resource).pythonPath;
 
-        return this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)
+        return (await this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath))
             ? this.windowsStoreHashProvider
             : this.hashProvider;
     }

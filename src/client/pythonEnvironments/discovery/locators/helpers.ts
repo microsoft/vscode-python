@@ -10,7 +10,7 @@ import { EnvironmentType, PythonEnvironment } from '../../info';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
-export async function lookForInterpretersInDirectory(pathToCheck: string, _: IFileSystem): Promise<string[]> {
+export async function lookForInterpretersInDirectory(pathToCheck: string): Promise<string[]> {
     // Technically, we should be able to use fs.getFiles().  However,
     // that breaks some tests.  So we stick with the broader behavior.
     try {
@@ -40,9 +40,9 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                 item.path = path.normalize(item.path);
                 return item;
             })
-            .reduce<PythonEnvironment[]>((accumulator, current) => {
+            .reduce<PythonEnvironment[]>((accumulator, current:PythonEnvironment) => {
                 const currentVersion = current && current.version ? current.version.raw : undefined;
-                const existingItem = accumulator.find((item) => {
+                let existingItem = accumulator.find((item) => {
                     // If same version and same base path, then ignore.
                     // Could be Python 3.6 with path = python.exe, and Python 3.6 and path = python3.exe.
                     if (
@@ -76,12 +76,11 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                         'sysVersion',
                         'version',
                     ];
-                    for (const prop of props) {
-                        if (!existingItem[prop] && current[prop]) {
-                            // tslint:disable-next-line: no-any
-                            (existingItem as any)[prop] = current[prop];
+                    props.forEach((prop) => {
+                        if (existingItem && !existingItem[prop] && current[prop]) {
+                            existingItem = { ...existingItem, [prop]: current[prop] };
                         }
-                    }
+                    });
                 }
                 return accumulator;
             }, []);

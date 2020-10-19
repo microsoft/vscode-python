@@ -13,7 +13,7 @@ import '../../../client/common/extensions';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
 import { ProductService } from '../../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../../client/common/installer/types';
-import { IPersistentState, IPersistentStateFactory, Product } from '../../../client/common/types';
+import { IPersistentState, IPersistentStateFactory, Product, ProductType } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -35,7 +35,11 @@ suite('Module Installer - Invalid Paths', () => {
                 let productPathService: TypeMoq.IMock<IProductPathService>;
                 let persistentState: TypeMoq.IMock<IPersistentStateFactory>;
 
-                setup(() => {
+                setup(function () {
+                    if (new ProductService().getProductType(product.value) === ProductType.DataScience) {
+                        // tslint:disable-next-line: no-invalid-this
+                        return this.skip();
+                    }
                     serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                     const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
 
@@ -80,13 +84,7 @@ suite('Module Installer - Invalid Paths', () => {
                     case Product.isort:
                     case Product.ctags:
                     case Product.rope:
-                    case Product.unittest:
-                    case Product.ipykernel:
-                    case Product.kernelspec:
-                    case Product.nbconvert:
-                    case Product.notebook:
-                    case Product.pandas:
-                    case Product.jupyter: {
+                    case Product.unittest: {
                         return;
                     }
                     default: {

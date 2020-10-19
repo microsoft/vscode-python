@@ -18,7 +18,6 @@ import {
     SignatureHelpContext,
     SymbolInformation,
     TextDocument,
-    TextDocumentContentChangeEvent,
     WorkspaceEdit
 } from 'vscode';
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
@@ -72,34 +71,25 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         this.manager.disconnect();
     }
 
-    public handleOpen(document: TextDocument): void {
+    public get connection() {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
-            languageClient.sendNotification(
-                vscodeLanguageClient.DidOpenTextDocumentNotification.type,
-                languageClient.code2ProtocolConverter.asOpenTextDocumentParams(document)
-            );
+            // Return an object that looks like a connection
+            return {
+                sendNotification: languageClient.sendNotification.bind(languageClient),
+                sendRequest: languageClient.sendRequest.bind(languageClient),
+                sendProgress: languageClient.sendProgress.bind(languageClient),
+                onRequest: languageClient.onRequest.bind(languageClient),
+                onNotification: languageClient.onNotification.bind(languageClient),
+                onProgress: languageClient.onProgress.bind(languageClient)
+            };
         }
     }
 
-    public handleChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]): void {
+    public get capabilities() {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
-            // If the language client doesn't support incremental, just send the whole document
-            if (this.textDocumentSyncKind === vscodeLanguageClient.TextDocumentSyncKind.Full) {
-                languageClient.sendNotification(
-                    vscodeLanguageClient.DidChangeTextDocumentNotification.type,
-                    languageClient.code2ProtocolConverter.asChangeTextDocumentParams(document)
-                );
-            } else {
-                languageClient.sendNotification(
-                    vscodeLanguageClient.DidChangeTextDocumentNotification.type,
-                    languageClient.code2ProtocolConverter.asChangeTextDocumentParams({
-                        document,
-                        contentChanges: changes
-                    })
-                );
-            }
+            return languageClient.initializeResult?.capabilities;
         }
     }
 
@@ -167,23 +157,6 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         if (proxy) {
             return proxy.languageClient;
         }
-    }
-
-    private get textDocumentSyncKind(): vscodeLanguageClient.TextDocumentSyncKind {
-        const languageClient = this.getLanguageClient();
-        if (languageClient?.initializeResult?.capabilities?.textDocumentSync) {
-            const syncOptions = languageClient.initializeResult.capabilities.textDocumentSync;
-            const syncKind =
-                syncOptions !== undefined && syncOptions.hasOwnProperty('change')
-                    ? (syncOptions as vscodeLanguageClient.TextDocumentSyncOptions).change
-                    : syncOptions;
-            if (syncKind !== undefined) {
-                return syncKind as vscodeLanguageClient.TextDocumentSyncKind;
-            }
-        }
-
-        // Default is full if not provided
-        return vscodeLanguageClient.TextDocumentSyncKind.Full;
     }
 
     private async handleProvideRenameEdits(

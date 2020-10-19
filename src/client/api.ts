@@ -4,15 +4,13 @@
 'use strict';
 
 import { Event, Uri } from 'vscode';
-import { NotebookCell } from 'vscode-proposed';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IConfigurationService, Resource } from './common/types';
-import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
-import { IJupyterUriProvider, IJupyterUriProviderRegistration, INotebookExtensibility } from './datascience/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
+import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -26,6 +24,9 @@ export interface IExtensionApi {
      * @memberof IExtensionApi
      */
     ready: Promise<void>;
+    jupyter: {
+        registerHooks(): void;
+    };
     debug: {
         /**
          * Generate an array of strings for commands to pass to the Python executable to launch the debugger for remote debugging.
@@ -77,21 +78,6 @@ export interface IExtensionApi {
             execCommand: string[] | undefined;
         };
     };
-    datascience: {
-        readonly onKernelPostExecute: Event<NotebookCell>;
-        readonly onKernelRestart: Event<void>;
-        /**
-         * Launches Data Viewer component.
-         * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
-         * @param {string} title Data Viewer title
-         */
-        showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
-        /**
-         * Registers a remote server provider component that's used to pick remote jupyter server URIs
-         * @param serverProvider object called back when picking jupyter server URI
-         */
-        registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
-    };
 }
 
 export function buildApi(
@@ -102,13 +88,17 @@ export function buildApi(
 ): IExtensionApi {
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    const notebookExtensibility = serviceContainer.get<INotebookExtensibility>(INotebookExtensibility);
+    serviceManager.addSingleton<JupyterExtensionIntegration>(JupyterExtensionIntegration, JupyterExtensionIntegration);
+    const jupyterIntegration = serviceContainer.get<JupyterExtensionIntegration>(JupyterExtensionIntegration);
     const api: IExtensionApi = {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch((ex) => {
             traceError('Failure during activation.', ex);
             return Promise.reject(ex);
         }),
+        jupyter: {
+            registerHooks: () => jupyterIntegration.integrateWithJupyterExtension()
+        },
         debug: {
             async getRemoteLauncherCommand(
                 host: string,
@@ -132,20 +122,6 @@ export function buildApi(
                 // If pythonPath equals an empty string, no interpreter is set.
                 return { execCommand: pythonPath === '' ? undefined : [pythonPath] };
             }
-        },
-        datascience: {
-            async showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
-                const dataViewerProviderService = serviceContainer.get<IDataViewerFactory>(IDataViewerFactory);
-                await dataViewerProviderService.create(dataProvider, title);
-            },
-            registerRemoteServerProvider(picker: IJupyterUriProvider): void {
-                const container = serviceContainer.get<IJupyterUriProviderRegistration>(
-                    IJupyterUriProviderRegistration
-                );
-                container.registerProvider(picker);
-            },
-            onKernelPostExecute: notebookExtensibility.onKernelPostExecute,
-            onKernelRestart: notebookExtensibility.onKernelRestart
         }
     };
 

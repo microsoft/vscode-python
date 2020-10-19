@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IExperimentService, IFileDownloader, IHttpClient, IInterpreterPathService } from '../common/types';
-import { LiveShareApi } from '../datascience/liveshare/liveshare';
-import { INotebookExecutionLogger } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
+import { JupyterExtensionDependencyManager } from '../jupyter/jupyterExtensionDependencyManager';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
 import { ActiveResourceService } from './application/activeResource';
@@ -30,8 +29,8 @@ import {
     ICustomEditorService,
     IDebugService,
     IDocumentManager,
+    IJupyterExtensionDependencyManager,
     ILanguageService,
-    ILiveShareApi,
     ITerminalManager,
     IVSCodeNotebook,
     IWorkspaceService
@@ -71,6 +70,10 @@ import { PathUtils } from './platform/pathUtils';
 import { CurrentProcess } from './process/currentProcess';
 import { ProcessLogger } from './process/logger';
 import { IProcessLogger } from './process/types';
+import { CodeCssGenerator } from './startPage/codeCssGenerator';
+import { StartPage } from './startPage/startPage';
+import { ThemeFinder } from './startPage/themeFinder';
+import { ICodeCssGenerator, IStartPage, IThemeFinder } from './startPage/types';
 import { TerminalActivator } from './terminal/activator';
 import { PowershellTerminalActivationFailedHandler } from './terminal/activator/powershellFailedHandler';
 import { Bash } from './terminal/environmentActivationProviders/bash';
@@ -128,6 +131,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
     serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
+    serviceManager.addSingleton<IJupyterExtensionDependencyManager>(
+        IJupyterExtensionDependencyManager,
+        JupyterExtensionDependencyManager
+    );
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
@@ -147,7 +154,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         ITerminalActivationHandler,
         PowershellTerminalActivationFailedHandler
     );
-    serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, LiveShareApi);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
@@ -184,7 +190,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
     serviceManager.addBinding(IImportTracker, IExtensionSingleActivationService);
-    serviceManager.addBinding(IImportTracker, INotebookExecutionLogger);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, SettingsShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, UserEnvironmentShellDetector);
@@ -219,4 +224,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         DebugSessionTelemetry
     );
     serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
+    serviceManager.addSingleton<IStartPage>(IStartPage, StartPage, undefined, [IExtensionSingleActivationService]);
+    serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
+    serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
 }

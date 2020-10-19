@@ -8,7 +8,7 @@ import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments
 import { PythonLocatorQuery } from '../../../client/pythonEnvironments/base/locator';
 import { DisableableLocator, Locators } from '../../../client/pythonEnvironments/base/locators';
 import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
-import { createEnv, createLocatedEnv, getEnvs, SimpleLocator } from './common';
+import { createLocatedEnv, createNamedEnv, getEnvs, SimpleLocator } from './common';
 
 suite('Python envs locators - Locators', () => {
     suite('onChanged consolidates', () => {
@@ -63,7 +63,7 @@ suite('Python envs locators - Locators', () => {
         });
 
         test('one', async () => {
-            const env1 = createEnv('foo', '3.8', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8', PythonEnvKind.Venv);
             const expected: PythonEnvInfo[] = [env1];
             const sub1 = new SimpleLocator(expected);
             const locators = new Locators([sub1]);
@@ -75,11 +75,11 @@ suite('Python envs locators - Locators', () => {
         });
 
         test('many', async () => {
-            const env1 = createEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
             const env2 = createLocatedEnv('some-dir', '3.8.1', PythonEnvKind.Conda);
-            const env3 = createEnv('python2', '2.7', PythonEnvKind.System);
-            const env4 = createEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
-            const env5 = createEnv('hello world', '3.8', PythonEnvKind.System);
+            const env3 = createNamedEnv('python2', '2.7', PythonEnvKind.System);
+            const env4 = createNamedEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
+            const env5 = createNamedEnv('hello world', '3.8', PythonEnvKind.System);
             const expected = [env1, env2, env3, env4, env5];
             const sub1 = new SimpleLocator([env1]);
             const sub2 = new SimpleLocator([], { before: sub1.done });
@@ -96,14 +96,14 @@ suite('Python envs locators - Locators', () => {
         test('with query', async () => {
             const expected: PythonLocatorQuery = {
                 kinds: [PythonEnvKind.Venv],
-                searchLocations: [Uri.file('???')]
+                searchLocations: { roots: [Uri.file('???')] },
             };
             let query: PythonLocatorQuery | undefined;
             async function onQuery(q: PythonLocatorQuery | undefined, e: PythonEnvInfo[]) {
                 query = q;
                 return e;
             }
-            const env1 = createEnv('foo', '3.8', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8', PythonEnvKind.Venv);
             const sub1 = new SimpleLocator([env1], { onQuery });
             const locators = new Locators([sub1]);
 
@@ -114,13 +114,13 @@ suite('Python envs locators - Locators', () => {
         });
 
         test('iterate out of order', async () => {
-            const env1 = createEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
             const env2 = createLocatedEnv('some-dir', '3.8.1', PythonEnvKind.Conda);
-            const env3 = createEnv('python2', '2.7', PythonEnvKind.System);
-            const env4 = createEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
-            const env5 = createEnv('hello world', '3.8', PythonEnvKind.System);
-            const env6 = createEnv('spam', '3.10.0a0', PythonEnvKind.Custom);
-            const env7 = createEnv('eggs', '3.9.1a0', PythonEnvKind.Custom);
+            const env3 = createNamedEnv('python2', '2.7', PythonEnvKind.System);
+            const env4 = createNamedEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
+            const env5 = createNamedEnv('hello world', '3.8', PythonEnvKind.System);
+            const env6 = createNamedEnv('spam', '3.10.0a0', PythonEnvKind.Custom);
+            const env7 = createNamedEnv('eggs', '3.9.1a0', PythonEnvKind.Custom);
             const expected = [env5, env1, env2, env3, env4, env6, env7];
             const sub4 = new SimpleLocator([env5]);
             const sub2 = new SimpleLocator([env1], { before: sub4.done });
@@ -136,11 +136,11 @@ suite('Python envs locators - Locators', () => {
         });
 
         test('iterate intermingled', async () => {
-            const env1 = createEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.5.12b1', PythonEnvKind.Venv);
             const env2 = createLocatedEnv('some-dir', '3.8.1', PythonEnvKind.Conda);
-            const env3 = createEnv('python2', '2.7', PythonEnvKind.System);
-            const env4 = createEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
-            const env5 = createEnv('hello world', '3.8', PythonEnvKind.System);
+            const env3 = createNamedEnv('python2', '2.7', PythonEnvKind.System);
+            const env4 = createNamedEnv('42', '3.9.0rc2', PythonEnvKind.Pyenv);
+            const env5 = createNamedEnv('hello world', '3.8', PythonEnvKind.System);
             const expected = [env1, env4, env2, env5, env3];
             const deferred1 = createDeferred<void>();
             const deferred2 = createDeferred<void>();
@@ -189,7 +189,7 @@ suite('Python envs locators - Locators', () => {
 
     suite('resolveEnv()', () => {
         test('one wrapped', async () => {
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected = env1;
             const calls: number[] = [];
             const sub1 = new SimpleLocator([env1], { resolve: async (e) => {
@@ -205,7 +205,7 @@ suite('Python envs locators - Locators', () => {
         });
 
         test('first one resolves', async () => {
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected = env1;
             const calls: number[] = [];
             const sub1 = new SimpleLocator([env1], { resolve: async (e) => {
@@ -225,7 +225,7 @@ suite('Python envs locators - Locators', () => {
         });
 
         test('second one resolves', async () => {
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected = env1;
             const calls: number[] = [];
             const sub1 = new SimpleLocator([env1], { resolve: async (_e) => {
@@ -245,7 +245,7 @@ suite('Python envs locators - Locators', () => {
         });
 
         test('none resolve', async () => {
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const calls: number[] = [];
             const sub1 = new SimpleLocator([env1], { resolve: async (_e) => {
                 calls.push(1);
@@ -320,7 +320,7 @@ suite('Python envs locators - DisableableLocator', () => {
 
     suite('iterEnvs()', () => {
         test('pass-through if enabled', async () => {
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected = [env1];
             const sub = new SimpleLocator([env1]);
             const locator = new DisableableLocator(sub);
@@ -332,7 +332,7 @@ suite('Python envs locators - DisableableLocator', () => {
         });
 
         test('empty if disabled', async () => {
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected: PythonEnvInfo[] = [];
             const sub = new SimpleLocator([env1]);
             const locator = new DisableableLocator(sub);
@@ -347,7 +347,7 @@ suite('Python envs locators - DisableableLocator', () => {
 
     suite('resolveEnv()', () => {
         test('pass-through if enabled', async () => {
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected = env1;
             const sub = new SimpleLocator([env1]);
             const locator = new DisableableLocator(sub);
@@ -358,7 +358,7 @@ suite('Python envs locators - DisableableLocator', () => {
         });
 
         test('empty if disabled', async () => {
-            const env1 = createEnv('foo', '3.8.1', PythonEnvKind.Venv);
+            const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const sub = new SimpleLocator([env1]);
             const locator = new DisableableLocator(sub);
 

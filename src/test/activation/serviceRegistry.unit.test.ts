@@ -46,14 +46,7 @@ import {
     LanguageServerType
 } from '../../client/activation/types';
 import { INugetRepository } from '../../client/common/nuget/types';
-import {
-    BANNER_NAME_DS_SURVEY,
-    BANNER_NAME_INTERACTIVE_SHIFTENTER,
-    BANNER_NAME_PROPOSE_LS,
-    IPythonExtensionBanner
-} from '../../client/common/types';
-import { DataScienceSurveyBanner } from '../../client/datascience/dataScienceSurveyBanner';
-import { InteractiveShiftEnterBanner } from '../../client/datascience/shiftEnterBanner';
+import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../../client/common/types';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceManager } from '../../client/ioc/types';
 import { ProposePylanceBanner } from '../../client/languageServices/proposeLanguageServerBanner';
@@ -95,20 +88,6 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
                 IPythonExtensionBanner,
                 ProposePylanceBanner,
                 BANNER_NAME_PROPOSE_LS
-            )
-        ).once();
-        verify(
-            serviceManager.addSingleton<IPythonExtensionBanner>(
-                IPythonExtensionBanner,
-                DataScienceSurveyBanner,
-                BANNER_NAME_DS_SURVEY
-            )
-        ).once();
-        verify(
-            serviceManager.addSingleton<IPythonExtensionBanner>(
-                IPythonExtensionBanner,
-                InteractiveShiftEnterBanner,
-                BANNER_NAME_INTERACTIVE_SHIFTENTER
             )
         ).once();
         verify(
