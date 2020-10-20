@@ -1,30 +1,20 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
-import pytest
-import sys
 import textwrap
 
 import normalizeForInterpreter
 
 
 class TestNormalizationScript(object):
-    """Basic unit tests for the normalization script."""
+    """Unit tests for the normalization script."""
 
-    @pytest.mark.skipif(
-        sys.version_info.major == 2,
-        reason="normalizeForInterpreter not working for 2.7, see GH #4805",
-    )
     def test_basicNormalization(self, capsys):
         src = 'print("this is a test")'
+        expected = src + "\n\n"
         normalizeForInterpreter.normalize_lines(src)
         captured = capsys.readouterr()
-        assert captured.out == src
+        assert captured.out == expected
 
-    @pytest.mark.skipif(
-        sys.version_info.major == 2,
-        reason="normalizeForInterpreter not working for 2.7, see GH #4805",
-    )
     def test_moreThanOneLine(self, capsys):
         src = textwrap.dedent(
             """\
@@ -34,14 +24,17 @@ class TestNormalizationScript(object):
                 print("Something")
             """
         )
+        expected = textwrap.dedent(
+            """\
+            def show_something():
+                print("Something")
+            
+            """
+        )
         normalizeForInterpreter.normalize_lines(src)
         captured = capsys.readouterr()
-        assert captured.out == src
+        assert captured.out == expected
 
-    @pytest.mark.skipif(
-        sys.version_info.major == 2,
-        reason="normalizeForInterpreter not working for 2.7, see GH #4805",
-    )
     def test_withHangingIndent(self, capsys):
         src = textwrap.dedent(
             """\
@@ -54,14 +47,25 @@ class TestNormalizationScript(object):
                 print("The answer to life, the universe, and everything")
             """
         )
+        expected = textwrap.dedent(
+            """\
+            x = 22
+
+            y = 30
+
+            z = -10
+
+            result = x + y + z
+
+            if result == 42:
+                print("The answer to life, the universe, and everything")
+            
+            """
+        )
         normalizeForInterpreter.normalize_lines(src)
         captured = capsys.readouterr()
-        assert captured.out == src
+        assert captured.out == expected
 
-    @pytest.mark.skipif(
-        sys.version_info.major == 2,
-        reason="normalizeForInterpreter not working for 2.7, see GH #4805",
-    )
     def test_clearOutExtraneousNewlines(self, capsys):
         src = textwrap.dedent(
             """\
@@ -78,8 +82,11 @@ class TestNormalizationScript(object):
         expectedResult = textwrap.dedent(
             """\
             value_x = 22
+
             value_y = 30
+
             value_z = -10
+
             print(value_x + value_y + value_z)
 
             """
@@ -88,10 +95,6 @@ class TestNormalizationScript(object):
         result = capsys.readouterr()
         assert result.out == expectedResult
 
-    @pytest.mark.skipif(
-        sys.version_info.major == 2,
-        reason="normalizeForInterpreter not working for 2.7, see GH #4805",
-    )
     def test_clearOutExtraLinesAndWhitespace(self, capsys):
         src = textwrap.dedent(
             """\
@@ -120,3 +123,57 @@ class TestNormalizationScript(object):
         normalizeForInterpreter.normalize_lines(src)
         result = capsys.readouterr()
         assert result.out == expectedResult
+
+    def test_partialSingleLine(self, capsys):
+        src = "   print('foo')"
+        expected = textwrap.dedent(src) + "\n\n"
+        normalizeForInterpreter.normalize_lines(src)
+        result = capsys.readouterr()
+        assert result.out == expected
+
+    def test_multiLineWithIndent(self, capsys):
+        src = """\
+           
+        if (x > 0
+            and condition == True):
+            print('foo')
+        else:
+
+            print('bar')
+        """
+
+        expectedResult = textwrap.dedent(
+            """\
+        if (x > 0
+            and condition == True):
+            print('foo')
+        else:
+            print('bar')
+        
+        """
+        )
+
+        normalizeForInterpreter.normalize_lines(src)
+        result = capsys.readouterr()
+        assert result.out == expectedResult
+
+    def test_multiLineWithComment(self, capsys):
+        src = textwrap.dedent(
+            """\
+
+            def show_something():
+                # Some rando comment
+                print("Something")
+            """
+        )
+        expected = textwrap.dedent(
+            """\
+            def show_something():
+                # Some rando comment
+                print("Something")
+            
+            """
+        )
+        normalizeForInterpreter.normalize_lines(src)
+        captured = capsys.readouterr()
+        assert captured.out == expected
