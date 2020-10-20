@@ -96,6 +96,29 @@
             "skipFiles": ["<node_internals>/**"]
         },
         {
+            // Note, for the smoke test you want to debug, you may need to copy the file,
+            // rename it and remove a check for only smoke tests.
+            "name": "Tests (Insiders, VS Code, *.insiders.test.ts)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/testMultiRootWkspc/smokeTests",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "env": {
+                "INSTALL_PYLANCE_EXTENSION": "true",
+                "VSC_PYTHON_CI_TEST_VSC_CHANNEL": "insiders",
+                "TEST_FILES_SUFFIX": "insiders.test"
+            },
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
+        },
+        {
             "name": "Tests (Single Workspace, VS Code, *.test.ts)",
             "type": "extensionHost",
             "request": "launch",

@@ -55,6 +55,9 @@ stages:
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
+            'Insiders':
+              TestsToRun: 'testInsiders'
+              NeedsPythonTestReqs: true
         pool:
           vmImage: 'ubuntu-20.04'
         steps:

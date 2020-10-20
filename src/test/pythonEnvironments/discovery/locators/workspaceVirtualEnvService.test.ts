@@ -93,7 +93,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
     const workspaceUri = IS_MULTI_ROOT_TEST ? Uri.file(path.join(multirootPath, 'workspace3')) : rootWorkspaceUri!;
     // "workspace4 does not exist.
     const workspace4 = Uri.file(path.join(multirootPath, 'workspace4'));
-    const venvs = new Venvs(workspaceUri.fsPath);
+    const venvs = new Venvs(workspaceUri?.fsPath || multirootPath);
 
     let serviceContainer: IServiceContainer;
     let locator: IInterpreterLocatorService;

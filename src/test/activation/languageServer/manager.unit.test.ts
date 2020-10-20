@@ -19,9 +19,6 @@ import {
 } from '../../../client/activation/types';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { ICommandManager } from '../../../client/common/application/types';
-import { ConfigurationService } from '../../../client/common/configuration/service';
-import { ExperimentsManager } from '../../../client/common/experiments/manager';
-import { IConfigurationService, IExperimentsManager } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { sleep } from '../../core';
@@ -38,8 +35,6 @@ suite('Language Server - Manager', () => {
     let lsExtension: ILanguageServerExtension;
     let onChangeAnalysisHandler: Function;
     let folderService: ILanguageServerFolderService;
-    let experimentsManager: IExperimentsManager;
-    let configService: IConfigurationService;
     let commandManager: ICommandManager;
     const languageClientOptions = ({ x: 1 } as any) as LanguageClientOptions;
     setup(() => {
@@ -48,8 +43,6 @@ suite('Language Server - Manager', () => {
         languageServer = mock(DotNetLanguageServerProxy);
         lsExtension = mock(LanguageServerExtension);
         folderService = mock(DotNetLanguageServerFolderService);
-        experimentsManager = mock(ExperimentsManager);
-        configService = mock(ConfigurationService);
 
         commandManager = mock(CommandManager);
         const disposable = mock(Disposable);
@@ -60,8 +53,6 @@ suite('Language Server - Manager', () => {
             instance(analysisOptions),
             instance(lsExtension),
             instance(folderService),
-            instance(experimentsManager),
-            instance(configService),
             instance(commandManager)
         );
     });

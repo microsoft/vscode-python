@@ -133,3 +133,8 @@ steps:
   #     echo Gulp Version = `gulp --version`
   #   condition: and(succeeded(), eq(variables['system.debug'], 'true'))
   #   displayName: Show Dependency Versions
+
+  - bash: |
+      az login
+      az storage blob download --file $(VSIX_NAME_JUPYTER) --account-name pvsc --container-name extension-builds-jupyter --name $(VSIX_NAME_JUPYTER)
+    displayName: 'Download Jupyter VSIX'    
