@@ -19,7 +19,7 @@ def _get_multiline_statements(selection: str) -> List[str]:
     lines = [line for line in selection.splitlines(False) if line.strip() != ""]
 
     # Dedent the selection and parse it using the ast module.
-    # Note that leading comments will be discarded during parsing.
+    # Note that leading comments in the selection will be discarded during parsing.
     source = textwrap.dedent("\n".join(lines))
     tree = ast.parse(source)
 
@@ -65,7 +65,7 @@ def normalize_lines(selection: str):
     # Check if it is a singleline or multiline selection.
     is_singleline = len(selection.splitlines()) == 1
 
-    # If it is a single line statement: Skip to the end.
+    # If it is a single line statement: Dedent and skip to the end.
     # Else: Parse the multiline selection into a list of top-level blocks.
     if is_singleline:
         statements = [textwrap.dedent(selection)]
