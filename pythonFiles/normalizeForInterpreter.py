@@ -52,7 +52,7 @@ def _get_multiline_statements(selection):
     return statements
 
 
-def normalize_lines(selection: str):
+def normalize_lines(selection):
     """
     Normalize the text selection received from the extension and send it to the REPL.
 
