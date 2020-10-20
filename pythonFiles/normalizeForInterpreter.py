@@ -11,7 +11,7 @@ def _get_multiline_statements(selection: str) -> List[str]:
     """
     Process a multiline selection into a list of its top-level statements.
     This will remove empty newlines around and within the selection, dedent it,
-    and split it using the result of `ast.parse()`.  
+    and split it using the result of `ast.parse()`.
     """
     statements = []
 
@@ -57,7 +57,7 @@ def normalize_lines(selection: str):
     Normalize the text selection received from the extension and send it to the REPL.
 
     If it is a single line selection, dedent it, append a newline and send it to the REPL.
-    Otherwise, sanitize the multiline selection before sending it to the REPL: 
+    Otherwise, sanitize the multiline selection before sending it to the REPL:
     split it in a list of top-level statements
     and add newlines between each of them to tell the REPL where each block ends.
     """
