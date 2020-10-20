@@ -7,7 +7,7 @@ import sys
 from typing import List
 
 
-def _get_multiline_statements(selection: str) -> List[str]:
+def _get_multiline_statements(selection):
     """
     Process a multiline selection into a list of its top-level statements.
     This will remove empty newlines around and within the selection, dedent it,
