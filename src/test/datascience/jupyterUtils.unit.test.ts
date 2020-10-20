@@ -3,7 +3,8 @@
 'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import { assert } from 'chai';
-import { anything, instance, mock, when } from 'ts-mockito';
+import * as os from 'os';
+import { anything, instance, mock, spy, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { DebugService } from '../../client/common/application/debugService';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -20,6 +21,7 @@ import { MockPythonSettings } from './mockPythonSettings';
 
 suite('DataScience JupyterUtils', () => {
     const workspaceService = mock(WorkspaceService);
+    const workspaceServiceNoFolder = mock(WorkspaceService);
     const configService = mock(ConfigurationService);
     const debugService = mock(DebugService);
     const fileSystem = mock(DataScienceFileSystem);
@@ -63,6 +65,22 @@ suite('DataScience JupyterUtils', () => {
             expandWorkingDir('${cwd}-${file}', 'bar/bip/foo.baz', inst),
             `${Uri.file('test/bar').fsPath}-${Uri.file('bar/bip/foo.baz').fsPath}`
         );
+
+        when(workspaceServiceNoFolder.hasWorkspaceFolders).thenReturn(false);
+        when(workspaceServiceNoFolder.workspaceFolders).thenReturn(undefined);
+        when(workspaceServiceNoFolder.getWorkspaceFolder(anything())).thenReturn(undefined);
+        const instNoFolder = instance(workspaceServiceNoFolder);
+
+        const tmpFolder: string = IS_WINDOWS ? 'C:\\temp' : '/tmp';
+        const spiedOS = spy(os);
+        when(spiedOS.tmpdir()).thenReturn(tmpFolder);
+
+        const rootFolder: string = IS_WINDOWS ? 'C:\\' : '/';
+        const spiedProcess = spy(process);
+        when(spiedProcess.cwd()).thenReturn(rootFolder);
+
+        // no workspace dir; unwritable process.cwd; writable temp folder
+        assert.equal(expandWorkingDir(undefined, undefined, instNoFolder), tmpFolder);
     });
 
     function modifyTraceback(trace: string[]): string[] {

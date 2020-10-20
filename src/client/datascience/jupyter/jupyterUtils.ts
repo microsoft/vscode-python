@@ -4,6 +4,7 @@
 import '../../common/extensions';
 
 import * as fs from 'fs-extra';
+import * as os from 'os';
 import * as path from 'path';
 import { Uri } from 'vscode';
 
@@ -13,6 +14,16 @@ import { noop } from '../../common/utils/misc';
 import { SystemVariables } from '../../common/variables/systemVariables';
 import { getJupyterConnectionDisplayName } from '../jupyter/jupyterConnection';
 import { IJupyterConnection, IJupyterServerUri } from '../types';
+
+function is_writable(directory: string): boolean {
+    try {
+        // const trialNotebook = path.join(directory, `${uuid()}.ipynb`);
+        fs.accessSync(directory, fs.constants.W_OK);
+        return true;
+    } catch (err) {
+        return false;
+    }
+}
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -39,7 +50,13 @@ export function expandWorkingDir(
         return workspaceFolder.uri.fsPath;
     }
 
-    return process.cwd();
+    // check if we can write to the directory where vscode was launched
+    const launchingDirectory = process.cwd();
+    if (is_writable(launchingDirectory)) {
+        return launchingDirectory;
+    }
+
+    return os.tmpdir();
 }
 
 export function createRemoteConnectionInfo(
