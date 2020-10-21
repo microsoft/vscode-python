@@ -18,7 +18,7 @@ def split_lines(source):
     return re.split(r"[\n\r]+", source)
 
 
-def _get_multiline_statements(split):
+def _get_statements(selection):
     """
     Process a multiline selection into a list of its top-level statements.
     This will remove empty newlines around and within the selection, dedent it,
@@ -26,7 +26,7 @@ def _get_multiline_statements(split):
     """
 
     # Remove blank lines within the selection to prevent the REPL from thinking the block is finished.
-    lines = (line for line in split if line.strip() != "")
+    lines = (line for line in split_lines(selection) if line.strip() != "")
 
     # Dedent the selection and parse it using the ast module.
     # Note that leading comments in the selection will be discarded during parsing.
@@ -89,15 +89,12 @@ def normalize_lines(selection):
     split it in a list of top-level statements
     and add newlines between each of them to tell the REPL where each block ends.
     """
-    split = selection.splitlines()
-    is_singleline = len(split) == 1
 
-    # If it is a single line statement: Dedent and skip to the end.
-    # Else: Parse the multiline selection into a list of top-level blocks.
-    if is_singleline:
-        statements = [textwrap.dedent(selection)]
-    else:
-        statements = _get_multiline_statements(split)
+    # Parse the selection into a list of top-level blocks.
+    # We don't differentiate between single and multiline statements
+    # because it's not a perf bottleneck,
+    # and the overhead from splitting and rejoining strings in the multiline case is one-off.
+    statements = _get_statements(selection)
 
     # Insert a newline between each top-level statement, and append a newline to the selection.
     source = "\n".join(statements) + "\n"
