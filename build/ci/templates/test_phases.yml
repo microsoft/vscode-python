@@ -555,6 +555,7 @@ steps:
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
     env:
       DISPLAY: :10
+      VSC_PYTHON_CI_TEST_VSC_CHANNEL: 'insiders'
 
   - task: PublishBuildArtifacts@1
     inputs:
