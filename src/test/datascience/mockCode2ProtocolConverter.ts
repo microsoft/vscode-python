@@ -148,6 +148,9 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
     ): proto.ReferenceParams {
         throw new Error('Method not implemented.');
     }
+    public asCodeAction(_item: code.CodeAction): proto.CodeAction {
+        throw new Error('Method not implemented.');
+    }
     public asCodeActionContext(_context: code.CodeActionContext): proto.CodeActionContext {
         throw new Error('Method not implemented.');
     }

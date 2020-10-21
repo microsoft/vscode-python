@@ -23,7 +23,7 @@ import { ILanguageServer, JupyterExtensionIntegration } from '../../api/jupyterI
  */
 export class NotebookLanguageServer implements Disposable {
     private code2ProtocolConverter = c2p.createConverter();
-    private protocol2CodeConverter = p2c.createConverter();
+    private protocol2CodeConverter = p2c.createConverter(undefined, undefined);
     private connection: ILanguageServerConnection;
     private capabilities: lsp.ServerCapabilities;
     private disposeConnection: () => void;
