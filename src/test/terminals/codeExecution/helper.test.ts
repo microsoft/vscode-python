@@ -16,14 +16,14 @@ import '../../../client/common/extensions';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
-import { Architecture, OSType } from '../../../client/common/utils/platform';
+import { Architecture } from '../../../client/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
-import { isOs, isPythonVersion, PYTHON_PATH } from '../../common';
+import { PYTHON_PATH } from '../../common';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
 
@@ -87,26 +87,19 @@ suite('Terminal - Code Execution Helper', () => {
         editor.setup((e) => e.document).returns(() => document.object);
     });
 
-    async function ensureBlankLinesAreRemoved(source: string, expectedSource: string) {
+    async function ensureCodeIsNormalized(source: string, expectedSource: string) {
         const actualProcessService = new ProcessService(new BufferDecoder());
         processService
             .setup((p) => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((file, args, options) => {
                 return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
             });
-        const normalizedZCode = await helper.normalizeLines(source);
+        const normalizedCode = await helper.normalizeLines(source);
         // In case file has been saved with different line endings.
         expectedSource = expectedSource.splitLines({ removeEmptyEntries: false, trim: false }).join(EOL);
-        expect(normalizedZCode).to.be.equal(expectedSource);
+        expect(normalizedCode).to.be.equal(expectedSource);
     }
-    test('Ensure blank lines are NOT removed when code is not indented (simple)', async function () {
-        // This test has not been working for many months in Python 2.7 under
-        // Windows.Tracked by #2544.
-        if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
-
+    test('Ensure there are no blank lines between single line statements when code is not indented (simple)', async () => {
         const code = [
             'import sys',
             '',
@@ -120,8 +113,8 @@ suite('Terminal - Code Execution Helper', () => {
             'print(1)',
             'print(2)'
         ];
-        const expectedCode = code.filter((line) => line.trim().length > 0).join(EOL);
-        await ensureBlankLinesAreRemoved(code.join(EOL), expectedCode);
+        const expectedCode = ['import sys', 'print(sys.executable)', 'print("1234")', 'print(1)', 'print(2)', ''];
+        await ensureCodeIsNormalized(code.join(EOL), expectedCode.join(EOL));
     });
     test('Ensure there are no multiple-CR elements in the normalized code.', async () => {
         const code = [
@@ -148,50 +141,13 @@ suite('Terminal - Code Execution Helper', () => {
         expect(doubleCrIndex).to.be.equal(-1, 'Double CR (CRCRLF) line endings detected in normalized code snippet.');
     });
     ['', '1', '2', '3', '4', '5', '6', '7', '8'].forEach((fileNameSuffix) => {
-        test(`Ensure blank lines are removed (Sample${fileNameSuffix})`, async function () {
-            // This test has not been working for many months in Python 2.7 under
-            // Windows.Tracked by #2544.
-            if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
-                // tslint:disable-next-line:no-invalid-this
-                return this.skip();
-            }
-
+        test(`Ensure code is normalized (Sample${fileNameSuffix})`, async () => {
             const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
             const expectedCode = await fs.readFile(
                 path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`),
                 'utf8'
             );
-            await ensureBlankLinesAreRemoved(code, expectedCode);
-        });
-        test(`Ensure last two blank lines are preserved (Sample${fileNameSuffix})`, async function () {
-            // This test has not been working for many months in Python 2.7 under
-            // Windows.Tracked by #2544.
-            if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
-                // tslint:disable-next-line:no-invalid-this
-                return this.skip();
-            }
-
-            const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
-            const expectedCode = await fs.readFile(
-                path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`),
-                'utf8'
-            );
-            await ensureBlankLinesAreRemoved(code + EOL, expectedCode + EOL);
-        });
-        test(`Ensure last two blank lines are preserved even if we have more than 2 trailing blank lines (Sample${fileNameSuffix})`, async function () {
-            // This test has not been working for many months in Python 2.7 under
-            // Windows.Tracked by #2544.
-            if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
-                // tslint:disable-next-line:no-invalid-this
-                return this.skip();
-            }
-
-            const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
-            const expectedCode = await fs.readFile(
-                path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`),
-                'utf8'
-            );
-            await ensureBlankLinesAreRemoved(code + EOL + EOL + EOL + EOL, expectedCode + EOL);
+            await ensureCodeIsNormalized(code, expectedCode);
         });
     });
     test("Display message if there's no active file", async () => {
