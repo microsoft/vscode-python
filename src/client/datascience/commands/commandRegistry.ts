@@ -16,6 +16,7 @@ import { IConfigurationService, IDisposable, IOutputChannel } from '../../common
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
@@ -481,7 +482,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
-        sendTelemetryEvent(Telemetry.OpenDataViewerFromVariableWindowRequest);
+        sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
         if (this.debugService.activeDebugSession) {
             const jupyterVariable = convertDebugProtocolVariableToIJupyterVariable(
                 request.variable as DebugProtocol.Variable
@@ -495,10 +496,10 @@ export class CommandRegistry implements IDisposable {
                 if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
                     const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
                     await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
-                    sendTelemetryEvent(Telemetry.OpenDataViewerFromVariableWindowSuccess);
+                    sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
                 }
             } catch (e) {
-                sendTelemetryEvent(Telemetry.OpenDataViewerFromVariableWindowError);
+                sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, e);
                 traceError(e);
                 this.appShell.showErrorMessage(e.toString());
             }
