@@ -10,7 +10,7 @@ class TestNormalizationScript(object):
 
     def test_basicNormalization(self, capsys):
         src = 'print("this is a test")'
-        expected = src + "\n\n"
+        expected = src + "\n"
         normalizeForInterpreter.normalize_lines(src)
         captured = capsys.readouterr()
         assert captured.out == expected
@@ -50,13 +50,9 @@ class TestNormalizationScript(object):
         expected = textwrap.dedent(
             """\
             x = 22
-
             y = 30
-
             z = -10
-
             result = x + y + z
-
             if result == 42:
                 print("The answer to life, the universe, and everything")
             
@@ -82,13 +78,9 @@ class TestNormalizationScript(object):
         expectedResult = textwrap.dedent(
             """\
             value_x = 22
-
             value_y = 30
-
             value_z = -10
-
             print(value_x + value_y + value_z)
-
             """
         )
         normalizeForInterpreter.normalize_lines(src)
@@ -117,7 +109,6 @@ class TestNormalizationScript(object):
                 z = -10
 
             print(x + y + z)
-
             """
         )
         normalizeForInterpreter.normalize_lines(src)
@@ -126,7 +117,7 @@ class TestNormalizationScript(object):
 
     def test_partialSingleLine(self, capsys):
         src = "   print('foo')"
-        expected = textwrap.dedent(src) + "\n\n"
+        expected = textwrap.dedent(src) + "\n"
         normalizeForInterpreter.normalize_lines(src)
         result = capsys.readouterr()
         assert result.out == expected
@@ -162,14 +153,14 @@ class TestNormalizationScript(object):
             """\
 
             def show_something():
-                # Some rando comment
+                # A comment
                 print("Something")
             """
         )
         expected = textwrap.dedent(
             """\
             def show_something():
-                # Some rando comment
+                # A comment
                 print("Something")
             
             """

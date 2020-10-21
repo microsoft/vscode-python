@@ -4,7 +4,6 @@
 import ast
 import textwrap
 import sys
-from typing import List
 
 
 def _get_multiline_statements(selection):
@@ -32,8 +31,8 @@ def _get_multiline_statements(selection):
     # If we supported Python 3.8+ only we could use the lineno and end_lineno attributes of each object
     # to get the boundaries of each block.
     # However, earlier Python versions only have the lineno attribute, which is the range start position (1-indexed).
-    # Therefore, to retrieve the line range of each block in a version-agnostic way we need to do
-    # `range_end = lineno + next_block.lineno`
+    # Therefore, to retrieve the end line of each block in a version-agnostic way we need to do
+    # `end = next_block.lineno - 1`
     # for all blocks except the last one, which will will just run until the last line.
     last_idx = len(tree.body) - 1
     for idx, node in enumerate(tree.body):
@@ -45,8 +44,21 @@ def _get_multiline_statements(selection):
         #
         # The first block would have lineno = 1,and the second block lineno = 4
         start = node.lineno - 1
-        end = None if idx == last_idx else tree.body[idx + 1].lineno - 1
+        end = len(lines) if idx == last_idx else tree.body[idx + 1].lineno - 1
         block = "\n".join(lines[start:end])
+
+        # If the block is multiline, add an extra newline character at its end.
+        # This way, when joining blocks back together, there will be a blank line between each multiline statement
+        # and no blank lines between single-line statements, or it would look like this:
+        # >>> x = 22
+        # >>>
+        # >>> y = 30
+        # >>>
+        # >>> total = x + y
+        # >>>
+        if end - start > 1:
+            block += "\n"
+
         statements.append(block)
 
     return statements
@@ -72,9 +84,8 @@ def normalize_lines(selection):
     else:
         statements = _get_multiline_statements(selection)
 
-    # Insert a blank line (2 newlines) between each top-level statement, and append a blank line to the selection.
-    blankline = "\n\n"
-    source = blankline.join(statements) + blankline
+    # Insert a newline between each top-level statement, and append a newline to the selection.
+    source = "\n".join(statements) + "\n"
 
     # Finally, send the formatted selection to the REPL.
     sys.stdout.write(source)
