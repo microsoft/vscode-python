@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
@@ -27,28 +28,19 @@ const DEFAULT_SEARCH_DEPTH = 2;
  */
 async function getGlobalVirtualEnvDirs(): Promise<string[]> {
     const venvDirs:string[] = [];
-    const dirPaths:string[] = [];
 
     const workOnHome = getEnvironmentVariable('WORKON_HOME');
-    if (workOnHome) {
-        dirPaths.push(workOnHome);
+    if (workOnHome && await pathExists(workOnHome)) {
+        venvDirs.push(workOnHome);
     }
 
     const homeDir = getUserHomeDir();
-    if (homeDir) {
-        dirPaths.push(path.join(homeDir, 'Envs'));
-        dirPaths.push(path.join(homeDir, 'envs'));
-        dirPaths.push(path.join(homeDir, '.direnv'));
-        dirPaths.push(path.join(homeDir, '.venvs'));
-        dirPaths.push(path.join(homeDir, '.virtualenvs'));
+    if (homeDir && await pathExists(homeDir)) {
+        const subDirs = ['Envs', 'envs', '.direnv', '.venvs', '.virtualenvs'];
+        (await fsapi.readdir(homeDir))
+            .filter((d) => subDirs.includes(d))
+            .forEach((d) => venvDirs.push(path.join(homeDir, d)));
     }
-
-    const exists = await Promise.all(dirPaths.map(pathExists));
-    exists.forEach((v, i) => {
-        if (v) {
-            venvDirs.push(dirPaths[i]);
-        }
-    });
 
     return venvDirs;
 }
@@ -93,7 +85,6 @@ export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implement
         // Number of levels of sub-directories to recurse when looking for
         // interpreters
         const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
-        const knownEnvKeys: string[] = [];
 
         async function* iterator(virtualEnvKinds:PythonEnvKind[]) {
             const envRootDirs = await getGlobalVirtualEnvDirs();
@@ -116,10 +107,7 @@ export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implement
                             const kind = await getVirtualEnvKind(env);
 
                             const data = await getFileInfo(env);
-                            const key = `${data.ctime}-${data.mtime}`;
-
-                            if (virtualEnvKinds.includes(kind) && !knownEnvKeys.includes(key)) {
-                                knownEnvKeys.push(key);
+                            if (virtualEnvKinds.includes(kind)) {
                                 let version:PythonVersion;
                                 try {
                                     version = parseVersion(path.basename(env));

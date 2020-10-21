@@ -37,15 +37,9 @@ suite('GlobalVirtualEnvironment Locator', () => {
         };
     }
 
-    function comparePaths(actual:PythonEnvInfo[], expected:PythonEnvInfo[], os:platformUtils.OSType) {
-        const actualPaths = os === platformUtils.OSType.Windows
-            ? actual.map((a) => a.executable.filename.toUpperCase())
-            : actual.map((a) => a.executable.filename);
-
-        const expectedPaths = os === platformUtils.OSType.Windows
-            ? expected.map((a) => a.executable.filename.toUpperCase())
-            : expected.map((a) => a.executable.filename);
-
+    function comparePaths(actual:PythonEnvInfo[], expected:PythonEnvInfo[]) {
+        const actualPaths = actual.map((a) => a.executable.filename);
+        const expectedPaths = expected.map((a) => a.executable.filename);
         assert.deepStrictEqual(actualPaths, expectedPaths);
     }
 
@@ -83,7 +77,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Windows);
+        comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
@@ -104,7 +98,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Windows);
+        comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
@@ -123,7 +117,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Linux);
+        comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
@@ -139,7 +133,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Linux);
+        comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
@@ -157,7 +151,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Linux);
+        comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
@@ -173,7 +167,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Linux);
+        comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
@@ -190,7 +184,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Linux);
+        comparePaths(actualEnvs, expectedEnvs);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
