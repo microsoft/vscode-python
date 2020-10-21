@@ -3,19 +3,29 @@
 
 import ast
 import textwrap
+import re
 import sys
 
 
-def _get_multiline_statements(selection):
+def split_lines(source):
+    """
+    Split selection lines in a version-agnostic way.
+
+    Python grammar only treats \r, \n, and \r\n as newlines.
+    But splitlines() in Python 3 has a much larger list: for example, it also includes \v, \f,
+    """
+    return re.split(r"[\n\r]+", source)
+
+
+def _get_multiline_statements(split):
     """
     Process a multiline selection into a list of its top-level statements.
     This will remove empty newlines around and within the selection, dedent it,
     and split it using the result of `ast.parse()`.
     """
-    statements = []
 
     # Remove blank lines within the selection to prevent the REPL from thinking the block is finished.
-    lines = [line for line in selection.splitlines(False) if line.strip() != ""]
+    lines = (line for line in split if line.strip() != "")
 
     # Dedent the selection and parse it using the ast module.
     # Note that leading comments in the selection will be discarded during parsing.
@@ -23,7 +33,7 @@ def _get_multiline_statements(selection):
     tree = ast.parse(source)
 
     # We'll need the dedented lines to rebuild the selection.
-    lines = source.splitlines(False)
+    lines = split_lines(source)
 
     # Get the line ranges for top-level blocks returned from parsing the dedented text
     # and split the selection accordingly.
@@ -34,8 +44,8 @@ def _get_multiline_statements(selection):
     # Therefore, to retrieve the end line of each block in a version-agnostic way we need to do
     # `end = next_block.lineno - 1`
     # for all blocks except the last one, which will will just run until the last line.
-    last_idx = len(tree.body) - 1
-    for idx, node in enumerate(tree.body):
+    ends = [node.lineno - 1 for node in tree.body[1:]] + [len(lines)]
+    for node, end in zip(tree.body, ends):
         # Given this selection:
         # if (m > 0 and
         #        n < 3):
@@ -44,7 +54,6 @@ def _get_multiline_statements(selection):
         #
         # The first block would have lineno = 1,and the second block lineno = 4
         start = node.lineno - 1
-        end = len(lines) if idx == last_idx else tree.body[idx + 1].lineno - 1
         block = "\n".join(lines[start:end])
 
         # If the block is multiline, add an extra newline character at its end.
@@ -59,9 +68,7 @@ def _get_multiline_statements(selection):
         if end - start > 1:
             block += "\n"
 
-        statements.append(block)
-
-    return statements
+        yield block
 
 
 def normalize_lines(selection):
@@ -75,14 +82,15 @@ def normalize_lines(selection):
     """
 
     # Check if it is a singleline or multiline selection.
-    is_singleline = len(selection.splitlines()) == 1
+    split = selection.splitlines()
+    is_singleline = len(split) == 1
 
     # If it is a single line statement: Dedent and skip to the end.
     # Else: Parse the multiline selection into a list of top-level blocks.
     if is_singleline:
         statements = [textwrap.dedent(selection)]
     else:
-        statements = _get_multiline_statements(selection)
+        statements = _get_multiline_statements(split)
 
     # Insert a newline between each top-level statement, and append a newline to the selection.
     source = "\n".join(statements) + "\n"
