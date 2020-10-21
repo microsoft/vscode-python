@@ -12,7 +12,8 @@ def split_lines(source):
     Split selection lines in a version-agnostic way.
 
     Python grammar only treats \r, \n, and \r\n as newlines.
-    But splitlines() in Python 3 has a much larger list: for example, it also includes \v, \f,
+    But splitlines() in Python 3 has a much larger list: for example, it also includes \v, \f.
+    As such, this function will split lines across all Python versions.
     """
     return re.split(r"[\n\r]+", source)
 
