@@ -3,16 +3,15 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { traceError, traceVerbose } from '../../../../common/logger';
+import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import {
     getEnvironmentVariable, getUserHomeDir,
 } from '../../../../common/utils/platform';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonVersion, UNKNOWN_PYTHON_VERSION,
+    PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION,
 } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
-import { parseVersion } from '../../../base/info/pythonVersion';
 import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
 import { PythonEnvsWatcher } from '../../../base/watcher';
 import { findInterpretersInDir } from '../../../common/commonUtils';
@@ -106,24 +105,16 @@ export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implement
                             // we can use the kind to determine this anyway.
                             const kind = await getVirtualEnvKind(env);
 
-                            const data = await getFileInfo(env);
+                            const timeData = await getFileInfo(env);
                             if (virtualEnvKinds.includes(kind)) {
-                                let version:PythonVersion;
-                                try {
-                                    version = parseVersion(path.basename(env));
-                                } catch (ex) {
-                                    traceError(`Failed to parse version from path: ${env}`, ex);
-                                    version = UNKNOWN_PYTHON_VERSION;
-                                }
-
                                 traceVerbose(`Global Virtual Environment: [added] ${env}`);
                                 const envInfo = buildEnvInfo({
                                     kind,
                                     executable: env,
-                                    version,
+                                    version: UNKNOWN_PYTHON_VERSION,
                                 });
-                                envInfo.executable.ctime = data.ctime;
-                                envInfo.executable.mtime = data.mtime;
+                                envInfo.executable.ctime = timeData.ctime;
+                                envInfo.executable.mtime = timeData.mtime;
                                 yield envInfo;
                             } else {
                                 traceVerbose(`Global Virtual Environment: [skipped] ${env}`);
@@ -150,23 +141,14 @@ export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implement
             // we can use the kind to determine this anyway.
             const kind = await getVirtualEnvKind(executablePath);
             if (this.virtualEnvKinds.includes(kind)) {
-                const data = await getFileInfo(executablePath);
-
-                let version:PythonVersion;
-                try {
-                    version = parseVersion(path.basename(executablePath));
-                } catch (ex) {
-                    traceError(`Failed to parse version from path: ${executablePath}`, ex);
-                    version = UNKNOWN_PYTHON_VERSION;
-                }
-
+                const timeData = await getFileInfo(executablePath);
                 const envInfo = buildEnvInfo({
                     kind,
-                    version,
+                    version: UNKNOWN_PYTHON_VERSION,
                     executable: executablePath,
                 });
-                envInfo.executable.ctime = data.ctime;
-                envInfo.executable.mtime = data.mtime;
+                envInfo.executable.ctime = timeData.ctime;
+                envInfo.executable.mtime = timeData.mtime;
                 return envInfo;
             }
         }
