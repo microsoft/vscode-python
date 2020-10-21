@@ -28,7 +28,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.48.0"
+        "vscode": "^1.49.0"
     },
     "keywords": [
         "python",
@@ -1670,7 +1670,7 @@
                 {
                     "command": "python.datascience.showDataViewer",
                     "group": "1_view",
-                    "when": "debugProtocolVariableMenuContext == 'viewableInDataViewer'"
+                    "when": "python.isDebuggerDataViewerExperimentEnabled && debugProtocolVariableMenuContext == 'viewableInDataViewer'"
                 }
             ]
         },
@@ -2127,6 +2127,7 @@
                             "RunByLine - experiment",
                             "tryPylance",
                             "jediLSP",
+                            "debuggerDataViewer",
                             "All"
                         ]
                     },
@@ -2152,6 +2153,7 @@
                             "RunByLine - experiment",
                             "tryPylance",
                             "jediLSP",
+                            "debuggerDataViewer",
                             "All"
                         ]
                     },
