@@ -62,10 +62,18 @@ def _get_multiline_statements(split):
         # and no blank lines between single-line statements, or it would look like this:
         # >>> x = 22
         # >>>
-        # >>> y = 30
+        # >>> total = x + 30
         # >>>
-        # >>> total = x + y
+        # Note that for the multiline parentheses case this newline is redundant,
+        # since the closing parenthesis terminates the statement already.
+        # This means that for this pattern we'll end up with:
+        # >>> x = [
+        # ...   1
+        # ... ]
         # >>>
+        # >>> y = [
+        # ...   2
+        # ...]
         if end - start > 1:
             block += "\n"
 
@@ -81,8 +89,6 @@ def normalize_lines(selection):
     split it in a list of top-level statements
     and add newlines between each of them to tell the REPL where each block ends.
     """
-
-    # Check if it is a singleline or multiline selection.
     split = selection.splitlines()
     is_singleline = len(split) == 1
 
@@ -96,10 +102,10 @@ def normalize_lines(selection):
     # Insert a newline between each top-level statement, and append a newline to the selection.
     source = "\n".join(statements) + "\n"
 
-    # Finally, send the formatted selection to the REPL.
-    # source is a unicode instance at this point on Python 2,
-    # so if we used `sys.stdout.write`, Python will implicitly encode it using sys.getdefaultencoding(),
-    # which is almost certainly the wrong thing.
+    # `source` is a unicode instance at this point on Python 2,
+    # so if we used `sys.stdout.write` to send it to the REPL,
+    # Python will implicitly encode it using sys.getdefaultencoding(),
+    # which we don't want.
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
     stdout.write(source.encode("utf-8"))
     stdout.flush()
