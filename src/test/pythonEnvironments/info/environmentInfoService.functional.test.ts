@@ -91,4 +91,38 @@ suite('Environment Info Service', () => {
         });
         assert.ok(stubShellExec.calledOnce);
     });
+
+    test('isInfoProvided() returns true for items already processed', async () => {
+        const envService = new EnvironmentInfoService();
+        let result: boolean;
+        const promises: Promise<InterpreterInformation | undefined>[] = [];
+        const path1 = 'any-path1';
+        const path2 = 'any-path2';
+
+        promises.push(envService.getEnvironmentInfo(path1));
+        promises.push(envService.getEnvironmentInfo(path2));
+
+        await Promise.all(promises);
+        result = envService.isInfoProvided(path1);
+        assert.strictEqual(result, true);
+        result = envService.isInfoProvided(path2);
+        assert.strictEqual(result, true);
+    });
+
+    test('isInfoProvided() returns false otherwise', async () => {
+        const envService = new EnvironmentInfoService();
+        const promises: Promise<InterpreterInformation | undefined>[] = [];
+        const path1 = 'any-path1';
+        const path2 = 'any-path2';
+
+        promises.push(envService.getEnvironmentInfo(path1));
+        promises.push(envService.getEnvironmentInfo(path2));
+
+        let result = envService.isInfoProvided(path1);
+        assert.strictEqual(result, false);
+        result = envService.isInfoProvided(path2);
+        assert.strictEqual(result, false);
+        result = envService.isInfoProvided('some-random-path');
+        assert.strictEqual(result, false);
+    });
 });
