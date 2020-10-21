@@ -5,11 +5,12 @@ import * as path from 'path';
 import { traceError, traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import {
-    Architecture, getEnvironmentVariable, getUserHomeDir,
+    getEnvironmentVariable, getUserHomeDir,
 } from '../../../../common/utils/platform';
 import {
     PythonEnvInfo, PythonEnvKind, PythonVersion, UNKNOWN_PYTHON_VERSION,
 } from '../../../base/info';
+import { buildEnvInfo } from '../../../base/info/env';
 import { parseVersion } from '../../../base/info/pythonVersion';
 import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
 import { PythonEnvsWatcher } from '../../../base/watcher';
@@ -17,7 +18,7 @@ import { findInterpretersInDir } from '../../../common/commonUtils';
 import { getFileInfo, pathExists } from '../../../common/externalDependencies';
 import { isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment } from './virtualEnvironmentIdentifier';
 
-const DEFAULT_SEARCH_DEPTH = 4;
+const DEFAULT_SEARCH_DEPTH = 2;
 
 /**
  * Gets all default virtual environment locations. This uses WORKON_HOME,
@@ -35,11 +36,11 @@ async function getGlobalVirtualEnvDirs(): Promise<string[]> {
 
     const homeDir = getUserHomeDir();
     if (homeDir) {
+        dirPaths.push(path.join(homeDir, 'Envs'));
         dirPaths.push(path.join(homeDir, 'envs'));
         dirPaths.push(path.join(homeDir, '.direnv'));
         dirPaths.push(path.join(homeDir, '.venvs'));
         dirPaths.push(path.join(homeDir, '.virtualenvs'));
-        dirPaths.push(path.join(homeDir, '.local', 'share', 'virtualenvs'));
     }
 
     const exists = await Promise.all(dirPaths.map(pathExists));
@@ -75,35 +76,6 @@ async function getVirtualEnvKind(interpreterPath:string): Promise<PythonEnvKind>
 }
 
 /**
- * Takes absolute path to the interpreter and environment kind to build
- * environment info.
- * @param {string} interpreterPath: Absolute path to interpreter.
- * @param {PythonEnvKind} kind: Kind for the given environment.
- */
-async function buildEnvInfo(interpreterPath:string, kind:PythonEnvKind): Promise<PythonEnvInfo> {
-    let version:PythonVersion;
-    try {
-        version = parseVersion(path.basename(interpreterPath));
-    } catch (ex) {
-        traceError(`Failed to parse version from path: ${interpreterPath}`, ex);
-        version = UNKNOWN_PYTHON_VERSION;
-    }
-    return {
-        name: '',
-        location: '',
-        kind,
-        executable: {
-            filename: interpreterPath,
-            sysPrefix: '',
-            ...(await getFileInfo(interpreterPath)),
-        },
-        version,
-        arch: Architecture.Unknown,
-        distro: { org: '' },
-    };
-}
-
-/**
  * Finds and resolves virtual environments created in known global locations.
  */
 export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implements ILocator {
@@ -121,6 +93,7 @@ export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implement
         // Number of levels of sub-directories to recurse when looking for
         // interpreters
         const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
+        const knownEnvKeys: string[] = [];
 
         async function* iterator(virtualEnvKinds:PythonEnvKind[]) {
             const envRootDirs = await getGlobalVirtualEnvDirs();
@@ -142,10 +115,28 @@ export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implement
                             // we can use the kind to determine this anyway.
                             const kind = await getVirtualEnvKind(env);
 
-                            if (virtualEnvKinds.includes(kind)) {
-                                traceVerbose(`Global Virtual Environment: [added] ${env}`);
+                            const data = await getFileInfo(env);
+                            const key = `${data.ctime}-${data.mtime}`;
 
-                                yield buildEnvInfo(env, kind);
+                            if (virtualEnvKinds.includes(kind) && !knownEnvKeys.includes(key)) {
+                                knownEnvKeys.push(key);
+                                let version:PythonVersion;
+                                try {
+                                    version = parseVersion(path.basename(env));
+                                } catch (ex) {
+                                    traceError(`Failed to parse version from path: ${env}`, ex);
+                                    version = UNKNOWN_PYTHON_VERSION;
+                                }
+
+                                traceVerbose(`Global Virtual Environment: [added] ${env}`);
+                                const envInfo = buildEnvInfo({
+                                    kind,
+                                    executable: env,
+                                    version,
+                                });
+                                envInfo.executable.ctime = data.ctime;
+                                envInfo.executable.mtime = data.mtime;
+                                yield envInfo;
                             } else {
                                 traceVerbose(`Global Virtual Environment: [skipped] ${env}`);
                             }
@@ -171,7 +162,24 @@ export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implement
             // we can use the kind to determine this anyway.
             const kind = await getVirtualEnvKind(executablePath);
             if (this.virtualEnvKinds.includes(kind)) {
-                return buildEnvInfo(executablePath, kind);
+                const data = await getFileInfo(executablePath);
+
+                let version:PythonVersion;
+                try {
+                    version = parseVersion(path.basename(executablePath));
+                } catch (ex) {
+                    traceError(`Failed to parse version from path: ${executablePath}`, ex);
+                    version = UNKNOWN_PYTHON_VERSION;
+                }
+
+                const envInfo = buildEnvInfo({
+                    kind,
+                    version,
+                    executable: executablePath,
+                });
+                envInfo.executable.ctime = data.ctime;
+                envInfo.executable.mtime = data.mtime;
+                return envInfo;
             }
         }
         return undefined;

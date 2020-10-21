@@ -29,15 +29,23 @@ suite('GlobalVirtualEnvironment Locator', () => {
                 ctime: -1,
                 mtime: -1,
             },
+            defaultDisplayName: undefined,
             version: UNKNOWN_PYTHON_VERSION,
             arch: platformUtils.Architecture.Unknown,
             distro: { org: '' },
+            searchLocation: undefined,
         };
     }
 
-    function comparePaths(actual:PythonEnvInfo[], expected:PythonEnvInfo[]) {
-        const actualPaths = actual.map((a) => a.executable.filename);
-        const expectedPaths = expected.map((e) => e.executable.filename);
+    function comparePaths(actual:PythonEnvInfo[], expected:PythonEnvInfo[], os:platformUtils.OSType) {
+        const actualPaths = os === platformUtils.OSType.Windows
+            ? actual.map((a) => a.executable.filename.toUpperCase())
+            : actual.map((a) => a.executable.filename);
+
+        const expectedPaths = os === platformUtils.OSType.Windows
+            ? expected.map((a) => a.executable.filename.toUpperCase())
+            : expected.map((a) => a.executable.filename);
+
         assert.deepStrictEqual(actualPaths, expectedPaths);
     }
 
@@ -64,8 +72,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.venvs', 'win2', 'bin', 'python.exe'), PythonEnvKind.Venv),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.virtualenvs', 'win1', 'python.exe'), PythonEnvKind.VirtualEnv),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.virtualenvs', 'win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnv),
-            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'envs', 'wrapper_win1', 'python.exe'), PythonEnvKind.VirtualEnv),
-            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'envs', 'wrapper_win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnv),
+            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'Envs', 'wrapper_win1', 'python.exe'), PythonEnvKind.VirtualEnv),
+            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'Envs', 'wrapper_win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnv),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, 'workonhome', 'win1', 'python.exe'), PythonEnvKind.VirtualEnvWrapper),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, 'workonhome', 'win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnvWrapper),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -75,7 +83,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs);
+        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Windows);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
@@ -87,8 +95,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.venvs', 'win2', 'bin', 'python.exe'), PythonEnvKind.Venv),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.virtualenvs', 'win1', 'python.exe'), PythonEnvKind.VirtualEnv),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.virtualenvs', 'win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnv),
-            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'envs', 'wrapper_win1', 'python.exe'), PythonEnvKind.VirtualEnvWrapper),
-            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'envs', 'wrapper_win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnvWrapper),
+            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'Envs', 'wrapper_win1', 'python.exe'), PythonEnvKind.VirtualEnvWrapper),
+            createExpectedEnvInfo(path.join(testVirtualHomeDir, 'Envs', 'wrapper_win2', 'bin', 'python.exe'), PythonEnvKind.VirtualEnvWrapper),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
         const locator = new GlobalVirtualEnvironmentLocator();
@@ -96,7 +104,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs);
+        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Windows);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
@@ -115,7 +123,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs);
+        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Linux);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
@@ -131,7 +139,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs);
+        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Linux);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
@@ -149,7 +157,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs);
+        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Linux);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
@@ -165,7 +173,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs);
+        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Linux);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 
@@ -182,7 +190,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        comparePaths(actualEnvs, expectedEnvs);
+        comparePaths(actualEnvs, expectedEnvs, platformUtils.OSType.Linux);
         assertEnvsEqual(actualEnvs, expectedEnvs);
     });
 

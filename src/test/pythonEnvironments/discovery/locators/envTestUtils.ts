@@ -3,6 +3,7 @@
 
 import * as assert from 'assert';
 import { zip } from 'lodash';
+import { getOSType, OSType } from '../../../../client/common/utils/platform';
 import { PythonEnvInfo } from '../../../../client/pythonEnvironments/base/info';
 
 export function assertEnvEqual(actual:PythonEnvInfo | undefined, expected: PythonEnvInfo | undefined):void {
@@ -17,6 +18,11 @@ export function assertEnvEqual(actual:PythonEnvInfo | undefined, expected: Pytho
         // No need to match these, so reset them
         actual.executable.ctime = -1;
         actual.executable.mtime = -1;
+
+        if (getOSType() === OSType.Windows && expected) {
+            actual.executable.filename = actual.executable.filename.toUpperCase();
+            expected.executable.filename = expected.executable.filename.toUpperCase();
+        }
 
         assert.deepStrictEqual(actual, expected);
     }
