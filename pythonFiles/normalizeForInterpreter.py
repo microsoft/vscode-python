@@ -96,11 +96,17 @@ def normalize_lines(selection):
     source = "\n".join(statements) + "\n"
 
     # Finally, send the formatted selection to the REPL.
-    sys.stdout.write(source)
-    sys.stdout.flush()
+    # source is a unicode instance at this point on Python 2,
+    # so if we used `sys.stdout.write`, Python will implicitly encode it using sys.getdefaultencoding(),
+    # which is almost certainly the wrong thing.
+    stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
+    stdout.write(source.encode("utf-8"))
+    stdout.flush()
 
 
 if __name__ == "__main__":
+    # This will fail on a large file.
+    # See https://github.com/microsoft/vscode-python/issues/14471
     contents = sys.argv[1]
     try:
         default_encoding = sys.getdefaultencoding()
