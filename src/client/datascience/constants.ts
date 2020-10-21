@@ -410,10 +410,7 @@ export enum Telemetry {
     TrustAllNotebooks = 'DATASCIENCE.TRUST_ALL_NOTEBOOKS',
     TrustNotebook = 'DATASCIENCE.TRUST_NOTEBOOK',
     DoNotTrustNotebook = 'DATASCIENCE.DO_NOT_TRUST_NOTEBOOK',
-    NotebookTrustPromptShown = 'DATASCIENCE.NOTEBOOK_TRUST_PROMPT_SHOWN',
-    OpenDataViewerFromVariableWindowRequest = 'DATASCIENCE.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST',
-    OpenDataViewerFromVariableWindowError = 'DATASCIENCE.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR',
-    OpenDataViewerFromVariableWindowSuccess = 'DATASCIENCE.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS'
+    NotebookTrustPromptShown = 'DATASCIENCE.NOTEBOOK_TRUST_PROMPT_SHOWN'
 }
 
 export enum NativeKeyboardCommandTelemetry {
