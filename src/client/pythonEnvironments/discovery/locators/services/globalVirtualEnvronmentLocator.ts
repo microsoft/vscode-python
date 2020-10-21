@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 import * as fsapi from 'fs-extra';
+import { toUpper, uniq } from 'lodash';
 import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import {
-    getEnvironmentVariable, getUserHomeDir,
+    getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
 import {
     PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION,
@@ -35,9 +36,14 @@ async function getGlobalVirtualEnvDirs(): Promise<string[]> {
 
     const homeDir = getUserHomeDir();
     if (homeDir && await pathExists(homeDir)) {
-        const subDirs = ['Envs', 'envs', '.direnv', '.venvs', '.virtualenvs'];
+        const os = getOSType();
+        let subDirs = ['Envs', 'envs', '.direnv', '.venvs', '.virtualenvs'];
+        if (os === OSType.Windows) {
+            subDirs = uniq(subDirs.map(toUpper));
+        }
+
         (await fsapi.readdir(homeDir))
-            .filter((d) => subDirs.includes(d))
+            .filter((d) => subDirs.includes(os === OSType.Windows ? d.toUpperCase() : d))
             .forEach((d) => venvDirs.push(path.join(homeDir, d)));
     }
 
