@@ -7,6 +7,7 @@ export const DefaultTheme = 'Default Light+';
 export const GatherExtension = 'ms-python.gather';
 
 export enum Telemetry {
+    // DS_INTERNAL and DATASCIENCE names must be preserved to maintain telemetry continuity
     ShiftEnterBannerShown = 'DS_INTERNAL.SHIFTENTER_BANNER_SHOWN',
     EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER',
     DisableInteractiveShiftEnter = 'DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER',
