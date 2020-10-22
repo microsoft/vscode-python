@@ -9,7 +9,7 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { Range, Selection, TextDocument, TextEditor, TextLine, Uri } from 'vscode';
+import { Position, Range, Selection, TextDocument, TextEditor, TextLine, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import '../../../client/common/extensions';
@@ -271,8 +271,8 @@ suite('Terminal - Code Execution Helper', () => {
         document.verify((doc) => doc.save(), TypeMoq.Times.never());
     });
 
-    test('Returns current line if nothing is selected', async () => {
-        const lineContents = 'Line Contents';
+    test('Selection is empty, return current line', async () => {
+        const lineContents = '    Line Contents';
         editor.setup((e) => e.selection).returns(() => new Selection(3, 0, 3, 0));
         const textLine = TypeMoq.Mock.ofType<TextLine>();
         textLine.setup((t) => t.text).returns(() => lineContents);
@@ -282,17 +282,137 @@ suite('Terminal - Code Execution Helper', () => {
         expect(content).to.be.equal(lineContents);
     });
 
-    test('Returns selected text', async () => {
-        const lineContents = 'Line Contents';
-        editor.setup((e) => e.selection).returns(() => new Selection(3, 0, 10, 5));
+    test('Single line: text selection without whitespace ', async () => {
+        // This test verifies following case:
+        // 1: if (x):
+        // 2:    print(x)
+        // 3:    ↑------↑   <--- selection range
+        const expected = '    print(x)';
+        editor.setup((e) => e.selection).returns(() => new Selection(2, 4, 2, 12));
         const textLine = TypeMoq.Mock.ofType<TextLine>();
-        textLine.setup((t) => t.text).returns(() => lineContents);
-        document
-            .setup((d) => d.getText(TypeMoq.It.isAny()))
-            .returns((r: Range) => `${r.start.line}.${r.start.character}.${r.end.line}.${r.end.character}`);
+        textLine.setup((t) => t.text).returns(() => '    print(x)');
+        document.setup((d) => d.lineAt(TypeMoq.It.isAny())).returns(() => textLine.object);
+        document.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => 'print(x)');
 
         const content = await helper.getSelectedTextToExecute(editor.object);
-        expect(content).to.be.equal('3.0.10.5');
+        expect(content).to.be.equal(expected);
+    });
+
+    test('Single line: partial text selection without whitespace ', async () => {
+        // This test verifies following case:
+        // 1: if (isPrime(x) || isFibonacci(x)):
+        // 2:     ↑--------↑    <--- selection range
+        const expected = 'isPrime(x)';
+        editor.setup((e) => e.selection).returns(() => new Selection(1, 4, 1, 14));
+        const textLine = TypeMoq.Mock.ofType<TextLine>();
+        textLine.setup((t) => t.text).returns(() => 'if (isPrime(x) || isFibonacci(x)):');
+        document.setup((d) => d.lineAt(TypeMoq.It.isAny())).returns(() => textLine.object);
+        document.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => 'isPrime(x)');
+
+        const content = await helper.getSelectedTextToExecute(editor.object);
+        expect(content).to.be.equal(expected);
+    });
+
+    test('Multi-line: text selection without whitespace ', async () => {
+        // This test verifies following case:
+        // 1: def calc(m, n):
+        //        ↓<------------------------------- selection start
+        // 2:     print(m)
+        // 3:     print(n)
+        //               ↑<------------------------ selection end
+        const expected = '    print(m)\n    print(n)';
+        const selection = new Selection(2, 4, 3, 12);
+        editor.setup((e) => e.selection).returns(() => selection);
+        const textLine = TypeMoq.Mock.ofType<TextLine>();
+        textLine.setup((t) => t.text).returns(() => 'def calc(m, n):');
+        const textLine2 = TypeMoq.Mock.ofType<TextLine>();
+        textLine2.setup((t) => t.text).returns(() => '    print(m)');
+        const textLine3 = TypeMoq.Mock.ofType<TextLine>();
+        textLine3.setup((t) => t.text).returns(() => '    print(n)');
+        const textLines = [textLine, textLine2, textLine3];
+        document.setup((d) => d.lineAt(TypeMoq.It.isAny())).returns((r: number) => textLines[r - 1].object);
+        document
+            .setup((d) => d.getText(new Range(selection.start, selection.end)))
+            .returns(() => 'print(m)\n    print(n)');
+        document
+            .setup((d) => d.getText(new Range(new Position(selection.start.line, 0), selection.end)))
+            .returns(() => '    print(m)\n    print(n)');
+
+        const content = await helper.getSelectedTextToExecute(editor.object);
+        expect(content).to.be.equal(expected);
+    });
+
+    test('Multi-line: text selection without whitespace and partial last line ', async () => {
+        // This test verifies following case:
+        // 1: def calc(m, n):
+        //        ↓<------------------------------ selection start
+        // 2:     if (m == 0):
+        // 3:         return n + 1
+        //                   ↑<------------------- selection end (notice " + 1" is not selected)
+        const expected = '    if (m == 0):\n        return n';
+        const selection = new Selection(2, 4, 3, 16);
+        editor.setup((e) => e.selection).returns(() => selection);
+        const textLine = TypeMoq.Mock.ofType<TextLine>();
+        textLine.setup((t) => t.text).returns(() => 'def calc(m, n):');
+        const textLine2 = TypeMoq.Mock.ofType<TextLine>();
+        textLine2.setup((t) => t.text).returns(() => '    if (m == 0):');
+        const textLine3 = TypeMoq.Mock.ofType<TextLine>();
+        textLine3.setup((t) => t.text).returns(() => '        return n + 1');
+        const textLines = [textLine, textLine2, textLine3];
+        document.setup((d) => d.lineAt(TypeMoq.It.isAny())).returns((r: number) => textLines[r - 1].object);
+        document
+            .setup((d) => d.getText(new Range(selection.start, selection.end)))
+            .returns(() => 'if (m == 0):\n        return n');
+        document
+            .setup((d) =>
+                d.getText(new Range(new Position(selection.start.line, 4), new Position(selection.start.line, 16)))
+            )
+            .returns(() => 'if (m == 0):');
+        document
+            .setup((d) =>
+                d.getText(new Range(new Position(selection.start.line, 0), new Position(selection.end.line, 20)))
+            )
+            .returns(() => '    if (m == 0):\n        return n + 1');
+
+        const content = await helper.getSelectedTextToExecute(editor.object);
+        expect(content).to.be.equal(expected);
+    });
+
+    test('Multi-line: partial first and last line', async () => {
+        // This test verifies following case:
+        // 1: def calc(m, n):
+        //           ↓<------------------------------- selection start
+        // 2:     if (m > 0
+        // 3:         and n == 0):
+        //                      ↑<-------------------- selection end
+        // 4:        pass
+        const expected = '(m > 0\n        and n == 0)';
+        const selection = new Selection(2, 7, 3, 19);
+        editor.setup((e) => e.selection).returns(() => selection);
+        const textLine = TypeMoq.Mock.ofType<TextLine>();
+        textLine.setup((t) => t.text).returns(() => 'def calc(m, n):');
+        const textLine2 = TypeMoq.Mock.ofType<TextLine>();
+        textLine2.setup((t) => t.text).returns(() => '    if (m > 0');
+        const textLine3 = TypeMoq.Mock.ofType<TextLine>();
+        textLine3.setup((t) => t.text).returns(() => '        and n == 0)');
+        const textLines = [textLine, textLine2, textLine3];
+        document.setup((d) => d.lineAt(TypeMoq.It.isAny())).returns((r: number) => textLines[r - 1].object);
+        document
+            .setup((d) => d.getText(new Range(selection.start, selection.end)))
+            .returns(() => '(m > 0\n        and n == 0)');
+        document
+            .setup((d) =>
+                d.getText(new Range(new Position(selection.start.line, 7), new Position(selection.start.line, 13)))
+            )
+            .returns(() => '(m > 0');
+        document
+            .setup((d) =>
+                d.getText(new Range(new Position(selection.start.line, 0), new Position(selection.end.line, 19)))
+            )
+            .returns(() => '    if (m > 0\n        and n == 0)');
+
+        const content = await helper.getSelectedTextToExecute(editor.object);
+        expect(content).to.be.equal(expected);
     });
 
     test('saveFileIfDirty will not fail if file is not opened', async () => {
