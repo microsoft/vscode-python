@@ -28,7 +28,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.48.0"
+        "vscode": "^1.49.0"
     },
     "keywords": [
         "python",
@@ -1041,6 +1041,7 @@
                             "RunByLine - experiment",
                             "tryPylance",
                             "jediLSP",
+                            "debuggerDataViewer",
                             "All"
                         ]
                     },
@@ -1066,6 +1067,7 @@
                             "RunByLine - experiment",
                             "tryPylance",
                             "jediLSP",
+                            "debuggerDataViewer",
                             "All"
                         ]
                     },

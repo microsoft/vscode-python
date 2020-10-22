@@ -568,6 +568,9 @@ export interface IEventNamePropertyMapping {
          */
         manuallyEnteredAValue?: boolean;
     };
+    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST]: never | undefined;
+    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR]: never | undefined;
+    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS]: never | undefined;
     /**
      * Telemetry event sent when providing completion provider in launch.json. It is sent just *after* inserting the completion.
      */
