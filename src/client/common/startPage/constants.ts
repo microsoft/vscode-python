@@ -32,8 +32,3 @@ export enum Telemetry {
     StartPageOpenFolder = 'DATASCIENCE.STARTPAGE_OPEN_FOLDER',
     StartPageOpenWorkspace = 'DATASCIENCE.STARTPAGE_OPEN_WORKSPACE'
 }
-
-export namespace Commands {
-    export const RunAllCells = 'jupyter.runallcells';
-    export const OpenNotebook = 'jupyter.opennotebook';
-}
