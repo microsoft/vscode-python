@@ -94,13 +94,13 @@ steps:
   # This task will only run if variable `NeedsPythonTestReqs` is true.
   #
   # Example command line (windows pwsh):
-  # > python -m pip install -m -U pip
-  # > python -m pip install --upgrade -r build/test-requirements.txt
-  # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+  # > python3.8 -m pip install -m -U pip
+  # > python3.8 -m pip install --upgrade -r build/test-requirements.txt
+  # > python3.8 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
   - bash: |
-      python -m pip install --upgrade -r build/test-requirements.txt
-      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+      python3.8 -m pip install --upgrade -r build/test-requirements.txt
+      python3.8 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+      python3.8 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
 
@@ -109,12 +109,12 @@ steps:
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
   #
   # Example command line (windows pwsh):
-  # > python -m pip install numpy
-  # > python -m pip install --upgrade -r build/functional-test-requirements.txt
-  # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+  # > python3.8 -m pip install numpy
+  # > python3.8 -m pip install --upgrade -r build/functional-test-requirements.txt
+  # > python3.8 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
   - bash: |
-      python -m pip install numpy
-      python -m pip install --upgrade -r ./build/functional-test-requirements.txt
+      python3.8 -m pip install numpy
+      python3.8 -m pip install --upgrade -r ./build/functional-test-requirements.txt
       python -c "import sys;print(sys.executable)"
     displayName: 'pip install functional requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
@@ -155,11 +155,11 @@ steps:
   - bash: |
       source activate base
       conda install --quiet -y --file build/ci/conda_base.yml
-      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      python3.8 -m pip install --upgrade -r build/conda-functional-requirements.txt
       source activate conda_env_1
-      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      python3.8 -m pip install --upgrade -r build/conda-functional-requirements.txt
       source activate conda_env_2
-      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      python3.8 -m pip install --upgrade -r build/conda-functional-requirements.txt
       conda deactivate
     displayName: 'Install Pip requirements for CONDA envs'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), ne(variables['Agent.Os'], 'Windows_NT'))
@@ -168,11 +168,11 @@ steps:
   - script: |
       call activate base
       call conda install --quiet -y --file build/ci/conda_base.yml
-      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      python3.8 -m pip install --upgrade -r build/conda-functional-requirements.txt
       call activate conda_env_1
-      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      python3.8 -m pip install --upgrade -r build/conda-functional-requirements.txt
       call activate conda_env_2
-      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      python3.8 -m pip install --upgrade -r build/conda-functional-requirements.txt
     displayName: 'Install Pip requirements for CONDA envs'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'))
 
@@ -180,7 +180,7 @@ steps:
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
   - bash: |
-      python -m pip install --upgrade pywin32==224
+      python3.8 -m pip install --upgrade pywin32==224
     displayName: 'Downgrade pywin32 on Windows / Python 3.6'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['PythonVersion'], '3.6'))
 
@@ -189,23 +189,23 @@ steps:
   # This task will only run if variable `NeedsIPythonReqs` is true.
   #
   # Example command line (windows pwsh):
-  # > python -m pip install numpy
-  # > python -m pip install --upgrade -r build/ipython-test-requirements.txt
-  # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+  # > python3.8 -m pip install numpy
+  # > python3.8 -m pip install --upgrade -r build/ipython-test-requirements.txt
+  # > python3.8 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
   - bash: |
-      python -m pip install numpy
-      python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+      python3.8 -m pip install numpy
+      python3.8 -m pip install --upgrade -r ./build/ipython-test-requirements.txt
     displayName: 'pip install ipython requirements'
     condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'))
 
   # Install jupyter for smoke tests.
   - bash: |
-      python -m pip install --upgrade jupyter
+      python3.8 -m pip install --upgrade jupyter
     displayName: 'pip install jupyter'
     condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'), contains(variables['TestsToRun'], 'testSmoke'))
 
   - bash: |
-      python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+      python3.8 -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
       python ./pythonFiles/install_debugpy.py
     failOnStderr: true
     displayName: 'Install DEBUGPY wheels'
@@ -217,8 +217,8 @@ steps:
   # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`.
   #
   # Example command line (windows pwsh):
-  # > python -m pip install -m -U pip
-  # > python -m pip install -U -r build/test-requirements.txt
+  # > python3.8 -m pip install -m -U pip
+  # > python3.8 -m pip install -U -r build/test-requirements.txt
   # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
   - bash: |
       python pythonFiles/tests/run_all.py --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tests-junit.xml
@@ -242,11 +242,11 @@ steps:
   # This task only runs if the string 'pythonIPythonTests' exists in variable `TestsToRun`.
   #
   # Example command line (windows pwsh):
-  # > python -m pip install -m -U pip
-  # > python -m pip install -U -r build/test-requirements.txt
+  # > python3.8 -m pip install -m -U pip
+  # > python3.8 -m pip install -U -r build/test-requirements.txt
   # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
   - bash: |
-      python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/ipython-tests-junit.xml
+      python3.8 -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/ipython-tests-junit.xml
     displayName: 'Python ipython tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonIPythonTests'))
 
@@ -266,10 +266,10 @@ steps:
   # This task only runs if the string 'pythonInternalTools' exists in variable `TestsToRun`
   #
   # Example command line (windows pwsh):
-  # > python -m pip install -U -r news/requirements.txt
+  # > python3.8 -m pip install -U -r news/requirements.txt
   - script: |
-      python -m pip install --upgrade -r news/requirements.txt
-      python -m pytest news --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-news-junit.xml
+      python3.8 -m pip install --upgrade -r news/requirements.txt
+      python3.8 -m pytest news --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-news-junit.xml
     displayName: 'Run Python tests for news'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonInternalTools'))
 
@@ -303,17 +303,17 @@ steps:
       }
 
       # pipenv
-      python -m pip install pipenv
-      python -m pipenv run python build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) pipenvPath
+      python3.8 -m pip install pipenv
+      python3.8 -m pipenv run python build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) pipenvPath
 
       # venv
       # what happens when running under Python 2.7?
-      python -m venv .venv
+      python3.8 -m venv .venv
       & ".venv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) venvPath
 
       # virtualenv
-      python -m pip install virtualenv
-      python -m virtualenv .virtualenv
+      python3.8 -m pip install virtualenv
+      python3.8 -m virtualenv .virtualenv
       & ".virtualenv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) virtualEnvPath
 
       # conda
@@ -380,12 +380,12 @@ steps:
   # This env will be used to install ipykernel & test for prompts if ipykernel is missing & similar tests.
   # Ensure this is registered as a kernel.
   - bash: |
-      python -m venv .venvnokernel
+      python3.8 -m venv .venvnokernel
       source .venvnokernel/bin/activate
 
-      python -m pip install ipykernel
-      python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
-      python -m pip uninstall ipykernel --yes
+      python3.8 -m pip install ipykernel
+      python3.8 -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
+      python3.8 -m pip uninstall ipykernel --yes
     displayName: 'Prepare Virtual Env for Kernel Tests'
     workingDirectory: $(Build.SourcesDirectory)/src/test/datascience
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScienceInVSCode'))

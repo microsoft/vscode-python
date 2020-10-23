@@ -44,7 +44,7 @@ jobs:
           python-version: ${{matrix.python}}
 
       - name: Upgrade pip
-        run: python -m pip install -U pip
+        run: python3.8 -m pip install -U pip
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v2.1.1
@@ -114,22 +114,22 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       # For faster/better builds of sdists.
-      - run: python -m pip install wheel
+      - run: python3.8 -m pip install wheel
         shell: bash
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install functional test requirements
         run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python3.8 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+          python3.8 -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
-          python -m pip install numpy
-          python -m pip install --upgrade jupyter
-          python -m pip install --upgrade -r build/test-requirements.txt
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-          python -m ipykernel install --user
+          python3.8 -m pip install numpy
+          python3.8 -m pip install --upgrade jupyter
+          python3.8 -m pip install --upgrade -r build/test-requirements.txt
+          python3.8 -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+          python3.8 -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+          python3.8 -m ipykernel install --user
         # This step is slow.
 
       - name: Install dependencies (npm ci)
@@ -175,7 +175,7 @@ jobs:
           python-version: ${{matrix.python}}
 
       - name: Upgrade pip
-        run: python -m pip install -U pip
+        run: python3.8 -m pip install -U pip
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v2.1.1
@@ -245,22 +245,22 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       # For faster/better builds of sdists.
-      - run: python -m pip install wheel
+      - run: python3.8 -m pip install wheel
         shell: bash
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install functional test requirements
         run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python3.8 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+          python3.8 -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
-          python -m pip install numpy
-          python -m pip install --upgrade jupyter
-          python -m pip install --upgrade -r build/test-requirements.txt
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-          python -m ipykernel install --user
+          python3.8 -m pip install numpy
+          python3.8 -m pip install --upgrade jupyter
+          python3.8 -m pip install --upgrade -r build/test-requirements.txt
+          python3.8 -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+          python3.8 -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+          python3.8 -m ipykernel install --user
         # This step is slow.
 
       - name: Install dependencies (npm ci)
@@ -324,7 +324,7 @@ jobs:
 #           python-version: ${{matrix.python}}
 
 #       - name: Upgrade pip
-#         run: python -m pip install -U pip
+#         run: python3.8 -m pip install -U pip
 
 #       - name: Use Node ${{env.NODE_VERSION}}
 #         uses: actions/setup-node@v2.1.1
@@ -394,22 +394,22 @@ jobs:
 #           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
 #       # For faster/better builds of sdists.
-#       - run: python -m pip install wheel
+#       - run: python3.8 -m pip install wheel
 #         shell: bash
 
 #       # debugpy is not shipped, only installed for local tests.
 #       # In production, we get debugpy from python extension.
 #       - name: Install functional test requirements
 #         run: |
-#           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-#           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+#           python3.8 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+#           python3.8 -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
 #           python ./pythonFiles/install_debugpy.py
-#           python -m pip install numpy
-#           python -m pip install --upgrade jupyter
-#           python -m pip install --upgrade -r build/test-requirements.txt
-#           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-#           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-#           python -m ipykernel install --user
+#           python3.8 -m pip install numpy
+#           python3.8 -m pip install --upgrade jupyter
+#           python3.8 -m pip install --upgrade -r build/test-requirements.txt
+#           python3.8 -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+#           python3.8 -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+#           python3.8 -m ipykernel install --user
 #         # This step is slow.
 
 #       - name: Install dependencies (npm ci)
