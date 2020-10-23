@@ -81,25 +81,25 @@ stages:
           - template: templates/test_phases.yml
 
       # This is the oldest Python 3 version we support.
-      - job: 'Py35'
+      - job: 'Py36'
         dependsOn: []
         timeoutInMinutes: 120
         strategy:
           matrix:
             'Unit':
-              PythonVersion: '3.5'
+              PythonVersion: '3.6'
               # Note: "pythonInternalTools" tests are 3.7+.
               TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
             'Venv':
-              PythonVersion: '3.5'
+              PythonVersion: '3.6'
               TestsToRun: 'venvTests'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
               PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             'Debugger':
-              PythonVersion: '3.5'
+              PythonVersion: '3.6'
               TestsToRun: 'testDebugger'
               NeedsPythonTestReqs: true
           maxParallel: 2
