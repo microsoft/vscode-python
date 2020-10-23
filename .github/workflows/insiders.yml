@@ -300,11 +300,10 @@ jobs:
           retention-days: 1
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
-      # Run the Python and IPython tests in our codebase.
-      - name: Run Python and IPython unit tests
+      # Run the Python tests in our codebase.
+      - name: Run Python unit tests
         run: |
           python pythonFiles/tests/run_all.py
-          python -m IPython pythonFiles/tests/run_all.py
         if: matrix.test-suite == 'python-unit'
 
       # The virtual environment based tests use the `testSingleWorkspace` set of tests

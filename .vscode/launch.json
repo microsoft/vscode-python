@@ -38,14 +38,6 @@
             "preLaunchTask": "Compile"
         },
         {
-            "name": "Python: Current File with iPython",
-            "type": "python",
-            "request": "launch",
-            "module": "IPython",
-            "console": "integratedTerminal",
-            "args": ["${file}"] // Additional args should be prefixed with a '--' first.
-        },
-        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",

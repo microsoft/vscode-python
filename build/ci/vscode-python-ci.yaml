@@ -38,9 +38,8 @@ stages:
               # with mocks
               # focused on small units (i.e. functions)
               # and tightly controlled dependencies
-              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
             'Functional':
               # no mocks, no vscode
               # focused on integration
@@ -60,7 +59,6 @@ stages:
             'Venv':
               TestsToRun: 'venvTests'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
               # This is for the venvTests to use, not needed if you don't run venv tests...
               PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             'Debugger':
@@ -69,7 +67,6 @@ stages:
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
           maxParallel: 2
         pool:
           vmImage: 'ubuntu-20.04'
@@ -85,14 +82,12 @@ stages:
             'Unit':
               PythonVersion: '3.5'
               # Note: "pythonInternalTools" tests are 3.7+.
-              TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
+              TestsToRun: 'testUnitTests, pythonUnitTests'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
             'Venv':
               PythonVersion: '3.5'
               TestsToRun: 'venvTests'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
               PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             'Debugger':
               PythonVersion: '3.5'
@@ -113,9 +108,8 @@ stages:
         strategy:
           matrix:
             'Unit':
-              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
             'Functional':
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
@@ -129,7 +123,6 @@ stages:
             'Venv':
               TestsToRun: 'venvTests'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
               PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             'Debugger':
               TestsToRun: 'testDebugger'
@@ -137,7 +130,6 @@ stages:
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
           maxParallel: 2
         pool:
           vmImage: '$(vmImageMacOS)'
@@ -153,9 +145,8 @@ stages:
         strategy:
           matrix:
             'Unit':
-              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
             'Functional':
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
@@ -169,7 +160,6 @@ stages:
             'Venv':
               TestsToRun: 'venvTests'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
               PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
             'Debugger':
               TestsToRun: 'testDebugger'
@@ -177,7 +167,6 @@ stages:
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
           maxParallel: 2
         pool:
           vmImage: 'vs2017-win2016'

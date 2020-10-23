@@ -39,11 +39,9 @@ stages:
             'NodeUnit':
               TestsToRun: 'testUnitTests'
               NeedsPythonTestReqs: false
-              NeedsIPythonReqs: false
             'Unit':
-              TestsToRun: 'pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              TestsToRun: 'pythonUnitTests, pythonInternalTools'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
             'Functional':
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
@@ -54,7 +52,6 @@ stages:
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
         pool:
           vmImage: 'ubuntu-20.04'
         steps:
@@ -105,9 +102,8 @@ stages:
         strategy:
           matrix:
             'Unit':
-              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
             # This gives us our best functional coverage for the OS.
             'Functional Non DS':
               TestsToRun: 'testfunctional'

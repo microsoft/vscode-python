@@ -31,7 +31,7 @@ steps:
       PythonVersion: $(PythonVersion)
       workingDirectory: $(Build.SourcesDirectory)
       compile: 'false'
-      sqlite: $(NeedsIPythonReqs)
+      sqlite: 'false'
 
   # When running unit tests, we need to just compile extension code (not webviews & the like).
   - task: Gulp@0
