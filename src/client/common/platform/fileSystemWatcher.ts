@@ -6,8 +6,8 @@
 import * as chokidar from 'chokidar';
 import * as path from 'path';
 import { RelativePattern, workspace } from 'vscode';
-import { normCasePath } from '../../pythonEnvironments/common/externalDependencies';
 import { traceError, traceVerbose, traceWarning } from '../logger';
+import { normCasePath } from './fileSystem';
 
 /**
  * Enumeration of file change types.
@@ -17,12 +17,10 @@ export enum FileChangeType {
      * The contents or metadata of a file have changed.
      */
     Changed = 1,
-
     /**
      * A file has been created.
      */
     Created = 2,
-
     /**
      * A file has been deleted.
      */
