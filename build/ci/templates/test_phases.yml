@@ -215,31 +215,6 @@ steps:
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'UnitTests'
 
-  # Run the Python IPython tests in our codebase. Produces a JUnit-style log file that
-  # will be uploaded after all tests are complete.
-  #
-  # This task only runs if the string 'pythonIPythonTests' exists in variable `TestsToRun`.
-  #
-  # Example command line (windows pwsh):
-  # > python -m pip install -m -U pip
-  # > python -m pip install -U -r build/test-requirements.txt
-  # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
-  - bash: |
-      python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/ipython-tests-junit.xml
-    displayName: 'Python ipython tests'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonIPythonTests'))
-
-  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
-  - task: PublishTestResults@2
-    displayName: 'Publish IPython test results'
-    condition: contains(variables['TestsToRun'], 'pythonIPythonTests')
-    inputs:
-      testResultsFiles: 'ipython-tests-junit.xml'
-      searchFolder: '$(Common.TestResultsDirectory)'
-      testRunTitle: 'pythonIPythonTests-$(Agent.Os)-Py$(pythonVersion)'
-      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
-      buildConfiguration: 'UnitTests'
-
   # Run the News tool tests.
   #
   # This task only runs if the string 'pythonInternalTools' exists in variable `TestsToRun`
