@@ -99,7 +99,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         const fullLineText = textEditor.document.lineAt(selection.start.line).text;
 
         if (selectionText.trim() === fullLineText.trim()) {
-            // This handled the following case:
+            // This handles the following case:
             // if (x):
             //     print(x)
             //     ↑------↑   <--- selection range
