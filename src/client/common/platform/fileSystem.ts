@@ -8,12 +8,10 @@ import { createHash } from 'crypto';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import { injectable } from 'inversify';
-import * as path from 'path';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
 import '../../common/extensions';
 import { traceError } from '../logger';
-import { getOSType, OSType } from '../utils/platform';
 import { createDirNotEmptyError, isFileExistsError, isFileNotFoundError, isNoPermissionsError } from './errors';
 import { FileSystemPaths, FileSystemPathUtils } from './fs-paths';
 import { TemporaryFileSystem } from './fs-temp';
@@ -587,8 +585,4 @@ export class FileSystem implements IFileSystem {
     public async isDirReadonly(dirname: string): Promise<boolean> {
         return this.utils.isDirReadonly(dirname);
     }
-}
-
-export function normCasePath(filePath: string): string {
-    return getOSType() === OSType.Windows ? path.normalize(filePath).toUpperCase() : path.normalize(filePath);
 }

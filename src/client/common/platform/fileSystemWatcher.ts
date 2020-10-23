@@ -7,7 +7,7 @@ import * as chokidar from 'chokidar';
 import * as path from 'path';
 import { RelativePattern, workspace } from 'vscode';
 import { traceError, traceVerbose, traceWarning } from '../logger';
-import { normCasePath } from './fileSystem';
+import { normCasePath } from './fs-paths';
 
 /**
  * Enumeration of file change types.
