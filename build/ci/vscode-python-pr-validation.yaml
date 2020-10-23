@@ -66,7 +66,7 @@ stages:
               # Note: "pythonInternalTools" tests are 3.7+.
               TestsToRun: 'pythonUnitTests'
               NeedsPythonTestReqs: true
-            'Functional':
+            'Functional Non DS':
               PythonVersion: '2.7'
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
