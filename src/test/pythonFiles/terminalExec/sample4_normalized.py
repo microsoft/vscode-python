@@ -4,4 +4,3 @@ class pc(object):
         self.model = model
     def print_name(self):
         print('Workstation name is', self.pcname, 'model is', self.model)
-
