@@ -48,10 +48,10 @@ def _get_statements(selection):
     ends = [node.lineno - 1 for node in tree.body[1:]] + [len(lines)]
     for node, end in zip(tree.body, ends):
         # Given this selection:
-        # if (m > 0 and
-        #        n < 3):
-        #     print('foo')
-        # value = 'bar'
+        # 1: if (m > 0 and
+        # 2:        n < 3):
+        # 3:     print('foo')
+        # 4: value = 'bar'
         #
         # The first block would have lineno = 1,and the second block lineno = 4
         start = node.lineno - 1
