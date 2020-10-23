@@ -169,3 +169,23 @@ class TestNormalizationScript(object):
         normalizeSelection.normalize_lines(src)
         captured = capsys.readouterr()
         assert captured.out == expected
+
+    def test_exception(self, capsys):
+        src = "       if True:"
+        expected = src + "\n\n"
+        normalizeSelection.normalize_lines(src)
+        captured = capsys.readouterr()
+        assert captured.out == expected
+
+    def test_multilineException(self, capsys):
+        src = textwrap.dedent(
+            """\
+
+            def show_something():
+                if True:
+            """
+        )
+        expected = src + "\n\n"
+        normalizeSelection.normalize_lines(src)
+        captured = capsys.readouterr()
+        assert captured.out == expected

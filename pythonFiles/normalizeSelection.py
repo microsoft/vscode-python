@@ -90,14 +90,19 @@ def normalize_lines(selection):
     and add newlines between each of them to tell the REPL where each block ends.
     """
 
-    # Parse the selection into a list of top-level blocks.
-    # We don't differentiate between single and multiline statements
-    # because it's not a perf bottleneck,
-    # and the overhead from splitting and rejoining strings in the multiline case is one-off.
-    statements = _get_statements(selection)
+    try:
+        # Parse the selection into a list of top-level blocks.
+        # We don't differentiate between single and multiline statements
+        # because it's not a perf bottleneck,
+        # and the overhead from splitting and rejoining strings in the multiline case is one-off.
+        statements = _get_statements(selection)
 
-    # Insert a newline between each top-level statement, and append a newline to the selection.
-    source = "\n".join(statements) + "\n"
+        # Insert a newline between each top-level statement, and append a newline to the selection.
+        source = "\n".join(statements) + "\n"
+    except:
+        # If there's a problem when parsing statements,
+        # append a blank line to end the block and send it as-is.
+        source = selection + "\n\n"
 
     # `source` is a unicode instance at this point on Python 2,
     # so if we used `sys.stdout.write` to send it to the REPL,
