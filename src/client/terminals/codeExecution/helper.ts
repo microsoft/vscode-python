@@ -3,7 +3,7 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import { Range, TextEditor, Uri } from 'vscode';
+import { Position, Range, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -20,12 +20,14 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
     private readonly applicationShell: IApplicationShell;
     private readonly processServiceFactory: IProcessServiceFactory;
     private readonly interpreterService: IInterpreterService;
+
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     }
+
     public async normalizeLines(code: string, resource?: Uri): Promise<string> {
         try {
             if (code.trim().length === 0) {
@@ -75,16 +77,124 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         let code: string;
         if (selection.isEmpty) {
             code = textEditor.document.lineAt(selection.start.line).text;
+        } else if (selection.isSingleLine) {
+            code = this.getSingleLineSelectionText(textEditor);
         } else {
-            const textRange = new Range(selection.start, selection.end);
-            code = textEditor.document.getText(textRange);
+            code = this.getMultiLineSelectionText(textEditor);
         }
         return code;
     }
+
     public async saveFileIfDirty(file: Uri): Promise<void> {
         const docs = this.documentManager.textDocuments.filter((d) => d.uri.path === file.path);
         if (docs.length === 1 && docs[0].isDirty) {
             await docs[0].save();
         }
+    }
+
+    private getSingleLineSelectionText(textEditor: TextEditor): string {
+        const selection = textEditor.selection;
+        const selectionRange = new Range(selection.start, selection.end);
+        const selectionText = textEditor.document.getText(selectionRange);
+        const fullLineText = textEditor.document.lineAt(selection.start.line).text;
+
+        if (selectionText.trim() === fullLineText.trim()) {
+            // This handles the following case:
+            // if (x):
+            //     print(x)
+            //     ↑------↑   <--- selection range
+            //
+            // We should return:
+            //     print(x)
+            // ↑----------↑    <--- text including the initial white space
+            return fullLineText;
+        }
+
+        // This is where part of the line is selected:
+        // if(isPrime(x) || isFibonacci(x)):
+        //    ↑--------↑    <--- selection range
+        //
+        // We should return just the selection:
+        // isPrime(x)
+        return selectionText;
+    }
+
+    private getMultiLineSelectionText(textEditor: TextEditor): string {
+        const selection = textEditor.selection;
+        const selectionRange = new Range(selection.start, selection.end);
+        const selectionText = textEditor.document.getText(selectionRange);
+
+        const fullTextRange = new Range(
+            new Position(selection.start.line, 0),
+            new Position(selection.end.line, textEditor.document.lineAt(selection.end.line).text.length)
+        );
+        const fullText = textEditor.document.getText(fullTextRange);
+
+        // This handles case where:
+        // def calc(m, n):
+        //     ↓<------------------------------- selection start
+        //     print(m)
+        //     print(n)
+        //            ↑<------------------------ selection end
+        //     if (m == 0):
+        //         return n + 1
+        //     if (m > 0 and n == 0):
+        //         return calc(m - 1 , 1)
+        //     return calc(m - 1, calc(m, n - 1))
+        //
+        // We should return:
+        // ↓<---------------------------------- From here
+        //     print(m)
+        //     print(n)
+        //            ↑<----------------------- To here
+        if (selectionText.trim() === fullText.trim()) {
+            return fullText;
+        }
+
+        const fullStartLineText = textEditor.document.lineAt(selection.start.line).text;
+        const selectionFirstLineRange = new Range(
+            selection.start,
+            new Position(selection.start.line, fullStartLineText.length)
+        );
+        const selectionFirstLineText = textEditor.document.getText(selectionFirstLineRange);
+
+        // This handles case where:
+        // def calc(m, n):
+        //     ↓<------------------------------ selection start
+        //     if (m == 0):
+        //         return n + 1
+        //                ↑<------------------- selection end (notice " + 1" is not selected)
+        //     if (m > 0 and n == 0):
+        //         return calc(m - 1 , 1)
+        //     return calc(m - 1, calc(m, n - 1))
+        //
+        // We should return:
+        // ↓<---------------------------------- From here
+        //     if (m == 0):
+        //         return n + 1
+        //                ↑<------------------- To here (notice " + 1" is not selected)
+        if (selectionFirstLineText.trimLeft() === fullStartLineText.trimLeft()) {
+            return fullStartLineText + selectionText.substr(selectionFirstLineText.length);
+        }
+
+        // If you are here then user has selected partial start and partial end lines:
+        // def calc(m, n):
+
+        //     if (m == 0):
+        //         return n + 1
+
+        //        ↓<------------------------------- selection start
+        //     if (m > 0
+        //         and n == 0):
+        //                   ↑<-------------------- selection end
+        //         return calc(m - 1 , 1)
+        //     return calc(m - 1, calc(m, n - 1))
+        //
+        // We should return:
+        // ↓<---------------------------------- From here
+        // (m > 0
+        //         and n == 0)
+        //                   ↑<---------------- To here
+        return selectionText;
     }
 }
