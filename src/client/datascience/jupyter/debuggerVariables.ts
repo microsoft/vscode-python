@@ -118,7 +118,7 @@ export class DebuggerVariables extends DebugLocationTracker
         return results
             ? {
                   ...targetVariable,
-                  ...JSON.parse(results.result.slice(1, -1))
+                  ...JSON.parse(results.result)
               }
             : targetVariable;
     }
@@ -158,7 +158,7 @@ export class DebuggerVariables extends DebugLocationTracker
                 // tslint:disable-next-line: no-any
                 (targetVariable as any).frameId
             );
-            const chunkResults = JSON.parse(results.result.slice(1, -1));
+            const chunkResults = JSON.parse(results.result);
             if (output && output.data) {
                 output = {
                     ...output,
@@ -225,7 +225,8 @@ export class DebuggerVariables extends DebugLocationTracker
             const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
                 expression: code,
                 frameId: this.topMostFrameId || frameId,
-                context: 'repl'
+                context: 'repl',
+                format: { rawString: true }
             });
             if (results && results.result !== 'None') {
                 return results;
@@ -268,7 +269,7 @@ export class DebuggerVariables extends DebugLocationTracker
             return {
                 ...variable,
                 truncated: false,
-                ...JSON.parse(results.result.slice(1, -1))
+                ...JSON.parse(results.result)
             };
         } else {
             // If no results, just return current value. Better than nothing.
