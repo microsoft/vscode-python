@@ -2,115 +2,146 @@
 # Licensed under the MIT License.
 
 import ast
-import textwrap
-import re
+import io
+import operator
+import os
 import sys
+import textwrap
+import token
+import tokenize
 
 
-def split_lines(source):
+class Visitor(ast.NodeVisitor):
+    def __init__(self, lines):
+        self._lines = lines
+        self.line_numbers_with_nodes = set()
+        self.line_numbers_with_statements = []
+
+    def generic_visit(self, node):
+        if (
+            hasattr(node, "col_offset")
+            and hasattr(node, "lineno")
+            and node.col_offset == 0
+        ):
+            self.line_numbers_with_nodes.add(node.lineno)
+            if isinstance(node, ast.stmt):
+                self.line_numbers_with_statements.append(node.lineno)
+
+        ast.NodeVisitor.generic_visit(self, node)
+
+
+def _tokenize(source):
+    """Tokenize Python source code."""
+    # Using an undocumented API as the documented one in Python 2.7 does not work as needed
+    # cross-version.
+    if sys.version_info < (3,) and isinstance(source, str):
+        source = source.decode()
+    return tokenize.generate_tokens(io.StringIO(source).readline)
+
+
+def _indent_size(line):
+    for index, char in enumerate(line):
+        if not char.isspace():
+            return index
+
+
+def _get_global_statement_blocks(source, lines):
+    """Return a list of all global statement blocks.
+
+    The list comprises of 3-item tuples that contain the starting line number,
+    ending line number and whether the statement is a single line.
+
     """
-    Split selection lines in a version-agnostic way.
-
-    Python grammar only treats \r, \n, and \r\n as newlines.
-    But splitlines() in Python 3 has a much larger list: for example, it also includes \v, \f.
-    As such, this function will split lines across all Python versions.
-    """
-    return re.split(r"[\n\r]+", source)
-
-
-def _get_statements(selection):
-    """
-    Process a multiline selection into a list of its top-level statements.
-    This will remove empty newlines around and within the selection, dedent it,
-    and split it using the result of `ast.parse()`.
-    """
-
-    # Remove blank lines within the selection to prevent the REPL from thinking the block is finished.
-    lines = (line for line in split_lines(selection) if line.strip() != "")
-
-    # Dedent the selection and parse it using the ast module.
-    # Note that leading comments in the selection will be discarded during parsing.
-    source = textwrap.dedent("\n".join(lines))
     tree = ast.parse(source)
+    visitor = Visitor(lines)
+    visitor.visit(tree)
 
-    # We'll need the dedented lines to rebuild the selection.
-    lines = split_lines(source)
+    statement_ranges = []
+    for index, line_number in enumerate(visitor.line_numbers_with_statements):
+        remaining_line_numbers = visitor.line_numbers_with_statements[index + 1 :]
+        end_line_number = (
+            len(lines)
+            if len(remaining_line_numbers) == 0
+            else min(remaining_line_numbers) - 1
+        )
+        current_statement_is_oneline = line_number == end_line_number
 
-    # Get the line ranges for top-level blocks returned from parsing the dedented text
-    # and split the selection accordingly.
-    # tree.body is a list of AST objects, which we rely on to extract top-level statements.
-    # If we supported Python 3.8+ only we could use the lineno and end_lineno attributes of each object
-    # to get the boundaries of each block.
-    # However, earlier Python versions only have the lineno attribute, which is the range start position (1-indexed).
-    # Therefore, to retrieve the end line of each block in a version-agnostic way we need to do
-    # `end = next_block.lineno - 1`
-    # for all blocks except the last one, which will will just run until the last line.
-    ends = [node.lineno - 1 for node in tree.body[1:]] + [len(lines)]
-    for node, end in zip(tree.body, ends):
-        # Given this selection:
-        # 1: if (m > 0 and
-        # 2:        n < 3):
-        # 3:     print('foo')
-        # 4: value = 'bar'
-        #
-        # The first block would have lineno = 1,and the second block lineno = 4
-        start = node.lineno - 1
-        block = "\n".join(lines[start:end])
+        if len(statement_ranges) == 0:
+            statement_ranges.append(
+                (line_number, end_line_number, current_statement_is_oneline)
+            )
+            continue
 
-        # If the block is multiline, add an extra newline character at its end.
-        # This way, when joining blocks back together, there will be a blank line between each multiline statement
-        # and no blank lines between single-line statements, or it would look like this:
-        # >>> x = 22
-        # >>>
-        # >>> total = x + 30
-        # >>>
-        # Note that for the multiline parentheses case this newline is redundant,
-        # since the closing parenthesis terminates the statement already.
-        # This means that for this pattern we'll end up with:
-        # >>> x = [
-        # ...   1
-        # ... ]
-        # >>>
-        # >>> y = [
-        # ...   2
-        # ...]
-        if end - start > 1:
-            block += "\n"
+        previous_statement = statement_ranges[-1]
+        previous_statement_is_oneline = previous_statement[2]
+        if previous_statement_is_oneline and current_statement_is_oneline:
+            statement_ranges[-1] = previous_statement[0], end_line_number, True
+        else:
+            statement_ranges.append(
+                (line_number, end_line_number, current_statement_is_oneline)
+            )
 
-        yield block
+    return statement_ranges
 
 
-def normalize_lines(selection):
+def normalize_lines(source):
+    """Normalize blank lines for sending to the terminal.
+
+    Blank lines within a statement block are removed to prevent the REPL
+    from thinking the block is finished. Newlines are added to separate
+    top-level statements so that the REPL does not think there is a syntax
+    error.
+
     """
-    Normalize the text selection received from the extension and send it to the REPL.
+    # Ensure to dedent the code (#2837)
+    lines = textwrap.dedent(source).splitlines(False)
+    # If we have two blank lines, then add two blank lines.
+    # Do not trim the spaces, if we have blank lines with spaces, its possible
+    # we have indented code.
+    if (len(lines) > 1 and len("".join(lines[-2:])) == 0) or source.endswith(
+        ("\n\n", "\r\n\r\n")
+    ):
+        trailing_newline = "\n" * 2
+    # Find out if we have any trailing blank lines
+    elif len(lines[-1].strip()) == 0 or source.endswith(("\n", "\r\n")):
+        trailing_newline = "\n"
+    else:
+        trailing_newline = ""
 
-    If it is a single line selection, dedent it, append a newline and send it to the REPL.
-    Otherwise, sanitize the multiline selection before sending it to the REPL:
-    split it in a list of top-level statements
-    and add newlines between each of them to tell the REPL where each block ends.
-    """
+    # Step 1: Remove empty lines.
+    tokens = _tokenize(source)
+    newlines_indexes_to_remove = (
+        spos[0]
+        for (toknum, tokval, spos, epos, line) in tokens
+        if len(line.strip()) == 0
+        and token.tok_name[toknum] == "NL"
+        and spos[0] == epos[0]
+    )
 
-    # Parse the selection into a list of top-level blocks.
-    # We don't differentiate between single and multiline statements
-    # because it's not a perf bottleneck,
-    # and the overhead from splitting and rejoining strings in the multiline case is one-off.
-    statements = _get_statements(selection)
+    for line_number in reversed(list(newlines_indexes_to_remove)):
+        del lines[line_number - 1]
 
-    # Insert a newline between each top-level statement, and append a newline to the selection.
-    source = "\n".join(statements) + "\n"
+    # Step 2: Add blank lines between each global statement block.
+    # A consecutive single lines blocks of code will be treated as a single statement,
+    # just to ensure we do not unnecessarily add too many blank lines.
+    source = "\n".join(lines)
+    tokens = _tokenize(source)
+    dedent_indexes = (
+        spos[0]
+        for (toknum, tokval, spos, epos, line) in tokens
+        if toknum == token.DEDENT and _indent_size(line) == 0
+    )
 
-    # `source` is a unicode instance at this point on Python 2,
-    # so if we used `sys.stdout.write` to send it to the REPL,
-    # Python will implicitly encode it using sys.getdefaultencoding(),
-    # which we don't want.
-    stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
-    stdout.write(source.encode("utf-8"))
-    stdout.flush()
+    global_statement_ranges = _get_global_statement_blocks(source, lines)
+    start_positions = map(operator.itemgetter(0), reversed(global_statement_ranges))
+    for line_number in filter(lambda x: x > 1, start_positions):
+        lines.insert(line_number - 1, "")
+
+    sys.stdout.write("\n".join(lines) + trailing_newline)
+    sys.stdout.flush()
 
 
 if __name__ == "__main__":
-    # This will fail on a large file.
-    # See https://github.com/microsoft/vscode-python/issues/14471
     contents = sys.argv[1]
     try:
         default_encoding = sys.getdefaultencoding()
