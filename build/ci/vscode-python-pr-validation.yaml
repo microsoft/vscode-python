@@ -100,8 +100,7 @@ stages:
               TestsToRun: 'testfunctional, testSingleWorkspace'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
-        pool:
-          vmImage: '$(vmImageMacOS)'
+        pool: DSMacDebug
         steps:
           - template: templates/test_phases.yml
 
