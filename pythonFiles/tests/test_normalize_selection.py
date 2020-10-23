@@ -1,8 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 import textwrap
 
-import normalizeForInterpreter
+import normalizeSelection
 
 
 class TestNormalizationScript(object):
@@ -11,7 +12,7 @@ class TestNormalizationScript(object):
     def test_basicNormalization(self, capsys):
         src = 'print("this is a test")'
         expected = src + "\n"
-        normalizeForInterpreter.normalize_lines(src)
+        normalizeSelection.normalize_lines(src)
         captured = capsys.readouterr()
         assert captured.out == expected
 
@@ -31,7 +32,7 @@ class TestNormalizationScript(object):
             
             """
         )
-        normalizeForInterpreter.normalize_lines(src)
+        normalizeSelection.normalize_lines(src)
         captured = capsys.readouterr()
         assert captured.out == expected
 
@@ -58,7 +59,7 @@ class TestNormalizationScript(object):
             
             """
         )
-        normalizeForInterpreter.normalize_lines(src)
+        normalizeSelection.normalize_lines(src)
         captured = capsys.readouterr()
         assert captured.out == expected
 
@@ -83,7 +84,7 @@ class TestNormalizationScript(object):
             print(value_x + value_y + value_z)
             """
         )
-        normalizeForInterpreter.normalize_lines(src)
+        normalizeSelection.normalize_lines(src)
         result = capsys.readouterr()
         assert result.out == expectedResult
 
@@ -111,14 +112,14 @@ class TestNormalizationScript(object):
             print(x + y + z)
             """
         )
-        normalizeForInterpreter.normalize_lines(src)
+        normalizeSelection.normalize_lines(src)
         result = capsys.readouterr()
         assert result.out == expectedResult
 
     def test_partialSingleLine(self, capsys):
         src = "   print('foo')"
         expected = textwrap.dedent(src) + "\n"
-        normalizeForInterpreter.normalize_lines(src)
+        normalizeSelection.normalize_lines(src)
         result = capsys.readouterr()
         assert result.out == expected
 
@@ -144,7 +145,7 @@ class TestNormalizationScript(object):
         """
         )
 
-        normalizeForInterpreter.normalize_lines(src)
+        normalizeSelection.normalize_lines(src)
         result = capsys.readouterr()
         assert result.out == expectedResult
 
@@ -165,6 +166,6 @@ class TestNormalizationScript(object):
             
             """
         )
-        normalizeForInterpreter.normalize_lines(src)
+        normalizeSelection.normalize_lines(src)
         captured = capsys.readouterr()
         assert captured.out == expected
