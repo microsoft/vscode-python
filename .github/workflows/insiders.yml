@@ -196,12 +196,6 @@ jobs:
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
-      - name: pip install ipython requirements
-        run: |
-          python -m pip install numpy
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-        if: matrix.test-suite == 'python-unit'
-
       - name: Install debugpy wheels (python 3.8)
         run: |
           python -m pip install wheel
@@ -404,11 +398,6 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
         shell: bash
-
-      - name: pip install ipython requirements
-        run: |
-          python -m pip install numpy
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
 
       # Save time by reusing bits from the VSIX.
       - name: Download VSIX

@@ -10,7 +10,6 @@
 # Your job using this template *may* supply these values:
 # - NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
 # - NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
-# - NeedsIPythonReqs: [true|false] - install the ipython-test-requirements prior to running tests. False if not set.
 # - PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion (from globals.yml) if not set.
 # - NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion (from globals.yml) if not set.
 
@@ -183,20 +182,6 @@ steps:
       python -m pip install --upgrade pywin32==224
     displayName: 'Downgrade pywin32 on Windows / Python 3.6'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['PythonVersion'], '3.6'))
-
-  # Install the requirements for ipython tests.
-  #
-  # This task will only run if variable `NeedsIPythonReqs` is true.
-  #
-  # Example command line (windows pwsh):
-  # > python -m pip install numpy
-  # > python -m pip install --upgrade -r build/ipython-test-requirements.txt
-  # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-  - bash: |
-      python -m pip install numpy
-      python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-    displayName: 'pip install ipython requirements'
-    condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'))
 
   - bash: |
       python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
