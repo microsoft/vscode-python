@@ -6,8 +6,7 @@
 import { FileChangeType, watchLocationForPattern } from '../../common/platform/fileSystemWatcher';
 import { getOSType, OSType } from '../../common/utils/platform';
 
-const os = getOSType();
-const [executable, binName] = os === OSType.Windows ? ['python.exe', 'Scripts'] : ['python', 'bin'];
+const [executable, binName] = getOSType() === OSType.Windows ? ['python.exe', 'Scripts'] : ['python', 'bin'];
 const patterns = [executable, `*/${executable}`, `*/${binName}/${executable}`];
 
 export function watchLocationForPythonBinaries(

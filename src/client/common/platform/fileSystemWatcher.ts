@@ -13,17 +13,8 @@ import { normCasePath } from './fileSystem';
  * Enumeration of file change types.
  */
 export enum FileChangeType {
-    /**
-     * The contents or metadata of a file have changed.
-     */
     Changed = 1,
-    /**
-     * A file has been created.
-     */
     Created = 2,
-    /**
-     * A file has been deleted.
-     */
     Deleted = 3
 }
 const POLLING_INTERVAL = 5000;
@@ -68,10 +59,18 @@ function watchLocationUsingChokidar(
         // While not used in normal cases, if any error causes chokidar to fallback to polling, increase its intervals
         interval: POLLING_INTERVAL,
         binaryInterval: POLLING_INTERVAL,
-        // 'depth' doesn't matter rn given regex restricts the depth to 2, same goes for other properties below
-        // But using them just to be safe in case it's misused
+        /* 'depth' doesn't matter given regex restricts the depth to 2, same goes for other properties below
+         * But using them just to be safe in case it's misused */
         depth: 2,
-        ignored: ['**/Lib/**'],
+        ignored: [
+            '**/Lib/**',
+            '**/.git/**',
+            '**/node_modules/*/**',
+            '**/.hg/store/**',
+            '/dev/**',
+            '/proc/**',
+            '/sys/**'
+        ], // https://github.com/microsoft/vscode/issues/23954
         followSymlinks: false
     };
     traceVerbose(`Start watching: ${baseDir} with pattern ${pattern} using chokidar`);
@@ -105,7 +104,7 @@ function watchLocationUsingChokidar(
             // once in this case to avoid log spam.
             // See https://github.com/Microsoft/vscode/issues/7950
             if (error.code === 'ENOSPC') {
-                traceError('Inotify limit reached (ENOSPC)');
+                traceError(`Inotify limit reached (ENOSPC) for ${baseDir} with pattern ${pattern}`);
                 if (watcher) {
                     await watcher.close();
                     watcher = null;
