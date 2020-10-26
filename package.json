@@ -1935,7 +1935,7 @@
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
-        "prePublish": "gulp clean && gulp prePublishBundle",
+        "prePublish": "gulp clean && gulp prePublishNonBundle",
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",

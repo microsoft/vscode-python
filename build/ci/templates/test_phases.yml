@@ -496,7 +496,7 @@ steps:
   #
   - bash: |
       npm run prePublish
-      npm run testInsiders
+      node ./out/test/standardTest.js
     displayName: 'Run Tests with Insiders'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testInsiders'))
     env:
