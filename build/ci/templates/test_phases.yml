@@ -463,8 +463,8 @@ steps:
 
   # Now actually install 
   - powershell: |
-      Invoke-WebRequest -Uri https://pvsc.blob.core.windows.net/extension-builds-jupyter/$(VSIX_NAME_JUPYTER) -OutFile "$(Build.SourcesDirectory)/$(VSIX_NAME_JUPYTER)"
-      if (![System.IO.File]::Exists("$(Build.SourcesDirectory)/$(VSIX_NAME_JUPYTER)")) {
+      Invoke-WebRequest -Uri https://pvsc.blob.core.windows.net/extension-builds-jupyter/$(VSIX_NAME_JUPYTER) -OutFile "$(Build.SourcesDirectory)/$(VSIX_NAME_JUPYTER_ZIP)"
+      if (![System.IO.File]::Exists("$(Build.SourcesDirectory)/$(VSIX_NAME_JUPYTER_ZIP)")) {
         Write-Warning "Jupyter extension not downloaded"
         throw new Exception("Jupyter extension not downloaded")
       }
@@ -488,6 +488,7 @@ steps:
       npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
       npm run package
       npx tsc -p ./
+      copy $(VSIX_NAME_JUPYTER_ZIP) $(VSIX_NAME_JUPYTER)
       node --no-force-async-hooks-checks ./out/test/smokeTest.js
     displayName: 'Run Smoke Tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
@@ -501,6 +502,7 @@ steps:
   #
   - bash: |
       npm run prePublish
+      copy $(VSIX_NAME_JUPYTER_ZIP) $(VSIX_NAME_JUPYTER)
       node ./out/test/standardTest.js
     displayName: 'Run Tests with Insiders'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testInsiders'))
