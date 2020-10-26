@@ -10,7 +10,7 @@ export class DebuggerDataViewerExperimentEnabler implements IExtensionSingleActi
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IExperimentService) private readonly experimentService: IExperimentService
-    ) { }
+    ) {}
     public async activate() {
         this.activateInternal().catch(traceError.bind('Failed to activate debuggerDataViewerExperimentEnabler'));
     }
