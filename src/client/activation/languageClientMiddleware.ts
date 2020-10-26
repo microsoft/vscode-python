@@ -134,16 +134,16 @@ export class LanguageClientMiddleware implements Middleware {
             IJupyterExtensionDependencyManager
         );
         const notebookApi = this.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry) || [];
         const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
         const fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
 
-        if (!experimentsManager.inExperiment(group.experiment)) {
+        if (experimentsManager && !experimentsManager.inExperiment(group.experiment)) {
             this.eventName = undefined;
             experimentsManager.sendTelemetryIfInExperiment(group.control);
         }
         // Enable notebook support if jupyter support is installed
-        if (jupyterDependencyManager.isJupyterExtensionInstalled) {
+        if (jupyterDependencyManager && jupyterDependencyManager.isJupyterExtensionInstalled) {
             this.notebookAddon = new NotebookMiddlewareAddon(
                 notebookApi,
                 getClient,
@@ -153,17 +153,19 @@ export class LanguageClientMiddleware implements Middleware {
             );
         }
         disposables.push(
-            extensions.onDidChange(() => {
-                if (this.notebookAddon && !jupyterDependencyManager.isJupyterExtensionInstalled) {
-                    this.notebookAddon = undefined;
-                } else if (!this.notebookAddon && jupyterDependencyManager.isJupyterExtensionInstalled) {
-                    this.notebookAddon = new NotebookMiddlewareAddon(
-                        notebookApi,
-                        getClient,
-                        fileSystem,
-                        PYTHON_LANGUAGE,
-                        /.*\.ipynb/m
-                    );
+            extensions?.onDidChange(() => {
+                if (jupyterDependencyManager) {
+                    if (this.notebookAddon && !jupyterDependencyManager.isJupyterExtensionInstalled) {
+                        this.notebookAddon = undefined;
+                    } else if (!this.notebookAddon && jupyterDependencyManager.isJupyterExtensionInstalled) {
+                        this.notebookAddon = new NotebookMiddlewareAddon(
+                            notebookApi,
+                            getClient,
+                            fileSystem,
+                            PYTHON_LANGUAGE,
+                            /.*\.ipynb/m
+                        );
+                    }
                 }
             })
         );
