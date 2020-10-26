@@ -7,7 +7,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { dirname } from 'path';
-import { CancellationToken, Disposable, Event, Memento, Uri } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Extension, Memento, NotebookCell, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
 import { ILanguageServerCache, ILanguageServerConnection } from '../activation/types';
 import { JUPYTER_EXTENSION_ID } from '../common/constants';
@@ -22,6 +22,7 @@ import {
     Resource
 } from '../common/types';
 import { isResource } from '../common/utils/misc';
+import { IDataViewerDataProvider, IJupyterUriProvider } from '../datascience/types';
 import { getDebugpyPackagePath } from '../debugger/extension/adapter/remoteLaunchers';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
@@ -112,11 +113,32 @@ type PythonApiForJupyterExtension = {
 };
 
 export type JupyterExtensionApi = {
+    // These two might go away. Not sure anybody is using them.
+    readonly onKernelPostExecute: Event<NotebookCell>;
+    readonly onKernelRestart: Event<void>;
+    /**
+     * Registers python extension specific parts with the jupyter extension
+     * @param interpreterService
+     */
     registerPythonApi(interpreterService: PythonApiForJupyterExtension): void;
+    /**
+     * Launches Data Viewer component.
+     * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
+     * @param {string} title Data Viewer title
+     */
+    showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
+    /**
+     * Registers a remote server provider component that's used to pick remote jupyter server URIs
+     * @param serverProvider object called back when picking jupyter server URI
+     */
+    registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
 };
 
 @injectable()
 export class JupyterExtensionIntegration {
+    private jupyterExtension: Extension<JupyterExtensionApi> | undefined;
+    private onKernelRestartEmitter = new EventEmitter<void>();
+    private onKernelPostExecuteEmitter = new EventEmitter<NotebookCell>();
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -129,6 +151,11 @@ export class JupyterExtensionIntegration {
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi) {
+        // Sign up for kernel events
+        jupyterExtensionApi.onKernelRestart(() => this.onKernelRestartEmitter.fire());
+        jupyterExtensionApi.onKernelPostExecute((n) => this.onKernelPostExecuteEmitter.fire(n));
+
+        // Forward python parts
         jupyterExtensionApi.registerPythonApi({
             onDidChangeInterpreter: this.interpreterService.onDidChangeInterpreter,
             getActiveInterpreter: async (resource?: Uri) => this.interpreterService.getActiveInterpreter(resource),
@@ -171,14 +198,50 @@ export class JupyterExtensionIntegration {
     }
 
     public async integrateWithJupyterExtension(): Promise<void> {
-        const jupyterExtension = this.extensions.getExtension<JupyterExtensionApi>(JUPYTER_EXTENSION_ID);
-        if (!jupyterExtension) {
-            return;
+        const api = await this.getExtensionApi();
+        if (api) {
+            this.registerApi(api);
         }
-        await jupyterExtension.activate();
-        if (!jupyterExtension.isActive) {
-            return;
+    }
+
+    public get onKernelPostExecute(): Event<NotebookCell> {
+        return this.onKernelPostExecuteEmitter.event;
+    }
+
+    public get onKernelRestart(): Event<void> {
+        return this.onKernelRestartEmitter.event;
+    }
+
+    public registerRemoteServerProvider(serverProvider: IJupyterUriProvider) {
+        this.getExtensionApi()
+            .then((e) => {
+                if (e) {
+                    e.registerRemoteServerProvider(serverProvider);
+                }
+            })
+            .ignoreErrors();
+    }
+
+    public async showDataViewer(dataProvider: IDataViewerDataProvider, title: string) {
+        const api = await this.getExtensionApi();
+        if (api) {
+            return api.showDataViewer(dataProvider, title);
         }
-        this.registerApi(jupyterExtension.exports);
+    }
+
+    private async getExtensionApi(): Promise<JupyterExtensionApi | undefined> {
+        if (!this.jupyterExtension) {
+            const jupyterExtension = this.extensions.getExtension<JupyterExtensionApi>(JUPYTER_EXTENSION_ID);
+            if (!jupyterExtension) {
+                return;
+            }
+            await jupyterExtension.activate();
+            if (jupyterExtension.isActive) {
+                this.jupyterExtension = jupyterExtension;
+                return this.jupyterExtension.exports;
+            }
+        } else {
+            return this.jupyterExtension.exports;
+        }
     }
 }
