@@ -488,7 +488,7 @@ steps:
       npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
       npm run package
       npx tsc -p ./
-      copy $(VSIX_NAME_JUPYTER_ZIP) $(VSIX_NAME_JUPYTER)
+      cp $(VSIX_NAME_JUPYTER_ZIP) $(VSIX_NAME_JUPYTER)
       node --no-force-async-hooks-checks ./out/test/smokeTest.js
     displayName: 'Run Smoke Tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
@@ -502,7 +502,7 @@ steps:
   #
   - bash: |
       npm run prePublish
-      copy $(VSIX_NAME_JUPYTER_ZIP) $(VSIX_NAME_JUPYTER)
+      cp $(VSIX_NAME_JUPYTER_ZIP) $(VSIX_NAME_JUPYTER)
       node ./out/test/standardTest.js
     displayName: 'Run Tests with Insiders'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testInsiders'))
