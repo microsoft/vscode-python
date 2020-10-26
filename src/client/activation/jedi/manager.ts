@@ -8,7 +8,7 @@ import { inject, injectable, named } from 'inversify';
 
 import { ICommandManager } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
-import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';
+import { IDisposable, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IServiceContainer } from '../../ioc/types';
@@ -39,8 +39,6 @@ export class JediLanguageServerManager implements ILanguageServerManager {
         @inject(ILanguageServerAnalysisOptions)
         @named(LanguageServerType.Jedi)
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(ICommandManager) commandManager: ICommandManager
     ) {
         this.disposables.push(
@@ -128,9 +126,9 @@ export class JediLanguageServerManager implements ILanguageServerManager {
 
         const options = await this.analysisOptions.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
-            this.experimentsManager,
-            this.configService,
+            this.serviceContainer,
             LanguageServerType.Jedi,
+            () => this.languageServerProxy?.languageClient,
             this.lsVersion
         );
 
