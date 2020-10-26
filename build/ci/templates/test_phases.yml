@@ -464,7 +464,7 @@ steps:
         $OutputPath = $(Build.SourcesDirectory)
         $ContainerName  = 'extension-builds-jupyter'
         Get-AzureStorageBlobContent -Blob $FileName -Container $ContainerName -Destination $OutputPath -Context $StorageContext    
-    condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders'))
+    condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')))
     displayName: 'Download Jupyter VSIX'
 
   # Run the smoke tests.
