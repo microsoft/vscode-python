@@ -469,6 +469,7 @@ steps:
         throw new Exception("Jupyter extension not downloaded")
       }
     condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')))
+    failOnStderr: true
     displayName: 'Download Jupyter VSIX'
 
   # Run the smoke tests.
