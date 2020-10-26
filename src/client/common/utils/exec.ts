@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsapi from 'fs-extra';
+import * as fsapi from 'fs';
 import * as path from 'path';
 import { normalizeFilename } from './filesystem';
 import { getEnvironmentVariable, getOSType, OSType } from './platform';
@@ -22,9 +22,9 @@ export function getSearchPathEnvVarNames(ostype = getOSType()): ('Path' | 'PATH'
  *
  * If the file does not exist then `undefined` is returned.
  */
-export function isExecutableSync(filename: string): boolean | undefined {
+export async function isExecutable(filename: string): Promise<boolean | undefined> {
     try {
-        fsapi.accessSync(filename, fsapi.constants.X_OK);
+        await fsapi.promises.access(filename, fsapi.constants.X_OK);
     } catch (err) {
         if (err.code === 'EEXIST') {
             return undefined;
@@ -61,37 +61,41 @@ function parseSearchPathEntries(envVarValue: string): string[] {
  *
  * @param matchExecutable - if provided, is used to filter the results
  */
-export function getExecutablesInDirectorySync(
+export async function getExecutablesInDirectory(
     dirname: string,
     matchExecutable?: (filename: string) => boolean
-): string[] {
+): Promise<string[]> {
     const normDir = normalizeFilename(dirname);
     let entries: fsapi.Dirent[] = [];
     try {
-        entries = fsapi.readdirSync(normDir, { withFileTypes: true });
+        entries = await fsapi.promises.readdir(normDir, { withFileTypes: true });
     } catch {
         // It must not be there.
         return [];
     }
-
-    return entries
+    const filenames = entries
         .filter((dirent) => dirent.isFile())
         .map((dirent) => dirent.name)
         .filter((basename) => !matchExecutable || matchExecutable(basename))
-        .map((basename) => path.join(normDir, basename))
-        .filter(isExecutableSync);
+        .map((basename) => path.join(normDir, basename));
+    const executables: string[] = [];
+    for (const filename of filenames) {
+        if (await isExecutable(filename)) {
+            executables.push(filename);
+        }
+    }
+    return executables;
 }
 
 /**
  * Identify executables found on the executable search path.
  */
-export function getSearchPathExecutablesSync(
+export async function getSearchPathExecutables(
     // This is purposefully very basic:
     matchExecutable?: (filename: string) => boolean
-): string[] {
-    const executables: string[] = [];
-    getSearchPathEntries().forEach((dirname) => {
-        executables.push(...getExecutablesInDirectorySync(dirname, matchExecutable));
-    });
-    return executables;
+): Promise<string[]> {
+    const getExecutables = (d: string) => getExecutablesInDirectory(d, matchExecutable);
+    const entries = getSearchPathEntries();
+    const results = await Promise.all(entries.map(getExecutables));
+    return results.reduce((p, c) => [...p, ...c]);
 }
