@@ -446,15 +446,13 @@ steps:
       DISPLAY: :10
 
   # Note this section below should download an extension when this code is moved to github actions
-  #  - name: Azure Login
+  #   name: Azure Login
   #    uses: azure/login@v1
   #    with:
   #      creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-  #  - name: Download JUPYTER VSIX
+  #  name: Download JUPYTER VSIX
   #    run: az storage blob download --file $(VSIX_NAME_JUPYTER) --account-name pvsc --container-name extension-builds-jupyter --name $(VSIX_NAME_JUPYTER) --auth-mode login
   #    condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')) 
-
   # Otherwise have to run a powershell task
   - task: AzurePowerShell@4
     inline: |
