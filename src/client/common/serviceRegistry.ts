@@ -38,6 +38,7 @@ import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { ConfigurationService } from './configuration/service';
 import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
+import { DebuggerDataViewerExperimentEnabler } from './experiments/debuggerDataViewerExperimentEnabler';
 import { ExperimentsManager } from './experiments/manager';
 import { ExperimentService } from './experiments/service';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
@@ -199,6 +200,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ReloadVSCodeCommandHandler
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        DebuggerDataViewerExperimentEnabler
     );
     serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
     serviceManager.addSingleton<IExtensionChannelRule>(
