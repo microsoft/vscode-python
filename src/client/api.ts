@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { noop } from 'lodash';
 import { Event, NotebookCell, Uri } from 'vscode';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
@@ -143,10 +144,19 @@ export function buildApi(
         // These are for backwards compatibility. Other extensions are using these APIs and we don't want
         // to force them to move to the jupyter extension ... yet.
         datascience: {
-            onKernelPostExecute: jupyterIntegration.onKernelPostExecute.bind(jupyterIntegration),
-            onKernelRestart: jupyterIntegration.onKernelRestart.bind(jupyterIntegration),
-            registerRemoteServerProvider: jupyterIntegration.registerRemoteServerProvider.bind(jupyterIntegration),
-            showDataViewer: jupyterIntegration.showDataViewer.bind(jupyterIntegration)
+            // tslint:disable:no-any
+            onKernelPostExecute: jupyterIntegration
+                ? jupyterIntegration.onKernelPostExecute.bind(jupyterIntegration)
+                : (noop as any),
+            onKernelRestart: jupyterIntegration
+                ? jupyterIntegration.onKernelRestart.bind(jupyterIntegration)
+                : (noop as any),
+            registerRemoteServerProvider: jupyterIntegration
+                ? jupyterIntegration.registerRemoteServerProvider.bind(jupyterIntegration)
+                : (noop as any),
+            showDataViewer: jupyterIntegration
+                ? jupyterIntegration.showDataViewer.bind(jupyterIntegration)
+                : (noop as any)
         }
     };
 
