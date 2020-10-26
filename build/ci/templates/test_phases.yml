@@ -118,6 +118,12 @@ steps:
     displayName: 'pip install functional requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
 
+  # Install smoke test specific requirements
+  - bash: |
+      python -m pip install --upgrade -r ./build/smoke-test-requirements.txt
+    displayName: 'pip install smoke test requirements'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
+
   # Add CONDA to the path so anaconda works
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
