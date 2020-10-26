@@ -487,7 +487,7 @@ steps:
   # This task only runs if the string 'testInsiders' exists in variable `TestsToRun`.
   #
   - bash: |
-      npm run prePublish
+      npx gulp prePublishNonBundle
       npm run testInsiders
     displayName: 'Run Tests with Insiders'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testInsiders'))
