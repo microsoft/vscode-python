@@ -455,14 +455,15 @@ steps:
   #    condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')) 
   # Otherwise have to run a powershell task
   - task: AzurePowerShell@4
-    inline: |
-      $StorageAccountName = 'pvsc'
-      $StorageAccountKey = Get-AzureStorageKey -StorageAccountName $StorageAccountName
-      $StorageContext = New-AzureStorageContext $StorageAccountName -StorageAccountKey $StorageAccountKey.Primary
-      $FileName = $(VSIX_NAME_JUPYTER)
-      $OutputPath = $(Build.SourcesDirectory)
-      $ContainerName  = 'extension-builds-jupyter'
-      Get-AzureStorageBlobContent -Blob $FileName -Container $ContainerName -Destination $OutputPath -Context $StorageContext    
+    inputs:    
+      inline: |
+        $StorageAccountName = 'pvsc'
+        $StorageAccountKey = Get-AzureStorageKey -StorageAccountName $StorageAccountName
+        $StorageContext = New-AzureStorageContext $StorageAccountName -StorageAccountKey $StorageAccountKey.Primary
+        $FileName = $(VSIX_NAME_JUPYTER)
+        $OutputPath = $(Build.SourcesDirectory)
+        $ContainerName  = 'extension-builds-jupyter'
+        Get-AzureStorageBlobContent -Blob $FileName -Container $ContainerName -Destination $OutputPath -Context $StorageContext    
     condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders'))
     displayName: 'Download Jupyter VSIX'
 
