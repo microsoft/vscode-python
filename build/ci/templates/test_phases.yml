@@ -462,8 +462,16 @@ steps:
     condition: ne(variables['Agent.Os'], 'Windows_NT')
 
   # Now actually install 
-  - powershell: |
-      Invoke-WebRequest -Uri https://pvsc.blob.core.windows.net/extension-builds-jupyter/$(VSIX_NAME_JUPYTER) -OutFile "$(Build.SourcesDirectory)/$(VSIX_NAME_JUPYTER)"
+  - powershell:
+      inputs:
+        targetType: inline
+        script: |
+          Invoke-WebRequest -Uri https://pvsc.blob.core.windows.net/extension-builds-jupyter/$(VSIX_NAME_JUPYTER) -OutFile "$(Build.SourcesDirectory)/$(VSIX_NAME_JUPYTER)"
+          if (![System.IO.File]::Exists("$(Build.SourcesDirectory)/$(VSIX_NAME_JUPYTER)")) {
+            Write-Warning "Jupyter extension not downloaded"
+            throw new Exception("Jupyter extension not downloaded")
+          }
+        failOnStderr: true  
     condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')))
     displayName: 'Download Jupyter VSIX'
 
