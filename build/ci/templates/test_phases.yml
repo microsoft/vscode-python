@@ -454,16 +454,8 @@ steps:
   #    run: az storage blob download --file $(VSIX_NAME_JUPYTER) --account-name pvsc --container-name extension-builds-jupyter --name $(VSIX_NAME_JUPYTER) --auth-mode login
   #    condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')) 
   # Otherwise have to run a powershell task
-  - task: AzurePowerShell@4
-    inputs:    
-      inline: |
-        $StorageAccountName = 'pvsc'
-        $StorageAccountKey = Get-AzureStorageKey -StorageAccountName $StorageAccountName
-        $StorageContext = New-AzureStorageContext $StorageAccountName -StorageAccountKey $StorageAccountKey.Primary
-        $FileName = $(VSIX_NAME_JUPYTER)
-        $OutputPath = $(Build.SourcesDirectory)
-        $ContainerName  = 'extension-builds-jupyter'
-        Get-AzureStorageBlobContent -Blob $FileName -Container $ContainerName -Destination $OutputPath -Context $StorageContext    
+  - powershell: |
+      Invoke-WebRequest -Uri https://pvsc.blob.core.windows.net/extension-builds-jupyter/$(VSIX_NAME_JUPYTER) -OutFile $(VSIX_NAME_JUPYTER)
     condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')))
     displayName: 'Download Jupyter VSIX'
 
