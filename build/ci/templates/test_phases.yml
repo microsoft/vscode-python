@@ -445,6 +445,16 @@ steps:
     env:
       DISPLAY: :10
 
+  # Download the Jupyter Extension VSIX
+   - name: Azure Login
+     uses: azure/login@v1
+     with:
+       creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+   - name: Download JUPYTER VSIX
+     run: az storage blob download --file $(VSIX_NAME_JUPYTER) --account-name pvsc --container-name extension-builds-jupyter --name $(VSIX_NAME_JUPYTER) --auth-mode login
+     condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')) 
+
   # Run the smoke tests.
   #
   # This task only runs if the string 'testSmoke' exists in variable `TestsToRun`.
