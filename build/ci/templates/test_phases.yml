@@ -454,6 +454,14 @@ steps:
   #    run: az storage blob download --file $(VSIX_NAME_JUPYTER) --account-name pvsc --container-name extension-builds-jupyter --name $(VSIX_NAME_JUPYTER) --auth-mode login
   #    condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')) 
   # Otherwise have to run a powershell task
+
+  # Work around https://github.com/actions/virtual-environments/issues/1378
+  - bash: |
+      sudo chmod -R 777 /run/user
+    displayName: 'Fix powershell problem on Ubuntu 20'
+    condition: ne(variables['Agent.Os'], 'Windows_NT')
+    
+  # Now actually install 
   - powershell: |
       Invoke-WebRequest -Uri https://pvsc.blob.core.windows.net/extension-builds-jupyter/$(VSIX_NAME_JUPYTER) -OutFile $(VSIX_NAME_JUPYTER)
     condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')))
