@@ -445,15 +445,28 @@ steps:
     env:
       DISPLAY: :10
 
-  # Download the Jupyter Extension VSIX
-   - name: Azure Login
-     uses: azure/login@v1
-     with:
-       creds: ${{ secrets.AZURE_CREDENTIALS }}
+  # Note this section below should download an extension when this code is moved to github actions
+  #  - name: Azure Login
+  #    uses: azure/login@v1
+  #    with:
+  #      creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-   - name: Download JUPYTER VSIX
-     run: az storage blob download --file $(VSIX_NAME_JUPYTER) --account-name pvsc --container-name extension-builds-jupyter --name $(VSIX_NAME_JUPYTER) --auth-mode login
-     condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')) 
+  #  - name: Download JUPYTER VSIX
+  #    run: az storage blob download --file $(VSIX_NAME_JUPYTER) --account-name pvsc --container-name extension-builds-jupyter --name $(VSIX_NAME_JUPYTER) --auth-mode login
+  #    condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')) 
+
+  # Otherwise have to run a powershell task
+  - task: AzurePowerShell@4
+    inline: |
+      $StorageAccountName = 'pvsc'
+      $StorageAccountKey = Get-AzureStorageKey -StorageAccountName $StorageAccountName
+      $StorageContext = New-AzureStorageContext $StorageAccountName -StorageAccountKey $StorageAccountKey.Primary
+      $FileName = $(VSIX_NAME_JUPYTER)
+      $OutputPath = $(Build.SourcesDirectory)
+      $ContainerName  = 'extension-builds-jupyter'
+      Get-AzureStorageBlobContent -Blob $FileName -Container $ContainerName -Destination $OutputPath -Context $StorageContext    
+    condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders'))
+    displayName: 'Download Jupyter VSIX'
 
   # Run the smoke tests.
   #
