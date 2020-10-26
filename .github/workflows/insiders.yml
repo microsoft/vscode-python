@@ -52,7 +52,8 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
+    # IANHU: Remove, just for testing
+    # if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -104,7 +105,8 @@ jobs:
     defaults:
       run:
         working-directory: ${{env.special-working-directory}}
-    if: github.repository == 'microsoft/vscode-python'
+    # IANHU: Remove, just for testing
+    # if: github.repository == 'microsoft/vscode-python'
     strategy:
       fail-fast: false
       matrix:
@@ -306,7 +308,8 @@ jobs:
     name: Smoke tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-python'
+    # IANHU: Remove, just for testing
+    # if: github.repository == 'microsoft/vscode-python'
     needs: [build-vsix]
     strategy:
       fail-fast: false
@@ -362,7 +365,8 @@ jobs:
   coverage:
     name: Coverage reports upload
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
+    # IANHU: Remove, just for testing
+    # if: github.repository == 'microsoft/vscode-python'
     needs: [tests, smoke-tests]
     steps:
       - name: Checkout
