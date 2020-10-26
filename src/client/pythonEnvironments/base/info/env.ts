@@ -3,10 +3,7 @@
 
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import {
-    Architecture,
-    getArchitecture,
-} from '../../../common/utils/platform';
+import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
 import {
     areEqualVersions,
@@ -196,7 +193,9 @@ export async function getMaxDerivedEnvInfo(minimal: PythonEnvInfo): Promise<Pyth
         }
     }
 
-    env.arch = getArchitecture();
+    // Note that we do not set `env.arch` to the host's native
+    // architecture.  That is normally a safe assumption but we play
+    // it safe for now by leaving it `Unknown`.
 
     // We could probably make a decent guess at the distro, but that
     // is best left to distro-specific locators.
