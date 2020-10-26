@@ -15,13 +15,7 @@ import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
 import { IS_CI_SERVER_TEST_DEBUGGER, MOCHA_REPORTER_JUNIT } from './ciConstants';
-import {
-    IS_MULTI_ROOT_TEST,
-    IS_SMOKE_TEST,
-    MAX_EXTENSION_ACTIVATION_TIME,
-    TEST_RETRYCOUNT,
-    TEST_TIMEOUT
-} from './constants';
+import { IS_MULTI_ROOT_TEST, MAX_EXTENSION_ACTIVATION_TIME, TEST_RETRYCOUNT, TEST_TIMEOUT } from './constants';
 import { initialize } from './initialize';
 import { initializeLogger } from './testLogger';
 
@@ -141,26 +135,8 @@ export async function run(): Promise<void> {
     // Enable source map support.
     require('source-map-support').install();
 
-    // nteract/transforms-full expects to run in the browser so we have to fake
-    // parts of the browser here.
-    if (!IS_SMOKE_TEST) {
-        const reactHelpers = require('./datascience/reactHelpers') as typeof import('./datascience/reactHelpers');
-        reactHelpers.setUpDomEnvironment();
-    }
-
-    const ignoreGlob: string[] = [];
-    switch (options.testFilesSuffix.toLowerCase()) {
-        case 'native.vscode.test': {
-            break;
-        }
-        case 'vscode.test': {
-            ignoreGlob.push('**/**.native.vscode.test.js');
-            break;
-        }
-        default: {
-            ignoreGlob.push('**/**.vscode.test.js');
-        }
-    }
+    // Ignore `ds.test.js` test files when running other tests.
+    const ignoreGlob = options.testFilesSuffix.toLowerCase() === 'ds.test' ? [] : ['**/**.ds.test.js'];
     const testFiles = await new Promise<string[]>((resolve, reject) => {
         glob(
             `**/**.${options.testFilesSuffix}.js`,

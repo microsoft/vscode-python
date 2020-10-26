@@ -8,7 +8,7 @@
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
-import { IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME } from './constants';
+import { MAX_EXTENSION_ACTIVATION_TIME } from './constants';
 import { initialize } from './initialize';
 
 // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY.
@@ -48,13 +48,6 @@ export async function run(): Promise<void> {
     const testsRoot = path.join(__dirname);
     // Enable source map support.
     require('source-map-support').install();
-
-    // nteract/transforms-full expects to run in the browser so we have to fake
-    // parts of the browser here.
-    if (!IS_SMOKE_TEST) {
-        const reactHelpers = require('./datascience/reactHelpers') as typeof import('./datascience/reactHelpers');
-        reactHelpers.setUpDomEnvironment();
-    }
 
     /**
      * Waits until the Python Extension completes loading or a timeout.

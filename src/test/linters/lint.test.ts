@@ -9,7 +9,6 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { Product } from '../../client/common/installer/productInstaller';
 import {
     CTagsProductPathService,
-    DataScienceProductPathService,
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
@@ -87,11 +86,6 @@ suite('Linting Settings', () => {
             IProductPathService,
             RefactoringLibraryProductPathService,
             ProductType.RefactoringLibrary
-        );
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            DataScienceProductPathService,
-            ProductType.DataScience
         );
     }
 

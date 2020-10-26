@@ -10,6 +10,7 @@ import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsChangedEvent } from './base/watcher';
 import { getGlobalPersistentStore } from './common/externalDependencies';
 import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
+import { EnvironmentInfoService } from './info/environmentInfoService';
 import { registerForIOC } from './legacyIOC';
 
 /**
@@ -53,9 +54,9 @@ export class PythonEnvironments implements ILocator {
 export function createAPI(): [PythonEnvironments, () => void] {
     const [locators, activateLocators] = initLocators();
 
-    // Update this to pass in an actual function that checks for env info completeness.
+    const envInfoService = new EnvironmentInfoService();
     const envsCache = new PythonEnvInfoCache(
-        () => true, // "isComplete"
+        (env: PythonEnvInfo) => envInfoService.isInfoProvided(env.executable.filename), // "isComplete"
         () => {
             const storage = getGlobalPersistentStore<PythonEnvInfo[]>('PYTHON_ENV_INFO_CACHE');
             return {

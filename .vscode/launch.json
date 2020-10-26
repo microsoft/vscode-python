@@ -26,22 +26,6 @@
             }
         },
         {
-            "name": "Extension (DS UI in Browser)",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
-            "stopOnEntry": false,
-            "smartStep": true,
-            "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
-            "preLaunchTask": "Inject DS WebBrowser UI",
-            "env": {
-                "VSC_PYTHON_DS_UI_PROMPT": "1"
-            },
-            "skipFiles": ["<node_internals>/**"]
-        },
-        {
             "name": "Extension inside container",
             "type": "extensionHost",
             "request": "launch",
@@ -52,14 +36,6 @@
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile"
-        },
-        {
-            "name": "Python: Current File with iPython",
-            "type": "python",
-            "request": "launch",
-            "module": "IPython",
-            "console": "integratedTerminal",
-            "args": ["${file}"] // Additional args should be prefixed with a '--' first.
         },
         {
             "name": "Python: Current File",
@@ -152,61 +128,6 @@
             "skipFiles": ["<node_internals>/**"]
         },
         {
-            "name": "Tests (DataScience, *.native.vscode.test.ts)",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "${workspaceFolder}/src/test/datascience",
-                "--disable-extensions",
-                "--enable-proposed-api",
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
-            ],
-            "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "", // Modify this to run a subset of the single workspace tests
-                "VSC_PYTHON_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
-                "CI_PYTHON_PATH": "<PythonPath>", // Initialize this to invert the grep (exclude tests with value defined in grep).
-
-                "VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "true",
-                "TEST_FILES_SUFFIX": "native.vscode.test"
-            },
-            "stopOnEntry": false,
-            "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
-            "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"]
-        },
-        {
-            "name": "DataScience tests in VS Code (*.vscode.ts)",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "${workspaceFolder}/src/test/datascience",
-                "--disable-extensions",
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
-            ],
-            "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "", // Modify this to run a subset of the single workspace tests
-                "VSC_PYTHON_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
-                "CI_PYTHON_PATH": "<PythonPath>", // Initialize this to invert the grep (exclude tests with value defined in grep).
-                "VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "true",
-                "TEST_FILES_SUFFIX": "vscode.test"
-            },
-            "stopOnEntry": false,
-            "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
-            "preLaunchTask": "Compile",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
-        },
-        {
             "name": "Tests (Multiroot, VS Code, *.test.ts)",
             "type": "extensionHost",
             "request": "launch",
@@ -295,37 +216,6 @@
                 "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output",
                 // Remove 'X' prefix to dump webview redux action log
                 "XVSC_PYTHON_WEBVIEW_LOG_FILE": "${workspaceRoot}/test-webview.log"
-            },
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
-            "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"]
-        },
-        {
-            "name": "Functional DS UI Tests (without VS Code, *.ui.functional.test.ts)",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-            "stopOnEntry": false,
-            "sourceMaps": true,
-            "args": [
-                "./out/test/**/*.ui.functional.test.js",
-                "--require=out/test/unittests.js",
-                "--ui=tdd",
-                "--recursive",
-                "--colors",
-                //"--grep", "<suite>",
-                "--timeout=300000",
-                "--fast"
-            ],
-            "env": {
-                // Remove `X` prefix to test with real browser to host DS ui (for DS functional tests).
-                "XVSC_PYTHON_DS_UI_BROWSER": "1",
-                // Remove `X` prefix to test with real python (for DS functional tests).
-                "XVSCODE_PYTHON_ROLLING": "1",
-                // Remove 'X' to turn on all logging in the debug output
-                "XVSC_PYTHON_FORCE_LOGGING": "1",
-                // Remove `X` prefix and update path to test with real python interpreter (for DS functional tests).
-                "XCI_PYTHON_PATH": "<Python Path>"
             },
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",

@@ -10,7 +10,6 @@
 # Your job using this template *may* supply these values:
 # - NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
 # - NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
-# - NeedsIPythonReqs: [true|false] - install the ipython-test-requirements prior to running tests. False if not set.
 # - PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion (from globals.yml) if not set.
 # - NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion (from globals.yml) if not set.
 
@@ -32,7 +31,7 @@ steps:
       PythonVersion: $(PythonVersion)
       workingDirectory: $(Build.SourcesDirectory)
       compile: 'false'
-      sqlite: $(NeedsIPythonReqs)
+      sqlite: 'false'
 
   # When running unit tests, we need to just compile extension code (not webviews & the like).
   - task: Gulp@0
@@ -184,26 +183,6 @@ steps:
     displayName: 'Downgrade pywin32 on Windows / Python 3.6'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['PythonVersion'], '3.6'))
 
-  # Install the requirements for ipython tests.
-  #
-  # This task will only run if variable `NeedsIPythonReqs` is true.
-  #
-  # Example command line (windows pwsh):
-  # > python -m pip install numpy
-  # > python -m pip install --upgrade -r build/ipython-test-requirements.txt
-  # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-  - bash: |
-      python -m pip install numpy
-      python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-    displayName: 'pip install ipython requirements'
-    condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'))
-
-  # Install jupyter for smoke tests.
-  - bash: |
-      python -m pip install --upgrade jupyter
-    displayName: 'pip install jupyter'
-    condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'), contains(variables['TestsToRun'], 'testSmoke'))
-
   - bash: |
       python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
       python ./pythonFiles/install_debugpy.py
@@ -233,31 +212,6 @@ steps:
       testResultsFiles: 'python-tests-junit.xml'
       searchFolder: '$(Common.TestResultsDirectory)'
       testRunTitle: 'pythonUnitTests-$(Agent.Os)-Py$(pythonVersion)'
-      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
-      buildConfiguration: 'UnitTests'
-
-  # Run the Python IPython tests in our codebase. Produces a JUnit-style log file that
-  # will be uploaded after all tests are complete.
-  #
-  # This task only runs if the string 'pythonIPythonTests' exists in variable `TestsToRun`.
-  #
-  # Example command line (windows pwsh):
-  # > python -m pip install -m -U pip
-  # > python -m pip install -U -r build/test-requirements.txt
-  # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
-  - bash: |
-      python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/ipython-tests-junit.xml
-    displayName: 'Python ipython tests'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonIPythonTests'))
-
-  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
-  - task: PublishTestResults@2
-    displayName: 'Publish IPython test results'
-    condition: contains(variables['TestsToRun'], 'pythonIPythonTests')
-    inputs:
-      testResultsFiles: 'ipython-tests-junit.xml'
-      searchFolder: '$(Common.TestResultsDirectory)'
-      testRunTitle: 'pythonIPythonTests-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'UnitTests'
 
@@ -373,23 +327,6 @@ steps:
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'SystemTests'
 
-
-  # Slow DataScience tests with VS Code
-  # Create a venv & register it as a kernel.
-  # These tests are slow hence will only run on linux.
-  # This env will be used to install ipykernel & test for prompts if ipykernel is missing & similar tests.
-  # Ensure this is registered as a kernel.
-  - bash: |
-      python -m venv .venvnokernel
-      source .venvnokernel/bin/activate
-
-      python -m pip install ipykernel
-      python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
-      python -m pip uninstall ipykernel --yes
-    displayName: 'Prepare Virtual Env for Kernel Tests'
-    workingDirectory: $(Build.SourcesDirectory)/src/test/datascience
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScienceInVSCode'))
-
   # Set the CI_PYTHON_PATH variable that forces VS Code system tests to use
   # the specified Python interpreter.
   #
@@ -403,17 +340,14 @@ steps:
       python -c "from __future__ import print_function;import sys;print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))"
     displayName: 'Set CI_PYTHON_PATH'
 
-  # Run the non DS functional tests
+  # Run the functional tests
   #
   # This task only runs if the string 'testFunctional' exists in variable `TestsToRun`.
-  #
-  # It runs the functional tests that don't start with 'DataScience'. DataScience functional tests
-  # will be handled in a separate yml.
   #
   # Example command line (windows pwsh):
   # > npm run test:functional
   - script: |
-      npm run test:functional -- --grep="^(?!DataScience).*$"
+      npm run test:functional
     displayName: 'Run functional tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testFunctional'))
     env:
@@ -441,29 +375,6 @@ steps:
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testSingleWorkspace'))
     env:
       DISPLAY: :10
-
-  # Run the single workspace tests for DS in VS Code Insiders.
-  - script: |
-      npm run testDataScience
-    continueOnError: true
-    displayName: 'Run Native Notebook Tests in VSCode Insiders'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScience'), not(contains(variables['TestsToRun'], 'testDataScienceInVSCode')))
-    env:
-      DISPLAY: :10
-      VSC_PYTHON_CI_TEST_VSC_CHANNEL: 'insiders'
-      VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE: 'true'
-      TEST_FILES_SUFFIX: 'native.vscode.test'
-
-  # Run the single workspace tests for DS in VS Code Stable.
-  - script: |
-      npm run testDataScienceInVSCode
-    displayName: 'Run DataScience Tests in VSCode Stable'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScienceInVSCode'))
-    env:
-      DISPLAY: :10
-      VSC_PYTHON_CI_TEST_VSC_CHANNEL: 'stable'
-      VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE: 'true'
-      TEST_FILES_SUFFIX: 'vscode.test'
 
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2

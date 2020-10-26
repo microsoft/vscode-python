@@ -10,7 +10,6 @@ pr:
     include:
       - 'main'
       - 'release*'
-      - 'ds*'
   paths:
     exclude: ['/news/1 Enhancements', '/news/2 Fixes', '/news/3 Code Health', '/.vscode']
 
@@ -40,30 +39,19 @@ stages:
             'NodeUnit':
               TestsToRun: 'testUnitTests'
               NeedsPythonTestReqs: false
-              NeedsIPythonReqs: false
             'Unit':
-              TestsToRun: 'pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              TestsToRun: 'pythonUnitTests, pythonInternalTools'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
-            'Functional Non DataScience':
+            'Functional':
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Native Notebook':
-              TestsToRun: 'testDataScience'
-              NeedsPythonTestReqs: true
-              NeedsPythonFunctionalReqs: true
-            'DataScience in VSCode':
-              TestsToRun: 'testDataScienceInVSCode'
-              NeedsPythonTestReqs: true
-              NeedsPythonFunctionalReqs: true
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
         pool:
           vmImage: 'ubuntu-20.04'
         steps:
@@ -114,9 +102,8 @@ stages:
         strategy:
           matrix:
             'Unit':
-              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
               NeedsPythonTestReqs: true
-              NeedsIPythonReqs: true
             # This gives us our best functional coverage for the OS.
             'Functional Non DS':
               TestsToRun: 'testfunctional'

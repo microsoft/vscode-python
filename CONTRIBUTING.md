@@ -59,7 +59,6 @@ For incremental builds you can use the following commands depending on your need
 
 ```shell
 npm run compile
-npm run compile-webviews-watch # For data science (React Code)
 ```
 
 Sometimes you will need to run `npm run clean` and even `rm -r out`.

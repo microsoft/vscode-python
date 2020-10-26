@@ -24,7 +24,6 @@ process.env.VSC_PYTHON_CI_TEST = '1';
 process.env.VSC_PYTHON_UNIT_TEST = '1';
 process.env.NODE_ENV = 'production'; // Make sure react is using production bits or we can run out of memory.
 
-import { setUpDomEnvironment, setupTranspile } from './datascience/reactHelpers';
 import { initialize } from './vscode-mock';
 
 // Custom module loader so we skip .css files that break non webpack wrapped compiles
@@ -69,26 +68,5 @@ const Module = require('module');
         return _require(this, filepath);
     };
 })();
-
-// Setting up DOM env and transpile is required for the react & monaco related tests.
-// However this takes around 40s to setup on Mac, hence slowing down testing/development.
-// Allowing ability to disable this (faster local development & testing, saving minutes).
-if (process.argv.indexOf('--fast') === -1) {
-    // nteract/transforms-full expects to run in the browser so we have to fake
-    // parts of the browser here.
-    setUpDomEnvironment();
-
-    // Also have to setup babel to get the monaco editor to work.
-    setupTranspile();
-}
-
-exports.mochaHooks = {
-    afterAll() {
-        const kernelLauncherMod = require('../client/datascience/kernel-launcher/kernelLauncher');
-
-        // After all tests run, clean up the kernel launcher mutex files
-        return kernelLauncherMod.KernelLauncher.cleanupStartPort();
-    }
-};
 
 initialize();

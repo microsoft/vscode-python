@@ -65,7 +65,7 @@ suite('Module Installer only', () => {
     [undefined, Uri.file('resource')].forEach((resource) => {
         // tslint:disable-next-line: cyclomatic-complexity
         getNamesAndValues<Product>(Product)
-            .concat([{ name: 'Unkown product', value: 404 }])
+            .concat([{ name: 'Unknown product', value: 404 }])
             // tslint:disable-next-line: cyclomatic-complexity
             .forEach((product) => {
                 let disposables: Disposable[] = [];
@@ -74,7 +74,7 @@ suite('Module Installer only', () => {
                 let moduleInstaller: TypeMoq.IMock<IModuleInstaller>;
                 let serviceContainer: TypeMoq.IMock<IServiceContainer>;
                 let app: TypeMoq.IMock<IApplicationShell>;
-                let promptDeferred: Deferred<string>;
+                let promptDeferred: Deferred<string> | undefined;
                 let workspaceService: TypeMoq.IMock<IWorkspaceService>;
                 let persistentStore: TypeMoq.IMock<IPersistentStateFactory>;
                 let outputChannel: TypeMoq.IMock<OutputChannel>;
@@ -82,11 +82,16 @@ suite('Module Installer only', () => {
                 let interpreterService: TypeMoq.IMock<IInterpreterService>;
                 const productService = new ProductService();
 
-                setup(() => {
+                setup(function () {
+                    if (new ProductService().getProductType(product.value) === ProductType.DataScience) {
+                        return this.skip();
+                    }
                     promptDeferred = createDeferred<string>();
                     serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                     outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
-
+                    if (new ProductService().getProductType(product.value) === ProductType.DataScience) {
+                        return this.skip();
+                    }
                     disposables = [];
                     serviceContainer
                         .setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
@@ -144,8 +149,14 @@ suite('Module Installer only', () => {
                     installer = new ProductInstaller(serviceContainer.object, outputChannel.object);
                 });
                 teardown(() => {
+                    if (new ProductService().getProductType(product.value) === ProductType.DataScience) {
+                        sinon.restore();
+                        return;
+                    }
                     // This must be resolved, else all subsequent tests will fail (as this same promise will be used for other tests).
-                    promptDeferred.resolve();
+                    if (promptDeferred) {
+                        promptDeferred.resolve();
+                    }
                     disposables.forEach((disposable) => {
                         if (disposable) {
                             disposable.dispose();
@@ -298,41 +309,6 @@ suite('Module Installer only', () => {
                         });
                         break;
                     }
-                    case Product.jupyter:
-                    case Product.pandas:
-                    case Product.nbconvert:
-                    case Product.ipykernel:
-                    case Product.kernelspec:
-                    case Product.notebook:
-                        {
-                            test(`Ensure resource info is passed into the module installer ${product.name} (${
-                                resource ? 'With a resource' : 'without a resource'
-                            })`, async () => {
-                                const moduleName = installer.translateProductToModuleName(
-                                    product.value,
-                                    ModuleNamePurpose.install
-                                );
-
-                                moduleInstaller
-                                    .setup((m) =>
-                                        m.installModule(
-                                            TypeMoq.It.isValue(moduleName),
-                                            TypeMoq.It.isValue(resource),
-                                            TypeMoq.It.isValue(undefined)
-                                        )
-                                    )
-                                    .returns(() => Promise.reject(new Error('UnitTesting')));
-
-                                try {
-                                    await installer.install(product.value, resource);
-                                } catch (ex) {
-                                    expect(ex.message).to.be.equal(
-                                        'All data science packages require an interpreter be passed in'
-                                    );
-                                }
-                            });
-                        }
-                        break;
 
                     default:
                         {
@@ -356,7 +332,7 @@ suite('Module Installer only', () => {
                                     )
                                 )
                                     .returns(() => {
-                                        return promptDeferred.promise;
+                                        return promptDeferred!.promise;
                                     })
                                     .verifiable(TypeMoq.Times.once());
                                 const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();

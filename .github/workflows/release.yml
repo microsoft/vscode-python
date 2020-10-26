@@ -177,12 +177,6 @@ jobs:
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
-      - name: pip install ipython requirements
-        run: |
-          python -m pip install numpy
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-        if: matrix.test-suite == 'python-unit'
-
       - name: Install debugpy wheels (python 3.8)
         run: |
           python -m pip install wheel
@@ -278,11 +272,10 @@ jobs:
         run: npm run test:unittests:cover
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
-      # Run the Python and IPython tests in our codebase.
-      - name: Run Python and IPython unit tests
+      # Run the Python tests in our codebase.
+      - name: Run Python unit tests
         run: |
           python pythonFiles/tests/run_all.py
-          python -m IPython pythonFiles/tests/run_all.py
         if: matrix.test-suite == 'python-unit'
 
       # The virtual environment based tests use the `testSingleWorkspace` set of tests
@@ -376,15 +369,6 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
         shell: bash
-
-      - name: pip install ipython requirements
-        run: |
-          python -m pip install numpy
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-
-      - name: pip install jupyter
-        run: |
-          python -m pip install --upgrade jupyter
 
       # Save time by reusing bits from the VSIX.
       - name: Download VSIX

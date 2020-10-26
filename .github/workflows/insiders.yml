@@ -196,12 +196,6 @@ jobs:
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
-      - name: pip install ipython requirements
-        run: |
-          python -m pip install numpy
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-        if: matrix.test-suite == 'python-unit'
-
       - name: Install debugpy wheels (python 3.8)
         run: |
           python -m pip install wheel
@@ -306,11 +300,10 @@ jobs:
           retention-days: 1
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
-      # Run the Python and IPython tests in our codebase.
-      - name: Run Python and IPython unit tests
+      # Run the Python tests in our codebase.
+      - name: Run Python unit tests
         run: |
           python pythonFiles/tests/run_all.py
-          python -m IPython pythonFiles/tests/run_all.py
         if: matrix.test-suite == 'python-unit'
 
       # The virtual environment based tests use the `testSingleWorkspace` set of tests
@@ -405,15 +398,6 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
         shell: bash
 
-      - name: pip install ipython requirements
-        run: |
-          python -m pip install numpy
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-
-      - name: pip install jupyter
-        run: |
-          python -m pip install --upgrade jupyter
-
       # Save time by reusing bits from the VSIX.
       - name: Download VSIX
         uses: actions/download-artifact@v2
@@ -480,28 +464,29 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/cobertura-coverage.xml
 
-  upload:
-    name: Upload VSIX to Azure Blob Storage
-    runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
-    needs: [tests, smoke-tests, build-vsix]
-    env:
-      BLOB_CONTAINER_NAME: extension-builds
-      BLOB_NAME: ms-python-insiders.vsix
+  # Re-enable when the Jupyter extension is available
+  # upload:
+    # name: Upload VSIX to Azure Blob Storage
+    # runs-on: ubuntu-latest
+    # if: github.repository == 'microsoft/vscode-python'
+    # needs: [tests, smoke-tests, build-vsix]
+    # env:
+      # BLOB_CONTAINER_NAME: extension-builds
+      # BLOB_NAME: ms-python-insiders.vsix
 
-    steps:
-      - name: Download VSIX
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ env.ARTIFACT_NAME_VSIX }}
+    # steps:
+      # - name: Download VSIX
+        # uses: actions/download-artifact@v2
+        # with:
+          # name: ${{ env.ARTIFACT_NAME_VSIX }}
 
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      # - name: Azure Login
+        # uses: azure/login@v1
+        # with:
+          # creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Upload to Blob Storage
-        run: az storage blob upload --file ${{ env.VSIX_NAME }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
+      # - name: Upload to Blob Storage
+        # run: az storage blob upload --file ${{ env.VSIX_NAME }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
 
-      - name: Get URL to uploaded VSIX
-        run: az storage blob url --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
+      # - name: Get URL to uploaded VSIX
+        # run: az storage blob url --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login

@@ -7,7 +7,6 @@ import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IPythonExtensionBanner } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionManager } from '../../../client/terminals/codeExecution/codeExecutionManager';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../../client/terminals/types';
@@ -20,18 +19,11 @@ suite('Terminal - Code Execution Manager', () => {
     let disposables: Disposable[] = [];
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
-    let shiftEnterBanner: TypeMoq.IMock<IPythonExtensionBanner>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     setup(() => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         fileSystem.setup((f) => f.readFile(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
-        shiftEnterBanner = TypeMoq.Mock.ofType<IPythonExtensionBanner>();
-        shiftEnterBanner
-            .setup((b) => b.showBanner())
-            .returns(() => {
-                return Promise.resolve();
-            });
         workspace
             .setup((c) => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
@@ -47,7 +39,6 @@ suite('Terminal - Code Execution Manager', () => {
             documentManager.object,
             disposables,
             fileSystem.object,
-            shiftEnterBanner.object,
             serviceContainer.object
         );
     });

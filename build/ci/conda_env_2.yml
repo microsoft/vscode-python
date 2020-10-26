@@ -1,8 +1,4 @@
 name: conda_env_2
 dependencies:
   - python=3.8
-  - pandas
-  - jupyter
-  - numpy
-  - matplotlib
   - pip

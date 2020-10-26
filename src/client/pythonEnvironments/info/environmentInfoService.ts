@@ -19,6 +19,7 @@ export interface IEnvironmentInfoService {
         interpreterPath: string,
         priority?: EnvironmentInfoServiceQueuePriority
     ): Promise<InterpreterInformation | undefined>;
+    isInfoProvided(interpreterPath: string): boolean;
 }
 
 async function buildEnvironmentInfo(interpreterPath: string): Promise<InterpreterInformation | undefined> {
@@ -69,5 +70,10 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
             }
             return r;
         });
+    }
+
+    public isInfoProvided(interpreterPath: string): boolean {
+        const result = this.cache.get(interpreterPath);
+        return !!(result && result.completed);
     }
 }

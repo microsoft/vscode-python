@@ -4,9 +4,7 @@
 import { isCondaEnvironment } from '../discovery/locators/services/condaLocator';
 import { isPipenvEnvironment } from '../discovery/locators/services/pipEnvHelper';
 import { isPyenvEnvironment } from '../discovery/locators/services/pyenvLocator';
-import { isVenvEnvironment } from '../discovery/locators/services/venvLocator';
-import { isVirtualenvEnvironment } from '../discovery/locators/services/virtualenvLocator';
-import { isVirtualenvwrapperEnvironment } from '../discovery/locators/services/virtualenvwrapperLocator';
+import { isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment } from '../discovery/locators/services/virtualEnvironmentIdentifier';
 import { isWindowsStoreEnvironment } from '../discovery/locators/services/windowsStoreLocator';
 import { EnvironmentType } from '../info';
 

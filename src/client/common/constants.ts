@@ -16,6 +16,7 @@ export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];
 export const PVSC_EXTENSION_ID = 'ms-python.python';
 export const CODE_RUNNER_EXTENSION_ID = 'formulahendry.code-runner';
 export const PYLANCE_EXTENSION_ID = 'ms-python.vscode-pylance';
+export const JUPYTER_EXTENSION_ID = 'ms-toolsai.jupyter';
 export const AppinsightsKey = 'AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217';
 
 export namespace Commands {
