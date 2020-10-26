@@ -46,9 +46,8 @@ suite('Telemetry', () => {
             this.sendTelemetryEvent(eventName, properties, measures);
             Reporter.errorProps = errorProps;
         }
-        public sendTelemetryException(error: Error, properties?: {}, measures?: {}): void {
-            this.sendTelemetryEvent('Exception', properties, measures);
-            Reporter.exception = error;
+        public sendTelemetryException(_error: Error, _properties?: {}, _measures?: {}): void {
+            throw new Error('sendTelemetryException is unsupported');
         }
     }
 
@@ -166,16 +165,22 @@ suite('Telemetry', () => {
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
         const eventName = 'Testing';
+        const measures = { start: 123, end: 987 };
         const properties = { hello: 'world', foo: 'bar' };
 
         // tslint:disable-next-line:no-any
-        sendTelemetryEvent(eventName as any, {}, properties as any, error);
+        sendTelemetryEvent(eventName as any, measures, properties as any, error);
 
-        const expectedErrorProperties = {
-            originalEventName: eventName
+        const expectedProperties = {
+            ...properties,
+            errorName: error.name,
+            errorMessage: error.message,
+            errorStack: error.stack
         };
 
-        expect(Reporter.properties).to.deep.equal([expectedErrorProperties]);
-        expect(Reporter.exception).to.deep.equal(error);
+        expect(Reporter.eventName).to.deep.equal([eventName]);
+        expect(Reporter.properties).to.deep.equal([expectedProperties]);
+        expect(Reporter.measures).to.deep.equal([measures]);
+        expect(Reporter.errorProps).to.deep.equal(['errorName', 'errorMessage', 'errorStack']);
     });
 });
