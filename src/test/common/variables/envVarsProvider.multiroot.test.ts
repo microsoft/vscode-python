@@ -12,7 +12,7 @@ import { PlatformService } from '../../../client/common/platform/platformService
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposableRegistry, IPathUtils } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
-import { getSearchPathEnvVarName } from '../../../client/common/utils/exec';
+import { getSearchPathEnvVarNames } from '../../../client/common/utils/exec';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { EnvironmentVariables } from '../../../client/common/variables/types';
@@ -34,7 +34,7 @@ const workspace4PyFile = Uri.file(path.join(workspace4Path.fsPath, 'one.py'));
 // tslint:disable-next-line:max-func-body-length
 suite('Multiroot Environment Variables Provider', () => {
     let ioc: UnitTestIocContainer;
-    const pathVariableName = getSearchPathEnvVarName();
+    const pathVariableName = getSearchPathEnvVarNames()[0];
     suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this

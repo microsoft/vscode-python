@@ -7,7 +7,7 @@ import * as os from 'os';
 import { coerce, SemVer } from 'semver';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName, PlatformErrors } from '../../telemetry/constants';
-import { getSearchPathEnvVarName } from '../utils/exec';
+import { getSearchPathEnvVarNames } from '../utils/exec';
 import { Architecture, getArchitecture, getOSType, OSType } from '../utils/platform';
 import { parseVersion } from '../utils/version';
 import { IPlatformService } from './types';
@@ -24,7 +24,7 @@ export class PlatformService implements IPlatformService {
         }
     }
     public get pathVariableName() {
-        return getSearchPathEnvVarName(this.osType);
+        return getSearchPathEnvVarNames(this.osType)[0];
     }
     public get virtualEnvBinName() {
         return this.isWindows ? 'Scripts' : 'bin';

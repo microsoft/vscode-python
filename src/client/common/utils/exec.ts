@@ -9,8 +9,12 @@ import { getEnvironmentVariable, getOSType, OSType } from './platform';
 /**
  * Determine the env var to use for the executable search path.
  */
-export function getSearchPathEnvVarName(ostype = getOSType()): 'Path' | 'PATH' {
-    return ostype === OSType.Windows ? 'Path' : 'PATH';
+export function getSearchPathEnvVarNames(ostype = getOSType()): ('Path' | 'PATH')[] {
+    if (ostype === OSType.Windows) {
+        // On Windows both are supported now.
+        return ['Path', 'PATH'];
+    }
+    return ['PATH'];
 }
 
 /**
@@ -34,8 +38,19 @@ export function isExecutableSync(filename: string): boolean | undefined {
  * Get the OS executable lookup "path" from the appropriate env var.
  */
 export function getSearchPathEntries(): string[] {
-    const envVar = getSearchPathEnvVarName();
-    return (getEnvironmentVariable(envVar) || '')
+    const envVars = getSearchPathEnvVarNames();
+    for (const envVar of envVars) {
+        const value = getEnvironmentVariable(envVar);
+        if (value !== undefined) {
+            return parseSearchPathEntries(value);
+        }
+    }
+    // No env var was set.
+    return [];
+}
+
+function parseSearchPathEntries(envVarValue: string): string[] {
+    return envVarValue
         .split(path.delimiter)
         .map((entry: string) => entry.trim())
         .filter((entry) => entry.length > 0);
