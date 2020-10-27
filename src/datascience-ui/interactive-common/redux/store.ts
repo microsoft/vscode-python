@@ -304,7 +304,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     // Create the test middle ware. It sends messages that are used for testing only
     // Or if testing in UI Test.
     // tslint:disable-next-line: no-any
-    const acquireVsCodeApi = (window as any).acquireVsCodeApi as Function;
+    const acquireVsCodeApi = (globalThis as any).acquireVsCodeApi as Function;
     const isUITest = acquireVsCodeApi && acquireVsCodeApi().handleMessage ? true : false;
     const testMiddleware = testMode || isUITest ? createTestMiddleware() : undefined;
 
