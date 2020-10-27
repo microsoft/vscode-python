@@ -153,5 +153,6 @@ if __name__ == "__main__":
     # Send the normalized code back in a JSON object.
     data = {"normalized": normalized}
 
-    sys.stdout.write(json.dumps(data))
-    sys.stdout.flush()
+    stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
+    stdout.write(data.encode())
+    stdout.flush()
