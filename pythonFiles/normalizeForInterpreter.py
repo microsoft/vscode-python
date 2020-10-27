@@ -5,6 +5,7 @@ import ast
 import io
 import json
 import operator
+import os
 import sys
 import textwrap
 import token
@@ -137,7 +138,10 @@ def normalize_lines(source):
     for line_number in filter(lambda x: x > 1, start_positions):
         lines.insert(line_number - 1, "")
 
-    sys.stdout.write("\n".join(lines) + trailing_newline)
+    # Send the normalized code back in a JSON object.
+    data = {"normalized": "\n".join(lines) + trailing_newline}
+
+    sys.stdout.write(json.dumps(data))
     sys.stdout.flush()
 
 
@@ -147,4 +151,5 @@ if __name__ == "__main__":
     stdin = sys.stdin if sys.version_info < (3,) else sys.stdin.buffer
     raw = stdin.read()
     contents = json.loads(raw.decode())
+
     normalize_lines(contents["code"])

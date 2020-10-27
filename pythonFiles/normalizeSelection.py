@@ -106,12 +106,11 @@ def normalize_lines(selection):
         # append a blank line to end the block and send it as-is.
         source = selection + "\n\n"
 
-    # `source` is a unicode instance at this point on Python 2,
-    # so if we used `sys.stdout.write` to send it to the REPL,
-    # Python will implicitly encode it using sys.getdefaultencoding(),
-    # which we don't want.
+    # Send the normalized code back in a JSON object.
+    data = json.dumps({"normalized": source})
+
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
-    stdout.write(source.encode("utf-8"))
+    stdout.write(data.encode())
     stdout.flush()
 
 
@@ -121,4 +120,5 @@ if __name__ == "__main__":
     stdin = sys.stdin if sys.version_info < (3,) else sys.stdin.buffer
     raw = stdin.read()
     contents = json.loads(raw.decode())
+
     normalize_lines(contents["code"])

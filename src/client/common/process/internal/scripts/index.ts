@@ -220,8 +220,9 @@ export function normalizeForInterpreter(): [string[], (out: string) => string] {
     const args = [ISOLATED, script];
 
     function parse(out: string) {
-        // The text will be used as-is.
-        return out;
+        // We expect a serialized JSON object, with the normalized code under the "normalized" key.
+        const result = JSON.parse(out);
+        return result.normalized;
     }
 
     return [args, parse];

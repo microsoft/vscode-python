@@ -59,7 +59,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 }
             });
 
-            // The normalization script expects a JSON object, with the selection under the "code" key.
+            // The normalization script expects a serialized JSON object, with the selection under the "code" key.
             // We're using a JSON object so that we don't have to worry about encoding, or escaping non-ASCII characters.
             const object = JSON.stringify({ code });
             observable.proc?.stdin.write(object);
