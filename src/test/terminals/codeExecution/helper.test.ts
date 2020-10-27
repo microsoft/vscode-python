@@ -90,14 +90,14 @@ suite('Terminal - Code Execution Helper', () => {
     async function ensureBlankLinesAreRemoved(source: string, expectedSource: string) {
         const actualProcessService = new ProcessService(new BufferDecoder());
         processService
-            .setup((p) => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((file, args, options) => {
-                return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
-            });
-        const normalizedZCode = await helper.normalizeLines(source);
+            .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((file, args, options) =>
+                actualProcessService.execObservable.apply(actualProcessService, [file, args, options])
+            );
+        const normalizedCode = await helper.normalizeLines(source);
         // In case file has been saved with different line endings.
         expectedSource = expectedSource.splitLines({ removeEmptyEntries: false, trim: false }).join(EOL);
-        expect(normalizedZCode).to.be.equal(expectedSource);
+        expect(normalizedCode).to.be.equal(expectedSource);
     }
     test('Ensure blank lines are NOT removed when code is not indented (simple)', async function () {
         // This test has not been working for many months in Python 2.7 under
