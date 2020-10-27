@@ -10,6 +10,7 @@ import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { JUPYTER_EXTENSION_ID } from '../../client/common/constants';
 import { SMOKE_TEST_EXTENSIONS_DIR } from '../constants';
 import { noop, sleep } from '../core';
 
@@ -41,6 +42,26 @@ export async function enableJedi(enable: boolean | undefined) {
     }
     await updateSetting('languageServer', 'Jedi');
 }
+
+export async function openNotebookAndWaitForLS(file: string): Promise<vscode.NotebookDocument> {
+    await verifyExtensionIsAvailable(JUPYTER_EXTENSION_ID);
+    await vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(file), 'jupyter-notebook');
+    const notebook = vscode.notebook.activeNotebookEditor;
+    assert(notebook, 'Notebook did not open');
+
+    // Make sure LS completes file loading and analysis.
+    // In test mode it awaits for the completion before trying
+    // to fetch data for completion, hover.etc.
+    await vscode.commands.executeCommand(
+        'vscode.executeCompletionItemProvider',
+        notebook.document.cells[0].uri,
+        new vscode.Position(0, 0)
+    );
+    // For for LS to get extracted.
+    await sleep(10_000);
+    return notebook.document;
+}
+
 export async function openFileAndWaitForLS(file: string): Promise<vscode.TextDocument> {
     const textDocument = await vscode.workspace.openTextDocument(file);
     await vscode.window.showTextDocument(textDocument);
@@ -56,4 +77,10 @@ export async function openFileAndWaitForLS(file: string): Promise<vscode.TextDoc
     // For for LS to get extracted.
     await sleep(10_000);
     return textDocument;
+}
+
+export async function verifyExtensionIsAvailable(extensionId: string): Promise<void> {
+    const extension = vscode.extensions.all.find((e) => e.id === extensionId);
+    assert.ok(extension, `Extension ${extensionId} not installed.`);
+    await extension.activate();
 }

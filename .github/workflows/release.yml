@@ -10,9 +10,6 @@ on:
 env:
   PYTHON_VERSION: 3.8
   MOCHA_REPORTER_JUNIT: false # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it hasn't already.
-  CACHE_NPM_DEPS: cache-npm
-  CACHE_OUT_DIRECTORY: cache-out-directory
-  CACHE_PIP_DEPS: cache-pip
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   ARTIFACT_NAME_VSIX: ms-python-release-vsix
@@ -28,18 +25,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Cache pip files
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}
-
-      - name: Cache npm files
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v2
@@ -73,23 +58,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Cache npm files
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
-
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
       - name: Run gulp prePublishNonBundle
         run: npx gulp prePublishNonBundle
-
-      - name: Cache the out/ directory
-        uses: actions/cache@v2
-        with:
-          path: ./out
-          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Check dependencies
         run: npm run checkDependencies
@@ -131,32 +104,11 @@ jobs:
         with:
           path: ${{env.special-working-directory-relative}}
 
-      - name: Cache pip files
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}
-
-      - name: Cache npm files
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
-
-      - name: Cache compiled TS files
-        # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
-        id: out-cache
-        uses: actions/cache@v2
-        with:
-          path: ${{env.special-working-directory}}/out
-          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
-
       - name: Install dependencies (npm ci)
         run: npm ci
 
-      - name: Compile if not cached
+      - name: Compile
         run: npx gulp prePublishNonBundle
-        if: steps.out-cache.outputs.cache-hit == false
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v2
@@ -342,18 +294,6 @@ jobs:
       # Need the source to have the tests available.
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Cache pip files
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}
-
-      - name: Cache npm files
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v2

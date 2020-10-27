@@ -118,6 +118,12 @@ steps:
     displayName: 'pip install functional requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
 
+  # Install smoke test specific requirements
+  - bash: |
+      python -m pip install --upgrade -r ./build/smoke-test-requirements.txt
+    displayName: 'pip install smoke test requirements'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
+
   # Add CONDA to the path so anaconda works
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
@@ -445,6 +451,33 @@ steps:
     env:
       DISPLAY: :10
 
+  # Note this section below should download an extension when this code is moved to github actions
+  #   name: Azure Login
+  #    uses: azure/login@v1
+  #    with:
+  #      creds: ${{ secrets.AZURE_CREDENTIALS }}
+  #  name: Download JUPYTER VSIX
+  #    run: az storage blob download --file $(VSIX_NAME_JUPYTER) --account-name pvsc --container-name extension-builds-jupyter --name $(VSIX_NAME_JUPYTER) --auth-mode login
+  #    condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')) 
+  # Otherwise have to run a powershell task
+
+  # Work around https://github.com/actions/virtual-environments/issues/1378
+  - bash: |
+      sudo chmod -R 777 /run/user
+    displayName: 'Fix powershell problem on Ubuntu 20'
+    condition: ne(variables['Agent.Os'], 'Windows_NT')
+
+  # Now actually install 
+  - powershell: |
+      Invoke-WebRequest -Uri https://pvsc.blob.core.windows.net/extension-builds-jupyter/$(VSIX_NAME_JUPYTER) -OutFile "$(Build.SourcesDirectory)/$(VSIX_NAME_JUPYTER_ZIP)"
+      if (![System.IO.File]::Exists("$(Build.SourcesDirectory)/$(VSIX_NAME_JUPYTER_ZIP)")) {
+        Write-Warning "Jupyter extension not downloaded"
+        throw new Exception("Jupyter extension not downloaded")
+      }
+    condition: and(succeeded(), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')))
+    failOnStderr: true
+    displayName: 'Download Jupyter VSIX'
+
   # Run the smoke tests.
   #
   # This task only runs if the string 'testSmoke' exists in variable `TestsToRun`.
@@ -461,11 +494,31 @@ steps:
       npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
       npm run package
       npx tsc -p ./
+      cp $(VSIX_NAME_JUPYTER_ZIP) $(VSIX_NAME_JUPYTER)
       node --no-force-async-hooks-checks ./out/test/smokeTest.js
     displayName: 'Run Smoke Tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
     env:
       DISPLAY: :10
+      INSTALL_JUPYTER_EXTENSION: true
+
+  # Run the insiders tests.
+  #
+  # This task only runs if the string 'testInsiders' exists in variable `TestsToRun`.
+  #
+  - bash: |
+      npm run prePublish
+      cp $(VSIX_NAME_JUPYTER_ZIP) $(VSIX_NAME_JUPYTER)
+      node ./out/test/standardTest.js
+    displayName: 'Run Tests with Insiders'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testInsiders'))
+    env:
+      DISPLAY: :10
+      INSTALL_JUPYTER_EXTENSION: true
+      INSTALL_PYLANCE_EXTENSION: true
+      VSC_PYTHON_CI_TEST_VSC_CHANNEL: insiders
+      TEST_FILES_SUFFIX: insiders.test
+      CODE_TESTS_WORKSPACE: ./src/testMultiRootWkspc/smokeTests
 
   - task: PublishBuildArtifacts@1
     inputs:

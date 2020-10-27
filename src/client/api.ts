@@ -3,10 +3,12 @@
 
 'use strict';
 
-import { Event, Uri } from 'vscode';
+import { noop } from 'lodash';
+import { Event, NotebookCell, Uri } from 'vscode';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IConfigurationService, Resource } from './common/types';
+import { IDataViewerDataProvider, IJupyterUriProvider } from './datascience/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -78,6 +80,22 @@ export interface IExtensionApi {
             execCommand: string[] | undefined;
         };
     };
+
+    datascience: {
+        readonly onKernelPostExecute: Event<NotebookCell>;
+        readonly onKernelRestart: Event<void>;
+        /**
+         * Launches Data Viewer component.
+         * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
+         * @param {string} title Data Viewer title
+         */
+        showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
+        /**
+         * Registers a remote server provider component that's used to pick remote jupyter server URIs
+         * @param serverProvider object called back when picking jupyter server URI
+         */
+        registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
+    };
 }
 
 export function buildApi(
@@ -122,6 +140,23 @@ export function buildApi(
                 // If pythonPath equals an empty string, no interpreter is set.
                 return { execCommand: pythonPath === '' ? undefined : [pythonPath] };
             }
+        },
+        // These are for backwards compatibility. Other extensions are using these APIs and we don't want
+        // to force them to move to the jupyter extension ... yet.
+        datascience: {
+            // tslint:disable:no-any
+            onKernelPostExecute: jupyterIntegration
+                ? jupyterIntegration.onKernelPostExecute.bind(jupyterIntegration)
+                : (noop as any),
+            onKernelRestart: jupyterIntegration
+                ? jupyterIntegration.onKernelRestart.bind(jupyterIntegration)
+                : (noop as any),
+            registerRemoteServerProvider: jupyterIntegration
+                ? jupyterIntegration.registerRemoteServerProvider.bind(jupyterIntegration)
+                : (noop as any),
+            showDataViewer: jupyterIntegration
+                ? jupyterIntegration.showDataViewer.bind(jupyterIntegration)
+                : (noop as any)
         }
     };
 

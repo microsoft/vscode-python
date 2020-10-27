@@ -11,3 +11,5 @@ variables:
   npm_config_cache: $(Pipeline.Workspace)/.npm
   vmImageMacOS: 'macOS-latest'
   TS_NODE_FILES: true # Temporarily enabled to allow using types from vscode.proposed.d.ts from ts-node (for tests).
+  VSIX_NAME_JUPYTER: ms-toolsai-jupyter-insiders.vsix
+  VSIX_NAME_JUPYTER_ZIP: ms-toolsai-jupyter-insiders.zip

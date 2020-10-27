@@ -105,7 +105,17 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
     protected async generateExtraSettings(): Promise<IPythonSettings> {
         const resource = this.owningResource;
-        return this.configService.getSettings(resource);
+        // tslint:disable-next-line: no-any
+        const prunedSettings = this.configService.getSettings(resource) as any;
+
+        // Remove keys that aren't serializable
+        const keys = Object.keys(prunedSettings);
+        keys.forEach((k) => {
+            if (k.includes('Manager') || k.includes('Service') || k.includes('onDid')) {
+                delete prunedSettings[k];
+            }
+        });
+        return prunedSettings;
     }
 
     protected async sendLocStrings() {

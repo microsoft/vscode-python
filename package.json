@@ -1935,6 +1935,7 @@
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
+        "prePublish": "gulp clean && gulp prePublishNonBundle",
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
@@ -1956,7 +1957,8 @@
         "testJediLSP": "node ./out/test/languageServers/jedi/lspSetup.js && cross-env CODE_TESTS_WORKSPACE=src/test VSC_PYTHON_CI_TEST_GREP='Language Server:' node ./out/test/testBootstrap.js ./out/test/standardTest.js && node ./out/test/languageServers/jedi/lspTeardown.js",
         "testMultiWorkspace": "node ./out/test/testBootstrap.js ./out/test/multiRootTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
-        "testSmoke": "node ./out/test/smokeTest.js",
+        "testSmoke": "cross-env INSTALL_JUPYTER_EXTENSION=true \"node ./out/test/smokeTest.js\"",
+        "testInsiders": "cross-env VSC_PYTHON_CI_TEST_VSC_CHANNEL=insiders INSTALL_PYLANCE_EXTENSION=true TEST_FILES_SUFFIX=insiders.test CODE_TESTS_WORKSPACE=src/testMultiRootWkspc/smokeTests \"node ./out/test/standardTest.js\"",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",

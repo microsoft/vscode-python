@@ -6,7 +6,7 @@ import { inject, injectable, named } from 'inversify';
 
 import { ICommandManager } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
-import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';
+import { IDisposable, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -39,8 +39,6 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(ILanguageServerFolderService)
         private readonly folderService: ILanguageServerFolderService,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(ICommandManager) commandManager: ICommandManager
     ) {
         this.disposables.push(
@@ -120,9 +118,9 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
 
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
-            this.experimentsManager,
-            this.configService,
+            this.serviceContainer,
             LanguageServerType.Node,
+            () => this.languageServerProxy?.languageClient,
             this.lsVersion
         );
 
