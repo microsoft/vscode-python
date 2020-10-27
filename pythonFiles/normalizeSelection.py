@@ -114,9 +114,8 @@ def normalize_lines(selection):
 
 
 if __name__ == "__main__":
-    # This will fail on a large file.
-    # See https://github.com/microsoft/vscode-python/issues/14471
-    contents = sys.argv[1]
+    contents = sys.stdin.read()
+
     try:
         default_encoding = sys.getdefaultencoding()
         encoded_contents = contents.encode(default_encoding, "surrogateescape")

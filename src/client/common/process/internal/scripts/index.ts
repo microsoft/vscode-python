@@ -215,9 +215,9 @@ export function refactor(root: string): [string[], (out: string) => object[]] {
 //============================
 // normalizeForInterpreter.py
 
-export function normalizeForInterpreter(code: string): [string[], (out: string) => string] {
+export function normalizeForInterpreter(): [string[], (out: string) => string] {
     const script = path.join(SCRIPTS_DIR, 'normalizeForInterpreter.py');
-    const args = [ISOLATED, script, code];
+    const args = [ISOLATED, script];
 
     function parse(out: string) {
         // The text will be used as-is.

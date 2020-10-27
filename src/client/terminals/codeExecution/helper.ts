@@ -10,6 +10,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { IProcessServiceFactory } from '../../common/process/types';
+import { createDeferred } from '../../common/utils/async';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
@@ -38,10 +39,30 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             code = code.replace(new RegExp('\\r', 'g'), '');
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
             const processService = await this.processServiceFactory.create(resource);
-            const [args, parse] = internalScripts.normalizeForInterpreter(code);
-            const proc = await processService.exec(interpreter?.path || 'python', args, { throwOnStdErr: true });
+            const [args, parse] = internalScripts.normalizeForInterpreter();
+            const observable = processService.execObservable(interpreter?.path || 'python', args, {
+                throwOnStdErr: true
+            });
 
-            return parse(proc.stdout);
+            let normalized = '';
+            const normalizeOutput = createDeferred<string>();
+            observable.out.subscribe({
+                next: (output) => {
+                    if (output.source === 'stdout') {
+                        normalized += output.out;
+                    }
+                },
+                complete: () => {
+                    normalizeOutput.resolve(normalized);
+                }
+            });
+
+            observable.proc?.stdin.write(code);
+            observable.proc?.stdin.end();
+
+            const result = await normalizeOutput.promise;
+
+            return parse(result);
         } catch (ex) {
             traceError(ex, 'Python: Failed to normalize code for execution in terminal');
             return code;

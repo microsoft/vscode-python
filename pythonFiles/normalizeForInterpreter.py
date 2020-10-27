@@ -142,7 +142,8 @@ def normalize_lines(source):
 
 
 if __name__ == "__main__":
-    contents = sys.argv[1]
+    contents = sys.stdin.read()
+
     try:
         default_encoding = sys.getdefaultencoding()
         encoded_contents = contents.encode(default_encoding, "surrogateescape")
