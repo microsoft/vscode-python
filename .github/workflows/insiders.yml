@@ -379,7 +379,6 @@ jobs:
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-python'
-    needs: [build-vsix]
     strategy:
       fail-fast: false
       matrix:
