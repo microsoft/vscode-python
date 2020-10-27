@@ -151,7 +151,7 @@ if __name__ == "__main__":
     normalized = normalize_lines(contents["code"])
 
     # Send the normalized code back in a JSON object.
-    data = {"normalized": normalized}
+    data = json.dumps({"normalized": normalized})
 
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
     stdout.write(data.encode())
