@@ -138,11 +138,7 @@ def normalize_lines(source):
     for line_number in filter(lambda x: x > 1, start_positions):
         lines.insert(line_number - 1, "")
 
-    # Send the normalized code back in a JSON object.
-    data = {"normalized": "\n".join(lines) + trailing_newline}
-
-    sys.stdout.write(json.dumps(data))
-    sys.stdout.flush()
+    return "\n".join(lines) + trailing_newline
 
 
 if __name__ == "__main__":
@@ -152,4 +148,10 @@ if __name__ == "__main__":
     raw = stdin.read()
     contents = json.loads(raw.decode())
 
-    normalize_lines(contents["code"])
+    normalized = normalize_lines(contents["code"])
+
+    # Send the normalized code back in a JSON object.
+    data = {"normalized": normalized}
+
+    sys.stdout.write(json.dumps(data))
+    sys.stdout.flush()

@@ -106,12 +106,7 @@ def normalize_lines(selection):
         # append a blank line to end the block and send it as-is.
         source = selection + "\n\n"
 
-    # Send the normalized code back in a JSON object.
-    data = json.dumps({"normalized": source})
-
-    stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
-    stdout.write(data.encode())
-    stdout.flush()
+    return source
 
 
 if __name__ == "__main__":
@@ -121,4 +116,11 @@ if __name__ == "__main__":
     raw = stdin.read()
     contents = json.loads(raw.decode())
 
-    normalize_lines(contents["code"])
+    normalized = normalize_lines(contents["code"])
+
+    # Send the normalized code back to the extension in a JSON object.
+    data = json.dumps({"normalized": normalized})
+
+    stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
+    stdout.write(data.encode())
+    stdout.flush()
