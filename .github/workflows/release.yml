@@ -16,6 +16,7 @@ env:
   VSIX_NAME: ms-python-release.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
+  VSIX_NAME_JUPYTER: ms-toolsai-jupyter-release.vsix
 
 jobs:
   build-vsix:
@@ -310,6 +311,11 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
         shell: bash
 
+      - name: pip install smoke test requirements
+        run: |
+          python -m pip install --upgrade -r build/smoke-test-requirements.txt
+        shell: bash
+
       # Save time by reusing bits from the VSIX.
       - name: Download VSIX
         uses: actions/download-artifact@v2
@@ -321,6 +327,16 @@ jobs:
         run: npx tsc -p ./
         shell: bash
 
+      # Download the jupyter extension
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: Download JUPYTER VSIX
+        run: az storage blob download --file ${{env.VSIX_NAME_JUPYTER}} --account-name pvsc --container-name extension-builds-jupyter --name ${{env.VSIX_NAME_JUPYTER}} --auth-mode login
+
+
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
           echo "::set-env name=CI_PYTHON_PATH::python"
@@ -330,6 +346,140 @@ jobs:
       - name: Run smoke tests
         env:
           DISPLAY: 10
+          INSTALL_JUPYTER_EXTENSION: true
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
+
+  insider-tests:
+    name: Insider tests
+    # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
+    runs-on: ${{ matrix.os }}
+    if: github.repository == 'microsoft/vscode-python'
+    strategy:
+      fail-fast: false
+      matrix:
+        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
+        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
+        os: [ubuntu-latest]
+        python: [3.8]
+    steps:
+      # Need the source to have the tests available.
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Python ${{matrix.python}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{matrix.python}}
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      - name: pip install system test requirements
+        run: |
+          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+        shell: bash
+
+      - name: pip install smoke test requirements
+        run: |
+          python -m pip install --upgrade -r build/smoke-test-requirements.txt
+        shell: bash
+
+      # Compile the test files.
+      - name: Prepare for insiders tests
+        run: npm run prePublish
+        shell: bash
+
+      # Download the jupyter extension
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: Download JUPYTER VSIX
+        run: az storage blob download --file ${{env.VSIX_NAME_JUPYTER}} --account-name pvsc --container-name extension-builds-jupyter --name ${{env.VSIX_NAME_JUPYTER}} --auth-mode login
+
+
+      - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
+        run: |
+          echo "::set-env name=CI_PYTHON_PATH::python"
+          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
+        shell: bash
+
+      - name: Run insider tests
+        env:
+          DISPLAY: 10
+          INSTALL_JUPYTER_EXTENSION: true
+          INSTALL_PYLANCE_EXTENSION: true
+          VSC_PYTHON_CI_TEST_VSC_CHANNEL: insiders
+          TEST_FILES_SUFFIX: insiders.test
+          CODE_TESTS_WORKSPACE: ./src/testMultiRootWkspc/smokeTests
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: node --no-force-async-hooks-checks ./out/test/standardTest.js          
+
+  coverage:
+    name: Coverage reports upload
+    runs-on: ubuntu-latest
+    if: github.repository == 'microsoft/vscode-python'
+    needs: [tests, smoke-tests]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
+      # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
+      # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
+      - name: Download Ubuntu test coverage artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: Linux-${{env.COVERAGE_REPORTS}}
+
+      - name: Extract Ubuntu coverage artifacts to ./nyc_output
+        run: |
+          mkdir .nyc_output
+          mv Linux-${{env.COVERAGE_REPORTS}}/* .nyc_output
+          rm -r Linux-${{env.COVERAGE_REPORTS}}
+
+      - name: Generate coverage reports
+        run: npm run test:cover:report
+        continue-on-error: true
+
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage/cobertura-coverage.xml
+
+  # Re-enable when the Jupyter extension is available
+  # upload:
+    # name: Upload VSIX to Azure Blob Storage
+    # runs-on: ubuntu-latest
+    # if: github.repository == 'microsoft/vscode-python'
+    # needs: [tests, smoke-tests, build-vsix]
+    # env:
+      # BLOB_CONTAINER_NAME: extension-builds
+      # BLOB_NAME: ms-python-insiders.vsix
+
+    # steps:
+      # - name: Download VSIX
+        # uses: actions/download-artifact@v2
+        # with:
+          # name: ${{ env.ARTIFACT_NAME_VSIX }}
+
+      # - name: Azure Login
+        # uses: azure/login@v1
+        # with:
+          # creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # - name: Upload to Blob Storage
+        # run: az storage blob upload --file ${{ env.VSIX_NAME }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
+
+      # - name: Get URL to uploaded VSIX
+        # run: az storage blob url --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
