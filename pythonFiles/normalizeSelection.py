@@ -2,9 +2,10 @@
 # Licensed under the MIT License.
 
 import ast
-import textwrap
+import json
 import re
 import sys
+import textwrap
 
 
 def split_lines(source):
@@ -115,13 +116,9 @@ def normalize_lines(selection):
 
 
 if __name__ == "__main__":
-    contents = sys.stdin.read()
-    try:
-        default_encoding = sys.getdefaultencoding()
-        encoded_contents = contents.encode(default_encoding, "surrogateescape")
-        contents = encoded_contents.decode(default_encoding, "replace")
-    except (UnicodeError, LookupError):
-        pass
-    if isinstance(contents, bytes):
-        contents = contents.decode("utf8")
-    normalize_lines(contents)
+    # Content is being sent from the extension as a JSON object.
+    # Decode the data from the raw bytes.
+    stdin = sys.stdin if sys.version_info < (3,) else sys.stdin.buffer
+    raw = stdin.read()
+    contents = json.loads(raw.decode())
+    normalize_lines(contents["code"])

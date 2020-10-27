@@ -37,15 +37,17 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             // On windows cr is not handled well by python when passing in/out via stdin/stdout.
             // So just remove cr from the input.
             code = code.replace(new RegExp('\\r', 'g'), '');
+
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
             const processService = await this.processServiceFactory.create(resource);
             const [args, parse] = internalScripts.normalizeForInterpreter();
             const observable = processService.execObservable(interpreter?.path || 'python', args, {
                 throwOnStdErr: true
             });
-
-            let normalized = '';
             const normalizeOutput = createDeferred<string>();
+
+            // Read result from the normalization script from stdout, and resolve the promise when done.
+            let normalized = '';
             observable.out.subscribe({
                 next: (output) => {
                     if (output.source === 'stdout') {
@@ -57,7 +59,10 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 }
             });
 
-            observable.proc?.stdin.write(code);
+            // The normalization script expects a JSON object, with the selection under the "code" key.
+            // We're using a JSON object so that we don't have to worry about encoding, or escaping non-ASCII characters.
+            const object = JSON.stringify({ code });
+            observable.proc?.stdin.write(object);
             observable.proc?.stdin.end();
 
             const result = await normalizeOutput.promise;
