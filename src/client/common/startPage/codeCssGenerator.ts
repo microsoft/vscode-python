@@ -3,7 +3,6 @@
 
 'use strict';
 
-import type { JSONArray, JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
@@ -12,7 +11,7 @@ import { IWorkspaceService } from '../application/types';
 import { traceError, traceInfo, traceWarning } from '../logger';
 
 import { IFileSystem } from '../platform/types';
-import { ICodeCssGenerator, IThemeFinder } from './types';
+import { ICodeCssGenerator, IThemeFinder, JSONArray, JSONObject } from './types';
 
 // tslint:disable:no-any
 const DarkTheme = 'dark';

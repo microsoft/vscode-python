@@ -11,9 +11,12 @@ import {
     Disposable,
     DocumentSelector,
     ProviderResult,
+    Range,
     WorkspaceEditEntryMetadata,
     Command,
-    AccessibilityInformation
+    AccessibilityInformation,
+    Position,
+    Location
 } from 'vscode';
 
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.

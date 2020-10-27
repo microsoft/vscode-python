@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, DocumentSelector, Event, EventEmitter, NotebookConcatTextDocument } from 'vscode';
+import { Disposable, DocumentSelector, Event, EventEmitter } from 'vscode';
 import type {
     notebook,
     NotebookCellMetadata,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
+    NotebookConcatTextDocument,
     NotebookContentProvider,
     NotebookDocument,
     NotebookDocumentFilter,

@@ -10,10 +10,13 @@ import {
     CancellationToken,
     Disposable,
     DocumentSelector,
+    Position,
     ProviderResult,
+    Range,
     WorkspaceEditEntryMetadata,
     Command,
-    AccessibilityInformation
+    AccessibilityInformation,
+    Location
 } from 'vscode';
 
 // Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
