@@ -82,10 +82,11 @@ def _get_statements(selection):
 
 def normalize_lines(selection):
     """
-    Normalize the text selection received from the extension and send it to the REPL.
+    Normalize the text selection received from the extension.
 
-    If it is a single line selection, dedent it, append a newline and send it to the REPL.
-    Otherwise, sanitize the multiline selection before sending it to the REPL:
+    If it is a single line selection, dedent it, append a newline and
+    send it back to the extension, which will send it to the REPL.
+    Otherwise, sanitize the multiline selection before returning it:
     split it in a list of top-level statements
     and add newlines between each of them to tell the REPL where each block ends.
     """
