@@ -116,7 +116,6 @@ def normalize_lines(selection):
 
 if __name__ == "__main__":
     contents = sys.stdin.read()
-
     try:
         default_encoding = sys.getdefaultencoding()
         encoded_contents = contents.encode(default_encoding, "surrogateescape")
