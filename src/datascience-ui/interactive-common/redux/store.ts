@@ -293,7 +293,7 @@ function getDebugState(vms: ICellViewModel[]): DebugState {
     return firstNonDesign ? firstNonDesign.runningByLine : DebugState.Design;
 }
 
-function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
+function createMiddleWare(testMode: boolean, postOffice: PostOffice): Redux.Middleware<{}, IStore>[] {
     // Create the middleware that modifies actions to queue new actions
     const queueableActions = createQueueableActionMiddleware();
 
@@ -304,8 +304,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     // Create the test middle ware. It sends messages that are used for testing only
     // Or if testing in UI Test.
     // tslint:disable-next-line: no-any
-    const acquireVsCodeApi = (globalThis as any).acquireVsCodeApi as Function;
-    const isUITest = acquireVsCodeApi && acquireVsCodeApi().handleMessage ? true : false;
+    const isUITest = postOffice.vscodeApi && (postOffice.vscodeApi as any).handleMessage ? true : false;
     const testMiddleware = testMode || isUITest ? createTestMiddleware() : undefined;
 
     // Create the logger if we're not in production mode or we're forcing logging
@@ -423,7 +422,7 @@ export function createStore<M>(
     });
 
     // Create our middleware
-    const middleware = createMiddleWare(testMode).concat([addMessageDirectionMiddleware]);
+    const middleware = createMiddleWare(testMode, postOffice).concat([addMessageDirectionMiddleware]);
 
     // Use this reducer and middle ware to create a store
     const store = Redux.createStore(rootReducer, Redux.applyMiddleware(...middleware));

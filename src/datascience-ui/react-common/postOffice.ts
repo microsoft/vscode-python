@@ -29,8 +29,8 @@ export declare function acquireVsCodeApi(): IVsCodeApi;
 export type PostOfficeMessage = { type: string; payload?: any };
 // tslint:disable-next-line: no-unnecessary-class
 export class PostOffice implements IDisposable {
+    public vscodeApi: IVsCodeApi | undefined;
     private registered: boolean = false;
-    private vscodeApi: IVsCodeApi | undefined;
     private handlers: IMessageHandler[] = [];
     private baseHandler = this.handleMessages.bind(this);
     private readonly subject = new Subject<PostOfficeMessage>();
