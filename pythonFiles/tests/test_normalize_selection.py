@@ -9,13 +9,13 @@ import normalizeSelection
 class TestNormalizationScript(object):
     """Unit tests for the normalization script."""
 
-    def test_basicNormalization():
+    def test_basicNormalization(self):
         src = 'print("this is a test")'
         expected = src + "\n"
         result = normalizeSelection.normalize_lines(src)
-        assert result["normalized"] == expected
+        assert result == expected
 
-    def test_moreThanOneLine():
+    def test_moreThanOneLine(self):
         src = textwrap.dedent(
             """\
             # Some rando comment
@@ -32,9 +32,9 @@ class TestNormalizationScript(object):
             """
         )
         result = normalizeSelection.normalize_lines(src)
-        assert result["normalized"] == expected
+        assert result == expected
 
-    def test_withHangingIndent():
+    def test_withHangingIndent(self):
         src = textwrap.dedent(
             """\
             x = 22
@@ -58,9 +58,9 @@ class TestNormalizationScript(object):
             """
         )
         result = normalizeSelection.normalize_lines(src)
-        assert result["normalized"] == expected
+        assert result == expected
 
-    def test_clearOutExtraneousNewlines():
+    def test_clearOutExtraneousNewlines(self):
         src = textwrap.dedent(
             """\
             value_x = 22
@@ -82,9 +82,9 @@ class TestNormalizationScript(object):
             """
         )
         result = normalizeSelection.normalize_lines(src)
-        assert result["normalized"] == expected
+        assert result == expected
 
-    def test_clearOutExtraLinesAndWhitespace():
+    def test_clearOutExtraLinesAndWhitespace(self):
         src = textwrap.dedent(
             """\
             if True:
@@ -109,15 +109,15 @@ class TestNormalizationScript(object):
             """
         )
         result = normalizeSelection.normalize_lines(src)
-        assert result["normalized"] == expected
+        assert result == expected
 
-    def test_partialSingleLine():
+    def test_partialSingleLine(self):
         src = "   print('foo')"
         expected = textwrap.dedent(src) + "\n"
         result = normalizeSelection.normalize_lines(src)
-        assert result["normalized"] == expected
+        assert result == expected
 
-    def test_multiLineWithIndent():
+    def test_multiLineWithIndent(self):
         src = """\
            
         if (x > 0
@@ -140,9 +140,9 @@ class TestNormalizationScript(object):
         )
 
         result = normalizeSelection.normalize_lines(src)
-        assert result["normalized"] == expected
+        assert result == expected
 
-    def test_multiLineWithComment():
+    def test_multiLineWithComment(self):
         src = textwrap.dedent(
             """\
 
@@ -160,15 +160,15 @@ class TestNormalizationScript(object):
             """
         )
         result = normalizeSelection.normalize_lines(src)
-        assert result["normalized"] == expected
+        assert result == expected
 
-    def test_exception():
+    def test_exception(self):
         src = "       if True:"
         expected = src + "\n\n"
         result = normalizeSelection.normalize_lines(src)
-        assert result["normalized"] == expected
+        assert result == expected
 
-    def test_multilineException():
+    def test_multilineException(self):
         src = textwrap.dedent(
             """\
 
@@ -178,4 +178,4 @@ class TestNormalizationScript(object):
         )
         expected = src + "\n\n"
         result = normalizeSelection.normalize_lines(src)
-        assert result["normalized"] == expected
+        assert result == expected

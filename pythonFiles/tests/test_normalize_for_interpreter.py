@@ -11,12 +11,12 @@ import normalizeForInterpreter
 class TestNormalizationScript(object):
     """Basic unit tests for the normalization script."""
 
-    def test_basicNormalization():
+    def test_basicNormalization(self):
         src = 'print("this is a test")'
         result = normalizeForInterpreter.normalize_lines(src)
-        assert result["normalized"] == src
+        assert result == src
 
-    def test_moreThanOneLine():
+    def test_moreThanOneLine(self):
         src = textwrap.dedent(
             """\
             # Some rando comment
@@ -26,9 +26,9 @@ class TestNormalizationScript(object):
             """
         )
         result = normalizeForInterpreter.normalize_lines(src)
-        assert result["normalized"] == src
+        assert result == src
 
-    def test_withHangingIndent():
+    def test_withHangingIndent(self):
         src = textwrap.dedent(
             """\
             x = 22
@@ -41,9 +41,9 @@ class TestNormalizationScript(object):
             """
         )
         result = normalizeForInterpreter.normalize_lines(src)
-        assert result["normalized"] == src
+        assert result == src
 
-    def test_clearOutExtraneousNewlines():
+    def test_clearOutExtraneousNewlines(self):
         src = textwrap.dedent(
             """\
             value_x = 22
@@ -66,9 +66,9 @@ class TestNormalizationScript(object):
             """
         )
         result = normalizeForInterpreter.normalize_lines(src)
-        assert result["normalized"] == expectedResult
+        assert result == expectedResult
 
-    def test_clearOutExtraLinesAndWhitespace():
+    def test_clearOutExtraLinesAndWhitespace(self):
         src = textwrap.dedent(
             """\
             if True:
@@ -94,4 +94,4 @@ class TestNormalizationScript(object):
             """
         )
         result = normalizeForInterpreter.normalize_lines(src)
-        assert result["normalized"] == expectedResult
+        assert result == expectedResult
