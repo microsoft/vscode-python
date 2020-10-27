@@ -313,7 +313,8 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest, windows-latest]
-        python: [3.9]
+        # 3.8 is still required here so that jupyter can install.
+        python: [3.8]
     steps:
       # Need the source to have the tests available.
       - name: Checkout
@@ -385,7 +386,7 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
-        python: [3.9]
+        python: [3.8]
     steps:
       # Need the source to have the tests available.
       - name: Checkout
