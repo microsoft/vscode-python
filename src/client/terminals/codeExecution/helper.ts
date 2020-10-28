@@ -61,13 +61,15 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
             // The normalization script expects a serialized JSON object, with the selection under the "code" key.
             // We're using a JSON object so that we don't have to worry about encoding, or escaping non-ASCII characters.
-            const object = JSON.stringify({ code });
-            observable.proc?.stdin.write(object);
+            const input = JSON.stringify({ code });
+            observable.proc?.stdin.write(input);
             observable.proc?.stdin.end();
 
+            // We expect a serialized JSON object back, with the normalized code under the "normalized" key.
             const result = await normalizeOutput.promise;
+            const object = JSON.parse(result);
 
-            return parse(result);
+            return parse(object.normalized);
         } catch (ex) {
             traceError(ex, 'Python: Failed to normalize code for execution in terminal');
             return code;
