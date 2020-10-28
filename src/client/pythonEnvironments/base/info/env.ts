@@ -208,8 +208,10 @@ export async function getMaxDerivedEnvInfo(minimal: PythonEnvInfo): Promise<Pyth
     }
 
     // Note that we do not set `env.arch` to the host's native
-    // architecture.  That is normally a safe assumption but we play
-    // it safe for now by leaving it `Unknown`.
+    // architecture.  Nearly all Python builds will match the host
+    // architecture, with the notable exception being older PSF builds
+    // for Windows,  There is enough uncertainty that we play it safe
+    // by not setting `env.arch` here.
 
     // We could probably make a decent guess at the distro, but that
     // is best left to distro-specific locators.
