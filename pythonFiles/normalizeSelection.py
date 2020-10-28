@@ -122,4 +122,4 @@ if __name__ == "__main__":
 
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
     stdout.write(data.encode("utf-8"))
-    stdout.flush()
+    stdout.close()
