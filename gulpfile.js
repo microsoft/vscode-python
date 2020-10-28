@@ -112,7 +112,6 @@ gulp.task('checkNativeDependencies', (done) => {
     done();
 });
 
-
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
 gulp.task('compile-viewers', async () => {
@@ -378,7 +377,7 @@ function hasNativeDependencies() {
     const jsonProperties = Object.keys(flat.flatten(dependencies));
     nativeDependencies = _.flatMap(nativeDependencies, (item) => path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep))
         .filter((item) => item.length > 0)
-        .filter((item) => !item.includes('zeromq')) // This is a known native. Allow this one for now
+        .filter((item) => !item.includes('zeromq') && item !== 'fsevents') // This is a known native. Allow this one for now
         .filter(
             (item) => jsonProperties.findIndex((flattenedDependency) => flattenedDependency.endsWith(`dependencies.${item}.version`)) >= 0,
         );
