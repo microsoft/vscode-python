@@ -1,17 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// eslint-disable-next-line max-classes-per-file
+// tslint:disable-next-line:no-single-line-block-comment
+/* eslint-disable max-classes-per-file */
+
 import { Event, Uri } from 'vscode';
 import { DisposableRegistry } from '../../common/syncDisposableRegistry';
 import { IDisposable } from '../../common/types';
-import { iterEmpty } from '../../common/utils/async';
+import { IAsyncIterableIterator, iterEmpty } from '../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind } from './info';
 import {
     BasicPythonEnvsChangedEvent,
     IPythonEnvsWatcher,
     PythonEnvsChangedEvent,
-    PythonEnvsWatcher
+    PythonEnvsWatcher,
 } from './watcher';
 
 /**
@@ -54,7 +56,7 @@ export type PythonEnvUpdatedEvent = {
  * Callers can usually ignore the update event entirely and rely on
  * the locator to provide sufficiently complete information.
  */
-export interface IPythonEnvsIterator extends AsyncIterator<PythonEnvInfo, void> {
+export interface IPythonEnvsIterator extends IAsyncIterableIterator<PythonEnvInfo> {
     /**
      * Provides possible updates for already-iterated envs.
      *
@@ -185,17 +187,19 @@ abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsCha
 implements IDisposable, ILocator<E> {
     public readonly onChanged: Event<E>;
 
-    protected readonly emitter: IPythonEnvsWatcher<E> & IEmitter<E>;
+    protected readonly emitter: IEmitter<E>;
 
     protected readonly disposables = new DisposableRegistry();
 
     constructor(watcher: IPythonEnvsWatcher<E> & IEmitter<E>) {
         this.emitter = watcher;
-        this.onChanged = this.emitter.onChanged;
+        this.onChanged = watcher.onChanged;
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public abstract iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
 
+    // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-unused-vars
     public async resolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return undefined;
     }

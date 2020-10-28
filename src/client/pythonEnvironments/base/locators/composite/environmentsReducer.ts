@@ -34,7 +34,7 @@ export class PythonEnvsReducer implements ILocator {
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const didUpdate = new EventEmitter<PythonEnvUpdatedEvent | null>();
         const incomingIterator = this.parentLocator.iterEnvs(query);
-        const iterator: IPythonEnvsIterator = iterEnvsIterator(incomingIterator, didUpdate);
+        const iterator = iterEnvsIterator(incomingIterator, didUpdate);
         iterator.onUpdated = didUpdate.event;
         return iterator;
     }
@@ -43,7 +43,7 @@ export class PythonEnvsReducer implements ILocator {
 async function* iterEnvsIterator(
     iterator: IPythonEnvsIterator,
     didUpdate: EventEmitter<PythonEnvUpdatedEvent | null>,
-): AsyncIterator<PythonEnvInfo, void> {
+): IPythonEnvsIterator {
     const state = {
         done: false,
         pending: 0,
