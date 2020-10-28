@@ -24,21 +24,21 @@ import { EnvironmentType } from '../info';
  *
  * Next level we have the following virtual environment tools. The are here because they
  * are consumed by the tools above, and can also be used independently.
- *  1. venv
- *  2. virtualenvwrapper
+ *  1. virtualenvwrapper
+ *  2. venv
  *  3. virtualenv
  *
  * Last category is globally installed python, or system python.
  */
-export function getPrioritizedEnvironmentType():EnvironmentType[] {
+export function getPrioritizedEnvironmentType(): EnvironmentType[] {
     return [
         EnvironmentType.Conda,
         EnvironmentType.WindowsStore,
         EnvironmentType.Pipenv,
         EnvironmentType.Pyenv,
         EnvironmentType.Poetry,
-        EnvironmentType.Venv,
         EnvironmentType.VirtualEnvWrapper,
+        EnvironmentType.Venv,
         EnvironmentType.VirtualEnv,
         EnvironmentType.Global,
         EnvironmentType.System,
@@ -46,11 +46,11 @@ export function getPrioritizedEnvironmentType():EnvironmentType[] {
     ];
 }
 
-function getIdentifiers(): Map<EnvironmentType, (path:string) => Promise<boolean>> {
+function getIdentifiers(): Map<EnvironmentType, (path: string) => Promise<boolean>> {
     const notImplemented = () => Promise.resolve(false);
     const defaultTrue = () => Promise.resolve(true);
-    const identifier: Map<EnvironmentType, (path:string) => Promise<boolean>> = new Map();
-    Object.keys(EnvironmentType).forEach((k:string) => {
+    const identifier: Map<EnvironmentType, (path: string) => Promise<boolean>> = new Map();
+    Object.keys(EnvironmentType).forEach((k: string) => {
         identifier.set(k as EnvironmentType, notImplemented);
     });
 

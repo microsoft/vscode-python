@@ -58,13 +58,13 @@ async function getGlobalVirtualEnvDirs(): Promise<string[]> {
  * and virtualenvwrapper based environments.
  * @param interpreterPath: Absolute path to the interpreter paths.
  */
-async function getVirtualEnvKind(interpreterPath:string): Promise<PythonEnvKind> {
-    if (await isVenvEnvironment(interpreterPath)) {
-        return PythonEnvKind.Venv;
-    }
-
+async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind> {
     if (await isVirtualenvwrapperEnvironment(interpreterPath)) {
         return PythonEnvKind.VirtualEnvWrapper;
+    }
+
+    if (await isVenvEnvironment(interpreterPath)) {
+        return PythonEnvKind.Venv;
     }
 
     if (await isVirtualenvEnvironment(interpreterPath)) {
