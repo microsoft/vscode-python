@@ -15,7 +15,6 @@ rope
 flask
 django
 isort
-virtualenvwrapper-win; platform_system == "Windows"
 
 # Python 2.7 support.
 pytest==4.6.9 ; python_version == '2.7'

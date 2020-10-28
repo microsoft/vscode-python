@@ -9,7 +9,7 @@ import { createDeferred, Deferred, sleep } from '../../../../client/common/utils
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
 import { GlobalVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
-import { deleteFiles } from '../../../common';
+import { deleteFiles, PYTHON_PATH } from '../../../common';
 import { TEST_TIMEOUT } from '../../../constants';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { run } from './envTestUtils';
@@ -18,13 +18,13 @@ const testVirtualHomeDir = path.join(TEST_LAYOUT_ROOT, 'virtualhome');
 const testWorkOnHomePath = path.join(testVirtualHomeDir, 'workonhome');
 
 class GlobalVenvs {
-    constructor(private readonly prefix = '.virtualenvwrapper-') { }
+    constructor(private readonly prefix = '.virtualenv-') { }
 
     public async create(name: string): Promise<string> {
         const envName = this.resolve(name);
-        const argv = ['mkvirtualenv', envName];
+        const argv = [PYTHON_PATH.fileToCommandArgument(), '-m', 'virtualenv', envName];
         try {
-            await run(argv);
+            await run(argv, { cwd: testWorkOnHomePath });
         } catch (err) {
             throw new Error(`Failed to create Env ${path.basename(envName)} Error: ${err}`);
         }
@@ -38,7 +38,7 @@ class GlobalVenvs {
 
     public resolve(name: string): string {
         // Ensure env is random to avoid conflicts in tests (corrupting test data)
-        const now = new Date().getTime().toString();
+        const now = new Date().getTime().toString().substr(-8);
         return `${this.prefix}${name}${now}`;
     }
 }
@@ -46,7 +46,6 @@ class GlobalVenvs {
 suite('GlobalVirtualEnvironment Locator', async () => {
     const globalVenvs = new GlobalVenvs();
     let locator: GlobalVirtualEnvironmentLocator;
-    let oldValue: string | undefined;
 
     async function waitForEnvironmentToBeDetected(deferred: Deferred<void>, envName: string) {
         const timeout = setTimeout(() => {
@@ -61,14 +60,12 @@ suite('GlobalVirtualEnvironment Locator', async () => {
 
     suiteSetup(() => globalVenvs.cleanUp());
     setup(async () => {
-        oldValue = process.env.WORKON_HOME;
         process.env.WORKON_HOME = testWorkOnHomePath;
         locator = new GlobalVirtualEnvironmentLocator();
         // Wait for watchers to get ready
         await sleep(1000);
     });
     teardown(async () => {
-        process.env.WORKON_HOME = oldValue;
         await globalVenvs.cleanUp();
     });
     suiteTeardown(() => globalVenvs.cleanUp());
