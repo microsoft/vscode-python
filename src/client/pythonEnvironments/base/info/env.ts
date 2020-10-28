@@ -218,6 +218,25 @@ export async function getMaxDerivedEnvInfo(minimal: PythonEnvInfo): Promise<Pyth
 }
 
 /**
+ * Create a function that decides if the given "query" matches some env info.
+ *
+ * The returned function is compatible with `Array.filter()`.
+ */
+export function getEnvMatcher(
+    query: string | Partial<PythonEnvInfo>,
+): (env: PythonEnvInfo) => boolean {
+    const executable = getEnvExecutable(query);
+    if (executable === '') {
+        // We could throw an exception error, but skipping it is fine.
+        return () => false;
+    }
+    function matchEnv(candidate: PythonEnvInfo): boolean {
+        return arePathsSame(executable, candidate.executable.filename);
+    }
+    return matchEnv;
+}
+
+/**
  * Checks if two environments are same.
  * @param {string | PythonEnvInfo} left: environment to compare.
  * @param {string | PythonEnvInfo} right: environment to compare.
