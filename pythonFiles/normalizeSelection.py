@@ -121,5 +121,5 @@ if __name__ == "__main__":
     data = json.dumps({"normalized": normalized})
 
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
-    stdout.write(data.encode())
+    stdout.write(data.encode("utf-8"))
     stdout.flush()
