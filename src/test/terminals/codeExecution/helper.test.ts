@@ -95,8 +95,7 @@ suite('Terminal - Code Execution Helper', () => {
                 actualProcessService.execObservable.apply(actualProcessService, [file, args, options])
             );
         const normalizedCode = await helper.normalizeLines(source);
-        // In case file has been saved with different line endings.
-        expectedSource = expectedSource.splitLines({ removeEmptyEntries: false, trim: false }).join(EOL);
+        expectedSource = expectedSource.splitLines({ removeEmptyEntries: false, trim: false }).join('\n');
         expect(normalizedCode).to.be.equal(expectedSource);
     }
     test('Ensure blank lines are NOT removed when code is not indented (simple)', async function () {
