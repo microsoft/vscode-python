@@ -160,3 +160,36 @@ export async function* iterAndUpdateEnvs(
         notify(null);
     }
 }
+
+/**
+ * Naively implement `ILocator.resolveEnv()` by searching through an iterator.
+ */
+export async function resolveEnvFromIterator(
+    env: string | Partial<PythonEnvInfo>,
+    iterator: IPythonEnvsIterator,
+): Promise<PythonEnvInfo | undefined> {
+    let resolved: PythonEnvInfo | undefined;
+
+    const matchEnv = getEnvMatcher(env);
+
+    const done = createDeferred<void>();
+    if (iterator.onUpdated !== undefined) {
+        iterator.onUpdated((event: PythonEnvUpdatedEvent | null) => {
+            if (event === null) {
+                done.resolve();
+            } else if (matchEnv(event.update)) {
+                resolved = event.update;
+            }
+        });
+    } else {
+        done.resolve();
+    }
+    for await (const iterated of iterator) {
+        if (matchEnv(iterated)) {
+            resolved = iterated;
+        }
+    }
+    await done.promise;
+
+    return resolved;
+}
