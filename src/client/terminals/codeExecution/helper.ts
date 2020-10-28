@@ -7,9 +7,11 @@ import { Position, Range, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { SendSelectionToREPL } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { IProcessServiceFactory } from '../../common/process/types';
+import { IExperimentService } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
@@ -20,12 +22,14 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
     private readonly applicationShell: IApplicationShell;
     private readonly processServiceFactory: IProcessServiceFactory;
     private readonly interpreterService: IInterpreterService;
+    private readonly experimentService: IExperimentService;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+        this.experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
     }
 
     public async normalizeLines(code: string, resource?: Uri): Promise<string> {
@@ -36,9 +40,15 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             // On windows cr is not handled well by python when passing in/out via stdin/stdout.
             // So just remove cr from the input.
             code = code.replace(new RegExp('\\r', 'g'), '');
+
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
             const processService = await this.processServiceFactory.create(resource);
-            const [args, parse] = internalScripts.normalizeForInterpreter(code);
+
+            const inExperiment = await this.experimentService.inExperiment(SendSelectionToREPL.experiment);
+            const [args, parse] = inExperiment
+                ? internalScripts.normalizeSelection(code)
+                : internalScripts.normalizeForInterpreter(code);
+
             const proc = await processService.exec(interpreter?.path || 'python', args, { throwOnStdErr: true });
 
             return parse(proc.stdout);

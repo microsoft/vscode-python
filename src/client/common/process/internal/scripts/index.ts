@@ -228,6 +228,21 @@ export function normalizeForInterpreter(code: string): [string[], (out: string) 
 }
 
 //============================
+// normalizeSelection.py
+
+export function normalizeSelection(code: string): [string[], (out: string) => string] {
+    const script = path.join(SCRIPTS_DIR, 'normalizeSelection.py');
+    const args = [ISOLATED, script, code];
+
+    function parse(out: string) {
+        // The text will be used as-is.
+        return out;
+    }
+
+    return [args, parse];
+}
+
+//============================
 // symbolProvider.py
 
 namespace _symbolProvider {
