@@ -87,21 +87,21 @@ export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvI
         iterator.onUpdated((event: PythonEnvUpdatedEvent | null) => {
             if (event === null) {
                 updatesDone.resolve();
-                return;
-            }
-            const oldEnv = envs[event.index];
-            if (oldEnv === undefined) {
-                // XXX log or fail
             } else {
-                envs[event.index] = event.update;
+                const { index, update } = event;
+                // We don't worry about if envs[index] is set already.
+                envs[index] = update;
             }
         });
     }
 
-    let result = await iterator.next();
-    while (!result.done) {
-        envs.push(result.value);
-        result = await iterator.next();
+    let itemIndex = 0;
+    for await (const env of iterator) {
+        // We can't just push because updates might get emitted early.
+        if (envs[itemIndex] === undefined) {
+            envs[itemIndex] = env;
+        }
+        itemIndex += 1;
     }
 
     await updatesDone.promise;
