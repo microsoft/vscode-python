@@ -3,7 +3,6 @@
 
 import * as fsapi from 'fs';
 import * as path from 'path';
-import { normalizeFilename } from './filesystem';
 import { getEnvironmentVariable, getOSType, OSType } from './platform';
 
 /**
@@ -54,48 +53,4 @@ function parseSearchPathEntries(envVarValue: string): string[] {
         .split(path.delimiter)
         .map((entry: string) => entry.trim())
         .filter((entry) => entry.length > 0);
-}
-
-/**
- * Identify executables in a specific directory.
- *
- * @param matchExecutable - if provided, is used to filter the results
- */
-export async function getExecutablesInDirectory(
-    dirname: string,
-    matchExecutable?: (filename: string) => boolean
-): Promise<string[]> {
-    const normDir = normalizeFilename(dirname);
-    let entries: fsapi.Dirent[] = [];
-    try {
-        entries = await fsapi.promises.readdir(normDir, { withFileTypes: true });
-    } catch {
-        // It must not be there.
-        return [];
-    }
-    const filenames = entries
-        .filter((dirent) => dirent.isFile())
-        .map((dirent) => dirent.name)
-        .filter((basename) => !matchExecutable || matchExecutable(basename))
-        .map((basename) => path.join(normDir, basename));
-    const executables: string[] = [];
-    for (const filename of filenames) {
-        if (await isExecutable(filename)) {
-            executables.push(filename);
-        }
-    }
-    return executables;
-}
-
-/**
- * Identify executables found on the executable search path.
- */
-export async function getSearchPathExecutables(
-    // This is purposefully very basic:
-    matchExecutable?: (filename: string) => boolean
-): Promise<string[]> {
-    const getExecutables = (d: string) => getExecutablesInDirectory(d, matchExecutable);
-    const entries = getSearchPathEntries();
-    const results = await Promise.all(entries.map(getExecutables));
-    return results.reduce((p, c) => [...p, ...c]);
 }
