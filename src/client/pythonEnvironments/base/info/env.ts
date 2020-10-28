@@ -237,6 +237,24 @@ export function getEnvMatcher(
 }
 
 /**
+ * Decide if the two given sets of envs have all the same executables.
+ */
+export function haveSameExecutables(
+    envs1: PythonEnvInfo[],
+    envs2: PythonEnvInfo[],
+): boolean {
+    if (envs1.length !== envs2.length) {
+        return false;
+    }
+    const executables1 = envs1.map((e) => e.executable.filename);
+    const executables2 = envs2.map((e) => e.executable.filename);
+    if (!executables2.every((e) => executables1.includes(e))) {
+        return false;
+    }
+    return true;
+}
+
+/**
  * Checks if two environments are same.
  * @param {string | PythonEnvInfo} left: environment to compare.
  * @param {string | PythonEnvInfo} right: environment to compare.
