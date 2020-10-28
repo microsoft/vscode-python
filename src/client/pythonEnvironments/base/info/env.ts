@@ -3,6 +3,7 @@
 
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
+import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
 import {
@@ -105,6 +106,19 @@ function updateEnv(env: PythonEnvInfo, updates: {
     if (updates.version !== undefined) {
         env.version = updates.version;
     }
+}
+
+/**
+ * Determine the corresponding Python executable filename, if any.
+ */
+export function getEnvExecutable(env: string | Partial<PythonEnvInfo>): string {
+    const executable = typeof env === 'string'
+        ? env
+        : env.executable?.filename || '';
+    if (executable === '') {
+        return '';
+    }
+    return normalizeFilename(executable);
 }
 
 /**
