@@ -1042,6 +1042,7 @@
                             "tryPylance",
                             "jediLSP",
                             "debuggerDataViewer",
+                            "pythonSendEntireLineToREPL",
                             "All"
                         ]
                     },
@@ -1068,6 +1069,7 @@
                             "tryPylance",
                             "jediLSP",
                             "debuggerDataViewer",
+                            "pythonSendEntireLineToREPL",
                             "All"
                         ]
                     },
