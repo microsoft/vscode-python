@@ -4,7 +4,7 @@
 // tslint:disable-next-line:no-single-line-block-comment
 /* eslint-disable max-classes-per-file */
 
-import { getSearchPathEntries } from '../../../../common/utils/exec';
+import { getSearchPathEntries, isValidAndExecutable } from '../../../../common/utils/exec';
 import { findInterpretersInDir } from '../../../common/commonUtils';
 import { PythonEnvKind } from '../../info';
 import {
@@ -41,7 +41,11 @@ class SimpleLocator extends FoundFilesLocator {
 
 async function* getExecutables(): AsyncIterableIterator<string> {
     for (const entry of getSearchPathEntries()) {
-        yield* findInterpretersInDir(entry);
+        for await (const executable of findInterpretersInDir(entry)) {
+            if (await isValidAndExecutable(executable)) {
+                yield executable;
+            }
+        }
     }
 }
 
