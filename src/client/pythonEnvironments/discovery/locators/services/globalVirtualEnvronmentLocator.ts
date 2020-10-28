@@ -5,37 +5,39 @@ import * as fsapi from 'fs-extra';
 import { toUpper, uniq } from 'lodash';
 import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
-import { chain, iterable } from '../../../../common/utils/async';
+import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
+import { chain, iterable, sleep } from '../../../../common/utils/async';
 import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
-import {
-    PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION,
-} from '../../../base/info';
+import { PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
-import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
-import { PythonEnvsWatcher } from '../../../base/watcher';
+import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { findInterpretersInDir } from '../../../common/commonUtils';
 import { getFileInfo, pathExists } from '../../../common/externalDependencies';
-import { isVenvEnvironment, isVirtualenvEnvironment, isVirtualenvwrapperEnvironment } from './virtualEnvironmentIdentifier';
+import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
+import {
+    isVenvEnvironment,
+    isVirtualenvEnvironment,
+    isVirtualenvwrapperEnvironment,
+} from './virtualEnvironmentIdentifier';
 
 const DEFAULT_SEARCH_DEPTH = 2;
-
 /**
  * Gets all default virtual environment locations. This uses WORKON_HOME,
  * and user home directory to find some known locations where global virtual
  * environments are often created.
  */
 async function getGlobalVirtualEnvDirs(): Promise<string[]> {
-    const venvDirs:string[] = [];
+    const venvDirs: string[] = [];
 
     const workOnHome = getEnvironmentVariable('WORKON_HOME');
-    if (workOnHome && await pathExists(workOnHome)) {
+    if (workOnHome && (await pathExists(workOnHome))) {
         venvDirs.push(workOnHome);
     }
 
     const homeDir = getUserHomeDir();
-    if (homeDir && await pathExists(homeDir)) {
+    if (homeDir && (await pathExists(homeDir))) {
         const os = getOSType();
         let subDirs = ['Envs', 'envs', '.direnv', '.venvs', '.virtualenvs'];
         if (os === OSType.Windows) {
@@ -75,15 +77,12 @@ async function getVirtualEnvKind(interpreterPath:string): Promise<PythonEnvKind>
 /**
  * Finds and resolves virtual environments created in known global locations.
  */
-export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implements ILocator {
-    private virtualEnvKinds = [
-        PythonEnvKind.Venv,
-        PythonEnvKind.VirtualEnv,
-        PythonEnvKind.VirtualEnvWrapper,
-    ];
+export class GlobalVirtualEnvironmentLocator extends Locator {
+    private virtualEnvKinds = [PythonEnvKind.Venv, PythonEnvKind.VirtualEnv, PythonEnvKind.VirtualEnvWrapper];
 
-    public constructor(private readonly searchDepth?:number) {
+    public constructor(private readonly searchDepth?: number) {
         super();
+        this.registerWatchers().ignoreErrors();
     }
 
     public iterEnvs(): IPythonEnvsIterator {
@@ -91,7 +90,7 @@ export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implement
         // interpreters
         const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
 
-        async function* iterator(virtualEnvKinds:PythonEnvKind[]) {
+        async function* iterator(virtualEnvKinds: PythonEnvKind[]) {
             const envRootDirs = await getGlobalVirtualEnvDirs();
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
@@ -159,5 +158,17 @@ export class GlobalVirtualEnvironmentLocator extends PythonEnvsWatcher implement
             }
         }
         return undefined;
+    }
+
+    private async registerWatchers(): Promise<void> {
+        const dirs = await getGlobalVirtualEnvDirs();
+        dirs.forEach((d) => watchLocationForPythonBinaries(d, async (type: FileChangeType, executablePath: string) => {
+            // Note detecting kind of virtual env depends on the file structure around the executable, so we need to
+            // wait before attempting to detect it. However even if the type detected is incorrect, it doesn't do any
+            // practical harm as kinds in this locator are used in the same way (same activation commands etc.)
+            await sleep(1000);
+            const kind = await getVirtualEnvKind(executablePath);
+            this.emitter.fire({ type, kind });
+        }));
     }
 }

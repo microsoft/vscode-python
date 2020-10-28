@@ -4,6 +4,7 @@
 // tslint:disable:max-classes-per-file
 
 import { Event, EventEmitter, Uri } from 'vscode';
+import { FileChangeType } from '../../common/platform/fileSystemWatcher';
 import { PythonEnvKind } from './info';
 
 // The use cases for `BasicPythonEnvsChangedEvent` are currently
@@ -18,6 +19,7 @@ import { PythonEnvKind } from './info';
  */
 export type BasicPythonEnvsChangedEvent = {
     kind?: PythonEnvKind;
+    type?: FileChangeType;
 };
 
 /**
@@ -64,6 +66,7 @@ export class PythonEnvsWatcher<T extends BasicPythonEnvsChangedEvent = PythonEnv
      * The hook for registering event listeners (callbacks).
      */
     public readonly onChanged: Event<T>;
+
     private readonly didChange = new EventEmitter<T>();
 
     constructor() {

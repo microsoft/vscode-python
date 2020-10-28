@@ -13,9 +13,9 @@ import { normCasePath } from './fs-paths';
  * Enumeration of file change types.
  */
 export enum FileChangeType {
-    Changed = 1,
-    Created = 2,
-    Deleted = 3
+    Changed = 'changed',
+    Created = 'created',
+    Deleted = 'deleted'
 }
 const POLLING_INTERVAL = 5000;
 
