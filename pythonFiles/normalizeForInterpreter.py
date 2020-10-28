@@ -146,7 +146,7 @@ if __name__ == "__main__":
     # Decode the data from the raw bytes.
     stdin = sys.stdin if sys.version_info < (3,) else sys.stdin.buffer
     raw = stdin.read()
-    contents = json.loads(raw.decode())
+    contents = json.loads(raw.decode("utf-8"))
 
     normalized = normalize_lines(contents["code"])
 
