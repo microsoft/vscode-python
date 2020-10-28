@@ -465,7 +465,7 @@ steps:
   - bash: |
       sudo chmod -R 777 /run/user
     displayName: 'Fix powershell problem on Ubuntu 20'
-    condition: ne(variables['Agent.Os'], 'Windows_NT')
+    condition: and(succeeded(), eq(variables['Agent.Os'], 'Linux'), or(contains(variables['TestsToRun'], 'testSmoke'), contains(variables['TestsToRun'], 'testInsiders')))
 
   # Now actually install 
   - powershell: |

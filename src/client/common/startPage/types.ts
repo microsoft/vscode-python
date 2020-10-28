@@ -1,8 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { JSONObject } from '@phosphor/coreutils';
 import { LanguageConfiguration } from 'vscode';
+
+export type JSONPrimitive = string | number | boolean | null;
+export type JSONValue = JSONPrimitive | JSONObject | JSONArray;
+export type JSONObject = { [member: string]: JSONValue };
+export type JSONArray = JSONValue[];
 
 export const IStartPage = Symbol('IStartPage');
 export interface IStartPage {

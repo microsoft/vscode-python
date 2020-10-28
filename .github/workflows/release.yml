@@ -16,6 +16,7 @@ env:
   VSIX_NAME: ms-python-release.vsix
   COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
+  VSIX_NAME_JUPYTER: ms-toolsai-jupyter-release.vsix
 
 jobs:
   build-vsix:
@@ -310,6 +311,11 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
         shell: bash
 
+      - name: pip install smoke test requirements
+        run: |
+          python -m pip install --upgrade -r build/smoke-test-requirements.txt
+        shell: bash
+
       # Save time by reusing bits from the VSIX.
       - name: Download VSIX
         uses: actions/download-artifact@v2
@@ -321,6 +327,16 @@ jobs:
         run: npx tsc -p ./
         shell: bash
 
+      # Download the jupyter extension
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: Download JUPYTER VSIX
+        run: az storage blob download --file ${{env.VSIX_NAME_JUPYTER}} --account-name pvsc --container-name extension-builds-jupyter --name ${{env.VSIX_NAME_JUPYTER}} --auth-mode login
+
+
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
           echo "::set-env name=CI_PYTHON_PATH::python"
@@ -330,6 +346,77 @@ jobs:
       - name: Run smoke tests
         env:
           DISPLAY: 10
+          INSTALL_JUPYTER_EXTENSION: true
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
+
+  insider-tests:
+    name: Insider tests
+    # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
+    runs-on: ${{ matrix.os }}
+    if: github.repository == 'microsoft/vscode-python'
+    strategy:
+      fail-fast: false
+      matrix:
+        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
+        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
+        os: [ubuntu-latest]
+        python: [3.8]
+    steps:
+      # Need the source to have the tests available.
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Python ${{matrix.python}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{matrix.python}}
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      - name: pip install system test requirements
+        run: |
+          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+        shell: bash
+
+      - name: pip install smoke test requirements
+        run: |
+          python -m pip install --upgrade -r build/smoke-test-requirements.txt
+        shell: bash
+
+      # Compile the test files.
+      - name: Prepare for insiders tests
+        run: npm run prePublish
+        shell: bash
+
+      # Download the jupyter extension
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: Download JUPYTER VSIX
+        run: az storage blob download --file ${{env.VSIX_NAME_JUPYTER}} --account-name pvsc --container-name extension-builds-jupyter --name ${{env.VSIX_NAME_JUPYTER}} --auth-mode login
+
+
+      - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
+        run: |
+          echo "::set-env name=CI_PYTHON_PATH::python"
+          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
+        shell: bash
+
+      - name: Run insider tests
+        env:
+          DISPLAY: 10
+          INSTALL_JUPYTER_EXTENSION: true
+          INSTALL_PYLANCE_EXTENSION: true
+          VSC_PYTHON_CI_TEST_VSC_CHANNEL: insiders
+          TEST_FILES_SUFFIX: insiders.test
+          CODE_TESTS_WORKSPACE: ./src/testMultiRootWkspc/smokeTests
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: node --no-force-async-hooks-checks ./out/test/standardTest.js          

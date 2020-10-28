@@ -30,13 +30,12 @@ export function readFile(filePath: string): Promise<string> {
     return fsapi.readFile(filePath, 'utf-8');
 }
 
+export function normCasePath(filePath: string): string {
+    return getOSType() === OSType.Windows ? path.normalize(filePath).toUpperCase() : path.normalize(filePath);
+}
+
 export function arePathsSame(path1: string, path2: string): boolean {
-    path1 = path.normalize(path1);
-    path2 = path.normalize(path2);
-    if (getOSType() === OSType.Windows) {
-        return path1.toUpperCase() === path2.toUpperCase();
-    }
-    return path1 === path2;
+    return normCasePath(path1) === normCasePath(path2);
 }
 
 function getPersistentStateFactory(): IPersistentStateFactory {

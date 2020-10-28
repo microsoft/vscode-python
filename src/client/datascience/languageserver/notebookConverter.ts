@@ -18,8 +18,6 @@ import {
     Hover,
     Location,
     LocationLink,
-    NotebookConcatTextDocument,
-    NotebookDocument,
     Position,
     Range,
     SymbolInformation,
@@ -30,6 +28,7 @@ import {
     Uri,
     WorkspaceEdit
 } from 'vscode';
+import { NotebookCell, NotebookConcatTextDocument, NotebookDocument } from 'vscode-proposed';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { NotebookConcatDocument } from './notebookConcatDocument';
@@ -107,7 +106,7 @@ export class NotebookConverter implements Disposable {
         if (wrapper) {
             // Diagnostics are supposed to be per file and are updated each time
             // Make sure to clear out old ones first
-            wrapper.notebook.cells.forEach((c) => {
+            wrapper.notebook.cells.forEach((c: NotebookCell) => {
                 result.set(c.uri, []);
             });
 
