@@ -5,6 +5,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as platformUtils from '../../../../client/common/utils/platform';
+import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { GlobalVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
@@ -17,6 +18,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
     let getEnvVariableStub: sinon.SinonStub;
     let getUserHomeDirStub: sinon.SinonStub;
     let getOSTypeStub: sinon.SinonStub;
+    let readFile: sinon.SinonStub;
 
     function createExpectedEnvInfo(interpreterPath:string, kind:PythonEnvKind): PythonEnvInfo {
         return {
@@ -52,8 +54,10 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
         getOSTypeStub = sinon.stub(platformUtils, 'getOSType');
         getOSTypeStub.returns(platformUtils.OSType.Linux);
+        readFile = sinon.stub(externalDependencies, 'readFile');
     });
     teardown(() => {
+        readFile.restore();
         getEnvVariableStub.restore();
         getUserHomeDirStub.restore();
         getOSTypeStub.restore();
@@ -103,6 +107,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
     });
 
     test('iterEnvs(): Non-Windows', async () => {
+        readFile.resolves(path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2'));
         const expectedEnvs = [
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python'), PythonEnvKind.Venv),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.venvs', 'posix2', 'bin', 'python'), PythonEnvKind.Venv),
@@ -110,6 +115,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.virtualenvs', 'posix2', 'bin', 'python'), PythonEnvKind.VirtualEnv),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, 'workonhome', 'posix1', 'python'), PythonEnvKind.VirtualEnvWrapper),
             createExpectedEnvInfo(path.join(testVirtualHomeDir, 'workonhome', 'posix2', 'bin', 'python'), PythonEnvKind.VirtualEnvWrapper),
+            createExpectedEnvInfo(path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P', 'bin', 'python'), PythonEnvKind.Pipenv),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
         const locator = new GlobalVirtualEnvironmentLocator();

@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsapi from 'fs-extra';
-import { toUpper, uniq } from 'lodash';
+import { uniq } from 'lodash';
 import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { chain, iterable, sleep } from '../../../../common/utils/async';
 import {
-    getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
+    getEnvironmentVariable, getOSType, getUserHomeDir, OSType
 } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
@@ -16,10 +15,11 @@ import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { findInterpretersInDir } from '../../../common/commonUtils';
 import { getFileInfo, pathExists } from '../../../common/externalDependencies';
 import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
+import { isPipenvEnvironment } from './pipEnvHelper';
 import {
     isVenvEnvironment,
     isVirtualenvEnvironment,
-    isVirtualenvwrapperEnvironment,
+    isVirtualenvwrapperEnvironment
 } from './virtualEnvironmentIdentifier';
 
 const DEFAULT_SEARCH_DEPTH = 2;
@@ -38,18 +38,17 @@ async function getGlobalVirtualEnvDirs(): Promise<string[]> {
 
     const homeDir = getUserHomeDir();
     if (homeDir && (await pathExists(homeDir))) {
-        const os = getOSType();
-        let subDirs = ['Envs', 'envs', '.direnv', '.venvs', '.virtualenvs'];
-        if (os === OSType.Windows) {
-            subDirs = uniq(subDirs.map(toUpper));
+        const subDirs = ['Envs', '.direnv', '.venvs', '.virtualenvs', path.join('.local', 'share', 'virtualenvs')];
+        if (getOSType() !== OSType.Windows) {
+            subDirs.push('envs');
         }
-
-        (await fsapi.readdir(homeDir))
-            .filter((d) => subDirs.includes(os === OSType.Windows ? d.toUpperCase() : d))
-            .forEach((d) => venvDirs.push(path.join(homeDir, d)));
+        subDirs
+            .map((d) => path.join(homeDir, d))
+            .filter((d) => pathExists(d))
+            .forEach((d) => venvDirs.push(d));
     }
 
-    return venvDirs;
+    return uniq(venvDirs);
 }
 
 /**
@@ -59,6 +58,14 @@ async function getGlobalVirtualEnvDirs(): Promise<string[]> {
  * @param interpreterPath: Absolute path to the interpreter paths.
  */
 async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind> {
+    if (await isPipenvEnvironment(interpreterPath)) {
+        return PythonEnvKind.Pipenv;
+    }
+
+    if (await isVenvEnvironment(interpreterPath)) {
+        return PythonEnvKind.Venv;
+    }
+
     if (await isVirtualenvwrapperEnvironment(interpreterPath)) {
         return PythonEnvKind.VirtualEnvWrapper;
     }
@@ -78,7 +85,12 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
  * Finds and resolves virtual environments created in known global locations.
  */
 export class GlobalVirtualEnvironmentLocator extends Locator {
-    private virtualEnvKinds = [PythonEnvKind.Venv, PythonEnvKind.VirtualEnv, PythonEnvKind.VirtualEnvWrapper];
+    private virtualEnvKinds = [
+        PythonEnvKind.Venv,
+        PythonEnvKind.VirtualEnv,
+        PythonEnvKind.VirtualEnvWrapper,
+        PythonEnvKind.Pipenv,
+    ];
 
     public constructor(private readonly searchDepth?: number) {
         super();
