@@ -239,11 +239,11 @@ suite('Terminal - Code Execution Helper', () => {
         ['', '1', '2', '3', '4', '5', '6', '7', '8'].forEach((fileNameSuffix) => {
             test(`Ensure code is normalized (Sample${fileNameSuffix})`, async () => {
                 const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
-                const expectedCode = await fs.readFile(
+                let expectedCode = await fs.readFile(
                     path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized_selection.py`),
                     'utf8'
                 );
-                expectedCode.replace(/\r\n/g, '\n');
+                expectedCode = expectedCode.replace(/\r\n/g, '\n');
                 await ensureCodeIsNormalized(code, expectedCode);
             });
         });
