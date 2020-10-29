@@ -7,7 +7,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { dirname } from 'path';
-import { CancellationToken, Disposable, Event, EventEmitter, Extension, Memento, NotebookCell, Uri } from 'vscode';
+import { CancellationToken, Disposable, Event, Extension, Memento, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
 import { ILanguageServerCache, ILanguageServerConnection } from '../activation/types';
 import { JUPYTER_EXTENSION_ID } from '../common/constants';
@@ -113,9 +113,6 @@ type PythonApiForJupyterExtension = {
 };
 
 export type JupyterExtensionApi = {
-    // These two might go away. Not sure anybody is using them.
-    readonly onKernelPostExecute: Event<NotebookCell>;
-    readonly onKernelRestart: Event<void>;
     /**
      * Registers python extension specific parts with the jupyter extension
      * @param interpreterService
@@ -137,8 +134,7 @@ export type JupyterExtensionApi = {
 @injectable()
 export class JupyterExtensionIntegration {
     private jupyterExtension: Extension<JupyterExtensionApi> | undefined;
-    private onKernelRestartEmitter = new EventEmitter<void>();
-    private onKernelPostExecuteEmitter = new EventEmitter<NotebookCell>();
+
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -151,10 +147,6 @@ export class JupyterExtensionIntegration {
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi) {
-        // Sign up for kernel events
-        jupyterExtensionApi.onKernelRestart(() => this.onKernelRestartEmitter.fire());
-        jupyterExtensionApi.onKernelPostExecute((n) => this.onKernelPostExecuteEmitter.fire(n));
-
         // Forward python parts
         jupyterExtensionApi.registerPythonApi({
             onDidChangeInterpreter: this.interpreterService.onDidChangeInterpreter,
@@ -202,14 +194,6 @@ export class JupyterExtensionIntegration {
         if (api) {
             this.registerApi(api);
         }
-    }
-
-    public get onKernelPostExecute(): Event<NotebookCell> {
-        return this.onKernelPostExecuteEmitter.event;
-    }
-
-    public get onKernelRestart(): Event<void> {
-        return this.onKernelRestartEmitter.event;
     }
 
     public registerRemoteServerProvider(serverProvider: IJupyterUriProvider) {
