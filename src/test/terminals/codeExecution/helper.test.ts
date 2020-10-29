@@ -138,8 +138,7 @@ suite('Terminal - Code Execution Helper', () => {
                 return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
             });
         const normalizedZCode = await helper.normalizeLines(source);
-        // In case file has been saved with different line endings.
-        expectedSource = expectedSource.splitLines({ removeEmptyEntries: false, trim: false }).join(EOL);
+        
         expect(normalizedZCode).to.be.equal(expectedSource);
     }
 
