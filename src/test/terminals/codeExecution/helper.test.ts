@@ -138,7 +138,7 @@ suite('Terminal - Code Execution Helper', () => {
                 return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
             });
         const normalizedZCode = await helper.normalizeLines(source);
-        
+
         expect(normalizedZCode).to.be.equal(expectedSource);
     }
 
