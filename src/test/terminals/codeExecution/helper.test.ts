@@ -134,33 +134,27 @@ suite('Terminal - Code Execution Helper', () => {
         expect(execArgs).to.contain('normalizeForInterpreter.py');
     });
 
-    async function ensureCodeIsNormalized(source: string, expectedSource: string) {
-        const actualProcessService = new ProcessService(new BufferDecoder());
-        processService
-            .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((file, args, options) =>
-                actualProcessService.execObservable.apply(actualProcessService, [file, args, options])
-            );
-        const normalizedCode = await helper.normalizeLines(source);
-
-        expect(normalizedCode).to.be.equal(expectedSource);
-    }
-
     suite('When using normalizeForIntepreter.py to normalize code', () => {
+        async function ensureBlankLinesAreRemoved(source: string, expectedSource: string) {
+            const actualProcessService = new ProcessService(new BufferDecoder());
+            processService
+                .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns((file, args, options) =>
+                    actualProcessService.execObservable.apply(actualProcessService, [file, args, options])
+                );
+            const normalizedCode = await helper.normalizeLines(source);
+            // In case file has been saved with different line endings.
+            expectedSource = expectedSource.splitLines({ removeEmptyEntries: false, trim: false }).join(EOL);
+            expect(normalizedCode).to.be.equal(expectedSource);
+        }
+
         setup(() => {
             experimentService
                 .setup((e) => e.inExperiment(SendSelectionToREPL.experiment))
                 .returns(() => Promise.resolve(false));
         });
 
-        test('Ensure blank lines are NOT removed when code is not indented (simple)', async function () {
-            // This test has not been working for many months in Python 2.7 under
-            // Windows.Tracked by #2544.
-            if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
-                // tslint:disable-next-line:no-invalid-this
-                return this.skip();
-            }
-
+        test('Ensure blank lines are NOT removed when code is not indented (simple)', async () => {
             const code = [
                 'import sys',
                 '',
@@ -175,7 +169,7 @@ suite('Terminal - Code Execution Helper', () => {
                 'print(2)'
             ];
             const expectedCode = code.filter((line) => line.trim().length > 0).join(EOL);
-            await ensureCodeIsNormalized(code.join(EOL), expectedCode);
+            await ensureBlankLinesAreRemoved(code.join(EOL), expectedCode);
         });
         test('Ensure there are no multiple-CR elements in the normalized code.', async () => {
             const code = [
@@ -211,7 +205,7 @@ suite('Terminal - Code Execution Helper', () => {
                     path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`),
                     'utf8'
                 );
-                await ensureCodeIsNormalized(code, expectedCode);
+                await ensureBlankLinesAreRemoved(code, expectedCode);
             });
             test(`Ensure last two blank lines are preserved (Sample${fileNameSuffix})`, async () => {
                 const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
@@ -219,7 +213,7 @@ suite('Terminal - Code Execution Helper', () => {
                     path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`),
                     'utf8'
                 );
-                await ensureCodeIsNormalized(code + EOL, expectedCode + EOL);
+                await ensureBlankLinesAreRemoved(code + EOL, expectedCode + EOL);
             });
             test(`Ensure last two blank lines are preserved even if we have more than 2 trailing blank lines (Sample${fileNameSuffix})`, async () => {
                 const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
@@ -227,12 +221,24 @@ suite('Terminal - Code Execution Helper', () => {
                     path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`),
                     'utf8'
                 );
-                await ensureCodeIsNormalized(code + EOL + EOL + EOL + EOL, expectedCode + EOL);
+                await ensureBlankLinesAreRemoved(code + EOL + EOL + EOL + EOL, expectedCode + EOL);
             });
         });
     });
 
     suite('When using normalizeSelection.py to normalize code', () => {
+        async function normalizeSelection(source: string, expectedSource: string) {
+            const actualProcessService = new ProcessService(new BufferDecoder());
+            processService
+                .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns((file, args, options) =>
+                    actualProcessService.execObservable.apply(actualProcessService, [file, args, options])
+                );
+            const normalizedCode = await helper.normalizeLines(source);
+
+            expect(normalizedCode).to.be.equal(expectedSource);
+        }
+
         setup(() => {
             experimentService
                 .setup((e) => e.inExperiment(SendSelectionToREPL.experiment))
@@ -247,7 +253,7 @@ suite('Terminal - Code Execution Helper', () => {
                     'utf8'
                 );
                 expectedCode = expectedCode.replace(/\r\n/g, '\n');
-                await ensureCodeIsNormalized(code, expectedCode);
+                await normalizeSelection(code, expectedCode);
             });
         });
     });
