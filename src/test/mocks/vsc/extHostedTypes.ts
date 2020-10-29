@@ -1249,8 +1249,15 @@ export namespace vscMockExtHostedTypes {
         uri: vscode.Uri;
         range: vscode.Range;
         selectionRange: vscode.Range;
-        
-        constructor(kind: vscode.SymbolKind, name: string, detail: string, uri: vscode.Uri, range: vscode.Range, selectionRange: vscode.Range){
+
+        constructor(
+            kind: vscode.SymbolKind,
+            name: string,
+            detail: string,
+            uri: vscode.Uri,
+            range: vscode.Range,
+            selectionRange: vscode.Range
+        ) {
             this.kind = kind;
             this.name = name;
             this.detail = detail;
