@@ -1,9 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as path from 'path';
+import { PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION } from '.';
+import { traceError } from '../../../common/logger';
 import { EMPTY_VERSION, parseBasicVersionInfo } from '../../../common/utils/version';
 
-import { PythonReleaseLevel, PythonVersion } from '.';
+export function getPythonVersionFromPath(exe:string): PythonVersion {
+    let version = UNKNOWN_PYTHON_VERSION;
+    try {
+        version = parseVersion(path.basename(exe));
+    } catch (ex) {
+        traceError(`Failed to parse version from path: ${exe}`, ex);
+    }
+    return version;
+}
 
 /**
  * Convert the given string into the corresponding Python version object.

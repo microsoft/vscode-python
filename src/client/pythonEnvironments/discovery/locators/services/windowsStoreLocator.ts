@@ -3,13 +3,13 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { traceError, traceWarning } from '../../../../common/logger';
+import { traceWarning } from '../../../../common/logger';
 import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonVersion, UNKNOWN_PYTHON_VERSION
+    PythonEnvInfo, PythonEnvKind,
 } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
-import { parseVersion } from '../../../base/info/pythonVersion';
+import { getPythonVersionFromPath } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getFileInfo } from '../../../common/externalDependencies';
 
@@ -144,7 +144,7 @@ export class WindowsStoreLocator extends Locator {
             yield* exes.map(async (executable:string) => buildEnvInfo({
                 kind,
                 executable,
-                version: getPythonVersion(executable),
+                version: getPythonVersionFromPath(executable),
                 org: 'Microsoft',
                 arch: Architecture.x64,
                 fileInfo: await getFileInfo(executable),
@@ -159,7 +159,7 @@ export class WindowsStoreLocator extends Locator {
             return buildEnvInfo({
                 kind: this.kind,
                 executable: executablePath,
-                version: getPythonVersion(executablePath),
+                version: getPythonVersionFromPath(executablePath),
                 org: 'Microsoft',
                 arch: Architecture.x64,
                 fileInfo: await getFileInfo(executablePath),
@@ -167,14 +167,4 @@ export class WindowsStoreLocator extends Locator {
         }
         return undefined;
     }
-}
-
-function getPythonVersion(exe:string): PythonVersion {
-    let version = UNKNOWN_PYTHON_VERSION;
-    try {
-        version = parseVersion(path.basename(exe));
-    } catch (ex) {
-        traceError(`Failed to parse version from path: ${exe}`, ex);
-    }
-    return version;
 }
