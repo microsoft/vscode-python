@@ -243,6 +243,7 @@ suite('Terminal - Code Execution Helper', () => {
                     path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized_selection.py`),
                     'utf8'
                 );
+                expectedCode.replace('\r\n', '\n');
                 await ensureCodeIsNormalized(code, expectedCode);
             });
         });
