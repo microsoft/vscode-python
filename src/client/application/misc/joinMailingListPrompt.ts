@@ -67,7 +67,7 @@ export class JoinMailingListPrompt implements IExtensionSingleActivationService 
             sendTelemetryEvent(EventName.JOIN_MAILING_LIST_PROMPT, undefined, { selection: 'Yes' });
             const query = querystring.stringify({
                 m: encodeURIComponent(this.appEnvironment.sessionId),
-                utm_source: "vscode"
+                utm_source: 'vscode'
             });
             const url = `https://aka.ms/python-vscode-mailinglist?${query}`;
             this.browserService.launch(url);
