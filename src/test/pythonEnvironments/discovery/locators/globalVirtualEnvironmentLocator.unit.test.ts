@@ -18,7 +18,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
     let getEnvVariableStub: sinon.SinonStub;
     let getUserHomeDirStub: sinon.SinonStub;
     let getOSTypeStub: sinon.SinonStub;
-    let readFile: sinon.SinonStub;
+    let readFileStub: sinon.SinonStub;
 
     function createExpectedEnvInfo(interpreterPath: string, kind: PythonEnvKind): PythonEnvInfo {
         return {
@@ -54,10 +54,10 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
         getOSTypeStub = sinon.stub(platformUtils, 'getOSType');
         getOSTypeStub.returns(platformUtils.OSType.Linux);
-        readFile = sinon.stub(externalDependencies, 'readFile');
+        readFileStub = sinon.stub(externalDependencies, 'readFile');
     });
     teardown(() => {
-        readFile.restore();
+        readFileStub.restore();
         getEnvVariableStub.restore();
         getUserHomeDirStub.restore();
         getOSTypeStub.restore();
@@ -141,7 +141,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
     });
 
     test('iterEnvs(): Non-Windows', async () => {
-        readFile.resolves(path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2'));
+        readFileStub.resolves(path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2'));
         const expectedEnvs = [
             createExpectedEnvInfo(path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python'), PythonEnvKind.Venv),
             createExpectedEnvInfo(

@@ -62,10 +62,6 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
         return PythonEnvKind.Pipenv;
     }
 
-    if (await isVenvEnvironment(interpreterPath)) {
-        return PythonEnvKind.Venv;
-    }
-
     if (await isVirtualenvwrapperEnvironment(interpreterPath)) {
         return PythonEnvKind.VirtualEnvWrapper;
     }
