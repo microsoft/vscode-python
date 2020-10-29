@@ -22,14 +22,14 @@ import {
     ObservableExecutionResult
 } from '../../../client/common/process/types';
 import { IExperimentService } from '../../../client/common/types';
-import { Architecture, OSType } from '../../../client/common/utils/platform';
+import { Architecture } from '../../../client/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
-import { isOs, isPythonVersion, PYTHON_PATH } from '../../common';
+import { PYTHON_PATH } from '../../common';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
 
