@@ -44,7 +44,7 @@ async function getGlobalVirtualEnvDirs(): Promise<string[]> {
         }
         subDirs
             .map((d) => path.join(homeDir, d))
-            .filter((d) => pathExists(d))
+            .filter(pathExists)
             .forEach((d) => venvDirs.push(d));
     }
 
