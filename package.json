@@ -1963,6 +1963,7 @@
         "lint": "tslint src/**/*.ts -t verbose",
         "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
         "clean": "gulp clean",
+        "addExtensionDependencies": "gulp addExtensionDependencies",
         "updateBuildNumber": "gulp updateBuildNumber",
         "verifyBundle": "gulp verifyBundle",
         "webpack": "webpack"
