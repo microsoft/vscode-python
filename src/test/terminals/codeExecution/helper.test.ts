@@ -16,7 +16,11 @@ import { SendSelectionToREPL } from '../../../client/common/experiments/groups';
 import '../../../client/common/extensions';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
-import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
+import {
+    IProcessService,
+    IProcessServiceFactory,
+    ObservableExecutionResult
+} from '../../../client/common/process/types';
 import { IExperimentService } from '../../../client/common/types';
 import { Architecture, OSType } from '../../../client/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
@@ -101,10 +105,10 @@ suite('Terminal - Code Execution Helper', () => {
             .setup((e) => e.inExperiment(SendSelectionToREPL.experiment))
             .returns(() => Promise.resolve(true));
         processService
-            .setup((p) => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((_, args: string[]) => {
                 execArgs = args.join(' ');
-                return Promise.resolve({ stdout: 'print("hello")' });
+                return ({} as unknown) as ObservableExecutionResult<string>;
             });
 
         await helper.normalizeLines('print("hello")');
@@ -119,10 +123,10 @@ suite('Terminal - Code Execution Helper', () => {
             .setup((e) => e.inExperiment(SendSelectionToREPL.experiment))
             .returns(() => Promise.resolve(false));
         processService
-            .setup((p) => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((_, args: string[]) => {
                 execArgs = args.join(' ');
-                return Promise.resolve({ stdout: 'print("hello")' });
+                return ({} as unknown) as ObservableExecutionResult<string>;
             });
 
         await helper.normalizeLines('print("hello")');
