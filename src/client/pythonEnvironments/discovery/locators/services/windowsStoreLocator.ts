@@ -6,13 +6,12 @@ import * as path from 'path';
 import { traceError, traceWarning } from '../../../../common/logger';
 import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
+    PythonEnvInfo, PythonEnvKind, PythonVersion, UNKNOWN_PYTHON_VERSION
 } from '../../../base/info';
+import { buildEnvInfo } from '../../../base/info/env';
 import { parseVersion } from '../../../base/info/pythonVersion';
-import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
-import { PythonEnvsWatcher } from '../../../base/watcher';
+import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getFileInfo } from '../../../common/externalDependencies';
-import { isWindowsPythonExe } from '../../../common/windowsUtils';
 
 /**
  * Gets path to the Windows Apps directory.
@@ -89,6 +88,28 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
 }
 
 /**
+ * Checks if a given path ends with python3.*.exe. Not all python executables are matched as
+ * we do not want to return duplicate executables.
+ * @param {string} interpreterPath : Path to python interpreter.
+ * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
+ */
+export function isWindowsStorePythonExe(interpreterPath:string): boolean {
+    /**
+     * This Reg-ex matches following file names:
+     * python3.8.exe
+     * python3.9.exe
+     * This Reg-ex does not match:
+     * python.exe
+     * python2.7.exe
+     * python3.exe
+     * python38.exe
+     */
+    const windowsPythonExes = /^python(3(.\d+))\.exe$/;
+
+    return windowsPythonExes.test(path.basename(interpreterPath));
+}
+
+/**
  * Gets paths to the Python executable under Windows Store apps.
  * @returns: Returns python*.exe for the windows store app root directory.
  *
@@ -111,55 +132,49 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
     const files = await fsapi.readdir(windowsAppsRoot);
     return files
         .map((filename:string) => path.join(windowsAppsRoot, filename))
-        .filter(isWindowsPythonExe);
+        .filter(isWindowsStorePythonExe);
 }
 
-export class WindowsStoreLocator extends PythonEnvsWatcher implements ILocator {
+export class WindowsStoreLocator extends Locator {
     private readonly kind:PythonEnvKind = PythonEnvKind.WindowsStore;
 
     public iterEnvs(): IPythonEnvsIterator {
-        const buildEnvInfo = (exe:string) => this.buildEnvInfo(exe);
-        const iterator = async function* () {
+        const iterator = async function* (kind: PythonEnvKind) {
             const exes = await getWindowsStorePythonExes();
-            yield* exes.map(buildEnvInfo);
+            yield* exes.map(async (executable:string) => buildEnvInfo({
+                kind,
+                executable,
+                version: getPythonVersion(executable),
+                org: 'Microsoft',
+                arch: Architecture.x64,
+                fileInfo: await getFileInfo(executable),
+            }));
         };
-        return iterator();
+        return iterator(this.kind);
     }
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         const executablePath = typeof env === 'string' ? env : env.executable.filename;
         if (await isWindowsStoreEnvironment(executablePath)) {
-            return this.buildEnvInfo(executablePath);
+            return buildEnvInfo({
+                kind: this.kind,
+                executable: executablePath,
+                version: getPythonVersion(executablePath),
+                org: 'Microsoft',
+                arch: Architecture.x64,
+                fileInfo: await getFileInfo(executablePath),
+            });
         }
         return undefined;
     }
+}
 
-    private async buildEnvInfo(exe:string): Promise<PythonEnvInfo> {
-        let version:PythonVersion;
-        try {
-            version = parseVersion(path.basename(exe));
-        } catch (ex) {
-            traceError(`Failed to parse version from path: ${exe}`, ex);
-            version = {
-                major: 3,
-                minor: -1,
-                micro: -1,
-                release: { level: PythonReleaseLevel.Final, serial: -1 },
-                sysVersion: undefined,
-            };
-        }
-        return {
-            name: '',
-            location: '',
-            kind: this.kind,
-            executable: {
-                filename: exe,
-                sysPrefix: '',
-                ...(await getFileInfo(exe)),
-            },
-            version,
-            arch: Architecture.x64,
-            distro: { org: 'Microsoft' },
-        };
+function getPythonVersion(exe:string): PythonVersion {
+    let version = UNKNOWN_PYTHON_VERSION;
+    try {
+        version = parseVersion(path.basename(exe));
+    } catch (ex) {
+        traceError(`Failed to parse version from path: ${exe}`, ex);
     }
+    return version;
 }

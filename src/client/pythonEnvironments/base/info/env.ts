@@ -3,10 +3,6 @@
 
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import { Architecture } from '../../../common/utils/platform';
-import { arePathsSame } from '../../common/externalDependencies';
-import { areEqualVersions, areEquivalentVersions } from './pythonVersion';
-
 import {
     FileInfo,
     PythonDistroInfo,
@@ -15,6 +11,9 @@ import {
     PythonReleaseLevel,
     PythonVersion,
 } from '.';
+import { Architecture } from '../../../common/utils/platform';
+import { arePathsSame } from '../../common/externalDependencies';
+import { areEqualVersions, areEquivalentVersions } from './pythonVersion';
 
 /**
  * Create a new info object with all values empty.
@@ -26,17 +25,20 @@ export function buildEnvInfo(init?: {
     executable?: string;
     location?: string;
     version?: PythonVersion;
+    org?: string;
+    arch?: Architecture;
+    fileInfo?: {ctime:number, mtime:number}
 }): PythonEnvInfo {
     const env = {
+        name: '',
+        location: '',
         kind: PythonEnvKind.Unknown,
         executable: {
             filename: '',
             sysPrefix: '',
-            ctime: -1,
-            mtime: -1,
+            ctime: init?.fileInfo?.ctime ?? -1,
+            mtime: init?.fileInfo?.mtime ?? -1,
         },
-        name: '',
-        location: '',
         searchLocation: undefined,
         defaultDisplayName: undefined,
         version: {
@@ -48,9 +50,9 @@ export function buildEnvInfo(init?: {
                 serial: 0,
             },
         },
-        arch: Architecture.Unknown,
+        arch: init?.arch ?? Architecture.Unknown,
         distro: {
-            org: '',
+            org: init?.org ?? '',
         },
     };
     if (init !== undefined) {

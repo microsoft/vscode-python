@@ -7,7 +7,7 @@ import * as sinon from 'sinon';
 import { ExecutionResult } from '../../../../client/common/process/types';
 import * as platformApis from '../../../../client/common/utils/platform';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
+    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
 import { InterpreterInformation } from '../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
@@ -34,10 +34,8 @@ suite('Windows Store', () => {
 
         test('Store Python Interpreters', async () => {
             const expected = [
-                path.join(testStoreAppRoot, 'python.exe'),
                 path.join(testStoreAppRoot, 'python3.7.exe'),
                 path.join(testStoreAppRoot, 'python3.8.exe'),
-                path.join(testStoreAppRoot, 'python3.exe'),
             ];
 
             const actual = await getWindowsStorePythonExes();
@@ -72,8 +70,6 @@ suite('Windows Store', () => {
             is64Bit: true,
         };
 
-        pathToData.set(path.join(testStoreAppRoot, 'python.exe'), python383data);
-        pathToData.set(path.join(testStoreAppRoot, 'python3.exe'), python383data);
         pathToData.set(path.join(testStoreAppRoot, 'python3.8.exe'), python383data);
         pathToData.set(path.join(testStoreAppRoot, 'python3.7.exe'), python379data);
 
@@ -90,13 +86,7 @@ suite('Windows Store', () => {
                     version.sysVersion = sysVersion;
                 }
             } catch (e) {
-                version = {
-                    major: 3,
-                    minor: -1,
-                    micro: -1,
-                    release: { level: PythonReleaseLevel.Final, serial: -1 },
-                    sysVersion,
-                };
+                version = UNKNOWN_PYTHON_VERSION;
             }
             return {
                 version,
@@ -138,7 +128,8 @@ suite('Windows Store', () => {
                     const data = pathToData.get(k);
                     if (data) {
                         return {
-
+                            defaultDisplayName: undefined,
+                            searchLocation: undefined,
                             name: '',
                             location: '',
                             kind: PythonEnvKind.WindowsStore,
@@ -160,7 +151,8 @@ suite('Windows Store', () => {
         test('resolveEnv(string)', async () => {
             const python38path = path.join(testStoreAppRoot, 'python3.8.exe');
             const expected = {
-
+                defaultDisplayName: undefined,
+                searchLocation: undefined,
                 name: '',
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
@@ -177,7 +169,8 @@ suite('Windows Store', () => {
         test('resolveEnv(PythonEnvInfo)', async () => {
             const python38path = path.join(testStoreAppRoot, 'python3.8.exe');
             const expected = {
-
+                defaultDisplayName: undefined,
+                searchLocation: undefined,
                 name: '',
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
@@ -189,6 +182,8 @@ suite('Windows Store', () => {
             const input:PythonEnvInfo = {
                 name: '',
                 location: '',
+                defaultDisplayName: undefined,
+                searchLocation: undefined,
                 kind: PythonEnvKind.WindowsStore,
                 distro: { org: 'Microsoft' },
                 arch: platformApis.Architecture.x64,
@@ -214,7 +209,8 @@ suite('Windows Store', () => {
         test('resolveEnv(string): forbidden path', async () => {
             const python38path = path.join(testLocalAppData, 'Program Files', 'WindowsApps', 'python3.8.exe');
             const expected = {
-
+                defaultDisplayName: undefined,
+                searchLocation: undefined,
                 name: '',
                 location: '',
                 kind: PythonEnvKind.WindowsStore,
