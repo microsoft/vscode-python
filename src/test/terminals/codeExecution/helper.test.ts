@@ -133,13 +133,13 @@ suite('Terminal - Code Execution Helper', () => {
     async function ensureCodeIsNormalized(source: string, expectedSource: string) {
         const actualProcessService = new ProcessService(new BufferDecoder());
         processService
-            .setup((p) => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((file, args, options) => {
-                return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
-            });
-        const normalizedZCode = await helper.normalizeLines(source);
+            .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((file, args, options) =>
+                actualProcessService.execObservable.apply(actualProcessService, [file, args, options])
+            );
+        const normalizedCode = await helper.normalizeLines(source);
 
-        expect(normalizedZCode).to.be.equal(expectedSource);
+        expect(normalizedCode).to.be.equal(expectedSource);
     }
 
     suite('When using normalizeForIntepreter.py to normalize code', () => {

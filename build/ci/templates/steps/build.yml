@@ -43,6 +43,10 @@ steps:
     condition: and(succeeded(), startsWith(variables['Build.SourceBranchName'], 'release'))
 
   - bash: |
+      npm run addExtensionDependencies
+    displayName: 'Add extension dependencies to package.json'
+
+  - bash: |
       npm run package
     displayName: 'Build VSIX'
 

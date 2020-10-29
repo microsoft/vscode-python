@@ -11,21 +11,12 @@ import normalizeForInterpreter
 class TestNormalizationScript(object):
     """Basic unit tests for the normalization script."""
 
-    @pytest.mark.skipif(
-        sys.version_info.major == 2,
-        reason="normalizeForInterpreter not working for 2.7, see GH #4805",
-    )
-    def test_basicNormalization(self, capsys):
+    def test_basicNormalization(self):
         src = 'print("this is a test")'
-        normalizeForInterpreter.normalize_lines(src)
-        captured = capsys.readouterr()
-        assert captured.out == src
+        result = normalizeForInterpreter.normalize_lines(src)
+        assert result == src
 
-    @pytest.mark.skipif(
-        sys.version_info.major == 2,
-        reason="normalizeForInterpreter not working for 2.7, see GH #4805",
-    )
-    def test_moreThanOneLine(self, capsys):
+    def test_moreThanOneLine(self):
         src = textwrap.dedent(
             """\
             # Some rando comment
@@ -34,15 +25,10 @@ class TestNormalizationScript(object):
                 print("Something")
             """
         )
-        normalizeForInterpreter.normalize_lines(src)
-        captured = capsys.readouterr()
-        assert captured.out == src
+        result = normalizeForInterpreter.normalize_lines(src)
+        assert result == src
 
-    @pytest.mark.skipif(
-        sys.version_info.major == 2,
-        reason="normalizeForInterpreter not working for 2.7, see GH #4805",
-    )
-    def test_withHangingIndent(self, capsys):
+    def test_withHangingIndent(self):
         src = textwrap.dedent(
             """\
             x = 22
@@ -54,15 +40,10 @@ class TestNormalizationScript(object):
                 print("The answer to life, the universe, and everything")
             """
         )
-        normalizeForInterpreter.normalize_lines(src)
-        captured = capsys.readouterr()
-        assert captured.out == src
+        result = normalizeForInterpreter.normalize_lines(src)
+        assert result == src
 
-    @pytest.mark.skipif(
-        sys.version_info.major == 2,
-        reason="normalizeForInterpreter not working for 2.7, see GH #4805",
-    )
-    def test_clearOutExtraneousNewlines(self, capsys):
+    def test_clearOutExtraneousNewlines(self):
         src = textwrap.dedent(
             """\
             value_x = 22
@@ -84,15 +65,10 @@ class TestNormalizationScript(object):
 
             """
         )
-        normalizeForInterpreter.normalize_lines(src)
-        result = capsys.readouterr()
-        assert result.out == expectedResult
+        result = normalizeForInterpreter.normalize_lines(src)
+        assert result == expectedResult
 
-    @pytest.mark.skipif(
-        sys.version_info.major == 2,
-        reason="normalizeForInterpreter not working for 2.7, see GH #4805",
-    )
-    def test_clearOutExtraLinesAndWhitespace(self, capsys):
+    def test_clearOutExtraLinesAndWhitespace(self):
         src = textwrap.dedent(
             """\
             if True:
@@ -117,6 +93,5 @@ class TestNormalizationScript(object):
 
             """
         )
-        normalizeForInterpreter.normalize_lines(src)
-        result = capsys.readouterr()
-        assert result.out == expectedResult
+        result = normalizeForInterpreter.normalize_lines(src)
+        assert result == expectedResult

@@ -4,7 +4,7 @@
 'use strict';
 
 import { noop } from 'lodash';
-import { Event, NotebookCell, Uri } from 'vscode';
+import { Event, Uri } from 'vscode';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IConfigurationService, Resource } from './common/types';
@@ -82,8 +82,6 @@ export interface IExtensionApi {
     };
 
     datascience: {
-        readonly onKernelPostExecute: Event<NotebookCell>;
-        readonly onKernelRestart: Event<void>;
         /**
          * Launches Data Viewer component.
          * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
@@ -145,12 +143,6 @@ export function buildApi(
         // to force them to move to the jupyter extension ... yet.
         datascience: {
             // tslint:disable:no-any
-            onKernelPostExecute: jupyterIntegration
-                ? jupyterIntegration.onKernelPostExecute.bind(jupyterIntegration)
-                : (noop as any),
-            onKernelRestart: jupyterIntegration
-                ? jupyterIntegration.onKernelRestart.bind(jupyterIntegration)
-                : (noop as any),
             registerRemoteServerProvider: jupyterIntegration
                 ? jupyterIntegration.registerRemoteServerProvider.bind(jupyterIntegration)
                 : (noop as any),

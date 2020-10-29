@@ -2,9 +2,10 @@
 # Licensed under the MIT License.
 
 import ast
-import textwrap
+import json
 import re
 import sys
+import textwrap
 
 
 def split_lines(source):
@@ -82,14 +83,14 @@ def _get_statements(selection):
 
 def normalize_lines(selection):
     """
-    Normalize the text selection received from the extension and send it to the REPL.
+    Normalize the text selection received from the extension.
 
-    If it is a single line selection, dedent it, append a newline and send it to the REPL.
-    Otherwise, sanitize the multiline selection before sending it to the REPL:
+    If it is a single line selection, dedent it and append a newline and
+    send it back to the extension.
+    Otherwise, sanitize the multiline selection before returning it:
     split it in a list of top-level statements
-    and add newlines between each of them to tell the REPL where each block ends.
+    and add newlines between each of them so the REPL knows where each block ends.
     """
-
     try:
         # Parse the selection into a list of top-level blocks.
         # We don't differentiate between single and multiline statements
@@ -104,25 +105,21 @@ def normalize_lines(selection):
         # append a blank line to end the block and send it as-is.
         source = selection + "\n\n"
 
-    # `source` is a unicode instance at this point on Python 2,
-    # so if we used `sys.stdout.write` to send it to the REPL,
-    # Python will implicitly encode it using sys.getdefaultencoding(),
-    # which we don't want.
-    stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
-    stdout.write(source.encode("utf-8"))
-    stdout.flush()
+    return source
 
 
 if __name__ == "__main__":
-    # This will fail on a large file.
-    # See https://github.com/microsoft/vscode-python/issues/14471
-    contents = sys.argv[1]
-    try:
-        default_encoding = sys.getdefaultencoding()
-        encoded_contents = contents.encode(default_encoding, "surrogateescape")
-        contents = encoded_contents.decode(default_encoding, "replace")
-    except (UnicodeError, LookupError):
-        pass
-    if isinstance(contents, bytes):
-        contents = contents.decode("utf8")
-    normalize_lines(contents)
+    # Content is being sent from the extension as a JSON object.
+    # Decode the data from the raw bytes.
+    stdin = sys.stdin if sys.version_info < (3,) else sys.stdin.buffer
+    raw = stdin.read()
+    contents = json.loads(raw.decode("utf-8"))
+
+    normalized = normalize_lines(contents["code"])
+
+    # Send the normalized code back to the extension in a JSON object.
+    data = json.dumps({"normalized": normalized})
+
+    stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
+    stdout.write(data.encode("utf-8"))
+    stdout.close()

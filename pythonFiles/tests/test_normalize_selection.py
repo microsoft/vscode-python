@@ -9,14 +9,13 @@ import normalizeSelection
 class TestNormalizationScript(object):
     """Unit tests for the normalization script."""
 
-    def test_basicNormalization(self, capsys):
+    def test_basicNormalization(self):
         src = 'print("this is a test")'
         expected = src + "\n"
-        normalizeSelection.normalize_lines(src)
-        captured = capsys.readouterr()
-        assert captured.out == expected
+        result = normalizeSelection.normalize_lines(src)
+        assert result == expected
 
-    def test_moreThanOneLine(self, capsys):
+    def test_moreThanOneLine(self):
         src = textwrap.dedent(
             """\
             # Some rando comment
@@ -32,11 +31,10 @@ class TestNormalizationScript(object):
             
             """
         )
-        normalizeSelection.normalize_lines(src)
-        captured = capsys.readouterr()
-        assert captured.out == expected
+        result = normalizeSelection.normalize_lines(src)
+        assert result == expected
 
-    def test_withHangingIndent(self, capsys):
+    def test_withHangingIndent(self):
         src = textwrap.dedent(
             """\
             x = 22
@@ -59,11 +57,10 @@ class TestNormalizationScript(object):
             
             """
         )
-        normalizeSelection.normalize_lines(src)
-        captured = capsys.readouterr()
-        assert captured.out == expected
+        result = normalizeSelection.normalize_lines(src)
+        assert result == expected
 
-    def test_clearOutExtraneousNewlines(self, capsys):
+    def test_clearOutExtraneousNewlines(self):
         src = textwrap.dedent(
             """\
             value_x = 22
@@ -76,7 +73,7 @@ class TestNormalizationScript(object):
 
             """
         )
-        expectedResult = textwrap.dedent(
+        expected = textwrap.dedent(
             """\
             value_x = 22
             value_y = 30
@@ -84,11 +81,10 @@ class TestNormalizationScript(object):
             print(value_x + value_y + value_z)
             """
         )
-        normalizeSelection.normalize_lines(src)
-        result = capsys.readouterr()
-        assert result.out == expectedResult
+        result = normalizeSelection.normalize_lines(src)
+        assert result == expected
 
-    def test_clearOutExtraLinesAndWhitespace(self, capsys):
+    def test_clearOutExtraLinesAndWhitespace(self):
         src = textwrap.dedent(
             """\
             if True:
@@ -102,7 +98,7 @@ class TestNormalizationScript(object):
 
             """
         )
-        expectedResult = textwrap.dedent(
+        expected = textwrap.dedent(
             """\
             if True:
                 x = 22
@@ -112,18 +108,16 @@ class TestNormalizationScript(object):
             print(x + y + z)
             """
         )
-        normalizeSelection.normalize_lines(src)
-        result = capsys.readouterr()
-        assert result.out == expectedResult
+        result = normalizeSelection.normalize_lines(src)
+        assert result == expected
 
-    def test_partialSingleLine(self, capsys):
+    def test_partialSingleLine(self):
         src = "   print('foo')"
         expected = textwrap.dedent(src) + "\n"
-        normalizeSelection.normalize_lines(src)
-        result = capsys.readouterr()
-        assert result.out == expected
+        result = normalizeSelection.normalize_lines(src)
+        assert result == expected
 
-    def test_multiLineWithIndent(self, capsys):
+    def test_multiLineWithIndent(self):
         src = """\
            
         if (x > 0
@@ -134,7 +128,7 @@ class TestNormalizationScript(object):
             print('bar')
         """
 
-        expectedResult = textwrap.dedent(
+        expected = textwrap.dedent(
             """\
         if (x > 0
             and condition == True):
@@ -145,11 +139,10 @@ class TestNormalizationScript(object):
         """
         )
 
-        normalizeSelection.normalize_lines(src)
-        result = capsys.readouterr()
-        assert result.out == expectedResult
+        result = normalizeSelection.normalize_lines(src)
+        assert result == expected
 
-    def test_multiLineWithComment(self, capsys):
+    def test_multiLineWithComment(self):
         src = textwrap.dedent(
             """\
 
@@ -166,18 +159,16 @@ class TestNormalizationScript(object):
             
             """
         )
-        normalizeSelection.normalize_lines(src)
-        captured = capsys.readouterr()
-        assert captured.out == expected
+        result = normalizeSelection.normalize_lines(src)
+        assert result == expected
 
-    def test_exception(self, capsys):
+    def test_exception(self):
         src = "       if True:"
         expected = src + "\n\n"
-        normalizeSelection.normalize_lines(src)
-        captured = capsys.readouterr()
-        assert captured.out == expected
+        result = normalizeSelection.normalize_lines(src)
+        assert result == expected
 
-    def test_multilineException(self, capsys):
+    def test_multilineException(self):
         src = textwrap.dedent(
             """\
 
@@ -186,6 +177,5 @@ class TestNormalizationScript(object):
             """
         )
         expected = src + "\n\n"
-        normalizeSelection.normalize_lines(src)
-        captured = capsys.readouterr()
-        assert captured.out == expected
+        result = normalizeSelection.normalize_lines(src)
+        assert result == expected
