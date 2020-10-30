@@ -4,6 +4,7 @@
 'use strict';
 
 import * as path from 'path';
+import * as picomatch from 'picomatch';
 import { FileChangeType, watchLocationForPattern } from '../../common/platform/fileSystemWatcher';
 import { getOSType, OSType } from '../../common/utils/platform';
 
@@ -17,8 +18,8 @@ export function watchLocationForPythonBinaries(
     const patterns = [executablePattern, `*/${executablePattern}`, `*/${binName}/${executablePattern}`];
     for (const pattern of patterns) {
         watchLocationForPattern(baseDir, pattern, (type: FileChangeType, e: string) => {
-            const regex = new RegExp(`^${executablePattern}$`);
-            if (!regex.test(path.basename(e))) {
+            const isMatch = picomatch(executablePattern);
+            if (!isMatch(path.basename(e))) {
                 // When deleting the file for some reason path to all directories leading up to python are reported
                 // Skip those events
                 return;

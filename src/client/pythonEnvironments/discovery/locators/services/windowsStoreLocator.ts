@@ -3,6 +3,7 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
+import * as picomatch from 'picomatch';
 import { traceWarning } from '../../../../common/logger';
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
@@ -86,7 +87,7 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
 }
 
 /**
- * This pattern matches following file names:
+ * This is a glob pattern which matches following file names:
  * python3.8.exe
  * python3.9.exe
  * This pattern does not match:
@@ -94,7 +95,6 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
  * python2.7.exe
  * python3.exe
  * python38.exe
- * Note the below is constructed in a way that it can be used as a glob pattern, or as a regex.
  */
 const windowsPythonExes = 'python3\.[0-9]\.exe';
 
@@ -105,8 +105,8 @@ const windowsPythonExes = 'python3\.[0-9]\.exe';
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
 export function isWindowsStorePythonExe(interpreterPath: string): boolean {
-    const regex = new RegExp(`^${windowsPythonExes}$`);
-    return regex.test(path.basename(interpreterPath));
+    const isMatch = picomatch(windowsPythonExes);
+    return isMatch(path.basename(interpreterPath));
 }
 
 /**
