@@ -6,14 +6,11 @@ import * as path from 'path';
 import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
+import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
+import { parseVersion } from '../../../base/info/pythonVersion';
 import { pathExists } from '../../../common/externalDependencies';
 
-/**
- * Checks if the given interpreter belongs to a venv based environment.
- * @param {string} interpreterPath: Absolute path to the python interpreter.
- * @returns {boolean} : Returns true if the interpreter belongs to a venv environment.
- */
-export async function isVenvEnvironment(interpreterPath:string): Promise<boolean> {
+function getPyvenvConfigPathsFrom(interpreterPath:string): string[] {
     const pyvenvConfigFile = 'pyvenv.cfg';
 
     // Check if the pyvenv.cfg file is in the parent directory relative to the interpreter.
@@ -30,7 +27,16 @@ export async function isVenvEnvironment(interpreterPath:string): Promise<boolean
     const venvPath2 = path.join(path.dirname(interpreterPath), pyvenvConfigFile);
 
     // The paths are ordered in the most common to least common
-    const venvPaths = [venvPath1, venvPath2];
+    return [venvPath1, venvPath2];
+}
+
+/**
+ * Checks if the given interpreter belongs to a venv based environment.
+ * @param {string} interpreterPath: Absolute path to the python interpreter.
+ * @returns {boolean} : Returns true if the interpreter belongs to a venv environment.
+ */
+export async function isVenvEnvironment(interpreterPath:string): Promise<boolean> {
+    const venvPaths = getPyvenvConfigPathsFrom(interpreterPath);
 
     // We don't need to test all at once, testing each one here
     for (const venvPath of venvPaths) {
@@ -107,4 +113,40 @@ export async function isVirtualenvwrapperEnvironment(interpreterPath:string): Pr
     return await pathExists(workOnHomeDir)
         && pathToCheck.startsWith(`${workOnRoot}${path.sep}`)
         && isVirtualenvEnvironment(interpreterPath);
+}
+
+/**
+ * Extracts version information from pyvenv.cfg near a given interpreter.
+ * @param interpreterPath Absolute path to the interpreter
+ *
+ * Remarks: This function looks for pyvenv.cfg usually in the same or parent directory.
+ * Reads the pyvenv.cfg and finds the line that looks like 'version = 3.9.0`. Gets the
+ * version string from that lines and parses it.
+ */
+export async function getPythonVersionFromVenv(interpreterPath:string): Promise<PythonVersion> {
+    const configPaths = getPyvenvConfigPathsFrom(interpreterPath);
+
+    // We want to check each of those locations in the order. There is no need to look at
+    // all of them in parallel.
+    for (const configPath of configPaths) {
+        if (await pathExists(configPath)) {
+            try {
+                const lines = (await fsapi.readFile(configPath, 'utf-8')).splitLines();
+
+                const pythonVersionStrings = lines
+                    .filter((line) => line.startsWith('version =') || line.startsWith('version='))
+                    .map((line) => line.split('=')[1]);
+
+                if (pythonVersionStrings.length > 0) {
+                    return parseVersion(pythonVersionStrings[0].trim());
+                }
+            } catch (ex) {
+                // There is only ome pyvenv.cfg. If we found it but failed to parse it
+                // then just return here. No need to look for versions any further.
+                return UNKNOWN_PYTHON_VERSION;
+            }
+        }
+    }
+
+    return UNKNOWN_PYTHON_VERSION;
 }

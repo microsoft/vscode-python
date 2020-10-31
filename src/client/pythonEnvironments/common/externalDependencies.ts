@@ -5,6 +5,7 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
 import { IPersistentStateFactory } from '../../common/types';
+import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 
@@ -72,4 +73,21 @@ export async function resolveSymbolicLink(filepath:string): Promise<string> {
         return resolveSymbolicLink(link);
     }
     return filepath;
+}
+
+export async function* getSubDirs(root:string): AsyncIterableIterator<string> {
+    const dirContents = await fsapi.readdir(root);
+    const generators = dirContents.map((item) => {
+        async function* generator() {
+            const stat = await fsapi.lstat(path.join(root, item));
+
+            if (stat.isDirectory()) {
+                yield item;
+            }
+        }
+
+        return generator();
+    });
+
+    yield* iterable(chain(generators));
 }

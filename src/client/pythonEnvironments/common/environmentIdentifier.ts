@@ -32,10 +32,10 @@ import { EnvironmentType } from '../info';
  */
 export function getPrioritizedEnvironmentType(): EnvironmentType[] {
     return [
+        EnvironmentType.Pyenv, // A Pyenv can also be a conda env but should be activated using pyenv
         EnvironmentType.Conda,
         EnvironmentType.WindowsStore,
         EnvironmentType.Pipenv,
-        EnvironmentType.Pyenv,
         EnvironmentType.Poetry,
         EnvironmentType.VirtualEnvWrapper,
         EnvironmentType.Venv,
