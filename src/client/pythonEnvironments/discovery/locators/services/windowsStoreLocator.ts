@@ -105,8 +105,8 @@ const windowsPythonExes = 'python3\.[0-9]\.exe';
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
 export function isWindowsStorePythonExe(interpreterPath: string): boolean {
-    const isMatch = picomatch(windowsPythonExes);
-    return isMatch(path.basename(interpreterPath));
+    const regex = picomatch.toRegex(windowsPythonExes, { nocase: true });
+    return regex.test(path.basename(interpreterPath));
 }
 
 /**
