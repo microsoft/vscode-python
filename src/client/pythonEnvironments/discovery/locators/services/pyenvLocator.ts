@@ -102,13 +102,16 @@ function getKnownPyenvVersionParsers() : Map<string, (path:string) => Promise<IP
                 distroVer: `${parts[1]}-${parts[2]}`,
                 distro: parts[0],
             });
-        } if (parts.length === 2) {
+        }
+
+        if (parts.length === 2) {
             return Promise.resolve({
                 pythonVer: undefined,
                 distroVer: parts[1],
                 distro: parts[0],
             });
         }
+
         return Promise.resolve({
             pythonVer: undefined,
             distroVer: undefined,
@@ -310,7 +313,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
                 // correctly, pyenv does not see it and can't correctly activate it.
                 envInfo.defaultDisplayName = `${subDir}:pyenv-conda`;
             } else if (await isVenvEnvironment(interpreterPath)) {
-                // These are virtual envs created using `pyenv virutalenv 3.9.0 env1`
+                // These are virtual envs created using `pyenv virtualenv 3.9.0 env1`
                 // command. They behave like virtual envs and have to be activated
                 // using pyenv
                 envInfo.defaultDisplayName = `${subDir}:pyenv`;
