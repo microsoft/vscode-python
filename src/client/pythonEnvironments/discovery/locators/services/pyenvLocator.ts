@@ -144,25 +144,33 @@ function getKnownPyenvVersionParsers() : Map<string, (path:string) => Promise<IP
                 distroVer: parts[1],
                 distro: 'pypy',
             });
-        } if (parts.length === 3 && (parts[2].startsWith('src') || parts[2].startsWith('beta') || parts[2].startsWith('alpha'))) {
+        }
+
+        if (parts.length === 3 && (parts[2].startsWith('src') || parts[2].startsWith('beta') || parts[2].startsWith('alpha'))) {
             return Promise.resolve({
                 pythonVer,
                 distroVer: `${parts[1]}-${parts[2]}`,
                 distro: 'pypy',
             });
-        } if (parts.length === 3 && (parts[1] === 'stm')) {
+        }
+
+        if (parts.length === 3 && (parts[1] === 'stm')) {
             return Promise.resolve({
                 pythonVer,
                 distroVer: parts[2],
                 distro: `${parts[0]}-${parts[1]}`,
             });
-        } if (parts.length === 4 && parts[1] === 'c') {
+        }
+
+        if (parts.length === 4 && parts[1] === 'c') {
             return Promise.resolve({
                 pythonVer,
                 distroVer: parts[3],
                 distro: `pypy-${parts[1]}-${parts[2]}`,
             });
-        } if (parts.length === 4 && parts[3].startsWith('src')) {
+        }
+
+        if (parts.length === 4 && parts[3].startsWith('src')) {
             return Promise.resolve({
                 pythonVer,
                 distroVer: `${parts[1]}-${parts[2]}-${parts[3]}`,
