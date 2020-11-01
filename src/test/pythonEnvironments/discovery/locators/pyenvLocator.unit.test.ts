@@ -243,7 +243,7 @@ suite('Pyenv Locator Tests', () => {
                     micro: 5,
                 },
             });
-            envInfo.defaultDisplayName = 'conda1:pyenv-conda';
+            envInfo.defaultDisplayName = 'conda1:pyenv';
             envInfo.location = path.join(testPyenvVersionsDir, 'conda1');
             envInfo.name = 'conda1';
             return envInfo;

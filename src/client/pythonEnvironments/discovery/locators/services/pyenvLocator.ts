@@ -14,8 +14,8 @@ import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
 import { PythonEnvsWatcher } from '../../../base/watcher';
 import { findInterpretersInDir, getPythonVersionFromNearByFiles } from '../../../common/commonUtils';
 import { getFileInfo, getSubDirs, pathExists } from '../../../common/externalDependencies';
-import { getPythonVersionFromConda, isCondaEnvironment } from './condaLocator';
-import { getPythonVersionFromVenv, isVenvEnvironment } from './virtualEnvironmentIdentifier';
+import { getPythonVersionFromConda } from './condaLocator';
+import { getPythonVersionFromVenv } from './virtualEnvironmentIdentifier';
 
 function getPyenvDir(): string {
     // Check if the pyenv environment variables exist: PYENV on Windows, PYENV_ROOT on Unix.
@@ -294,7 +294,12 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
         const interpreterPath = await getInterpreterPathFromDir(envDir);
 
         if (interpreterPath) {
+            // The sub-directory name sometimes can contain distro and python versions.
+            // here we attempt to extract the texts out of the name.
             const versionStrings = await parsePyenvVersion(subDir);
+
+            // Here we look for near by files, or config files to see if we can get python version info
+            // without running python itself.
             const pythonVersion = await getPythonVersionFromPath(interpreterPath, versionStrings?.pythonVer);
 
             const envInfo = buildEnvInfo({
@@ -304,23 +309,24 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
                 version: pythonVersion,
             });
 
-            if (await isCondaEnvironment(interpreterPath)) {
-                // Even though these environments are technically conda they have to be
-                // activated the same way as pyenv. There are some issues here, it works
-                // only if the environment was created using command like this:
-                // `pyenv virtualenv miniconda-latest env1`
-                // If it was created using `conda create env1` then it does not work
-                // correctly, pyenv does not see it and can't correctly activate it.
-                envInfo.defaultDisplayName = `${subDir}:pyenv-conda`;
-            } else if (await isVenvEnvironment(interpreterPath)) {
-                // These are virtual envs created using `pyenv virtualenv 3.9.0 env1`
-                // command. They behave like virtual envs and have to be activated
-                // using pyenv
-                envInfo.defaultDisplayName = `${subDir}:pyenv`;
-            } else {
-                // These are global environments created when you run `pyenv install 3.9.0`.
-                envInfo.defaultDisplayName = `${subDir}:pyenv`;
-            }
+            // Pyenv environments can fall in to these three categories:
+            // 1. Global Installs : These are environments that are created when you install
+            //    a supported python distribution using `pyenv install <distro>` command.
+            //    These behave similar to globally installed version of python or distribution.
+            //
+            // 2. Virtual Envs    : These are environments that are created when you use
+            //    `pyenv virtualenv <distro> <env-name>`. These are similar to environments
+            //    created using `python -m venv <env-name>`.
+            //
+            // 3. Conda Envs      : These are environments that are created when you use
+            //    `pyenv virtualenv <miniconda|anaconda> <env-name>`. These are similar to
+            //    environments created using `conda create -n <env-name>.
+            //
+            // All these environments are fully handled by `pyenv` and should be activated using
+            // `pyenv local|global <env-name>` or `pyenv shell <env-name>`
+            //
+            // For the display name we are going to treat these as `pyenv` environments.
+            envInfo.defaultDisplayName = `${subDir}:pyenv`;
 
             envInfo.name = subDir;
             envInfo.distro.org = (versionStrings && versionStrings.distro)
