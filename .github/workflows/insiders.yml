@@ -3,7 +3,7 @@ name: Insiders Build
 on:
   push:
     branches:
-      - main
+      - 14267-*
 
 env:
   PYTHON_VERSION: 3.9
@@ -20,7 +20,7 @@ jobs:
   build-vsix:
     name: Build VSIX
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -50,7 +50,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -102,7 +102,7 @@ jobs:
     defaults:
       run:
         working-directory: ${{env.special-working-directory}}
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     strategy:
       fail-fast: false
       matrix:
@@ -447,7 +447,7 @@ jobs:
   coverage:
     name: Coverage reports upload
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     needs: [tests, smoke-tests]
     steps:
       - name: Checkout
@@ -474,11 +474,11 @@ jobs:
         run: npm run test:cover:report
         continue-on-error: true
 
-      - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage/cobertura-coverage.xml
+      # - name: Upload coverage to codecov
+      #   uses: codecov/codecov-action@v1
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     file: ./coverage/cobertura-coverage.xml
 
   # Re-enable when the Jupyter extension is available
   # upload:
