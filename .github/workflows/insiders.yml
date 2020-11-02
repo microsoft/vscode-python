@@ -460,7 +460,7 @@ jobs:
       # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
       # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
       - name: Download Ubuntu test coverage artifacts
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2
         with:
           name: Linux-${{env.COVERAGE_REPORTS}}
 
