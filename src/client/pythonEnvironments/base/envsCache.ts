@@ -65,10 +65,10 @@ export class PythonEnvsCache {
         if (this.byExecutable === undefined) {
             this.byExecutable = {};
             for (const env of this.envs) {
-                this.byExecutable![env.executable.filename] = env;
+                this.byExecutable[env.executable.filename] = env;
             }
         }
-        return this.byExecutable![executable];
+        return this.byExecutable[executable];
     }
 
     public filter(match: (env: PythonEnvInfo) => boolean | undefined): PythonEnvInfo[] {
