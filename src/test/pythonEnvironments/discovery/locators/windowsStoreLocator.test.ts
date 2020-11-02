@@ -71,6 +71,7 @@ suite('Windows Store Locator', async () => {
     });
     setup(async () => {
         locator = new WindowsStoreLocator();
+        locator.initialize();
         // Wait for watchers to get ready
         await sleep(1000);
     });

@@ -18,8 +18,8 @@ export function watchLocationForPythonBinaries(
     const patterns = [executablePattern, `*/${executablePattern}`, `*/${binName}/${executablePattern}`];
     for (const pattern of patterns) {
         watchLocationForPattern(baseDir, pattern, (type: FileChangeType, e: string) => {
-            const regex = picomatch.toRegex(executablePattern, { nocase: getOSType() === OSType.Windows });
-            if (!regex.test(path.basename(e))) {
+            const isMatch = picomatch(path.join('**', executablePattern));
+            if (!isMatch(path.basename(e))) {
                 // When deleting the file for some reason path to all directories leading up to python are reported
                 // Skip those events
                 return;

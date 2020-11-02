@@ -72,7 +72,9 @@ export function isForbiddenStorePath(interpreterPath: string): boolean {
  */
 export async function isWindowsStoreEnvironment(interpreterPath: string): Promise<boolean> {
     const pythonPathToCompare = path.normalize(interpreterPath).toUpperCase();
-    const localAppDataStorePath = path.normalize(getWindowsStoreAppsRoot()).toUpperCase();
+    const localAppDataStorePath = path
+        .normalize(getWindowsStoreAppsRoot())
+        .toUpperCase();
     if (pythonPathToCompare.includes(localAppDataStorePath)) {
         return true;
     }
@@ -96,7 +98,7 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
  * python3.exe
  * python38.exe
  */
-const windowsPythonExes = 'python3\.[0-9]\.exe';
+const windowsStorePythonExes = 'python3\.[0-9]\.exe';
 
 /**
  * Checks if a given path ends with python3.*.exe. Not all python executables are matched as
@@ -105,7 +107,7 @@ const windowsPythonExes = 'python3\.[0-9]\.exe';
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
 export function isWindowsStorePythonExe(interpreterPath: string): boolean {
-    const regex = picomatch.toRegex(windowsPythonExes, { nocase: true });
+    const regex = picomatch.toRegex(windowsStorePythonExes, { nocase: true });
     return regex.test(path.basename(interpreterPath));
 }
 
@@ -130,15 +132,16 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
 
     // Collect python*.exe directly under %LOCALAPPDATA%/Microsoft/WindowsApps
     const files = await fsapi.readdir(windowsAppsRoot);
-    return files.map((filename: string) => path.join(windowsAppsRoot, filename)).filter(isWindowsStorePythonExe);
+    return files
+        .map((filename: string) => path.join(windowsAppsRoot, filename))
+        .filter(isWindowsStorePythonExe);
 }
 
 export class WindowsStoreLocator extends Locator {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
-    public constructor() {
-        super();
-        this.registerWatchers().ignoreErrors();
+    public initialize(): void {
+        this.startWatcher().ignoreErrors();
     }
 
     public iterEnvs(): IPythonEnvsIterator {
@@ -171,10 +174,10 @@ export class WindowsStoreLocator extends Locator {
         return undefined;
     }
 
-    private async registerWatchers(): Promise<void> {
+    private async startWatcher(): Promise<void> {
         const windowsAppsRoot = getWindowsStoreAppsRoot();
         watchLocationForPythonBinaries(windowsAppsRoot, (type: FileChangeType) => {
             this.emitter.fire({ type, kind: this.kind });
-        }, windowsPythonExes);
+        }, windowsStorePythonExes);
     }
 }
