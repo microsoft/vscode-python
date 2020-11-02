@@ -6,11 +6,11 @@ import * as path from 'path';
 import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame } from '../../common/externalDependencies';
+import { parseVersion } from './executable';
 import {
     areEqualVersions,
     areEquivalentVersions,
     isVersionEmpty,
-    parseVersion,
 } from './pythonVersion';
 
 import {
