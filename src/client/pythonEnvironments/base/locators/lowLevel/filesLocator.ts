@@ -22,8 +22,6 @@ export class FoundFilesLocator implements ILocator {
 
     protected readonly watcher = new PythonEnvsWatcher();
 
-    private readonly hasUpdates: boolean;
-
     constructor(
         private readonly kind: PythonEnvKind,
         private readonly getExecutables: () => Promise<string[]> | AsyncIterableIterator<string>,
@@ -31,7 +29,6 @@ export class FoundFilesLocator implements ILocator {
     ) {
         this.onChanged = this.watcher.onChanged;
 
-        this.hasUpdates = !!onUpdated;
         if (onUpdated !== undefined) {
             onUpdated(() => this.watcher.fire({}));
         }
@@ -39,9 +36,6 @@ export class FoundFilesLocator implements ILocator {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public iterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator {
-        if (!this.hasUpdates) {
-            this.watcher.fire({});
-        }
         const executablesPromise = this.getExecutables();
         const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
         async function* generator(
@@ -50,7 +44,7 @@ export class FoundFilesLocator implements ILocator {
             const executables = await executablesPromise;
             yield* iterAndUpdateEnvs(
                 iterMinimalEnvsFromExecutables(executables, kind),
-                emitter.fire,
+                (evt: PythonEnvUpdatedEvent | null) => emitter.fire(evt),
             );
         }
         const iterator = generator(this.kind);
