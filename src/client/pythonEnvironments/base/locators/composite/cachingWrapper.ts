@@ -71,16 +71,24 @@ export class CachingLocatorWrapper implements ILocator {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public iterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator {
-        const envs = this.cache.getEnvs();
-        async function* generator() {
+        // Get the envs early in case a refresh is triggered.
+        let envs = this.cache.getEnvs();
+        async function* generator(self: CachingLocatorWrapper) {
+            if (!self.initialized) {
+                await self.initialize();
+                envs = self.cache.getEnvs();
+            }
             yield* envs;
         }
-        return generator();
+        return generator(this);
     }
 
     public async resolveEnv(env: string | Partial<PythonEnvInfo>): Promise<PythonEnvInfo | undefined> {
         if (this.refreshing !== undefined) {
             await this.refreshing;
+        }
+        if (!this.initialized) {
+            await this.initialize();
         }
         return this.cache.lookUp(env);
     }
