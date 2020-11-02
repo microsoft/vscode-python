@@ -153,13 +153,13 @@
         "name": "RunByLine - experiment",
         "salt": "RunByLine",
         "min": 0,
-        "max": 40
+        "max": 100
     },
     {
         "name": "RunByLine - control",
         "salt": "RunByLine",
-        "min": 40,
-        "max": 100
+        "min": 0,
+        "max": 0
     },
     {
         "name": "CustomEditorSupport - control",
