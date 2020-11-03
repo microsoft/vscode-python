@@ -8,7 +8,7 @@ import {
 import {
     PythonEnvInfo, PythonEnvKind, PythonVersion, UNKNOWN_PYTHON_VERSION,
 } from '../../../base/info';
-import { buildEnvInfo, comparePythonVersionsByHeuristic } from '../../../base/info/env';
+import { buildEnvInfo, comparePythonVersionSpecificity } from '../../../base/info/env';
 import { parseVersion } from '../../../base/info/pythonVersion';
 import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
 import { PythonEnvsWatcher } from '../../../base/watcher';
@@ -273,7 +273,7 @@ async function getPythonVersionFromPath(
 
     let version = UNKNOWN_PYTHON_VERSION;
     for (const v of [versionA, versionB, versionC, versionD]) {
-        version = comparePythonVersionsByHeuristic(version, v) > 0 ? version : v;
+        version = comparePythonVersionSpecificity(version, v) > 0 ? version : v;
     }
     return version;
 }

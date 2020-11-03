@@ -179,7 +179,7 @@ export function areSameEnv(
  * weighted by most important to least important fields.
  * Wn > Wn-1 + Wn-2 + ... W0
  */
-export function getPythonVersionInfoHeuristic(version: PythonVersion): number {
+export function getPythonVersionSpecificity(version: PythonVersion): number {
     let infoLevel = 0;
     if (version.major > 0) {
         infoLevel += 20; // W4
@@ -208,11 +208,9 @@ export function getPythonVersionInfoHeuristic(version: PythonVersion): number {
  * Compares two python versions, based on the amount of data each object has. If versionA has
  * less information then the returned value is negative. If it is same then 0. If versionA has
  * more information then positive.
- * @param versionA
- * @param versionB
  */
-export function comparePythonVersionsByHeuristic(versionA: PythonVersion, versionB: PythonVersion): number {
-    return getPythonVersionInfoHeuristic(versionA) - getPythonVersionInfoHeuristic(versionB);
+export function comparePythonVersionSpecificity(versionA: PythonVersion, versionB: PythonVersion): number {
+    return Math.sign(getPythonVersionSpecificity(versionA) - getPythonVersionSpecificity(versionB));
 }
 
 /**
@@ -278,7 +276,7 @@ export function mergeEnvironments(target: PythonEnvInfo, other: PythonEnvInfo): 
     const merged = cloneDeep(target);
 
     const version = cloneDeep(
-        getPythonVersionInfoHeuristic(target.version) > getPythonVersionInfoHeuristic(other.version)
+        getPythonVersionSpecificity(target.version) > getPythonVersionSpecificity(other.version)
             ? target.version
             : other.version,
     );

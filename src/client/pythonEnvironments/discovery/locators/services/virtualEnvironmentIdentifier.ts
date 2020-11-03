@@ -3,12 +3,14 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
+import '../../../../common/extensions';
 import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
-import { parseVersion } from '../../../base/info/pythonVersion';
-import { pathExists } from '../../../common/externalDependencies';
+import { getPythonVersionSpecificity } from '../../../base/info/env';
+import { parseVersion, parseVersionInfo } from '../../../base/info/pythonVersion';
+import { pathExists, readFile } from '../../../common/externalDependencies';
 
 function getPyvenvConfigPathsFrom(interpreterPath:string): string[] {
     const pyvenvConfigFile = 'pyvenv.cfg';
@@ -125,20 +127,50 @@ export async function isVirtualenvwrapperEnvironment(interpreterPath:string): Pr
  */
 export async function getPythonVersionFromVenv(interpreterPath:string): Promise<PythonVersion> {
     const configPaths = getPyvenvConfigPathsFrom(interpreterPath);
+    let version = UNKNOWN_PYTHON_VERSION;
 
     // We want to check each of those locations in the order. There is no need to look at
     // all of them in parallel.
     for (const configPath of configPaths) {
         if (await pathExists(configPath)) {
             try {
-                const lines = (await fsapi.readFile(configPath, 'utf-8')).splitLines();
+                const lines = (await readFile(configPath)).splitLines();
 
-                const pythonVersionStrings = lines
-                    .filter((line) => line.startsWith('version =') || line.startsWith('version='))
-                    .map((line) => line.split('=')[1]);
+                const pythonVersions = lines
+                    .map((line) => {
+                        const parts = line.split('=');
+                        if (parts.length === 2) {
+                            const name = parts[0].toLowerCase().trim();
+                            const value = parts[1].trim();
+                            if (name === 'version') {
+                                try {
+                                    return parseVersion(value);
+                                } catch (ex) {
+                                    return undefined;
+                                }
+                            } else if (name === 'version_info') {
+                                try {
+                                    return parseVersionInfo(value);
+                                } catch (ex) {
+                                    return undefined;
+                                }
+                            }
+                        }
+                        return undefined;
+                    })
+                    .filter((v) => v !== undefined);
 
-                if (pythonVersionStrings.length > 0) {
-                    return parseVersion(pythonVersionStrings[0].trim());
+                if (pythonVersions.length > 0) {
+                    let specificity = getPythonVersionSpecificity(version);
+                    for (const v of pythonVersions) {
+                        if (v) {
+                            const curSpecificity = getPythonVersionSpecificity(v);
+                            if (curSpecificity > specificity) {
+                                version = v;
+                                specificity = curSpecificity;
+                            }
+                        }
+                    }
                 }
             } catch (ex) {
                 // There is only ome pyvenv.cfg. If we found it but failed to parse it
@@ -148,5 +180,5 @@ export async function getPythonVersionFromVenv(interpreterPath:string): Promise<
         }
     }
 
-    return UNKNOWN_PYTHON_VERSION;
+    return version;
 }

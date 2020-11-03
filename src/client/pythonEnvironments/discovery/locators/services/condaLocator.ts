@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import * as fsapi from 'fs-extra';
 import * as path from 'path';
+import '../../../../common/extensions';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
 import { parseVersion } from '../../../base/info/pythonVersion';
-import { pathExists } from '../../../common/externalDependencies';
+import { pathExists, readFile } from '../../../common/externalDependencies';
 
 function getCondaMetaPaths(interpreterPath:string): string[] {
     const condaMetaDir = 'conda-meta';
@@ -79,21 +79,20 @@ export async function isCondaEnvironment(interpreterPath: string): Promise<boole
  */
 export async function getPythonVersionFromConda(interpreterPath:string): Promise<PythonVersion> {
     const configPaths = getCondaMetaPaths(interpreterPath).map((p) => path.join(p, 'history'));
-    const pattern = /python-((\d\.?)+)/;
+    const pattern = /\:python-(([\d\.a-z]?)+)/;
 
     // We want to check each of those locations in the order. There is no need to look at
     // all of them in parallel.
     for (const configPath of configPaths) {
         if (await pathExists(configPath)) {
             try {
-                const lines = (await fsapi.readFile(configPath, 'utf-8')).splitLines();
+                const lines = (await readFile(configPath)).splitLines();
 
                 // Sample data:
                 // +defaults/linux-64::pip-20.2.4-py38_0
                 // +defaults/linux-64::python-3.8.5-h7579374_1
                 // +defaults/linux-64::readline-8.0-h7b6447c_0
                 const pythonVersionStrings = lines
-                    .filter((line) => line.search('python-') >= 0)
                     .map((line) => {
                         // Here we should have only lines with 'python-' in it.
                         // +defaults/linux-64::python-3.8.5-h7579374_1
@@ -109,11 +108,13 @@ export async function getPythonVersionFromConda(interpreterPath:string): Promise
                     }).filter((v) => v.length > 0);
 
                 if (pythonVersionStrings.length > 0) {
-                    return parseVersion(pythonVersionStrings[0].trim());
+                    const last = pythonVersionStrings.length - 1;
+                    return parseVersion(pythonVersionStrings[last].trim());
                 }
             } catch (ex) {
-                // There is only ome pyvenv.cfg. If we found it but failed to parse it
-                // then just return here. No need to look for versions any further.
+                // There is usually only one `conda-meta/history`. If we found, it but
+                // failed to parse it, then just return here. No need to look for versions
+                // any further.
                 return UNKNOWN_PYTHON_VERSION;
             }
         }

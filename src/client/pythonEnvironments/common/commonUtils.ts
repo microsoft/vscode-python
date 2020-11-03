@@ -6,21 +6,25 @@ import * as path from 'path';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
-import { getPythonVersionInfoHeuristic } from '../base/info/env';
+import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
 import { isPosixPythonBin } from './posixUtils';
 import { isWindowsPythonExe } from './windowsUtils';
 
+/**
+ * Searches recursively under the given `root` directory for python interpreters.
+ * @param root : Directory where the search begins.
+ * @param recurseLevels : Number of levels to search for from the root directory.
+ * @param filter : Callback that identifies directories to ignore.
+ */
 export async function* findInterpretersInDir(
-    root:string,
-    recurseLevels?:number,
-    dirFilter?:(x:string)=>boolean,
+    root: string,
+    recurseLevels?: number,
+    filter?: (x: string) => boolean,
 ): AsyncIterableIterator<string> {
     const os = getOSType();
     const checkBin = os === OSType.Windows ? isWindowsPythonExe : isPosixPythonBin;
-
-    function defaultFilter() { return true; }
-    const itemFilter = dirFilter ?? defaultFilter;
+    const itemFilter = filter ?? (() => true);
 
     const dirContents = (await fsapi.readdir(root)).filter(itemFilter);
 
@@ -48,17 +52,18 @@ export async function* findInterpretersInDir(
     yield* iterable(chain(generators));
 }
 
+/**
+ * Looks for files in the same directory which might have version in their name.
+ * @param interpreterPath
+ */
 export async function getPythonVersionFromNearByFiles(interpreterPath:string): Promise<PythonVersion> {
     const root = path.dirname(interpreterPath);
     let version = UNKNOWN_PYTHON_VERSION;
-    let heuristic = getPythonVersionInfoHeuristic(version);
     for await (const interpreter of findInterpretersInDir(root)) {
         try {
             const curVersion = parseVersion(path.basename(interpreter));
-            const curHeuristic = getPythonVersionInfoHeuristic(curVersion);
-            if (curHeuristic > heuristic) {
+            if (comparePythonVersionSpecificity(curVersion, version) > 0) {
                 version = curVersion;
-                heuristic = curHeuristic;
             }
         } catch (ex) {
             // Ignore any parse errors
