@@ -8,8 +8,6 @@ import {
 
 import { PythonVersion } from '.';
 
-const basenameRegex = /^python(\d+(?:.\d+)?)?(\.exe)?$/;
-
 /**
  * Determine a best-effort Python version based on the given filename.
  */
@@ -18,7 +16,7 @@ export function parseVersion(executable: string): PythonVersion {
     try {
         version = parseVersionString(executable);
     } catch (err) {
-        if (basenameRegex.test(path.basename(executable))) {
+        if (['python', 'python.exe'].includes(path.basename(executable))) {
             return parseVersionString('2.7');
         }
         throw err; // re-throw
