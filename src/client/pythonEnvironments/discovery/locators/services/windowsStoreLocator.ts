@@ -176,8 +176,12 @@ export class WindowsStoreLocator extends Locator {
 
     private startWatcher(): void {
         const windowsAppsRoot = getWindowsStoreAppsRoot();
-        watchLocationForPythonBinaries(windowsAppsRoot, (type: FileChangeType) => {
-            this.emitter.fire({ type, kind: this.kind });
-        }, pythonExeGlob);
+        watchLocationForPythonBinaries(
+            windowsAppsRoot,
+            (type: FileChangeType) => {
+                this.emitter.fire({ type, kind: this.kind });
+            },
+            pythonExeGlob,
+        );
     }
 }
