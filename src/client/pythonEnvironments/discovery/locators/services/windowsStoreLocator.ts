@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import * as fsapi from 'fs-extra';
+import * as minimatch from 'minimatch';
 import * as path from 'path';
-import * as picomatch from 'picomatch';
 import { traceWarning } from '../../../../common/logger';
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
@@ -107,8 +107,7 @@ const windowsStorePythonExes = 'python3\.[0-9]\.exe';
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
 export function isWindowsStorePythonExe(interpreterPath: string): boolean {
-    const regex = picomatch.toRegex(windowsStorePythonExes, { nocase: true });
-    return regex.test(path.basename(interpreterPath));
+    return minimatch(path.basename(interpreterPath), windowsStorePythonExes, { nocase: true });
 }
 
 /**
@@ -141,7 +140,7 @@ export class WindowsStoreLocator extends Locator {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
     public initialize(): void {
-        this.startWatcher().ignoreErrors();
+        this.startWatcher();
     }
 
     public iterEnvs(): IPythonEnvsIterator {
@@ -174,7 +173,7 @@ export class WindowsStoreLocator extends Locator {
         return undefined;
     }
 
-    private async startWatcher(): Promise<void> {
+    private startWatcher(): void {
         const windowsAppsRoot = getWindowsStoreAppsRoot();
         watchLocationForPythonBinaries(windowsAppsRoot, (type: FileChangeType) => {
             this.emitter.fire({ type, kind: this.kind });
