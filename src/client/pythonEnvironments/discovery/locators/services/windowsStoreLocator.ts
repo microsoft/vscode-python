@@ -98,7 +98,7 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
  * python3.exe
  * python38.exe
  */
-const windowsStorePythonExes = 'python3\.[0-9]\.exe';
+const pythonExeGlob = 'python3\.[0-9]\.exe';
 
 /**
  * Checks if a given path ends with python3.*.exe. Not all python executables are matched as
@@ -107,7 +107,7 @@ const windowsStorePythonExes = 'python3\.[0-9]\.exe';
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
 export function isWindowsStorePythonExe(interpreterPath: string): boolean {
-    return minimatch(path.basename(interpreterPath), windowsStorePythonExes, { nocase: true });
+    return minimatch(path.basename(interpreterPath), pythonExeGlob, { nocase: true });
 }
 
 /**
@@ -177,6 +177,6 @@ export class WindowsStoreLocator extends Locator {
         const windowsAppsRoot = getWindowsStoreAppsRoot();
         watchLocationForPythonBinaries(windowsAppsRoot, (type: FileChangeType) => {
             this.emitter.fire({ type, kind: this.kind });
-        }, windowsStorePythonExes);
+        }, pythonExeGlob);
     }
 }

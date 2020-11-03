@@ -4,6 +4,7 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { traceWarning } from '../../../../client/common/logger';
 import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
@@ -14,55 +15,65 @@ import { WindowsStoreLocator } from '../../../../client/pythonEnvironments/disco
 import { TEST_TIMEOUT } from '../../../constants';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 
-const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
-const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
-const testExecutablePath = path.join(testStoreAppRoot, 'python3.4.exe');
-
 class WindowsStoreEnvs {
-    private executablePath = testExecutablePath;
+    private executables: string[] = [];
 
-    public async create(): Promise<void> {
+    constructor(private readonly storeAppRoot: string) {}
+
+    public async create(basename: string): Promise<string> {
+        const filename = path.join(this.storeAppRoot, basename);
         try {
-            await fs.createFile(this.executablePath);
+            await fs.createFile(filename);
         } catch (err) {
-            throw new Error(`Failed to create Windows Apps executable, Error: ${err}`);
+            throw new Error(`Failed to create Windows Apps executable ${filename}, Error: ${err}`);
         }
+        this.executables.push(filename);
+        return filename;
     }
 
-    public async update(): Promise<void> {
+    public async update(basename: string): Promise<void> {
+        const filename = path.join(this.storeAppRoot, basename);
         try {
-            await fs.writeFile(this.executablePath, 'Environment has been updated');
+            await fs.writeFile(filename, 'Environment has been updated');
         } catch (err) {
-            throw new Error(`Failed to update Windows Apps executable, Error: ${err}`);
+            throw new Error(`Failed to update Windows Apps executable ${filename}, Error: ${err}`);
         }
     }
 
     public async cleanUp() {
-        await fs.remove(this.executablePath);
+        await Promise.all(
+            this.executables.map(async (filename: string) => {
+                try {
+                    await fs.remove(filename);
+                } catch (err) {
+                    traceWarning(`Failed to clean up ${filename}`);
+                }
+            }),
+        );
     }
 }
 
 suite('Windows Store Locator', async () => {
-    const windowsStoreEnvs = new WindowsStoreEnvs();
+    const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
+    const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
+    const windowsStoreEnvs = new WindowsStoreEnvs(testStoreAppRoot);
     let locator: WindowsStoreLocator;
     const localAppDataOldValue = process.env.LOCALAPPDATA;
 
-    async function waitForChangeToBeDetected(
-        deferred: Deferred<void>,
-        check: FileChangeType,
-    ) {
-        const timeout = setTimeout(() => {
-            clearTimeout(timeout);
-            deferred.reject(new Error('Environment not detected'));
-        }, TEST_TIMEOUT);
+    async function waitForChangeToBeDetected(deferred: Deferred<void>) {
+        const timeout = setTimeout(
+            () => {
+                clearTimeout(timeout);
+                deferred.reject(new Error('Environment not detected'));
+            },
+            TEST_TIMEOUT,
+        );
         await deferred.promise;
+    }
+
+    async function isLocated(basename: string): Promise<boolean> {
         const items = await getEnvs(locator.iterEnvs());
-        const result = items.some((item) => arePathsSame(item.executable.filename, testExecutablePath));
-        if (check === FileChangeType.Created || check === FileChangeType.Changed) {
-            assert.ok(result);
-        } else if (check === FileChangeType.Deleted) {
-            assert.notOk(result);
-        }
+        return items.some((item) => arePathsSame(item.executable.filename, path.join(testStoreAppRoot, basename)));
     }
 
     suiteSetup(async () => {
@@ -78,31 +89,36 @@ suite('Windows Store Locator', async () => {
     teardown(() => windowsStoreEnvs.cleanUp());
     suiteTeardown(async () => {
         process.env.LOCALAPPDATA = localAppDataOldValue;
-        await windowsStoreEnvs.cleanUp();
     });
 
     test('Detect a new environment', async () => {
         let actualEvent: PythonEnvsChangedEvent;
         const deferred = createDeferred<void>();
+        const expectedEvent = {
+            kind: PythonEnvKind.WindowsStore,
+            type: FileChangeType.Created,
+        };
         locator.onChanged(async (e) => {
             actualEvent = e;
             deferred.resolve();
         });
 
-        await windowsStoreEnvs.create();
-        await waitForChangeToBeDetected(deferred, FileChangeType.Created);
+        await windowsStoreEnvs.create('python3.4.exe');
+        await waitForChangeToBeDetected(deferred);
+        const isFound = await isLocated('python3.4.exe');
 
-        const expectedEvent = {
-            kind: PythonEnvKind.WindowsStore,
-            type: FileChangeType.Created,
-        };
+        assert.ok(isFound);
         assert.deepEqual(actualEvent!, expectedEvent, 'Wrong event emitted');
     });
 
     test('Detect when an environment has been deleted', async () => {
         let actualEvent: PythonEnvsChangedEvent;
         const deferred = createDeferred<void>();
-        await windowsStoreEnvs.create();
+        const expectedEvent = {
+            kind: PythonEnvKind.WindowsStore,
+            type: FileChangeType.Deleted,
+        };
+        await windowsStoreEnvs.create('python3.4.exe');
         // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.
         await sleep(100);
         locator.onChanged(async (e) => {
@@ -111,19 +127,21 @@ suite('Windows Store Locator', async () => {
         });
 
         await windowsStoreEnvs.cleanUp();
-        await waitForChangeToBeDetected(deferred, FileChangeType.Deleted);
+        await waitForChangeToBeDetected(deferred);
+        const isFound = await isLocated('python3.4.exe');
 
-        const expectedEvent = {
-            kind: PythonEnvKind.WindowsStore,
-            type: FileChangeType.Deleted,
-        };
+        assert.notOk(isFound);
         assert.deepEqual(actualEvent!, expectedEvent, 'Wrong event emitted');
     });
 
     test('Detect when an environment has been updated', async () => {
         let actualEvent: PythonEnvsChangedEvent;
         const deferred = createDeferred<void>();
-        await windowsStoreEnvs.create();
+        const expectedEvent = {
+            kind: PythonEnvKind.WindowsStore,
+            type: FileChangeType.Changed,
+        };
+        await windowsStoreEnvs.create('python3.4.exe');
         // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.
         await sleep(100);
         locator.onChanged(async (e) => {
@@ -131,13 +149,11 @@ suite('Windows Store Locator', async () => {
             deferred.resolve();
         });
 
-        await windowsStoreEnvs.update();
-        await waitForChangeToBeDetected(deferred, FileChangeType.Changed);
+        await windowsStoreEnvs.update('python3.4.exe');
+        await waitForChangeToBeDetected(deferred);
+        const isFound = await isLocated('python3.4.exe');
 
-        const expectedEvent = {
-            kind: PythonEnvKind.WindowsStore,
-            type: FileChangeType.Changed,
-        };
+        assert.ok(isFound);
         assert.deepEqual(actualEvent!, expectedEvent, 'Wrong event emitted');
     });
 });
