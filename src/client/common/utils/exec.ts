@@ -17,22 +17,6 @@ export function getSearchPathEnvVarNames(ostype = getOSType()): ('Path' | 'PATH'
 }
 
 /**
- * Determine if the given file is executable by the current user.
- *
- * If the file does not exist or has any other problem when accessed
- * then `false` is returned.  The caller is responsible to determine
- * whether or not the file exists.
- */
-export async function isValidAndExecutable(filename: string): Promise<boolean | undefined> {
-    try {
-        await fsapi.promises.access(filename, fsapi.constants.X_OK);
-    } catch (err) {
-        return false;
-    }
-    return true;
-}
-
-/**
  * Get the OS executable lookup "path" from the appropriate env var.
  */
 export function getSearchPathEntries(): string[] {
@@ -52,4 +36,20 @@ function parseSearchPathEntries(envVarValue: string): string[] {
         .split(path.delimiter)
         .map((entry: string) => entry.trim())
         .filter((entry) => entry.length > 0);
+}
+
+/**
+ * Determine if the given file is executable by the current user.
+ *
+ * If the file does not exist or has any other problem when accessed
+ * then `false` is returned.  The caller is responsible to determine
+ * whether or not the file exists.
+ */
+export async function isValidAndExecutable(filename: string): Promise<boolean | undefined> {
+    try {
+        await fsapi.promises.access(filename, fsapi.constants.X_OK);
+    } catch (err) {
+        return false;
+    }
+    return true;
 }
