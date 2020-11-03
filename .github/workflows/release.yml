@@ -215,8 +215,8 @@ jobs:
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
-          echo "::set-env name=CI_PYTHON_PATH::python"
-          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
+          echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
+          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
         shell: bash
         if: matrix.test-suite != 'ts-unit'
 
@@ -339,8 +339,8 @@ jobs:
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
-          echo "::set-env name=CI_PYTHON_PATH::python"
-          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
+          echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
+          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV          
         shell: bash
 
       - name: Run smoke tests
@@ -405,8 +405,8 @@ jobs:
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
-          echo "::set-env name=CI_PYTHON_PATH::python"
-          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
+          echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
+          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
         shell: bash
 
       - name: Run insider tests
