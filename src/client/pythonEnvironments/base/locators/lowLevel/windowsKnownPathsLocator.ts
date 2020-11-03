@@ -61,11 +61,7 @@ export class WindowsKnownPathsLocator extends CachingLocatorWrapper {
         const iterator = super.iterEnvs(query);
         // Until we have FS watchers set up, we force a background
         // refresh every time we iterate.
-        this.triggerRefresh();
-        return iterator;
-    }
-
-    public triggerRefresh(): void {
         this.simple.triggerRefresh();
+        return iterator;
     }
 }
