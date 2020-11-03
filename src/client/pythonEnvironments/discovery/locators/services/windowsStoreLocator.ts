@@ -99,7 +99,7 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
  * python38.exe
  * 'python.exe', 'python3.exe', and 'python3.8.exe' can point to the same executable, hence only capture python3.*.exes.
  */
-const pythonExeGlob = 'python3\.+([0-9])\.exe';
+const pythonExeGlob = 'python3\.[0-9]*\.exe';
 
 /**
  * Checks if a given path ends with python3.*.exe. Not all python executables are matched as
