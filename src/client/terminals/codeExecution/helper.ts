@@ -7,9 +7,11 @@ import { Position, Range, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { SendSelectionToREPL } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { IProcessServiceFactory } from '../../common/process/types';
+import { IExperimentService } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -21,12 +23,14 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
     private readonly applicationShell: IApplicationShell;
     private readonly processServiceFactory: IProcessServiceFactory;
     private readonly interpreterService: IInterpreterService;
+    private readonly experimentService: IExperimentService;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+        this.experimentService = serviceContainer.get<IExperimentService>(IExperimentService);
     }
 
     public async normalizeLines(code: string, resource?: Uri): Promise<string> {
@@ -40,7 +44,11 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
             const processService = await this.processServiceFactory.create(resource);
-            const [args, parse] = internalScripts.normalizeForInterpreter();
+
+            const inExperiment = await this.experimentService.inExperiment(SendSelectionToREPL.experiment);
+            const [args, parse] = inExperiment
+                ? internalScripts.normalizeSelection()
+                : internalScripts.normalizeForInterpreter();
             const observable = processService.execObservable(interpreter?.path || 'python', args, {
                 throwOnStdErr: true
             });
