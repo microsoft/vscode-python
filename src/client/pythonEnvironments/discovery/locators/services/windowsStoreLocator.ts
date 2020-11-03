@@ -98,7 +98,7 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
  * python3.exe
  * python38.exe
  */
-const pythonExeGlob = 'python3\.[0-9]\.exe';
+const pythonExeGlob = 'python3\.+([0-9])\.exe';
 
 /**
  * Checks if a given path ends with python3.*.exe. Not all python executables are matched as
