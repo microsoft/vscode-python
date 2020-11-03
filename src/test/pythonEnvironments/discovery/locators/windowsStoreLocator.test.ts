@@ -80,12 +80,15 @@ suite('Windows Store Locator', async () => {
         process.env.LOCALAPPDATA = testLocalAppData;
         await windowsStoreEnvs.cleanUp();
     });
-    setup(async () => {
+
+    async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
         locator = new WindowsStoreLocator();
         locator.initialize();
         // Wait for watchers to get ready
         await sleep(1000);
-    });
+        locator.onChanged(onChanged);
+    }
+
     teardown(() => windowsStoreEnvs.cleanUp());
     suiteTeardown(async () => {
         process.env.LOCALAPPDATA = localAppDataOldValue;
@@ -98,7 +101,7 @@ suite('Windows Store Locator', async () => {
             kind: PythonEnvKind.WindowsStore,
             type: FileChangeType.Created,
         };
-        locator.onChanged(async (e) => {
+        await setupLocator(async (e) => {
             actualEvent = e;
             deferred.resolve();
         });
@@ -121,7 +124,7 @@ suite('Windows Store Locator', async () => {
         await windowsStoreEnvs.create('python3.4.exe');
         // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.
         await sleep(100);
-        locator.onChanged(async (e) => {
+        await setupLocator(async (e) => {
             actualEvent = e;
             deferred.resolve();
         });
@@ -144,7 +147,7 @@ suite('Windows Store Locator', async () => {
         await windowsStoreEnvs.create('python3.4.exe');
         // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.
         await sleep(100);
-        locator.onChanged(async (e) => {
+        await setupLocator(async (e) => {
             actualEvent = e;
             deferred.resolve();
         });
