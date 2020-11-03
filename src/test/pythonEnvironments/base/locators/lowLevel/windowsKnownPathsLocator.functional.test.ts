@@ -9,7 +9,6 @@ import { PythonLocatorQuery } from '../../../../../client/pythonEnvironments/bas
 import {
     WindowsKnownPathsLocator,
 } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsKnownPathsLocator';
-import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import { ensureFSTree } from '../../../../utils/fs';
 import { createNamedEnv, getEnvs } from '../../common';
 
@@ -254,17 +253,8 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
         });
     });
 
-    test('handle changes', async () => {
-        const locator = new WindowsKnownPathsLocator();
-        await locator.initialize();
-        // Once the locator has an FS watcher, we will need to stop it:
-        //   cleanUps.push(() => locator.dispose());
-        let triggered: PythonEnvsChangedEvent | undefined;
-
-        locator.onChanged((event) => {
-            triggered = event;
-        });
-
-        assert.equal(triggered, undefined);
-    });
+    // Once the locator has an FS watcher, we will need to add
+    // a test to verify that FS or env var changes cause the
+    // locator to refresh and emit an event.  Until then there
+    // really isn't much to test with `locator.onChanged`.
 });

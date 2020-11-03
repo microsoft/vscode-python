@@ -244,46 +244,6 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
 
             assert.deepEqual(envs, expected);
         });
-
-        //test('updates for found executables', async () => {
-        //    const expectedInitial: PythonEnvInfo[] = [
-        //        createMinEnv('2.7', '/x/y/z/python.exe'),
-        //        createMinEnv('3', '/x/y/z/python3.exe'),
-        //        createMinEnv('3.8', '/x/y/z/python3.8.exe'),
-        //    ];
-        //    const expectedRefreshed = expectedInitial.map((old, index) => {
-        //        const updated = cloneDeep(old);
-        //        updated.name = `env${index + 1}`;
-        //        return updated;
-        //    });
-        //    const locator = new WindowsKnownPathsLocator();
-        //    setExecutables([
-        //        '/x/y/z/',
-        //        '  python.exe',
-        //        '  python3.exe',
-        //        '  python3.8.exe',
-        //    ]);
-        //    stubs.getInfo.resolvesArg(0);
-        //    const query: PythonLocatorQuery | undefined = undefined;
-        //    // Trigger the initial envs.
-        //    await locator.initialize();
-        //    const iterator1 = locator.iterEnvs(query);
-        //    // Trigger a refresh.
-        //    const seen : PythonEnvInfo[] = [];
-        //    stubs.getInfo.callsFake((e) => {
-        //        const updated = cloneDeep(e);
-        //        updated.name = `env${seen.length + 1}`;
-        //        seen.push(e);
-        //        return Promise.resolve(updated);
-        //    });
-        //    const iterator2 = locator.iterEnvs(query);
-
-        //    const initial = await getEnvs(iterator1);
-        //    const refreshed = await getEnvs(iterator2);
-
-        //    assert.deepEqual(initial, expectedInitial);
-        //    assert.deepEqual(refreshed, expectedRefreshed);
-        //});
     });
 
     suite('resolveEnv()', () => {
