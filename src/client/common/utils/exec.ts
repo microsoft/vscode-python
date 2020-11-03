@@ -19,15 +19,14 @@ export function getSearchPathEnvVarNames(ostype = getOSType()): ('Path' | 'PATH'
 /**
  * Determine if the given file is executable by the current user.
  *
- * If the file does not exist then `undefined` is returned.
+ * If the file does not exist or has any other problem when accessed
+ * then `false` is returned.  The caller is responsible to determine
+ * whether or not the file exists.
  */
-export async function isExecutable(filename: string): Promise<boolean | undefined> {
+export async function isValidAndExecutable(filename: string): Promise<boolean | undefined> {
     try {
         await fsapi.promises.access(filename, fsapi.constants.X_OK);
     } catch (err) {
-        if (err.code === 'ENOENT') {
-            return undefined;
-        }
         return false;
     }
     return true;
