@@ -71,9 +71,9 @@ suite('Windows Store Locator', async () => {
         await deferred.promise;
     }
 
-    async function isLocated(basename: string): Promise<boolean> {
+    async function isLocated(executable: string): Promise<boolean> {
         const items = await getEnvs(locator.iterEnvs());
-        return items.some((item) => arePathsSame(item.executable.filename, path.join(testStoreAppRoot, basename)));
+        return items.some((item) => arePathsSame(item.executable.filename, executable));
     }
 
     suiteSetup(async () => {
@@ -106,9 +106,9 @@ suite('Windows Store Locator', async () => {
             deferred.resolve();
         });
 
-        await windowsStoreEnvs.create('python3.4.exe');
+        const executable = await windowsStoreEnvs.create('python3.4.exe');
         await waitForChangeToBeDetected(deferred);
-        const isFound = await isLocated('python3.4.exe');
+        const isFound = await isLocated(executable);
 
         assert.ok(isFound);
         assert.deepEqual(actualEvent!, expectedEvent, 'Wrong event emitted');
@@ -121,7 +121,7 @@ suite('Windows Store Locator', async () => {
             kind: PythonEnvKind.WindowsStore,
             type: FileChangeType.Deleted,
         };
-        await windowsStoreEnvs.create('python3.4.exe');
+        const executable = await windowsStoreEnvs.create('python3.4.exe');
         // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.
         await sleep(100);
         await setupLocator(async (e) => {
@@ -131,7 +131,7 @@ suite('Windows Store Locator', async () => {
 
         await windowsStoreEnvs.cleanUp();
         await waitForChangeToBeDetected(deferred);
-        const isFound = await isLocated('python3.4.exe');
+        const isFound = await isLocated(executable);
 
         assert.notOk(isFound);
         assert.deepEqual(actualEvent!, expectedEvent, 'Wrong event emitted');
@@ -144,7 +144,7 @@ suite('Windows Store Locator', async () => {
             kind: PythonEnvKind.WindowsStore,
             type: FileChangeType.Changed,
         };
-        await windowsStoreEnvs.create('python3.4.exe');
+        const executable = await windowsStoreEnvs.create('python3.4.exe');
         // Wait before the change event has been sent. If both operations occur almost simultaneously no event is sent.
         await sleep(100);
         await setupLocator(async (e) => {
@@ -154,7 +154,7 @@ suite('Windows Store Locator', async () => {
 
         await windowsStoreEnvs.update('python3.4.exe');
         await waitForChangeToBeDetected(deferred);
-        const isFound = await isLocated('python3.4.exe');
+        const isFound = await isLocated(executable);
 
         assert.ok(isFound);
         assert.deepEqual(actualEvent!, expectedEvent, 'Wrong event emitted');
