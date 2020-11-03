@@ -348,7 +348,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
 function getPyenvEnvironmentDirFromPath(interpreterPath:string): string {
     const skipDirs = ['bin', 'scripts'];
 
-    // env <--- Return this directory if it si not 'bin' or 'scripts'
+    // env <--- Return this directory if it is not 'bin' or 'scripts'
     // |__ python  <--- interpreterPath
     const dir = path.basename(path.dirname(interpreterPath));
     if (!skipDirs.includes(dir.toLowerCase())) {
@@ -356,7 +356,7 @@ function getPyenvEnvironmentDirFromPath(interpreterPath:string): string {
     }
 
     // This is the best next guess.
-    // env <--- Return this directory if it si not 'bin' or 'scripts'
+    // env <--- Return this directory if it is not 'bin' or 'scripts'
     // |__ bin or Scripts
     //     |__ python  <--- interpreterPath
     return path.dirname(path.dirname(interpreterPath));
