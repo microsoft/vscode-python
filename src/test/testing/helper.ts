@@ -37,6 +37,8 @@ export function fixPath(filename: string): string {
     return filename.replace(/\//, sep);
 }
 
+// XXX Move these to something like src/test/utils/text.ts.
+
 // Return the indentation part of the given line.
 export function getIndent(line: string): string {
     const found = line.match(/^ */);
