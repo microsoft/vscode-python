@@ -41,10 +41,17 @@ class SimpleLocator extends FoundFilesLocator {
 
 async function* getExecutables(): AsyncIterableIterator<string> {
     for (const entry of getSearchPathEntries()) {
-        for await (const executable of findInterpretersInDir(entry)) {
-            if (await isValidAndExecutable(executable)) {
-                yield executable;
+        try {
+            for await (const executable of findInterpretersInDir(entry)) {
+                if (await isValidAndExecutable(executable)) {
+                    yield executable;
+                }
             }
+        } catch (err) {
+            if (err.code === 'ENOENT') {
+                return;
+            }
+            throw err; // re-throw
         }
     }
 }
