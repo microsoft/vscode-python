@@ -66,7 +66,6 @@ export function parseVersion(versionStr: string): PythonVersion {
  *   3.9.0.candidate.1
  *
  * Does not parse:
-
  *   3.9.0
  *   3.9.0a1
  *   3.9.0b2
