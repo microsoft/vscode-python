@@ -25,7 +25,7 @@ export async function isExecutable(filename: string): Promise<boolean | undefine
     try {
         await fsapi.promises.access(filename, fsapi.constants.X_OK);
     } catch (err) {
-        if (err.code === 'EEXIST') {
+        if (err.code === 'ENOENT') {
             return undefined;
         }
         return false;
