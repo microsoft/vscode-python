@@ -97,6 +97,7 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
  * python2.7.exe
  * python3.exe
  * python38.exe
+ * 'python.exe', 'python3.exe', and 'python3.8.exe' can point to the same executable, hence only capture python3.*.exes.
  */
 const pythonExeGlob = 'python3\.+([0-9])\.exe';
 
