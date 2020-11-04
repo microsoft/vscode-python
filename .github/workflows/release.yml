@@ -117,7 +117,7 @@ jobs:
           python-version: ${{matrix.python}}
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v1
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -339,7 +339,7 @@ jobs:
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
           echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
-          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV          
+          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
         shell: bash
 
       - name: Run smoke tests
