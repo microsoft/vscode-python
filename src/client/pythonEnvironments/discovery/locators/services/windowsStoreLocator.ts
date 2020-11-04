@@ -93,14 +93,16 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
  * This is a glob pattern which matches following file names:
  * python3.8.exe
  * python3.9.exe
+ * python3.10.exe
  * This pattern does not match:
  * python.exe
  * python2.7.exe
  * python3.exe
  * python38.exe
- * 'python.exe', 'python3.exe', and 'python3.8.exe' can point to the same executable, hence only capture python3.*.exes.
+ * Note chokidar fails to match multiple digits using +([0-9]), even though the underlying glob pattern matcher
+ * they use (picomatch), or any other glob matcher does. Hence why we had to use {[0-9],[0-9][0-9]} instead.
  */
-const pythonExeGlob = 'python3\.[0-9]*\.exe';
+const pythonExeGlob = 'python3\.{[0-9],[0-9][0-9]}\.exe';
 
 /**
  * Checks if a given path ends with python3.*.exe. Not all python executables are matched as
