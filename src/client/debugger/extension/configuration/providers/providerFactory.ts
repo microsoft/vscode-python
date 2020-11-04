@@ -12,6 +12,9 @@ export class DebugConfigurationProviderFactory implements IDebugConfigurationPro
     private readonly providers: Map<DebugConfigurationType, IDebugConfigurationProvider>;
     constructor(
         @inject(IDebugConfigurationProvider)
+        @named(DebugConfigurationType.launchFastAPI)
+        fastapiProvider: IDebugConfigurationProvider,
+        @inject(IDebugConfigurationProvider)
         @named(DebugConfigurationType.launchFlask)
         flaskProvider: IDebugConfigurationProvider,
         @inject(IDebugConfigurationProvider)
@@ -35,6 +38,7 @@ export class DebugConfigurationProviderFactory implements IDebugConfigurationPro
     ) {
         this.providers = new Map<DebugConfigurationType, IDebugConfigurationProvider>();
         this.providers.set(DebugConfigurationType.launchDjango, djangoProvider);
+        this.providers.set(DebugConfigurationType.launchFastAPI, fastapiProvider);
         this.providers.set(DebugConfigurationType.launchFlask, flaskProvider);
         this.providers.set(DebugConfigurationType.launchFile, fileProvider);
         this.providers.set(DebugConfigurationType.launchModule, moduleProvider);
