@@ -1,10 +1,12 @@
 # Changelog
 
-## 2020.10.0-rc (14 October 2020)
+## 2020.10.0 (27 October 2020)
 
 ### Enhancements
 
-1. `debugpy` updated to stable version.
+1. `debugpy` updated to latest stable version.
+1. Make data viewer openable from the variables window context menu while debugging.
+   ([#14406](https://github.com/Microsoft/vscode-python/issues/14406))
 1. Do not opt users out of the insiders program if they have a stable version installed.
    ([#14090](https://github.com/Microsoft/vscode-python/issues/14090))
 
@@ -308,6 +310,7 @@ part of!
    ([#13729](https://github.com/Microsoft/vscode-python/issues/13729))
 1. Fix nighly failure with beakerx.
    ([#13734](https://github.com/Microsoft/vscode-python/issues/13734))
+
 ## 2020.8.6 (15 September 2020)
 
 ### Fixes
