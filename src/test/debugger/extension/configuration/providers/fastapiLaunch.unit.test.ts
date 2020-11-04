@@ -34,23 +34,23 @@ suite('Debugging - Configuration Provider FastAPI', () => {
     });
     test("getApplicationPath should return undefined if file doesn't exist", async () => {
         const folder = { uri: Uri.parse(path.join('one', 'two')), name: '1', index: 0 };
-        const appPyPath = path.join(folder.uri.fsPath, 'app.py');
+        const appPyPath = path.join(folder.uri.fsPath, 'main.py');
         when(fs.fileExists(appPyPath)).thenResolve(false);
 
         const file = await provider.getApplicationPath(folder);
 
         expect(file).to.be.equal(undefined, 'Should return undefined');
     });
-    test('getApplicationPath should file path', async () => {
+    test('getApplicationPath should find path', async () => {
         const folder = { uri: Uri.parse(path.join('one', 'two')), name: '1', index: 0 };
-        const appPyPath = path.join(folder.uri.fsPath, 'app.py');
+        const appPyPath = path.join(folder.uri.fsPath, 'main.py');
 
         when(fs.fileExists(appPyPath)).thenResolve(true);
 
         const file = await provider.getApplicationPath(folder);
 
         // tslint:disable-next-line:no-invalid-template-strings
-        expect(file).to.be.equal('app.py');
+        expect(file).to.be.equal('main.py');
     });
     test('Launch JSON with valid python path', async () => {
         const folder = { uri: Uri.parse(path.join('one', 'two')), name: '1', index: 0 };
@@ -60,16 +60,11 @@ suite('Debugging - Configuration Provider FastAPI', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: DebugConfigStrings.flask.snippet.name(),
+            name: DebugConfigStrings.fastapi.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-            module: 'flask',
-            env: {
-                FLASK_APP: 'xyz.py',
-                FLASK_ENV: 'development',
-                FLASK_DEBUG: '0'
-            },
-            args: ['run', '--no-debugger'],
+            module: 'uvicorn',
+            args: ['main:app'],
             jinja: true
         };
 
@@ -80,46 +75,16 @@ suite('Debugging - Configuration Provider FastAPI', () => {
         const state = { config: {}, folder };
         provider.getApplicationPath = () => Promise.resolve(undefined);
 
-        when(input.showInputBox(anything())).thenResolve('hello');
+        when(input.showInputBox(anything())).thenResolve('main');
 
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: DebugConfigStrings.flask.snippet.name(),
+            name: DebugConfigStrings.fastapi.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-            module: 'flask',
-            env: {
-                FLASK_APP: 'hello',
-                FLASK_ENV: 'development',
-                FLASK_DEBUG: '0'
-            },
-            args: ['run', '--no-debugger'],
-            jinja: true
-        };
-
-        expect(state.config).to.be.deep.equal(config);
-    });
-    test('Launch JSON with default managepy path', async () => {
-        const folder = { uri: Uri.parse(path.join('one', 'two')), name: '1', index: 0 };
-        const state = { config: {}, folder };
-        provider.getApplicationPath = () => Promise.resolve(undefined);
-
-        when(input.showInputBox(anything())).thenResolve();
-
-        await provider.buildConfiguration(instance(input), state);
-
-        const config = {
-            name: DebugConfigStrings.flask.snippet.name(),
-            type: DebuggerTypeName,
-            request: 'launch',
-            module: 'flask',
-            env: {
-                FLASK_APP: 'app.py',
-                FLASK_ENV: 'development',
-                FLASK_DEBUG: '0'
-            },
-            args: ['run', '--no-debugger'],
+            module: 'uvicorn',
+            args: ['main:app'],
             jinja: true
         };
 
