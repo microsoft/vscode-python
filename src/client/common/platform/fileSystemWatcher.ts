@@ -5,7 +5,7 @@
 
 import * as chokidar from 'chokidar';
 import * as path from 'path';
-import { RelativePattern, workspace } from 'vscode';
+import { Disposable, RelativePattern, workspace } from 'vscode';
 import { traceError, traceVerbose, traceWarning } from '../logger';
 import { normCasePath } from './fs-paths';
 
@@ -22,35 +22,40 @@ const POLLING_INTERVAL = 5000;
 export function watchLocationForPattern(
     baseDir: string,
     pattern: string,
-    callback: (type: FileChangeType, absPath: string) => void
-): void {
+    callback: (type: FileChangeType, absPath: string) => void,
+): Disposable {
     // Use VSCode API iff base directory to exists within the current workspace folders
     const found = workspace.workspaceFolders?.find((e) => normCasePath(baseDir).startsWith(normCasePath(e.uri.fsPath)));
     if (found) {
-        watchLocationUsingVSCodeAPI(baseDir, pattern, callback);
-    } else {
-        // Fallback to chokidar as base directory to lookup doesn't exist within the current workspace folders
-        watchLocationUsingChokidar(baseDir, pattern, callback);
+        return watchLocationUsingVSCodeAPI(baseDir, pattern, callback);
     }
+    // Fallback to chokidar as base directory to lookup doesn't exist within the current workspace folders
+    return watchLocationUsingChokidar(baseDir, pattern, callback);
 }
 
 function watchLocationUsingVSCodeAPI(
     baseDir: string,
     pattern: string,
-    callback: (type: FileChangeType, absPath: string) => void
+    callback: (type: FileChangeType, absPath: string) => void,
 ) {
     const globPattern = new RelativePattern(baseDir, pattern);
+    const disposables: Disposable[] = [];
     traceVerbose(`Start watching: ${baseDir} with pattern ${pattern} using VSCode API`);
     const watcher = workspace.createFileSystemWatcher(globPattern);
-    watcher.onDidCreate((e) => callback(FileChangeType.Created, e.fsPath));
-    watcher.onDidChange((e) => callback(FileChangeType.Changed, e.fsPath));
-    watcher.onDidDelete((e) => callback(FileChangeType.Deleted, e.fsPath));
+    disposables.push(watcher.onDidCreate((e) => callback(FileChangeType.Created, e.fsPath)));
+    disposables.push(watcher.onDidChange((e) => callback(FileChangeType.Changed, e.fsPath)));
+    disposables.push(watcher.onDidDelete((e) => callback(FileChangeType.Deleted, e.fsPath)));
+    return {
+        dispose: async () => {
+            disposables.forEach((d) => d.dispose());
+        },
+    };
 }
 
 function watchLocationUsingChokidar(
     baseDir: string,
     pattern: string,
-    callback: (type: FileChangeType, absPath: string) => void
+    callback: (type: FileChangeType, absPath: string) => void,
 ) {
     const watcherOpts: chokidar.WatchOptions = {
         cwd: baseDir,
@@ -69,9 +74,9 @@ function watchLocationUsingChokidar(
             '**/.hg/store/**',
             '/dev/**',
             '/proc/**',
-            '/sys/**'
+            '/sys/**',
         ], // https://github.com/microsoft/vscode/issues/23954
-        followSymlinks: false
+        followSymlinks: false,
     };
     traceVerbose(`Start watching: ${baseDir} with pattern ${pattern} using chokidar`);
     let watcher: chokidar.FSWatcher | null = chokidar.watch(pattern, watcherOpts);
@@ -96,6 +101,13 @@ function watchLocationUsingChokidar(
         callback(eventType, absPath);
     });
 
+    const dispose = async () => {
+        if (watcher) {
+            await watcher.close();
+            watcher = null;
+        }
+    };
+
     watcher.on('error', async (error: NodeJS.ErrnoException) => {
         if (error) {
             // Specially handle ENOSPC errors that can happen when
@@ -105,13 +117,12 @@ function watchLocationUsingChokidar(
             // See https://github.com/Microsoft/vscode/issues/7950
             if (error.code === 'ENOSPC') {
                 traceError(`Inotify limit reached (ENOSPC) for ${baseDir} with pattern ${pattern}`);
-                if (watcher) {
-                    await watcher.close();
-                    watcher = null;
-                }
+                await dispose();
             } else {
                 traceWarning(error.toString());
             }
         }
     });
+
+    return { dispose };
 }

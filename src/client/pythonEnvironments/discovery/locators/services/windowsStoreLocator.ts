@@ -10,7 +10,8 @@ import { Architecture, getEnvironmentVariable } from '../../../../common/utils/p
 import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { getPythonVersionFromPath } from '../../../base/info/pythonVersion';
-import { IPythonEnvsIterator, Locator } from '../../../base/locator';
+import { IPythonEnvsIterator } from '../../../base/locator';
+import { FSWatchingLocator } from '../../../base/locators/lowLevel/locator';
 import { getFileInfo } from '../../../common/externalDependencies';
 import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
 
@@ -137,10 +138,10 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
         .filter(isWindowsStorePythonExe);
 }
 
-export class WindowsStoreLocator extends Locator {
+export class WindowsStoreLocator extends FSWatchingLocator {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
-    public initialize(): void {
+    public async initialize(): Promise<void> {
         this.startWatcher();
     }
 
@@ -176,12 +177,14 @@ export class WindowsStoreLocator extends Locator {
 
     private startWatcher(): void {
         const windowsAppsRoot = getWindowsStoreAppsRoot();
-        watchLocationForPythonBinaries(
-            windowsAppsRoot,
-            (type: FileChangeType) => {
-                this.emitter.fire({ type, kind: this.kind });
-            },
-            pythonExeGlob,
+        this.disposables.push(
+            watchLocationForPythonBinaries(
+                windowsAppsRoot,
+                (type: FileChangeType) => {
+                    this.emitter.fire({ type, kind: this.kind });
+                },
+                pythonExeGlob,
+            ),
         );
     }
 }

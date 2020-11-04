@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// eslint-disable-next-line max-classes-per-file
 import { Event, Uri } from 'vscode';
+import { AsyncDisposableRegistry } from '../../common/asyncDisposableRegistry';
+import { IAsyncDisposableRegistry, IDisposable } from '../../common/types';
 import { iterEmpty } from '../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind } from './info';
 import {
@@ -178,9 +181,14 @@ interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
  * should be used.  Only in low-level cases should you consider using
  * `BasicPythonEnvsChangedEvent`.
  */
-export abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent> implements ILocator<E> {
+export abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
+implements IDisposable, ILocator<E> {
     public readonly onChanged: Event<E>;
+
     protected readonly emitter: IEmitter<E>;
+
+    protected readonly disposables: IAsyncDisposableRegistry = new AsyncDisposableRegistry();
+
     constructor(watcher: IPythonEnvsWatcher<E> & IEmitter<E>) {
         this.emitter = watcher;
         this.onChanged = watcher.onChanged;
@@ -190,6 +198,10 @@ export abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = Python
 
     public async resolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return undefined;
+    }
+
+    public dispose(): void {
+        this.disposables.dispose().ignoreErrors();
     }
 }
 
