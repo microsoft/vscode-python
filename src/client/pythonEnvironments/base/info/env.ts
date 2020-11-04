@@ -179,7 +179,7 @@ export function areSameEnv(
  * weighted by most important to least important fields.
  * Wn > Wn-1 + Wn-2 + ... W0
  */
-export function getPythonVersionSpecificity(version: PythonVersion): number {
+function getPythonVersionSpecificity(version: PythonVersion): number {
     let infoLevel = 0;
     if (version.major > 0) {
         infoLevel += 20; // W4
