@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 import * as path from 'path';
 import '../../../../common/extensions';
-import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
-import { parseVersion } from '../../../base/info/pythonVersion';
+import { PythonVersion } from '../../../base/info';
+import { getEmptyVersion, parseVersion } from '../../../base/info/pythonVersion';
 import { pathExists, readFile } from '../../../common/externalDependencies';
 
 function getCondaMetaPaths(interpreterPath:string): string[] {
@@ -115,10 +115,10 @@ export async function getPythonVersionFromConda(interpreterPath:string): Promise
                 // There is usually only one `conda-meta/history`. If we found, it but
                 // failed to parse it, then just return here. No need to look for versions
                 // any further.
-                return UNKNOWN_PYTHON_VERSION;
+                return getEmptyVersion();
             }
         }
     }
 
-    return UNKNOWN_PYTHON_VERSION;
+    return getEmptyVersion();
 }

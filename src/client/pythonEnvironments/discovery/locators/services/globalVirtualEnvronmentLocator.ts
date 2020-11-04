@@ -6,10 +6,14 @@ import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
 import { chain, iterable } from '../../../../common/utils/async';
 import {
-    getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
+    getEnvironmentVariable,
+    getOSType,
+    getUserHomeDir,
+    OSType,
 } from '../../../../common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
+import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
+import { getEmptyVersion } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { findInterpretersInDir } from '../../../common/commonUtils';
@@ -128,7 +132,7 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
                                 const envInfo = buildEnvInfo({
                                     kind,
                                     executable: env,
-                                    version: UNKNOWN_PYTHON_VERSION,
+                                    version: getEmptyVersion(),
                                 });
                                 envInfo.executable.ctime = timeData.ctime;
                                 envInfo.executable.mtime = timeData.mtime;
@@ -161,7 +165,7 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
                 const timeData = await getFileInfo(executablePath);
                 const envInfo = buildEnvInfo({
                     kind,
-                    version: UNKNOWN_PYTHON_VERSION,
+                    version: getEmptyVersion(),
                     executable: executablePath,
                 });
                 envInfo.executable.ctime = timeData.ctime;

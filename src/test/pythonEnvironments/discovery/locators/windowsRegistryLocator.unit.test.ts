@@ -9,9 +9,12 @@ import {
 } from 'winreg';
 import { Architecture } from '../../../../client/common/utils/platform';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION,
+    PythonEnvInfo,
+    PythonEnvKind,
+    PythonReleaseLevel,
+    PythonVersion,
 } from '../../../../client/pythonEnvironments/base/info';
-import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { getEmptyVersion, parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as winutils from '../../../../client/pythonEnvironments/common/windowsUtils';
 import { WindowsRegistryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryLocator';
@@ -269,7 +272,7 @@ suite('Windows Registry', () => {
         try {
             version = parseVersion(versionStr);
         } catch (ex) {
-            version = UNKNOWN_PYTHON_VERSION;
+            version = getEmptyVersion();
         }
 
         return {

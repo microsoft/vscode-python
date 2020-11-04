@@ -4,8 +4,8 @@
 import * as path from 'path';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
-import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
-import { compareVersions, parseVersion } from '../base/info/pythonVersion';
+import { PythonVersion } from '../base/info';
+import { compareVersions, getEmptyVersion, parseVersion } from '../base/info/pythonVersion';
 import { getPythonVersionFromConda } from '../discovery/locators/services/condaLocator';
 import { getPythonVersionFromVenv } from '../discovery/locators/services/virtualEnvironmentIdentifier';
 import { isDirectory, listDir } from './externalDependencies';
@@ -58,7 +58,7 @@ export async function* findInterpretersInDir(
  */
 export async function getPythonVersionFromNearByFiles(interpreterPath:string): Promise<PythonVersion> {
     const root = path.dirname(interpreterPath);
-    let version = UNKNOWN_PYTHON_VERSION;
+    let version = getEmptyVersion();
     for await (const interpreter of findInterpretersInDir(root)) {
         try {
             const curVersion = parseVersion(path.basename(interpreter));
@@ -84,15 +84,15 @@ export async function getPythonVersionFromPath(
 ): Promise<PythonVersion> {
     let versionA;
     try {
-        versionA = hint ? parseVersion(hint) : UNKNOWN_PYTHON_VERSION;
+        versionA = hint ? parseVersion(hint) : getEmptyVersion();
     } catch (ex) {
-        versionA = UNKNOWN_PYTHON_VERSION;
+        versionA = getEmptyVersion();
     }
-    const versionB = interpreterPath ? await getPythonVersionFromNearByFiles(interpreterPath) : UNKNOWN_PYTHON_VERSION;
-    const versionC = interpreterPath ? await getPythonVersionFromVenv(interpreterPath) : UNKNOWN_PYTHON_VERSION;
-    const versionD = interpreterPath ? await getPythonVersionFromConda(interpreterPath) : UNKNOWN_PYTHON_VERSION;
+    const versionB = interpreterPath ? await getPythonVersionFromNearByFiles(interpreterPath) : getEmptyVersion();
+    const versionC = interpreterPath ? await getPythonVersionFromVenv(interpreterPath) : getEmptyVersion();
+    const versionD = interpreterPath ? await getPythonVersionFromConda(interpreterPath) : getEmptyVersion();
 
-    let version = UNKNOWN_PYTHON_VERSION;
+    let version = getEmptyVersion();
     for (const v of [versionA, versionB, versionC, versionD]) {
         version = compareVersions(version, v) > 0 ? version : v;
     }

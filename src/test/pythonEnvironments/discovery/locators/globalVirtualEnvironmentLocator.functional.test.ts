@@ -6,7 +6,8 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher';
 import * as platformUtils from '../../../../client/common/utils/platform';
-import { PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION } from '../../../../client/pythonEnvironments/base/info';
+import { PythonEnvInfo, PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
+import { getEmptyVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { GlobalVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
@@ -35,7 +36,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
                 mtime: -1,
             },
             defaultDisplayName: undefined,
-            version: UNKNOWN_PYTHON_VERSION,
+            version: getEmptyVersion(),
             arch: platformUtils.Architecture.Unknown,
             distro: { org: '' },
             searchLocation: undefined,
@@ -310,7 +311,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
                 ctime: -1,
                 mtime: -1,
             },
-            version: UNKNOWN_PYTHON_VERSION,
+            version: getEmptyVersion(),
         };
 
         locator = new GlobalVirtualEnvironmentLocator();

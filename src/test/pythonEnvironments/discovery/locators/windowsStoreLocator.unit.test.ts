@@ -8,9 +8,12 @@ import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher
 import { ExecutionResult } from '../../../../client/common/process/types';
 import * as platformApis from '../../../../client/common/utils/platform';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION,
+    PythonEnvInfo,
+    PythonEnvKind,
+    PythonReleaseLevel,
+    PythonVersion,
 } from '../../../../client/pythonEnvironments/base/info';
-import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { getEmptyVersion, parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 import * as externalDep from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { getWindowsStorePythonExes, WindowsStoreLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
 import { InterpreterInformation } from '../../../../client/pythonEnvironments/info/environmentInfoService';
@@ -89,7 +92,7 @@ suite('Windows Store', () => {
                     version.sysVersion = sysVersion;
                 }
             } catch (e) {
-                version = UNKNOWN_PYTHON_VERSION;
+                version = getEmptyVersion();
             }
             return {
                 version,

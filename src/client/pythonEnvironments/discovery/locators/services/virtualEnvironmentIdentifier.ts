@@ -7,8 +7,13 @@ import '../../../../common/extensions';
 import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
-import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
-import { compareVersions, parseVersion, parseVersionInfo } from '../../../base/info/pythonVersion';
+import { PythonVersion } from '../../../base/info';
+import {
+    compareVersions,
+    getEmptyVersion,
+    parseVersion,
+    parseVersionInfo,
+} from '../../../base/info/pythonVersion';
 import { pathExists, readFile } from '../../../common/externalDependencies';
 
 function getPyvenvConfigPathsFrom(interpreterPath:string): string[] {
@@ -126,7 +131,7 @@ export async function isVirtualenvwrapperEnvironment(interpreterPath:string): Pr
  */
 export async function getPythonVersionFromVenv(interpreterPath:string): Promise<PythonVersion> {
     const configPaths = getPyvenvConfigPathsFrom(interpreterPath);
-    let version = UNKNOWN_PYTHON_VERSION;
+    let version = getEmptyVersion();
 
     // We want to check each of those locations in the order. There is no need to look at
     // all of them in parallel.
@@ -169,7 +174,7 @@ export async function getPythonVersionFromVenv(interpreterPath:string): Promise<
             } catch (ex) {
                 // There is only ome pyvenv.cfg. If we found it but failed to parse it
                 // then just return here. No need to look for versions any further.
-                return UNKNOWN_PYTHON_VERSION;
+                return getEmptyVersion();
             }
         }
     }

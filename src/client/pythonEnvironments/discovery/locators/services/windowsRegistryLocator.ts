@@ -6,9 +6,11 @@ import { HKCU, HKLM } from 'winreg';
 import { traceError, traceVerbose } from '../../../../common/logger';
 import { Architecture } from '../../../../common/utils/platform';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonVersion, UNKNOWN_PYTHON_VERSION,
+    PythonEnvInfo,
+    PythonEnvKind,
+    PythonVersion,
 } from '../../../base/info';
-import { parseVersion } from '../../../base/info/pythonVersion';
+import { getEmptyVersion, parseVersion } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getFileInfo } from '../../../common/externalDependencies';
 import { getInterpreterDataFromRegistry, IRegistryInterpreterData, readRegistryKeys } from '../../../common/windowsUtils';
@@ -68,7 +70,7 @@ export class WindowsRegistryLocator extends Locator {
 
     private async buildEnvInfo(data:IRegistryInterpreterData): Promise<PythonEnvInfo> {
         const versionStr = (data.versionStr ?? data.sysVersionStr) ?? data.interpreterPath;
-        let version:PythonVersion = UNKNOWN_PYTHON_VERSION;
+        let version:PythonVersion = getEmptyVersion();
 
         try {
             version = parseVersion(versionStr);

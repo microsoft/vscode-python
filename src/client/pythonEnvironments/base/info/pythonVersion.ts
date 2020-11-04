@@ -11,10 +11,10 @@ import {
     parseBasicVersionInfo,
 } from '../../../common/utils/version';
 
-import { PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION } from '.';
+import { PythonReleaseLevel, PythonVersion } from '.';
 
 export function getPythonVersionFromPath(exe:string): PythonVersion {
-    let version = UNKNOWN_PYTHON_VERSION;
+    let version = getEmptyVersion();
     try {
         version = parseVersion(path.basename(exe));
     } catch (ex) {
@@ -38,7 +38,7 @@ export function parseVersion(versionStr: string): PythonVersion {
     const parsed = parseBasicVersionInfo<PythonVersion>(versionStr);
     if (!parsed) {
         if (versionStr === '') {
-            return EMPTY_VERSION as PythonVersion;
+            return getEmptyVersion();
         }
         throw Error(`invalid version ${versionStr}`);
     }
@@ -80,7 +80,7 @@ export function parseVersion(versionStr: string): PythonVersion {
  */
 export function parseVersionInfo(versionInfoStr: string): PythonVersion {
     const parts = versionInfoStr.split('.');
-    const version = UNKNOWN_PYTHON_VERSION;
+    const version = getEmptyVersion();
     if (parts.length >= 2) {
         version.major = parseInt(parts[0], 10);
         version.minor = parseInt(parts[1], 10);
