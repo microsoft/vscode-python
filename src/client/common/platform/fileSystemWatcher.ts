@@ -74,7 +74,9 @@ function watchLocationUsingChokidar(
             '**/.hg/store/**',
             '/dev/**',
             '/proc/**',
-            '/sys/**'
+            '/sys/**',
+            '**/lib/**',
+            '**/includes/**'
         ], // https://github.com/microsoft/vscode/issues/23954
         followSymlinks: false
     };
