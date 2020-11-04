@@ -6,16 +6,15 @@ import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
 import {
-    PythonEnvInfo, PythonEnvKind, PythonVersion, UNKNOWN_PYTHON_VERSION,
+    PythonEnvInfo, PythonEnvKind,
 } from '../../../base/info';
-import { buildEnvInfo, comparePythonVersionSpecificity } from '../../../base/info/env';
-import { parseVersion } from '../../../base/info/pythonVersion';
+import { buildEnvInfo } from '../../../base/info/env';
 import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
 import { PythonEnvsWatcher } from '../../../base/watcher';
-import { findInterpretersInDir, getPythonVersionFromNearByFiles } from '../../../common/commonUtils';
+import {
+    getEnvironmentDirFromPath, getInterpreterPathFromDir, getPythonVersionFromPath,
+} from '../../../common/commonUtils';
 import { getFileInfo, getSubDirs, pathExists } from '../../../common/externalDependencies';
-import { getPythonVersionFromConda } from './condaLocator';
-import { getPythonVersionFromVenv } from './virtualEnvironmentIdentifier';
 
 function getPyenvDir(): string {
     // Check if the pyenv environment variables exist: PYENV on Windows, PYENV_ROOT on Unix.
@@ -67,7 +66,10 @@ export interface IPyenvVersionStrings {
 
 /**
  * This function provides parsers for some of the common and known distributions
- * supported by pyenv.
+ * supported by pyenv. To get the list of supported pyenv distributions, run
+ * `pyenv install --list`
+ *
+ * The parsers below were written based on the list obtained from pyenv version 1.2.21
  */
 function getKnownPyenvVersionParsers() : Map<string, (path:string) => Promise<IPyenvVersionStrings|undefined>> {
     /**
@@ -230,55 +232,6 @@ export function parsePyenvVersion(str:string): Promise<IPyenvVersionStrings|unde
 }
 
 /**
- * This function looks for python or python.exe binary in the sub folders of a given
- * environment directory.
- * @param envDir Absolute path to the pyenv environment directory
- */
-async function getInterpreterPathFromDir(envDir:string): Promise<string|undefined> {
-    // Ignore any folders or files that not directly python binary related.
-    function filter(str:string):boolean {
-        const lower = str.toLowerCase();
-        return ['bin', 'scripts'].includes(lower) || lower.search('python') >= 0;
-    }
-
-    // Search in the sub-directories for python binary
-    for await (const bin of findInterpretersInDir(envDir, 2, filter)) {
-        const base = path.basename(bin).toLowerCase();
-        if (base === 'python.exe' || base === 'python') {
-            return bin;
-        }
-    }
-    return undefined;
-}
-
-/**
- * This function does the best effort of finding version of python without running the
- * python binary.
- * @param interpreterPath Absolute path to the interpreter.
- * @param hint Any string that might contain version info.
- */
-async function getPythonVersionFromPath(
-    interpreterPath:string|undefined,
-    hint:string|undefined,
-): Promise<PythonVersion> {
-    let versionA;
-    try {
-        versionA = hint ? parseVersion(hint) : UNKNOWN_PYTHON_VERSION;
-    } catch (ex) {
-        versionA = UNKNOWN_PYTHON_VERSION;
-    }
-    const versionB = interpreterPath ? await getPythonVersionFromNearByFiles(interpreterPath) : UNKNOWN_PYTHON_VERSION;
-    const versionC = interpreterPath ? await getPythonVersionFromVenv(interpreterPath) : UNKNOWN_PYTHON_VERSION;
-    const versionD = interpreterPath ? await getPythonVersionFromConda(interpreterPath) : UNKNOWN_PYTHON_VERSION;
-
-    let version = UNKNOWN_PYTHON_VERSION;
-    for (const v of [versionA, versionB, versionC, versionD]) {
-        version = comparePythonVersionSpecificity(version, v) > 0 ? version : v;
-    }
-    return version;
-}
-
-/**
  * Gets all the pyenv environments.
  *
  * Remarks: This function looks at the <pyenv dir>/versions directory and gets
@@ -341,27 +294,6 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
     }
 }
 
-/**
- *
- * @param interpreterPath Absolute path to the python interpreter
- */
-function getPyenvEnvironmentDirFromPath(interpreterPath:string): string {
-    const skipDirs = ['bin', 'scripts'];
-
-    // env <--- Return this directory if it is not 'bin' or 'scripts'
-    // |__ python  <--- interpreterPath
-    const dir = path.basename(path.dirname(interpreterPath));
-    if (!skipDirs.includes(dir.toLowerCase())) {
-        return path.dirname(interpreterPath);
-    }
-
-    // This is the best next guess.
-    // env <--- Return this directory if it is not 'bin' or 'scripts'
-    // |__ bin or Scripts
-    //     |__ python  <--- interpreterPath
-    return path.dirname(path.dirname(interpreterPath));
-}
-
 export class PyenvLocator extends PythonEnvsWatcher implements ILocator {
     // eslint-disable-next-line class-methods-use-this
     public iterEnvs(): IPythonEnvsIterator {
@@ -378,7 +310,7 @@ export class PyenvLocator extends PythonEnvsWatcher implements ILocator {
                 executable: executablePath,
             });
 
-            const location = getPyenvEnvironmentDirFromPath(executablePath);
+            const location = getEnvironmentDirFromPath(executablePath);
             envInfo.location = location;
             envInfo.name = path.basename(location);
             envInfo.defaultDisplayName = `${envInfo.name}:pyenv`;

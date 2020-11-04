@@ -8,7 +8,7 @@ import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
-import { getPythonVersionSpecificity } from '../../../base/info/env';
+import { comparePythonVersionSpecificity } from '../../../base/info/env';
 import { parseVersion, parseVersionInfo } from '../../../base/info/pythonVersion';
 import { pathExists, readFile } from '../../../common/externalDependencies';
 
@@ -161,14 +161,9 @@ export async function getPythonVersionFromVenv(interpreterPath:string): Promise<
                     .filter((v) => v !== undefined);
 
                 if (pythonVersions.length > 0) {
-                    let specificity = getPythonVersionSpecificity(version);
                     for (const v of pythonVersions) {
-                        if (v) {
-                            const curSpecificity = getPythonVersionSpecificity(v);
-                            if (curSpecificity > specificity) {
-                                version = v;
-                                specificity = curSpecificity;
-                            }
+                        if (v && comparePythonVersionSpecificity(v, version) > 0) {
+                            version = v;
                         }
                     }
                 }
