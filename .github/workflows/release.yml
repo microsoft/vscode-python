@@ -117,7 +117,7 @@ jobs:
           python-version: ${{matrix.python}}
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.1
+        uses: actions/setup-node@v2
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -332,10 +332,9 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      
+
       - name: Download JUPYTER VSIX
         run: az storage blob download --file ${{env.VSIX_NAME_JUPYTER}} --account-name pvsc --container-name extension-builds-jupyter --name ${{env.VSIX_NAME_JUPYTER}} --auth-mode login
-
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
@@ -398,10 +397,9 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      
+
       - name: Download JUPYTER VSIX
         run: az storage blob download --file ${{env.VSIX_NAME_JUPYTER}} --account-name pvsc --container-name extension-builds-jupyter --name ${{env.VSIX_NAME_JUPYTER}} --auth-mode login
-
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
@@ -419,4 +417,4 @@ jobs:
           CODE_TESTS_WORKSPACE: ./src/testMultiRootWkspc/smokeTests
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: node --no-force-async-hooks-checks ./out/test/standardTest.js          
+          run: node --no-force-async-hooks-checks ./out/test/standardTest.js

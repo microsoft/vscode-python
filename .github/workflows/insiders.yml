@@ -130,7 +130,7 @@ jobs:
           python-version: ${{matrix.python}}
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.1
+        uses: actions/setup-node@v2
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -355,10 +355,9 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      
+
       - name: Download JUPYTER VSIX
         run: az storage blob download --file ${{env.VSIX_NAME_JUPYTER}} --account-name pvsc --container-name extension-builds-jupyter --name ${{env.VSIX_NAME_JUPYTER}} --auth-mode login
-
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
@@ -421,10 +420,9 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      
+
       - name: Download JUPYTER VSIX
         run: az storage blob download --file ${{env.VSIX_NAME_JUPYTER}} --account-name pvsc --container-name extension-builds-jupyter --name ${{env.VSIX_NAME_JUPYTER}} --auth-mode login
-
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
@@ -442,7 +440,7 @@ jobs:
           CODE_TESTS_WORKSPACE: ./src/testMultiRootWkspc/smokeTests
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: node --no-force-async-hooks-checks ./out/test/standardTest.js          
+          run: node --no-force-async-hooks-checks ./out/test/standardTest.js
 
   coverage:
     name: Coverage reports upload
@@ -479,30 +477,25 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/cobertura-coverage.xml
-
   # Re-enable when the Jupyter extension is available
   # upload:
-    # name: Upload VSIX to Azure Blob Storage
-    # runs-on: ubuntu-latest
-    # if: github.repository == 'microsoft/vscode-python'
-    # needs: [tests, smoke-tests, build-vsix]
-    # env:
-      # BLOB_CONTAINER_NAME: extension-builds
-      # BLOB_NAME: ms-python-insiders.vsix
-
-    # steps:
-      # - name: Download VSIX
-        # uses: actions/download-artifact@v2
-        # with:
-          # name: ${{ env.ARTIFACT_NAME_VSIX }}
-
-      # - name: Azure Login
-        # uses: azure/login@v1
-        # with:
-          # creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      # - name: Upload to Blob Storage
-        # run: az storage blob upload --file ${{ env.VSIX_NAME }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
-
-      # - name: Get URL to uploaded VSIX
-        # run: az storage blob url --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
+  # name: Upload VSIX to Azure Blob Storage
+  # runs-on: ubuntu-latest
+  # if: github.repository == 'microsoft/vscode-python'
+  # needs: [tests, smoke-tests, build-vsix]
+  # env:
+  # BLOB_CONTAINER_NAME: extension-builds
+  # BLOB_NAME: ms-python-insiders.vsix
+  # steps:
+  # - name: Download VSIX
+  # uses: actions/download-artifact@v2
+  # with:
+  # name: ${{ env.ARTIFACT_NAME_VSIX }}
+  # - name: Azure Login
+  # uses: azure/login@v1
+  # with:
+  # creds: ${{ secrets.AZURE_CREDENTIALS }}
+  # - name: Upload to Blob Storage
+  # run: az storage blob upload --file ${{ env.VSIX_NAME }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
+  # - name: Get URL to uploaded VSIX
+  # run: az storage blob url --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
