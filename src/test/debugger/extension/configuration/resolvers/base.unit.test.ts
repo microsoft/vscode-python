@@ -49,6 +49,9 @@ suite('Debugging - Config Resolver', () => {
         public isLocalHost(hostName?: string) {
             return super.isLocalHost(hostName);
         }
+        public isDebuggingFastAPI(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
+            return super.isDebuggingFastAPI(debugConfiguration);
+        }
         public isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
             return super.isDebuggingFlask(debugConfiguration);
         }

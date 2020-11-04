@@ -19,46 +19,41 @@ import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationPro
 export class FastAPILaunchDebugConfigurationProvider implements IDebugConfigurationProvider {
     constructor(@inject(IFileSystem) private fs: IFileSystem) {}
     public isSupported(debugConfigurationType: DebugConfigurationType): boolean {
-        return debugConfigurationType === DebugConfigurationType.launchFlask;
+        return debugConfigurationType === DebugConfigurationType.launchFastAPI;
     }
     public async buildConfiguration(input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         const application = await this.getApplicationPath(state.folder);
         let manuallyEnteredAValue: boolean | undefined;
         const config: Partial<LaunchRequestArguments> = {
-            name: DebugConfigStrings.flask.snippet.name(),
+            name: DebugConfigStrings.fastapi.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-            module: 'flask',
-            env: {
-                FLASK_APP: application || 'app.py',
-                FLASK_ENV: 'development',
-                FLASK_DEBUG: '0'
-            },
-            args: ['run', '--no-debugger'],
+            module: 'uvicorn',
+            args: ['main:app'],
             jinja: true
         };
 
         if (!application) {
-            const selectedApp = await input.showInputBox({
-                title: DebugConfigStrings.flask.enterAppPathOrNamePath.title(),
-                value: 'app.py',
-                prompt: DebugConfigStrings.flask.enterAppPathOrNamePath.prompt(),
+            const selectedPath = await input.showInputBox({
+                title: DebugConfigStrings.fastapi.enterAppPathOrNamePath.title(),
+                value: 'main.py',
+                prompt: DebugConfigStrings.fastapi.enterAppPathOrNamePath.prompt(),
                 validate: (value) =>
                     Promise.resolve(
                         value && value.trim().length > 0
                             ? undefined
-                            : DebugConfigStrings.flask.enterAppPathOrNamePath.invalid()
+                            : DebugConfigStrings.fastapi.enterAppPathOrNamePath.invalid()
                     )
             });
-            if (selectedApp) {
+            if (selectedPath) {
                 manuallyEnteredAValue = true;
-                config.env!.FLASK_APP = selectedApp;
+                config.args = [`${selectedPath.replace('.py', '').replace('/', '.')}:app`];
             }
         }
 
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
-            configurationType: DebugConfigurationType.launchFlask,
-            autoDetectedFlaskAppPyPath: !!application,
+            configurationType: DebugConfigurationType.launchFastAPI,
+            autoDetectedFastAPIAppPyPath: !!application,
             manuallyEnteredAValue
         });
         Object.assign(state.config, config);
@@ -67,9 +62,9 @@ export class FastAPILaunchDebugConfigurationProvider implements IDebugConfigurat
         if (!folder) {
             return;
         }
-        const defaultLocationOfManagePy = path.join(folder.uri.fsPath, 'app.py');
+        const defaultLocationOfManagePy = path.join(folder.uri.fsPath, 'main.py');
         if (await this.fs.fileExists(defaultLocationOfManagePy)) {
-            return 'app.py';
+            return 'main.py';
         }
     }
 }
