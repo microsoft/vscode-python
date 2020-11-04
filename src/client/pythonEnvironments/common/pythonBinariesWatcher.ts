@@ -11,16 +11,21 @@ import { getOSType, OSType } from '../../common/utils/platform';
 
 const [executable, binName] = getOSType() === OSType.Windows ? ['python.exe', 'Scripts'] : ['python', 'bin'];
 
+/**
+ * @param baseDir The base directory from which watch paths are to be derived.
+ * @param callback The listener function will be called when the event happens.
+ * @param executableSuffixGlob Glob which represents suffix of the full executable file path to watch.
+ */
 export function watchLocationForPythonBinaries(
     baseDir: string,
     callback: (type: FileChangeType, absPath: string) => void,
-    executableGlob: string = executable,
+    executableSuffixGlob: string = executable,
 ): Disposable {
-    const patterns = [executableGlob, `*/${executableGlob}`, `*/${binName}/${executableGlob}`];
+    const patterns = [executableSuffixGlob, `*/${executableSuffixGlob}`, `*/${binName}/${executableSuffixGlob}`];
     const disposables: Disposable[] = [];
     for (const pattern of patterns) {
         disposables.push(watchLocationForPattern(baseDir, pattern, (type: FileChangeType, e: string) => {
-            const isMatch = minimatch(e, path.join('**', executableGlob), { nocase: getOSType() === OSType.Windows });
+            const isMatch = minimatch(e, path.join('**', executableSuffixGlob), { nocase: getOSType() === OSType.Windows });
             if (!isMatch) {
                 // When deleting the file for some reason path to all directories leading up to python are reported
                 // Skip those events
