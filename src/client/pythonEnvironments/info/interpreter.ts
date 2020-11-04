@@ -67,7 +67,7 @@ export async function getInterpreterInfo(
         if (logger) {
             logger.error(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
         }
-        return;
+        return undefined;
     }
     const json = parse(result.stdout);
     if (logger) {

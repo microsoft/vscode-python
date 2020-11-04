@@ -242,8 +242,9 @@ export function isVersionInfoEmpty<T extends BasicVersionInfo>(info: T): boolean
  * @returns - a string that indicates the property where they differ (if any)
  */
 export function compareVersions<T extends BasicVersionInfo, V extends BasicVersionInfo>(
+    // the versions to compare:
     left: T,
-    right: V,
+    right: V
 ): [number, string] {
     if (left.major < right.major) {
         return [1, 'major'];
@@ -334,18 +335,20 @@ export function parseVersionInfo<T extends VersionInfo>(verStr: string): ParseRe
  * have more info.  Otherwise "other" is used.
  */
 export function mergeVersions<T extends BasicVersionInfo, V extends BasicVersionInfo>(
+    // the versions to merge:
     version: T,
-    other: V,
+    other: V
 ): VersionInfo {
     let winner: BasicVersionInfo = version;
-    const [result,] = compareVersions(version, other);
+    const [result] = compareVersions(version, other);
     if (result > 0) {
         winner = other;
     }
     const merged: VersionInfo = {
+        // Copy the winner's info.
         major: winner.major,
         minor: winner.minor,
-        micro: winner.micro,
+        micro: winner.micro
     };
 
     let raw = ((version as unknown) as VersionInfo).raw;

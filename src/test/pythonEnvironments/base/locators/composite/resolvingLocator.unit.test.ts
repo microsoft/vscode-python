@@ -41,7 +41,7 @@ function getEnvInfoFunc(
     } | null,
 ): (p: string) => Promise<PythonEnvInfo | undefined> {
     if (spec === null) {
-        return (_e: string) => Promise.resolve(undefined);
+        return () => Promise.resolve(undefined);
     }
     return (executable: string) => {
         const env = buildToolEnvInfo({ executable, ...spec });
@@ -49,7 +49,7 @@ function getEnvInfoFunc(
     };
 }
 
-function failIfUsed(_p: string): Promise<PythonEnvInfo | undefined> {
+function failIfUsed(): Promise<PythonEnvInfo | undefined> {
     throw Error('this should not have been called!');
 }
 
@@ -82,7 +82,7 @@ suite('Python envs locator - ResolvingLocator', () => {
                 version: '3.8.3',
                 sysVersion: '3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]',
                 is64Bit: true,
-            });;
+            });
             const resolver = new ResolvingLocator(parentLocator, getEnvInfo);
 
             const iterator = resolver.iterEnvs();
@@ -103,7 +103,7 @@ suite('Python envs locator - ResolvingLocator', () => {
                 version: '3.8.3',
                 sysVersion: '3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]',
                 is64Bit: true,
-            });;
+            });
             const resolver = new ResolvingLocator(parentLocator, getEnvInfo);
 
             const iterator = resolver.iterEnvs(); // Act
@@ -144,7 +144,7 @@ suite('Python envs locator - ResolvingLocator', () => {
                 version: '3.8.3',
                 sysVersion: '3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]',
                 is64Bit: true,
-            });;
+            });
             const resolver = new ResolvingLocator(parentLocator, getEnvInfo);
 
             const iterator = resolver.iterEnvs(); // Act

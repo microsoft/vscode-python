@@ -128,7 +128,7 @@ export function isVersionEmpty(version: PythonVersion): boolean {
  */
 export function areIdenticalVersion(left: PythonVersion, right: PythonVersion): boolean {
     // We do not do a simple deep-equal check here due to "sysVersion".
-    const [result,] = compareVersionsRaw(left, right);
+    const [result] = compareVersionsRaw(left, right);
     return result === 0;
 }
 
@@ -151,36 +151,14 @@ export function areSimilarVersions(left: PythonVersion, right: PythonVersion): b
             [result, prop] = compareBasicVersions(left, { ...right, minor: 7 });
         }
     }
+    // tslint:disable:no-any
     if (result < 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return ((right as unknown) as any)[prop] === -1;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return ((left as unknown) as any)[prop] === -1;
-    //if (left.major === 2 && right.major === 2) {
-    //    if (left.minor === -1 || right.minor === -1) {
-    //        // We are going to assume that if the major version is 2 then the version is 2.7
-    //        return true;
-    //    }
-    //}
-
-    //if (left.major !== right.major) {
-    //    return false;
-    //}
-    //if (left.minor === -1 || right.minor === -1) {
-    //    return true;
-    //}
-    //if (left.minor !== right.minor) {
-    //    return false;
-    //}
-    //if (left.micro === -1 || right.micro === -1) {
-    //    return true;
-    //}
-    //if (left.micro !== right.micro) {
-    //    return false;
-    //}
-    //if (left.release === undefined || right.release === undefined) {
-    //    return true;
-    //}
-    //return areDeepEqual(left.release, right.release);
+    // tslint:enable:no-any
 }
 
 /**
@@ -196,7 +174,7 @@ function compareVersionsRaw(left: PythonVersion, right: PythonVersion): [number,
     if (result !== 0) {
         return [result, prop];
     }
-    const [release,] = compareVersionRelease(left, right);
+    const [release] = compareVersionRelease(left, right);
     return release === 0 ? [0, ''] : [release, 'release'];
 }
 
@@ -206,22 +184,28 @@ function compareVersionRelease(left: PythonVersion, right: PythonVersion): [numb
             return [0, ''];
         }
         return [1, 'level'];
-    } else if (right.release === undefined) {
+    }
+    if (right.release === undefined) {
         return [-1, 'level'];
     }
 
+    // Compare the level.
     if (left.release.level < right.release.level) {
         return [1, 'level'];
-    } else if (left.release.level > right.release.level) {
+    }
+    if (left.release.level > right.release.level) {
         return [-1, 'level'];
-    } else if (left.release.level === PythonReleaseLevel.Final) {
+    }
+    if (left.release.level === PythonReleaseLevel.Final) {
         // We ignore "serial".
         return [0, ''];
     }
 
+    // Compare the serial.
     if (left.release.serial < right.release.serial) {
         return [1, 'serial'];
-    } else if (left.release.serial > right.release.serial) {
+    }
+    if (left.release.serial > right.release.serial) {
         return [-1, 'serial'];
     }
 
@@ -236,7 +220,7 @@ function compareVersionRelease(left: PythonVersion, right: PythonVersion): [numb
  */
 export function mergeVersions(version: PythonVersion, other: PythonVersion): PythonVersion {
     let winner = version;
-    const [result,] = compareVersionsRaw(version, other);
+    const [result] = compareVersionsRaw(version, other);
     if (result === 0) {
         if (version.major === 2 && version.minor === -1) {
             winner = other;

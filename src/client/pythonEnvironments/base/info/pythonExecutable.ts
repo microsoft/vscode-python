@@ -33,7 +33,7 @@ function mergeFileInfo(file: FileInfo, other: FileInfo): FileInfo {
         merged.filename = other.filename;
     }
 
-    if (merged.filename === other.filename || other.filename == '') {
+    if (merged.filename === other.filename || other.filename === '') {
         if (file.ctime < 0 && other.ctime > -1) {
             merged.ctime = other.ctime;
         }
