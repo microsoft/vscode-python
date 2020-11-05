@@ -29,7 +29,7 @@ export function watchLocationForPythonBinaries(
     const disposables = new DisposableRegistry();
     for (const pattern of patterns) {
         disposables.push(watchLocationForPattern(baseDir, pattern, (type: FileChangeType, e: string) => {
-            const isMatch = minimatch(e, path.join('**', executableBaseGlob), { nocase: getOSType() === OSType.Windows });
+            const isMatch = minimatch(path.basename(e), executableBaseGlob, { nocase: getOSType() === OSType.Windows });
             if (!isMatch) {
                 // When deleting the file for some reason path to all directories leading up to python are reported
                 // Skip those events

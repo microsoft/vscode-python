@@ -62,6 +62,7 @@ suite('GlobalVirtualEnvironment Locator', async () => {
     setup(async () => {
         process.env.WORKON_HOME = testWorkOnHomePath;
         locator = new GlobalVirtualEnvironmentLocator();
+        await locator.initialize();
         // Wait for watchers to get ready
         await sleep(1000);
     });
