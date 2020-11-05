@@ -2,10 +2,16 @@
 
 ## 2020.11.0-rc (4 November 2020)
 
+### Enhancements
+
+UPDATE THIS BEFORE RELEASE
+
 ### Fixes
 
 1. Update the logic for parsing and sending selected code to the REPL.
    ([#14048](https://github.com/Microsoft/vscode-python/issues/14048))
+1. Fix "TypeError: message must be set" error when debugging with `pytest`.
+   ([#14067](https://github.com/Microsoft/vscode-python/issues/14067))
 1. When sending code to the REPL, read input from `sys.stdin` instead of passing it as an argument.
    ([#14471](https://github.com/Microsoft/vscode-python/issues/14471))
 
