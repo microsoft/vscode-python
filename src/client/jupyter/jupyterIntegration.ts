@@ -22,7 +22,6 @@ import {
     Resource
 } from '../common/types';
 import { isResource } from '../common/utils/misc';
-import { IDataViewerDataProvider, IJupyterUriProvider } from '../datascience/types';
 import { getDebugpyPackagePath } from '../debugger/extension/adapter/remoteLaunchers';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
@@ -30,6 +29,7 @@ import { IInterpreterService } from '../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
 import { WindowsStoreInterpreter } from '../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { PythonEnvironment } from '../pythonEnvironments/info';
+import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
 
 export interface ILanguageServer extends Disposable {
     readonly connection: ILanguageServerConnection;

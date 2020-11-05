@@ -8,11 +8,11 @@ import { Event, Uri } from 'vscode';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IConfigurationService, Resource } from './common/types';
-import { IDataViewerDataProvider, IJupyterUriProvider } from './datascience/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
+import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
 
 /*
  * Do not introduce any breaking changes to this API.
