@@ -170,22 +170,18 @@ interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
 }
 
 /**
- * The base for most Python envs locators.
+ * The generic base for Python envs locators.
  *
  * By default `resolveEnv()` returns undefined.  Subclasses may override
  * the method to provide an implementation.
  *
  * Subclasses will call `this.emitter.fire()` to emit events.
  *
- * In most cases this is the class you will want to subclass.
- * Only in low-level cases should you consider subclassing `LocatorBase`
- * using `BasicPythonEnvsChangedEvent.
- *
  * Also, in most cases the default event type (`PythonEnvsChangedEvent`)
  * should be used.  Only in low-level cases should you consider using
  * `BasicPythonEnvsChangedEvent`.
  */
-export abstract class Locator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
+abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
 implements IDisposable, ILocator<E> {
     public readonly onChanged: Event<E>;
 
@@ -193,8 +189,8 @@ implements IDisposable, ILocator<E> {
 
     protected readonly disposables = new DisposableRegistry();
 
-    constructor() {
-        this.emitter = new PythonEnvsWatcher();
+    constructor(watcher: IPythonEnvsWatcher<E> & IEmitter<E>) {
+        this.emitter = watcher;
         this.onChanged = this.emitter.onChanged;
     }
 
@@ -206,5 +202,23 @@ implements IDisposable, ILocator<E> {
 
     public dispose(): void {
         this.disposables.dispose();
+    }
+}
+
+/**
+ * The base for most Python envs locators.
+ *
+ * By default `resolveEnv()` returns undefined.  Subclasses may override
+ * the method to provide an implementation.
+ *
+ * Subclasses will call `this.emitter.fire()` * to emit events.
+ *
+ * In most cases this is the class you will want to subclass.
+ * Only in low-level cases should you consider subclassing `LocatorBase`
+ * using `BasicPythonEnvsChangedEvent.
+ */
+export abstract class Locator extends LocatorBase {
+    constructor() {
+        super(new PythonEnvsWatcher());
     }
 }

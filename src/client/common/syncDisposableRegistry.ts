@@ -6,6 +6,9 @@
 import { traceWarning } from './logger';
 import { IDisposable } from './types';
 
+/**
+ * Responsible for disposing a list of disposables synchronusly.
+ */
 export class DisposableRegistry implements IDisposable {
     private _list: IDisposable[] = [];
 

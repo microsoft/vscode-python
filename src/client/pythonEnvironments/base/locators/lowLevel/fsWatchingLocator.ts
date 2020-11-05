@@ -31,7 +31,7 @@ export abstract class FSWatchingLocator extends Locator {
              */
             executableBaseGlob?: string,
             /**
-             * Time to wait before attempting to identify kind when detected that an environment has been created.
+             * Time to wait before handling an environment-created event.
              */
             delayOnCreated?: number, // milliseconds
         } = {},
