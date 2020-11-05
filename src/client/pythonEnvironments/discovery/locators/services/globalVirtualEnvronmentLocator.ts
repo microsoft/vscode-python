@@ -4,8 +4,7 @@
 import { uniq } from 'lodash';
 import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
-import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
-import { chain, iterable, sleep } from '../../../../common/utils/async';
+import { chain, iterable } from '../../../../common/utils/async';
 import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType
 } from '../../../../common/utils/platform';
@@ -15,7 +14,6 @@ import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { findInterpretersInDir } from '../../../common/commonUtils';
 import { getFileInfo, pathExists } from '../../../common/externalDependencies';
-import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
 import { isPipenvEnvironment } from './pipEnvHelper';
 import {
     isVenvEnvironment,
@@ -89,12 +87,14 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
         PythonEnvKind.Pipenv,
     ];
 
-    public constructor(private readonly searchDepth?: number) {
-        super();
-    }
-
-    public async initialize(): Promise<void> {
-        await this.startWatchers();
+    constructor(private readonly searchDepth?: number) {
+        super(getGlobalVirtualEnvDirs, getVirtualEnvKind, {
+            // Note detecting kind of virtual env depends on the file structure around the
+            // executable, so we need to wait before attempting to detect it. However even
+            // if the type detected is incorrect, it doesn't do any practical harm as kinds
+            // in this locator are used in the same way (same activation commands etc.)
+            delayOnCreated: 1000,
+        });
     }
 
     public iterEnvs(): IPythonEnvsIterator {
@@ -170,22 +170,5 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
             }
         }
         return undefined;
-    }
-
-    private async startWatchers(): Promise<void> {
-        const dirs = await getGlobalVirtualEnvDirs();
-        dirs.forEach(
-            (d) => this.disposables.push(
-                watchLocationForPythonBinaries(d, async (type: FileChangeType, executablePath: string) => {
-                    // Note detecting kind of virtual env depends on the file structure around the
-                    // executable, so we need to wait before attempting to detect it. However even
-                    // if the type detected is incorrect, it doesn't do any practical harm as kinds
-                    // in this locator are used in the same way (same activation commands etc.)
-                    await sleep(1000);
-                    const kind = await getVirtualEnvKind(executablePath);
-                    this.emitter.fire({ type, kind });
-                }),
-            ),
-        );
     }
 }

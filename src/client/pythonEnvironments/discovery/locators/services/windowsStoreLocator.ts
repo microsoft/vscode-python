@@ -5,7 +5,6 @@ import * as fsapi from 'fs-extra';
 import * as minimatch from 'minimatch';
 import * as path from 'path';
 import { traceWarning } from '../../../../common/logger';
-import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
@@ -13,7 +12,6 @@ import { getPythonVersionFromPath } from '../../../base/info/pythonVersion';
 import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { getFileInfo } from '../../../common/externalDependencies';
-import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
 
 /**
  * Gets path to the Windows Apps directory.
@@ -143,8 +141,12 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
 export class WindowsStoreLocator extends FSWatchingLocator {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
-    public async initialize(): Promise<void> {
-        this.startWatcher();
+    constructor() {
+        super(
+            getWindowsStoreAppsRoot,
+            async () => this.kind,
+            { executableBaseGlob: pythonExeGlob },
+        );
     }
 
     public iterEnvs(): IPythonEnvsIterator {
@@ -175,18 +177,5 @@ export class WindowsStoreLocator extends FSWatchingLocator {
             });
         }
         return undefined;
-    }
-
-    private startWatcher(): void {
-        const windowsAppsRoot = getWindowsStoreAppsRoot();
-        this.disposables.push(
-            watchLocationForPythonBinaries(
-                windowsAppsRoot,
-                (type: FileChangeType) => {
-                    this.emitter.fire({ type, kind: this.kind });
-                },
-                pythonExeGlob,
-            ),
-        );
     }
 }

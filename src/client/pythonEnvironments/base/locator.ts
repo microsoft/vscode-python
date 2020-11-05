@@ -175,7 +175,7 @@ interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
  * By default `resolveEnv()` returns undefined.  Subclasses may override
  * the method to provide an implementation.
  *
- * Subclasses will call `this.emitter.fire()` * to emit events.
+ * Subclasses will call `this.emitter.fire()` to emit events.
  *
  * In most cases this is the class you will want to subclass.
  * Only in low-level cases should you consider subclassing `LocatorBase`
