@@ -30,5 +30,8 @@ runs:
     - run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
       shell: bash
 
+    - run: npm run addExtensionDependencies
+      shell: bash
+
     - run: npm run package
       shell: bash
