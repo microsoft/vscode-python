@@ -20,7 +20,7 @@ export abstract class FSWatchingLocator extends Locator {
         /**
          * Location(s) to watch for python binaries.
          */
-        private readonly getRoots: () => Promise<string[]> | string,
+        private readonly getRoots: () => Promise<string[]> | string | string[],
         /**
          * Returns the kind of environment specific to locator given the path to exectuable.
          */
