@@ -3,7 +3,7 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
+import { ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../../common/process/types';
 import { IPersistentStateFactory } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
@@ -21,6 +21,11 @@ function getProcessFactory(): IProcessServiceFactory {
 export async function shellExecute(command: string, timeout: number): Promise<ExecutionResult<string>> {
     const proc = await getProcessFactory().create();
     return proc.shellExec(command, { timeout });
+}
+
+export async function exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
+    const proc = await getProcessFactory().create();
+    return proc.exec(file, args, options);
 }
 
 export function pathExists(absPath: string): Promise<boolean> {
@@ -67,7 +72,7 @@ export function getGlobalPersistentStore<T>(key: string): IPersistentStore<T> {
     };
 }
 
-export async function getFileInfo(filePath: string): Promise<{ctime:number, mtime:number}> {
+export async function getFileInfo(filePath: string): Promise<{ ctime: number, mtime: number }> {
     try {
         const data = await fsapi.lstat(filePath);
         return {
@@ -81,7 +86,7 @@ export async function getFileInfo(filePath: string): Promise<{ctime:number, mtim
     }
 }
 
-export async function resolveSymbolicLink(filepath:string): Promise<string> {
+export async function resolveSymbolicLink(filepath: string): Promise<string> {
     const stats = await fsapi.lstat(filepath);
     if (stats.isSymbolicLink()) {
         const link = await fsapi.readlink(filepath);
