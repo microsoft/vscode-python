@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+import { traceError } from '../../../common/logger';
 import { getOSType, OSType } from '../../../common/utils/platform';
 import { getEmptyVersion, parseVersion } from './pythonVersion';
 
@@ -10,8 +11,22 @@ import { PythonVersion } from '.';
 /**
  * Determine a best-effort Python version based on the given filename.
  */
-export function parseVersionFromExecutable(filename: string): PythonVersion {
-    const version = parseBasename(path.basename(filename));
+export function parseExeVersion(
+    filename: string,
+    opts: {
+        ignoreErrors?: boolean;
+    } = {},
+): PythonVersion {
+    let version: PythonVersion;
+    try {
+        version = parseBasename(path.basename(filename));
+    } catch (err) {
+        if (opts.ignoreErrors) {
+            traceError(`failed to parse version from "${filename}"`, err);
+            return getEmptyVersion();
+        }
+        throw err; // re-throw
+    }
 
     if (version.major === 2 && version.minor === -1) {
         version.minor = 7;
