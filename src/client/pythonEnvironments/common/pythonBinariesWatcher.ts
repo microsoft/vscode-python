@@ -5,8 +5,9 @@
 
 import * as minimatch from 'minimatch';
 import * as path from 'path';
-import { Disposable } from 'vscode';
 import { FileChangeType, watchLocationForPattern } from '../../common/platform/fileSystemWatcher';
+import { DisposableRegistry } from '../../common/syncDisposableRegistry';
+import { IDisposable } from '../../common/types';
 import { getOSType, OSType } from '../../common/utils/platform';
 
 const [executable, binName] = getOSType() === OSType.Windows ? ['python.exe', 'Scripts'] : ['python', 'bin'];
@@ -14,18 +15,21 @@ const [executable, binName] = getOSType() === OSType.Windows ? ['python.exe', 'S
 /**
  * @param baseDir The base directory from which watch paths are to be derived.
  * @param callback The listener function will be called when the event happens.
- * @param executableSuffixGlob Glob which represents suffix of the full executable file path to watch.
+ * @param executableBaseGlob Glob which represents basename of the executable to watch.
  */
 export function watchLocationForPythonBinaries(
     baseDir: string,
     callback: (type: FileChangeType, absPath: string) => void,
-    executableSuffixGlob: string = executable,
-): Disposable {
-    const patterns = [executableSuffixGlob, `*/${executableSuffixGlob}`, `*/${binName}/${executableSuffixGlob}`];
-    const disposables: Disposable[] = [];
+    executableBaseGlob: string = executable,
+): IDisposable {
+    if (executableBaseGlob.includes(path.sep)) {
+        throw new Error('Glob basename contains invalid characters');
+    }
+    const patterns = [executableBaseGlob, `*/${executableBaseGlob}`, `*/${binName}/${executableBaseGlob}`];
+    const disposables = new DisposableRegistry();
     for (const pattern of patterns) {
         disposables.push(watchLocationForPattern(baseDir, pattern, (type: FileChangeType, e: string) => {
-            const isMatch = minimatch(e, path.join('**', executableSuffixGlob), { nocase: getOSType() === OSType.Windows });
+            const isMatch = minimatch(e, path.join('**', executableBaseGlob), { nocase: getOSType() === OSType.Windows });
             if (!isMatch) {
                 // When deleting the file for some reason path to all directories leading up to python are reported
                 // Skip those events
@@ -34,9 +38,5 @@ export function watchLocationForPythonBinaries(
             callback(type, e);
         }));
     }
-    return {
-        dispose: async () => {
-            disposables.forEach((d) => d.dispose());
-        },
-    };
+    return disposables;
 }

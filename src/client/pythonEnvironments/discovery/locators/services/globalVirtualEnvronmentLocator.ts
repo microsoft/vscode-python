@@ -7,12 +7,12 @@ import { traceVerbose } from '../../../../common/logger';
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { chain, iterable, sleep } from '../../../../common/utils/async';
 import {
-    getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
+    getEnvironmentVariable, getOSType, getUserHomeDir, OSType
 } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { IPythonEnvsIterator } from '../../../base/locator';
-import { FSWatchingLocator } from '../../../base/locators/lowLevel/locator';
+import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { findInterpretersInDir } from '../../../common/commonUtils';
 import { getFileInfo, pathExists } from '../../../common/externalDependencies';
 import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
@@ -20,7 +20,7 @@ import { isPipenvEnvironment } from './pipEnvHelper';
 import {
     isVenvEnvironment,
     isVirtualenvEnvironment,
-    isVirtualenvwrapperEnvironment,
+    isVirtualenvwrapperEnvironment
 } from './virtualEnvironmentIdentifier';
 
 const DEFAULT_SEARCH_DEPTH = 2;

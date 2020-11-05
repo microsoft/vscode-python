@@ -3,8 +3,8 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { Event, Uri } from 'vscode';
-import { AsyncDisposableRegistry } from '../../common/asyncDisposableRegistry';
-import { IAsyncDisposableRegistry, IDisposable } from '../../common/types';
+import { DisposableRegistry } from '../../common/syncDisposableRegistry';
+import { IDisposable } from '../../common/types';
 import { iterEmpty } from '../../common/utils/async';
 import { PythonEnvInfo, PythonEnvKind } from './info';
 import {
@@ -170,42 +170,6 @@ interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
 }
 
 /**
- * The generic base for Python envs locators.
- *
- * By default `resolveEnv()` returns undefined.  Subclasses may override
- * the method to provide an implementation.
- *
- * Subclasses will call `this.emitter.fire()` to emit events.
- *
- * Also, in most cases the default event type (`PythonEnvsChangedEvent`)
- * should be used.  Only in low-level cases should you consider using
- * `BasicPythonEnvsChangedEvent`.
- */
-export abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
-implements IDisposable, ILocator<E> {
-    public readonly onChanged: Event<E>;
-
-    protected readonly emitter: IEmitter<E>;
-
-    protected readonly disposables: IAsyncDisposableRegistry = new AsyncDisposableRegistry();
-
-    constructor(watcher: IPythonEnvsWatcher<E> & IEmitter<E>) {
-        this.emitter = watcher;
-        this.onChanged = watcher.onChanged;
-    }
-
-    public abstract iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
-
-    public async resolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        return undefined;
-    }
-
-    public dispose(): void {
-        this.disposables.dispose().ignoreErrors();
-    }
-}
-
-/**
  * The base for most Python envs locators.
  *
  * By default `resolveEnv()` returns undefined.  Subclasses may override
@@ -216,9 +180,31 @@ implements IDisposable, ILocator<E> {
  * In most cases this is the class you will want to subclass.
  * Only in low-level cases should you consider subclassing `LocatorBase`
  * using `BasicPythonEnvsChangedEvent.
+ *
+ * Also, in most cases the default event type (`PythonEnvsChangedEvent`)
+ * should be used.  Only in low-level cases should you consider using
+ * `BasicPythonEnvsChangedEvent`.
  */
-export abstract class Locator extends LocatorBase {
+export abstract class Locator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
+implements IDisposable, ILocator<E> {
+    public readonly onChanged: Event<E>;
+
+    protected readonly emitter: IPythonEnvsWatcher<E> & IEmitter<E>;
+
+    protected readonly disposables = new DisposableRegistry();
+
     constructor() {
-        super(new PythonEnvsWatcher());
+        this.emitter = new PythonEnvsWatcher();
+        this.onChanged = this.emitter.onChanged;
+    }
+
+    public abstract iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator;
+
+    public async resolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
+        return undefined;
+    }
+
+    public dispose(): void {
+        this.disposables.dispose();
     }
 }

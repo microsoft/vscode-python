@@ -5,8 +5,10 @@
 
 import * as chokidar from 'chokidar';
 import * as path from 'path';
-import { Disposable, RelativePattern, workspace } from 'vscode';
+import { RelativePattern, workspace } from 'vscode';
 import { traceError, traceVerbose, traceWarning } from '../logger';
+import { DisposableRegistry } from '../syncDisposableRegistry';
+import { IDisposable } from '../types';
 import { normCasePath } from './fs-paths';
 
 /**
@@ -23,7 +25,7 @@ export function watchLocationForPattern(
     baseDir: string,
     pattern: string,
     callback: (type: FileChangeType, absPath: string) => void
-): Disposable {
+): IDisposable {
     // Use VSCode API iff base directory to exists within the current workspace folders
     const found = workspace.workspaceFolders?.find((e) => normCasePath(baseDir).startsWith(normCasePath(e.uri.fsPath)));
     if (found) {
@@ -37,26 +39,22 @@ function watchLocationUsingVSCodeAPI(
     baseDir: string,
     pattern: string,
     callback: (type: FileChangeType, absPath: string) => void
-) {
+): IDisposable {
     const globPattern = new RelativePattern(baseDir, pattern);
-    const disposables: Disposable[] = [];
+    const disposables = new DisposableRegistry();
     traceVerbose(`Start watching: ${baseDir} with pattern ${pattern} using VSCode API`);
     const watcher = workspace.createFileSystemWatcher(globPattern);
     disposables.push(watcher.onDidCreate((e) => callback(FileChangeType.Created, e.fsPath)));
     disposables.push(watcher.onDidChange((e) => callback(FileChangeType.Changed, e.fsPath)));
     disposables.push(watcher.onDidDelete((e) => callback(FileChangeType.Deleted, e.fsPath)));
-    return {
-        dispose: async () => {
-            disposables.forEach((d) => d.dispose());
-        }
-    };
+    return disposables;
 }
 
 function watchLocationUsingChokidar(
     baseDir: string,
     pattern: string,
     callback: (type: FileChangeType, absPath: string) => void
-) {
+): IDisposable {
     const watcherOpts: chokidar.WatchOptions = {
         cwd: baseDir,
         ignoreInitial: true,
@@ -103,10 +101,15 @@ function watchLocationUsingChokidar(
         callback(eventType, absPath);
     });
 
-    const dispose = async () => {
+    const stopWatcher = async () => {
         if (watcher) {
-            await watcher.close();
+            const obj = watcher;
             watcher = null;
+            try {
+                await obj.close();
+            } catch (err) {
+                traceError(`Failed to close FS watcher (${err})`);
+            }
         }
     };
 
@@ -119,12 +122,12 @@ function watchLocationUsingChokidar(
             // See https://github.com/Microsoft/vscode/issues/7950
             if (error.code === 'ENOSPC') {
                 traceError(`Inotify limit reached (ENOSPC) for ${baseDir} with pattern ${pattern}`);
-                await dispose();
+                await stopWatcher();
             } else {
                 traceWarning(error.toString());
             }
         }
     });
 
-    return { dispose };
+    return { dispose: () => stopWatcher().ignoreErrors() };
 }
