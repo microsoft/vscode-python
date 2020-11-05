@@ -13,6 +13,7 @@ import { PythonReleaseLevel, PythonVersion } from '.';
 
 /**
  * Convert the given string into the corresponding Python version object.
+ *
  * Example:
  *   3.9.0
  *   3.9.0a1
@@ -23,14 +24,7 @@ import { PythonReleaseLevel, PythonVersion } from '.';
  *   3.9.0.final.0
  */
 export function parseVersion(versionStr: string): PythonVersion {
-    const parsed = parseBasicVersionInfo<PythonVersion>(versionStr);
-    if (!parsed) {
-        if (versionStr === '') {
-            return getEmptyVersion();
-        }
-        throw Error(`invalid version ${versionStr}`);
-    }
-    const { version, after } = parsed;
+    const [version, after] = parseBasicVersion(versionStr);
     const match = after.match(/^(a|b|rc)(\d+)$/);
     if (match) {
         const [, levelStr, serialStr] = match;
@@ -54,43 +48,20 @@ export function parseVersion(versionStr: string): PythonVersion {
 
 /**
  * Convert the given string into the corresponding Python version object.
- * Example:
- *   3.9.0.final.0
- *   3.9.0.alpha.1
- *   3.9.0.beta.2
- *   3.9.0.candidate.1
- *
- * Does not parse:
- *   3.9.0
- *   3.9.0a1
- *   3.9.0b2
- *   3.9.0rc1
  */
-export function parseVersionInfo(versionInfoStr: string): PythonVersion {
-    const parts = versionInfoStr.split('.');
-    const version = getEmptyVersion();
-    if (parts.length >= 2) {
-        version.major = parseInt(parts[0], 10);
-        version.minor = parseInt(parts[1], 10);
-    }
-
-    if (parts.length >= 3) {
-        version.micro = parseInt(parts[2], 10);
-    }
-
-    if (parts.length >= 4 && version.release) {
-        const levels = ['alpha', 'beta', 'candidate', 'final'];
-        const level = parts[3].toLowerCase();
-        if (levels.includes(level)) {
-            version.release.level = level as PythonReleaseLevel;
+export function parseBasicVersion(versionStr: string): [PythonVersion, string] {
+    // We set a prefix (which will be ignored) to make sure "plain"
+    // versions are fully parsed.
+    const parsed = parseBasicVersionInfo<PythonVersion>(`ignored-${versionStr}`);
+    if (!parsed) {
+        if (versionStr === '') {
+            return [getEmptyVersion(), ''];
         }
+        throw Error(`invalid version ${versionStr}`);
     }
-
-    if (parts.length >= 5 && version.release) {
-        version.release.serial = parseInt(parts[4], 10);
-    }
-
-    return version;
+    // We ignore any "before" text.
+    const { version, after } = parsed;
+    return [version, after];
 }
 
 /**

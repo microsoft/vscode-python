@@ -7,12 +7,13 @@ import '../../../../common/extensions';
 import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
-import { PythonVersion } from '../../../base/info';
+import { PythonReleaseLevel, PythonVersion } from '../../../base/info';
 import {
     compareVersions,
     getEmptyVersion,
+    isVersionEmpty,
+    parseBasicVersion,
     parseVersion,
-    parseVersionInfo,
 } from '../../../base/info/pythonVersion';
 import { pathExists, readFile } from '../../../common/externalDependencies';
 
@@ -179,5 +180,55 @@ export async function getPythonVersionFromVenv(interpreterPath:string): Promise<
         }
     }
 
+    return version;
+}
+
+/**
+ * Convert the given string into the corresponding Python version object.
+ *
+ * This handles the "version_info" strings found in pyvenv.cfg.
+ *
+ * Example:
+ *   3.9.0.final.0
+ *   3.9.0.alpha.1
+ *   3.9.0.beta.2
+ *   3.9.0.candidate.1
+ *
+ * Does not parse:
+ *   3.9.0
+ *   3.9.0a1
+ *   3.9.0b2
+ *   3.9.0rc1
+ */
+function parseVersionInfo(versionInfoStr: string): PythonVersion {
+    const [version, after] = parseBasicVersion(versionInfoStr);
+    if (isVersionEmpty(version)) {
+        return version;
+    }
+    if (after.trim() === '') {
+        return version;
+    }
+    if (!after.startsWith('.')) {
+        // Ignore it!
+        return version;
+    }
+
+    const match = after.toLowerCase()
+        .match(/^[.](?:(?:(alpha|beta|candidate)[.](\d+))|final)/);
+    if (!match) {
+        return version;
+    }
+    const [, levelStr, serialStr] = match;
+    if (levelStr) {
+        version.release = {
+            level: levelStr as PythonReleaseLevel,
+            serial: parseInt(serialStr, 10),
+        };
+    } else {
+        version.release = {
+            level: PythonReleaseLevel.Final,
+            serial: -1,
+        };
+    }
     return version;
 }
