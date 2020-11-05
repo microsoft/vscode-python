@@ -28,8 +28,4 @@ export class DisposableRegistry implements IDisposable {
             this._list.push(disposable);
         }
     }
-
-    public get list(): IDisposable[] {
-        return this._list;
-    }
 }
