@@ -4,14 +4,14 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { traceError, traceInfo } from '../../../../common/logger';
+import { IDisposable } from '../../../../common/types';
 
 import { Architecture } from '../../../../common/utils/platform';
 import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
 } from '../../../base/info';
 import { parseVersion } from '../../../base/info/pythonVersion';
-import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
-import { PythonEnvsWatcher } from '../../../base/watcher';
+import { ILocator, IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getFileInfo, resolveSymbolicLink } from '../../../common/externalDependencies';
 import { commonPosixBinPaths, isPosixPythonBin } from '../../../common/posixUtils';
 
@@ -39,7 +39,7 @@ async function getPythonBinFromKnownPaths(): Promise<string[]> {
     return Array.from(pythonBins);
 }
 
-export class PosixKnownPathsLocator extends PythonEnvsWatcher implements ILocator {
+class PosixKnownPathsLocator extends Locator {
     private kind: PythonEnvKind = PythonEnvKind.OtherGlobal;
 
     public iterEnvs(): IPythonEnvsIterator {
@@ -84,4 +84,9 @@ export class PosixKnownPathsLocator extends PythonEnvsWatcher implements ILocato
             distro: { org: '' },
         };
     }
+}
+
+export function createPosixKnownPathsLocator(): Promise<[ILocator, IDisposable]> {
+    const locator = new PosixKnownPathsLocator();
+    return Promise.resolve([locator, locator]);
 }
