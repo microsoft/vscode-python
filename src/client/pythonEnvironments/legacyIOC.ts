@@ -25,12 +25,11 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
-import { IServiceContainer, IServiceManager } from '../ioc/types';
+import { IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
 import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { getEnvs } from './base/locatorUtils';
-import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
@@ -277,14 +276,7 @@ class ComponentAdapter implements IComponentAdapter {
     }
 }
 
-export function registerForIOC(
-    serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer,
-    api: IPythonEnvironments,
-): void {
-    const adapter = new ComponentAdapter(api);
-    serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, adapter);
-
+export function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
@@ -367,5 +359,8 @@ export function registerForIOC(
     serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
 
     serviceManager.addSingletonInstance<IEnvironmentInfoService>(IEnvironmentInfoService, new EnvironmentInfoService());
-    initializeExternalDependencies(serviceContainer);
+}
+
+export function registerNewDiscoveryForIOC(serviceManager: IServiceManager, api:IPythonEnvironments): void {
+    serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, new ComponentAdapter(api));
 }
