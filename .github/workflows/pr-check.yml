@@ -8,6 +8,7 @@ on:
       - release*
 
 env:
+  NODE_VERSION: 12.15.0
   PYTHON_VERSION: 3.9
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
