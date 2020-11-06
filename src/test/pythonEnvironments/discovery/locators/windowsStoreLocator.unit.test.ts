@@ -4,32 +4,35 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher';
 import { ExecutionResult } from '../../../../client/common/process/types';
+import { IDisposable } from '../../../../client/common/types';
 import * as platformApis from '../../../../client/common/utils/platform';
 import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
 import { InterpreterInformation } from '../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { ILocator } from '../../../../client/pythonEnvironments/base/locator';
 import * as externalDep from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { getWindowsStorePythonExes, WindowsStoreLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
+import { createWindowsStoreLocator, getWindowsStorePythonExes } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
 import { getEnvs } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
 suite('Windows Store', () => {
     suite('Utils', () => {
-        let getEnvVar: sinon.SinonStub;
+        let getEnvVarStub: sinon.SinonStub;
         const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
         const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
 
         setup(() => {
-            getEnvVar = sinon.stub(platformApis, 'getEnvironmentVariable');
-            getEnvVar.withArgs('LOCALAPPDATA').returns(testLocalAppData);
+            getEnvVarStub = sinon.stub(platformApis, 'getEnvironmentVariable');
+            getEnvVarStub.withArgs('LOCALAPPDATA').returns(testLocalAppData);
         });
 
         teardown(() => {
-            getEnvVar.restore();
+            getEnvVarStub.restore();
         });
 
         test('Store Python Interpreters', async () => {
@@ -46,6 +49,9 @@ suite('Windows Store', () => {
     suite('Locator', () => {
         let stubShellExec: sinon.SinonStub;
         let getEnvVar: sinon.SinonStub;
+        let locator: ILocator;
+        let locatorDispose: IDisposable;
+        let watchLocationForPatternStub: sinon.SinonStub;
 
         const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
         const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
@@ -100,7 +106,7 @@ suite('Windows Store', () => {
             };
         }
 
-        setup(() => {
+        setup(async () => {
             stubShellExec = sinon.stub(externalDep, 'shellExecute');
             stubShellExec.callsFake((command:string) => {
                 if (command.indexOf('notpython.exe') > 0) {
@@ -114,11 +120,18 @@ suite('Windows Store', () => {
 
             getEnvVar = sinon.stub(platformApis, 'getEnvironmentVariable');
             getEnvVar.withArgs('LOCALAPPDATA').returns(testLocalAppData);
+
+            watchLocationForPatternStub = sinon.stub(fsWatcher, 'watchLocationForPattern');
+            watchLocationForPatternStub.returns({ dispose: () => { /* do nothing */ } });
+
+            [locator, locatorDispose] = await createWindowsStoreLocator();
         });
 
         teardown(() => {
             stubShellExec.restore();
             getEnvVar.restore();
+            watchLocationForPatternStub.restore();
+            locatorDispose.dispose();
         });
 
         test('iterEnvs()', async () => {
@@ -140,7 +153,6 @@ suite('Windows Store', () => {
                     return undefined;
                 });
 
-            const locator = new WindowsStoreLocator();
             const iterator = locator.iterEnvs();
             const actualEnvs = (await getEnvs(iterator))
                 .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -160,7 +172,6 @@ suite('Windows Store', () => {
                 ...createExpectedInterpreterInfo(python38path),
             };
 
-            const locator = new WindowsStoreLocator();
             const actual = await locator.resolveEnv(python38path);
 
             assertEnvEqual(actual, expected);
@@ -201,7 +212,6 @@ suite('Windows Store', () => {
                 },
             };
 
-            const locator = new WindowsStoreLocator();
             const actual = await locator.resolveEnv(input);
 
             assertEnvEqual(actual, expected);
@@ -218,7 +228,6 @@ suite('Windows Store', () => {
                 ...createExpectedInterpreterInfo(python38path),
             };
 
-            const locator = new WindowsStoreLocator();
             const actual = await locator.resolveEnv(python38path);
 
             assertEnvEqual(actual, expected);
@@ -227,7 +236,6 @@ suite('Windows Store', () => {
             // Use a non store root path
             const python38path = path.join(testLocalAppData, 'python3.8.exe');
 
-            const locator = new WindowsStoreLocator();
             const actual = await locator.resolveEnv(python38path);
 
             assert.deepStrictEqual(actual, undefined);

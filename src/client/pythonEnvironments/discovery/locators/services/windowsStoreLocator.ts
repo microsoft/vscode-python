@@ -5,11 +5,12 @@ import * as fsapi from 'fs-extra';
 import * as minimatch from 'minimatch';
 import * as path from 'path';
 import { traceWarning } from '../../../../common/logger';
+import { IDisposable } from '../../../../common/types';
 import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { getPythonVersionFromPath } from '../../../base/info/pythonVersion';
-import { IPythonEnvsIterator } from '../../../base/locator';
+import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { getFileInfo } from '../../../common/externalDependencies';
 
@@ -138,7 +139,7 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
         .filter(isWindowsStorePythonExe);
 }
 
-export class WindowsStoreLocator extends FSWatchingLocator {
+class WindowsStoreLocator extends FSWatchingLocator {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
     constructor() {
@@ -178,4 +179,10 @@ export class WindowsStoreLocator extends FSWatchingLocator {
         }
         return undefined;
     }
+}
+
+export async function createWindowsStoreLocator(): Promise<[ILocator, IDisposable]> {
+    const locator = new WindowsStoreLocator();
+    await locator.initialize();
+    return [locator, locator];
 }
