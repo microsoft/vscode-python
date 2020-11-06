@@ -2,11 +2,8 @@
 
 ---
 
-| `release` branch                                                                                                                                                                            | `main` branch                                                                                                                                                                         | Nightly CI                                                                                                                                                                                         | coverage (`main` branch)                                                                                                               |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=main)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=main) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=main)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=main) | [![codecov](https://codecov.io/gh/microsoft/vscode-python/branch/main/graph/badge.svg)](https://codecov.io/gh/microsoft/vscode-python) |
-
-[[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)]
+-   [![codecov](https://codecov.io/gh/microsoft/vscode-python/branch/main/graph/badge.svg)](https://codecov.io/gh/microsoft/vscode-python)
+-   [Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)
 
 ---
 
