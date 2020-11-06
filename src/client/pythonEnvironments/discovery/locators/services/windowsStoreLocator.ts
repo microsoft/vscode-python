@@ -5,14 +5,13 @@ import * as fsapi from 'fs-extra';
 import * as minimatch from 'minimatch';
 import * as path from 'path';
 import { traceWarning } from '../../../../common/logger';
-import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 import { Architecture, getEnvironmentVariable } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { getPythonVersionFromPath } from '../../../base/info/pythonVersion';
-import { IPythonEnvsIterator, Locator } from '../../../base/locator';
+import { IPythonEnvsIterator } from '../../../base/locator';
+import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { getFileInfo } from '../../../common/externalDependencies';
-import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
 
 /**
  * Gets path to the Windows Apps directory.
@@ -92,14 +91,16 @@ export async function isWindowsStoreEnvironment(interpreterPath: string): Promis
  * This is a glob pattern which matches following file names:
  * python3.8.exe
  * python3.9.exe
+ * python3.10.exe
  * This pattern does not match:
  * python.exe
  * python2.7.exe
  * python3.exe
  * python38.exe
- * 'python.exe', 'python3.exe', and 'python3.8.exe' can point to the same executable, hence only capture python3.*.exes.
+ * Note chokidar fails to match multiple digits using +([0-9]), even though the underlying glob pattern matcher
+ * they use (picomatch), or any other glob matcher does. Hence why we had to use {[0-9],[0-9][0-9]} instead.
  */
-const pythonExeGlob = 'python3\.[0-9]*\.exe';
+const pythonExeGlob = 'python3\.{[0-9],[0-9][0-9]}\.exe';
 
 /**
  * Checks if a given path ends with python3.*.exe. Not all python executables are matched as
@@ -137,11 +138,15 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
         .filter(isWindowsStorePythonExe);
 }
 
-export class WindowsStoreLocator extends Locator {
+export class WindowsStoreLocator extends FSWatchingLocator {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
-    public initialize(): void {
-        this.startWatcher();
+    constructor() {
+        super(
+            getWindowsStoreAppsRoot,
+            async () => this.kind,
+            { executableBaseGlob: pythonExeGlob },
+        );
     }
 
     public iterEnvs(): IPythonEnvsIterator {
@@ -172,16 +177,5 @@ export class WindowsStoreLocator extends Locator {
             });
         }
         return undefined;
-    }
-
-    private startWatcher(): void {
-        const windowsAppsRoot = getWindowsStoreAppsRoot();
-        watchLocationForPythonBinaries(
-            windowsAppsRoot,
-            (type: FileChangeType) => {
-                this.emitter.fire({ type, kind: this.kind });
-            },
-            pythonExeGlob,
-        );
     }
 }

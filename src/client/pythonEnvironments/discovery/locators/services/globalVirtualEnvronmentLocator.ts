@@ -4,17 +4,16 @@
 import { uniq } from 'lodash';
 import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
-import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
-import { chain, iterable, sleep } from '../../../../common/utils/async';
+import { chain, iterable } from '../../../../common/utils/async';
 import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType
 } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
-import { IPythonEnvsIterator, Locator } from '../../../base/locator';
+import { IPythonEnvsIterator } from '../../../base/locator';
+import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { findInterpretersInDir } from '../../../common/commonUtils';
 import { getFileInfo, pathExists } from '../../../common/externalDependencies';
-import { watchLocationForPythonBinaries } from '../../../common/pythonBinariesWatcher';
 import { isPipenvEnvironment } from './pipEnvHelper';
 import {
     isVenvEnvironment,
@@ -80,7 +79,7 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
 /**
  * Finds and resolves virtual environments created in known global locations.
  */
-export class GlobalVirtualEnvironmentLocator extends Locator {
+export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
     private virtualEnvKinds = [
         PythonEnvKind.Venv,
         PythonEnvKind.VirtualEnv,
@@ -88,9 +87,14 @@ export class GlobalVirtualEnvironmentLocator extends Locator {
         PythonEnvKind.Pipenv,
     ];
 
-    public constructor(private readonly searchDepth?: number) {
-        super();
-        this.registerWatchers().ignoreErrors();
+    constructor(private readonly searchDepth?: number) {
+        super(getGlobalVirtualEnvDirs, getVirtualEnvKind, {
+            // Note detecting kind of virtual env depends on the file structure around the
+            // executable, so we need to wait before attempting to detect it. However even
+            // if the type detected is incorrect, it doesn't do any practical harm as kinds
+            // in this locator are used in the same way (same activation commands etc.)
+            delayOnCreated: 1000,
+        });
     }
 
     public iterEnvs(): IPythonEnvsIterator {
@@ -166,17 +170,5 @@ export class GlobalVirtualEnvironmentLocator extends Locator {
             }
         }
         return undefined;
-    }
-
-    private async registerWatchers(): Promise<void> {
-        const dirs = await getGlobalVirtualEnvDirs();
-        dirs.forEach((d) => watchLocationForPythonBinaries(d, async (type: FileChangeType, executablePath: string) => {
-            // Note detecting kind of virtual env depends on the file structure around the executable, so we need to
-            // wait before attempting to detect it. However even if the type detected is incorrect, it doesn't do any
-            // practical harm as kinds in this locator are used in the same way (same activation commands etc.)
-            await sleep(1000);
-            const kind = await getVirtualEnvKind(executablePath);
-            this.emitter.fire({ type, kind });
-        }));
     }
 }
