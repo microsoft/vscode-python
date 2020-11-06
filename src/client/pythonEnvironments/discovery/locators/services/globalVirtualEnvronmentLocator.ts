@@ -4,13 +4,14 @@
 import { uniq } from 'lodash';
 import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
+import { IDisposable } from '../../../../common/types';
 import { chain, iterable } from '../../../../common/utils/async';
 import {
-    getEnvironmentVariable, getOSType, getUserHomeDir, OSType
+    getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
-import { IPythonEnvsIterator } from '../../../base/locator';
+import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { findInterpretersInDir } from '../../../common/commonUtils';
 import { getFileInfo, pathExists } from '../../../common/externalDependencies';
@@ -18,7 +19,7 @@ import { isPipenvEnvironment } from './pipEnvHelper';
 import {
     isVenvEnvironment,
     isVirtualenvEnvironment,
-    isVirtualenvwrapperEnvironment
+    isVirtualenvwrapperEnvironment,
 } from './virtualEnvironmentIdentifier';
 
 const DEFAULT_SEARCH_DEPTH = 2;
@@ -79,7 +80,7 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
 /**
  * Finds and resolves virtual environments created in known global locations.
  */
-export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
+class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
     private virtualEnvKinds = [
         PythonEnvKind.Venv,
         PythonEnvKind.VirtualEnv,
@@ -171,4 +172,10 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
         }
         return undefined;
     }
+}
+
+export async function createGlobalVirtualEnvironmentLocator(searchDepth?: number): Promise<[ILocator, IDisposable]> {
+    const locator = new GlobalVirtualEnvironmentLocator(searchDepth);
+    await locator.initialize();
+    return [locator, locator];
 }
