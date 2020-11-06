@@ -398,6 +398,8 @@ jobs:
 
   insider-tests:
     name: Insider tests
+    # Requires Azure credentials to download the Jupyter extension.
+    if: github.repository == 'microsoft/vscode-python'
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
     strategy:
@@ -471,8 +473,9 @@ jobs:
 
   coverage:
     name: Coverage reports upload
-    runs-on: ubuntu-latest
+    # Don't' assume external contributors want to upload the coverage report.
     if: github.repository == 'microsoft/vscode-python'
+    runs-on: ubuntu-latest
     needs: [tests, smoke-tests]
     steps:
       - name: Checkout
