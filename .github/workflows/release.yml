@@ -9,6 +9,7 @@ on:
 
 env:
   PYTHON_VERSION: 3.8
+  NODE_VERSION: 12.15.0
   MOCHA_REPORTER_JUNIT: false # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it hasn't already.
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
@@ -26,6 +27,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{env.NODE_VERSION}}
 
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v2
