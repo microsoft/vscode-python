@@ -5,9 +5,8 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
-import { IDisposable } from '../../../../client/common/types';
 import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
-import { ILocator } from '../../../../client/pythonEnvironments/base/locator';
+import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
 import { createGlobalVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
@@ -47,8 +46,7 @@ class GlobalVenvs {
 
 suite('GlobalVirtualEnvironment Locator', async () => {
     const globalVenvs = new GlobalVenvs();
-    let locator: ILocator;
-    let locatorDispose: IDisposable;
+    let locator: IDisposableLocator;
 
     async function waitForEnvironmentToBeDetected(deferred: Deferred<void>, envName: string) {
         const timeout = setTimeout(() => {
@@ -65,13 +63,13 @@ suite('GlobalVirtualEnvironment Locator', async () => {
     setup(async () => {
         process.env.WORKON_HOME = testWorkOnHomePath;
 
-        [locator, locatorDispose] = await createGlobalVirtualEnvironmentLocator();
+        locator = await createGlobalVirtualEnvironmentLocator();
 
         // Wait for watchers to get ready
         await sleep(1000);
     });
     teardown(async () => {
-        locatorDispose.dispose();
+        locator.dispose();
         await globalVenvs.cleanUp();
     });
     suiteTeardown(() => globalVenvs.cleanUp());

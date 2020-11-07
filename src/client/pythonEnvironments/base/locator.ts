@@ -167,6 +167,9 @@ export interface ILocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChan
     resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
 }
 
+export interface IDisposableLocator<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
+    extends ILocator<E>, IDisposable{}
+
 interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
     fire(e: E): void;
 }
@@ -184,7 +187,7 @@ interface IEmitter<E extends BasicPythonEnvsChangedEvent> {
  * `BasicPythonEnvsChangedEvent`.
  */
 abstract class LocatorBase<E extends BasicPythonEnvsChangedEvent = PythonEnvsChangedEvent>
-implements IDisposable, ILocator<E> {
+implements IDisposableLocator<E> {
     public readonly onChanged: Event<E>;
 
     protected readonly emitter: IEmitter<E>;

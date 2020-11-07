@@ -4,14 +4,13 @@
 import { uniq } from 'lodash';
 import * as path from 'path';
 import { traceVerbose } from '../../../../common/logger';
-import { IDisposable } from '../../../../common/types';
 import { chain, iterable } from '../../../../common/utils/async';
 import {
     getEnvironmentVariable, getOSType, getUserHomeDir, OSType,
 } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, UNKNOWN_PYTHON_VERSION } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
-import { ILocator, IPythonEnvsIterator } from '../../../base/locator';
+import { IDisposableLocator, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { findInterpretersInDir } from '../../../common/commonUtils';
 import { getFileInfo, pathExists } from '../../../common/externalDependencies';
@@ -174,8 +173,8 @@ class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
     }
 }
 
-export async function createGlobalVirtualEnvironmentLocator(searchDepth?: number): Promise<[ILocator, IDisposable]> {
+export async function createGlobalVirtualEnvironmentLocator(searchDepth?: number): Promise<IDisposableLocator> {
     const locator = new GlobalVirtualEnvironmentLocator(searchDepth);
     await locator.initialize();
-    return [locator, locator];
+    return locator;
 }

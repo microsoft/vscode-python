@@ -2,18 +2,21 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { IDisposable, IDisposableRegistry } from '../common/types';
+import { IDisposableRegistry } from '../common/types';
 import { getOSType, OSType } from '../common/utils/platform';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonEnvInfoCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
-import { ILocator, IPythonEnvsIterator, PythonLocatorQuery } from './base/locator';
+import {
+    IDisposableLocator, ILocator, IPythonEnvsIterator, PythonLocatorQuery,
+} from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsChangedEvent } from './base/watcher';
 import { getGlobalPersistentStore, initializeExternalDependencies as initializeLegacyExternalDependencies } from './common/externalDependencies';
 import { ExtensionLocators, WorkspaceLocators } from './discovery/locators';
 import { createGlobalVirtualEnvironmentLocator } from './discovery/locators/services/globalVirtualEnvronmentLocator';
 import { createPosixKnownPathsLocator } from './discovery/locators/services/posixKnownPathsLocator';
+import { createPyenvLocator } from './discovery/locators/services/pyenvLocator';
 import { createWindowsRegistryLocator } from './discovery/locators/services/windowsRegistryLocator';
 import { createWindowsStoreLocator } from './discovery/locators/services/windowsStoreLocator';
 import { EnvironmentInfoService } from './info/environmentInfoService';
@@ -99,9 +102,10 @@ async function initLocators(disposables:IDisposableRegistry): Promise<ExtensionL
 }
 
 async function initNonWorkspaceLocators(disposables:IDisposableRegistry): Promise<ILocator[]> {
-    const locatorFactories:(()=> Promise<[ILocator, IDisposable]>)[] = [
+    const locatorFactories:(()=> Promise<IDisposableLocator>)[] = [
         // Common locator factory goes here.
         createGlobalVirtualEnvironmentLocator,
+        createPyenvLocator,
     ];
 
     if (getOSType() === OSType.Windows) {
@@ -120,9 +124,9 @@ async function initNonWorkspaceLocators(disposables:IDisposableRegistry): Promis
     const locators:ILocator[] = [];
 
     for (const create of locatorFactories) {
-        const [locator, dispose] = await create();
+        const locator = await create();
         locators.push(locator);
-        disposables.push(dispose);
+        disposables.push(locator);
     }
 
     return locators;

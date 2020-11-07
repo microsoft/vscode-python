@@ -6,14 +6,13 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as fsWatcher from '../../../../client/common/platform/fileSystemWatcher';
 import { ExecutionResult } from '../../../../client/common/process/types';
-import { IDisposable } from '../../../../client/common/types';
 import * as platformApis from '../../../../client/common/utils/platform';
 import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
 import { InterpreterInformation } from '../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
-import { ILocator } from '../../../../client/pythonEnvironments/base/locator';
+import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import * as externalDep from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { createWindowsStoreLocator, getWindowsStorePythonExes } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
 import { getEnvs } from '../../base/common';
@@ -49,8 +48,7 @@ suite('Windows Store', () => {
     suite('Locator', () => {
         let stubShellExec: sinon.SinonStub;
         let getEnvVar: sinon.SinonStub;
-        let locator: ILocator;
-        let locatorDispose: IDisposable;
+        let locator: IDisposableLocator;
         let watchLocationForPatternStub: sinon.SinonStub;
 
         const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
@@ -124,14 +122,14 @@ suite('Windows Store', () => {
             watchLocationForPatternStub = sinon.stub(fsWatcher, 'watchLocationForPattern');
             watchLocationForPatternStub.returns({ dispose: () => { /* do nothing */ } });
 
-            [locator, locatorDispose] = await createWindowsStoreLocator();
+            locator = await createWindowsStoreLocator();
         });
 
         teardown(() => {
             stubShellExec.restore();
             getEnvVar.restore();
             watchLocationForPatternStub.restore();
-            locatorDispose.dispose();
+            locator.dispose();
         });
 
         test('iterEnvs()', async () => {

@@ -4,14 +4,15 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { traceError, traceInfo } from '../../../../common/logger';
-import { IDisposable } from '../../../../common/types';
 
 import { Architecture } from '../../../../common/utils/platform';
 import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
 } from '../../../base/info';
 import { parseVersion } from '../../../base/info/pythonVersion';
-import { ILocator, IPythonEnvsIterator, Locator } from '../../../base/locator';
+import {
+    IDisposableLocator, IPythonEnvsIterator, Locator,
+} from '../../../base/locator';
 import { getFileInfo, resolveSymbolicLink } from '../../../common/externalDependencies';
 import { commonPosixBinPaths, isPosixPythonBin } from '../../../common/posixUtils';
 
@@ -86,7 +87,7 @@ class PosixKnownPathsLocator extends Locator {
     }
 }
 
-export function createPosixKnownPathsLocator(): Promise<[ILocator, IDisposable]> {
+export function createPosixKnownPathsLocator(): Promise<IDisposableLocator> {
     const locator = new PosixKnownPathsLocator();
-    return Promise.resolve([locator, locator]);
+    return Promise.resolve(locator);
 }

@@ -7,13 +7,12 @@ import * as sinon from 'sinon';
 import {
     HKCU, HKLM, Options, REG_SZ,
 } from 'winreg';
-import { IDisposable } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
-import { ILocator } from '../../../../client/pythonEnvironments/base/locator';
+import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as winutils from '../../../../client/pythonEnvironments/common/windowsUtils';
 import { createWindowsRegistryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryLocator';
@@ -24,8 +23,7 @@ suite('Windows Registry', () => {
     let stubReadRegistryValues: sinon.SinonStub;
     let stubReadRegistryKeys: sinon.SinonStub;
     let stubGetInterpreterDataFromRegistry: sinon.SinonStub;
-    let locator:ILocator;
-    let locatorDispose:IDisposable;
+    let locator:IDisposableLocator;
 
     const regTestRoot = path.join(TEST_LAYOUT_ROOT, 'winreg');
 
@@ -307,14 +305,14 @@ suite('Windows Registry', () => {
         stubReadRegistryKeys.callsFake(fakeRegistryKeys);
         stubGetInterpreterDataFromRegistry.callsFake(fakeGetInterpreterDataFromRegistry);
 
-        [locator, locatorDispose] = await createWindowsRegistryLocator();
+        locator = await createWindowsRegistryLocator();
     });
 
     teardown(() => {
         stubReadRegistryValues.restore();
         stubReadRegistryKeys.restore();
         stubGetInterpreterDataFromRegistry.restore();
-        locatorDispose.dispose();
+        locator.dispose();
     });
 
     test('iterEnvs()', async () => {

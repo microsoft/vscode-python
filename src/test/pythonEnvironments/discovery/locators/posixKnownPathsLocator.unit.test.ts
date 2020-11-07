@@ -11,7 +11,7 @@ import {
 } from '../../../../client/pythonEnvironments/base/info';
 import { InterpreterInformation } from '../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
-import { ILocator } from '../../../../client/pythonEnvironments/base/locator';
+import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { createPosixKnownPathsLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/posixKnownPathsLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
@@ -19,8 +19,8 @@ import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
 suite('Posix Known Path Locator', () => {
     let getPathEnvVar: sinon.SinonStub;
-    let locator: ILocator;
-    let locatorDispose: IDisposable;
+    let locator: IDisposableLocator;
+
     const testPosixKnownPathsRoot = path.join(TEST_LAYOUT_ROOT, 'posixroot');
 
     const testLocation1 = path.join(testPosixKnownPathsRoot, 'location1');
@@ -71,7 +71,7 @@ suite('Posix Known Path Locator', () => {
     });
     teardown(() => {
         getPathEnvVar.restore();
-        locatorDispose.dispose();
+        locator.dispose();
     });
 
     test('iterEnvs(): get python bin from known test roots', async () => {

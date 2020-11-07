@@ -6,10 +6,9 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { traceWarning } from '../../../../client/common/logger';
 import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
-import { IDisposable } from '../../../../client/common/types';
 import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { ILocator } from '../../../../client/pythonEnvironments/base/locator';
+import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
 import { arePathsSame } from '../../../../client/pythonEnvironments/common/externalDependencies';
@@ -59,8 +58,8 @@ suite('Windows Store Locator', async () => {
     const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
     const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
     const windowsStoreEnvs = new WindowsStoreEnvs(testStoreAppRoot);
-    let locator: ILocator;
-    let locatorDispose: IDisposable;
+    let locator: IDisposableLocator;
+
     const localAppDataOldValue = process.env.LOCALAPPDATA;
 
     async function waitForChangeToBeDetected(deferred: Deferred<void>) {
@@ -85,7 +84,7 @@ suite('Windows Store Locator', async () => {
     });
 
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
-        [locator, locatorDispose] = await createWindowsStoreLocator();
+        locator = await createWindowsStoreLocator();
         // Wait for watchers to get ready
         await sleep(1000);
         locator.onChanged(onChanged);
@@ -93,7 +92,7 @@ suite('Windows Store Locator', async () => {
 
     teardown(async () => {
         await windowsStoreEnvs.cleanUp();
-        locatorDispose.dispose();
+        locator.dispose();
     });
     suiteTeardown(async () => {
         process.env.LOCALAPPDATA = localAppDataOldValue;

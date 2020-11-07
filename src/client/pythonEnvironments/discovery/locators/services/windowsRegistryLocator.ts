@@ -4,13 +4,14 @@
 import { uniqBy } from 'lodash';
 import { HKCU, HKLM } from 'winreg';
 import { traceError, traceVerbose } from '../../../../common/logger';
-import { IDisposable } from '../../../../common/types';
 import { Architecture } from '../../../../common/utils/platform';
 import {
     PythonEnvInfo, PythonEnvKind, PythonVersion, UNKNOWN_PYTHON_VERSION,
 } from '../../../base/info';
 import { parseVersion } from '../../../base/info/pythonVersion';
-import { ILocator, IPythonEnvsIterator, Locator } from '../../../base/locator';
+import {
+    IDisposableLocator, IPythonEnvsIterator, Locator,
+} from '../../../base/locator';
 import { getFileInfo } from '../../../common/externalDependencies';
 import { getInterpreterDataFromRegistry, IRegistryInterpreterData, readRegistryKeys } from '../../../common/windowsUtils';
 
@@ -94,7 +95,7 @@ class WindowsRegistryLocator extends Locator {
     }
 }
 
-export function createWindowsRegistryLocator(): Promise<[ILocator, IDisposable]> {
+export function createWindowsRegistryLocator(): Promise<IDisposableLocator> {
     const locator = new WindowsRegistryLocator();
-    return Promise.resolve([locator, locator]);
+    return Promise.resolve(locator);
 }
