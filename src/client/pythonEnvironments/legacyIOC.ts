@@ -25,11 +25,12 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../interpreter/contracts';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../interpreter/locators/types';
-import { IServiceManager } from '../ioc/types';
+import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonReleaseLevel } from './base/info';
 import { buildEnvInfo } from './base/info/env';
 import { ILocator, PythonLocatorQuery } from './base/locator';
 import { getEnvs } from './base/locatorUtils';
+import { initializeExternalDependencies } from './common/externalDependencies';
 import { PythonInterpreterLocatorService } from './discovery/locators';
 import { InterpreterLocatorHelper } from './discovery/locators/helpers';
 import { InterpreterLocatorProgressService } from './discovery/locators/progressService';
@@ -363,4 +364,18 @@ export function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): 
 
 export function registerNewDiscoveryForIOC(serviceManager: IServiceManager, api:IPythonEnvironments): void {
     serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, new ComponentAdapter(api));
+}
+
+/**
+ * This is here to support old tests.
+ * @deprecated
+ */
+export function registerForIOC(
+    serviceManager: IServiceManager,
+    serviceContainer: IServiceContainer,
+    api:IPythonEnvironments,
+): void{
+    registerLegacyDiscoveryForIOC(serviceManager);
+    initializeExternalDependencies(serviceContainer);
+    registerNewDiscoveryForIOC(serviceManager, api);
 }
