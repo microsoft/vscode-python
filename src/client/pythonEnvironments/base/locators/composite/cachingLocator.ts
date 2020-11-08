@@ -10,7 +10,7 @@ import { IEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
 import { getMinimalPartialInfo } from '../../info/env';
 import {
-    ILocator,
+    IDisposableLocator,
     IPythonEnvsIterator,
     PythonLocatorQuery,
 } from '../../locator';
@@ -21,7 +21,7 @@ import { pickBestEnv } from './reducingLocator';
 /**
  * A locator that stores the known environments in the given cache.
  */
-export class CachingLocator implements ILocator {
+export class CachingLocator implements IDisposableLocator {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     private readonly watcher = new PythonEnvsWatcher();
@@ -34,7 +34,7 @@ export class CachingLocator implements ILocator {
 
     constructor(
         private readonly cache: IEnvsCache,
-        private readonly locator: ILocator,
+        private readonly locator: IDisposableLocator,
     ) {
         this.onChanged = this.watcher.onChanged;
         this.looper = new BackgroundRequestLooper({
@@ -76,6 +76,8 @@ export class CachingLocator implements ILocator {
     public dispose(): void {
         const waitUntilStopped = this.looper.stop();
         waitUntilStopped.ignoreErrors();
+
+        this.locator.dispose();
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {

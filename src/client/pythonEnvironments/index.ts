@@ -8,7 +8,7 @@ import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { PythonEnvInfoCache } from './base/envsCache';
 import { PythonEnvInfo } from './base/info';
 import {
-    IDisposableLocator, ILocator, IPythonEnvsIterator, PythonLocatorQuery,
+    IDisposableLocator, IPythonEnvsIterator, PythonLocatorQuery,
 } from './base/locator';
 import { CachingLocator } from './base/locators/composite/cachingLocator';
 import { PythonEnvsChangedEvent } from './base/watcher';
@@ -26,11 +26,14 @@ import { registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from './leg
  * Activate the Python environments component (during extension activation).'
  */
 export async function activate(serviceManager: IServiceManager, serviceContainer: IServiceContainer): Promise<void> {
-    const disposables: IDisposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
     registerLegacyDiscoveryForIOC(serviceManager);
     initializeLegacyExternalDependencies(serviceContainer);
 
-    const api = await createAPI(disposables);
+    const api = await createAPI();
+
+    const disposables: IDisposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+    disposables.push(api);
+
     registerNewDiscoveryForIOC(serviceManager, api);
 }
 
@@ -39,10 +42,10 @@ export async function activate(serviceManager: IServiceManager, serviceContainer
  *
  * Note that this is composed of sub-components.
  */
-export class PythonEnvironments implements ILocator {
+export class PythonEnvironments implements IDisposableLocator {
     constructor(
         // These are the sub-components the full component is composed of:
-        private readonly locators: ILocator,
+        private readonly locators: IDisposableLocator,
     ) {}
 
     public get onChanged(): vscode.Event<PythonEnvsChangedEvent> {
@@ -56,6 +59,10 @@ export class PythonEnvironments implements ILocator {
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         return this.locators.resolveEnv(env);
     }
+
+    public dispose():void{
+        this.locators.dispose();
+    }
 }
 
 /**
@@ -63,8 +70,8 @@ export class PythonEnvironments implements ILocator {
  *
  * An activation function is also returned, which should be called soon.
  */
-export async function createAPI(disposables:IDisposableRegistry): Promise<PythonEnvironments> {
-    const locators = await initLocators(disposables);
+export async function createAPI(): Promise<PythonEnvironments> {
+    const locators = await initLocators();
 
     const envInfoService = new EnvironmentInfoService();
     const envsCache = new PythonEnvInfoCache(
@@ -86,10 +93,10 @@ export async function createAPI(disposables:IDisposableRegistry): Promise<Python
     return new PythonEnvironments(cachingLocator);
 }
 
-async function initLocators(disposables:IDisposableRegistry): Promise<ExtensionLocators> {
+async function initLocators(): Promise<ExtensionLocators> {
     // We will add locators in similar order
     // to PythonInterpreterLocatorService.getLocators().
-    const nonWorkspaceLocators = await initNonWorkspaceLocators(disposables);
+    const nonWorkspaceLocators = await initNonWorkspaceLocators();
 
     const workspaceLocators = new WorkspaceLocators([
         // Add an ILocator factory func here for each kind of workspace-rooted locator.
@@ -101,7 +108,7 @@ async function initLocators(disposables:IDisposableRegistry): Promise<ExtensionL
     return new ExtensionLocators(nonWorkspaceLocators, workspaceLocators);
 }
 
-async function initNonWorkspaceLocators(disposables:IDisposableRegistry): Promise<ILocator[]> {
+async function initNonWorkspaceLocators(): Promise<IDisposableLocator[]> {
     const locatorFactories:(()=> Promise<IDisposableLocator>)[] = [
         // Common locator factory goes here.
         createGlobalVirtualEnvironmentLocator,
@@ -121,15 +128,7 @@ async function initNonWorkspaceLocators(disposables:IDisposableRegistry): Promis
         );
     }
 
-    const locators:ILocator[] = [];
-
-    for (const create of locatorFactories) {
-        const locator = await create();
-        locators.push(locator);
-        disposables.push(locator);
-    }
-
-    return locators;
+    return Promise.all(locatorFactories.map((create) => create()));
 }
 
 function getWorkspaceFolders() {

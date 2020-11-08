@@ -4,11 +4,14 @@
 import * as assert from 'assert';
 import { Uri } from 'vscode';
 import { createDeferred } from '../../../client/common/utils/async';
+import { DisableableLocator } from '../../../client/pythonEnvironments/base/disableableLocator';
 import { PythonEnvInfo, PythonEnvKind } from '../../../client/pythonEnvironments/base/info';
 import { PythonLocatorQuery } from '../../../client/pythonEnvironments/base/locator';
-import { DisableableLocator, Locators } from '../../../client/pythonEnvironments/base/locators';
+import { Locators } from '../../../client/pythonEnvironments/base/locators';
 import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
-import { createLocatedEnv, createNamedEnv, getEnvs, SimpleLocator } from './common';
+import {
+    createLocatedEnv, createNamedEnv, getEnvs, SimpleLocator,
+} from './common';
 
 suite('Python envs locators - Locators', () => {
     suite('onChanged consolidates', () => {
@@ -160,7 +163,7 @@ suite('Python envs locators - Locators', () => {
                     } else if (env === env2) {
                         deferred2.resolve();
                     }
-                }
+                },
             });
             const sub2 = new SimpleLocator([env4, env5], {
                 beforeEach: async (env) => {
@@ -176,7 +179,7 @@ suite('Python envs locators - Locators', () => {
                     } else if (env === env5) {
                         deferred5.resolve();
                     }
-                }
+                },
             });
             const locators = new Locators([sub1, sub2]);
 
@@ -192,10 +195,12 @@ suite('Python envs locators - Locators', () => {
             const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected = env1;
             const calls: number[] = [];
-            const sub1 = new SimpleLocator([env1], { resolve: async (e) => {
-                calls.push(1);
-                return e;
-            }});
+            const sub1 = new SimpleLocator([env1], {
+                resolve: async (e) => {
+                    calls.push(1);
+                    return e;
+                },
+            });
             const locators = new Locators([sub1]);
 
             const resolved = await locators.resolveEnv(env1);
@@ -208,14 +213,18 @@ suite('Python envs locators - Locators', () => {
             const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected = env1;
             const calls: number[] = [];
-            const sub1 = new SimpleLocator([env1], { resolve: async (e) => {
-                calls.push(1);
-                return e;
-            }});
-            const sub2 = new SimpleLocator([env1], { resolve: async (e) => {
-                calls.push(2);
-                return e;
-            }});
+            const sub1 = new SimpleLocator([env1], {
+                resolve: async (e) => {
+                    calls.push(1);
+                    return e;
+                },
+            });
+            const sub2 = new SimpleLocator([env1], {
+                resolve: async (e) => {
+                    calls.push(2);
+                    return e;
+                },
+            });
             const locators = new Locators([sub1, sub2]);
 
             const resolved = await locators.resolveEnv(env1);
@@ -228,14 +237,18 @@ suite('Python envs locators - Locators', () => {
             const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const expected = env1;
             const calls: number[] = [];
-            const sub1 = new SimpleLocator([env1], { resolve: async (_e) => {
-                calls.push(1);
-                return undefined;
-            }});
-            const sub2 = new SimpleLocator([env1], { resolve: async (e) => {
-                calls.push(2);
-                return e;
-            }});
+            const sub1 = new SimpleLocator([env1], {
+                resolve: async () => {
+                    calls.push(1);
+                    return undefined;
+                },
+            });
+            const sub2 = new SimpleLocator([env1], {
+                resolve: async (e) => {
+                    calls.push(2);
+                    return e;
+                },
+            });
             const locators = new Locators([sub1, sub2]);
 
             const resolved = await locators.resolveEnv(env1);
@@ -247,14 +260,18 @@ suite('Python envs locators - Locators', () => {
         test('none resolve', async () => {
             const env1 = createNamedEnv('foo', '3.8.1', PythonEnvKind.Venv);
             const calls: number[] = [];
-            const sub1 = new SimpleLocator([env1], { resolve: async (_e) => {
-                calls.push(1);
-                return undefined;
-            }});
-            const sub2 = new SimpleLocator([env1], { resolve: async (_e) => {
-                calls.push(2);
-                return undefined;
-            }});
+            const sub1 = new SimpleLocator([env1], {
+                resolve: async () => {
+                    calls.push(1);
+                    return undefined;
+                },
+            });
+            const sub2 = new SimpleLocator([env1], {
+                resolve: async () => {
+                    calls.push(2);
+                    return undefined;
+                },
+            });
             const locators = new Locators([sub1, sub2]);
 
             const resolved = await locators.resolveEnv(env1);
