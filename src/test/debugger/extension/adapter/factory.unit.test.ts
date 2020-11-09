@@ -237,10 +237,28 @@ suite('Debugging - Adapter Factory', () => {
         assert.ok(Reporter.eventNames.includes(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH));
     });
 
-    test('Use custom debug adapter path when specified', async () => {
+    test('Use "debugAdapterPath" when specified', async () => {
         const customAdapterPath = 'custom/debug/adapter/path';
         const session = createSession({ debugAdapterPath: customAdapterPath });
         const debugExecutable = new DebugAdapterExecutable(pythonPath, [customAdapterPath]);
+
+        const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
+
+        assert.deepEqual(descriptor, debugExecutable);
+    });
+
+    test('Use "debugAdapterPython" when specified', async () => {
+        const session = createSession({ debugAdapterPython: '/bin/custompy' });
+        const debugExecutable = new DebugAdapterExecutable('/bin/custompy', [debugAdapterPath]);
+
+        const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
+
+        assert.deepEqual(descriptor, debugExecutable);
+    });
+
+    test('Do not use "python" to spawn the debug adapter', async () => {
+        const session = createSession({ python: '/bin/custompy' });
+        const debugExecutable = new DebugAdapterExecutable(pythonPath, [debugAdapterPath]);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 

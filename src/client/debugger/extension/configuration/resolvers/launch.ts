@@ -29,47 +29,69 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
     ) {
         super(workspaceService, documentManager, platformService, configurationService);
     }
+
     public async resolveDebugConfiguration(
         folder: WorkspaceFolder | undefined,
         debugConfiguration: LaunchRequestArguments,
         _token?: CancellationToken
     ): Promise<LaunchRequestArguments | undefined> {
-        const workspaceFolder = this.getWorkspaceFolder(folder);
-
-        const config = debugConfiguration as LaunchRequestArguments;
-        const numberOfSettings = Object.keys(config);
-
-        if ((config.noDebug === true && numberOfSettings.length === 1) || numberOfSettings.length === 0) {
+        if (
+            debugConfiguration.name === undefined &&
+            debugConfiguration.type === undefined &&
+            debugConfiguration.request === undefined &&
+            debugConfiguration.program === undefined &&
+            debugConfiguration.env === undefined
+        ) {
             const defaultProgram = this.getProgram();
-
-            config.name = 'Launch';
-            config.type = DebuggerTypeName;
-            config.request = 'launch';
-            config.program = defaultProgram ? defaultProgram : '';
-            config.env = {};
+            debugConfiguration.name = 'Launch';
+            debugConfiguration.type = DebuggerTypeName;
+            debugConfiguration.request = 'launch';
+            debugConfiguration.program = defaultProgram ?? '';
+            debugConfiguration.env = {};
         }
 
-        await this.provideLaunchDefaults(workspaceFolder, config);
+        const workspaceFolder = this.getWorkspaceFolder(folder);
+        this.resolveAndUpdatePaths(workspaceFolder, debugConfiguration);
+        return debugConfiguration;
+    }
 
-        const isValid = await this.validateLaunchConfiguration(folder, config);
+    public async resolveDebugConfigurationWithSubstitutedVariables(
+        folder: WorkspaceFolder | undefined,
+        debugConfiguration: LaunchRequestArguments,
+        _token?: CancellationToken
+    ): Promise<LaunchRequestArguments | undefined> {
+        const workspaceFolder = this.getWorkspaceFolder(folder);
+        await this.provideLaunchDefaults(workspaceFolder, debugConfiguration);
+
+        const isValid = await this.validateLaunchConfiguration(folder, debugConfiguration);
         if (!isValid) {
             return;
         }
 
-        const dbgConfig = debugConfiguration;
-        if (Array.isArray(dbgConfig.debugOptions)) {
-            dbgConfig.debugOptions = dbgConfig.debugOptions!.filter(
-                (item, pos) => dbgConfig.debugOptions!.indexOf(item) === pos
+        if (Array.isArray(debugConfiguration.debugOptions)) {
+            debugConfiguration.debugOptions = debugConfiguration.debugOptions!.filter(
+                (item, pos) => debugConfiguration.debugOptions!.indexOf(item) === pos
             );
         }
         return debugConfiguration;
     }
+
     // tslint:disable-next-line:cyclomatic-complexity
     protected async provideLaunchDefaults(
         workspaceFolder: Uri | undefined,
         debugConfiguration: LaunchRequestArguments
     ): Promise<void> {
-        this.resolveAndUpdatePaths(workspaceFolder, debugConfiguration);
+        if (debugConfiguration.python === undefined) {
+            debugConfiguration.python = debugConfiguration.pythonPath;
+        }
+        if (debugConfiguration.debugAdapterPython === undefined) {
+            debugConfiguration.debugAdapterPython = debugConfiguration.pythonPath;
+        }
+        if (debugConfiguration.debugLauncherPython === undefined) {
+            debugConfiguration.debugLauncherPython = debugConfiguration.pythonPath;
+        }
+        delete debugConfiguration.pythonPath;
+
         if (typeof debugConfiguration.cwd !== 'string' && workspaceFolder) {
             debugConfiguration.cwd = workspaceFolder.fsPath;
         }
@@ -160,10 +182,18 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         debugConfiguration: LaunchRequestArguments
     ): Promise<boolean> {
         const diagnosticService = this.invalidPythonPathInDebuggerService;
-        return diagnosticService.validatePythonPath(
-            debugConfiguration.pythonPath,
-            this.pythonPathSource,
-            folder ? folder.uri : undefined
+        return (
+            diagnosticService.validatePythonPath(debugConfiguration.python, this.pythonPathSource, folder?.uri) &&
+            diagnosticService.validatePythonPath(
+                debugConfiguration.debugAdapterPython,
+                this.pythonPathSource,
+                folder?.uri
+            ) &&
+            diagnosticService.validatePythonPath(
+                debugConfiguration.debugLauncherPython,
+                this.pythonPathSource,
+                folder?.uri
+            )
         );
     }
 }

@@ -31,24 +31,38 @@ suite('Debugging - Config Resolver', () => {
         ): Promise<AttachRequestArguments | LaunchRequestArguments | undefined> {
             throw new Error('Not Implemented');
         }
+
+        public resolveDebugConfigurationWithSubstitutedVariables(
+            _folder: WorkspaceFolder | undefined,
+            _debugConfiguration: DebugConfiguration,
+            _token?: CancellationToken
+        ): Promise<AttachRequestArguments | LaunchRequestArguments | undefined> {
+            throw new Error('Not Implemented');
+        }
+
         public getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
             return super.getWorkspaceFolder(folder);
         }
+
         public getProgram(): string | undefined {
             return super.getProgram();
         }
+
         public resolveAndUpdatePythonPath(
             workspaceFolder: Uri | undefined,
             debugConfiguration: LaunchRequestArguments
         ): void {
             return super.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
         }
+
         public debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions) {
             return super.debugOption(debugOptions, debugOption);
         }
+
         public isLocalHost(hostName?: string) {
             return super.isLocalHost(hostName);
         }
+
         public isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
             return super.isDebuggingFlask(debugConfiguration);
         }
@@ -185,7 +199,7 @@ suite('Debugging - Config Resolver', () => {
     test('Do nothing if debug configuration is undefined', () => {
         resolver.resolveAndUpdatePythonPath(undefined, undefined as any);
     });
-    test('Python path in debug config must point to pythonpath in settings if pythonPath in config is not set', () => {
+    test('pythonPath in debug config must point to pythonPath in settings if pythonPath in config is not set', () => {
         const config = {};
         const pythonPath = path.join('1', '2', '3');
 
@@ -195,7 +209,7 @@ suite('Debugging - Config Resolver', () => {
 
         expect(config).to.have.property('pythonPath', pythonPath);
     });
-    test('Python path in debug config must point to pythonpath in settings  if pythonPath in config is ${command:python.interpreterPath}', () => {
+    test('pythonPath in debug config must point to pythonPath in settings  if pythonPath in config is ${command:python.interpreterPath}', () => {
         const config = {
             pythonPath: '${command:python.interpreterPath}'
         };
