@@ -30,6 +30,9 @@ function parseBasename(basename: string): PythonVersion {
         // We can assume it is 2.7.  (See PEP 394.)
         return parseVersion('2.7');
     }
+    if (!basename.startsWith('python')) {
+        throw Error(`not a Python executable (expected "python..", got "${basename}")`);
+    }
     // If we reach here then we expect it to have a version in the name.
     return parseVersion(basename);
 }
