@@ -348,14 +348,8 @@ jobs:
         run: npx tsc -p ./
         shell: bash
 
-      # Download the jupyter extension
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Download JUPYTER VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_JUPYTER}} --account-name pvsc --container-name extension-builds-jupyter --name ${{env.VSIX_NAME_JUPYTER}} --auth-mode login
+      - name: Download Jupyter VSIX
+        run: curl --output ${{ env.VSIX_NAME_JUPYTER }} https://pvsc.blob.core.windows.net/extension-builds-jupyter/${{ env.VSIX_NAME_JUPYTER }}
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
@@ -418,14 +412,8 @@ jobs:
         run: npm run prePublish
         shell: bash
 
-      # Download the jupyter extension
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Download JUPYTER VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_JUPYTER}} --account-name pvsc --container-name extension-builds-jupyter --name ${{env.VSIX_NAME_JUPYTER}} --auth-mode login
+      - name: Download Jupyter VSIX
+        run: curl --output ${{ env.VSIX_NAME_JUPYTER }} https://pvsc.blob.core.windows.net/extension-builds-jupyter/${{ env.VSIX_NAME_JUPYTER }}
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
