@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { parseVersion } from './pythonVersion';
+import { getOSType, OSType } from '../../../common/utils/platform';
+import { getEmptyVersion, parseVersion } from './pythonVersion';
 
 import { PythonVersion } from '.';
 
@@ -10,19 +11,25 @@ import { PythonVersion } from '.';
  * Determine a best-effort Python version based on the given filename.
  */
 export function parseVersionFromExecutable(filename: string): PythonVersion {
-    let version: PythonVersion;
-    try {
-        version = parseVersion(filename);
-    } catch (err) {
-        if (['python', 'python.exe'].includes(path.basename(filename))) {
-            return parseVersion('2.7');
-        }
-        throw err; // re-throw
-    }
+    const version = parseBasename(path.basename(filename));
 
     if (version.major === 2 && version.minor === -1) {
         version.minor = 7;
     }
 
     return version;
+}
+
+function parseBasename(basename: string): PythonVersion {
+    if (getOSType() === OSType.Windows) {
+        if (basename === 'python.exe') {
+            // On Windows we can't assume it is 2.7.
+            return getEmptyVersion();
+        }
+    } else if (basename === 'python') {
+        // We can assume it is 2.7.  (See PEP 394.)
+        return parseVersion('2.7');
+    }
+    // If we reach here then we expect it to have a version in the name.
+    return parseVersion(basename);
 }
