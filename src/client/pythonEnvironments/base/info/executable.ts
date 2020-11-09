@@ -2,22 +2,20 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import {
-    parseVersion as parseVersionString,
-} from './pythonVersion';
+import { parseVersion } from './pythonVersion';
 
 import { PythonVersion } from '.';
 
 /**
  * Determine a best-effort Python version based on the given filename.
  */
-export function parseVersion(executable: string): PythonVersion {
+export function parseVersionFromExecutable(filename: string): PythonVersion {
     let version: PythonVersion;
     try {
-        version = parseVersionString(executable);
+        version = parseVersion(filename);
     } catch (err) {
-        if (['python', 'python.exe'].includes(path.basename(executable))) {
-            return parseVersionString('2.7');
+        if (['python', 'python.exe'].includes(path.basename(filename))) {
+            return parseVersion('2.7');
         }
         throw err; // re-throw
     }
