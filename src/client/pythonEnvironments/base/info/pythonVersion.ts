@@ -103,6 +103,13 @@ export function parseVersionInfo(versionInfoStr: string): PythonVersion {
 }
 
 /**
+ * Get a new version object with all properties "zeroed out".
+ */
+export function getEmptyVersion(): PythonVersion {
+    return { ...EMPTY_VERSION };
+}
+
+/**
  * Determine if the version is effectively a blank one.
  */
 export function isVersionEmpty(version: PythonVersion): boolean {
