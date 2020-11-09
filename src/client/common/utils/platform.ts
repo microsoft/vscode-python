@@ -40,7 +40,13 @@ const architectures: Record<string, Architecture> = {
  * Identify the host's native architecture/bitness.
  */
 export function getArchitecture(): Architecture {
-    return architectures[process.arch] || Architecture.Unknown;
+    const fromProc = architectures[process.arch];
+    if (fromProc !== undefined) {
+        return fromProc;
+    }
+    // tslint:disable-next-line:no-require-imports
+    const arch = require('arch');
+    return architectures[arch()] || Architecture.Unknown;
 }
 
 /**
