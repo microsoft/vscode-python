@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { EventEmitter } from 'vscode';
+import { traceVerbose } from '../../common/logger';
 import { chain } from '../../common/utils/async';
 import { PythonEnvInfo } from './info';
 import {
@@ -71,6 +72,12 @@ export class Locators extends PythonEnvsWatchers implements IDisposableLocator {
     }
 
     public dispose(): void {
-        this.locators.forEach((locator) => locator.dispose());
+        this.locators.forEach((locator) => {
+            try {
+                locator.dispose();
+            } catch (ex) {
+                traceVerbose(`Dispose failed for ${typeof locator} locator:`, ex);
+            }
+        });
     }
 }
