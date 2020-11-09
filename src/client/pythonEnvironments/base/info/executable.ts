@@ -5,8 +5,9 @@ import * as path from 'path';
 import { traceError } from '../../../common/logger';
 import { getOSType, OSType } from '../../../common/utils/platform';
 import {
+    areSimilarVersions,
+    compareVersions,
     getEmptyVersion,
-    isBetterVersion,
     parseVersion,
 } from './pythonVersion';
 
@@ -83,14 +84,12 @@ function walkExecutablePath(filename: string): PythonVersion {
             // The path segment did not look like a version.
         }
         if (current !== undefined) {
-            // We should use areSimilarVersions() here instead once we have it.
-            const better = isBetterVersion(current, best);
-            if (better === undefined) {
-                // They are not similar versions.
-                // We prioritize the previously found version.
+            if (!areSimilarVersions(current, best)) {
+                // We treat the right-most version in the filename
+                // as authoritative in this case.
                 break;
             }
-            if (better) {
+            if (compareVersions(current, best) < 0) {
                 best = current;
                 if (current.release !== undefined) {
                     // It can't get better.
