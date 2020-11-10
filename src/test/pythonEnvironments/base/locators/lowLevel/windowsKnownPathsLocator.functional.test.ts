@@ -44,30 +44,34 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
            root1/
               python2.exe  # not executable
               <python.exe>
+              <python2.7.exe>
               <python3.exe>
               <python3.8.exe>
               <python3.8>
               <python3.8.1rc1.10213.exe>  # should match but doesn't
+              #<python27.exe>
+              #<python38.exe>
+              #<python.3.8.exe>
               python.txt
               <my-python.exe>  # should match but doesn't
               <spam.exe>
               spam.txt
            parent/
               root2/
-                 <python.exe>
-                 <python>
+                 <python2.exe>
+                 <python2>
            root3/  # empty
            root4/  # no executables
               subdir/
               spam.txt
-              python
+              python2
               python.exe
            root5/  # executables only in subdir
               subdir/
-                 <python.exe>
-                 <python>
-              python
-              python.exe
+                 <python2.exe>
+                 <python2>
+              python2
+              python2.exe
            root6/  # no matching executables
               <spam.exe>
               spam.txt
@@ -136,12 +140,12 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
 
         test('resolveEnv()', async () => {
             const executables = [
-                path.join(ROOT2, 'python.exe'),
+                path.join(ROOT2, 'python2.exe'),
                 path.join(ROOT1, 'python3.8.exe'),
                 path.join(ROOT1, 'python3.8.1rc1.10213.exe'), // does not match regex
                 path.join(ROOT1, 'my-python.exe'), // does not match regex
-                path.join(ROOT4, 'python.exe'), // not executable
-                path.join(ROOT5, 'subdir', 'python.exe'), // non on $PATH
+                path.join(ROOT4, 'python2.exe'), // not executable
+                path.join(ROOT5, 'subdir', 'python2.exe'), // not on $PATH
                 path.join(ROOT6, 'spam.exe'), // does not match regex
                 path.join(ROOT6, 'py.exe'), // does not match regex
             ];
@@ -176,12 +180,12 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
 
         test('resolveEnv()', async () => {
             const executables = [
-                path.join(ROOT2, 'python.exe'),
+                path.join(ROOT2, 'python2.exe'),
                 path.join(ROOT1, 'python3.8.exe'),
                 path.join(ROOT1, 'python3.8.1rc1.10213.exe'), // does not match regex
                 path.join(ROOT1, 'my-python.exe'), // does not match regex
-                path.join(ROOT4, 'python.exe'), // not executable
-                path.join(ROOT5, 'subdir', 'python.exe'), // non on $PATH
+                path.join(ROOT4, 'python2.exe'), // not executable
+                path.join(ROOT5, 'subdir', 'python2.exe'), // non on $PATH
                 path.join(ROOT6, 'spam.exe'), // does not match regex
                 path.join(ROOT6, 'py.exe'), // does not match regex
             ];
@@ -201,8 +205,10 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
     suite('some executables match', () => {
         test('iterEnvs()', async () => {
             const expected: PythonEnvInfo[] = [
-                getEnv('', '2.7', path.join(ROOT2, 'python.exe')),
-                getEnv('', '2.7', path.join(ROOT1, 'python.exe')),
+                // On Windows we do not assume 2.7 for "python.exe".
+                getEnv('', '2.7', path.join(ROOT2, 'python2.exe')),
+                getEnv('', '', path.join(ROOT1, 'python.exe')),
+                getEnv('', '2.7', path.join(ROOT1, 'python2.7.exe')),
                 getEnv('', '3.8', path.join(ROOT1, 'python3.8.exe')),
                 getEnv('', '3', path.join(ROOT1, 'python3.exe')),
             ];
@@ -222,9 +228,11 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
 
         test('resolveEnv()', async () => {
             const expected: (PythonEnvInfo | undefined)[] = [
-                getEnv('', '2.7', path.join(ROOT2, 'python.exe')),
+                getEnv('', '2.7', path.join(ROOT2, 'python2.exe')),
                 undefined,
                 undefined,
+                getEnv('', '', path.join(ROOT1, 'python.exe')),
+                getEnv('', '2.7', path.join(ROOT1, 'python2.7.exe')),
                 getEnv('', '3.8', path.join(ROOT1, 'python3.8.exe')),
                 undefined,
                 undefined,
@@ -232,9 +240,11 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
                 undefined,
             ];
             const executables = [
-                path.join(ROOT2, 'python.exe'),
+                path.join(ROOT2, 'python2.exe'),
                 path.join(ROOT1, 'python3.8.1rc1.10213.exe'), // does not match regex
                 path.join(ROOT1, 'my-python.exe'), // does not match regex
+                path.join(ROOT1, 'python.exe'),
+                path.join(ROOT1, 'python2.7.exe'),
                 path.join(ROOT1, 'python3.8.exe'),
                 path.join(ROOT4, 'python.exe'), // not executable
                 path.join(ROOT5, 'subdir', 'python.exe'), // non on $PATH
