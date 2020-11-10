@@ -207,7 +207,8 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
 
         test('Python executables found (initialized)', async () => {
             const expected: PythonEnvInfo[] = [
-                createMinEnv('2.7', '/x/y/z/python.exe'),
+                // On Windows we do not assume 2.7 for "python.exe".
+                createMinEnv('', '/x/y/z/python.exe'),
                 createMinEnv('2.7', '/x/y/z/python2.exe'),
                 createMinEnv('2.7', '/x/y/z/python2.7.exe'),
                 createMinEnv('3', '/x/y/z/python3.exe'),
@@ -238,14 +239,14 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
 
         test('Python executables found (not initialized)', async () => {
             const expected: PythonEnvInfo[] = [
-                createMinEnv('2.7', '/x/y/z/python.exe'),
+                createMinEnv('2.7', '/x/y/z/python2.exe'),
                 createMinEnv('3.8', '/x/y/z/python3.8.exe'),
             ];
             const locator = new WindowsKnownPathsLocator();
             setExecutables([
                 '/x/y/z/',
                 '  spam.exe',
-                '  python.exe',
+                '  python2.exe',
                 '  python3.8.exe',
             ]);
             stubs.getInfo.resolvesArg(0);
