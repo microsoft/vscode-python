@@ -681,7 +681,18 @@ function getPythonExecutable(pythonPath: string): string {
     }
     // Keep python right on top, for backwards compatibility.
     // tslint:disable-next-line:variable-name
-    const KnownPythonExecutables = ['python', 'python4', 'python3.6', 'python3.5', 'python3', 'python2.7', 'python2', 'python3.7', 'python3.8', 'python3.9'];
+    const KnownPythonExecutables = [
+        'python',
+        'python4',
+        'python3.6',
+        'python3.5',
+        'python3',
+        'python2.7',
+        'python2',
+        'python3.7',
+        'python3.8',
+        'python3.9'
+    ];
 
     for (let executableName of KnownPythonExecutables) {
         // Suffix with 'python' for linux and 'osx', and 'python.exe' for 'windows'.
