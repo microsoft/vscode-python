@@ -32,8 +32,7 @@ export async function* findInterpretersInDir(
         .map((c) => path.join(root, c))
         .filter(itemFilter);
 
-    const generators = dirContents.map((item) => {
-        const fullPath = path.join(root, item);
+    const generators = dirContents.map((fullPath) => {
         async function* generator() {
             if (await isDirectory(fullPath)) {
                 if (recurseLevels && recurseLevels > 0) {
