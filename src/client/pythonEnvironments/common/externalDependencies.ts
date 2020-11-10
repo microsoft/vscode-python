@@ -5,6 +5,7 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
 import { chain, iterable } from '../../common/utils/async';
+import { normalizeFilename } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 
@@ -12,6 +13,8 @@ let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
     internalServiceContainer = serviceContainer;
 }
+
+// processes
 
 function getProcessFactory(): IProcessServiceFactory {
     return internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
@@ -21,6 +24,8 @@ export async function shellExecute(command: string, timeout: number): Promise<Ex
     const proc = await getProcessFactory().create();
     return proc.shellExec(command, { timeout });
 }
+
+// filesystem
 
 export function pathExists(absPath: string): Promise<boolean> {
     return fsapi.pathExists(absPath);
@@ -37,6 +42,10 @@ export function listDir(dirname: string): Promise<string[]> {
 export async function isDirectory(filename: string): Promise<boolean> {
     const stat = await fsapi.lstat(filename);
     return stat.isDirectory();
+}
+
+export function normalizePath(filename: string): string {
+    return normalizeFilename(filename);
 }
 
 export function normCasePath(filePath: string): string {
