@@ -3,7 +3,6 @@
 
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { IDisposable } from '../../../../client/common/types';
 import * as executablesAPI from '../../../../client/common/utils/exec';
 import { Architecture } from '../../../../client/common/utils/platform';
 import {
@@ -66,8 +65,9 @@ suite('Posix Known Path Locator', () => {
         };
     }
 
-    setup(() => {
+    setup(async () => {
         getPathEnvVar = sinon.stub(executablesAPI, 'getSearchPathEntries');
+        locator = await createPosixKnownPathsLocator();
     });
     teardown(() => {
         getPathEnvVar.restore();
