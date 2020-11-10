@@ -39,6 +39,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
     let stubs: {
         getPATH: sinon.SinonStub;
         isExecutable: sinon.SinonStub;
+        normFile: sinon.SinonStub;
         listDir: sinon.SinonStub;
         isDir: sinon.SinonStub;
         getInfo: sinon.SinonStub;
@@ -55,6 +56,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
         stubs = {
             getPATH: sinon.stub(executablesAPI, 'getSearchPathEntries'),
             isExecutable: sinon.stub(executablesAPI, 'isValidAndExecutable'),
+            normFile: sinon.stub(extDeps, 'normalizePath'),
             listDir: sinon.stub(extDeps, 'listDir'),
             isDir: sinon.stub(extDeps, 'isDirectory'),
             getInfo: sinon.stub(envInfoAPI, 'getMaxDerivedEnvInfo'),
@@ -63,6 +65,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
         cleanUps.push(
             stubs.getPATH.restore,
             stubs.isExecutable.restore,
+            stubs.normFile.restore,
             stubs.listDir.restore,
             stubs.isDir.restore,
             stubs.getInfo.restore,
@@ -70,6 +73,13 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
         );
 
         stubs.getOSType.returns(platformAPI.OSType.Windows);
+        stubs.normFile.callsFake((f: string) => {
+            const norm = path.normalize(f);
+            if (path.sep === '/') {
+                return norm;
+            }
+            return norm.toLowerCase();
+        });
     });
     teardown(() => {
         cleanUps.forEach((f) => f());
@@ -111,6 +121,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
                     throw Error(`bad input "${executable}"`);
                 }
                 if (curRoot !== '') {
+                    // Set up for the previous root before replacing it.
                     stubs.listDir.withArgs(curRoot).resolves(curFiles);
                 }
                 roots.push(normalized);
@@ -131,6 +142,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
             }
         }
         if (curRoot !== '') {
+            // Set up the last root (if there was one).
             stubs.listDir.withArgs(curRoot).resolves(curFiles);
         }
         stubs.getPATH.returns(roots);

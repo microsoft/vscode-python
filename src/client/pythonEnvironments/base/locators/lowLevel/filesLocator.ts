@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event, EventEmitter } from 'vscode';
-import { normalizeFilename } from '../../../../common/utils/filesystem';
+import { normalizePath } from '../../../common/externalDependencies';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { getFastEnvInfo } from '../../info/env';
 import {
@@ -66,7 +66,7 @@ async function* iterMinimalEnvsFromExecutables(
     kind: PythonEnvKind,
 ): AsyncIterableIterator<PythonEnvInfo> {
     for await (const filename of executables) {
-        const executable = normalizeFilename(filename);
+        const executable = normalizePath(filename);
         yield getFastEnvInfo(kind, executable);
     }
 }
