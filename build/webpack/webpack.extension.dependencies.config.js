@@ -20,7 +20,11 @@ const config = {
     node: {
         __dirname: false
     },
-    module: {},
+    module: {
+        rules: [
+            { test: /\.node$/,  loader: 'node-loader' },
+        ]
+    },
     externals: ['vscode', 'commonjs'],
     plugins: [
         ...common.getDefaultPlugins('dependencies'),
