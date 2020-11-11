@@ -3,9 +3,10 @@
 
 import { registerTypes as registerDotNetTypes } from '../common/dotnet/serviceRegistry';
 import { INugetRepository } from '../common/nuget/types';
-import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../common/types';
+import { BANNER_NAME_PROPOSE_LS, BANNER_NAME_PROPOSE_LS_FOR_JEDI_USERS, IPythonExtensionBanner } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import { ProposePylanceBanner } from '../languageServices/proposeLanguageServerBanner';
+import { ProposePylanceBannerJedi } from '../languageServices/proposeLanguageServerBannerJedi';
 import { AATesting } from './aaTesting';
 import { ExtensionActivationManager } from './activationManager';
 import { LanguageServerExtensionActivationService } from './activationService';
@@ -79,6 +80,12 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         IPythonExtensionBanner,
         ProposePylanceBanner,
         BANNER_NAME_PROPOSE_LS
+    );
+
+    serviceManager.addSingleton<IPythonExtensionBanner>(
+        IPythonExtensionBanner,
+        ProposePylanceBannerJedi,
+        BANNER_NAME_PROPOSE_LS_FOR_JEDI_USERS
     );
 
     if (languageServerType === LanguageServerType.Microsoft) {
