@@ -196,6 +196,21 @@ export class PythonSettings implements IPythonSettings {
         PythonSettings.pythonSettings.forEach((item) => item && item.dispose());
         PythonSettings.pythonSettings.clear();
     }
+
+    public static toSerializable(settings: IPythonSettings): IPythonSettings {
+        // tslint:disable-next-line: no-any
+        const clone: any = {};
+        const keys = Object.entries(settings);
+        keys.forEach((e) => {
+            const [k, v] = e;
+            if (!k.includes('Manager') && !k.includes('Service') && !k.includes('onDid')) {
+                clone[k] = v;
+            }
+        });
+
+        return clone as IPythonSettings;
+    }
+
     public dispose() {
         // tslint:disable-next-line:no-unsafe-any
         this.disposables.forEach((disposable) => disposable && disposable.dispose());
