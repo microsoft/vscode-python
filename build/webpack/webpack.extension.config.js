@@ -39,7 +39,8 @@ const config = {
                         loader: 'ts-loader'
                     }
                 ]
-            }
+            },
+            { test: /\.node$/,  loader: 'node-loader' },
         ]
     },
     externals: ['vscode', 'commonjs', ...existingModulesInOutDir],
