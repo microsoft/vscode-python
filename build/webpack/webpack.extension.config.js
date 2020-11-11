@@ -40,7 +40,14 @@ const config = {
                     }
                 ]
             },
-            { test: /\.node$/,  loader: 'node-loader' },
+            {
+                test: /\.node$/,
+                use: [
+                    {
+                        loader: 'node-loader'
+                    }
+                ]
+            }
         ]
     },
     externals: ['vscode', 'commonjs', ...existingModulesInOutDir],
