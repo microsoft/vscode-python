@@ -1,10 +1,11 @@
 # Changelog
 
-## 2020.11.0-rc (4 November 2020)
+## 2020.11.0 (11 November 2020)
 
 ### Enhancements
 
-UPDATE THIS BEFORE RELEASE
+1. Update shipped debugger wheels to python 3.8.
+   ([#14614](https://github.com/Microsoft/vscode-python/issues/14614))
 
 ### Fixes
 
@@ -14,6 +15,10 @@ UPDATE THIS BEFORE RELEASE
    ([#14067](https://github.com/Microsoft/vscode-python/issues/14067))
 1. When sending code to the REPL, read input from `sys.stdin` instead of passing it as an argument.
    ([#14471](https://github.com/Microsoft/vscode-python/issues/14471))
+
+### Code Health
+
+1. Code for Jupyter Notebooks support has been refactored into the Jupyter extension, which is now a dependency for the Python extension
 
 ### Thanks
 
