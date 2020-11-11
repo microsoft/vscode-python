@@ -114,12 +114,16 @@ export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
 //================================
 // iterators
 
+export interface IAsyncIterator<T> extends AsyncIterator<T, void>, Partial<AsyncIterable<T>> {}
+
+export interface IAsyncIterableIterator<T> extends IAsyncIterator<T>, AsyncIterable<T> {}
+
 /**
  * An iterator that yields nothing.
  */
-export function iterEmpty<T>(): AsyncIterator<T, void> {
+export function iterEmpty<T>(): IAsyncIterableIterator<T> {
     // tslint:disable-next-line:no-empty
-    return ((async function* () {})() as unknown) as AsyncIterator<T, void>;
+    return ((async function* () {})() as unknown) as IAsyncIterableIterator<T>;
 }
 
 type NextResult<T> = { index: number } & (
@@ -153,7 +157,7 @@ export async function* chain<T>(
     iterators: AsyncIterator<T, T | void>[],
     onError?: (err: Error, index: number) => Promise<void>
     // Ultimately we may also want to support cancellation.
-): AsyncIterator<T, void> {
+): IAsyncIterableIterator<T> {
     const promises = iterators.map(getNext);
     let numRunning = iterators.length;
     while (numRunning > 0) {
@@ -193,7 +197,7 @@ export async function* mapToIterator<T, R = T>(
     items: T[],
     func: (item: T) => Promise<R>,
     race = true
-): AsyncIterator<R, void> {
+): IAsyncIterableIterator<R> {
     if (race) {
         const iterators = items.map((item) => {
             async function* generator() {
@@ -210,8 +214,8 @@ export async function* mapToIterator<T, R = T>(
 /**
  * Convert an iterator into an iterable, if it isn't one already.
  */
-export function iterable<T>(iterator: AsyncIterator<T, void>): AsyncIterableIterator<T> {
-    const it = iterator as AsyncIterableIterator<T>;
+export function iterable<T>(iterator: IAsyncIterator<T>): IAsyncIterableIterator<T> {
+    const it = iterator as IAsyncIterableIterator<T>;
     if (it[Symbol.asyncIterator] === undefined) {
         it[Symbol.asyncIterator] = () => it;
     }
@@ -221,14 +225,10 @@ export function iterable<T>(iterator: AsyncIterator<T, void>): AsyncIterableIter
 /**
  * Get everything yielded by the iterator.
  */
-export async function flattenIterator<T>(iterator: AsyncIterator<T, void>): Promise<T[]> {
+export async function flattenIterator<T>(iterator: IAsyncIterator<T>): Promise<T[]> {
     const results: T[] = [];
-    // We are dealing with an iterator, not an iterable, so we have
-    // to iterate manually rather than with a for-await loop.
-    let result = await iterator.next();
-    while (!result.done) {
-        results.push(result.value);
-        result = await iterator.next();
+    for await (const item of iterable(iterator)) {
+        results.push(item);
     }
     return results;
 }

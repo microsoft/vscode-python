@@ -277,14 +277,7 @@ class ComponentAdapter implements IComponentAdapter {
     }
 }
 
-export function registerForIOC(
-    serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer,
-    api: IPythonEnvironments,
-): void {
-    const adapter = new ComponentAdapter(api);
-    serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, adapter);
-
+export function registerLegacyDiscoveryForIOC(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,
@@ -367,5 +360,22 @@ export function registerForIOC(
     serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
 
     serviceManager.addSingletonInstance<IEnvironmentInfoService>(IEnvironmentInfoService, new EnvironmentInfoService());
+}
+
+export function registerNewDiscoveryForIOC(serviceManager: IServiceManager, api:IPythonEnvironments): void {
+    serviceManager.addSingletonInstance<IComponentAdapter>(IComponentAdapter, new ComponentAdapter(api));
+}
+
+/**
+ * This is here to support old tests.
+ * @deprecated
+ */
+export function registerForIOC(
+    serviceManager: IServiceManager,
+    serviceContainer: IServiceContainer,
+    api:IPythonEnvironments,
+): void{
+    registerLegacyDiscoveryForIOC(serviceManager);
     initializeExternalDependencies(serviceContainer);
+    registerNewDiscoveryForIOC(serviceManager, api);
 }

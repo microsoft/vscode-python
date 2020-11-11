@@ -9,7 +9,7 @@ import { Architecture, getEnvironmentVariable } from '../../../../common/utils/p
 import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
 import { getPythonVersionFromPath } from '../../../base/info/pythonVersion';
-import { IPythonEnvsIterator } from '../../../base/locator';
+import { IDisposableLocator, IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import { getFileInfo } from '../../../common/externalDependencies';
 
@@ -138,7 +138,7 @@ export async function getWindowsStorePythonExes(): Promise<string[]> {
         .filter(isWindowsStorePythonExe);
 }
 
-export class WindowsStoreLocator extends FSWatchingLocator {
+class WindowsStoreLocator extends FSWatchingLocator {
     private readonly kind: PythonEnvKind = PythonEnvKind.WindowsStore;
 
     constructor() {
@@ -178,4 +178,10 @@ export class WindowsStoreLocator extends FSWatchingLocator {
         }
         return undefined;
     }
+}
+
+export async function createWindowsStoreLocator(): Promise<IDisposableLocator> {
+    const locator = new WindowsStoreLocator();
+    await locator.initialize();
+    return locator;
 }

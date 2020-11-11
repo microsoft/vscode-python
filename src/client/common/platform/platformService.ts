@@ -7,9 +7,9 @@ import * as os from 'os';
 import { coerce, SemVer } from 'semver';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName, PlatformErrors } from '../../telemetry/constants';
-import { getOSType, OSType } from '../utils/platform';
+import { getSearchPathEnvVarNames } from '../utils/exec';
+import { Architecture, getArchitecture, getOSType, OSType } from '../utils/platform';
 import { parseVersion } from '../utils/version';
-import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
 import { IPlatformService } from './types';
 
 @injectable()
@@ -24,7 +24,7 @@ export class PlatformService implements IPlatformService {
         }
     }
     public get pathVariableName() {
-        return this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
+        return getSearchPathEnvVarNames(this.osType)[0];
     }
     public get virtualEnvBinName() {
         return this.isWindows ? 'Scripts' : 'bin';
@@ -72,8 +72,6 @@ export class PlatformService implements IPlatformService {
         return os.release();
     }
     public get is64bit(): boolean {
-        // tslint:disable-next-line:no-require-imports
-        const arch = require('arch');
-        return arch() === 'x64';
+        return getArchitecture() === Architecture.x64;
     }
 }

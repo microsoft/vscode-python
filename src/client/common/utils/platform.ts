@@ -30,15 +30,38 @@ export function getOSType(platform: string = process.platform): OSType {
     }
 }
 
+const architectures: Record<string, Architecture> = {
+    x86: Architecture.x86, // 32-bit
+    x64: Architecture.x64, // 64-bit
+    '': Architecture.Unknown
+};
+
+/**
+ * Identify the host's native architecture/bitness.
+ */
+export function getArchitecture(): Architecture {
+    const fromProc = architectures[process.arch];
+    if (fromProc !== undefined) {
+        return fromProc;
+    }
+    // tslint:disable-next-line:no-require-imports
+    const arch = require('arch');
+    return architectures[arch()] || Architecture.Unknown;
+}
+
+/**
+ * Look up the requested env var value (or  undefined` if not set).
+ */
 export function getEnvironmentVariable(key: string): string | undefined {
     // tslint:disable-next-line: no-any
     return ((process.env as any) as EnvironmentVariables)[key];
 }
 
-export function getPathEnvironmentVariable(): string | undefined {
-    return getEnvironmentVariable('Path') || getEnvironmentVariable('PATH');
-}
-
+/**
+ * Get the current user's home directory.
+ *
+ * The lookup is limited to environment variables.
+ */
 export function getUserHomeDir(): string | undefined {
     if (getOSType() === OSType.Windows) {
         return getEnvironmentVariable('USERPROFILE');

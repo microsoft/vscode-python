@@ -25,9 +25,10 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import { DisableableLocator } from '../../base/disableableLocator';
 import { PythonEnvInfo } from '../../base/info';
 import {
-    ILocator,
+    IDisposableLocator,
     IPythonEnvsIterator,
     Locator,
     NOOP_ITERATOR,
@@ -35,7 +36,6 @@ import {
 } from '../../base/locator';
 import {
     combineIterators,
-    DisableableLocator,
     Locators,
 } from '../../base/locators';
 import { PythonEnvironment } from '../../info';
@@ -48,16 +48,16 @@ import { GetInterpreterLocatorOptions } from './types';
 export class ExtensionLocators extends Locators {
     constructor(
         // These are expected to be low-level locators (e.g. system).
-        nonWorkspace: ILocator[],
+        nonWorkspace: IDisposableLocator[],
         // This is expected to be a locator wrapping any found in
         // the workspace (i.e. WorkspaceLocators).
-        workspace: ILocator,
+        workspace: IDisposableLocator,
     ) {
         super([...nonWorkspace, workspace]);
     }
 }
 
-type WorkspaceLocatorFactory = (root: Uri) => ILocator[];
+type WorkspaceLocatorFactory = (root: Uri) => IDisposableLocator[];
 
 interface IWorkspaceFolders {
     readonly roots: ReadonlyArray<Uri>;
@@ -144,7 +144,7 @@ export class WorkspaceLocators extends Locator {
         // Drop the old one, if necessary.
         this.removeRoot(root);
         // Create the root's locator, wrapping each factory-generated locator.
-        const locators: ILocator[] = [];
+        const locators: IDisposableLocator[] = [];
         this.factories.forEach((create) => {
             locators.push(...create(root));
         });

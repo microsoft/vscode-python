@@ -12,9 +12,10 @@ import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION,
 } from '../../../../client/pythonEnvironments/base/info';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
+import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as winutils from '../../../../client/pythonEnvironments/common/windowsUtils';
-import { WindowsRegistryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryLocator';
+import { createWindowsRegistryLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
@@ -22,6 +23,7 @@ suite('Windows Registry', () => {
     let stubReadRegistryValues: sinon.SinonStub;
     let stubReadRegistryKeys: sinon.SinonStub;
     let stubGetInterpreterDataFromRegistry: sinon.SinonStub;
+    let locator:IDisposableLocator;
 
     const regTestRoot = path.join(TEST_LAYOUT_ROOT, 'winreg');
 
@@ -295,19 +297,22 @@ suite('Windows Registry', () => {
         return createExpectedEnv(await getDataFromKey({ arch, hive, key }, org));
     }
 
-    setup(() => {
+    setup(async () => {
         stubReadRegistryValues = sinon.stub(winutils, 'readRegistryValues');
         stubReadRegistryKeys = sinon.stub(winutils, 'readRegistryKeys');
         stubGetInterpreterDataFromRegistry = sinon.stub(winutils, 'getInterpreterDataFromRegistry');
         stubReadRegistryValues.callsFake(fakeRegistryValues);
         stubReadRegistryKeys.callsFake(fakeRegistryKeys);
         stubGetInterpreterDataFromRegistry.callsFake(fakeGetInterpreterDataFromRegistry);
+
+        locator = await createWindowsRegistryLocator();
     });
 
     teardown(() => {
         stubReadRegistryValues.restore();
         stubReadRegistryKeys.restore();
         stubGetInterpreterDataFromRegistry.restore();
+        locator.dispose();
     });
 
     test('iterEnvs()', async () => {
@@ -320,7 +325,6 @@ suite('Windows Registry', () => {
             ],
         )).sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        const locator = new WindowsRegistryLocator();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -333,7 +337,6 @@ suite('Windows Registry', () => {
             throw Error();
         });
 
-        const locator = new WindowsRegistryLocator();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -356,7 +359,6 @@ suite('Windows Registry', () => {
             ],
         )).sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        const locator = new WindowsRegistryLocator();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -368,7 +370,6 @@ suite('Windows Registry', () => {
         const expected: PythonEnvInfo = await getExpectedDataFromKey({ arch: 'x64', hive: HKLM, key: '\\SOFTWARE\\Python\\PythonCore\\3.9' }, 'PythonCore');
         const interpreterPath = path.join(regTestRoot, 'py39', 'python.exe');
 
-        const locator = new WindowsRegistryLocator();
         const actual = await locator.resolveEnv(interpreterPath);
 
         assertEnvEqual(actual, expected);
@@ -399,7 +400,6 @@ suite('Windows Registry', () => {
             },
         };
 
-        const locator = new WindowsRegistryLocator();
         const actual = await locator.resolveEnv(input);
 
         assertEnvEqual(actual, expected);
@@ -408,7 +408,6 @@ suite('Windows Registry', () => {
     test('resolveEnv(string): unknown interpreter', async () => {
         const interpreterPath = path.join(regTestRoot, 'unknown_python.exe');
 
-        const locator = new WindowsRegistryLocator();
         const actual = await locator.resolveEnv(interpreterPath);
 
         assert.deepStrictEqual(actual, undefined);

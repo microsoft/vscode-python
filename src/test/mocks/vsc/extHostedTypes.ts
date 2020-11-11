@@ -1241,6 +1241,32 @@ export namespace vscMockExtHostedTypes {
         }
     }
 
+    export class CallHierarchyItem {
+        name: string;
+        kind: SymbolKind;
+        tags?: ReadonlyArray<vscode.SymbolTag>;
+        detail?: string;
+        uri: vscode.Uri;
+        range: vscode.Range;
+        selectionRange: vscode.Range;
+
+        constructor(
+            kind: vscode.SymbolKind,
+            name: string,
+            detail: string,
+            uri: vscode.Uri,
+            range: vscode.Range,
+            selectionRange: vscode.Range
+        ) {
+            this.kind = kind;
+            this.name = name;
+            this.detail = detail;
+            this.uri = uri;
+            this.range = range;
+            this.selectionRange = selectionRange;
+        }
+    }
+
     export enum ViewColumn {
         Active = -1,
         Beside = -2,

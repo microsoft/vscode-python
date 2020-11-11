@@ -6,10 +6,12 @@ import * as sinon from 'sinon';
 import * as platformUtils from '../../../../client/common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { buildEnvInfo } from '../../../../client/pythonEnvironments/base/info/env';
+import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as fileUtils from '../../../../client/pythonEnvironments/common/externalDependencies';
 import {
-    IPyenvVersionStrings, isPyenvEnvironment, parsePyenvVersion, PyenvLocator,
+    createPyenvLocator,
+    IPyenvVersionStrings, isPyenvEnvironment, parsePyenvVersion,
 } from '../../../../client/pythonEnvironments/discovery/locators/services/pyenvLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
@@ -199,21 +201,25 @@ suite('Pyenv Versions Parser Test', () => {
 suite('Pyenv Locator Tests', () => {
     let getEnvVariableStub: sinon.SinonStub;
     let getOsTypeStub: sinon.SinonStub;
+    let locator: IDisposableLocator;
 
     const testPyenvRoot = path.join(TEST_LAYOUT_ROOT, 'pyenvhome', '.pyenv');
     const testPyenvVersionsDir = path.join(testPyenvRoot, 'versions');
 
-    setup(() => {
+    setup(async () => {
         getEnvVariableStub = sinon.stub(platformUtils, 'getEnvironmentVariable');
         getEnvVariableStub.withArgs('PYENV_ROOT').returns(testPyenvRoot);
 
         getOsTypeStub = sinon.stub(platformUtils, 'getOSType');
         getOsTypeStub.returns(platformUtils.OSType.Linux);
+
+        locator = await createPyenvLocator();
     });
 
     teardown(() => {
         getEnvVariableStub.restore();
         getOsTypeStub.restore();
+        locator.dispose();
     });
 
     function getExpectedPyenvInfo(name:string) : PythonEnvInfo | undefined {
@@ -297,7 +303,6 @@ suite('Pyenv Locator Tests', () => {
             return 0;
         });
 
-        const locator = new PyenvLocator();
         const actualEnvs = (await getEnvs(locator.iterEnvs()))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
         assertEnvsEqual(actualEnvs, expectedEnvs);
@@ -307,7 +312,6 @@ suite('Pyenv Locator Tests', () => {
         const pythonPath = path.join(testPyenvVersionsDir, '3.9.0', 'bin', 'python');
         const expected = getExpectedPyenvInfo('3.9.0');
 
-        const locator = new PyenvLocator();
         const actual = await locator.resolveEnv(pythonPath);
         assertEnvEqual(actual, expected);
     });
@@ -335,7 +339,6 @@ suite('Pyenv Locator Tests', () => {
             },
         };
 
-        const locator = new PyenvLocator();
         const actual = await locator.resolveEnv(input);
 
         assertEnvEqual(actual, expected);

@@ -8,10 +8,11 @@ import { traceWarning } from '../../../../client/common/logger';
 import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
+import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
 import { arePathsSame } from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { WindowsStoreLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
+import { createWindowsStoreLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
 import { TEST_TIMEOUT } from '../../../constants';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 
@@ -57,7 +58,8 @@ suite('Windows Store Locator', async () => {
     const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
     const testStoreAppRoot = path.join(testLocalAppData, 'Microsoft', 'WindowsApps');
     const windowsStoreEnvs = new WindowsStoreEnvs(testStoreAppRoot);
-    let locator: WindowsStoreLocator;
+    let locator: IDisposableLocator;
+
     const localAppDataOldValue = process.env.LOCALAPPDATA;
 
     async function waitForChangeToBeDetected(deferred: Deferred<void>) {
@@ -82,14 +84,16 @@ suite('Windows Store Locator', async () => {
     });
 
     async function setupLocator(onChanged: (e: PythonEnvsChangedEvent) => Promise<void>) {
-        locator = new WindowsStoreLocator();
-        await locator.initialize();
+        locator = await createWindowsStoreLocator();
         // Wait for watchers to get ready
         await sleep(1000);
         locator.onChanged(onChanged);
     }
 
-    teardown(() => windowsStoreEnvs.cleanUp());
+    teardown(async () => {
+        await windowsStoreEnvs.cleanUp();
+        locator.dispose();
+    });
     suiteTeardown(async () => {
         process.env.LOCALAPPDATA = localAppDataOldValue;
     });
