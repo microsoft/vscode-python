@@ -46,12 +46,14 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
         getOSType: sinon.SinonStub;
     };
 
-    setup(function () {
-        cleanUps = [];
+    suiteSetup(function () {
         if (platformAPI.getOSType() !== platformAPI.OSType.Windows) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
+    });
+    setup(() => {
+        cleanUps = [];
 
         stubs = {
             getPATH: sinon.stub(executablesAPI, 'getSearchPathEntries'),
@@ -114,7 +116,8 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
         let curRoot = '';
         let curFiles: string[] = [];
         for (const executable of executables) {
-            const [normalized, isDir, isExecutable] = parseInput(executable);
+            // We ignore "isExecutable'.  See below for more info.
+            const [normalized, isDir] = parseInput(executable);
             if (!executable.startsWith(' ')) {
                 // It's a $PATH entry.
                 if (!isDir) {
@@ -136,7 +139,11 @@ suite('Python envs locator - WindowsKnownPathsLocator', () => {
                 const filename = path.join(curRoot, basename);
                 if (!isDir) {
                     filesOnPATH.push(filename);
-                    stubs.isExecutable.withArgs(filename).resolves(isExecutable);
+                    // At the moment node does not give us a good way
+                    // to known on Windows if a file is executable.
+                    // So for now we admit we do not know by
+                    // returning `undefined`.
+                    stubs.isExecutable.withArgs(filename).resolves(undefined);
                 }
                 stubs.isDir.withArgs(filename).resolves(isDir);
             }

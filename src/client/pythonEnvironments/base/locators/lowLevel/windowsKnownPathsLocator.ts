@@ -43,7 +43,13 @@ async function* getExecutables(): AsyncIterableIterator<string> {
     for (const entry of getSearchPathEntries()) {
         try {
             for await (const executable of findInterpretersInDir(entry)) {
-                if (await isValidAndExecutable(executable)) {
+                const okay = await isValidAndExecutable(executable);
+                if (okay) {
+                    yield executable;
+                } else if (okay === undefined) {
+                    // We could not determine if the file is executable
+                    // (e.g. on Windows).  So we trust that the ".exe"
+                    // suffix check done elsewhere is sufficient.
                     yield executable;
                 }
             }

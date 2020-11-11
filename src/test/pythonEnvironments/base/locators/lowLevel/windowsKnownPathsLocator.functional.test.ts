@@ -42,7 +42,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
     const dataTree = `
         ./.data/
            root1/
-              python2.exe  # not executable
+              python2.exe  # matches on Windows (not actually executable though)
               <python.exe>
               <python2.7.exe>
               <python3.exe>
@@ -51,7 +51,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
               <python3.8.1rc1.10213.exe>  # should match but doesn't
               #<python27.exe>
               #<python38.exe>
-              #<python.3.8.exe>
+              <python.3.8.exe>  # should match but doesn't
               python.txt
               <my-python.exe>  # should match but doesn't
               <spam.exe>
@@ -65,13 +65,13 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
               subdir/
               spam.txt
               python2
-              python.exe
+              #python.exe  # matches on Windows (not actually executable though)
            root5/  # executables only in subdir
               subdir/
                  <python2.exe>
                  <python2>
               python2
-              python2.exe
+              #python2.exe  # matches on Windows (not actually executable though)
            root6/  # no matching executables
               <spam.exe>
               spam.txt
@@ -209,6 +209,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
                 getEnv('', '2.7', path.join(ROOT2, 'python2.exe')),
                 getEnv('', '', path.join(ROOT1, 'python.exe')),
                 getEnv('', '2.7', path.join(ROOT1, 'python2.7.exe')),
+                getEnv('', '2.7', path.join(ROOT1, 'python2.exe')),
                 getEnv('', '3.8', path.join(ROOT1, 'python3.8.exe')),
                 getEnv('', '3', path.join(ROOT1, 'python3.exe')),
             ];
