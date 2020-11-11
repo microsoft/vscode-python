@@ -75,6 +75,7 @@ export class AttachPicker implements IAttachPicker {
             );
 
             quickPick.show();
+            quickPick.show();
         });
     }
 }
