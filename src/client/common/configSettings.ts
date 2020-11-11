@@ -203,7 +203,7 @@ export class PythonSettings implements IPythonSettings {
         const keys = Object.entries(settings);
         keys.forEach((e) => {
             const [k, v] = e;
-            if (!k.includes('Manager') && !k.includes('Service') && !k.includes('onDid') && !k.includes('to')) {
+            if (!k.includes('Manager') && !k.includes('Service') && !k.includes('onDid')) {
                 clone[k] = v;
             }
         });
