@@ -15,10 +15,10 @@ import * as localize from '../utils/localize';
 import { DefaultTheme, Telemetry } from './constants';
 import { ICodeCssGenerator, IThemeFinder } from './types';
 
+import { PythonSettings } from '../configSettings';
 import { isTestExecution } from '../constants';
 import { IConfigurationService, IDisposable, IPythonSettings, Resource } from '../types';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
-import { PythonSettings } from '../configSettings';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
