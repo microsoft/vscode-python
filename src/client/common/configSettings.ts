@@ -196,6 +196,21 @@ export class PythonSettings implements IPythonSettings {
         PythonSettings.pythonSettings.forEach((item) => item && item.dispose());
         PythonSettings.pythonSettings.clear();
     }
+
+    public static toSerializable(settings: IPythonSettings): IPythonSettings {
+        // tslint:disable-next-line: no-any
+        const clone: any = {};
+        const keys = Object.entries(settings);
+        keys.forEach((e) => {
+            const [k, v] = e;
+            if (!k.includes('Manager') && !k.includes('Service') && !k.includes('onDid') && !k.includes('to')) {
+                clone[k] = v;
+            }
+        });
+
+        return clone as IPythonSettings;
+    }
+
     public dispose() {
         // tslint:disable-next-line:no-unsafe-any
         this.disposables.forEach((disposable) => disposable && disposable.dispose());
@@ -681,7 +696,18 @@ function getPythonExecutable(pythonPath: string): string {
     }
     // Keep python right on top, for backwards compatibility.
     // tslint:disable-next-line:variable-name
-    const KnownPythonExecutables = ['python', 'python4', 'python3.6', 'python3.5', 'python3', 'python2.7', 'python2', 'python3.7', 'python3.8', 'python3.9'];
+    const KnownPythonExecutables = [
+        'python',
+        'python4',
+        'python3.6',
+        'python3.5',
+        'python3',
+        'python2.7',
+        'python2',
+        'python3.7',
+        'python3.8',
+        'python3.9'
+    ];
 
     for (let executableName of KnownPythonExecutables) {
         // Suffix with 'python' for linux and 'osx', and 'python.exe' for 'windows'.

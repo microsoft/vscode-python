@@ -18,6 +18,7 @@ import { ICodeCssGenerator, IThemeFinder } from './types';
 import { isTestExecution } from '../constants';
 import { IConfigurationService, IDisposable, IPythonSettings, Resource } from '../types';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
+import { PythonSettings } from '../configSettings';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
@@ -104,18 +105,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     }
 
     protected async generateExtraSettings(): Promise<IPythonSettings> {
-        const resource = this.owningResource;
-        // tslint:disable-next-line: no-any
-        const prunedSettings = this.configService.getSettings(resource) as any;
-
-        // Remove keys that aren't serializable
-        const keys = Object.keys(prunedSettings);
-        keys.forEach((k) => {
-            if (k.includes('Manager') || k.includes('Service') || k.includes('onDid')) {
-                delete prunedSettings[k];
-            }
-        });
-        return prunedSettings;
+        const settings = this.configService.getSettings(this.owningResource);
+        return PythonSettings.toSerializable(settings);
     }
 
     protected async sendLocStrings() {
