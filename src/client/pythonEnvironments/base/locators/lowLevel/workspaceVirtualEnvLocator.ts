@@ -15,7 +15,7 @@ import { isPipenvEnvironment } from '../../../discovery/locators/services/pipEnv
 import { isVenvEnvironment, isVirtualenvEnvironment } from '../../../discovery/locators/services/virtualEnvironmentIdentifier';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { buildEnvInfo } from '../../info/env';
-import { IDisposableLocator, IPythonEnvsIterator } from '../../locator';
+import { IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
 
 /**
@@ -76,7 +76,7 @@ async function buildSimpleVirtualEnvInfo(executablePath: string, kind: PythonEnv
 /**
  * Finds and resolves virtual environments created in workspace roots.
  */
-class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
+export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
     public constructor(private readonly root: string) {
         super(() => getWorkspaceVirtualEnvDirs(this.root), getVirtualEnvKind, {
             // Note detecting kind of virtual env depends on the file structure around the
@@ -132,10 +132,4 @@ class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
         }
         return undefined;
     }
-}
-
-export async function createWorkspaceVirtualEnvLocator(root: string): Promise<IDisposableLocator> {
-    const locator = new WorkspaceVirtualEnvironmentLocator(root);
-    await locator.initialize();
-    return locator;
 }

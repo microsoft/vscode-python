@@ -9,10 +9,9 @@ import * as platformUtils from '../../../../client/common/utils/platform';
 import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion, UNKNOWN_PYTHON_VERSION
 } from '../../../../client/pythonEnvironments/base/info';
-import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { createGlobalVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
+import { GlobalVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
@@ -23,7 +22,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
     let getUserHomeDirStub: sinon.SinonStub;
     let getOSTypeStub: sinon.SinonStub;
     let readFileStub: sinon.SinonStub;
-    let locator: IDisposableLocator;
+    let locator: GlobalVirtualEnvironmentLocator;
     let watchLocationForPatternStub: sinon.SinonStub;
 
     function createExpectedEnvInfo(
@@ -152,7 +151,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        locator = await createGlobalVirtualEnvironmentLocator();
+        locator = new GlobalVirtualEnvironmentLocator();
+        await locator.activate();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -215,7 +215,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        locator = await createGlobalVirtualEnvironmentLocator();
+        locator = new GlobalVirtualEnvironmentLocator();
+        await locator.activate();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -283,7 +284,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        locator = await createGlobalVirtualEnvironmentLocator();
+        locator = new GlobalVirtualEnvironmentLocator();
+        await locator.activate();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -317,7 +319,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        locator = await createGlobalVirtualEnvironmentLocator(1);
+        locator = new GlobalVirtualEnvironmentLocator(1);
+        await locator.activate();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -372,7 +375,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        locator = await createGlobalVirtualEnvironmentLocator();
+        locator = new GlobalVirtualEnvironmentLocator();
+        await locator.activate();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -400,7 +404,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        locator = await createGlobalVirtualEnvironmentLocator();
+        locator = new GlobalVirtualEnvironmentLocator();
+        await locator.activate();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -429,7 +434,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
             ),
         ].sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
 
-        locator = await createGlobalVirtualEnvironmentLocator(2);
+        locator = new GlobalVirtualEnvironmentLocator(2);
+        await locator.activate();
         const iterator = locator.iterEnvs();
         const actualEnvs = (await getEnvs(iterator))
             .sort((a, b) => a.executable.filename.localeCompare(b.executable.filename));
@@ -448,7 +454,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
             path.join(testVirtualHomeDir, '.venvs', 'posix1'),
         );
 
-        locator = await createGlobalVirtualEnvironmentLocator();
+        locator = new GlobalVirtualEnvironmentLocator();
+        await locator.activate();
         const actual = await locator.resolveEnv(interpreterPath);
 
         assertEnvEqual(actual, expected);
@@ -480,7 +487,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
             version: UNKNOWN_PYTHON_VERSION,
         };
 
-        locator = await createGlobalVirtualEnvironmentLocator();
+        locator = new GlobalVirtualEnvironmentLocator();
+        await locator.activate();
         const actual = await locator.resolveEnv(input);
 
         assertEnvEqual(actual, expected);
@@ -489,7 +497,8 @@ suite('GlobalVirtualEnvironment Locator', () => {
     test('resolveEnv(string): non existent path', async () => {
         const interpreterPath = path.join('some', 'random', 'nonvenv', 'python');
 
-        locator = await createGlobalVirtualEnvironmentLocator();
+        locator = new GlobalVirtualEnvironmentLocator();
+        await locator.activate();
         const actual = await locator.resolveEnv(interpreterPath);
 
         assert.deepStrictEqual(actual, undefined);

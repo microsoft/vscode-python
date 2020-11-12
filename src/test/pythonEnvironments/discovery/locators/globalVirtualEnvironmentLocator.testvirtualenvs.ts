@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { createGlobalVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
+import { GlobalVirtualEnvironmentLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvronmentLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { testLocatorWatcher } from './watcherTestUtils';
 
@@ -14,7 +14,14 @@ suite('GlobalVirtualEnvironment Locator', async () => {
         workonHomeOldValue = process.env.WORKON_HOME;
         process.env.WORKON_HOME = testWorkOnHomePath;
     });
-    testLocatorWatcher(testWorkOnHomePath, createGlobalVirtualEnvironmentLocator);
+    testLocatorWatcher(
+        testWorkOnHomePath,
+        async () => {
+            const locator = new GlobalVirtualEnvironmentLocator();
+            await locator.activate();
+            return locator;
+        },
+    );
     suiteTeardown(() => {
         process.env.WORKON_HOME = workonHomeOldValue;
     });

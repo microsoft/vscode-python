@@ -12,9 +12,8 @@ import {
 } from '../../../../client/pythonEnvironments/base/info';
 import { InterpreterInformation } from '../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
-import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import * as externalDep from '../../../../client/pythonEnvironments/common/externalDependencies';
-import { createWindowsStoreLocator, getWindowsStorePythonExes } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
+import { getWindowsStorePythonExes, WindowsStoreLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsStoreLocator';
 import { getEnvs } from '../../base/common';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
@@ -48,7 +47,7 @@ suite('Windows Store', () => {
     suite('Locator', () => {
         let stubShellExec: sinon.SinonStub;
         let getEnvVar: sinon.SinonStub;
-        let locator: IDisposableLocator;
+        let locator: WindowsStoreLocator;
         let watchLocationForPatternStub: sinon.SinonStub;
 
         const testLocalAppData = path.join(TEST_LAYOUT_ROOT, 'storeApps');
@@ -122,7 +121,8 @@ suite('Windows Store', () => {
             watchLocationForPatternStub = sinon.stub(fsWatcher, 'watchLocationForPattern');
             watchLocationForPatternStub.returns({ dispose: () => { /* do nothing */ } });
 
-            locator = await createWindowsStoreLocator();
+            locator = new WindowsStoreLocator();
+            await locator.activate();
         });
 
         teardown(() => {

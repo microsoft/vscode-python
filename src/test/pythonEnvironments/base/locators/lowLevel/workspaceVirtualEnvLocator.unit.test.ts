@@ -12,8 +12,7 @@ import {
     PythonVersion,
     UNKNOWN_PYTHON_VERSION,
 } from '../../../../../client/pythonEnvironments/base/info';
-import { IDisposableLocator } from '../../../../../client/pythonEnvironments/base/locator';
-import { createWorkspaceVirtualEnvLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/workspaceVirtualEnvLocator';
+import { WorkspaceVirtualEnvironmentLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/workspaceVirtualEnvLocator';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from '../../../discovery/locators/envTestUtils';
@@ -21,7 +20,7 @@ import { assertEnvEqual, assertEnvsEqual } from '../../../discovery/locators/env
 suite('WorkspaceVirtualEnvironment Locator', () => {
     const testWorkspaceFolder = path.join(TEST_LAYOUT_ROOT, 'workspace', 'folder1');
     let getOSTypeStub: sinon.SinonStub;
-    let locator: IDisposableLocator;
+    let locator: WorkspaceVirtualEnvironmentLocator;
 
     function createExpectedEnvInfo(
         interpreterPath: string,
@@ -54,10 +53,10 @@ suite('WorkspaceVirtualEnvironment Locator', () => {
         assert.deepStrictEqual(actualPaths, expectedPaths);
     }
 
-    setup(async () => {
+    setup(() => {
         getOSTypeStub = sinon.stub(platformUtils, 'getOSType');
         getOSTypeStub.returns(platformUtils.OSType.Linux);
-        locator = await createWorkspaceVirtualEnvLocator(testWorkspaceFolder);
+        locator = new WorkspaceVirtualEnvironmentLocator(testWorkspaceFolder);
     });
     teardown(() => {
         getOSTypeStub.restore();

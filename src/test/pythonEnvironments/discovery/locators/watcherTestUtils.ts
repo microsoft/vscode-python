@@ -8,8 +8,9 @@ import { traceWarning } from '../../../../client/common/logger';
 import { FileChangeType } from '../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, Deferred, sleep } from '../../../../client/common/utils/async';
 import { getOSType, OSType } from '../../../../client/common/utils/platform';
+import { IDisposable } from '../../../../client/common/utils/resourceLifecycle';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
-import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
+import { ILocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../client/pythonEnvironments/base/watcher';
 import { getInterpreterPathFromDir } from '../../../../client/pythonEnvironments/common/commonUtils';
@@ -86,10 +87,10 @@ class Venvs {
     }
 }
 
-type locatorFactoryFuncType1 = () => Promise<IDisposableLocator>;
+type locatorFactoryFuncType1 = () => Promise<ILocator & IDisposable>;
 // tslint:disable:no-any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type locatorFactoryFuncType2 = (_: any) => Promise<IDisposableLocator>;
+type locatorFactoryFuncType2 = (_: any) => Promise<ILocator & IDisposable>;
 // tslint:enable:no-any
 export type locatorFactoryFuncType = locatorFactoryFuncType1 & locatorFactoryFuncType2;
 
@@ -119,7 +120,7 @@ export function testLocatorWatcher(
         kind?: PythonEnvKind
     },
 ): void {
-    let locator: IDisposableLocator;
+    let locator: ILocator & IDisposable;
     const venvs = new Venvs(root);
 
     async function waitForChangeToBeDetected(deferred: Deferred<void>) {

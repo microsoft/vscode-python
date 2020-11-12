@@ -14,7 +14,7 @@ import { Locator } from '../../locator';
  * Subclasses can call `this.emitter.fire()` * to emit events.
  */
 export abstract class FSWatchingLocator extends Locator {
-    private initialized = false;
+    private active = false;
 
     constructor(
         /**
@@ -39,17 +39,22 @@ export abstract class FSWatchingLocator extends Locator {
         super();
     }
 
-    public async initialize(): Promise<void> {
-        if (this.initialized) {
+    public async activate(): Promise<void> {
+        if (this.active) {
             return;
         }
-        this.initialized = true;
-        this.startWatchers().ignoreErrors();
+        this.active = true;
+
+        await this.startWatchers();
     }
 
     public dispose(): void {
+        if (!this.active) {
+            return;
+        }
+        this.active = false;
+
         super.dispose();
-        this.initialized = false;
     }
 
     private async startWatchers(): Promise<void> {

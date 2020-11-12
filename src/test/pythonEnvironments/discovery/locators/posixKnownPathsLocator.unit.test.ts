@@ -10,15 +10,14 @@ import {
 } from '../../../../client/pythonEnvironments/base/info';
 import { InterpreterInformation } from '../../../../client/pythonEnvironments/base/info/interpreter';
 import { parseVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
-import { IDisposableLocator } from '../../../../client/pythonEnvironments/base/locator';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
-import { createPosixKnownPathsLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/posixKnownPathsLocator';
+import { PosixKnownPathsLocator } from '../../../../client/pythonEnvironments/discovery/locators/services/posixKnownPathsLocator';
 import { TEST_LAYOUT_ROOT } from '../../common/commonTestConstants';
 import { assertEnvEqual, assertEnvsEqual } from './envTestUtils';
 
 suite('Posix Known Path Locator', () => {
     let getPathEnvVar: sinon.SinonStub;
-    let locator: IDisposableLocator;
+    let locator: PosixKnownPathsLocator;
 
     const testPosixKnownPathsRoot = path.join(TEST_LAYOUT_ROOT, 'posixroot');
 
@@ -67,7 +66,7 @@ suite('Posix Known Path Locator', () => {
 
     setup(async () => {
         getPathEnvVar = sinon.stub(executablesAPI, 'getSearchPathEntries');
-        locator = await createPosixKnownPathsLocator();
+        locator = new PosixKnownPathsLocator();
     });
     teardown(() => {
         getPathEnvVar.restore();

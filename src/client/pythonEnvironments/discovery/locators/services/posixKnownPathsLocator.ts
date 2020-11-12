@@ -10,9 +10,7 @@ import {
     PythonEnvInfo, PythonEnvKind, PythonReleaseLevel, PythonVersion,
 } from '../../../base/info';
 import { parseVersion } from '../../../base/info/pythonVersion';
-import {
-    IDisposableLocator, IPythonEnvsIterator, Locator,
-} from '../../../base/locator';
+import { IPythonEnvsIterator, Locator } from '../../../base/locator';
 import { getFileInfo, resolveSymbolicLink } from '../../../common/externalDependencies';
 import { commonPosixBinPaths, isPosixPythonBin } from '../../../common/posixUtils';
 
@@ -40,7 +38,7 @@ async function getPythonBinFromKnownPaths(): Promise<string[]> {
     return Array.from(pythonBins);
 }
 
-class PosixKnownPathsLocator extends Locator {
+export class PosixKnownPathsLocator extends Locator {
     private kind: PythonEnvKind = PythonEnvKind.OtherGlobal;
 
     public iterEnvs(): IPythonEnvsIterator {
@@ -85,9 +83,4 @@ class PosixKnownPathsLocator extends Locator {
             distro: { org: '' },
         };
     }
-}
-
-export function createPosixKnownPathsLocator(): Promise<IDisposableLocator> {
-    const locator = new PosixKnownPathsLocator();
-    return Promise.resolve(locator);
 }

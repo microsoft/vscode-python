@@ -25,7 +25,7 @@ export class CachingLocatorWrapper implements ILocator {
 
     private readonly watcher = new PythonEnvsWatcher();
 
-    private initialized = false;
+    private active = false;
 
     private refreshing: Promise<void> | undefined;
 
@@ -37,7 +37,7 @@ export class CachingLocatorWrapper implements ILocator {
         this.onChanged = this.watcher.onChanged;
 
         wrapped.onChanged((event) => {
-            if (this.initialized) {
+            if (this.active) {
                 // Refresh the cache in the background.
                 if (this.refreshing) {
                     // The wrapped locator noticed changes while we're
@@ -59,11 +59,11 @@ export class CachingLocatorWrapper implements ILocator {
      *
      * This should be called as soon as possible before using the locator.
      */
-    public async initialize(): Promise<void> {
-        if (this.initialized) {
+    public async activate(): Promise<void> {
+        if (this.active) {
             return;
         }
-        this.initialized = true;
+        this.active = true;
 
         // Populate the cache with initial data.
         await this.refresh();
@@ -74,8 +74,8 @@ export class CachingLocatorWrapper implements ILocator {
         // Get the envs early in case a refresh is triggered.
         let envs = this.cache.getEnvs();
         async function* generator(self: CachingLocatorWrapper) {
-            if (!self.initialized) {
-                await self.initialize();
+            if (!self.active) {
+                await self.activate();
                 envs = self.cache.getEnvs();
             }
             yield* envs;
@@ -87,8 +87,8 @@ export class CachingLocatorWrapper implements ILocator {
         if (this.refreshing !== undefined) {
             await this.refreshing;
         }
-        if (!this.initialized) {
-            await this.initialize();
+        if (!this.active) {
+            await this.activate();
         }
         return this.cache.lookUp(env);
     }

@@ -25,13 +25,13 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentsManager,
-    IExtensionContext,
     IFeatureDeprecationManager,
     IOutputChannel
 } from './common/types';
 import { OutputChannelNames } from './common/utils/localize';
 import { noop } from './common/utils/misc';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
+import { ActivationFunc, ActivationResult, ExtensionState, IComponent } from './components';
 import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
@@ -44,7 +44,6 @@ import {
     IInterpreterService
 } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
-import { IServiceContainer, IServiceManager } from './ioc/types';
 import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
@@ -66,13 +65,23 @@ import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from '.
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 
 export async function activateComponents(
-    context: IExtensionContext,
-    serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer
-) {
-    // We will be pulling code over from activateLegacy().
-
-    return activateLegacy(context, serviceManager, serviceContainer);
+    // `ext` is passed to any extra activation funcs.
+    ext: ExtensionState,
+    components: IComponent[]
+): Promise<ActivationResult[]> {
+    const componentFuncs = components.map((c) => c.activate);
+    const extraFuncs: ActivationFunc[] = [
+        // In cases where the component activator cannot be returned
+        // from the initializer, a separate activation func can be
+        // registered here.
+        // For example:
+        //   (ext) => pythonEnvironments.activate(serviceManager, serviceContainer),
+        // We will be factoring them out of activateLegacy().
+    ];
+    const allFuncs = [...componentFuncs, ...extraFuncs];
+    const promises = allFuncs.map((func) => func(ext));
+    const results = await Promise.all(promises);
+    return results.filter((res) => !!res) as ActivationResult[];
 }
 
 /////////////////////////////
@@ -85,11 +94,9 @@ export async function activateComponents(
 // init and activation: move them to activateComponents().
 // See https://github.com/microsoft/vscode-python/issues/10454.
 
-async function activateLegacy(
-    context: IExtensionContext,
-    serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer
-) {
+export async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
+    const { context, serviceManager, serviceContainer } = ext;
+
     // register "services"
 
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
@@ -215,5 +222,5 @@ async function activateLegacy(
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
 
-    return { activationPromise };
+    return { finished: activationPromise };
 }

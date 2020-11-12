@@ -5,7 +5,7 @@ import { flatten } from 'lodash';
 import {
     Disposable, Event, EventEmitter, Uri,
 } from 'vscode';
-import { traceDecorators } from '../../../common/logger';
+import { traceDecorators, traceError } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
 import { IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -28,7 +28,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { DisableableLocator } from '../../base/disableableLocator';
 import { PythonEnvInfo } from '../../base/info';
 import {
-    IDisposableLocator,
+    ILocator,
     IPythonEnvsIterator,
     Locator,
     NOOP_ITERATOR,
@@ -48,16 +48,39 @@ import { GetInterpreterLocatorOptions } from './types';
 export class ExtensionLocators extends Locators {
     constructor(
         // These are expected to be low-level locators (e.g. system).
-        nonWorkspace: IDisposableLocator[],
+        nonWorkspace: ILocator[],
         // This is expected to be a locator wrapping any found in
         // the workspace (i.e. WorkspaceLocators).
-        workspace: IDisposableLocator,
+        workspace: ILocator,
     ) {
         super([...nonWorkspace, workspace]);
     }
 }
 
-type WorkspaceLocatorFactory = (root: Uri) => IDisposableLocator[];
+type ActivationFunc = () => (Promise<void> | void);
+type DisposeFunc = () => void;
+interface IMaybeActive {
+    activate?: ActivationFunc;
+    dispose?: DisposeFunc;
+}
+interface IMaybeActiveLocator extends IMaybeActive, ILocator {}
+type WorkspaceLocatorInfo = IMaybeActive & {
+    locator: ILocator;
+};
+type WorkspaceLocatorFactory = (root: Uri) => (IMaybeActiveLocator | WorkspaceLocatorInfo)[];
+
+function getLocator(info: IMaybeActiveLocator | WorkspaceLocatorInfo): ILocator {
+    const maybeInfo = info as Partial<WorkspaceLocatorInfo>;
+    const maybeLocator = info as Partial<ILocator>;
+    if (maybeInfo.locator === undefined) {
+        return info as ILocator;
+    }
+    if (maybeLocator.iterEnvs !== undefined) {
+        // (unusual) It's a locator with a "locator" property.
+        return info as ILocator;
+    }
+    return maybeInfo.locator!;
+}
 
 interface IWorkspaceFolders {
     readonly roots: ReadonlyArray<Uri>;
@@ -73,11 +96,14 @@ type RootURI = string;
  * The factories are used to produce the locators for each workspace folder.
  */
 export class WorkspaceLocators extends Locator {
-    private readonly locators: Record<RootURI, DisableableLocator> = {};
+    private active = false;
+
+    private readonly locators: Record<RootURI, [DisableableLocator, DisposeFunc[]]> = {};
 
     private readonly roots: Record<RootURI, Uri> = {};
 
     constructor(
+        private readonly getFolders: () => IWorkspaceFolders,
         // used to produce the per-root locators:
         private readonly factories: WorkspaceLocatorFactory[],
     ) {
@@ -89,12 +115,42 @@ export class WorkspaceLocators extends Locator {
      *
      * @param folders - the info used to keep track of the workspace folders
      */
-    public activate(folders: IWorkspaceFolders):void {
+    public activate(): void {
+        if (this.active) {
+            return;
+        }
+        this.active = true;
+
+        const folders = this.getFolders();
         folders.roots.forEach((root) => {
+            if (!this.active) {
+                return;
+            }
             this.addRoot(root);
         });
-        folders.onAdded((root: Uri) => this.addRoot(root));
-        folders.onRemoved((root: Uri) => this.removeRoot(root));
+        folders.onAdded((root: Uri) => {
+            if (!this.active) {
+                return;
+            }
+            this.addRoot(root);
+        });
+        folders.onRemoved((root: Uri) => {
+            if (!this.active) {
+                return;
+            }
+            this.removeRoot(root);
+        });
+    }
+
+    public dispose(): void {
+        if (this.active) {
+            return;
+        }
+        this.active = false;
+
+        // Clear all the roots.
+        const roots = Object.keys(this.roots).map((key) => this.roots[key]);
+        roots.forEach((root) => this.removeRoot(root));
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
@@ -114,7 +170,7 @@ export class WorkspaceLocators extends Locator {
                 }
             }
             // The query matches or was not location-specific.
-            const locator = this.locators[key];
+            const [locator] = this.locators[key];
             return locator.iterEnvs(query);
         });
         return combineIterators(iterators);
@@ -122,8 +178,9 @@ export class WorkspaceLocators extends Locator {
 
     public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
         if (typeof env !== 'string' && env.searchLocation) {
-            const rootLocator = this.locators[env.searchLocation.toString()];
-            if (rootLocator) {
+            const found = this.locators[env.searchLocation.toString()];
+            if (found !== undefined) {
+                const [rootLocator] = found;
                 return rootLocator.resolveEnv(env);
             }
         }
@@ -131,8 +188,9 @@ export class WorkspaceLocators extends Locator {
         // The eslint disable below should be removed after we have a
         // better solution for these. We need asyncFind for this.
         for (const key of Object.keys(this.locators)) {
+            const [locator] = this.locators[key];
             // eslint-disable-next-line no-await-in-loop
-            const resolved = await this.locators[key].resolveEnv(env);
+            const resolved = await locator.resolveEnv(env);
             if (resolved !== undefined) {
                 return resolved;
             }
@@ -144,14 +202,28 @@ export class WorkspaceLocators extends Locator {
         // Drop the old one, if necessary.
         this.removeRoot(root);
         // Create the root's locator, wrapping each factory-generated locator.
-        const locators: IDisposableLocator[] = [];
+        const locators: ILocator[] = [];
+        const disposeFuncs: DisposeFunc[] = [];
         this.factories.forEach((create) => {
-            locators.push(...create(root));
+            create(root).forEach((maybeInfo) => {
+                const loc = getLocator(maybeInfo);
+                if (maybeInfo.activate !== undefined) {
+                    const maybePromise = maybeInfo.activate();
+                    if (maybePromise !== undefined) {
+                        // Is there a way we can wait here for `activate()` to finish?
+                        maybePromise.ignoreErrors();
+                    }
+                }
+                locators.push(loc);
+                if (maybeInfo.dispose !== undefined) {
+                    disposeFuncs.push(() => maybeInfo.dispose!());
+                }
+            });
         });
         const locator = new DisableableLocator(new Locators(locators));
         // Cache it.
         const key = root.toString();
-        this.locators[key] = locator;
+        this.locators[key] = [locator, disposeFuncs];
         this.roots[key] = root;
         this.emitter.fire({ searchLocation: root });
         // Hook up the watchers.
@@ -165,14 +237,26 @@ export class WorkspaceLocators extends Locator {
 
     private removeRoot(root: Uri) {
         const key = root.toString();
-        const locator = this.locators[key];
-        if (locator === undefined) {
+        const found = this.locators[key];
+        if (found === undefined) {
             return;
         }
+        const [locator, disposeFuncs] = found;
         delete this.locators[key];
         delete this.roots[key];
         locator.disable();
-        this.emitter.fire({ searchLocation: root });
+        if (disposeFuncs !== undefined) {
+            disposeFuncs.forEach((dispose, i) => {
+                try {
+                    dispose();
+                } catch (err) {
+                    traceError(`dispose #${i + 1} failed: {err}`);
+                }
+            });
+        }
+        if (this.active) {
+            this.emitter.fire({ searchLocation: root });
+        }
     }
 }
 

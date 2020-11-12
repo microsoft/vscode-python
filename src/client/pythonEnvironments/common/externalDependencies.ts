@@ -4,7 +4,6 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../../common/process/types';
-import { IPersistentStateFactory } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
@@ -51,25 +50,6 @@ export function normCasePath(filePath: string): string {
 
 export function arePathsSame(path1: string, path2: string): boolean {
     return normCasePath(path1) === normCasePath(path2);
-}
-
-function getPersistentStateFactory(): IPersistentStateFactory {
-    return internalServiceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-}
-
-export interface IPersistentStore<T> {
-    get(): T | undefined;
-    set(value: T): Promise<void>;
-}
-
-export function getGlobalPersistentStore<T>(key: string): IPersistentStore<T> {
-    const factory = getPersistentStateFactory();
-    const state = factory.createGlobalPersistentState<T>(key, undefined);
-
-    return {
-        get() { return state.value; },
-        set(value: T) { return state.updateValue(value); },
-    };
 }
 
 export async function getFileInfo(filePath: string): Promise<{ ctime: number, mtime: number }> {

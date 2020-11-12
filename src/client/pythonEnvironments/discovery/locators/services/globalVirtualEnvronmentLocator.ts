@@ -10,7 +10,7 @@ import {
 } from '../../../../common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
-import { IDisposableLocator, IPythonEnvsIterator } from '../../../base/locator';
+import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import {
     findInterpretersInDir, getEnvironmentDirFromPath, getPythonVersionFromPath, isStandardPythonBinary
@@ -98,7 +98,7 @@ async function buildSimpleVirtualEnvInfo(executablePath: string, kind: PythonEnv
 /**
  * Finds and resolves virtual environments created in known global locations.
  */
-class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
+export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
     constructor(private readonly searchDepth?: number) {
         super(getGlobalVirtualEnvDirs, getVirtualEnvKind, {
             // Note detecting kind of virtual env depends on the file structure around the
@@ -160,10 +160,4 @@ class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
         }
         return undefined;
     }
-}
-
-export async function createGlobalVirtualEnvironmentLocator(searchDepth?: number): Promise<IDisposableLocator> {
-    const locator = new GlobalVirtualEnvironmentLocator(searchDepth);
-    await locator.initialize();
-    return locator;
 }

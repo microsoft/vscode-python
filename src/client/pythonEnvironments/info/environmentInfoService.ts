@@ -34,6 +34,8 @@ async function buildEnvironmentInfo(interpreterPath: string): Promise<Interprete
 
 @injectable()
 export class EnvironmentInfoService implements IEnvironmentInfoService {
+    private active = false;
+
     // Caching environment here in-memory. This is so that we don't have to run this on the same
     // path again and again in a given session. This information will likely not change in a given
     // session. There are definitely cases where this will change. But a simple reload should address
@@ -47,6 +49,24 @@ export class EnvironmentInfoService implements IEnvironmentInfoService {
 
     public constructor() {
         this.workerPool = createWorkerPool<string, InterpreterInformation | undefined>(buildEnvironmentInfo);
+    }
+
+    public activate(): void {
+        if (this.active) {
+            return;
+        }
+        this.active = true;
+
+        this.workerPool.start();
+    }
+
+    public dispose(): void {
+        if (!this.active) {
+            return;
+        }
+        this.active = false;
+
+        this.workerPool.stop();
     }
 
     public async getEnvironmentInfo(

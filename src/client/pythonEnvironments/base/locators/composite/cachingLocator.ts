@@ -10,7 +10,7 @@ import { IEnvsCache } from '../../envsCache';
 import { PythonEnvInfo } from '../../info';
 import { getMinimalPartialInfo } from '../../info/env';
 import {
-    IDisposableLocator,
+    ILocator,
     IPythonEnvsIterator,
     PythonLocatorQuery,
 } from '../../locator';
@@ -21,20 +21,20 @@ import { pickBestEnv } from './reducingLocator';
 /**
  * A locator that stores the known environments in the given cache.
  */
-export class CachingLocator implements IDisposableLocator {
+export class CachingLocator implements ILocator {
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     private readonly watcher = new PythonEnvsWatcher();
 
     private readonly initializing = createDeferred<void>();
 
-    private initialized = false;
+    private active = false;
 
     private looper: BackgroundRequestLooper;
 
     constructor(
         private readonly cache: IEnvsCache,
-        private readonly locator: IDisposableLocator,
+        private readonly locator: ILocator,
     ) {
         this.onChanged = this.watcher.onChanged;
         this.looper = new BackgroundRequestLooper({
@@ -43,19 +43,20 @@ export class CachingLocator implements IDisposableLocator {
     }
 
     /**
-     * Prepare the locator for use.
+     * Finish pPreparing the locator for use.
      *
      * This must be called before using the locator.  It is distinct
      * from the constructor to avoid the problems that come from doing
      * any serious work in constructors.  It also allows initialization
      * to be asynchronous.
      */
-    public async initialize(): Promise<void> {
-        if (this.initialized) {
+    public async activate(): Promise<void> {
+        if (this.active) {
             return;
         }
+        this.active = true;
 
-        await this.cache.initialize();
+        await this.cache.activate();
         this.looper.start();
 
         this.locator.onChanged((event) => this.ensureCurrentRefresh(event));
@@ -74,10 +75,13 @@ export class CachingLocator implements IDisposableLocator {
     }
 
     public dispose(): void {
+        if (!this.active) {
+            return;
+        }
+        this.active = false;
+
         const waitUntilStopped = this.looper.stop();
         waitUntilStopped.ignoreErrors();
-
-        this.locator.dispose();
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
@@ -141,7 +145,7 @@ export class CachingLocator implements IDisposableLocator {
     private async* iterFromCache(query?: PythonLocatorQuery): IPythonEnvsIterator {
         const envs = this.cache.getAllEnvs();
         if (envs === undefined) {
-            logWarning('envs cache unexpectedly not initialized');
+            logWarning('envs cache unexpectedly not activated');
             return;
         }
         // We trust `this.locator.onChanged` to be reliable.

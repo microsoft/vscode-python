@@ -59,13 +59,17 @@ import {
     WorkspaceVirtualEnvService,
 } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvWatcherService';
-import { IEnvironmentInfoService } from '../../client/pythonEnvironments/info/environmentInfoService';
+import { EnvironmentInfoService, IEnvironmentInfoService } from '../../client/pythonEnvironments/info/environmentInfoService';
 import { registerLegacyDiscoveryForIOC } from '../../client/pythonEnvironments/legacyIOC';
 
 suite('Interpreters - Service Registry', () => {
     test('Registrations', () => {
         const serviceManager = mock(ServiceManager);
-        registerLegacyDiscoveryForIOC(instance(serviceManager));
+        const envInfo = mock(EnvironmentInfoService);
+        registerLegacyDiscoveryForIOC(
+            instance(serviceManager),
+            instance(envInfo),
+        );
         verify(serviceManager.addSingleton(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters)).once();
         verify(serviceManager.addSingleton(IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global')).once();
         verify(serviceManager.addSingleton(IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace')).once();

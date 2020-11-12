@@ -9,7 +9,7 @@ import {
     PythonEnvInfo, PythonEnvKind,
 } from '../../../base/info';
 import { buildEnvInfo } from '../../../base/info/env';
-import { IDisposableLocator, IPythonEnvsIterator } from '../../../base/locator';
+import { IPythonEnvsIterator } from '../../../base/locator';
 import { FSWatchingLocator } from '../../../base/locators/lowLevel/fsWatchingLocator';
 import {
     getEnvironmentDirFromPath, getInterpreterPathFromDir, getPythonVersionFromPath,
@@ -298,7 +298,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<PythonEnvInfo> {
     }
 }
 
-class PyenvLocator extends FSWatchingLocator {
+export class PyenvLocator extends FSWatchingLocator {
     constructor() {
         super(
             getPyenvVersionsDir,
@@ -339,10 +339,4 @@ class PyenvLocator extends FSWatchingLocator {
         }
         return undefined;
     }
-}
-
-export async function createPyenvLocator(): Promise<IDisposableLocator> {
-    const locator = new PyenvLocator();
-    await locator.initialize();
-    return Promise.resolve(locator);
 }
