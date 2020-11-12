@@ -10,7 +10,12 @@
 
 ---
 
-[For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [Pylance](https://github.com/microsoft/pylance-release) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
+The following projects have their own repositories:
+
+-   [Pylance](https://github.com/microsoft/pylance-release)
+-   [debugpy](https://github.com/microsoft/debugpy)
+-   [Jupyter](https://github.com/microsoft/vscode-jupyter)
+-   [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server)
 
 ## Contributing a pull request
 
