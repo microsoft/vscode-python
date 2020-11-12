@@ -7,6 +7,7 @@ import { createWorkerPool, QueuePosition } from '../../../client/common/utils/wo
 suite('Process Queue', () => {
     test('Run two workers to calculate square', async () => {
         const workerPool = createWorkerPool<number, number>(async (i) => Promise.resolve(i * i));
+        workerPool.start();
         const promises: Promise<number>[] = [];
         const results: number[] = [];
         [2, 3, 4, 5, 6, 7, 8, 9].forEach((i) => promises.push(workerPool.addToQueue(i)));
@@ -18,6 +19,7 @@ suite('Process Queue', () => {
 
     test('Run, wait for result, run again', async () => {
         const workerPool = createWorkerPool<number, number>((i) => Promise.resolve(i * i));
+        workerPool.start();
         let promises: Promise<number>[] = [];
         let results: number[] = [];
         [2, 3, 4].forEach((i) => promises.push(workerPool.addToQueue(i)));
@@ -41,6 +43,7 @@ suite('Process Queue', () => {
             }
             return Promise.resolve(i * i);
         });
+        workerPool.start();
         const promises: Promise<number>[] = [];
         const results: number[] = [];
         const reasons: Error[] = [];
@@ -62,6 +65,7 @@ suite('Process Queue', () => {
 
     test('Add to a stopped queue', async () => {
         const workerPool = createWorkerPool<number, number>((i) => Promise.resolve(i * i));
+        workerPool.start();
         workerPool.stop();
         const reasons: Error[] = [];
         try {
@@ -79,6 +83,7 @@ suite('Process Queue', () => {
             }
             return Promise.resolve(i * i);
         });
+        workerPool.start();
         const promises: Promise<number>[] = [];
         const results: number[] = [];
         const reasons: string[] = [];
@@ -100,6 +105,7 @@ suite('Process Queue', () => {
             processOrder.push(i);
             return Promise.resolve(i * i);
         });
+        workerPool.start();
 
         const promises: Promise<number>[] = [];
         const results: number[] = [];
