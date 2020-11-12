@@ -80,7 +80,7 @@ export async function activateComponents(
     const allFuncs = [...componentFuncs, ...extraFuncs];
     const promises = allFuncs.map((func) => func(ext));
     const results = await Promise.all(promises);
-    return results.filter((res) => !!res) as ActivationResult[];
+    return results.filter((res) => !!res);
 }
 
 /////////////////////////////
