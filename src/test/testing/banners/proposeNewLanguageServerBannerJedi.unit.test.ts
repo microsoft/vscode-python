@@ -18,13 +18,13 @@ import {
     IExtensions,
     IPersistentState,
     IPersistentStateFactory,
-    IPythonSettings,
+    IPythonSettings
 } from '../../../client/common/types';
 import { Common, Pylance } from '../../../client/common/utils/localize';
 import {
     getPylanceExtensionUri,
     ProposeLSStateKeys,
-    ProposePylanceBannerJedi,
+    ProposePylanceBannerJedi
 } from '../../../client/languageServices/proposeLanguageServerBannerJedi';
 
 import * as Telemetry from '../../../client/telemetry';
@@ -43,7 +43,7 @@ const testData: IExperimentLsCombination[] = [
     { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.None, shouldShowBanner: false },
     { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Microsoft, shouldShowBanner: false },
     { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Node, shouldShowBanner: false },
-    { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Jedi, shouldShowBanner: false },
+    { experiment: TryPylance.jediPrompt2, lsType: LanguageServerType.Jedi, shouldShowBanner: false }
 ];
 
 suite('Propose Pylance Banner To Jedi', () => {
@@ -73,7 +73,7 @@ suite('Propose Pylance Banner To Jedi', () => {
             .callsFake((eventName: EventName, _, properties: { userAction: string; experimentName: string }) => {
                 telemetryEvent = {
                     eventName,
-                    properties,
+                    properties
                 };
             });
     });
@@ -104,12 +104,14 @@ suite('Propose Pylance Banner To Jedi', () => {
     });
     test('Do not show banner when it is disabled', async () => {
         appShell
-            .setup((a) => a.showInformationMessage(
-                anything(),
-                typemoq.It.isValue(yes),
-                typemoq.It.isValue(no),
-                typemoq.It.isValue(later),
-            ))
+            .setup((a) =>
+                a.showInformationMessage(
+                    anything(),
+                    typemoq.It.isValue(yes),
+                    typemoq.It.isValue(no),
+                    typemoq.It.isValue(later)
+                )
+            )
             .verifiable(typemoq.Times.never());
         const testBanner = preparePopup(
             false,
@@ -117,19 +119,21 @@ suite('Propose Pylance Banner To Jedi', () => {
             appEnv.object,
             config.object,
             TryPylance.jediPrompt1,
-            false,
+            false
         );
         await testBanner.showBanner();
         appShell.verifyAll();
     });
     test('Clicking No should disable the banner', async () => {
         appShell
-            .setup((a) => a.showInformationMessage(
-                anything(),
-                typemoq.It.isValue(yes),
-                typemoq.It.isValue(no),
-                typemoq.It.isValue(later),
-            ))
+            .setup((a) =>
+                a.showInformationMessage(
+                    anything(),
+                    typemoq.It.isValue(yes),
+                    typemoq.It.isValue(no),
+                    typemoq.It.isValue(later)
+                )
+            )
             .returns(async () => no)
             .verifiable(typemoq.Times.once());
         appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.never());
@@ -140,7 +144,7 @@ suite('Propose Pylance Banner To Jedi', () => {
             appEnv.object,
             config.object,
             TryPylance.jediPrompt1,
-            false,
+            false
         );
         await testBanner.showBanner();
 
@@ -150,17 +154,19 @@ suite('Propose Pylance Banner To Jedi', () => {
         sinon.assert.calledOnce(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, {
             eventName: EventName.LANGUAGE_SERVER_TRY_PYLANCE,
-            properties: { userAction: 'no', experimentName: TryPylance.jediPrompt1 },
+            properties: { userAction: 'no', experimentName: TryPylance.jediPrompt1 }
         });
     });
     test('Clicking Later should disable banner in session', async () => {
         appShell
-            .setup((a) => a.showInformationMessage(
-                anything(),
-                typemoq.It.isValue(yes),
-                typemoq.It.isValue(no),
-                typemoq.It.isValue(later),
-            ))
+            .setup((a) =>
+                a.showInformationMessage(
+                    anything(),
+                    typemoq.It.isValue(yes),
+                    typemoq.It.isValue(no),
+                    typemoq.It.isValue(later)
+                )
+            )
             .returns(async () => later)
             .verifiable(typemoq.Times.once());
         appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.never());
@@ -171,13 +177,13 @@ suite('Propose Pylance Banner To Jedi', () => {
             appEnv.object,
             config.object,
             TryPylance.jediPrompt1,
-            false,
+            false
         );
         await testBanner.showBanner();
 
         expect(testBanner.enabled).to.be.equal(
             true,
-            'Banner should not be permanently disabled when user clicked Later',
+            'Banner should not be permanently disabled when user clicked Later'
         );
         appShell.verifyAll();
 
@@ -186,18 +192,20 @@ suite('Propose Pylance Banner To Jedi', () => {
             eventName: EventName.BANNER_NAME_PROPOSE_LS_FOR_JEDI_USERS,
             properties: {
                 userAction: 'later',
-                experimentName: TryPylance.jediPrompt1,
-            },
+                experimentName: TryPylance.jediPrompt1
+            }
         });
     });
     test('Clicking Yes opens the extension marketplace entry', async () => {
         appShell
-            .setup((a) => a.showInformationMessage(
-                anything(),
-                typemoq.It.isValue(yes),
-                typemoq.It.isValue(no),
-                typemoq.It.isValue(later),
-            ))
+            .setup((a) =>
+                a.showInformationMessage(
+                    anything(),
+                    typemoq.It.isValue(yes),
+                    typemoq.It.isValue(no),
+                    typemoq.It.isValue(later)
+                )
+            )
             .returns(async () => yes)
             .verifiable(typemoq.Times.once());
         appShell.setup((a) => a.openUrl(getPylanceExtensionUri(appEnv.object))).verifiable(typemoq.Times.once());
@@ -208,7 +216,7 @@ suite('Propose Pylance Banner To Jedi', () => {
             appEnv.object,
             config.object,
             TryPylance.jediPrompt1,
-            false,
+            false
         );
         await testBanner.showBanner();
 
@@ -220,8 +228,8 @@ suite('Propose Pylance Banner To Jedi', () => {
             eventName: EventName.BANNER_NAME_PROPOSE_LS_FOR_JEDI_USERS,
             properties: {
                 userAction: 'yes',
-                experimentName: TryPylance.jediPrompt1,
-            },
+                experimentName: TryPylance.jediPrompt1
+            }
         });
     });
 });
@@ -232,7 +240,7 @@ function preparePopup(
     appEnv: IApplicationEnvironment,
     config: IConfigurationService,
     experiment: TryPylance,
-    pylanceInstalled: boolean,
+    pylanceInstalled: boolean
 ): ProposePylanceBannerJedi {
     const myfactory = typemoq.Mock.ofType<IPersistentStateFactory>();
     const val = typemoq.Mock.ofType<IPersistentState<boolean>>();
@@ -246,16 +254,20 @@ function preparePopup(
     });
     val.setup((a) => a.value).returns(() => enabledValue);
     myfactory
-        .setup((a) => a.createGlobalPersistentState(
-            typemoq.It.isValue(ProposeLSStateKeys.ShowBannerJedi),
-            typemoq.It.isValue(true),
-        ))
+        .setup((a) =>
+            a.createGlobalPersistentState(
+                typemoq.It.isValue(ProposeLSStateKeys.ShowBannerJedi),
+                typemoq.It.isValue(true)
+            )
+        )
         .returns(() => val.object);
     myfactory
-        .setup((a) => a.createGlobalPersistentState(
-            typemoq.It.isValue(ProposeLSStateKeys.ShowBannerJedi),
-            typemoq.It.isValue(false),
-        ))
+        .setup((a) =>
+            a.createGlobalPersistentState(
+                typemoq.It.isValue(ProposeLSStateKeys.ShowBannerJedi),
+                typemoq.It.isValue(false)
+            )
+        )
         .returns(() => val.object);
 
     const experiments = typemoq.Mock.ofType<IExperimentService>();
@@ -287,6 +299,6 @@ function preparePopup(
         myfactory.object,
         config,
         experiments.object,
-        extensions.object,
+        extensions.object
     );
 }

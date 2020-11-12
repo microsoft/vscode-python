@@ -85,7 +85,7 @@ export class ProposePylanceBannerJedi implements IPythonExtensionBanner {
             promptContent,
             Pylance.tryItNow(),
             Common.bannerLabelNo(),
-            Pylance.remindMeLater(),
+            Pylance.remindMeLater()
         );
 
         let userAction: string;
