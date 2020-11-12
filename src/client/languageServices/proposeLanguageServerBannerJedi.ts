@@ -25,7 +25,7 @@ export function getPylanceExtensionUri(appEnv: IApplicationEnvironment): string 
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
-    ShowBanner = 'TryPylanceBannerJedi'
+    ShowBannerJedi = 'TryPylanceBannerJedi'
 }
 
 /*
@@ -54,7 +54,7 @@ export class ProposePylanceBannerJedi implements IPythonExtensionBanner {
         if (lsType !== LanguageServerType.Jedi) {
             return false;
         }
-        return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
+        return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBannerJedi, true).value;
     }
 
     public async showBanner(): Promise<void> {
@@ -67,11 +67,14 @@ export class ProposePylanceBannerJedi implements IPythonExtensionBanner {
             return;
         }
 
+        let experimentName = '';
         let promptContent: string | undefined;
         if (await this.experiments.inExperiment(TryPylance.jediPrompt1)) {
             promptContent = await this.experiments.getExperimentValue<string>(TryPylance.jediPrompt1);
+            experimentName = TryPylance.jediPrompt1;
         } else if (await this.experiments.inExperiment(TryPylance.jediPrompt2)) {
             promptContent = await this.experiments.getExperimentValue<string>(TryPylance.jediPrompt2);
+            experimentName = TryPylance.jediPrompt2;
         }
 
         if (promptContent === undefined) {
@@ -97,7 +100,7 @@ export class ProposePylanceBannerJedi implements IPythonExtensionBanner {
             this.disabledInCurrentSession = true;
             userAction = 'later';
         }
-        sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRY_PYLANCE, undefined, { userAction });
+        sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRY_PYLANCE, undefined, { userAction, experimentName });
     }
 
     public async shouldShowBanner(): Promise<boolean> {
@@ -110,7 +113,7 @@ export class ProposePylanceBannerJedi implements IPythonExtensionBanner {
 
     public async disable(): Promise<void> {
         await this.persistentState
-            .createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, false)
+            .createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBannerJedi, false)
             .updateValue(false);
     }
 }

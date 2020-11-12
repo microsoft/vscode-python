@@ -86,7 +86,8 @@ export class ProposePylanceBanner implements IPythonExtensionBanner {
             this.disabledInCurrentSession = true;
             userAction = 'later';
         }
-        sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRY_PYLANCE, undefined, { userAction });
+        const experimentName = TryPylance.experiment;
+        sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRY_PYLANCE, undefined, { userAction, experimentName });
     }
 
     public async shouldShowBanner(): Promise<boolean> {
