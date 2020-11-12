@@ -127,7 +127,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             const expected: PythonEnvInfo[] = [];
             const locator = new WindowsKnownPathsLocator();
             setSearchPath([ROOT3, ROOT4, DOES_NOT_EXIST, ROOT5]);
-            await locator.initialize();
+            await locator.activate();
             // Once the locator has an FS watcher, we will need to stop it:
             //   cleanUps.push(() => locator.dispose());
             const query: PythonLocatorQuery | undefined = undefined;
@@ -152,7 +152,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             const expected = executables.map(() => undefined);
             const locator = new WindowsKnownPathsLocator();
             setSearchPath([ROOT3, ROOT4, DOES_NOT_EXIST, ROOT5]);
-            await locator.initialize();
+            await locator.activate();
 
             const envs = await Promise.all(
                 executables.map((ex) => locator.resolveEnv(ex)),
@@ -167,7 +167,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             const expected: PythonEnvInfo[] = [];
             const locator = new WindowsKnownPathsLocator();
             setSearchPath([ROOT6, DOES_NOT_EXIST]);
-            await locator.initialize();
+            await locator.activate();
             // Once the locator has an FS watcher, we will need to stop it:
             //   cleanUps.push(() => locator.dispose());
             const query: PythonLocatorQuery | undefined = undefined;
@@ -192,7 +192,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             const expected = executables.map(() => undefined);
             const locator = new WindowsKnownPathsLocator();
             setSearchPath([ROOT6, DOES_NOT_EXIST]);
-            await locator.initialize();
+            await locator.activate();
 
             const envs = await Promise.all(
                 executables.map((ex) => locator.resolveEnv(ex)),
@@ -215,7 +215,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             ];
             const locator = new WindowsKnownPathsLocator();
             setSearchPath([ROOT2, ROOT6, ROOT1]);
-            await locator.initialize();
+            await locator.activate();
             // Once the locator has an FS watcher, we will need to stop it:
             //   cleanUps.push(() => locator.dispose());
             const query: PythonLocatorQuery | undefined = undefined;
@@ -254,7 +254,7 @@ suite('Python envs locator - WindowsKnownPathsLocator', async () => {
             ];
             const locator = new WindowsKnownPathsLocator();
             setSearchPath([ROOT2, ROOT6, ROOT1]);
-            await locator.initialize();
+            await locator.activate();
 
             const envs = await Promise.all(
                 executables.map((ex) => locator.resolveEnv(ex)),
