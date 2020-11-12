@@ -79,7 +79,7 @@ function getLocator(info: IMaybeActiveLocator | WorkspaceLocatorInfo): ILocator 
         // (unusual) It's a locator with a "locator" property.
         return info as ILocator;
     }
-    return maybeInfo.locator!;
+    return maybeInfo.locator;
 }
 
 interface IWorkspaceFolders {
